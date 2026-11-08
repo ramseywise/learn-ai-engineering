@@ -1,0 +1,607 @@
+{
+ "schema": 1,
+ "key": "1910.14599",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nie-2020-adversarial-nli.pdf",
+ "bib": {
+  "title": "Adversarial NLI: A New Benchmark for Natural Language Understanding",
+  "authors": [
+   "Yixin Nie",
+   "Adina Williams",
+   "Emily Dinan",
+   "Mohit Bansal",
+   "Jason Weston",
+   "Douwe Kiela"
+  ],
+  "first_author": "Nie",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL 2020), pages 4885-4901",
+  "arxiv": "1910.14599",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64480,
+  "chars_total": 64480,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Table 12 extra examples and UI figures (Figs 8-10) only skimmed."
+ },
+ "type": "benchmark",
+ "question": "Can a large NLI benchmark be built by iterative adversarial human-and-model-in-the-loop collection so that it is harder than existing sets, lasts longer, and also improves model training?",
+ "hypothesis": "Human annotators, even non-experts, can find weaknesses of current SOTA models; training on the resulting examples improves robustness and the moving-target procedure resists saturation.",
+ "contributions": [
+  "A human-and-model-in-the-loop NLI dataset of three rounds of increasing difficulty and complexity with annotator-provided explanations.",
+  "Training on it gives state-of-the-art results on a variety of popular NLI benchmarks.",
+  "Detailed analysis of the data: shortcomings of current models, inference-type categorisation, good performance on NLI stress tests."
+ ],
+ "method": {
+  "summary": "Annotators on Mechanical Turk write a hypothesis for a given context and target label (entailment/neutral/contradiction) to fool the current best model, which shows label probabilities as feedback. Model-wrong examples are verified by 2-3 other humans; verified ones form dev/test, all others go to train; a stronger model is trained on the augmented data for the next round (HAMLET). Three rounds (A1-A3) were collected; BERT/XLNet/RoBERTa are trained on mixes of SNLI, MNLI, FEVER-NLI and ANLI and evaluated.",
+  "task": "natural language inference (3-way classification), dataset collection and evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ANLI A1",
+    "role": "both",
+    "size": "16,946 train / 1,000 dev / 1,000 test; 2,080 contexts",
+    "split": "16,946 / 1,000 / 1,000",
+    "source": "Wikipedia contexts (250-600 chars) from HotpotQA training set, ground-truth or TF-IDF retrieved",
+    "preprocessing": "dev/test only verified model-wrong examples; test restricted to exclusive annotators and label-balanced"
+   },
+   {
+    "name": "ANLI A2",
+    "role": "both",
+    "size": "2,694 contexts; 45,460 train / 1,000 dev / 1,000 test",
+    "split": "45,460 / 1,000 / 1,000",
+    "source": "new non-overlapping Wikipedia/HotpotQA contexts",
+    "preprocessing": null
+   },
+   {
+    "name": "ANLI A3",
+    "role": "both",
+    "size": "6,002 contexts; 100,459 train / 1,200 dev / 1,200 test",
+    "split": "100,459 / 1,200 / 1,200",
+    "source": "Wikipedia, news (Common Crawl), fiction (StoryCloze, CBT), spoken text (MASC court and debate transcripts), WikiHow, RTE5 long contexts",
+    "preprocessing": null
+   },
+   {
+    "name": "ANLI total",
+    "role": "both",
+    "size": "10,776 contexts; 162,865 train / 3,200 dev / 3,200 test",
+    "split": "162,865 / 3,200 / 3,200",
+    "source": "A1+A2+A3",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI",
+    "role": "train",
+    "size": "inferred: part of 943k SNLI+MNLI training examples",
+    "split": null,
+    "source": "Bowman et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "MNLI",
+    "role": "train",
+    "size": "see SNLI",
+    "split": "dev matched/mismatched reported",
+    "source": "Williams et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "FEVER NLI version",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "claims paired with evidence retrieved by Nie et al. (2019)",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI-Hard and NLI stress tests",
+    "role": "eval",
+    "size": null,
+    "split": "models tuned on each test's own dev set",
+    "source": "Gururangan et al. 2018; Naik et al. 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-Large",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Round 1 adversary, trained on SNLI+MNLI, best model they could train"
+    }
+   },
+   {
+    "name": "RoBERTa (ensemble)",
+    "role": "base",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "R2": "trained on SNLI, MNLI, FEVER-NLI, A1; hyperparameter search selected on A1 dev, then several seeds; random ensemble member per annotator turn",
+     "R3": "adds A2 to training data; ensemble"
+    }
+   },
+   {
+    "name": "XLNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: 3-way classification cross-entropy (not stated)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "several random seeds for the R2/R3 ensembles, number not stated",
+   "other": {
+    "hyperparameter_selection": "best on A1 dev for R2 model"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single reported accuracy per row; number of seeds for reported rows not stated",
+   "prompting": null,
+   "retrieval": "TF-IDF (Chen et al. 2017) retrieval for some A1/A2 contexts",
+   "parameters": {
+    "max_tries_per_context": "5 in round 1, 10 thereafter",
+    "verification": "2 verifiers must agree with writer, a third breaks ties, else discarded",
+    "test_restriction": "exclusive annotators never in training; label-balanced (and genre-balanced where applicable)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of test examples labelled correctly",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "model error rate",
+     "definition": "percentage of examples the model got wrong; verified = confirmed by at least 2 human annotators",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "tries",
+     "definition": "attempts per context until a model error found",
+     "unit": "count mean/median",
+     "higher_is_better": true
+    },
+    {
+     "name": "Fleiss kappa",
+     "definition": "inter-annotator agreement for writers and first two verifiers",
+     "unit": "kappa",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT",
+    "XLNet",
+    "RoBERTa trained on S,M / +F",
+    "hypothesis-only RoBERTa",
+    "InferSent (stress tests)",
+    "DIIN (SNLI-Hard)"
+   ],
+   "protocol": "Test accuracy per round, ANLI total, ANLI-E (exclusive annotators), SNLI test and MNLI dev; equal-size downsampling comparisons; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "github.com/facebookresearch/anli/",
+   "weights": null,
+   "data": "github.com/facebookresearch/anli/; demo at adversarialnli.com"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.ANLI A1.size",
+    "quote": null,
+    "where": "Table 2 shows 16,946 train, 1,000 dev, 1,000 test; text says approximately 19k for Round 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Training RoBERTa on S,M,F,ANLI gives 53.7% on the full ANLI test set while S+M alone gives 31.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.7,
+   "unit": "%",
+   "baseline_value": 31.1,
+   "n": null,
+   "setup": "RoBERTa, ANLI test (A1+A2+A3), trained on S,M,F,ANLI",
+   "quote": null,
+   "table": "Table 3, row RoBERTa S,M,F,ANLI, column ANLI",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RoBERTa trained on S,M,F,ANLI scores 73.8 / 48.9 / 44.4 on A1 / A2 / A3 test; rounds get harder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 44.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa S,M,F,ANLI, A3 test (A1 73.8, A2 48.9)",
+   "quote": null,
+   "table": "Table 3, row RoBERTa S,M,F,ANLI, column A3",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Base RoBERTa trained on S,M scores 22.1% on A3 test, below the 33% chance level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 22.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa S,M, A3 test; chance is 33% since labels balanced",
+   "quote": null,
+   "table": "Table 3, row RoBERTa S,M, column A3",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Verified model error rate fell from 18.33% in A1 to 8.07% in A2, with 9.52% overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "verified model error rate",
+   "value": 9.52,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ANLI total, model in the loop per round",
+   "quote": null,
+   "table": "Table 2, row ANLI, column Verified",
+   "note": "A1 18.33, A2 8.07, A3 8.60",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Mean tries per verified example rose from 3.4 in A1 to 6.4 in A2 and A3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean tries",
+   "value": 6.4,
+   "unit": "tries",
+   "baseline_value": 3.4,
+   "n": null,
+   "setup": "verified examples, mean/median",
+   "quote": null,
+   "table": "Table 2, rows A2 and A3, column Tries",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "RoBERTa reaches state-of-the-art SNLI 92.9 when trained on S,M,F plus A1 and A2, versus 91.6 for MT-DNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 92.9,
+   "unit": "%",
+   "baseline_value": 91.6,
+   "n": null,
+   "setup": "SNLI test, RoBERTa +F+A1+A2",
+   "quote": "The state of the art on\nSNLI is currently held by MT-DNN (Liu et al.,\n2019a), which reports 91.6 compared to our 92.9.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "MNLI dev matched 91.0 and mismatched 90.7 versus 90.2 in the RoBERTa paper.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.0,
+   "unit": "%",
+   "baseline_value": 90.2,
+   "n": null,
+   "setup": "MNLI dev-m, RoBERTa fine-tuned with ANLI",
+   "quote": "while\nwe obtain 91.0 and 90.7",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Hypothesis-only RoBERTa trained on ANLI only gets 51.0 / 42.6 / 41.5 on A1-A3 but 51.9 / 54.5 on MNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa ANLI-OnlyH, A3 test",
+   "quote": null,
+   "table": "Table 6, row ANLI-OnlyH, column A3",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Training on ANLI only (~163k examples) matches BERT trained on SNLI+MNLI (943k) at about 86 on MNLI.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa ANLI-Only, MNLI-m",
+   "quote": null,
+   "table": "Table 6, row ANLI-Only, column M-m/mm",
+   "note": "Text: both getting ~86",
+   "where": "Table 6; Sec 4.3"
+  },
+  {
+   "claim": "Adversarial data is more data-efficient: with equal training size SMD1+A scores 72.6 on A1 versus 45.1 for SMD1+SMD2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.6,
+   "unit": "%",
+   "baseline_value": 45.1,
+   "n": null,
+   "setup": "RoBERTa dev, equal-size mixes",
+   "quote": null,
+   "table": "Table 5, row SMD1+A, column A1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Verified examples are much more valuable than unverified ones; unverified drops to random in later rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa, downsampled to equal size, Fig 3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 3, Sec 4.1"
+  },
+  {
+   "claim": "ANLI-trained RoBERTa (All) gets 85.9/82.1 on the Antonym stress test versus 14.4/10.2 for the previous model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.9,
+   "unit": "%",
+   "baseline_value": 14.4,
+   "n": null,
+   "setup": "NLI stress test AT matched, tuned on own dev",
+   "quote": null,
+   "table": "Table 4, row RoBERTa (All), column AT (m/mm)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Fleiss kappa for writers and first two verifiers is 0.7210 on A1 dev+test, 0.6910 on A2, 0.6786 on A3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa",
+   "value": 0.6786,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A3 dev+test",
+   "quote": null,
+   "table": "Table 10, row A3, column Dev + Test",
+   "note": "FEVER 0.68, SNLI 0.70",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Numerical and quantitative reasoning share of tagged dev examples falls from 38% in A1 to 10% in A3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of examples",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": 38,
+   "n": null,
+   "setup": "500 manually tagged dev examples per round",
+   "quote": null,
+   "table": "Table 7, row A3, column Numerical & Quant.",
+   "note": null,
+   "where": "Table 7"
+  }
+ ],
+ "limits": [
+  "Training examples were not verified, so some noise remains in training data.",
+  "Compared with static collection, the paper gives no cost or time trade-off; leaves it to future work.",
+  "Unclear how to apply the method to generative tasks.",
+  "Some hypothesis bias remains (hypothesis-only is slightly above chance on ANLI).",
+  "Training hyperparameters, seeds and compute for all models are not stated.",
+  "Only three rounds; saturation by later models (not tested here) has since occurred; not assessed in text.",
+  "Round 3 mixes new domains with a stronger model, so round-to-round difficulty is partly confounded by context change."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HAMLET",
+   "definition": "Human-And-Model-in-the-Loop Enabled Training, the iterative adversarial collection procedure",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "ANLI-E",
+   "definition": "ANLI test set examples written by annotators exclusive to the test set",
+   "where": "Table 3 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SNLI",
+   "year": 2015,
+   "arxiv": "1508.05326",
+   "relation": "uses-data",
+   "note": "training data and comparison dataset",
+   "quote": null
+  },
+  {
+   "work": "MultiNLI",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Williams et al. 2017 training data",
+   "quote": null
+  },
+  {
+   "work": "FEVER",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NLI version via Nie et al. 2019",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "Round 1 adversary and baseline",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Rounds 2-3 adversary",
+   "quote": null
+  },
+  {
+   "work": "XLNet",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "different architecture baseline",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "A1/A2 contexts",
+   "quote": null
+  },
+  {
+   "work": "Build it Break it Fix it for Dialogue Safety",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Dinan et al.: same adversarial human loop applied to NLI",
+   "quote": null
+  },
+  {
+   "work": "Hypothesis-only baselines",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Gururangan et al. 2018; Poliak et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "NLI stress tests",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Naik et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "AFLite",
+   "year": 2020,
+   "arxiv": "2002.04108",
+   "relation": "related",
+   "note": "Bras et al. adversarial filtering",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Adversarial NLI data collection via human-and-model-in-the-loop enabled training (HAMLET).",
+   "page": 2,
+   "why": "Shows the four-step loop and routing of model-correct vs model-wrong examples."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "RoBERTa performance on dev, with A1-3 downsampled",
+   "page": 6,
+   "why": "Later rounds more data-efficient."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of verified, unverified and combined data",
+   "page": 6,
+   "why": "Verified examples matter."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Dataset statistics",
+   "page": 4,
+   "why": "Error rate, tries and time per round."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Model Performance",
+   "page": 5,
+   "why": "Main results across models and training mixes."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text has ligature characters (fi) in places; quotes avoid them.",
+  "Figure values are not readable from text; Figs 2-3 numbers not recorded.",
+  "No embedded instructions found."
+ ]
+}

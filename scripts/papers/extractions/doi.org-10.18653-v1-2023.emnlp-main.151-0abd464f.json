@@ -1,0 +1,512 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.emnlp-main.151",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2023-repocoder.pdf",
+ "bib": {
+  "title": "RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and Generation",
+  "authors": [
+   "Fengji Zhang",
+   "Bei Chen",
+   "Yue Zhang",
+   "Jacky Keung",
+   "Jin Liu",
+   "Daoguang Zan",
+   "Yi Mao",
+   "Jian-Guang Lou",
+   "Weizhu Chen"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "EMNLP 2023 (Proceedings, pages 2471-2484)",
+  "arxiv": null,
+  "doi": "10.18653/v1/2023.emnlp-main.151"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57391,
+  "chars_total": 57391,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How can a code language model use the rest of a repository to complete unfinished code, when the unfinished code alone is a poor retrieval query?",
+ "hypothesis": "Using the model's own generated completion to build the next retrieval query bridges the gap between the retrieval context and the completion target, beating single-pass retrieval-augmented generation.",
+ "contributions": [
+  "RepoCoder: an iterative retrieval-generation framework for repository-level code completion",
+  "RepoEval: a benchmark with line, API invocation and function body completion, with unit-test evaluation",
+  "Experiments showing RepoCoder beats In-File completion and vanilla RAG"
+ ],
+ "method": {
+  "summary": "A frozen retriever (Jaccard over tokens in a sliding window of repo code) fetches snippets using the last lines of the unfinished code; a frozen code LM completes. In iterations after the first, the query is the last (Sw-Ss) lines of the unfinished code plus the first Ss lines of the previous prediction. No training; evaluated on the new RepoEval benchmark.",
+  "task": "repository-level code completion (line, API invocation, function body)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "RepoEval line completion",
+    "role": "eval",
+    "size": "1600 samples",
+    "split": "200 random lines from each of 8 repos",
+    "source": "GitHub Python repos created after 2022-01-01, >100 stars, >80% Python, non-fork, explicit unit tests, open-source licence; archived Jan 2023",
+    "preprocessing": "lines non-repetitive, not comments, at least 5 tokens"
+   },
+   {
+    "name": "RepoEval API invocation completion",
+    "role": "eval",
+    "size": "1600 samples",
+    "split": "200 non-repetitive in-repository API invocations from each of the same 8 repos",
+    "source": "same 8 repos as line set",
+    "preprocessing": "invocations located by parsing the repos"
+   },
+   {
+    "name": "RepoEval function body completion",
+    "role": "eval",
+    "size": "373 samples",
+    "split": "6 separate smaller repos",
+    "source": "GitHub, same criteria",
+    "preprocessing": "functions covered by unit tests, bodies of 3 to 30 lines"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo",
+    "role": "evaluated",
+    "params": "inferred: not stated beyond 'billions of trainable parameters'",
+    "architecture": "commercial API model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens for prompt plus output",
+    "other": {}
+   },
+   {
+    "name": "CodeGen-Mono 6B, 2B, 350M",
+    "role": "evaluated",
+    "params": "6B, 2B, 350M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens for prompt plus output",
+    "other": {}
+   },
+   {
+    "name": "Jaccard sparse bag-of-words retriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": "token-set Jaccard index",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UniXcoder",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense code embedding, cosine similarity (Appendix B only)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "prompt plus output 4096 (GPT-3.5-Turbo) / 2048 (CodeGen); generated completion max 100 (line, API), 500 (function body)",
+   "samples": null,
+   "prompting": "Retrieved snippets in ascending order of similarity, each with its original file path, followed by the unfinished code (Fig 3); zero-shot",
+   "retrieval": "Jaccard over token sets; sliding window of Sw lines moved by Ss lines over repo files; K=10 max snippets; retrieved context set to half the prompt length; iteration 1 query = last Sw lines of X; iteration i>1 query = last (Sw-Ss) lines of X + first Ss lines of previous prediction",
+   "parameters": {
+    "Sw": "20 (line, API), 50 (function body)",
+    "Ss": "10",
+    "K": "10",
+    "iterations": "1 to 4 reported; 2 recommended",
+    "snippet length": "half the prompt length"
+   },
+   "other": {
+    "seeds": "not stated; single run per cell implied but not stated",
+    "stopping": "no stopping criterion; Limitations say none found"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "1 if prediction equals ground truth, else 0, averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit Similarity (ES)",
+     "definition": "1 - Lev(Yhat,Y)/max(|Yhat|,|Y|)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pass Rate (PR)",
+     "definition": "1 if completed function passes all repository unit tests, else 0",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall",
+     "definition": "share of retrieved sets containing an invocation example of the ground-truth API",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "In-File completion (unfinished code only)",
+    "vanilla single-iteration RAG (RepoCoder iteration 1)",
+    "Oracle (retrieval using the last Sw-Ss lines of X plus first Ss lines of ground truth)",
+    "GT-Code (analysis only)"
+   ],
+   "protocol": "Single reported value per cell; no seeds, variance or significance tests stated. Hyper-parameters set 'based on our experience' and said to be not very sensitive; no sweep shown."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/CodeT/tree/main/RepoCoder",
+   "weights": null,
+   "data": "RepoEval, same repository"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters",
+    "quote": "the maximum number of tokens in the generated completion ( Ŷ ), the line length of the sliding window (Sw), and the sliding size (Ss) are set to 100, 20, and 10 respectively.",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RepoCoder (2 iterations) beats vanilla single-retrieval RAG and In-File on line completion with GPT-3.5-Turbo (EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 56.81,
+   "unit": "%",
+   "baseline_value": 40.56,
+   "n": null,
+   "setup": "Line completion, RepoEval, 1600 samples, 8 repos, Jaccard sparse retriever, Sw=20, Ss=10, K=10, GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row GPT-3.5-Turbo EM, column RepoCoder 2"
+  },
+  {
+   "claim": "Single-iteration RAG on line completion, GPT-3.5-Turbo, EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 55.31,
+   "unit": "%",
+   "baseline_value": 40.56,
+   "n": null,
+   "setup": "Line completion, RepoEval, 1600 samples, 8 repos, Jaccard sparse retriever, Sw=20, Ss=10, K=10, GPT-3.5-Turbo, iteration 1",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row GPT-3.5-Turbo EM, column RepoCoder 1"
+  },
+  {
+   "claim": "In-File baseline EM on line completion, GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 40.56,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Line completion, RepoEval, 1600 samples, 8 repos, Jaccard sparse retriever, Sw=20, Ss=10, K=10",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row GPT-3.5-Turbo EM, column In-File"
+  },
+  {
+   "claim": "Oracle (ground-truth-augmented retrieval) upper bound on line completion, GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 57.75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Line completion, RepoEval, 1600 samples, 8 repos, Jaccard sparse retriever, Sw=20, Ss=10, K=10",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row GPT-3.5-Turbo EM, column Oracle"
+  },
+  {
+   "claim": "API invocation completion, GPT-3.5-Turbo: RepoCoder iteration 2 vs In-File.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 49.19,
+   "unit": "%",
+   "baseline_value": 34.06,
+   "n": null,
+   "setup": "API invocation completion, RepoEval, 1600 samples, GPT-3.5-Turbo, iteration 2",
+   "note": null,
+   "where": "Table 2b",
+   "table": "Table 2b, row GPT-3.5-Turbo EM, column RepoCoder 2"
+  },
+  {
+   "claim": "API invocation, GPT-3.5-Turbo, single-iteration RAG EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 47.69,
+   "unit": "%",
+   "baseline_value": 34.06,
+   "n": null,
+   "setup": "API invocation completion, GPT-3.5-Turbo, iteration 1",
+   "note": null,
+   "where": "Table 2b",
+   "table": "Table 2b, row GPT-3.5-Turbo EM, column RepoCoder 1"
+  },
+  {
+   "claim": "Function body completion with unit tests: RepoCoder iteration 2 matches Oracle and doubles In-File pass rate (GPT-3.5-Turbo).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass Rate",
+   "value": 42.63,
+   "unit": "%",
+   "baseline_value": 23.32,
+   "n": null,
+   "setup": "Function body completion, 373 samples, 6 repos, GPT-3.5-Turbo, Sw=50, max 500 output tokens",
+   "note": "Oracle is also 42.63; iteration 1 is 38.34, 3 is 41.82, 4 is 42.36",
+   "where": "Table 3",
+   "table": "Table 3, row All, column RepoCoder 2"
+  },
+  {
+   "claim": "Function body: single-iteration RAG pass rate, GPT-3.5-Turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass Rate",
+   "value": 38.34,
+   "unit": "%",
+   "baseline_value": 23.32,
+   "n": null,
+   "setup": "Function body completion, 373 samples, GPT-3.5-Turbo, iteration 1",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row All, column RepoCoder 1"
+  },
+  {
+   "claim": "CodeGen-Mono-350M with RepoCoder iter 2 is comparable to GPT-3.5-Turbo In-File on line completion.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 43.06,
+   "unit": "%",
+   "baseline_value": 40.56,
+   "n": null,
+   "setup": "Line completion, CodeGen-Mono-350M, iteration 2 vs GPT-3.5-Turbo In-File 40.56",
+   "note": null,
+   "where": "Table 2a",
+   "table": "Table 2a, row CODEGEN-MONO-350M EM, column RepoCoder 2"
+  },
+  {
+   "claim": "Stated gain over In-File: absolute EM improvement exceeds 10% and ES 8% across models on line and API sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM gain",
+   "value": 10,
+   "unit": "% absolute (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Line and API datasets, all four models",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "The absolute improvements in the Exact Match (EM) and Edit Similarity (ES) scores exceed 10% and 8%, respectively."
+  },
+  {
+   "claim": "Retrieval recall of ground-truth API invocation examples rises from iteration 1 to 2 (GPT-3.5-Turbo).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 90.34,
+   "unit": "%",
+   "baseline_value": 86.04,
+   "n": null,
+   "setup": "API completion subset of 1046 eligible samples (GPT-3.5-Turbo), RepoCoder iter 2",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-3.5-Turbo Recall, column RepoCoder 2"
+  },
+  {
+   "claim": "GT-Code (retrieve snippets that contain the true API call) EM on eligible API samples, GPT-3.5-Turbo; Iter-2 is 55.07.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 55.54,
+   "unit": "%",
+   "baseline_value": 34.42,
+   "n": null,
+   "setup": "Eligible API subset, GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row GPT-3.5-Turbo EM, column GT-Code"
+  },
+  {
+   "claim": "Dense UniXcoder retriever gives comparable results to sparse retriever (line, GPT-3.5-Turbo, Oracle EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 57.25,
+   "unit": "%",
+   "baseline_value": 40.56,
+   "n": null,
+   "setup": "Line completion, UniXcoder cosine retriever, Oracle column; Iter 2 is 56.25, In-File 40.56",
+   "note": null,
+   "where": "Table 6a",
+   "table": "Table 6a, row GPT-3.5-Turbo EM, column Oracle"
+  },
+  {
+   "claim": "Iterations are not monotone: from iter 3 to 4 on API completion, GPT-3.5-Turbo gains 10 and loses 14 correct completions (790 vs 794 correct).",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct count",
+   "value": 790,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "API completion, GPT-3.5-Turbo, iteration 4",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row GPT-3.5-Turbo, final column"
+  }
+ ],
+ "limits": [
+  "Little gain when a repo has few duplicated code lines (Appendix C, Fig 4); correlation with duplication is not absolute.",
+  "No way to pick the number of iterations; later iterations can fail cases earlier ones passed (Table 8); no stopping criterion found.",
+  "Extra retrieval-generation rounds add latency; not measured.",
+  "Prompt template, retrieval models beyond Jaccard and UniXcoder, and stronger code models (GPT-4, StarCoder, WizardCoder) not explored.",
+  "Baselines are only In-File and Oracle; commercial tools (Copilot, Tabnine, CodeWhisperer) only in one qualitative case (Appendix E).",
+  "EM undercounts correct completions; many EM failures are functionally correct (Appendix D).",
+  "Python only; repos from 2022 chosen to avoid training leakage for 2021-cutoff models; single run, no variance reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "In-File completion",
+   "definition": "Baseline that populates the prompt with only the unfinished code",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Oracle method",
+   "definition": "One retrieval using the last Sw-Ss lines of X and the first Ss lines of the ground truth, an upper bound for RepoCoder given R and M",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lu et al. 2022 (ReACC)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "retrieval-augmented code completion with shifted snippets and Jaccard sparse retriever",
+   "quote": null
+  },
+  {
+   "work": "Shrivastava et al. 2022 (repository-level prompt generation)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "repo-level completion with heuristics and a trained classifier; source of the file-location scheme",
+   "quote": null
+  },
+  {
+   "work": "CodeGen (Nijkamp et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "generation models 6B, 2B, 350M",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5-Turbo",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "generation model via OpenAI API",
+   "quote": null
+  },
+  {
+   "work": "UniXcoder (Guo et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense retriever in Appendix B",
+   "quote": null
+  },
+  {
+   "work": "Mao et al. 2020; Wang et al. 2023; Zemlyanskiy et al. 2022",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "use model predictions to inform retrieval",
+   "quote": null
+  },
+  {
+   "work": "Lewis et al. 2020 (RAG); Ram et al. 2023; Shi et al. 2023",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "in-context retrieval with a fixed LLM",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the In-File code completion method, the repository-level RAG method, and the iterative retrieval-generation RepoCoder method.",
+   "page": 1,
+   "why": "shows the three pipelines side by side"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A motivating example showcasing the utilization of model predictions to enhance the performance of code retrieval.",
+   "page": 2,
+   "why": "concrete case where the first guess retrieves the right API signature on the second pass"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A visual example demonstrating the format of the RepoCoder prompt",
+   "page": 3,
+   "why": "shows the prompt layout with file paths"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Correlation between the absolute performance improvements achieved by RepoCoder Iter-2 over the In-File method and the repository duplication ratios.",
+   "page": 12,
+   "why": "shows where the method helps and where not"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2",
+   "snippet": "query_i = last (Sw - Ss) lines of X + first Ss lines of Y_hat^(i-1); C_ret^i = R(C_repo, X, Y_hat^(i-1)); Y_hat^i = M(C_ret^i, X)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Two Table 6 rows (Oracle EM 57.25) differ from Table 2 Oracle 57.75 because Table 6 is the dense retriever. Table 3 'best in bold' marks are lost in text."
+ ]
+}

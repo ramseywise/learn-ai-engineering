@@ -1,0 +1,535 @@
+{
+ "schema": 1,
+ "key": "1811.02084",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/shazeer-2018-mesh-tensorflow.pdf",
+ "bib": {
+  "title": "Mesh-TensorFlow: Deep Learning for Supercomputers",
+  "authors": [
+   "Noam Shazeer",
+   "Youlong Cheng",
+   "Niki Parmar",
+   "Dustin Tran",
+   "Ashish Vaswani",
+   "Penporn Koanantakool",
+   "Peter Hawkins",
+   "HyoukJoong Lee",
+   "Mingsheng Hong",
+   "Cliff Young",
+   "Ryan Sepassi",
+   "Blake Hechtman"
+  ],
+  "first_author": "Shazeer",
+  "year": 2018,
+  "venue": "NeurIPS 2018 (32nd Conference on Neural Information Processing Systems)",
+  "arxiv": "1811.02084",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48410,
+  "chars_total": 48410,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can model-parallel (and mixed data/model-parallel) training be specified simply enough to train much larger Transformers on TPU meshes?",
+ "hypothesis": "Splitting arbitrary named tensor dimensions across a multi-dimensional processor mesh removes the memory and small-batch limits of pure data-parallelism, and scaling model size this way improves quality.",
+ "contributions": [
+  "Mesh-TensorFlow, a language for specifying distributed tensor computations as named tensor dimensions mapped to named mesh dimensions via a computation layout, compiled to SPMD with collectives",
+  "Analysis of communication, computation and memory costs for data-, model- and mixed layouts (Table 1)",
+  "A model-parallel Transformer (split vocab, d_ff, heads) trained up to 4.9B parameters on 512 TPUv2 cores with new state-of-the-art WMT14 En-Fr and One Billion Word results"
+ ],
+ "method": {
+  "summary": "A Python library where tensors carry named dimensions and a layout maps tensor dimensions to mesh dimensions; it lowers to SPMD TensorFlow for TPUs. Used to train Transformers whose vocab, d_ff and heads dimensions are split over one mesh axis and batch over the other.",
+  "task": "distributed training framework; LM and machine translation with Transformers",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "One Billion Word language modeling benchmark",
+    "role": "both",
+    "size": null,
+    "split": "dev perplexity reported",
+    "source": null,
+    "preprocessing": "each sequence is the concatenation of multiple training sentences"
+   },
+   {
+    "name": "languagemodel_wiki_noref_v128k_l1k (Tensor2Tensor Wikipedia)",
+    "role": "both",
+    "size": "over 5 billion tokens",
+    "split": null,
+    "source": "Wikipedia, via Tensor2Tensor; no published results exist",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT14 En-Fr",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "WMT14 En-De",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "the authors note its training data is small"
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer decoder LM (Table 2)",
+    "role": "proposed",
+    "params": "0.14B to 4.90B",
+    "architecture": "Transformer decoder, model-parallel over vocab, d_ff, heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "d_model 1024; d_ff 4096 to 262144",
+    "heads": "4 to 256",
+    "context": null,
+    "other": {
+     "d_k_d_v": 256,
+     "vocab_not_scaled": "vocabulary size was not increased",
+     "layer_count": "not stated in paper (in tensor2tensor)"
+    }
+   },
+   {
+    "name": "Transformer seq2seq MT (Table 3)",
+    "role": "proposed",
+    "params": "0.15B to 2.89B",
+    "architecture": "Transformer encoder-decoder, model-parallel",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "d_model 1024; d_ff 2048 to 65536",
+    "heads": "4 to 128",
+    "context": null,
+    "other": {
+     "d_k_d_v": 128,
+     "extra_row": "d_ff 4096, 16 heads, d_k=d_v=64, 0.21B"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256 sequences of 256 tokens each (LM, all models)",
+   "steps": null,
+   "epochs": "10 (One Billion Word LM); 3 (WMT14 En-Fr)",
+   "tokens": null,
+   "seq_len": "256 tokens (LM)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "TPUv2 meshes up to 16x32=512 cores; LM largest on 512 cores, 2.9B MT on 128 cores",
+   "compute": "6 PFLOP/s sustained of 11.5 PFLOP/s peak on largest models",
+   "wall_clock": "13 hours (4.9B LM, 512 cores); 22 hours (2.9B MT, 128 cores)",
+   "seeds": null,
+   "other": {
+    "mesh_layout_LM": "batch split over mesh dim of size 16, model dims over dim of size 32",
+    "layout": "[(batch,rows),(vocab,cols),(d_ff,cols),(heads,cols)]",
+    "details": "Additional configuration details deferred to the tensor2tensor library"
+   }
+  },
+  "inference": {
+   "decoding": "random sampling for Appendix C LM samples (method not described)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "8 samples per model shown in Appendix C, seeded with 'According to Ray Kurzweil'",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "eval_logit_scale": "0.9 on the 4.9B model gave ppl 23.5 vs 24.0"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "word perplexity",
+     "definition": "per-word dev perplexity on One Billion Word",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "subword perplexity",
+     "definition": "on Wikipedia dataset",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "BLEU",
+     "definition": "evaluated using sacrebleu",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Prev Best DNN (Shazeer 2017)",
+    "Best DNN Ensemble (Jozefowicz 2016)",
+    "Best Ensemble of different methods",
+    "Vaswani 2017 Transformer (Table 3 last row)"
+   ],
+   "protocol": "single runs; no seeds or variance reported"
+  },
+  "availability": {
+   "code": "https://github.com/tensorflow/mesh; Transformer in tensor2tensor",
+   "weights": null,
+   "data": "WMT14 and Tensor2Tensor datasets (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "up to 16x32=512 cores",
+    "where": "Sec 9"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The 4.9B-parameter Transformer decoder reaches 24.0 word perplexity on the One Billion Word benchmark dev set, which the authors call the best published result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word perplexity (dev)",
+   "value": "24.0",
+   "unit": "perplexity",
+   "baseline_value": "28.0 (previous best single DNN, ref 20)",
+   "n": null,
+   "setup": "Transformer decoder LM, d_model 1024, d_ff 262144, 256 heads, 10 epochs, 512-core TPUv2 mesh 16x32, batch 256 seq x 256 tokens",
+   "quote": "Per-word dev-perplexity for the largest model was 24.0,",
+   "table": null,
+   "note": "Abstract and text round 4.9B to 5 billion parameters. Logits x0.9 gives 23.5.",
+   "where": "Sec 9.1, Table 2"
+  },
+  {
+   "claim": "Multiplying logits by 0.9 at evaluation lowers the largest model's dev perplexity from 24.0 to 23.5, which the authors attribute to likely overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word perplexity (dev)",
+   "value": "23.5",
+   "unit": "perplexity",
+   "baseline_value": "24.0",
+   "n": null,
+   "setup": "Same 4.9B LM, logits scaled by 0.9 at evaluation",
+   "quote": "but dropped to 23.5 when the model was evaluated with the logits multiplied by 0.9 (likely due to",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.1"
+  },
+  {
+   "claim": "Training the 4.9B-parameter LM for 10 epochs took 13 hours on a 512-core TPUv2 cluster.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "13 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4.9B LM on One Billion Word benchmark, 512-core TPUv2, 10 epochs",
+   "quote": "took 13 hours to train on a 512-core TPUv2 cluster.",
+   "table": null,
+   "note": "Implied compute: 512 cores x 13 h = about 6,656 TPUv2 core-hours (my arithmetic, not stated).",
+   "where": "Sec 9.1"
+  },
+  {
+   "claim": "The largest models sustained over 50 percent of peak FLOP/s on a 512-core TPUv2 mesh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sustained FLOP/s",
+   "value": "6 PFLOP/s of 11.5 PFLOP/s peak",
+   "unit": "PFLOP/s",
+   "baseline_value": "11.5 PFLOP/s",
+   "n": null,
+   "setup": "Largest Transformers, 2-D 16x32 TPUv2 mesh, batch over rows, model dims over cols",
+   "quote": "(6 PFLOP/s out of a maximum 11.5 PFLOP/s) on the largest models.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9"
+  },
+  {
+   "claim": "The 2.9B-parameter Transformer reaches 43.9 BLEU on WMT14 En-Fr, the best published result at the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU (sacrebleu)",
+   "value": "43.9",
+   "unit": "BLEU",
+   "baseline_value": "41.8 (smallest model, 0.15B)",
+   "n": null,
+   "setup": "WMT14 En-Fr, 3 epochs, d_ff 65536, 128 heads, 128-core TPUv2",
+   "quote": "with the largest model achieved BLEU score 43.9 (evaluated using sacrebleu), the",
+   "table": "Table 3, row 65536/128/128/2.89, column WMT14 EN-FR BLEU",
+   "note": null,
+   "where": "Sec 9.1, Table 3"
+  },
+  {
+   "claim": "The 2.9B translation model trained for 22 hours on a 128-core TPUv2 cluster.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "22 hours",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT14 En-Fr, 2.9B params, 3 epochs, 128-core TPUv2",
+   "quote": "was trained for 22 hours on a 128-core TPUv2 cluster.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.1"
+  },
+  {
+   "claim": "Word perplexity on One Billion Word falls monotonically with model size, from 35.0 at 0.14B to 24.0 at 4.90B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word perplexity",
+   "value": "35.0",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seven Transformer LMs, d_model 1024, d_ff 4096 to 262144, heads 4 to 256; value is the 0.14B row",
+   "quote": null,
+   "table": "Table 2, row 4096/4/0.14, column Word-Perplexity (rows 0.22B 31.7, 0.37B 28.9, 0.67B 26.8, 1.28B 25.1, 2.48B 24.1, 4.90B 24.0)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Gains diminish: the last doubling (2.48B to 4.90B) lowers word perplexity only from 24.1 to 24.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "word perplexity",
+   "value": "24.1",
+   "unit": "perplexity",
+   "baseline_value": "24.0 at 4.90B",
+   "n": null,
+   "setup": "Table 2 rows 2.48B and 4.90B",
+   "quote": null,
+   "table": "Table 2, row 131072/128/2.48, column Word-Perplexity",
+   "note": "My reading of the table, not a claim made in the text.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Wikipedia subword perplexity falls from 8.74 at 0.14B to 6.01 at 4.90B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "subword perplexity",
+   "value": "6.01",
+   "unit": "perplexity",
+   "baseline_value": "8.74 at 0.14B",
+   "n": null,
+   "setup": "languagemodel_wiki_noref_v128k_l1k, over 5 billion tokens",
+   "quote": null,
+   "table": "Table 2, row 262144/256/4.90, column Subword-Perplexity",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On WMT14 En-De the gains from model size are smaller and the largest model (26.7 BLEU) is worse than the 1.48B one (27.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "26.7",
+   "unit": "BLEU",
+   "baseline_value": "27.5 at 1.48B",
+   "n": null,
+   "setup": "WMT14 En-De, 2.89B row",
+   "quote": "For the WMT14 En-De dataset, gains from model size were smaller,",
+   "table": "Table 3, row 65536/128/128/2.89, column WMT14 EN-DE BLEU",
+   "note": "Authors suggest small training data as the reason.",
+   "where": "Sec 9.1, Table 3"
+  },
+  {
+   "claim": "Prior best single DNN on One Billion Word was 28.0 perplexity (Shazeer 2017 MoE).",
+   "kind": "reported",
+   "source": "Shazeer et al. 2017, Outrageously Large Neural Networks (ref 20)",
+   "metric": "word perplexity",
+   "value": "28.0",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One Billion Word benchmark dev",
+   "quote": null,
+   "table": "Table 2, row Prev Best DNN [20], column Word-Perplexity",
+   "note": "Same row lists 6.5 under Parameters (Billions).",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Pure data-parallel layout allreduces about 2*d_io*d_h values per processor (the parameter count), independent of batch size.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two fully-connected layers, Sec 8.1",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 8.1"
+  },
+  {
+   "claim": "Pure model-parallel layout allreduces 2*b*d_io values per processor; mixed data+model layout allreduces 2*b*d_io/r + 2*d_io*d_h/c.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two fully-connected layers on n processors / r x c mesh, Sec 8.2-8.3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 8.2, 8.3, Table 1"
+  },
+  {
+   "claim": "In a 2-D data+model mesh, processor count can grow quadratically while batch and layer size grow only linearly at constant efficiency (cubically in a 3-D mesh).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Network-boundedness ratio c/d_h + r/b, Sec 8.6",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 8.6"
+  }
+ ],
+ "limits": [
+  "Optimizer, learning rate, schedule, dropout, precision, layer counts and tokenizer are not given; deferred to tensor2tensor.",
+  "Single runs, no variance; no compute-optimal or data-scaling analysis, scaling is in parameters only with fixed data epochs.",
+  "Perplexity gains flatten at the top (24.1 to 24.0); En-De quality drops at 2.89B, blamed on small data.",
+  "Layout search is manual; automated layout search listed as future work.",
+  "Only TPU SPMD and multi-CPU/GPU MIMD implemented; SPMD on GPU clusters is future work.",
+  "Cost accounting is wall-clock and PFLOP/s only; no total FLOPs, energy or dollar cost."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mesh",
+   "definition": "an n-dimensional array of such processors; only a naming abstraction and does not imply a physical network topology",
+   "where": "Sec 2"
+  },
+  {
+   "term": "computation layout",
+   "definition": "A global computation layout is a partial map from tensor-dimension to mesh-dimension",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "model-parallel Transformer built on it",
+   "quote": null
+  },
+  {
+   "work": "Outrageously Large Neural Networks: Sparsely-Gated MoE (Shazeer et al.)",
+   "year": 2017,
+   "arxiv": "1701.06538",
+   "relation": "baseline",
+   "note": "previous best single DNN on One Billion Word; also data/model-parallel switching",
+   "quote": null
+  },
+  {
+   "work": "Exploring the Limits of Language Modeling (Jozefowicz et al.)",
+   "year": 2016,
+   "arxiv": "1602.02410",
+   "relation": "baseline",
+   "note": "best DNN ensemble baseline",
+   "quote": null
+  },
+  {
+   "work": "Integrated Model and Data Parallelism in Training Neural Networks (Gholami et al.)",
+   "year": 2017,
+   "arxiv": "1712.04432",
+   "relation": "related",
+   "note": "analytic case for combining data and model parallelism",
+   "quote": null
+  },
+  {
+   "work": "Beyond Data and Model Parallelism for Deep Neural Networks (Jia et al.)",
+   "year": 2018,
+   "arxiv": "1807.05358",
+   "relation": "related",
+   "note": "cost-model parallelization search; owner-computes",
+   "quote": null
+  },
+  {
+   "work": "Large Scale Distributed Deep Networks (Dean et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "model-parallelism reference",
+   "quote": null
+  },
+  {
+   "work": "Cyclops Tensor Framework (Solomonik et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar replication and arbitrary mappings",
+   "quote": null
+  },
+  {
+   "work": "One Billion Word benchmark; WMT14 En-Fr/En-De",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Computation, communication and memory costs for different layouts of the computation in Algorithm 1.",
+   "page": 6,
+   "why": "Shows why data-parallel needs large per-processor batch (n/b) and model-parallel needs wide layers (n/d_h), and how a 2-D mesh scales both."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Transformer-Decoder Language Models: dmodel = 1024, dk = dv = 256",
+   "page": 7,
+   "why": "Parameter count vs perplexity scaling curve from 0.14B to 4.9B with the d_ff/heads recipe."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Transformer Machine-Translation Results. dmodel = 1024, dk = dv = 128",
+   "page": 8,
+   "why": "Shows En-Fr BLEU gains saturating and En-De regressing at 2.89B."
+  },
+  {
+   "figure": "Figure 2-5",
+   "caption": "Data-parallel, model-parallel and mixed layouts for the Two Fully-Connected Layers example (Appendix A)",
+   "page": 12,
+   "why": "Visual of how weights and activations are split or replicated per layout."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 9",
+   "snippet": "mesh_shape = [(\"rows\", r), (\"cols\", c\")]\ncomputation_layout = [(\"batch\", \"rows\"), (\"vocab\", \"cols\"),\n(\"d_ff\", \"cols\"), (\"heads\", \"cols\")]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction renders Table 1 and figure labels as scattered fragments; Table 1 cells were not read cell by cell.",
+  "Table 3 last row (dk=64, 0.21B, 28.4 / 41.8) is followed by a stray [21] label; it is presumably the Vaswani baseline but the paper does not say so."
+ ]
+}

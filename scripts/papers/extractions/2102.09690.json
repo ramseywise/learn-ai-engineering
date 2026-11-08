@@ -1,0 +1,686 @@
+{
+ "schema": 1,
+ "key": "2102.09690",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhao-2021-calibrate-before-use.pdf",
+ "bib": {
+  "title": "Calibrate Before Use: Improving Few-Shot Performance of Language Models",
+  "authors": [
+   "Tony Z. Zhao",
+   "Eric Wallace",
+   "Shi Feng",
+   "Dan Klein",
+   "Sameer Singh"
+  ],
+  "first_author": "Zhao",
+  "year": 2021,
+  "venue": "ICML 2021 (arXiv v2, 10 Jun 2021)",
+  "arxiv": "2102.09690",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53237,
+  "chars_total": 53237,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why is GPT-3 few-shot in-context accuracy unstable across prompt format, examples and order, and can the instability be corrected without extra data?",
+ "hypothesis": "The instability comes from output biases (majority label, recency, common token) that shift the output distribution and can be cancelled by calibrating on a content-free input.",
+ "contributions": [
+  "Show few-shot accuracy varies from near chance to near SOTA with example choice, permutation and format",
+  "Identify majority label, recency and common token biases as causes",
+  "Propose data-free contextual calibration that improves accuracy and reduces variance"
+ ],
+ "method": {
+  "summary": "Probe GPT-3 (2.7B, 13B, 175B) and GPT-2 XL with few-shot prompts across 11+ datasets, vary examples, order and format, then divide output label probabilities by those the model assigns to content-free inputs (N/A, [MASK], empty string), averaged.",
+  "task": "few-shot in-context classification, fact retrieval and slot-filling extraction",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SST-2",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Socher et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "TREC (6-way)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Voorhees & Tice 2000",
+    "preprocessing": null
+   },
+   {
+    "name": "CB (3-way)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "SuperGLUE, de Marneffe et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "RTE",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "SuperGLUE, Dagan et al. 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "AGNews (4-way)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Zhang et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "DBPedia (14-way)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Zhang et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "LAMA",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Petroni et al. 2019",
+    "preprocessing": "relations removed where the missing answer is not at the end of the template; answers single tokens"
+   },
+   {
+    "name": "ATIS (airline, departure date)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Hemphill et al. 1990",
+    "preprocessing": "two random slots"
+   },
+   {
+    "name": "MIT Movies trivia10k13 (director, genre)",
+    "role": "eval",
+    "size": null,
+    "split": "validation set used for eval (stated for LAMA ablations); training examples drawn at random",
+    "source": "Liu et al. 2012",
+    "preprocessing": "two random slots"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 2.7B",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API, probabilities only"
+    }
+   },
+   {
+    "name": "GPT-3 13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used": "MIT/ATIS tasks only (Table 1)"
+    }
+   },
+   {
+    "name": "GPT-3 175B",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 XL",
+    "role": "evaluated",
+    "params": "1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy until newline for generation tasks; classification via probability of label-name tokens",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 random training sets per cell in Table 1, arbitrary order, labels not balanced; mean and std over sets; Fig 2 uses 10 sets with all permutations; 15 formats for SST-2 and each of 3 LAMA relations",
+   "prompting": "0, 1, 4, 8 shots (up to 16 in Fig 1 for some); fixed default format per dataset (Tables 5-6); 8 max because API cost",
+   "retrieval": null,
+   "parameters": {
+    "calibration": "q = softmax(W p + b); W = diag(p_cf)^-1, b = 0",
+    "W_structure": "diagonal (vector scaling)",
+    "content_free_inputs": "average of N/A, [MASK], empty string",
+    "alt_solution": "b = -p_cf, W = I; better for generation tasks",
+    "generation": "only first output token calibrated; p-hat is the full first-token distribution (about 50,000)",
+    "LAMA_task_specific_cf": "'N/A was born in'"
+   },
+   "other": {
+    "api_caveat": "affine transform applied to probabilities, not logits, since only probabilities available"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "classification accuracy; LAMA average accuracy over all triples",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "exact match",
+     "definition": "exact match of generated span with ground truth, slot-filling",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "std dev across training sets",
+     "definition": "std of accuracy over the 5 random training sets",
+     "unit": "points",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "uncalibrated greedy decoding (Brown et al. 2020)",
+    "oracle calibration (best diagonal W on validation set, AGNews)"
+   ],
+   "protocol": "5 training sets, fixed format; mean ± std. No significance test stated."
+  },
+  "availability": {
+   "code": "https://www.github.com/tonyzhaozh/few-shot-learning",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "SST-2 default",
+    "text": "Review: This movie is amazing!\nSentiment: Positive\nReview: Horrific movie, don't see it.\nSentiment:",
+    "where": "Table 5"
+   },
+   {
+    "purpose": "Content-free test input (intro example)",
+    "text": "Input: Subpar acting. Sentiment: Negative\nInput: Beautiful film. Sentiment: Positive\nInput: N/A\nSentiment:",
+    "where": "Sec 5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.calibration",
+    "quote": "We then set W = diag(ˆpcf)−1 and b to the all-zero vector.",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Permuting four SST-2 training examples moves GPT-3 2.7B from near chance to near state of the art.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54.3% to 93.4%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 4-shot, GPT-3 2.7B, fixed format, all permutations of ten random example sets (Fig 2)",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "varying the permutation of the training examples can cause accuracy to go from near chance (54.3%) to near state-of-the-art (93.4%)"
+  },
+  {
+   "claim": "Reversing two training examples drops SST-2 accuracy to chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "88.5% to 51.3%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 2 training examples, GPT-3 2.7B",
+   "note": null,
+   "where": "App A Table 2",
+   "quote": "simply reversing the order of the two examples",
+   "table": "Table 2, rows top and bottom, column Acc. (88.5%, 51.3%)"
+  },
+  {
+   "claim": "Contextual calibration improves GPT-3 accuracy by up to 30.0% absolute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "30.0",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 tasks, GPT-3 2.7B/13B/175B, 0-8 shot, 5 random training sets, fixed format",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Contextual calibration dramatically improves GPT-3’s average and worst-case accuracy, by up to 30.0% absolute."
+  },
+  {
+   "claim": "Calibrated GPT-3 2.7B can beat uncalibrated 175B, over 50x larger.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "19.3",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, 2.7B calibrated vs 175B baseline, best case",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "by up to 19.3%"
+  },
+  {
+   "claim": "DBPedia 0-shot, GPT-3 175B: calibration lifts accuracy from 22.0 to 59.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.7",
+   "unit": "accuracy (%)",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "DBPedia, 175B, 0-shot, greedy decoding after calibration",
+   "note": null,
+   "where": "Sec 5.1 Table 1",
+   "table": "Table 1, row DBPedia 175B, columns 0-shot Baseline (22.0) and Ours (59.7)"
+  },
+  {
+   "claim": "AGNews 4-shot GPT-3 175B: calibration lifts mean accuracy and cuts std dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "85.9",
+   "unit": "accuracy (%)",
+   "baseline_value": "61.0",
+   "n": null,
+   "setup": "AGNews, 175B, 4-shot, 5 training sets, mean over sets; std 1.3 vs 10.9 baseline",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row AGNews 175B, column 4-shot (Baseline 61.0 10.9, Ours 85.9 1.3)"
+  },
+  {
+   "claim": "Adding a training example can hurt: DBPedia mean accuracy falls from 0-shot to 1-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "36.0 to 25.9",
+   "unit": "accuracy (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBPedia, GPT-3 2.7B, baseline",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "mean accuracy drops from 36.0% to 25.9% for DBPedia 0-shot to 1-shot"
+  },
+  {
+   "claim": "Variance persists at 16 shots.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1, GPT-3 across sizes",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "The variance remains high even when we use 16 training examples."
+  },
+  {
+   "claim": "Prompt-format sensitivity: some SST-2 formats are better on average, but all have high variance across training sets.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SST-2, 15 formats (Table 7), GPT-3 2.7B, Fig 3 shows ten",
+   "note": null,
+   "where": "Sec 3",
+   "quote": "all of the formats still suffer from high variance across different training sets"
+  },
+  {
+   "claim": "Majority label bias in generation: 4-shot LAMA predictions repeat a training answer about twice as often as the ground truth.",
+   "kind": "measured",
+   "source": null,
+   "metric": "repeat rate",
+   "value": "50.2 vs 24.7",
+   "unit": "% of predictions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA validation, 4-shot, GPT-3 2.7B",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "50.2% of the model predictions are a repeat of one of the four training answers (the correct repeat rate is 24.7%)"
+  },
+  {
+   "claim": "Recency bias can outweigh majority label bias: P P P N prompt gives nearly 90% Negative predictions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of Negative predictions",
+   "value": "nearly 90",
+   "unit": "% Negative predictions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4-shot SST-2, GPT-3 2.7B, balanced validation set (Fig 4)",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "the “P P P N” training set leads to nearly 90% of predictions being Negative"
+  },
+  {
+   "claim": "LAMA overprediction of the training answer rises with proximity to the end of the prompt (1st to 4th example).",
+   "kind": "measured",
+   "source": null,
+   "metric": "repeat rate minus ground-truth repeat rate",
+   "value": "8.5, 8.3, 14.3, 16.1",
+   "unit": "% overprediction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4-shot LAMA, GPT-3 2.7B",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "the model “overpredicts” the answer from the 1st, 2nd, 3rd, and 4th training example by 8.5%, 8.3%, 14.3%, and 16.1%"
+  },
+  {
+   "claim": "Common token bias: GPT-3 predicts DBPedia class book 11x more often than artist; label-name frequency correlates with prediction rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": "r = 0.67",
+   "unit": "Pearson r (label frequency vs prediction rate)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DBPedia 0-shot validation, frequency from Google Ngrams",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "there is a moderate correlation (r = 0.67) between the frequency of a DBPedia label name and the rate at which GPT-3 predicts its class"
+  },
+  {
+   "claim": "With the optimal threshold p(Positive)=0.68, the example SST-2 prompt would reach 94% validation accuracy, so the bias is largely a distribution shift.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "94",
+   "unit": "accuracy (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one SST-2 sentiment prompt, validation set, Fig 5",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "the classifier would be highly accurate (94% on the validation set)"
+  },
+  {
+   "claim": "Content-free input N/A is scored 61.8% Positive by GPT-3 in the two-shot example prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p(Positive)",
+   "value": "61.8",
+   "unit": "% Positive",
+   "baseline_value": null,
+   "n": null,
+   "setup": "two-shot sentiment prompt, GPT-3",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "the model’s biases cause it to score this input as 61.8% Positive"
+  },
+  {
+   "claim": "Content-free choice matters but many work: 1-shot SST-2 accuracy 66.5 uncalibrated vs 79.0 with the N/A, [MASK], empty ensemble.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.0",
+   "unit": "accuracy (%)",
+   "baseline_value": "66.5",
+   "n": null,
+   "setup": "SST-2 1-shot (AGNews 0-shot: 48.5 to 66.5 for ensemble)",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row N/A, [MASK], '' column SST-2 (79.0); baseline row 66.5; AGNews 66.5 vs 48.5"
+  },
+  {
+   "claim": "Contextual calibration reduces 0-shot to 1-shot drop in three of four cases where baseline drops.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cases",
+   "value": "3 of 4",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TREC, AGNews, DBpedia, SST-2",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Calibration removes this drop in three out of four cases."
+  },
+  {
+   "claim": "Calibration is close to oracle calibration (best diagonal W fit on validation set) on AGNews.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AGNews, GPT-3 175B, Fig 8",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "contextual calibration is surprisingly close to it"
+  },
+  {
+   "claim": "Calibration also helps GPT-2 XL: 0-shot SST-2 accuracy 60.0 to 82.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "82.0",
+   "unit": "accuracy (%)",
+   "baseline_value": "60.0",
+   "n": null,
+   "setup": "SST-2 0-shot GPT-2 1.5B",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row SST-2 GPT-2, 0-shot Baseline 60.0, Ours 82.0"
+  },
+  {
+   "claim": "Calibration lowers variance across 15 SST-2 formats and improves mean and worst-case accuracy; same for LAMA mean and worst-case.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7, Fig 9, GPT-3 2.7B",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Contextual calibration improves the average and worst-case accuracy for both datasets, and reduces the variance for SST-2."
+  },
+  {
+   "claim": "Calibration mitigates but does not eliminate prompt engineering.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discussion",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Contextual calibration does not eliminate the need to engineer prompts, however, it does mitigate it"
+  }
+ ],
+ "limits": [
+  "Fixed LM, no finetuning compared; interplay with finetuning left open (Sec 6)",
+  "Capped at 8 shots (16 in some figures) due to API cost",
+  "Calibration only first output token for generation; probabilities not logits",
+  "Does not eliminate prompt engineering",
+  "Table 1 uses GPT-3 13B for MIT/ATIS but 175B for the rest; 175B not run on extraction tasks",
+  "Pre-instruction-tuning models only (GPT-2, GPT-3 base)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "contextual calibration",
+   "definition": "estimate the model's bias with a content-free input in the same prompt and fit W so its class scores are uniform",
+   "where": "Sec 5"
+  },
+  {
+   "term": "majority label bias",
+   "definition": "bias towards answers that are frequent in the prompt",
+   "where": "Sec 4"
+  },
+  {
+   "term": "recency bias",
+   "definition": "tendency to repeat answers that appear towards the end of the prompt",
+   "where": "Sec 4"
+  },
+  {
+   "term": "common token bias",
+   "definition": "bias towards tokens common in the pre-training distribution",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 and standard greedy few-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "On calibration of modern neural networks (Guo et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vector scaling; distinct from statistical calibration",
+   "quote": null
+  },
+  {
+   "work": "Platt scaling",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "affine transform of probabilities",
+   "quote": null
+  },
+  {
+   "work": "Language models as knowledge bases? (LAMA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "fact retrieval",
+   "quote": null
+  },
+  {
+   "work": "How can we know what language models know? (Jiang et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LAMA paraphrase templates for format study",
+   "quote": null
+  },
+  {
+   "work": "Making pre-trained language models better few-shot learners (Gao et al.)",
+   "year": 2020,
+   "arxiv": "2012.15723",
+   "relation": "related",
+   "note": "concurrent finetuning instability",
+   "quote": null
+  },
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "GPT-2 XL",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Few-shot learning can be highly unstable across different choices of the prompt.",
+   "page": 2,
+   "why": "shows variance and calibration lift vs shots for three tasks and sizes"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "There is high variance in GPT-3's accuracy as we change the prompt's training examples, as well as the permutation of the examples.",
+   "page": 3,
+   "why": "ordering effect"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Majority label and recency biases cause GPT-3 to become biased towards certain answers",
+   "page": 4,
+   "why": "mechanism of bias by class balance and order"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "reversing the order of two examples drops accuracy 88.5% to 51.3%",
+   "page": 10,
+   "why": "concrete order sensitivity example"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Contextual calibration achieves similar accuracy to an oracle calibration",
+   "page": 8,
+   "why": "shows data-free method near oracle"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5, Eq 1",
+   "snippet": "ˆq = softmax(Wˆp + b)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 5",
+   "snippet": "W = diag(ˆpcf)−1 and b to the all-zero vector",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Fig 9 caption says GPT-2 2.7B while the panels say GPT-3 2.7B (likely typo).",
+  "Table 4 GPT-2 LAMA row is identical to Table 1 GPT-3 2.7B LAMA row (14.0/22.7, 29.7/31.6, ...), possibly a copy error in the paper.",
+  "Table 4 RTE 8-shot std printed as 1.29 (extra digit).",
+  "Table 3 is labelled App A in text but extraction offsets in section map are approximate.",
+  "No embedded instructions found."
+ ]
+}

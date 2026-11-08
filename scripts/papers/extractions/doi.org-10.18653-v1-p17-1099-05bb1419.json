@@ -1,0 +1,506 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/p17-1099",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/see-2017-get-point.pdf",
+ "bib": {
+  "title": "Get To The Point: Summarization with Pointer-Generator Networks",
+  "authors": [
+   "Abigail See",
+   "Peter J. Liu",
+   "Christopher D. Manning"
+  ],
+  "first_author": "See",
+  "year": 2017,
+  "venue": "Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (ACL 2017), pages 1073-1083",
+  "arxiv": null,
+  "doi": "10.18653/v1/P17-1099"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43350,
+  "chars_total": 43350,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. No appendix in the PDF; the supplementary material it mentions is not included."
+ },
+ "type": "empirical",
+ "question": "Can a seq2seq attentional summariser be made to reproduce facts accurately, handle OOV words, and stop repeating itself on multi-sentence news summaries?",
+ "hypothesis": "Copying via pointing improves factual accuracy and OOV handling, and a coverage vector with coverage loss removes repetition.",
+ "contributions": [
+  "Hybrid pointer-generator network that can copy source words or generate from the vocabulary",
+  "Coverage mechanism (sum of past attention) plus coverage loss to discourage repetition",
+  "Result above the previous abstractive state of the art on CNN/Daily Mail by at least 2 ROUGE points"
+ ],
+ "method": {
+  "summary": "Baseline is a single-layer bi-LSTM encoder and LSTM decoder with Bahdanau attention. The pointer-generator mixes the vocabulary distribution and the attention distribution with a learned soft switch p_gen over an extended vocabulary. Coverage is added in a short final training phase.",
+  "task": "abstractive multi-sentence news summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CNN/Daily Mail (non-anonymized)",
+    "role": "both",
+    "size": "287,226 train / 13,368 val / 11,490 test pairs; articles 781 tokens avg, summaries 3.75 sentences or 56 tokens avg",
+    "split": "Nallapati et al. 2016 scripts split",
+    "source": "Hermann et al. 2015; Nallapati et al. 2016",
+    "preprocessing": "Original text, no entity anonymization; article truncated to 400 tokens, summary to 100 (train) / 120 (test)"
+   }
+  ],
+  "models": [
+   {
+    "name": "seq2seq + attention baseline",
+    "role": "baseline",
+    "params": "21,499,600 (50k vocab)",
+    "architecture": "single-layer bi-LSTM encoder, single-layer LSTM decoder, additive attention",
+    "init_from": "none; embeddings learned from scratch",
+    "tokenizer": null,
+    "vocab": "50k (also 150k variant)",
+    "layers": "1",
+    "hidden": "256",
+    "heads": null,
+    "context": "400 source tokens",
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "pointer-generator",
+    "role": "proposed",
+    "params": "baseline + 1153",
+    "architecture": "baseline + p_gen switch over extended vocabulary",
+    "init_from": "trained from scratch",
+    "tokenizer": null,
+    "vocab": "50k source and target",
+    "layers": "1",
+    "hidden": "256",
+    "heads": null,
+    "context": "400 source tokens",
+    "other": {}
+   },
+   {
+    "name": "pointer-generator + coverage",
+    "role": "proposed",
+    "params": "pointer-generator + 512",
+    "architecture": "adds coverage vector in attention and coverage loss",
+    "init_from": "converged pointer-generator",
+    "tokenizer": null,
+    "vocab": "50k",
+    "layers": "1",
+    "hidden": "256",
+    "heads": null,
+    "context": "400 source tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "mean per-step NLL of reference word; coverage phase adds lambda * sum_i min(a_i, c_i), lambda=1",
+   "optimizer": "Adagrad, initial accumulator 0.1, gradient clipping max norm 2",
+   "lr": "0.15",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16",
+   "steps": "baseline about 600,000 iterations; pointer-generator under 230,000; coverage 3000 further",
+   "epochs": "baseline 33; pointer-generator 12.8",
+   "tokens": null,
+   "seq_len": "article 400, summary 100 (train)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "none; early stopping on validation loss",
+   "hardware": "single Tesla K40m GPU",
+   "compute": null,
+   "wall_clock": "baseline 4 days 14 h (50k), 8 days 21 h (150k); pointer-generator 3 days 4 h; coverage about 2 h",
+   "seeds": null,
+   "other": {
+    "optimizer_choice": "Adagrad found best of SGD, Adadelta, Momentum, Adam, RMSProp",
+    "curriculum": "start with highly truncated sequences, raise max length once converged",
+    "coverage_loss_start": "coverage loss converged to about 0.2 from about 0.5; lambda=2 reduced coverage loss but raised primary loss, not used"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 4, self-stopping",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "120 at test",
+   "samples": "single output per article; single run",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_size": "4",
+    "max_summary_length": "120"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1/2/L F1",
+     "definition": "word, bigram and longest-common-subsequence overlap with reference, pyrouge 0.1.3",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "METEOR (exact and stem/syn/para)",
+     "definition": "METEOR of Denkowski and Lavie 2014",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "% duplicate / novel n-grams",
+     "definition": "share of summary n-grams repeated within the summary or absent from the article",
+     "unit": "%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Nallapati et al. 2016 abstractive",
+    "seq2seq+attn 150k and 50k vocab",
+    "lead-3",
+    "Nallapati et al. 2017 extractive (SummaRuNNer)"
+   ],
+   "protocol": "ROUGE 95% CI at most +/-0.25; METEOR gains tested with approximate randomization p<0.01; one reference summary per article; Nallapati numbers use anonymized data so are not strictly comparable"
+  },
+  "availability": {
+   "code": "www.github.com/abisee/pointer-generator",
+   "weights": null,
+   "data": "non-anonymized data scripts and model outputs at the same GitHub repository"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Pointer-generator with coverage scores ROUGE-1 39.53 on test, vs 31.33 for the 50k-vocab seq2seq+attention baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1",
+   "value": "39.53",
+   "unit": "points",
+   "baseline_value": "31.33",
+   "n": null,
+   "setup": "CNN/Daily Mail non-anonymized test set (11,490 pairs), 256-d hidden LSTM, 50k vocab, beam 4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row pointer-generator + coverage, column ROUGE-1"
+  },
+  {
+   "claim": "Pointer-generator without coverage reaches ROUGE-1 36.44 against baseline 31.33.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1",
+   "value": "36.44",
+   "unit": "points",
+   "baseline_value": "31.33",
+   "n": null,
+   "setup": "CNN/Daily Mail non-anonymized test set (11,490 pairs), 256-d hidden LSTM, 50k vocab, beam 4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row pointer-generator, column ROUGE-1"
+  },
+  {
+   "claim": "Coverage adds about 3 ROUGE-1 points (39.53 vs 36.44, derived) over plain pointer-generator.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/Daily Mail non-anonymized test set (11,490 pairs), 256-d hidden LSTM, 50k vocab, beam 4; 39.53 minus 36.44 (derived)",
+   "note": "Difference derived from Table 1.",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Coverage training phase took 3000 iterations (about 2 hours), about 1% of total training time, and nearly eliminated repetition.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage training iterations",
+   "value": "3000",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Added after the pointer-generator converged, lambda=1",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "trained for a further 3000 iterations (about 2 hours)"
+  },
+  {
+   "claim": "Best model does not beat the lead-3 baseline (40.34 ROUGE-1 on the same data).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1 lead-3",
+   "value": "40.34",
+   "unit": "points",
+   "baseline_value": "39.53",
+   "n": null,
+   "setup": "CNN/Daily Mail non-anonymized test set (11,490 pairs), 256-d hidden LSTM, 50k vocab, beam 4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row lead-3 baseline (ours), column ROUGE-1"
+  },
+  {
+   "claim": "Estimated margin over the previous abstractive system (Nallapati 2016) is at least 2 ROUGE points, after correcting for anonymized vs original text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE gain lower bound",
+   "value": "2",
+   "unit": "ROUGE points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scores not strictly comparable (anonymized vs original text)",
+   "note": null,
+   "where": "Sec 6.1",
+   "quote": "we may estimate that we outperform the only previous abstractive system by at least 2 ROUGE points all-round"
+  },
+  {
+   "claim": "Final model copies whole article sentences 35% of the time; reference summaries do so 1.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "whole-sentence copy rate",
+   "value": "35",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pointer-generator + coverage, test set",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "copies whole article sentences 35% of the time; by comparison the reference summaries do so only 1.3% of the time"
+  },
+  {
+   "claim": "Mean generation probability p_gen is about 0.53 at the end of training but only 0.17 at test time, so the model mostly copies at test time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean p_gen at test",
+   "value": "0.17",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pointer-generator model",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "with a mean value of 0.17"
+  },
+  {
+   "claim": "p_gen rises from about 0.30 at the start of training to about 0.53.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p_gen training",
+   "value": "0.53",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training",
+   "note": null,
+   "where": "Sec 7.2",
+   "quote": "converging to about 0.53 by the end of training"
+  },
+  {
+   "claim": "Pointer-generator trains faster: under 230,000 iterations (12.8 epochs) vs about 600,000 (33 epochs) for the baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training iterations",
+   "value": "230,000",
+   "unit": "iterations",
+   "baseline_value": "600,000",
+   "n": null,
+   "setup": "Single Tesla K40m, batch 16",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "requiring less than 230,000 training iterations (12.8 epochs); a total of 3 days and 4 hours"
+  },
+  {
+   "claim": "Pointer and coverage add very few parameters: 1153 and 512 on a 21,499,600-parameter baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "extra parameters",
+   "value": "1153",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50k vocab models",
+   "note": "Quote split across a hyphenated line break in the text; coverage adds 512; baseline has 21,499,600.",
+   "where": "Sec 5",
+   "quote": "the pointer-generator adds 1153 extra param-"
+  },
+  {
+   "claim": "Truncating articles to the first 400 tokens gave significantly higher ROUGE than the first 800 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "truncation",
+   "value": "400",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM",
+   "note": "Quote may contain ligature characters from the PDF.",
+   "where": "Sec 7.1",
+   "quote": "using only the ﬁrst 400 tokens (about 20 sentences) of the article yielded"
+  },
+  {
+   "claim": "Baseline fabricates facts, replacing rare in-vocabulary words with common ones (thwart -> destabilize), emits UNK, and repeats; pointer-generator copies facts almost always correctly.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, Figure 1 example",
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Coverage without a coverage loss gave no discernible reduction in repetition; coverage from iteration 0 interfered with the main objective.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablations described in text only, no numbers",
+   "note": null,
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "ROUGE comparison to Nallapati et al. is on a different (anonymized) data version, so not strictly comparable",
+  "Best model does not beat lead-3 or the best extractive model on ROUGE",
+  "Model is much less abstractive than references: copies whole sentences 35% of the time",
+  "Only ROUGE and METEOR; no human evaluation of factuality; factual accuracy claims are qualitative from examples",
+  "Single run, no seeds reported; compute for coverage and ablations given only in prose",
+  "Supplementary examples not in the PDF",
+  "Dated: LSTM seq2seq, 2017 baselines"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pointer-generator network",
+   "definition": "hybrid between baseline and a pointer network, allowing both copying words via pointing and generating words from a fixed vocabulary",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "coverage vector",
+   "definition": "sum of attention distributions over all previous decoder timesteps",
+   "where": "Sec 2.3, Eq 10"
+  },
+  {
+   "term": "generation probability p_gen",
+   "definition": "soft switch in [0,1] weighting generating from the vocabulary vs copying from the source",
+   "where": "Sec 2.2, Eq 8"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Pointer networks (Vinyals et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pointing via attention distribution",
+   "quote": null
+  },
+  {
+   "work": "Modeling coverage for neural machine translation (Tu et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "coverage vector, simplified to summed attention with a different loss",
+   "quote": null
+  },
+  {
+   "work": "Incorporating copying mechanism in seq2seq (CopyNet, Gu et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "close; explicit p_gen vs shared softmax",
+   "quote": null
+  },
+  {
+   "work": "Abstractive text summarization using seq2seq RNNs and beyond (Nallapati et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous abstractive SOTA and source of dataset",
+   "quote": null
+  },
+  {
+   "work": "SummaRuNNer (Nallapati et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "extractive baseline",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "attention",
+   "quote": null
+  },
+  {
+   "work": "Teaching machines to read and comprehend (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CNN/Daily Mail",
+   "quote": null
+  },
+  {
+   "work": "Adagrad (Duchi et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of output of 3 abstractive summarization models on a news article.",
+   "page": 1,
+   "why": "Shows the baseline's factual error (destabilize), UNK, repetition, and what copying and coverage each fix."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Pointer-generator model. For each decoder timestep a generation probability pgen is calculated, which weights the probability of generating words from the vocabulary, versus copying words from the source text.",
+   "page": 3,
+   "why": "The architecture in one picture: vocab distribution and attention distribution mixed into a final distribution."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Coverage eliminates undesirable repetition.",
+   "page": 7,
+   "why": "Bar chart of duplicate n-gram rates: no coverage vs coverage vs references."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Although our best model is abstractive, it does not produce novel n-grams as often as the reference summaries.",
+   "page": 9,
+   "why": "Shows the copy-vs-abstraction trade-off."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 9",
+   "snippet": "P(w) = p_gen P_vocab(w) + (1 - p_gen) sum_{i: w_i = w} a_i^t",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 8",
+   "snippet": "p_gen = sigma(w_h*^T h*_t + w_s^T s_t + w_x^T x_t + b_ptr)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 13",
+   "snippet": "loss_t = -log P(w*_t) + lambda sum_i min(a_i^t, c_i^t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Equations are garbled in the text layer, so snippets are reconstructed (verbatim false).",
+  "arXiv ids are not printed in the PDF or its reference list for these works, so left null."
+ ]
+}

@@ -1,0 +1,573 @@
+{
+ "schema": 1,
+ "key": "1805.12471",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/warstadt-2019-neural-network-acceptability-judgments.pdf",
+ "bib": {
+  "title": "Neural Network Acceptability Judgments",
+  "authors": [
+   "Alex Warstadt",
+   "Amanpreet Singh",
+   "Samuel R. Bowman"
+  ],
+  "first_author": "Warstadt",
+  "year": 2019,
+  "venue": "TACL (arXiv v3, 1 Oct 2019)",
+  "arxiv": "1805.12471",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66624,
+  "chars_total": 66624,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "benchmark",
+ "question": "Can neural networks judge the grammatical acceptability of single English sentences, and how far are they from human judgments?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduce CoLA, 10k+ linguistics-literature sentences with expert acceptability labels",
+  "Train semi-supervised neural sequence models on CoLA and compare with unsupervised Lau et al. (2016) models",
+  "Analyse impact of training data domain and quantity",
+  "Assess performance on specific linguistic phenomena"
+ ],
+ "method": {
+  "summary": "Builds CoLA from example sentences in linguistics publications with Boolean acceptability labels, with in-domain and out-of-domain splits. Baselines are BiLSTM max-pooling classifiers over BNC/GloVe/ELMo-style embeddings, optionally with encoders pretrained on a real/fake sentence discrimination task, plus Lau et al. (2016) LM-threshold models and a CBOW baseline; evaluated by accuracy and MCC against a small human study.",
+  "task": "binary sentence acceptability classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CoLA",
+    "role": "both",
+    "size": "10,657 sentences (70.5% acceptable)",
+    "split": "in-domain: train 8551, dev 527, test 530 (17 sources); out-of-domain: dev 516, test 533 (6 sources); 1049 OOD total",
+    "source": "Examples from 23 linguistics publications (Table 2); downloadable from nyu-mll.github.io/CoLA; part of GLUE",
+    "preprocessing": "Excluded unacceptable pragmatic anomalies, unavailable meanings, prescriptive rules, nonce words; non-Boolean labels '?'/'#' dropped, '??'/'*?' set unacceptable (<3% of cases); alternates expanded; vocabulary restricted to 100k most frequent BNC words by manual edits; fragments completed into sentences"
+   },
+   {
+    "name": "British National Corpus (BNC)",
+    "role": "pretrain",
+    "size": "100 million tokens",
+    "split": null,
+    "source": "BNC",
+    "preprocessing": "lowercased, tokenized with NLTK, 100k most frequent words kept, others <unk>"
+   },
+   {
+    "name": "Real/fake data",
+    "role": "pretrain",
+    "size": "entire BNC plus an equal amount of fake data",
+    "split": null,
+    "source": "Fake = samples from the LSTM LM, or BNC sentences with a subset of words randomly permuted",
+    "preprocessing": null
+   },
+   {
+    "name": "Targeted test sets (SVO, Wh-extraction, causative-inchoative, subject-verb agreement, reflexive)",
+    "role": "eval",
+    "size": "SVO 100 triples x 5 permutations; Wh 260 pairs; Causative 91 verb/object pairs (36 alternate, 55 not); SV agreement 169 quadruples; Reflexive 144 sentences (1 in 6 acceptable)",
+    "split": null,
+    "source": "Generated with rewrite grammars (inspired by Ettinger et al. 2016)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LSTM language model",
+    "role": "base",
+    "params": null,
+    "architecture": "LSTM LM, forward only",
+    "init_from": null,
+    "tokenizer": "NLTK",
+    "vocab": "100k BNC words",
+    "layers": "1-4 (random search)",
+    "hidden": "600-1200 (random search)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_size": "200-600 (random search)",
+     "perplexity": "56.1 word-level on BNC"
+    }
+   },
+   {
+    "name": "Pooling classifier (best: ELMo-style, real/fake encoder, CoLA classifier)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "deep BiLSTM encoder, concatenated fwd/bwd states, max-pooling, then sigmoid (optionally one tanh hidden layer)",
+    "init_from": "encoder pretrained on real/fake task, frozen",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "embedding 819, real/fake encoder hidden 528, acceptability classifier hidden 1134",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Lau et al. (2016) LM + Word LogProb Min-1 metric with fitted threshold",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM LM and 2/3/4-gram LMs trained on BNC",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CBOW",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sum of BNC embeddings into one-hidden-layer MLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GloVe 300-d (6B)",
+    "role": "base",
+    "params": null,
+    "architecture": "pretrained word embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "LM likelihood; real/fake binary discrimination; CoLA binary acceptability",
+   "optimizer": "Adam",
+   "lr": "random search in [3e-3, 1e-5] for LM and end-to-end classifiers; [1e-2, 1e-5] for transfer classifiers",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "LM: up to 7 days or until 4 epochs without dev perplexity improvement; real/fake: up to 7 days or 4 epochs without dev MCC gain; CoLA transfer classifiers: until 20 epochs without dev MCC gain",
+   "tokens": "encoders limited to 100-200 million tokens",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "{0.2, 0.5} (random search)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "up to 7 days per run",
+   "seeds": "20 restarts per config for design experiments",
+   "other": {
+    "random_search": "20 LSTM LMs; 20 pooling classifiers end-to-end each for BNC, GloVe, ELMo-style real/fake; 20 end-to-end on CoLA; transfer: 5 best encoders per embedding type x 10 classifiers",
+    "pooling_hparams": "embedding 200-600, hidden 500-1500, layers 1-5; transfer hidden 20-1200",
+    "framework": "PyTorch"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "best run per experiment reported in Table 4; 20 restarts averaged in Tables 5 and Fig 4",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "lau_threshold": "threshold fitted by 10-fold cross-validation on the CoLA test set"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of sentences classified correctly",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "MCC",
+     "definition": "Matthews correlation coefficient, Pearson r for Boolean variables; 0 for unrelated predictions regardless of class imbalance",
+     "unit": "-1 to 1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CBOW",
+    "Lau et al. (2016) LSTM and n-gram LMs",
+    "human annotators (5 linguistics PhD students, 200 dev sentences)"
+   ],
+   "protocol": "In-domain and out-of-domain test sets; Table 4 reports best run; threshold-tuned Lau models use 10-fold CV on the test set (labels used); no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/nyu-mll/CoLA-baselines",
+   "weights": null,
+   "data": "https://nyu-mll.github.io/CoLA/ ; Kaggle competitions; GLUE"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "This is done with 10-fold cross-validation on the CoLA test set",
+    "where": "Section 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best model (ELMo-style real/fake pooling classifier) in-domain test MCC",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.341,
+   "unit": "MCC",
+   "baseline_value": "human average 0.644, aggregate 0.695",
+   "n": null,
+   "setup": "CoLA, pooling classifier (BiLSTM encoder, ELMo-style embeddings, real/fake-pretrained frozen encoder, MLP trained on CoLA), best run; in-domain test",
+   "quote": null,
+   "table": "Table 4, row Pooling Classifier ELMo-Style Real/Fake CoLA, column In-domain MCC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Same model out-of-domain test MCC",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.281,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoLA, pooling classifier (BiLSTM encoder, ELMo-style embeddings, real/fake-pretrained frozen encoder, MLP trained on CoLA), best run; out-of-domain test",
+   "quote": null,
+   "table": "Table 4, row Pooling Classifier ELMo-Style Real/Fake CoLA, column Out-of-domain MCC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Same model in-domain accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.772,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoLA, pooling classifier (BiLSTM encoder, ELMo-style embeddings, real/fake-pretrained frozen encoder, MLP trained on CoLA), best run",
+   "quote": null,
+   "table": "Table 4, row Pooling Classifier ELMo-Style Real/Fake CoLA, column In-domain Acc.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Human aggregate (majority) in-domain MCC on 200 dev sentences",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.695,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 linguistics PhD students, forced-choice single-sentence judgments on 200 CoLA dev sentences, in-domain half",
+   "quote": null,
+   "table": "Table 4, row Human Aggregate, column In-domain MCC",
+   "note": "Section 3 text gives overall majority MCC as 0.713 (87% agreement), Table 4 splits it by domain",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Overall majority human agreement with CoLA labels",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.87,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 CoLA dev sentences, 5 annotators, majority vote",
+   "quote": "These judgments agreed with CoLA's ratings on 87% of sentences with an MCC",
+   "table": null,
+   "note": "quote apostrophe may differ",
+   "where": "Section 3 Human Performance"
+  },
+  {
+   "claim": "Average individual annotator agreement with CoLA",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 86.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 annotators, 200 sentences",
+   "quote": "Average annota-\ntor agreement with CoLA is 86.1%",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Lau et al. LSTM LM WLPM baseline in-domain MCC",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.253,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSTM LM with Word LogProb Min-1, threshold fit by 10-fold CV on test",
+   "quote": null,
+   "table": "Table 4, row LSTM LM WLPM, column In-domain MCC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CBOW baseline in-domain MCC (near chance)",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.063,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CBOW on BNC embeddings, trained on CoLA",
+   "quote": null,
+   "table": "Table 4, row CBOW, column In-domain MCC",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Average CoLA sentence is labelled with 3.22 phenomenon features",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.22,
+   "unit": "features per sentence",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoLA development set annotated for 15 broad classes",
+   "quote": "The average sentence is labeled\nwith 3.22 features.",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Out-of-domain vs in-domain MCC gap on original split averaged over 20 restarts",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.125,
+   "unit": "MCC difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELMo-style real/fake encoder, 20 restarts",
+   "quote": "average in-domain MCC is 0.125 greater",
+   "table": null,
+   "note": "Table 5 orig. row: in-domain 0.348, out-of-domain 0.223; max gap across splits 0.162",
+   "where": "Section 6"
+  },
+  {
+   "claim": "Training-size curve: performance improves roughly log-linearly from 100 to 8551 examples; much learned from ~300 examples",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELMo-style real/fake encoder, downsampled CoLA train sets 100/300/1000/3000, 20 restarts, evaluated on dev",
+   "quote": "we see approximately log-linear im-\nprovements in performance",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Fig 3"
+  },
+  {
+   "claim": "Targeted SVO test: GloVe pooling classifier near-perfect MCC",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.988,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "synthetic SVO permutation test set, GloVe real/fake encoder + CoLA classifier",
+   "quote": null,
+   "table": "Table 6, row Pooling GloVe R/F CoLA, column SVO",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Targeted Wh-extraction: only LSTM LM WLPM does well",
+   "kind": "measured",
+   "source": null,
+   "metric": "MCC",
+   "value": 0.601,
+   "unit": "MCC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "260-pair Wh test set; LSTM LM WLPM",
+   "quote": null,
+   "table": "Table 6, row LSTM LM WLPM, column Wh",
+   "note": "ELMo-style real/fake pooling model gets 0.000",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Targeted reflexive agreement: all models near zero",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "144-sentence reflexive test, all models <= 0.152 MCC",
+   "quote": null,
+   "table": "Table 6, column Reflexive",
+   "note": "ELMo-style R/F model -0.020, LSTM LM WLPM 0.152",
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Absolute model performance far below human (MCC 0.341 vs 0.695 in-domain); only LSTM-era models tested, no Transformers or BERT",
+  "Lau et al. threshold is fit with 10-fold CV on the test labels",
+  "Table 4 reports the best run per experiment, not mean; no significance tests",
+  "Labels are published linguists' judgments; 13% of CoLA labels contradict majority human judgment; 1-2% have PDF character-recognition errors",
+  "Boolean single-sentence task, not minimal pairs; dialect and missing-context effects",
+  "Authors concede CoLA may have biases that other annotation schemes would detect; excludes pragmatic/meaning-dependent unacceptability",
+  "Targeted test sets are small synthetic sets; authors speculate underrepresentation of agreement in CoLA explains poor results"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "acceptability",
+   "definition": "determined by introspective judgments of native speakers, as opposed to grammaticality, which is determined by a grammatical formalism",
+   "where": "footnote 1"
+  },
+  {
+   "term": "MCC",
+   "definition": "Matthews correlation coefficient, a special case of Pearson's r for Boolean variables",
+   "where": "footnote 9"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Grammaticality, acceptability, and probability (Lau, Clark, Lappin)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unsupervised LM acceptability metrics (Word LogProb Min-1, SLOR) used as baselines",
+   "quote": null
+  },
+  {
+   "work": "Deep contextualized word representations (ELMo, Peters et al.)",
+   "year": 2018,
+   "arxiv": "1802.05365",
+   "relation": "uses-method",
+   "note": "ELMo-style embeddings",
+   "quote": null
+  },
+  {
+   "work": "Supervised learning of universal sentence representations from NLI data (Conneau et al.)",
+   "year": 2017,
+   "arxiv": "1705.02364",
+   "relation": "uses-method",
+   "note": "pooling classifier architecture",
+   "quote": null
+  },
+  {
+   "work": "Assessing the ability of LSTMs to learn syntax-sensitive dependencies (Linzen et al.)",
+   "year": 2016,
+   "arxiv": "1611.01368",
+   "relation": "related",
+   "note": "agreement tasks and minimal pair evaluation",
+   "quote": null
+  },
+  {
+   "work": "Targeted syntactic evaluation of language models (Marvin and Linzen)",
+   "year": 2018,
+   "arxiv": "1808.09031",
+   "relation": "related",
+   "note": "minimal-pair evaluation of LMs",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "related",
+   "note": "CoLA is included in GLUE",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma and Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretrained 300-d 6B embeddings",
+   "quote": null
+  },
+  {
+   "work": "British National Corpus",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LM and real/fake training data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Performance on phenomenon-specific subsets of the CoLA development set (mean MCC over 20 restarts, error bars +-1 STD)",
+   "page": 11,
+   "why": "Shows which constructions (binding, violations, questions) are hardest against human mean"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Results on the CoLA development set as a function of the number of training examples",
+   "page": 10,
+   "why": "Log-linear data scaling curve"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Results for acceptability classification on the CoLA test set",
+   "page": 8,
+   "why": "Main leaderboard of baselines vs humans, in vs out of domain"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Our informal classification of unacceptable sentences, shown with their presence or absence in CoLA",
+   "page": 2,
+   "why": "Concrete example of each violation type and what CoLA excludes"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Frequencies of phenomenon types in the CoLA development set",
+   "page": 5,
+   "why": "Dataset composition"
+  }
+ ],
+ "code": [
+  {
+   "where": "footnote 13, p7",
+   "snippet": "Word LP Min-1 = min{ -log pLM(w) / log pu(w) , w in s }",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction mangles the Table 4 and Table 5 layouts (cells one per line); mapping checked by column order.",
+  "No embedded instructions found."
+ ]
+}

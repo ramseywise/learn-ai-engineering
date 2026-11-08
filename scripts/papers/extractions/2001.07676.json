@@ -1,0 +1,635 @@
+{
+ "schema": 1,
+ "key": "2001.07676",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/schick-2021-exploiting-cloze-questions-few-shot.pdf",
+ "bib": {
+  "title": "Exploiting Cloze Questions for Few Shot Text Classification and Natural Language Inference",
+  "authors": [
+   "Timo Schick",
+   "Hinrich Schütze"
+  ],
+  "first_author": "Schick",
+  "year": 2021,
+  "venue": "Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics (EACL), pages 255-269",
+  "arxiv": "2001.07676",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 60845,
+  "chars_total": 60845,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can task descriptions given as cloze-style patterns be combined with supervised training to beat standard fine-tuning and semi-supervised methods when only a few labeled examples exist?",
+ "hypothesis": "Providing a task description (pattern plus verbalizer) lets a pretrained masked LM understand the task from few examples, so PET outperforms supervised training in low-resource settings.",
+ "contributions": [
+  "Pattern-Exploiting Training (PET): semi-supervised procedure reformulating inputs as cloze questions, finetuning one MLM per pattern, soft-labeling unlabeled data with the ensemble, training a standard classifier",
+  "iPET: iterative variant training generations on growing self-labeled sets, usable zero-shot",
+  "Automatic verbalizer search (AVS) in Appendix E",
+  "Experiments on four English datasets and multilingual x-stance"
+ ],
+ "method": {
+  "summary": "Each input is converted by a pattern into a cloze question with one mask, and a verbalizer maps labels to vocabulary words; an MLM is finetuned per pattern-verbalizer pair on the small labeled set (with auxiliary MLM loss alpha=1e-4). The ensemble soft-labels unlabeled data (temperature 2) and a sequence classifier is trained on it; iPET repeats this over generations with training sets growing by factor 5.",
+  "task": "few-shot text classification and NLI",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Yelp Review Full",
+    "role": "both",
+    "size": "50000 test examples",
+    "split": "T = first t/|L| examples per label of train set (t in 10,50,100,1000); D = 10,000 unlabeled per label; official test set",
+    "source": "Zhang et al. 2015",
+    "preprocessing": "\\n replaced by space; truncated to 256 tokens (longest first) before applying patterns"
+   },
+   {
+    "name": "AG's News",
+    "role": "both",
+    "size": "7600 test examples",
+    "split": "as Yelp",
+    "source": "Zhang et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Yahoo Questions",
+    "role": "both",
+    "size": "60000 test examples",
+    "split": "as Yelp",
+    "source": "Zhang et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "MNLI",
+    "role": "both",
+    "size": "10000 / 10000 (m/mm) examples, dev set used for reporting",
+    "split": "as Yelp; evaluated on dev set because of the 2 submissions per 14 hours limit",
+    "source": "Williams et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "x-stance",
+    "role": "both",
+    "size": "train |T_Fr|=11790, |T_De|=33850; test 3479 De / 1284 Fr / 1173 It",
+    "split": "1000/2000/4000 subsets or full; with full sets D=T; Italian zero-shot cross-lingual",
+    "source": "Vamvas and Sennrich 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa large",
+    "role": "base",
+    "params": "355M",
+    "architecture": "masked LM transformer encoder",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max seq length used",
+    "other": {}
+   },
+   {
+    "name": "XLM-R base",
+    "role": "base",
+    "params": "270M",
+    "architecture": "multilingual masked LM",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "256 max seq length used",
+    "other": {}
+   },
+   {
+    "name": "RoBERTa base",
+    "role": "base",
+    "params": null,
+    "architecture": "12-layer Transformer",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "comparison with UDA and MixText"
+    }
+   },
+   {
+    "name": "UDA",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lr": "2e-5",
+     "steps tuned in": "500..10000"
+    }
+   },
+   {
+    "name": "MixText",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "lr": "5e-6 RoBERTa, 5e-4 head",
+     "steps tuned in": "1000..5000",
+     "mix layers": "7,9,12"
+    }
+   }
+  ],
+  "training": {
+   "objective": "L = (1-alpha)*L_CE + alpha*L_MLM per PVP, alpha=1e-4; final classifier trained on soft labels (softmax temperature T=2)",
+   "optimizer": "inferred: Adam-type (adam epsilon 1e-8 in Table 5, Transformers defaults)",
+   "lr": "1e-5 (5e-5 for in-domain pretraining)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16 effective (per GPU batch 4 x 4 gradient accumulation steps); PET with LM: 1 labeled + 3 unlabeled per batch",
+   "steps": "PET model 250 (1000 with auxiliary LM); final classifier C 5000; supervised 250; x-stance 3 epochs; in-domain PT 50000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256",
+   "precision": null,
+   "weight_decay": "0.01 (0.0 for in-domain PT)",
+   "dropout": null,
+   "regularisation": "max grad norm 1.0; mlm probability 0.15",
+   "hardware": "single NVIDIA GeForce GTX 1080 Ti 11GB; in-domain pretraining on 3 GTX 1080 Ti",
+   "compute": "PET model 250 steps ~30 min; with LM 1000 steps ~60 min; labeling D 15-30 min per model; classifier C 5000 steps ~2 h",
+   "wall_clock": null,
+   "seeds": "3 seeds per model; ensemble of n PVPs has 3n models",
+   "other": {
+    "iPET": "lambda=0.25, d=5, k=ceil(log_d(1000/|T|)) generations until each model saw >=1000 examples",
+    "weighting": "w(p) uniform or training-set accuracy before training (weighted default)",
+    "other hyperparameters": "Transformers library defaults",
+    "alpha selection": "{1e-3,1e-4,1e-5} on Yelp |T|=100, 90/10 and 50/50 train/dev split"
+   }
+  },
+  "inference": {
+   "decoding": "label with highest masked-token score after softmax over verbalizer words",
+   "temperature": "2 for soft labels",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs per configuration, mean and std reported",
+   "prompting": "cloze pattern with one mask plus verbalizer; no in-context examples",
+   "retrieval": null,
+   "parameters": {
+    "AVS": "k=250, epsilon=1e-3, i_max=5, m=10, tokens with >=2 alphabetic chars, 10000 most frequent in D",
+    "iPET zero-shot": "M0 untrained, c1(l)=10/|L|, sample from the top 100 examples per label"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct on test set (MNLI dev)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "macro-F1 (x-stance)",
+     "definition": "macro-average of F1 for labels 0 and 1, official script",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "unsupervised single PVPs (avg, max)",
+    "supervised RoBERTa/XLM-R fine-tuning",
+    "UDA",
+    "MixText",
+    "mBERT from Vamvas and Sennrich (2020)"
+   ],
+   "protocol": "three seeds, mean +- std; no dev set for hyperparameters; first-t/|L| examples used as T so not resampled"
+  },
+  "availability": {
+   "code": "https://github.com/timoschick/pet",
+   "weights": null,
+   "data": "public datasets, links in Table 6"
+  },
+  "prompts": [
+   {
+    "purpose": "Yelp pattern P1",
+    "text": "It was <MASK>. a",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Yelp pattern P2",
+    "text": "Just <MASK>! || a",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Yelp pattern P3",
+    "text": "a. All in all, it was <MASK>.",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Yelp pattern P4",
+    "text": "a || In summary, the restaurant is <MASK>.",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Yelp verbalizer",
+    "text": "1=terrible 2=bad 3=okay 4=good 5=great",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "AG's News patterns (a headline, b body)",
+    "text": "P1 <MASK>: a b; P2 a (<MASK>) b; P3 <MASK> - a b; P4 a b (<MASK>); P5 <MASK> News: a b; P6 [ Category: <MASK> ] a b. Verbalizer World/Sports/Business/Tech. Mask positions reconstructed from garbled text, see problems",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "MNLI patterns",
+    "text": "P1 \"a\"? || <MASK>, \"b\"; P2 a? || <MASK>, b. Verbalizer v1 Wrong/Right/Maybe, v2 No/Yes/Maybe (entail/contradict/neutral = 0/1/2); 2 patterns x 2 verbalizers = 4 PVPs",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "x-stance patterns",
+    "text": "P1 \"a\" || <MASK>. \"b\"; P2 a || <MASK>. b. Verbalizers Yes/No, Oui/Non, Ja/Nein",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "Yahoo",
+    "text": "Same patterns as AG's News with 'News' replaced by 'Question'; 10 category words Society, Science, Health, Education, Computer, Sports, Business, Entertainment, Relationship, Politics",
+    "where": "Sec 4.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a learning rate of 1 · 10−5, a batch size of 16",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "With 10 labeled examples on Yelp, PET reaches 52.9 accuracy while supervised fine-tuning gets 21.1 (near chance).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.9,
+   "unit": "%",
+   "baseline_value": 21.1,
+   "n": 3,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=10, 10,000 unlabeled per label",
+   "note": null,
+   "where": "Table 1 L4-L5",
+   "table": "Table 1, row |T|=10 PET, column Yelp (supervised row 21.1)"
+  },
+  {
+   "claim": "On MNLI-m with 100 examples PET gets 74.7 versus 47.9 supervised; iPET reaches 78.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.7,
+   "unit": "%",
+   "baseline_value": 47.9,
+   "n": 3,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, MNLI matched, |T|=100",
+   "note": null,
+   "where": "Table 1 L10-L12",
+   "table": "Table 1, row |T|=100 PET, column MNLI (m/mm)"
+  },
+  {
+   "claim": "Zero-shot iPET on AG's News (87.5) beats supervised training with 1000 examples (86.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 87.5,
+   "unit": "%",
+   "baseline_value": 86.9,
+   "n": null,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=0 (iPET zero-shot, 10 examples per generation-1 label split), AG's News",
+   "note": null,
+   "where": "Sec 4.2 L3 vs L13",
+   "table": "Table 1, row |T|=0 iPET, column AG's",
+   "quote": "on AG’s News, it even performs better than standard supervised training with 1000 examples"
+  },
+  {
+   "claim": "Unsupervised single patterns vary widely: on Yelp avg 33.8 vs best-on-test pattern 40.8, so pattern choice matters without a dev set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 33.8,
+   "unit": "%",
+   "baseline_value": 40.8,
+   "n": null,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=0, no training; max is the pattern best on the test set",
+   "note": "baseline_value is the max row",
+   "where": "Table 1 L1-L2",
+   "table": "Table 1, rows unsupervised (avg) and (max), column Yelp"
+  },
+  {
+   "claim": "With only 10 examples, PET on Yelp (52.9) exceeds the best individual pattern after finetuning (52.4); gap between worst (39.6) and best pattern is large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.9,
+   "unit": "%",
+   "baseline_value": 52.4,
+   "n": null,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=10",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows min 39.6, max 52.4, PET weighted 52.9, column Yelp"
+  },
+  {
+   "claim": "Distilling the ensemble into one classifier beats the undistilled ensemble on Yelp (52.9 vs 51.7); uniform vs weighted weighting shows no clear difference (52.7 vs 52.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.9,
+   "unit": "%",
+   "baseline_value": 51.7,
+   "n": null,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=10",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, rows PET (no distillation) 51.7, PET uniform 52.7, PET weighted 52.9, column Yelp"
+  },
+  {
+   "claim": "PET and iPET beat UDA and MixText with RoBERTa base at 10 examples (Yelp: PET 48.8, iPET 52.9, UDA 27.3, MixText 20.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 52.9,
+   "unit": "%",
+   "baseline_value": 27.3,
+   "n": null,
+   "setup": "RoBERTa base, Yelp, |T|=10; UDA/MixText steps tuned on the test set (favourable to them)",
+   "note": "Single run values, no std reported",
+   "where": "Table 2",
+   "table": "Table 2, row |T|=10 iPET, column Yelp (UDA 27.3, MixText 20.4)"
+  },
+  {
+   "claim": "On x-stance German with 1000 examples PET gets 66.4 F1 vs 43.3 supervised; the gap shrinks to 77.9 vs 76.6 on the full German set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-F1",
+   "value": 66.4,
+   "unit": "%",
+   "baseline_value": 43.3,
+   "n": 3,
+   "setup": "XLM-R base, x-stance, macro-average F1 of labels 0 and 1, three runs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row |T|=1000 PET, column De (supervised 43.3)"
+  },
+  {
+   "claim": "Handcrafted verbalizers beat automatic verbalizer search: Yelp 60.0 vs 55.2 with 50 examples, though AVS still beats supervised (44.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 55.2,
+   "unit": "%",
+   "baseline_value": 60.0,
+   "n": null,
+   "setup": "RoBERTa large (355M), Yelp/AG's/Yahoo/MNLI, three seeds, mean accuracy, |T|=50; AVS k=250, eps=1e-3, i_max=5, m=10",
+   "note": "baseline_value is handcrafted PET",
+   "where": "App E, Table 7",
+   "table": "Table 7, row PET + AVS, column Yelp (PET 60.0, supervised 44.8)"
+  },
+  {
+   "claim": "The auxiliary language-modeling loss helps most at 10 examples and becomes less important or harmful with more data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy improvement",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa large, four English datasets, |T| in 10/50/100/1000 (Fig 3, values not in text)",
+   "note": null,
+   "where": "Sec 5, Fig 3",
+   "quote": "the auxiliary task is extremely valuable when training on just 10 examples"
+  },
+  {
+   "claim": "Skipping iPET generations 2-3 (annotating 10*5^4 examples straight from M1) gives worse accuracy than gradual growth.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot iPET on AG's News and Yahoo (Fig 4)",
+   "note": null,
+   "where": "Sec 5, Fig 4",
+   "quote": "this clearly leads to worse performance"
+  },
+  {
+   "claim": "Training one PET model for 250 steps took about 30 minutes on one GTX 1080 Ti; the final classifier for 5000 steps took 2 hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": 30,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single NVIDIA GeForce GTX 1080 Ti 11GB, RoBERTa large",
+   "note": null,
+   "where": "App B.3",
+   "quote": "Training a single PET classiﬁer for 250 steps on one GPU took approximately 30 minutes"
+  }
+ ],
+ "limits": [
+  "Needs a task expressible as patterns, and hand-written patterns and verbalizers; AVS does worse than manual verbalizers and fails on 3 of 10 Yahoo labels and all MNLI labels",
+  "Requires a large unlabeled in-domain set D (10,000 per label)",
+  "UDA and MixText compared at RoBERTa base with steps tuned on the test set; one supervised MNLI run (|T|=1000) excluded as underfit",
+  "Number of iPET iterations beyond the tested ones not explored",
+  "In-domain pretraining checked on Yelp only",
+  "Gains shrink as |T| grows (no AG's News advantage at 1000)",
+  "Uses finetuned masked LMs with gradient updates, not in-context prompting of a frozen generative LM"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "pattern",
+   "definition": "a function P that takes x as input and outputs a phrase or sentence P(x) that contains exactly one mask token, i.e., its output can be viewed as a cloze question",
+   "where": "Sec 3"
+  },
+  {
+   "term": "verbalizer",
+   "definition": "an injective function v : L -> V that maps each label to a word from M's vocabulary",
+   "where": "Sec 3"
+  },
+  {
+   "term": "pattern-verbalizer pair (PVP)",
+   "definition": "(P, v)",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are unsupervised multitask learners (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "task descriptions in natural language for zero-shot; PET combines them with supervised training",
+   "quote": null
+  },
+  {
+   "work": "Puri and Catanzaro, Zero-shot text classification with generative language models",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "unsupervised classification from descriptions",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al., Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "distillation and temperature 2",
+   "quote": null
+  },
+  {
+   "work": "Jiang et al., How can we know what language models know",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "finding best pattern; similar weighting idea zero-shot",
+   "quote": null
+  },
+  {
+   "work": "Liu et al., RoBERTa",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "main PLM",
+   "quote": null
+  },
+  {
+   "work": "Conneau et al., XLM-R",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multilingual PLM",
+   "quote": null
+  },
+  {
+   "work": "Xie et al., UDA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "semi-supervised, backtranslation",
+   "quote": null
+  },
+  {
+   "work": "Chen et al., MixText",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "semi-supervised, backtranslation",
+   "quote": null
+  },
+  {
+   "work": "Raffel et al., T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "text-to-text patterns that only loosely resemble natural language, unsuitable for few-shot",
+   "quote": null
+  },
+  {
+   "work": "Chronopoulou et al., embarrassingly simple transfer learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "auxiliary LM loss",
+   "quote": null
+  },
+  {
+   "work": "Petroni et al., Language models as knowledge bases",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cloze probing",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al., Character-level CNNs for text classification",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Yelp, AG's News, Yahoo",
+   "quote": null
+  },
+  {
+   "work": "Williams et al., MNLI",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Vamvas and Sennrich, x-stance",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "PET for sentiment classification. (1) A number of patterns encoding some form of task description are created to convert training examples to cloze questions; for each pattern, a pretrained language model is finetuned. (2) The ensemble of trained models annotates unlabeled data. (3) A classifier is trained on the resulting soft-labeled dataset.",
+   "page": 2,
+   "why": "Shows pattern + verbalizer (It was ___ , great/bad) and the three PET stages at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Schematic representation of PET (1-3) and iPET (a-c).",
+   "page": 4,
+   "why": "iPET generations and growing training sets"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Average accuracy and standard deviation for RoBERTa (large) on Yelp, AG's News, Yahoo and MNLI for five training set sizes |T|.",
+   "page": 6,
+   "why": "Core evidence: zero-shot, PET and supervised across sizes"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Average accuracy for each generation of models with iPET in a zero-shot setting.",
+   "page": 8,
+   "why": "Gradual growth helps"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1-3.3",
+   "snippet": "s_p(l | x) = M(v(l) | P(x)); q_p = softmax(s_p); L = (1 - alpha) * L_CE + alpha * L_MLM; s_M(l | x) = (1/Z) sum_p w(p) s_p(l | x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Mask token glyph is lost in the extracted text, so pattern mask positions in AG's News/MNLI/x-stance prompts are reconstructed from blank gaps",
+  "Table cells flattened; row/column mapping inferred from order",
+  "Results via table references only for Table cells; Fig 3-6 values not in text"
+ ]
+}

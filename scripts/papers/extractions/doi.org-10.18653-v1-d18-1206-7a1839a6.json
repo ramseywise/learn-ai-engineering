@@ -1,0 +1,572 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d18-1206",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/narayan-2018-dont-give-me-details-just.pdf",
+ "bib": {
+  "title": "Don't Give Me the Details, Just the Summary! Topic-Aware Convolutional Neural Networks for Extreme Summarization",
+  "authors": [
+   "Shashi Narayan",
+   "Shay B. Cohen",
+   "Mirella Lapata"
+  ],
+  "first_author": "Narayan",
+  "year": 2018,
+  "venue": "Proceedings of EMNLP 2018, pages 1797-1807, Brussels",
+  "arxiv": null,
+  "doi": "10.18653/v1/d18-1206"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48627,
+  "chars_total": 48627,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a one-sentence 'what is the article about' summarization task, with a dataset that does not favour extractive methods, drive abstractive modelling, and does a topic-conditioned convolutional seq2seq model do well on it?",
+ "hypothesis": "Existing datasets favour extractive models; a one-sentence BBC summary dataset is less extractive, and conditioning a convolutional seq2seq model on LDA topics captures long-range and document-level content better than RNNs.",
+ "contributions": [
+  "A new single-document summarization dataset (XSum) that encourages abstractive systems",
+  "Analysis and empirical results showing extractive approaches are not well suited to extreme summarization",
+  "A topic-aware convolutional sequence-to-sequence model for abstractive summarization"
+ ],
+ "method": {
+  "summary": "XSum is built from 226,711 BBC articles whose first sentence, written by the author, is the one-line summary. T-ConvS2S extends fairseq ConvS2S with LDA word-topic and document-topic vectors in encoder and decoder. Compared against Random, LEAD, EXT-ORACLE, RNN seq2seq, pointer-generator (with and without coverage) and vanilla ConvS2S, by ROUGE, novel n-grams, best-worst human ranking and a QA test.",
+  "task": "extreme (one-sentence) abstractive single-document news summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "XSum",
+    "role": "both",
+    "size": "226,711 articles; train 204,045, val 11,332, test 11,334",
+    "split": "90%/5%/5% random split by unique article id in the URL",
+    "source": "BBC articles from Wayback archive, 2010-2017; summary is the 'story-body introduction' HTML element",
+    "preprocessing": "lowercased, entities not anonymized; input truncated to 400 tokens, summary to 90 tokens; 50,000-word vocabulary"
+   },
+   {
+    "name": "CNN, DailyMail, NY Times",
+    "role": "eval",
+    "size": "CNN 90,266/1,220/1,093; DailyMail 196,961/12,148/10,397; NYT 589,284/32,736/32,739 (train/val/test)",
+    "split": "CNN/DM original Hermann et al. splits; NYT Paulus et al. 2018 splits",
+    "source": "Hermann et al. 2015; Sandhaus 2008",
+    "preprocessing": "for comparison statistics only"
+   }
+  ],
+  "models": [
+   {
+    "name": "T-ConvS2S",
+    "role": "proposed",
+    "params": null,
+    "architecture": "convolutional encoder-decoder with GLU, residual connections, multi-hop attention, LDA topic inputs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50,000 words",
+    "layers": null,
+    "hidden": "512",
+    "heads": null,
+    "context": "input truncated to 400 tokens",
+    "other": {
+     "embeddings": "512 dim word and position",
+     "LDA topics": "512, trained on XSum training documents",
+     "normalisation": "layer normalization; weight normalization on all layers except lookup tables"
+    }
+   },
+   {
+    "name": "ConvS2S",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Gehring et al. 2017 fairseq-py",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50,000 words",
+    "layers": null,
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Seq2Seq / PtGen / PtGen-Covg",
+    "role": "baseline",
+    "params": null,
+    "architecture": "RNN with attention; pointer-generator; with coverage (See et al. 2017)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "50,000 words",
+    "layers": null,
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "word embeddings": "128 dim"
+    }
+   },
+   {
+    "name": "Random, LEAD, EXT-ORACLE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "extractive: random sentence, first sentence, best single sentence by ROUGE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: cross-entropy next-word prediction over the 50,000-word vocabulary (softmax output; loss not named)",
+   "optimizer": "RNN models: Adagrad; conv models: Nesterov accelerated gradient, momentum 0.99",
+   "lr": "RNN models 0.15 (initial accumulator 0.1); conv models 0.10",
+   "lr_schedule": "conv models: once validation perplexity stopped improving, lr cut by 10x after each epoch until below 1e-4; RNN models: early stopping on validation loss",
+   "warmup": null,
+   "batch_size": "32 sentences",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "input 400 tokens, summary 90 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.2 on embeddings, decoder outputs and input of the convolutional blocks (conv models)",
+   "regularisation": "RNN models: none; gradient clipping max norm 2 (RNN); conv models renormalize gradients if norm exceeds 0.1",
+   "hardware": "single Nvidia M40 GPU",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gradient normalisation": "by number of non-padding tokens per mini-batch",
+    "LDA": "best of several configurations on held-out data: 512 topics"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 10",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "summary limited to 90 tokens",
+   "samples": "single run; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1/2/L F1",
+     "definition": "pyrouge with parameters '-a -c 95 -m -n 4 -w 1.2'; R1 and R2 unigram/bigram overlap, RL longest common subsequence",
+     "unit": "F1 points",
+     "higher_is_better": true
+    },
+    {
+     "name": "% novel n-grams",
+     "definition": "share of n-grams in the summary not present in the source document",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Best-Worst Scaling score",
+     "definition": "percent chosen best minus percent chosen worst on informativeness and fluency",
+     "unit": "score in [-1,1]",
+     "higher_is_better": true
+    },
+    {
+     "name": "QA score",
+     "definition": "two fact questions per document answered from the summary alone; correct 1, partial 0.5, else 0; average over questions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random",
+    "LEAD",
+    "EXT-ORACLE",
+    "Seq2Seq",
+    "PtGen",
+    "PtGen-Covg",
+    "ConvS2S"
+   ],
+   "protocol": "Human studies on 50 random test documents on Amazon Mechanical Turk. BWS: all pairs of 5 systems, 3 participants per comparison, one-way ANOVA with Tukey HSD, p<0.01. QA: 100 questions written from the gold summaries, 5 participants per summary. ROUGE from a single run."
+  },
+  "availability": {
+   "code": "https://github.com/shashiongithub/XSum",
+   "weights": null,
+   "data": "https://github.com/shashiongithub/XSum (dataset URLs, per footnote 1)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We used a learning rate of 0.10 and once the validation perplexity stopped improving",
+    "where": "Sec 4, p1802"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "XSum gold summaries have far more novel unigrams than CNN, DailyMail or NY Times, so the dataset is less extractive.",
+   "kind": "measured",
+   "source": null,
+   "metric": "novel unigrams in gold summary",
+   "value": "36",
+   "unit": "%",
+   "baseline_value": "17 (CNN)",
+   "n": null,
+   "setup": "Test set; compared with 17% CNN, 17% DailyMail, 23% NY Times",
+   "note": null,
+   "where": "Sec 2, p1798",
+   "quote": "There are 36% novel unigrams in the XSum reference summaries compared to 17% in CNN, 17% in DailyMail, and 23% in NY Times."
+  },
+  {
+   "claim": "Novel higher-order n-grams in XSum gold summaries are also very high.",
+   "kind": "measured",
+   "source": null,
+   "metric": "novel bigrams in gold summary",
+   "value": "83",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum test set; comparison datasets 47-55% bigrams",
+   "note": "Table 2 prints 83.45, 95.50, 98.49",
+   "where": "Sec 2, p1798",
+   "quote": "approximately 83% novel bigrams, 96% novel trigrams, and 98% novel 4-grams"
+  },
+  {
+   "claim": "LEAD (first sentence) scores very low on XSum ROUGE-2, versus 11.13 on CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 of LEAD",
+   "value": "1.61",
+   "unit": "F1",
+   "baseline_value": "11.13 (CNN)",
+   "n": null,
+   "setup": "Test set; Table 2 row XSum; Table 4 prints 1.60 for the same system",
+   "note": "Table 2 prints 1.61, Table 4 prints 1.60",
+   "where": "Table 2",
+   "table": "Table 2, row XSum, column LEAD R2"
+  },
+  {
+   "claim": "Sentence-level extractive oracle reaches only 29.79 ROUGE-1 on XSum, vs 50.38 on CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 of EXT-ORACLE",
+   "value": "29.79",
+   "unit": "F1",
+   "baseline_value": "50.38 (CNN)",
+   "n": null,
+   "setup": "XSum test set, single best sentence by ROUGE vs gold",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row XSum, column EXT-ORACLE R1"
+  },
+  {
+   "claim": "T-ConvS2S (topic in encoder and decoder) gets the best ROUGE-1 on XSum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": "31.89",
+   "unit": "F1",
+   "baseline_value": "31.27 (ConvS2S)",
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries; 512 LDA topics; beam 10",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T-CONVS2S (enc(t',tD), dectD), column R1"
+  },
+  {
+   "claim": "T-ConvS2S best ROUGE-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2",
+   "value": "11.54",
+   "unit": "F1",
+   "baseline_value": "11.07 (ConvS2S)",
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T-CONVS2S (enc(t',tD), dectD), column R2"
+  },
+  {
+   "claim": "T-ConvS2S best ROUGE-L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": "25.75",
+   "unit": "F1",
+   "baseline_value": "25.23 (ConvS2S)",
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row T-CONVS2S (enc(t',tD), dectD), column RL"
+  },
+  {
+   "claim": "PTGEN beats EXT-ORACLE on ROUGE-2 on XSum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 of PTGEN",
+   "value": "9.21",
+   "unit": "F1",
+   "baseline_value": "8.81 (EXT-ORACLE)",
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PTGEN, column R2"
+  },
+  {
+   "claim": "PTGEN-COVG (coverage) does worse than PTGEN on XSum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 of PTGEN-COVG",
+   "value": "8.02",
+   "unit": "F1",
+   "baseline_value": "9.21 (PTGEN)",
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row PTGEN-COVG, column R2"
+  },
+  {
+   "claim": "Random sentence baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 of Random",
+   "value": "15.16",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "XSum test set (11,334 BBC articles), one-sentence reference summaries",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Random, column R1"
+  },
+  {
+   "claim": "Human best-worst score: T-ConvS2S ranks second behind gold.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BWS score",
+   "value": "0.037",
+   "unit": "score in [-1,1]",
+   "baseline_value": "0.431 (GOLD)",
+   "n": null,
+   "setup": "50 XSum test documents, all pairs of 5 systems, 3 judges per comparison, MTurk",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row T-CONVS2S, column Score"
+  },
+  {
+   "claim": "PTGEN scored worst in human best-worst scaling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BWS score of PTGEN",
+   "value": "-0.218",
+   "unit": "score in [-1,1]",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 50 documents",
+   "note": null,
+   "where": "Sec 5, p1805",
+   "quote": "PTGEN was ranked worst with the lowest score of −0.218."
+  },
+  {
+   "claim": "QA-based evaluation: share of questions answerable from T-ConvS2S summaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA score",
+   "value": "46.05",
+   "unit": "%",
+   "baseline_value": "30.90 (ConvS2S)",
+   "n": null,
+   "setup": "100 questions on 50 test docs, 5 participants per summary, partial credit 0.5",
+   "note": null,
+   "where": "Sec 5, p1805",
+   "quote": "participants can answer 46.05% of the questions correctly"
+  },
+  {
+   "claim": "QA for PTGEN and EXT-ORACLE is low and their difference is not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA score of EXT-ORACLE",
+   "value": "15.70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same QA setup; PTGEN 21.40",
+   "note": null,
+   "where": "Sec 5, p1805",
+   "quote": "Summaries generated by CONVS2S, PTGEN and EXT-ORACLE provide answers to 30.90%, 21.40%, and 15.70% of the questions"
+  },
+  {
+   "claim": "Gold summaries answer almost all questions (questions were written from them).",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA score of GOLD",
+   "value": "97.23",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same QA setup",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row GOLD, column QA"
+  },
+  {
+   "claim": "Convolutional models produce a high share of novel n-grams, close to gold; PTGEN copies more.",
+   "kind": "measured",
+   "source": null,
+   "metric": "novel unigrams in generated summaries (T-ConvS2S)",
+   "value": "30.73",
+   "unit": "%",
+   "baseline_value": "27.40 (PTGEN)",
+   "n": null,
+   "setup": "XSum test set; PTGEN 27.40, ConvS2S 31.26, GOLD 35.76",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row T-CONVS2S, column unigrams"
+  },
+  {
+   "claim": "PTGEN trained on XSum copies few n-grams from the source, unlike on CNN/DailyMail where it copies 99% of unigrams.",
+   "kind": "measured",
+   "source": null,
+   "metric": "4-grams copied by PTGEN on XSum",
+   "value": "4",
+   "unit": "%",
+   "baseline_value": "85+ (CNN/DM, See et al. 2017)",
+   "n": null,
+   "setup": "XSum-trained PTGEN; CNN/DM figure is from See et al. 2017",
+   "note": null,
+   "where": "Sec 5, p1803",
+   "quote": "PTGEN trained on XSum only copies 4% of 4-grams in the source document"
+  }
+ ],
+ "limits": [
+  "XSum is not diverse: a single news outlet (BBC) and a single-sentence summary style (authors' own concession).",
+  "ROUGE can mislead as the only measure of informativeness (Schluter 2017); EXT-ORACLE gets high ROUGE but low QA and human scores.",
+  "Human studies cover only 50 test documents; QA questions were written by the authors from the gold summary, which favours gold (97.23%).",
+  "No seeds, variance, parameter counts, epochs or training time reported; ROUGE gaps between T-ConvS2S variants are small (31.71 to 31.89 R1) with no significance test for them."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "extreme summarization",
+   "definition": "a single-document summarization task creating a short, one-sentence news summary answering the question 'What is the article about?'",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Convolutional sequence to sequence learning (Gehring et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "T-ConvS2S adds topic vectors to this model; also the ConvS2S baseline",
+   "quote": null
+  },
+  {
+   "work": "Get to the point: Summarization with pointer-generator networks (See et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Seq2Seq, PtGen, PtGen-Covg baselines",
+   "quote": null
+  },
+  {
+   "work": "Teaching machines to read and comprehend (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dataset construction methodology; CNN/DailyMail comparison",
+   "quote": null
+  },
+  {
+   "work": "Latent Dirichlet allocation (Blei et al.)",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "topic model supplying word and document topic distributions",
+   "quote": null
+  },
+  {
+   "work": "NEWSROOM (Grusky et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reports similar extractive bias in existing datasets",
+   "quote": null
+  },
+  {
+   "work": "Language modeling with gated convolutional networks (Dauphin et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GLU",
+   "quote": null
+  },
+  {
+   "work": "The limits of automatic summarisation according to ROUGE (Schluter)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ROUGE can mislead",
+   "quote": null
+  },
+  {
+   "work": "Ranking sentences for extractive summarization with RL (Narayan et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LEAD settings and QA protocol",
+   "quote": null
+  },
+  {
+   "work": "NY Times Annotated Corpus (Sandhaus)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "comparison statistics",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An abridged example from our extreme summarization dataset showing the document and its one-line summary. Document content present in the summary is color-coded.",
+   "page": 1,
+   "why": "Shows at a glance that the one-line summary draws on content scattered through the article."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Corpus bias towards extractive methods in the CNN, DailyMail, NY Times, and XSum datasets. We show the proportion of novel n-grams in gold summaries. We also report ROUGE scores for the LEAD baseline and the extractive oracle system EXT-ORACLE.",
+   "page": 3,
+   "why": "Single table showing why a benchmark's extractive bias matters: LEAD R1 16.30 on XSum vs 29-40 elsewhere."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Topic-conditioned convolutional model for extreme summarization.",
+   "page": 4,
+   "why": "Architecture diagram of encoder, decoder and multi-hop attention with topic vectors."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "ROUGE results on XSum test set.",
+   "page": 7,
+   "why": "Ranks extractive, RNN and convolutional systems on one test set."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3, p1801",
+   "snippet": "ei = [(xi + pi); (t'i ⊗ tD)] ∈ R^(f+f')",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and Figure 2 text extracted as scattered fragments; model equations read from partial text.",
+  "No arXiv ids are printed in the reference list, so lineage arxiv fields are null."
+ ]
+}

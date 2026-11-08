@@ -1,0 +1,521 @@
+{
+ "schema": 1,
+ "key": "1703.03400",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/finn-2017-model-agnostic-meta-learning-fast.pdf",
+ "bib": {
+  "title": "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks",
+  "authors": [
+   "Chelsea Finn",
+   "Pieter Abbeel",
+   "Sergey Levine"
+  ],
+  "first_author": "Finn",
+  "year": 2017,
+  "venue": "ICML 2017 (PMLR 70)",
+  "arxiv": "1703.03400",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54705,
+  "chars_total": 54705,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a model be trained so that a few gradient steps on a few examples of a new task give good performance, in a way that works for any gradient-trained model and for classification, regression and RL?",
+ "hypothesis": "Training the initial parameters so that one or a few gradient steps on a new task generalise well yields a representation that is easy and fast to fine-tune.",
+ "contributions": [
+  "A simple model- and task-agnostic meta-learning algorithm (MAML) that trains initial parameters for fast gradient-based adaptation",
+  "Demonstration across few-shot regression, image classification and policy-gradient RL",
+  "State-of-the-art or comparable few-shot classification with no extra learned parameters"
+ ],
+ "method": {
+  "summary": "MAML meta-trains initial parameters theta by sampling a batch of tasks, taking one or more inner gradient steps on K examples per task, and updating theta by the gradient of the post-update loss on fresh task data (second-order through the inner step, or first-order approximation). Evaluated on sinusoid regression, Omniglot and MiniImagenet few-shot classification, and rllab RL tasks.",
+  "task": "gradient-based meta-learning / few-shot adaptation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Sinusoid regression",
+    "role": "both",
+    "size": "tasks sampled continuously; K=10 datapoints per task in training, K in {5,10,20} at test",
+    "split": "amplitude in [0.1, 5.0], phase in [0, pi]; x uniform in [-5.0, 5.0]",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Omniglot",
+    "role": "both",
+    "size": "20 instances of 1623 characters from 50 alphabets",
+    "split": "1200 characters random for training irrespective of alphabet, remaining for testing",
+    "source": "Lake et al., 2011",
+    "preprocessing": "images downsampled to 28 x 28; augmented with rotations by multiples of 90 degrees"
+   },
+   {
+    "name": "MiniImagenet",
+    "role": "both",
+    "size": "64 train classes, 12 validation, 24 test",
+    "split": "Ravi & Larochelle (2017) split",
+    "source": "Ravi & Larochelle, 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "rllab 2D navigation, half-cheetah and ant (MuJoCo)",
+    "role": "both",
+    "size": "task distributions: goal position in unit square; goal velocity 0.0-2.0 (cheetah), 0.0-3.0 (ant); forward/backward direction",
+    "split": null,
+    "source": "rllab (Duan et al., 2016a), MuJoCo",
+    "preprocessing": "ant goal velocity: positive reward bonus per timestep"
+   }
+  ],
+  "models": [
+   {
+    "name": "Sinusoid regressor",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP, 2 hidden layers of size 40, ReLU",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": 40,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Conv classifier (Omniglot/MiniImagenet)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "4 modules of 3x3 conv with 64 filters, batch norm, ReLU, 2x2 max-pool, then softmax",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 4,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "omniglot": "strided convolutions instead of max-pooling; last hidden layer dim 64",
+     "miniimagenet": "32 filters per layer"
+    }
+   },
+   {
+    "name": "Non-conv classifier (Omniglot)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP with 4 hidden layers 256,128,64,64, batch norm and ReLU, then linear and softmax",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 4,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RL policy",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP, 2 hidden layers of size 100, ReLU",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": 100,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "meta-objective: sum over tasks of L_Ti(f_theta'_i) where theta'_i = theta - alpha grad L_Ti(f_theta); MSE for regression, cross-entropy for classification, negative expected reward (REINFORCE) for RL",
+   "optimizer": "Adam as meta-optimizer for regression (alpha fixed 0.01); classification meta-optimizer not stated in text; TRPO as meta-optimizer for RL",
+   "lr": "inner alpha: 0.01 (sinusoid), 0.4 (Omniglot 5-way), 0.1 (Omniglot 20-way), 0.01 (MiniImagenet), 0.1 first step then 0.05 (RL); meta step size beta not stated",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "meta batch: 32 tasks (Omniglot 5-way), 16 (20-way), 4 and 2 (MiniImagenet 1-shot and 5-shot), 20 (2D nav), 40 (locomotion); inner batch N*K examples",
+   "steps": "60000 iterations (classification); up to 500 meta-iterations (RL)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single NVIDIA Pascal Titan X GPU (classification)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "inner_steps_train_test": "Omniglot 5-way: 1 train / 3 test; 20-way: 5 / 5; MiniImagenet: 5 train / 10 test; sinusoid: 1 train; RL: 1 train, up to 4 at test",
+    "RL": "horizon 100 (nav), 200 (locomotion); 20 trajectories per step (40 for ant fwd/back, 40 samples per step at nav test); linear feature baseline; best-average-return model during training used; finite differences for Hessian-vector products in TRPO",
+    "meta_eval_examples": "15 examples per class for post-update meta-gradient on MiniImagenet",
+    "first_order": "drops Hessian-vector backward pass, about 33% faster"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "classification: 95% confidence intervals over tasks (number of test tasks not stated); sinusoid K in {5,10,20} points; RL: up to 4 gradient updates of 40 samples (nav)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "N-way K-shot accuracy",
+     "definition": "classify new instances of N unseen classes after adaptation on K examples per class",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MSE (sinusoid)",
+     "definition": "mean squared error after k gradient steps on K points",
+     "unit": "MSE",
+     "higher_is_better": false
+    },
+    {
+     "name": "Average return (RL)",
+     "definition": "mean reward after k policy-gradient updates",
+     "unit": "return",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Pretraining on all tasks then fine-tune",
+    "Random init",
+    "Oracle given task identity",
+    "Multi-task parameter averaging",
+    "Context vector (Rei 2015)",
+    "MANN",
+    "Siamese nets",
+    "matching nets",
+    "neural statistician",
+    "memory module",
+    "meta-learner LSTM",
+    "fine-tuning and nearest neighbor baselines"
+   ],
+   "protocol": "Tasks held out at meta-test; Vinyals et al. 2016 N-way protocol; Omniglot split may not be strictly comparable to prior work; MiniImagenet baselines taken from Ravi & Larochelle"
+  },
+  "availability": {
+   "code": "github.com/cbfinn/maml (regression and supervised), github.com/cbfinn/maml_rl (RL)",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MAML reaches 98.7% 5-way 1-shot and 99.9% 5-shot accuracy on held-out Omniglot characters, narrowly above prior methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-way 1-shot accuracy",
+   "value": "98.7 +/- 0.4",
+   "unit": "%",
+   "baseline_value": "98.4 (memory mod., Kaiser et al.)",
+   "n": null,
+   "setup": "Omniglot, conv model, 1200 train characters, 95% CI over tasks",
+   "quote": null,
+   "table": "Table 1, row MAML (ours), 5-way 1-shot",
+   "note": "also 5-shot 99.9 +/- 0.1; 20-way 95.8 / 98.9",
+   "where": "Table 1"
+  },
+  {
+   "claim": "On MiniImagenet MAML scores 48.70% 5-way 1-shot, versus 43.44% for the meta-learner LSTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-way 1-shot accuracy",
+   "value": "48.70 +/- 1.84",
+   "unit": "%",
+   "baseline_value": "43.44 +/- 0.77",
+   "n": null,
+   "setup": "MiniImagenet test classes, 4-layer conv 32 filters, 5 inner steps train / 10 test, alpha 0.01",
+   "quote": null,
+   "table": "Table 1, row MAML (ours), MiniImagenet 5-way 1-shot",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On MiniImagenet 5-shot MAML scores 63.11% versus 60.60% for the meta-learner LSTM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-way 5-shot accuracy",
+   "value": "63.11 +/- 0.92",
+   "unit": "%",
+   "baseline_value": "60.60 +/- 0.71",
+   "n": null,
+   "setup": "MiniImagenet test classes",
+   "quote": null,
+   "table": "Table 1, row MAML (ours), MiniImagenet 5-way 5-shot",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "First-order approximation nearly matches full MAML on MiniImagenet 1-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-way 1-shot accuracy",
+   "value": "48.07 +/- 1.75",
+   "unit": "%",
+   "baseline_value": "48.70 +/- 1.84",
+   "n": null,
+   "setup": "MiniImagenet, second derivatives omitted",
+   "quote": null,
+   "table": "Table 1, row MAML, first order approx., 5-way 1-shot",
+   "note": "5-shot first order 63.15 vs 63.11 full",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Dropping the second-order term gives about a 33% speed-up.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed-up",
+   "value": "33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "first-order MAML versus full MAML network computation",
+   "quote": "roughly 33% speed-up in network computation",
+   "table": null,
+   "note": null,
+   "where": "Section 5.2"
+  },
+  {
+   "claim": "On 5-shot sinusoid regression, MAML after 1 gradient step has MSE 0.67 versus 2.41 for pretraining on all tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "0.67",
+   "unit": "MSE",
+   "baseline_value": "2.41",
+   "n": null,
+   "setup": "sinusoid, 5 test points, 1 gradient step; MAML 0.38 at 5 steps, 0.35 at 10 steps; pretrain 2.23, 2.19",
+   "quote": null,
+   "table": "Table 2, row MAML (ours), column 1",
+   "note": null,
+   "where": "Table 2 (Appendix C.1)"
+  },
+  {
+   "claim": "Averaging in parameter space (multi-task) did worse than pretraining on all tasks on sinusoid regression.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "4.19",
+   "unit": "MSE",
+   "baseline_value": "2.41",
+   "n": null,
+   "setup": "5-shot, 1 step, multi-task no reg; 500 separate models averaged",
+   "quote": null,
+   "table": "Table 2, row multi-task, no reg, column 1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On half-cheetah forward/backward MAML reaches average return 293.19 after one gradient step; context vector stays negative.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average return",
+   "value": "293.19",
+   "unit": "return",
+   "baseline_value": "-44.08",
+   "n": null,
+   "setup": "half-cheetah, 1 gradient step; MAML 0 steps -50.69, 2 steps 313.48, 3 steps 315.65",
+   "quote": null,
+   "table": "Table 5, row MAML (ours), column 1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "A context-vector adaptation baseline reaches 94.9% on 5-way 1-shot Omniglot, below MAML's 98.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "5-way 1-shot accuracy",
+   "value": "94.9 +/- 0.9",
+   "unit": "%",
+   "baseline_value": "98.7 +/- 0.4",
+   "n": null,
+   "setup": "Omniglot, free input vector z adapted instead of weights",
+   "quote": null,
+   "table": "Table 3, row context vector, column 1-shot",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MAML-trained model keeps improving with more gradient steps though trained for one step.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "sinusoid regression, Fig 3 and Fig 6",
+   "quote": "MAML continues to improve with additional gradient steps without overﬁtting",
+   "table": null,
+   "note": null,
+   "where": "Fig 3 caption"
+  },
+  {
+   "claim": "In RL pretraining is in some cases worse than random initialisation, while MAML initialisation adapts in two or three gradient steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "half-cheetah and ant locomotion",
+   "quote": "pretraining is in some cases worse than random initialization",
+   "table": null,
+   "note": null,
+   "where": "Section 5.3"
+  }
+ ],
+ "limits": [
+  "Few-shot tasks are small supervised or simulated-control problems; no large pretrained or language models.",
+  "Second-order meta-gradient is costly; the authors only test a first-order approximation on MiniImagenet.",
+  "Omniglot results may not be strictly comparable because prior train/test splits were unavailable.",
+  "RL needs fresh on-policy samples for each adaptation step.",
+  "Meta step size beta, classification meta-optimizer, seeds and number of test tasks are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "K-shot learning",
+   "definition": "the model learns a new task from only K samples and feedback from that task",
+   "where": "Section 2.1"
+  },
+  {
+   "term": "model-agnostic",
+   "definition": "compatible with any model trained with gradient descent",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Optimization as a model for few-shot learning (Ravi & Larochelle)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "meta-learner LSTM; MiniImagenet split and baselines",
+   "quote": null
+  },
+  {
+   "work": "Matching networks for one shot learning (Vinyals et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "N-way protocol and conv embedding",
+   "quote": null
+  },
+  {
+   "work": "Meta-learning with memory-augmented neural networks (Santoro et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MANN; rotation augmentation",
+   "quote": null
+  },
+  {
+   "work": "Siamese neural networks for one-shot image recognition (Koch)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Benchmarking deep RL for continuous control (Duan et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "rllab tasks and linear feature baseline",
+   "quote": null
+  },
+  {
+   "work": "Trust region policy optimization (Schulman et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "meta-optimizer for RL",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "meta-optimizer for regression",
+   "quote": null
+  },
+  {
+   "work": "Online representation learning in recurrent neural language models (Rei)",
+   "year": 2015,
+   "arxiv": "1508.03854",
+   "relation": "baseline",
+   "note": "context-vector adaptation baseline",
+   "quote": null
+  },
+  {
+   "work": "Learning to learn by gradient descent by gradient descent (Andrychowicz et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learned update rule, contrasted",
+   "quote": null
+  },
+  {
+   "work": "Omniglot (Lake et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Diagram of our model-agnostic meta-learning algorithm (MAML), which optimizes for a representation θ that can quickly adapt to new tasks.",
+   "page": 2,
+   "why": "One picture of the inner/outer loop: theta sits near the per-task optima theta*_1..3."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Few-shot adaptation for the simple regression task. Left: MAML; Right: pretrained model fine-tuned.",
+   "page": 6,
+   "why": "Shows MAML extrapolating a sine from 5 points where pretraining fails."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Quantitative sinusoid regression results showing the learning curve at meta test-time.",
+   "page": 6,
+   "why": "Loss keeps falling with extra gradient steps."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Reinforcement learning results for the half-cheetah and ant locomotion tasks.",
+   "page": 8,
+   "why": "MAML vs pretrain vs random init over gradient steps."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p3",
+   "snippet": "theta'_i = theta - alpha * grad_theta L_Ti(f_theta);  theta <- theta - beta * grad_theta sum_{Ti ~ p(T)} L_Ti(f_theta'_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 4-7 content is graphical and was not extracted; no embedded instructions found.",
+  "Classification meta-optimizer and meta step size beta not stated in text."
+ ]
+}

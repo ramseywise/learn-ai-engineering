@@ -14,6 +14,10 @@ sources:
   - https://aclanthology.org/W04-1013/
   - https://arxiv.org/abs/2202.12837
   - https://arxiv.org/abs/2107.13586
+  - https://arxiv.org/abs/2001.07676
+  - https://arxiv.org/abs/1911.12543
+  - https://arxiv.org/abs/2102.09690
+  - https://arxiv.org/abs/2102.07350
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -71,6 +75,8 @@ Say exactly what shape the output takes: a numbered list of five, JSON with thes
 | Few-shot (3–5) | Reliable format and style. Beyond that, reliability keeps rising and variety falls |
 
 The authors' advice: try direction first, then add examples. Examples are powerful and easy to over-fit to. Vary them so the model learns the pattern, not one instance. Min et al. ran 12 model variants on 26 classification and multiple-choice datasets with 16 demonstrations and found that swapping the gold labels for random ones cost only 0–5% absolute. What mattered was the label space, the distribution of the input text and the format: out-of-distribution inputs cost 3–16% for most models, and demonstrations with no labels, or labels only, scored close to or worse than none. Generation tasks were not tested ([arXiv:2202.12837](https://arxiv.org/abs/2202.12837) (Min et al., EMNLP 2022)). The survey of prompting methods notes how much the choice of examples can matter, swinging from near the state of the art to near chance, and that majority-label and recency biases can be reduced by calibrating on a content-free input such as "N/A". Both are reported from earlier work. The survey runs no experiments of its own and stops in mid-2021 ([arXiv:2107.13586](https://arxiv.org/abs/2107.13586) (Liu et al., ACM Computing Surveys 2023)).
+
+Four papers show how much wording and example choice carry. Schick & Schütze's PET recasts classification as a cloze question with a verbalizer (the pattern "It was ___." with the words terrible to great) and fine-tunes a masked language model on it. With 10 labelled Yelp examples RoBERTa-large reached 52.9 accuracy against 21.1 for ordinary fine-tuning, and with 100 MNLI examples 74.7 against 47.9 (3 seeds). It is gradient fine-tuning, not in-context prompting ([arXiv:2001.07676](https://arxiv.org/abs/2001.07676) (Schick & Schütze, EACL 2021)). Jiang et al. mined and paraphrased prompts for LAMA fact probes: an optimised ensemble raised BERT-base from 31.1% to 39.6% on T-REx, and changing "plays in" to "plays at" moved one relation by 23.2 points, so a failed probe measures the prompt as much as the model ([arXiv:1911.12543](https://arxiv.org/abs/1911.12543) (Jiang et al., TACL 2020)). Zhao et al. found the same instability in GPT-3 2.7B on 4-shot SST-2: permuting the examples moved accuracy from 54.3% to 93.4%, which they trace to majority-label, recency and common-token bias. Contextual calibration, which divides the label probabilities by those the model gives a content-free input such as "N/A", gained up to 30.0 points, and a calibrated 2.7B beat the uncalibrated 175B by up to 19.3. They tested only base GPT-2 and GPT-3 ([arXiv:2102.09690](https://arxiv.org/abs/2102.09690) (Zhao et al., ICML 2021)). Reynolds & McDonell argued that zero-shot had been underrated: on WMT14 French to English a bare "French: ... English:" prompt scored 33.3 BLEU on Curie against 22.4 for OpenAI's reported zero-shot, and adding one example lowered it to 27.6, which they put down to the model reading the example as part of the text. It is one task on two engines with no variance ([arXiv:2102.07350](https://arxiv.org/abs/2102.07350) (Reynolds & McDonell, CHI EA 2021)).
 
 ### 4. Evaluate quality
 

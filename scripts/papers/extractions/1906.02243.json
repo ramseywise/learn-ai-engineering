@@ -1,0 +1,604 @@
+{
+ "schema": 1,
+ "key": "1906.02243",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/strubell-2019-energy-policy-considerations-deep-learning.pdf",
+ "bib": {
+  "title": "Energy and Policy Considerations for Deep Learning in NLP",
+  "authors": [
+   "Emma Strubell",
+   "Ananya Ganesh",
+   "Andrew McCallum"
+  ],
+  "first_author": "Strubell",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 3645-3650",
+  "arxiv": "1906.02243",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 24958,
+  "chars_total": 24958,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What are the financial and carbon costs of training and developing recent NLP neural models, and what should the community do about them?",
+ "hypothesis": null,
+ "contributions": [
+  "Estimate energy, CO2 and cloud cost of training BERT, ELMo, Transformer, GPT-2 and NAS from reported training times",
+  "Case study of total compute to develop LISA, including all tuning",
+  "Recommendations: report training time and hyperparameter sensitivity; equitable compute access; efficient hardware and algorithms"
+ ],
+ "method": {
+  "summary": "Power draw is sampled while training each model with default code for up to 1 day; total training time is taken from the original papers and converted to kWh with PUE 1.58, then to CO2e with the US EPA factor, and to dollars with cloud prices. A case study sums the logs of all jobs behind LISA.",
+  "task": "energy, carbon and dollar cost estimation of NLP model training",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LISA project training logs (Strubell et al. 2018)",
+    "role": "eval",
+    "size": "4789 jobs, 123 grid searches, 172 days",
+    "split": null,
+    "source": "authors' own job logs",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer base (T2Tbase)",
+    "role": "evaluated",
+    "params": "65M",
+    "architecture": "encoder-decoder, 6+6 layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer big (T2Tbig)",
+    "role": "evaluated",
+    "params": "213M",
+    "architecture": "encoder-decoder, 6+6 layers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ELMo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "stacked LSTMs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT base",
+    "role": "evaluated",
+    "params": "110M",
+    "architecture": "Transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 large",
+    "role": "evaluated",
+    "params": "1542M",
+    "architecture": "Transformer decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Evolved Transformer NAS",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "architecture search over Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "steps": "979M training steps in total; base model 10 h per 300k steps on one TPUv2 core"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one power-sampling run per model, max 1 day each; no repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "PUE": "1.58 (2018 global data-centre average, Ascierto 2018)",
+    "CO2e_factor": "0.954 lbs per kWh (EPA 2018 US average)",
+    "electricity_price": "$0.12/kWh",
+    "GPU_price_bounds": "pre-emptible $0.43-$0.74/hr, on-demand $1.46-$2.48/hr (P100/V100)",
+    "TPU_price_bounds": "pre-emptible $1.46-$2.40/hr, on-demand $4.50-$8/hr (v2/v3)",
+    "measurement_hardware": "single NVIDIA Titan X; ELMo on 3 GTX 1080 Ti; nvidia-smi for GPU, Intel RAPL for CPU/DRAM",
+    "sampling_interval": null
+   },
+   "other": {
+    "equation_1": "p_t = 1.58 t (p_c + p_r + g p_g) / 1000",
+    "equation_2": "CO2e = 0.954 p_t",
+    "case_study_cloud_price_basis": "P100 pricing (footnote 8)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "kWh·PUE",
+     "definition": "1.58 * t * (CPU + DRAM + g*GPU watts) / 1000",
+     "unit": "kWh",
+     "higher_is_better": false
+    },
+    {
+     "name": "CO2e",
+     "definition": "0.954 * kWh·PUE",
+     "unit": "lbs",
+     "higher_is_better": false
+    },
+    {
+     "name": "Cloud compute cost",
+     "definition": "hours x hardware price bounds",
+     "unit": "USD",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "familiar consumption: air travel, human life, car lifetime (Table 1)"
+   ],
+   "protocol": "estimates, no repeated measurement or error bars"
+  },
+  "availability": {
+   "code": "models' public code used out-of-the-box; no code released for estimates",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.PUE",
+    "quote": "We use a PUE coefﬁcient of 1.58",
+    "where": "2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Neural architecture search for the Transformer emits about 626,155 lbs CO2e, roughly 5 car lifetimes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "626,155",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh; NAS from So et al. 2019, 274,120 hours on 8 P100",
+   "note": "Table 1 lists car lifetime incl. fuel as 126,000 lbs",
+   "where": "Table 3; Table 1",
+   "table": "Table 3, row NAS P100x8, column CO2e"
+  },
+  {
+   "claim": "Cloud cost of the NAS run is $942,973-$3,201,722 on GPU and $44,055-$146,848 on one TPUv2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$942,973–$3,201,722",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same NAS run, pre-emptible to on-demand pricing",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row NAS P100x8, column Cloud compute cost"
+  },
+  {
+   "claim": "NAS gains 0.1 BLEU (29.7 En-De) for at least $150k on-demand compute.",
+   "kind": "reported",
+   "source": "So et al. 2019",
+   "metric": null,
+   "value": "$150k",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "So et al. 2019 NAS result as framed by the authors",
+   "note": null,
+   "where": "4.1",
+   "quote": "an increase of just 0.1 BLEU at the cost of at least $150k in on-demand"
+  },
+  {
+   "claim": "Developing one NLP model (LISA) took 4789 jobs across 123 grid searches over 172 days.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4789",
+   "unit": "jobs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Strubell et al. 2018 project logs; Titan X 72%, M40 28%",
+   "note": null,
+   "where": "4.2",
+   "quote": "resulting in 4789 jobs"
+  },
+  {
+   "claim": "Total GPU time for the LISA project was 9998 days (27 years), about 60 GPUs running constantly for 6 months.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9998",
+   "unit": "GPU days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same case study",
+   "note": null,
+   "where": "4.2",
+   "quote": "totaled 9998 days (27 years)"
+  },
+  {
+   "claim": "Full R&D for LISA cost $103k-$350k in cloud compute and $9870 in electricity (239,942 hours).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$103k–$350k",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4789 models, cloud priced at P100 rates, electricity at $0.12/kWh",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 4789 models, column Cloud"
+  },
+  {
+   "claim": "Electricity cost of the full LISA R&D was $9870.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$9870",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 4789 models, column Electric"
+  },
+  {
+   "claim": "A single LISA tune (24 jobs, 2880 hours) costs $1238-$4205 cloud, $118 electricity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$1238–$4205",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "24 jobs",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 24 models, column Cloud"
+  },
+  {
+   "claim": "A single LISA training run (120 hours) costs $52-$175 cloud, $5 electricity.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$52–$175",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1 model",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 1 model, column Cloud"
+  },
+  {
+   "claim": "Training BERT base on 64 V100 GPUs (79 h) emits about 1438 lbs CO2e, roughly a trans-American flight.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1438",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh; NVIDIA-reported 64 V100 for 79 hours",
+   "note": "Table 1 lists NY-SF air travel at 1984 lbs",
+   "where": "Table 3; 4.1",
+   "table": "Table 3, row BERTbase V100x64, column CO2e"
+  },
+  {
+   "claim": "BERT base on 64 V100 draws 12,041.51 W and 1507 kWh*PUE.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1507",
+   "unit": "kWh·PUE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BERTbase V100x64, column kWh·PUE"
+  },
+  {
+   "claim": "Transformer big (8 P100, 84 h) emits 192 lbs CO2e at 201 kWh*PUE and $289-$981.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "192",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row T2Tbig, column CO2e"
+  },
+  {
+   "claim": "Transformer base (8 P100, 12 h) emits 26 lbs CO2e, 27 kWh*PUE, $41-$140.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "26",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row T2Tbase, column CO2e"
+  },
+  {
+   "claim": "ELMo (3 GPUs, 336 h) emits 262 lbs CO2e, $433-$1472.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "262",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Estimated from training times and hardware reported in the original papers, power sampled on a single Titan X (ELMo: 3 GTX 1080 Ti) with default code, PUE 1.58, US EPA 0.954 lbs CO2/kWh",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ELMo, column CO2e"
+  },
+  {
+   "claim": "BERT base on 16 TPUv2 for 96 h costs $2074-$6912, cheaper than GPU ($3751-$12,571).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$2074–$6912",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU price bounds pre-emptible vs on-demand; no power estimate for TPU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BERTbase TPUv2x16, column Cloud compute cost"
+  },
+  {
+   "claim": "GPT-2 (1542M params, 32 TPUv3, 168 h) costs $12,902-$43,008 to train.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "$12,902–$43,008",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hardware and time via the authors on Reddit (footnote 6)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-2, column Cloud compute cost"
+  },
+  {
+   "claim": "Energy mix: Google 56% renewable, AWS 17%, Microsoft 32%; US 17% renewable, 27% coal.",
+   "kind": "reported",
+   "source": "Cook et al. 2017",
+   "metric": null,
+   "value": "56%",
+   "unit": "% renewable",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cook et al. 2017 (Greenpeace)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Google, column Renew."
+  },
+  {
+   "claim": "Training one NLP pipeline (parsing, SRL) emits 39 lbs CO2e, 78,468 with tuning and experiments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "78,468",
+   "unit": "lbs CO2e",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 comparison with familiar consumption",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row w/ tuning & experiments"
+  },
+  {
+   "claim": "Owning 8x1080 Ti servers for the case study (about 58 GPUs, 172 days) would cost $145,000 plus electricity, about half on-demand cloud.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "$145,000",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Server about $20,000 each",
+   "note": null,
+   "where": "5",
+   "quote": "would cost $145,000 USD plus electricity"
+  }
+ ],
+ "limits": [
+  "Power measured on Titan X / 1080 Ti GPUs but applied to training times from papers that used P100, V100 or TPUs; per-model power is an approximation.",
+  "TPU power and carbon are omitted for lack of public data.",
+  "CO2 uses the US average grid; cloud providers differ (Table 2).",
+  "Single-day power sampling, no repeats or uncertainty.",
+  "Numbers are 2019 hardware and prices; cloud prices and efficiency have changed.",
+  "Only one development case study (LISA); NAS and GPT-2 dev costs are not logged.",
+  "GPT-2 hardware and time came from the authors on Reddit."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PUE",
+   "definition": "Power Usage Effectiveness, accounts for the additional energy required to support the compute infrastructure (mainly cooling)",
+   "where": "2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Linguistically-Informed Self-Attention for Semantic Role Labeling",
+   "year": 2018,
+   "arxiv": "1804.08199",
+   "relation": "evaluates",
+   "note": "case study of full development cost",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "evaluates",
+   "note": "Transformer base and big",
+   "quote": null
+  },
+  {
+   "work": "Deep contextualized word representations (ELMo)",
+   "year": 2018,
+   "arxiv": "1802.05365",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "The evolved transformer",
+   "year": 2019,
+   "arxiv": "1901.11117",
+   "relation": "evaluates",
+   "note": "NAS cost",
+   "quote": null
+  },
+  {
+   "work": "Li et al. energy efficiency of CNNs on CPUs and GPUs",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inference/training energy for vision, not NLP",
+   "quote": null
+  },
+  {
+   "work": "Canziani et al. analysis of DNN models for practical applications",
+   "year": 2016,
+   "arxiv": "1605.07678",
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Cook et al. Clicking Clean",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "energy mix of cloud providers",
+   "quote": null
+  },
+  {
+   "work": "Bergstra and Bengio random search; Snoek et al. Bayesian optimisation",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "recommended over grid search",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Estimated CO2 emissions from training common NLP models, compared to familiar consumption.",
+   "page": 1,
+   "why": "puts NAS (626,155 lbs) beside a car lifetime (126,000 lbs)"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Estimated cost of training a model in terms of CO2 emissions (lbs) and cloud compute cost (USD).",
+   "page": 4,
+   "why": "per-model power, hours, kWh, CO2e and dollars in one grid"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Estimated cost in terms of cloud compute and electricity for training: (1) a single model (2) a single tune and (3) all models trained during R&D.",
+   "page": 4,
+   "why": "shows the 1 : 24 : 4789 multiplier from run to tune to project"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Percent energy sourced from renewable, gas, coal and nuclear for top 3 cloud providers vs US, China, Germany.",
+   "page": 2,
+   "why": "why carbon factor depends on region"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-2, section 2",
+   "snippet": "p_t = 1.58 t (p_c + p_r + g p_g) / 1000 ; CO2e = 0.954 p_t",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Ligatures in cached text; Table 3 column values flattened."
+ ]
+}

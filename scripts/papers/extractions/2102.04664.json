@@ -1,0 +1,661 @@
+{
+ "schema": 1,
+ "key": "2102.04664",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lu-2021-codexglue.pdf",
+ "bib": {
+  "title": "CodeXGLUE: A Machine Learning Benchmark Dataset for Code Understanding and Generation",
+  "authors": [
+   "Shuai Lu",
+   "Daya Guo",
+   "Shuo Ren",
+   "Junjie Huang",
+   "Alexey Svyatkovskiy",
+   "Ambrosio Blanco",
+   "Colin Clement",
+   "Dawn Drain",
+   "Daxin Jiang",
+   "Duyu Tang",
+   "Ge Li",
+   "Lidong Zhou",
+   "Linjun Shou",
+   "Long Zhou",
+   "Michele Tufano",
+   "Ming Gong",
+   "Ming Zhou",
+   "Nan Duan",
+   "Neel Sundaresan",
+   "Shao Kun Deng",
+   "Shengyu Fu",
+   "Shujie Liu"
+  ],
+  "first_author": "Lu",
+  "year": 2021,
+  "venue": "NeurIPS 2021 Datasets and Benchmarks Track (venue not printed in the PDF text; preprint arXiv:2102.04664v2)",
+  "arxiv": "2102.04664",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 74615,
+  "chars_total": 74615,
+  "engine": "pymupdf",
+  "skipped": "References (from about char 51848) skimmed only for lineage."
+ },
+ "type": "benchmark",
+ "question": "Can a single GLUE-style benchmark of diverse code understanding and generation tasks, with baseline systems and an evaluation platform, speed up research on code intelligence?",
+ "hypothesis": "A diversified benchmark, as ImageNet and GLUE were for vision and NLP, will accelerate applied AI research on code (implied by the introduction).",
+ "contributions": [
+  "A benchmark of 10 tasks across 14 datasets (8 existing, the rest newly created) covering code-code, text-code, code-text and text-text",
+  "A platform for model evaluation and comparison",
+  "Three baseline systems: CodeBERT (BERT-style), CodeGPT (GPT-style, newly released) and an Encoder-Decoder framework"
+ ],
+ "method": {
+  "summary": "Collects or builds 14 datasets for 10 code tasks, defines metrics and an overall score per task, and trains CodeBERT, CodeGPT and CodeBERT-initialised encoder-decoder baselines on each. Reports one results table per task plus training and inference time on 2 P100 GPUs.",
+  "task": "code intelligence benchmark: clone detection, defect detection, cloze test, code completion, code repair, code translation, NL code search, text-to-code generation, code summarization, documentation translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BigCloneBench",
+    "role": "both",
+    "size": "901,028/415,416/415,416 examples; 9,134 Java fragments",
+    "split": "train/dev/test as given by Wang et al.",
+    "source": "Svajlenko BigCloneBench [71], filtered by Wang et al. [84]",
+    "preprocessing": "discard fragments without tagged true or false clone pairs"
+   },
+   {
+    "name": "POJ-104",
+    "role": "both",
+    "size": "104 problems, 500 programs each; 32K/8K/12K",
+    "split": "64/16/24 problems for train/dev/test",
+    "source": "pedagogical open judge system [52]",
+    "preprocessing": null
+   },
+   {
+    "name": "Devign",
+    "role": "both",
+    "size": "27,318 labelled C functions; 21K/2.7K/2.7K",
+    "split": "random shuffle, 80%/10%/10%",
+    "source": "QEMU and FFmpeg commits [99]",
+    "preprocessing": null
+   },
+   {
+    "name": "CT-all / CT-maxmin",
+    "role": "eval",
+    "size": "176,115 / 2,615 test examples over 6 languages",
+    "split": "test only, built from CodeSearchNet validation and test sets",
+    "source": "CodeSearchNet [35]; CT-maxmin from CodeBERT PL-Probing data",
+    "preprocessing": "930 target tokens kept as unique words after BPE, punctuation removed by handcrafted rules, token occurrence thresholds set manually"
+   },
+   {
+    "name": "PY150",
+    "role": "both",
+    "size": "150,000 files; 100,000 train / 50,000 test; 76.3M and 37.2M tokens; dev 5K",
+    "split": "Raychev et al. split",
+    "source": "[62]",
+    "preprocessing": "tokenise, strip comments, strings over 15 characters replaced by empty string, <EOL> token added; line-level test set of 10,000 random lines with at least 15% of file as context; mean 489.11 input and 6.56 output tokens"
+   },
+   {
+    "name": "Github Java Corpus",
+    "role": "both",
+    "size": "12,934/7,189/8,268 files; 15.8M/3.8M/5.3M tokens",
+    "split": "1% subset following Hellendoorn and Devanbu and Karampatsis et al.",
+    "source": "Allamanis and Sutton [4]",
+    "preprocessing": "same as PY150 without <EOL>; line-level test 3,000 examples, mean 350.62 input and 10.49 output tokens"
+   },
+   {
+    "name": "Bugs2Fix",
+    "role": "both",
+    "size": "small 46,680/5,835/5,835; medium 52,364/6,545/6,545",
+    "split": "small tokens <=50, medium 50<tokens<=100",
+    "source": "Tufano et al. [75], GitHub Archive Mar 2011 to Oct 2017",
+    "preprocessing": "names normalised, pairs with errors or over 100 AST edit actions dropped"
+   },
+   {
+    "name": "CodeTrans (Java-C#)",
+    "role": "both",
+    "size": "11,800 function pairs; 10K/0.5K/1K",
+    "split": "500 dev, 1,000 test random",
+    "source": "Lucene, POI, JGit, Antlr (Itext and JTS excluded for licence)",
+    "preprocessing": "match same signatures in similarly named classes, dedupe, drop pairs with token overlap under 1/3, null bodies, no data-flow; avg length 38.51 Java and 46.16 C# tokens"
+   },
+   {
+    "name": "CodeSearchNet AdvTest",
+    "role": "both",
+    "size": "251,820/9,604/19,210",
+    "split": "train/dev/test",
+    "source": "CodeSearchNet Python [35]",
+    "preprocessing": "drop unparsable code, docs under 3 or over 256 tokens, docs with URLs, empty or non-English docs; function and variable names normalised to func and arg_i in dev/test; whole test set is the candidate pool"
+   },
+   {
+    "name": "WebQueryTest",
+    "role": "eval",
+    "size": "1,300 labelled; 254 (-1), 642 (0), 422 (1); only classes 0 and 1 kept (642+422, derived)",
+    "split": "test only; train/dev from CodeSearchNet",
+    "source": "real queries from a commercial search engine log containing python, candidates from CodeSearchNet",
+    "preprocessing": "top 2 functions per query by a CodeBERT retrieval model trained on 148K StaQC; 13 developers annotated 100 each"
+   },
+   {
+    "name": "CONCODE",
+    "role": "both",
+    "size": "100,000 train, 4,000 dev and test (2K/2K in Table 1)",
+    "split": "as released",
+    "source": "about 33,000 Java GitHub projects [38]",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeSearchNet (summarization)",
+    "role": "both",
+    "size": "908K/45K/53K over 6 languages (Table 3 per language)",
+    "split": "train/dev/test",
+    "source": "[35]",
+    "preprocessing": "same four filter rules as AdvTest"
+   },
+   {
+    "name": "Microsoft Docs",
+    "role": "both",
+    "size": "43K, 19K, 44K, 50K training pairs for EN-LA, EN-DA, EN-NO, EN-ZH; 1K dev and 1K test each",
+    "split": "train/dev/test",
+    "source": "Microsoft Documentation",
+    "preprocessing": "drop identical pairs, under 3 words, length ratio over 3, fast_align alignment ratio under 0.6"
+   }
+  ],
+  "models": [
+   {
+    "name": "CodeBERT",
+    "role": "baseline",
+    "params": "125M",
+    "architecture": "12-layer bidirectional Transformer encoder, MLM and replaced-token-detection pretraining",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "50,265",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512",
+    "other": {
+     "pretrain_data": "CodeSearchNet 2.4M function-document pairs, 6 languages",
+     "head": "two-layer feed-forward + softmax for classification"
+    }
+   },
+   {
+    "name": "CodeGPT",
+    "role": "proposed",
+    "params": "124M",
+    "architecture": "GPT-2 architecture and objective, 12 decoder layers",
+    "init_from": "random init, new BPE vocabulary",
+    "tokenizer": "BPE",
+    "vocab": "50,000",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "1,024",
+    "other": {
+     "pretrain_data": "CodeSearchNet 1.1M Python functions or 1.6M Java methods, monolingual models"
+    }
+   },
+   {
+    "name": "CodeGPT-adapted",
+    "role": "proposed",
+    "params": "124M",
+    "architecture": "as CodeGPT",
+    "init_from": "GPT-2, continued training on code corpus",
+    "tokenizer": "GPT-2 vocabulary",
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "1,024",
+    "other": {
+     "note": "default for completion and text-to-code; GPT-2 vocab size not stated separately"
+    }
+   },
+   {
+    "name": "Encoder-Decoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CodeBERT encoder + randomly initialised 6-layer Transformer decoder",
+    "init_from": "encoder from CodeBERT",
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": "decoder 6",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "documentation_translation": "encoder from XLM-R, multilingual model with target-language token such as <2en>"
+    }
+   },
+   {
+    "name": "RoBERTa, LSTM, BiLSTM, TextCNN, Transformer, GPT-2, Seq2Seq, PBSMT and prior task models",
+    "role": "baseline",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "CodeBERT MLM+RTD, CodeGPT next-token as GPT-2, fine-tuned per task with task losses (not detailed)",
+   "optimizer": "Adam (stated for code summarization only)",
+   "lr": "5e-5 (code summarization only)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 (code summarization only)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "max input 256 and max inference length 128 (code summarization only)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping on dev set (code summarization)",
+   "hardware": "2x P100 GPUs (P100-16G for cloze)",
+   "compute": null,
+   "wall_clock": "per task, Fig 8: e.g. 25 h PY150 completion, 30 h CONCODE, 30 h doc translation, 24 h code repair, 20 h translation, 12 h per language summarization",
+   "seeds": null,
+   "other": {
+    "note": "hyperparameters for all other tasks and for pretraining are not given in the paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "128 (code summarization)",
+   "samples": null,
+   "prompting": null,
+   "retrieval": "code search encodes text and code separately; AdvTest candidate pool is the whole test set, not 1,000",
+   "parameters": {},
+   "other": {
+    "inference_time": "Fig 8, e.g. 2 h BigCloneBench, 30 min PY150 on 2x P100"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1 / MAP (clone detection)",
+     "definition": "F1 on BigCloneBench binary classification; MAP retrieving 499 programs on POJ-104; overall = mean",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (defect detection)",
+     "definition": "binary vulnerability classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (cloze)",
+     "definition": "per-language accuracy, overall = macro-average",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Token accuracy / exact match / Levenshtein edit similarity (completion)",
+     "definition": "dataset score = mean of token accuracy and line edit similarity; overall = mean over both datasets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR; F1 and accuracy (code search)",
+     "definition": "MRR on AdvTest; F1 and accuracy on WebQueryTest; overall = average of the values",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM, BLEU, CodeBLEU (text-to-code, translation)",
+     "definition": "CodeBLEU is the overall metric",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM accuracy, BLEU, CodeBLEU (code repair)",
+     "definition": "exact match is the overall metric",
+     "unit": "fraction (0.052 form) as printed",
+     "higher_is_better": true
+    },
+    {
+     "name": "smoothed BLEU (summarization, doc translation)",
+     "definition": "summarization smoothed BLEU, overall mean over languages; doc translation BLEU averaged over 8 directions",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RoBERTa",
+    "LSTM/BiLSTM",
+    "TextCNN",
+    "Transformer",
+    "GPT-2",
+    "Seq2Seq",
+    "PBSMT",
+    "Naive copy",
+    "prior clone detectors (RtvNN, Deckard, CDLH, ASTNN, FA-AST-GMN, TBCCD, code2vec, NCC, Aroma, MISIM-GNN)"
+   ],
+   "protocol": "Single reported number per cell; no seeds, variance or significance tests stated. Leaderboard submissions by email."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/CodeXGLUE",
+   "weights": "https://huggingface.co/microsoft/codebert-base, microsoft/CodeGPT-small-java (and -py, -adaptedGPT2)",
+   "data": "https://github.com/microsoft/CodeXGLUE"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.CodeGPT-adapted.init_from",
+    "quote": "uses the GPT-2 model as the starting point and is continually trained on the code corpus",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CodeGPT-adapted is the best code completion baseline overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall score",
+   "value": 71.28,
+   "unit": "%",
+   "baseline_value": 51.41,
+   "n": null,
+   "setup": "PY150 and Github Java Corpus, token-level accuracy plus line-level edit similarity, 124M model",
+   "note": "baseline_value is LSTM overall; GPT-2 is 69.69",
+   "where": "Table 8, Sec 5.4",
+   "table": "Table 8, row CodeGPT-adapted, column Overall",
+   "quote": "CodeGPT-adapted achieves a state-of-the-art performance with the overall"
+  },
+  {
+   "claim": "CodeGPT-adapted is the best text-to-code baseline on CONCODE",
+   "kind": "measured",
+   "source": null,
+   "metric": "CodeBLEU",
+   "value": 35.98,
+   "unit": "CodeBLEU",
+   "baseline_value": 29.69,
+   "n": null,
+   "setup": "CONCODE test, Java",
+   "note": "baseline_value is GPT-2",
+   "where": "Sec 5.6",
+   "quote": "CodeGPT-adapted achieves the CodeBLEU score of 35.98"
+  },
+  {
+   "claim": "CodeBERT beats RoBERTa on clone detection overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall (mean of F1 and MAP)",
+   "value": 90.4,
+   "unit": "score",
+   "baseline_value": 87.4,
+   "n": null,
+   "setup": "BigCloneBench F1 96.5, POJ-104 MAP 84.29",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "achieving the overall score of 90.4"
+  },
+  {
+   "claim": "CodeBERT is only slightly better than TextCNN on defect detection",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 62.08,
+   "unit": "%",
+   "baseline_value": 60.69,
+   "n": null,
+   "setup": "Devign, 80/10/10 random split",
+   "note": "text prints 62.1; baseline is TextCNN 60.69; RoBERTa 61.05, BiLSTM 59.37",
+   "where": "Table 7",
+   "table": "Table 7, row CodeBERT, column Accuracy"
+  },
+  {
+   "claim": "Normalising function and variable names cuts CodeBERT code search MRR on CodeSearchNet Python",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": 0.507,
+   "unit": "MRR",
+   "baseline_value": 0.869,
+   "n": null,
+   "setup": "from 0.869 before normalisation; RoBERTa drops from 0.809 to 0.419",
+   "note": null,
+   "where": "Sec 3.6",
+   "quote": "from 0.809 to 0.419 and from 0.869 to 0.507, respectively"
+  },
+  {
+   "claim": "CodeBERT on AdvTest, with full-test-set candidates, scores far lower than prior 1,000-candidate setups",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": 27.19,
+   "unit": "MRR",
+   "baseline_value": 18.33,
+   "n": null,
+   "setup": "CodeSearchNet AdvTest, Python",
+   "note": "baseline is RoBERTa; overall CodeBERT 40.28 vs RoBERTa 33.63",
+   "where": "Table 9",
+   "table": "Table 9, row CodeBERT, column MRR"
+  },
+  {
+   "claim": "CodeBERT-initialised encoder-decoder best on Java-C# translation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall CodeBLEU",
+   "value": 82.26,
+   "unit": "CodeBLEU",
+   "baseline_value": 81.63,
+   "n": null,
+   "setup": "1,000 test pairs",
+   "note": "baseline is RoBERTa (code); Transformer 62.67; PBSMT 43.10",
+   "where": "Table 12",
+   "table": "Table 12, row CodeBERT, column Overall"
+  },
+  {
+   "claim": "Code repair exact match stays very low",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall accuracy",
+   "value": 0.108,
+   "unit": "fraction",
+   "baseline_value": 0.092,
+   "n": null,
+   "setup": "Bugs2Fix small+medium, CodeBERT",
+   "note": "baseline is Transformer. Printed as 0.164 small and 0.052 medium; unit ambiguous (fraction vs percent)",
+   "where": "Table 11",
+   "table": "Table 11, row CodeBERT, column Overall"
+  },
+  {
+   "claim": "CodeBERT is best on code summarization overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall smoothed BLEU",
+   "value": 17.83,
+   "unit": "BLEU",
+   "baseline_value": 16.57,
+   "n": null,
+   "setup": "CodeSearchNet 6 languages, lr 5e-5, batch 32",
+   "note": "baseline is RoBERTa; text says 1.3% gain over RoBERTa",
+   "where": "Table 13",
+   "table": "Table 13, row CodeBERT, column Overall"
+  },
+  {
+   "claim": "XLM-R-initialised encoder lifts documentation translation",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall BLEU",
+   "value": 66.16,
+   "unit": "BLEU",
+   "baseline_value": 52.67,
+   "n": null,
+   "setup": "Microsoft Docs, 8 directions",
+   "note": "text says 13.49 improvement",
+   "where": "Sec 5.10, Table 14",
+   "table": "Table 14, row Overall, column pretrained Transformer",
+   "quote": "pretraining achieves a 13.49 improvement in BLEU score"
+  },
+  {
+   "claim": "CodeBERT beats RoBERTa on cloze test overall",
+   "kind": "measured",
+   "source": null,
+   "metric": "Overall accuracy",
+   "value": 85.66,
+   "unit": "%",
+   "baseline_value": 62.45,
+   "n": null,
+   "setup": "CT-all and CT-maxmin, 6 languages",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row CodeBERT(MLM), column Overall"
+  },
+  {
+   "claim": "Training cost of the slowest task",
+   "kind": "measured",
+   "source": null,
+   "metric": "Training time",
+   "value": 30,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CONCODE and Microsoft Docs, 2x P100",
+   "note": null,
+   "where": "Fig 8",
+   "table": "Fig 8 (text table), rows Text-to-Code Generation and Documentation Translation, column Training Cost"
+  }
+ ],
+ "limits": [
+  "Only baselines are given, usually one run per cell; no variance, seeds or significance tests and most fine-tuning hyperparameters are unstated.",
+  "Models are small (about 125M) encoders and a GPT-2-small decoder; written in the BERT/GPT-2 era, so numbers are far below later code LLMs.",
+  "Metrics are overlap-based (BLEU, CodeBLEU, edit similarity, exact match) not execution-based; text-to-code has no functional tests.",
+  "Authors note the datasets are limited to six-ish languages and omit tasks such as idiom mining, bug localization, test generation and program synthesis, planned for future extension.",
+  "Authors say CodeBERT ignores code structure (AST, data flow) and improvement is limited on defect detection.",
+  "Code repair and defect detection results are low in absolute terms (62% accuracy, about 10% exact match).",
+  "Devign has no official split so authors made a random one; ambiguity over duplicate leakage not discussed."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CT-all",
+   "definition": "cloze test with candidates from a filtered vocabulary of 930 tokens",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "CT-maxmin",
+   "definition": "cloze test with the candidates max and min, testing semantic reasoning",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "CodeGPT-adapted",
+   "definition": "CodeGPT starting from GPT-2 and continually trained on the code corpus",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CodeBERT (Feng et al.)",
+   "year": 2020,
+   "arxiv": "2002.08155",
+   "relation": "uses-method",
+   "note": "encoder baseline and encoder init",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CodeGPT architecture and init",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "extends",
+   "note": "benchmark model the paper follows",
+   "quote": null
+  },
+  {
+   "work": "CodeSearchNet (Husain et al.)",
+   "year": 2019,
+   "arxiv": "1909.09436",
+   "relation": "uses-data",
+   "note": "pretraining, search, cloze, summarization",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "baseline",
+   "note": "natural-language-only comparison",
+   "quote": null
+  },
+  {
+   "work": "BigCloneBench, POJ-104, Devign, PY150, Github Java Corpus, Bugs2Fix, CONCODE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eight existing datasets",
+   "quote": null
+  },
+  {
+   "work": "XLM-R (Conneau et al.)",
+   "year": 2019,
+   "arxiv": "1911.02116",
+   "relation": "uses-method",
+   "note": "encoder init for documentation translation",
+   "quote": null
+  },
+  {
+   "work": "CodeBLEU (Ren et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "metric",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6",
+   "caption": "Three pipelines, including CodeBERT, CodeGPT, and Encoder-Decoder, are provided.",
+   "page": 4,
+   "why": "Shows which baseline serves which task family"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "A brief summary of CodeXGLUE, which includes tasks, datasets, languages, sizes in various states, and baseline systems.",
+   "page": 2,
+   "why": "One-page map of the 10 tasks, 14 datasets and sizes"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Training and inference time costs for each task, evaluated on two P100 GPUs.",
+   "page": 7,
+   "why": "Compute cost per task"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Two examples in the cloze test dataset.",
+   "page": 2,
+   "why": "Shows what a code cloze item looks like"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "An example in the CodeSearchNet AdvTest dataset.",
+   "page": 4,
+   "why": "Shows the name normalisation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Venue (NeurIPS Datasets and Benchmarks) is from the task brief; the PDF text prints only the arXiv stamp.",
+  "Table cells flatten column-wise in the text; values were matched by order."
+ ]
+}

@@ -1,0 +1,153 @@
+{
+ "schema": 1,
+ "key": "1911.02116",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/conneau-2020-unsupervised-cross-lingual-representation-learning.pdf",
+ "bib": {
+  "title": "Unsupervised Cross-lingual Representation Learning at Scale",
+  "authors": ["Alexis Conneau", "Kartikay Khandelwal", "Naman Goyal", "Vishrav Chaudhary", "Guillaume Wenzek", "Francisco Guzmán", "Edouard Grave", "Myle Ott", "Luke Zettlemoyer", "Veselin Stoyanov"],
+  "first_author": "Conneau",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL 2020), pages 8440-8451",
+  "arxiv": "1911.02116",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48310,
+  "chars_total": 48310,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What happens to cross-lingual transfer and per-language quality when a masked language model is pretrained at very large scale (more data, 100 languages) and what trade-offs govern it?",
+ "hypothesis": "Scaling multilingual MLM pretraining data (clean CommonCrawl instead of Wikipedia) and tuning training, sampling and vocabulary gives large cross-lingual gains, especially for low-resource languages, without losing per-language quality.",
+ "contributions": [
+  "XLM-R, a multilingual masked LM trained on 100 languages and more than two terabytes of filtered CommonCrawl, beating mBERT and XLM on XNLI, MLQA and NER",
+  "Analysis of the transfer-dilution trade-off (curse of multilinguality), language sampling, vocabulary size and data scale",
+  "Evidence that a multilingual model can be competitive with monolingual models on GLUE and XNLI"
+ ],
+ "method": {
+  "summary": "Transformer encoder trained with the multilingual MLM objective on CC-100 (cleaned CommonCrawl in 100 languages, CCNet pipeline), SentencePiece unigram tokenisation on raw text, 250K vocabulary, language sampling with alpha=0.3, no language embeddings, no TLM. Evaluated by fine-tuning on XNLI, CoNLL NER, MLQA and GLUE; ablations use BERT-Base architectures.",
+  "task": "multilingual masked language model pretraining, then fine-tuning for cross-lingual classification, NER, QA",
+  "trains": true,
+  "datasets": [
+   {"name": "CC-100", "role": "pretrain", "size": "more than 2 TB / 2.5 TB filtered text, 100 languages (per-language tokens and GiB in Table 6; e.g. English 55608M tokens, 300.8 GiB; Swahili 275M, 1.6 GiB; Russian 278.0 GiB)", "split": null, "source": "CommonCrawl, one dump for English and twelve dumps for all other languages, cleaned following Wenzek et al. 2019 (CCNet)", "preprocessing": "internal language ID model plus fastText language ID; per-language LMs used to filter documents as in Wenzek et al. 2019; SentencePiece applied to raw text"},
+   {"name": "Wiki-100", "role": "pretrain", "size": "Wikipedia in 100 languages, used for ablations and for the mBERT / XLM-100 baselines (sizes shown in Fig 1 only)", "split": null, "source": "Wikipedia", "preprocessing": "language-specific tokenisation plus BPE for XLM-100"},
+   {"name": "XNLI", "role": "both", "size": "dev and test in 15 languages; English training set machine translated to the other 14", "split": "train on English (cross-lingual transfer), translate-train, translate-train-all", "source": "official XNLI data and translations", "preprocessing": null},
+   {"name": "CoNLL-2002 / CoNLL-2003 NER", "role": "both", "size": null, "split": "English, Dutch, Spanish, German; fine-tune on en, each, or all", "source": "Sang 2002; Tjong Kim Sang and De Meulder 2003", "preprocessing": null},
+   {"name": "MLQA", "role": "eval", "size": null, "split": "fine-tune on English SQuAD, evaluate zero-shot on en, es, de, ar, hi, vi, zh", "source": "Lewis et al. 2019", "preprocessing": null},
+   {"name": "GLUE", "role": "eval", "size": null, "split": "dev sets; MNLI, QNLI, QQP, SST, MRPC, STS-B reported", "source": "Wang et al. 2018", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "XLM-R", "role": "proposed", "params": "550M", "architecture": "Transformer encoder, multilingual MLM", "init_from": null, "tokenizer": "SentencePiece unigram LM on raw text", "vocab": "250K (full softmax)", "layers": "24", "hidden": "1024", "heads": "16", "context": null, "other": {"ffn_dim": "4096"}},
+   {"name": "XLM-R Base", "role": "proposed", "params": "270M", "architecture": "Transformer encoder, multilingual MLM", "init_from": null, "tokenizer": "SentencePiece", "vocab": "250K", "layers": "12", "hidden": "768", "heads": "12", "context": null, "other": {"ffn_dim": "3072"}},
+   {"name": "Ablation models", "role": "base", "params": null, "architecture": "BERT-Base architecture", "init_from": null, "tokenizer": null, "vocab": "150K for ablations (varied 32K-512K in vocab study)", "layers": "12", "hidden": "768 (widened to 960 and 1152 for 30 and 100 languages in the capacity study)", "heads": "12", "context": null, "other": {}},
+   {"name": "mBERT", "role": "baseline", "params": "172M", "architecture": "BERT-Base multilingual", "init_from": null, "tokenizer": "WordPiece", "vocab": "110K", "layers": "12", "hidden": "768", "heads": "12", "context": null, "other": {"languages": "104 (102 in Table 1)"}},
+   {"name": "XLM-100", "role": "baseline", "params": "570M", "architecture": "Transformer, MLM on Wikipedia", "init_from": null, "tokenizer": "BPE", "vocab": "200K", "layers": "16", "hidden": "1280", "heads": "16", "context": null, "other": {}},
+   {"name": "RoBERTa / BERT-Large / XLNet-Large", "role": "baseline", "params": "RoBERTa 355M, BERT-Large 335M", "architecture": "monolingual English encoders", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "GLUE numbers taken from Liu et al. 2019"}}
+  ],
+  "training": {
+   "objective": "multilingual masked language modelling on monolingual text streams; no translation language modelling (TLM)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8192",
+   "steps": "1.5 million updates",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "no language embeddings",
+   "hardware": "five-hundred 32GB Nvidia V100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "XNLI results averaged over five seeds",
+   "other": {"language_sampling": "alpha = 0.3 exponential smoothing of language sampling, proportional to number of sentences per corpus", "ablation_batch_sizes": "2048, 4096, 8192 (read from Fig 7)", "stopping": "downstream performance keeps improving after validation perplexity plateaus; perplexity not used as stopping criterion", "fine_tuning": "not stated (no fine-tuning hyperparameters given)"}
+  },
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "XLM-R XNLI averaged over five seeds",
+   "prompting": null, "retrieval": null,
+   "parameters": {}, "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "XNLI accuracy", "definition": "accuracy per language and average over 15 languages", "unit": "%", "higher_is_better": true},
+    {"name": "NER F1", "definition": "F1 on CoNLL-2002/2003", "unit": "F1", "higher_is_better": true},
+    {"name": "MLQA F1 / EM", "definition": "F1 and exact match, zero-shot from English SQuAD", "unit": "%", "higher_is_better": true},
+    {"name": "GLUE dev score", "definition": "task metrics on dev sets, averaged", "unit": "points", "higher_is_better": true}
+   ],
+   "baselines": ["mBERT", "XLM-100", "XLM-15 (MLM+TLM)", "Unicoder", "BERT-en", "RoBERTa", "BERT-Large", "XLNet-Large", "LSTM+CRF (Lample 2016)", "Flair (Akbik 2018)", "monolingual BERT-Base models (14 trained)"],
+   "protocol": "XNLI: cross-lingual transfer, translate-test, translate-train, translate-train-all; model selection either per-language dev (N models) or joint dev (1 model); XLM-R averaged over 5 seeds. Ablations mostly on XNLI with 7 languages (en, fr, de, ru, zh, sw, ur); high-resource = mean of en and fr, low-resource = mean of sw and ur."
+  },
+  "availability": {"code": "https://github.com/facebookresearch/(fairseq-py,pytext,xlm); ccnet at github.com/facebookresearch/cc_net", "weights": "promised public ('We will make our code, data and models publicly available')", "data": "promised public"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.steps", "quote": "train our XLM-R model for", "where": "Section 5.2"}
+  ]
+ },
+ "results": [
+  {"claim": "XLM-R improves XNLI average accuracy over mBERT.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy gain over mBERT", "value": "14.6", "unit": "% average accuracy", "baseline_value": null, "n": null, "setup": "cross-lingual transfer from English, XLM-R 550M vs mBERT open-source model", "quote": "+14.6% average accu-", "table": null, "note": "Abstract prints +14.6%; Section 5.2 says 14.6% over mBERT and 10.2% over XLM-100. Table 1 avg 80.9 vs 66.3 is a 14.6 point gap.", "where": "Abstract; Table 1"},
+  {"claim": "XLM-R (large) average XNLI accuracy under cross-lingual transfer.", "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "80.9", "unit": "%", "baseline_value": "66.3 (mBERT)", "n": "5 seeds", "setup": "fine-tune on English, test on 15 languages, single model selected on joint dev", "quote": null, "table": "Table 1, row XLM-R (CC, 1, 100), column Avg, cross-lingual transfer block", "note": null, "where": "Table 1"},
+  {"claim": "XLM-R with translate-train-all sets a new XNLI state of the art.", "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "83.6", "unit": "%", "baseline_value": "78.5 (Huang et al. 2019, Unicoder)", "n": "5 seeds", "setup": "translate-train-all, fine-tune on concatenation of all machine-translated training sets", "quote": "obtains a new state of the art on XNLI of 83.6% average accuracy", "table": null, "note": null, "where": "Table 1 caption"},
+  {"claim": "XLM-R Base XNLI average, cross-lingual transfer.", "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "76.2", "unit": "%", "baseline_value": null, "n": "5 seeds", "setup": "XLM-R Base 270M, English fine-tune", "quote": null, "table": "Table 1, row XLM-R Base, column Avg, cross-lingual transfer block", "note": null, "where": "Table 1"},
+  {"claim": "Low-resource gains on XNLI: Swahili and Urdu improvements over XLM-100.", "kind": "measured", "source": null, "metric": "XNLI sw gain over XLM-100", "value": "15.7", "unit": "% accuracy", "baseline_value": null, "n": null, "setup": "cross-lingual transfer; Urdu gain 11.4%", "quote": "improving 15.7% in XNLI accuracy", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "XLM-R improves MLQA F1 over mBERT.", "kind": "measured", "source": null, "metric": "MLQA average F1", "value": "70.7", "unit": "F1 %", "baseline_value": "61.6 (XLM-15)", "n": null, "setup": "train on English SQuAD, zero-shot on 7 languages; avg EM 52.7 vs 43.5", "quote": "70.7% and 52.7% while the previous state of the art", "table": null, "note": "previous SOTA 61.6 F1 / 43.5 EM", "where": "Section 5.2, Table 3"},
+  {"claim": "XLM-R improves NER F1 over mBERT for cross-lingual transfer.", "kind": "measured", "source": null, "metric": "CoNLL NER average F1 gain", "value": "2.42", "unit": "F1", "baseline_value": null, "n": null, "setup": "fine-tune on English, evaluate en/nl/es/de, no CRF", "quote": "outperforms mBERT by 2.42 F1 on average for", "table": null, "note": "Abstract says +2.4%; Table 2 en row avg 80.94 vs 78.52", "where": "Section 5.2, Table 2"},
+  {"claim": "Training NER on all languages reaches 89.43 average F1.", "kind": "measured", "source": null, "metric": "NER average F1", "value": "89.43", "unit": "F1", "baseline_value": null, "n": null, "setup": "XLM-R trained on data of all languages", "quote": "average F1 score of 89.43%", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "Curse of multilinguality: XNLI accuracy falls as languages are added at fixed capacity.", "kind": "measured", "source": null, "metric": "XNLI overall accuracy, XLM-7 to XLM-100", "value": "71.8 to 67.7", "unit": "%", "baseline_value": null, "n": null, "setup": "Wikipedia, BERT-Base, fixed capacity, 150K vocab", "quote": "the overall XNLI accuracy decreases", "table": null, "note": "Quote continues 'from 71.8% to 67.7% as we go from XLM-7 to XLM-100' across lines.", "where": "Section 5.1, Fig 2"},
+  {"claim": "Increasing vocabulary size at fixed parameter count raises XNLI accuracy.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy gain, vocab 32K to 256K", "value": "2.8", "unit": "%", "baseline_value": null, "n": null, "setup": "XLM-100 on Wikipedia, transformer width adjusted to hold parameters constant", "quote": "we observe a 2.8% increase in XNLI av-", "table": null, "note": "Separate test: more than 3% gain from 128K to 512K with BERT-Base", "where": "Section 5.1, Fig 6"},
+  {"claim": "Alpha=0.3 for language sampling chosen as best overall; higher alpha favours high-resource languages.", "kind": "measured", "source": null, "metric": "language sampling alpha", "value": "0.3", "unit": "alpha", "baseline_value": null, "n": null, "setup": "XLM-100 on Wikipedia, alpha swept over 0.01, 0.3, 0.7, 1.0 (Fig 5)", "quote": "we found 0.3 to be an optimal", "table": null, "note": null, "where": "Section 5.1"},
+  {"claim": "Training the XLM MLM longer lifted its XNLI average from 71.3 to over 75, on par with TLM.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy of Lample and Conneau MLM, retrained", "value": "75", "unit": "% (more than)", "baseline_value": "71.3", "n": null, "setup": "validation perplexity was a poor stopping criterion; downstream keeps improving after plateau", "quote": "from 71.3% to more than 75% average accuracy", "table": null, "note": null, "where": "Section 5.1"},
+  {"claim": "XLM-R trails RoBERTa on GLUE by about 1 point.", "kind": "measured", "source": null, "metric": "GLUE dev average", "value": "91.8", "unit": "points", "baseline_value": "92.8 (RoBERTa)", "n": null, "setup": "XLM-R 100 languages vs English monolingual models", "quote": "outperforms XLM-R by only 1.0% on average", "table": "Table 4, row XLM-R, column Avg", "note": "BERT-Large 90.2, XLNet-Large 92.0", "where": "Table 4"},
+  {"claim": "Multilingual translate-train-all XLM-7 on CC beats monolingual BERT models on 7 languages.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy over 7 languages", "value": "80.0", "unit": "%", "baseline_value": "77.5 (BERT CC)", "n": null, "setup": "BERT-Base, 14 monolingual BERTs on Wikipedia and CC (capped at 60 GiB), 40K vs 150K vocab", "quote": "our XLM-7 trained on CC obtains 80.0%", "table": "Table 5", "note": "With cross-lingual transfer only, monolingual wins by 1.6% (Wiki) and 1.3% (CC): XLM-7 CC 76.2 vs BERT CC 77.5", "where": "Section 5.3, Table 5"},
+  {"claim": "CommonCrawl pretraining helps low-resource languages much more than Wikipedia.", "kind": "measured", "source": null, "metric": "translate-train-all gain CC vs Wiki, Swahili", "value": "7", "unit": "% (Urdu 4.8%)", "baseline_value": null, "n": null, "setup": "XLM-7 BERT-Base; Wikipedia Swahili/Urdu pretraining similar to random init", "quote": "7% and 4.8% improve-", "table": null, "note": null, "where": "Section 5.4"},
+  {"claim": "Roughly a few hundred MiB is the minimum text for learning a BERT model.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "authors' experience from experiments, no table", "quote": null, "table": null, "note": null, "where": "Section 3"},
+  {"claim": "SentencePiece on raw text matched language-specific preprocessing plus BPE.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 7 comparison, no numbers in text", "quote": null, "table": null, "note": null, "where": "Section 5.1, Fig 7"}
+ ],
+ "limits": [
+  "Authors concede the curse of multilinguality remains a limitation for models of modest size (Fig 4: increased capacity does not rescue XLM-100).",
+  "Authors concede RoBERTa still beats XLM-R by 1.0 on GLUE and expect future work to close the gap.",
+  "No optimizer, learning rate, warmup, sequence length, precision or fine-tuning hyperparameters are stated; compute given only as GPUs and updates.",
+  "Ablations use BERT-Base and Wikipedia, so findings may not transfer to the 550M CC-trained model.",
+  "No training token count is stated and no data licence discussion; per-language data skew (English 300 GiB vs Swahili 1.6 GiB) is only handled by alpha=0.3 sampling.",
+  "The 2020 comparison set (mBERT, XLM, Unicoder, RoBERTa) has dated; later multilingual models are not covered."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "curse of multilinguality", "definition": "more languages leads to better cross-lingual performance on low-resource languages up until a point, after which the overall performance on monolingual and cross-lingual benchmarks degrades, for a fixed model capacity", "where": "Section 1"},
+  {"term": "transfer-dilution trade-off", "definition": "Positive transfer and capacity dilution have to be traded off against each other.", "where": "Section 5.1"}
+ ],
+ "lineage": [
+  {"work": "Cross-lingual language model pretraining (XLM)", "year": 2019, "arxiv": null, "relation": "extends", "note": "follows the XLM approach as closely as possible, same sampling distribution form, drops language embeddings and TLM", "quote": "We follow the XLM approach (Lample and Conneau, 2019) as closely"},
+  {"work": "RoBERTa", "year": 2019, "arxiv": "1907.11692", "relation": "extends", "note": "inspiration for training longer on more data; GLUE baseline", "quote": null},
+  {"work": "BERT / mBERT", "year": 2018, "arxiv": null, "relation": "baseline", "note": "multilingual MLM objective and main baseline", "quote": null},
+  {"work": "CCNet (Wenzek et al.)", "year": 2019, "arxiv": "1911.00359", "relation": "uses-data", "note": "pipeline to build CC-100", "quote": null},
+  {"work": "SentencePiece (Kudo and Richardson)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "unigram LM tokeniser on raw text", "quote": null},
+  {"work": "Subword regularization / unigram LM (Kudo)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "unigram language model for subword segmentation", "quote": null},
+  {"work": "Unicoder (Huang et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "previous XNLI state of the art", "quote": null},
+  {"work": "Massively multilingual NMT in the wild (Arivazhagan et al.)", "year": 2019, "arxiv": "1907.05019", "relation": "related", "note": "capacity dilution in 103 languages", "quote": null},
+  {"work": "XNLI (Conneau et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "cross-lingual NLI benchmark", "quote": null},
+  {"work": "MLQA (Lewis et al.)", "year": 2019, "arxiv": "1910.07475", "relation": "uses-data", "note": "cross-lingual QA benchmark", "quote": null},
+  {"work": "GLUE (Wang et al.)", "year": 2018, "arxiv": "1804.07461", "relation": "uses-data", "note": "English evaluation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Amount of data in GiB (log-scale) for the 88 languages that appear in both the Wiki-100 corpus used for mBERT and XLM-100, and the CC-100 used for XLM-R. CC-100 increases the amount of data by several orders of magnitude, in particular for low-resource languages.", "page": 3, "why": "Shows at a glance how much more data CommonCrawl gives low-resource languages than Wikipedia."},
+  {"figure": "Fig 2", "caption": "The transfer-interference trade-off: Low-resource languages benefit from scaling to more languages, until dilution (interference) kicks in and degrades overall performance.", "page": 5, "why": "The curse of multilinguality curve."},
+  {"figure": "Fig 5", "caption": "On the high-resource versus low-resource trade-off: impact of batch language sampling for XLM-100.", "page": 5, "why": "Shows effect of sampling alpha on high vs low resource languages."},
+  {"figure": "Fig 6", "caption": "On the impact of vocabulary size at fixed capacity and with increasing capacity for XLM-100.", "page": 5, "why": "Vocabulary size vs accuracy; relevant to tokens-and-embeddings note."},
+  {"figure": "Table 6", "caption": "Languages and statistics of the CC-100 corpus (tokens in millions and GiB per language).", "page": 10, "why": "Concrete data skew across 100 languages, useful for pretraining data mix discussion."}
+ ],
+ "code": [
+  {"where": "Appendix B, Table 7 caption", "snippet": "For Transformer encoders, the number of parameters can be approximated by 4LH2m + 2LHmHff + V Hm.", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 6 has garbled rows in extraction: Swedish tokens printed as 77.8M, Ukrainian tokens as 6.5M and Burmese appears twice; these look like source typos or extraction artefacts and were not used.",
+  "Table 1 mBERT row says 102 languages while Table 7 says 104."
+ ]
+}

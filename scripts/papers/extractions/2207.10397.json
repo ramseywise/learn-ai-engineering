@@ -1,0 +1,682 @@
+{
+ "schema": 1,
+ "key": "2207.10397",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chen-2022-codet.pdf",
+ "bib": {
+  "title": "CODET: CODE GENERATION WITH GENERATED TESTS",
+  "authors": [
+   "Bei Chen",
+   "Fengji Zhang",
+   "Anh Nguyen",
+   "Daoguang Zan",
+   "Zeqi Lin",
+   "Jian-Guang Lou",
+   "Weizhu Chen"
+  ],
+  "first_author": "Chen",
+  "year": 2022,
+  "venue": "ICLR 2023 (arXiv v2, Nov 2022)",
+  "arxiv": "2207.10397",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72179,
+  "chars_total": 72179,
+  "engine": "pymupdf",
+  "skipped": "references skimmed only"
+ },
+ "type": "empirical",
+ "question": "How can one pick the correct code solution from many LM samples without human-written tests?",
+ "hypothesis": "Correct solutions pass more LM-generated tests and agree with more other solutions; incorrect solutions are diverse and rarely agree by chance (RANSAC-like assumptions).",
+ "contributions": [
+  "CodeT: LM-generated test cases plus dual execution agreement for solution selection",
+  "Evaluation on five models and four benchmarks, with large pass@1 gains",
+  "Analysis of test case quality, quantity and scoring variants"
+ ],
+ "method": {
+  "summary": "Sample N code solutions and M assert-style test cases from the same pretrained LM (zero-shot, with a test-generation instruction appended). Execute every solution on every test, group solutions passing identical test sets into consensus sets, score each set by sqrt(|Sx|)*|Sy| and return a solution from the top-ranked set(s). No training; pure inference-time reranking.",
+  "task": "code generation with solution selection / reranking",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems",
+    "split": "all",
+    "source": "Chen et al. 2021",
+    "preprocessing": "example input-output cases removed from context; avg 7.77 GT tests; n=100 samples"
+   },
+   {
+    "name": "MBPP (sanitized)",
+    "role": "eval",
+    "size": "427 problems",
+    "split": "all",
+    "source": "Austin et al. 2021",
+    "preprocessing": "context built like HumanEval; avg 3.1 GT tests; n=100"
+   },
+   {
+    "name": "APPS",
+    "role": "eval",
+    "size": "1,000 introductory, 3,000 interview, 1,000 competition",
+    "split": "all",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "examples removed; header def solution(stdin : str) -> str:; avg 20.99 GT tests; n=50"
+   },
+   {
+    "name": "CodeContests",
+    "role": "eval",
+    "size": "165 problems",
+    "split": "all",
+    "source": "Li et al. 2022b",
+    "preprocessing": "same as APPS; avg 203.7 GT tests; n=1000"
+   }
+  ],
+  "models": [
+   {
+    "name": "code-cushman-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Codex (GPT-3 descendant)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-davinci-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Codex",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "code-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Codex",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "INCODER-6B",
+    "role": "evaluated",
+    "params": "6.7B",
+    "architecture": "infilling decoder LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "precision": "half"
+    }
+   },
+   {
+    "name": "CODEGEN-MONO-16B",
+    "role": "evaluated",
+    "params": "16B",
+    "architecture": "Python mono-lingual CodeGen",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "precision": "half"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "top-p sampling; baseline pass@1 uses greedy (temperature 0)",
+   "temperature": "0.8",
+   "top_p": "0.95",
+   "max_tokens": "300 generated length",
+   "samples": "HumanEval/MBPP 100 code samples; APPS 50; CodeContests 1000; test cases: 100 samples per problem (HumanEval, MBPP), 50 (APPS, CodeContests), first 5 valid asserts per sample (Limit 5)",
+   "prompting": "zero-shot; test generation appends instruction: pass placeholder, comment 'check the correctness of [entry point]', and 'assert'",
+   "retrieval": null,
+   "parameters": {
+    "consensus_score": "f(S)=sqrt(|Sx|)*|Sy| (sqrt on solution count, Appendix A); paper main text defines f=|Sx||Sy|",
+    "stop_sequences": "\\nclass, \\ndef, \\n#, \\nif, \\nprint",
+    "exec_timeout": "0.1 seconds per test case",
+    "valid_test": "starts with assert and contains entry point name",
+    "top_k": "k consensus sets, one solution from each; cycles if fewer than k sets",
+    "RANSAC_iterations": "naive version enumerates all pairs; no iteration count given"
+   },
+   "other": {
+    "inferred_hardware": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "percent of problems where any of k selected solutions passes all ground-truth tests; baseline uses unbiased estimator (Chen 2021) with k random from n; CodeT selects k via consensus sets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "test case accuracy / toxicity rate / coverage",
+     "definition": "accuracy: canonical solution passes the test; toxic: some generated solution passes but canonical fails; statement and branch coverage via Coverage.py",
+     "unit": "fraction/%",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "random-pick pass@k (Chen et al. 2021)",
+    "greedy pass@1",
+    "AlphaCode-C (replication of Li et al. 2022b clustering)",
+    "Inala et al. 2022 fault-aware ranker",
+    "Fried 2022a / Nijkamp 2022 reported numbers"
+   ],
+   "protocol": "single run, no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/CodeT",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "test case generation suffix",
+    "text": "check the correctness of [entry point]",
+    "where": "Sec 2.1, Fig 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.consensus_score",
+    "quote": "we use the square root of |Sx| to reduce the impact caused by code solutions",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CodeT lifts code-davinci-002 HumanEval pass@1 from 47.0 to 65.8, +18.8 absolute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "65.8",
+   "unit": "%",
+   "baseline_value": "47.0",
+   "n": null,
+   "setup": "HumanEval (164 problems, example I/O removed), zero-shot, code-davinci-002, T=0.8, 100 samples, 100 generated test samples/problem",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "CODET improves the pass@1 metric on HumanEval to 65.8%, which represents an absolute improvement of 18.8% over the code-davinci-002 model"
+  },
+  {
+   "claim": "CodeT improves MBPP pass@1 for code-davinci-002 from 58.1 to 67.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "67.7",
+   "unit": "%",
+   "baseline_value": "58.1",
+   "n": null,
+   "setup": "MBPP sanitized (427 problems), zero-shot, code-davinci-002, T=0.8, 100 samples",
+   "note": null,
+   "where": "Intro; Table 2",
+   "quote": "MBPP (58.1% →67.7%)"
+  },
+  {
+   "claim": "Previous best HumanEval pass@1 was 42.7 (Inala et al. 2022); CodeT with code-davinci-002 exceeds it by about 23 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "65.8",
+   "unit": "%",
+   "baseline_value": "42.7",
+   "n": null,
+   "setup": "HumanEval; comparison with a trained fault-aware ranker, settings not identical",
+   "note": null,
+   "where": "Intro",
+   "quote": "HumanEval: 42.7% (Inala et al., 2022) →65.8%"
+  },
+  {
+   "claim": "On HumanEval with code-cushman-001, pass@100 is far above pass@1, which motivates selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@100",
+   "value": "77.4",
+   "unit": "% pass@100",
+   "baseline_value": "33.5",
+   "n": null,
+   "setup": "HumanEval, Codex code-cushman-001, baseline",
+   "note": "Quote line-wrapped in source; value 33.5 pass@1.",
+   "where": "Intro",
+   "table": "Table 2, row HumanEval code-cushman-001, column Baseline k=100 (77.4) and k=1 (33.5)"
+  },
+  {
+   "claim": "code-cushman-001 CodeT HumanEval pass@1 is 44.5 vs baseline 33.5 (+11.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "44.5",
+   "unit": "%",
+   "baseline_value": "33.5",
+   "n": null,
+   "setup": "HumanEval, code-cushman-001",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row HumanEval code-cushman-001, column CodeT k=1"
+  },
+  {
+   "claim": "CodeT pass@2 is close to baseline pass@10 for code-davinci-002 on HumanEval (75.1 vs 74.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@2",
+   "value": "75.1",
+   "unit": "%",
+   "baseline_value": "74.9",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row HumanEval code-davinci-002, column CodeT k=2 (baseline k=10 is 74.9)"
+  },
+  {
+   "claim": "AlphaCode-C clustering replication is consistently worse than CodeT: code-davinci-002 HumanEval pass@1 55.1 vs 65.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "55.1",
+   "unit": "%",
+   "baseline_value": "65.8",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002; AlphaCode-C uses CodeT-generated test inputs, clusters by outputs, ranks by size",
+   "note": null,
+   "where": "Table 2; Appendix I",
+   "table": "Table 2, row HumanEval code-davinci-002, column AlphaCode-C k=1"
+  },
+  {
+   "claim": "CodeT gains on open models: INCODER-6B +13.1 on MBPP pass@1, range 4.2 to 13.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 gain",
+   "value": "13.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "INCODER-6B and CODEGEN-MONO-16B, HumanEval and MBPP, pass@1",
+   "note": null,
+   "where": "4.1",
+   "quote": "INCODER-6B achieves the greatest improvement with a gain of 13.1% on the MBPP benchmark"
+  },
+  {
+   "claim": "APPS introductory pass@1 rises 27.2 to 34.6 zero-shot; gains on competition level are small (1.8 to 2.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "34.6",
+   "unit": "%",
+   "baseline_value": "27.2",
+   "n": null,
+   "setup": "APPS 5000 problems, code-davinci-002, 50 samples, T=0.8",
+   "note": null,
+   "where": "Intro; Table 3",
+   "quote": "APPS INTRODUCTORY (27.2% →34.6%)"
+  },
+  {
+   "claim": "CodeContests pass@1 rises 0.7 to 2.1 with 1000 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "2.1",
+   "unit": "%",
+   "baseline_value": "0.7",
+   "n": null,
+   "setup": "CodeContests (165 problems), code-davinci-002, 1000 samples",
+   "note": null,
+   "where": "Intro; Table 3",
+   "quote": "CodeContests (0.7% →2.1%)"
+  },
+  {
+   "claim": "Better test cases transfer: code-davinci-002-generated tests lift INCODER-6B HumanEval pass@1 by 6.2 and CODEGEN by 11.0 over own tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "47.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, CODEGEN-MONO-16B code, tests from code-davinci-002",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row CODEGEN-MONO-16B, HumanEval k=1 (47.7, +11.0)"
+  },
+  {
+   "claim": "Test case quality (accuracy, toxicity rate) correlates with CodeT gain; Codex tests are more accurate than CODEGEN/INCODER. No single number; see Fig 4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, canonical solutions used as oracle, Fig 4",
+   "note": null,
+   "where": "4.3 Q1"
+  },
+  {
+   "claim": "With only 10 test cases per problem CodeT still improves pass@1 by 9.5 for code-davinci-002.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1 gain",
+   "value": "9.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, code-davinci-002, Sampling Number 10, Limit 1",
+   "note": null,
+   "where": "4.3 Q3; Table 5",
+   "quote": "CODET improves the pass@1 by 9.5% with only 10 test cases using code-davinci-002"
+  },
+  {
+   "claim": "Pass@1 for code-davinci-002 increases with more tests: 56.5 (10 samples, limit 1) to 65.8 (100 samples, limit 5); gap narrows at sampling>=50 and limit>=3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "65.8",
+   "unit": "%",
+   "baseline_value": "56.5",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Limit 5, column Sampling Number 100 (56.5 at Limit 1 / Sampling 10)"
+  },
+  {
+   "claim": "Scoring by solution count only (self-consistency style) or test count only is worse than f=|Sx||Sy|, even below baseline at pass@1 for some models: code-davinci-002 solution-only 55.9, test-only 58.4 vs CodeT 65.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "55.9",
+   "unit": "%",
+   "baseline_value": "65.8",
+   "n": null,
+   "setup": "HumanEval, code-davinci-002, Table 13",
+   "note": null,
+   "where": "Appendix I",
+   "table": "Table 13, row code-davinci-002, column Code Solution Only k=1 (test case only 58.4)"
+  },
+  {
+   "claim": "53 of 164 HumanEval problems with code-cushman-001 have a correct solution generated but not in the top-1 consensus set; about 20% of these are due to ambiguity, uncovered corner cases or missing imports.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "53",
+   "unit": "problems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, CodeT with code-cushman-001, manual inspection",
+   "note": null,
+   "where": "4.4",
+   "quote": "we ﬁnd 53 out of 164 programming problems that belong to this situation"
+  },
+  {
+   "claim": "Leaving example I/O in the HumanEval prompt inflates CodeT: code-davinci-002 pass@1 74.8 vs 65.8, because the model copies real tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "74.8",
+   "unit": "%",
+   "baseline_value": "65.8",
+   "n": null,
+   "setup": "Original HumanEval contexts, Codex, Table 6",
+   "note": null,
+   "where": "Appendix B",
+   "table": "Table 6, row code-davinci-002, column CodeT k=1"
+  },
+  {
+   "claim": "Removing trivial solutions (4.5 of 50 on APPS, 91.6 of 1000 on CodeContests) changes CodeT little.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "91.6",
+   "unit": "solutions per problem",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS/CodeContests, code-davinci-002",
+   "note": null,
+   "where": "Appendix F; Table 8",
+   "quote": "we can remove an average of 4.5 (91.6) trivial solutions"
+  },
+  {
+   "claim": "One-shot with example filtering: CodeT Filter beats Baseline Filter on APPS introductory pass@1 (49.6 vs 43.6) but is slightly worse on CodeContests (9.6 vs 9.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "49.6",
+   "unit": "%",
+   "baseline_value": "43.6",
+   "n": null,
+   "setup": "APPS introductory, code-davinci-002, one-shot, filter by given example",
+   "note": null,
+   "where": "Appendix G",
+   "table": "Table 9, APPS INTRODUCTORY, CODET Filter k=1 (Baseline Filter 43.6; CodeContests 9.6 vs 9.9)"
+  },
+  {
+   "claim": "De-duplication of solutions or tests has slight, inconsistent effect.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": "46.9",
+   "unit": "%",
+   "baseline_value": "44.5",
+   "n": null,
+   "setup": "HumanEval pass@1, code-cushman-001, dedupe solutions only vs 44.5 none",
+   "note": null,
+   "where": "Appendix D",
+   "table": "Table 7, row Solution Yes Test No, HumanEval k=1 (44.5 no dedup)"
+  },
+  {
+   "claim": "Higher temperature improves baseline pass@100 and CodeT pass@1; T=0.8 chosen.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "code-cushman-001, HumanEval, Fig 9, T 0.1 to 1.0",
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Test cases average 391.1 per problem for code-davinci-002 on HumanEval vs 55.6 for CODEGEN; statement coverage 95.7 vs 78.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "391.1",
+   "unit": "tests per problem",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, 100 samples x first 5 valid asserts",
+   "note": null,
+   "where": "Appendix H",
+   "table": "Table 10, row code-davinci-002 Average (CODEGEN 55.6); Table 11 statement 95.7 / 78.2"
+  }
+ ],
+ "limits": [
+  "Only works for executable code and adds test-generation compute cost (Conclusion).",
+  "Gains small on hard problems (APPS competition, CodeContests) because generated tests are low quality; one-shot CodeT Filter can be slightly worse than baseline on CodeContests.",
+  "Relies on assumption that incorrect solutions rarely agree; fails with ambiguous specs, uncovered corner cases, or misunderstood problems (53/164 HumanEval cases with cushman-001 had a correct solution outside top-1).",
+  "Example I/O removed from prompts, so numbers differ from original HumanEval; leaving them in leaks real tests into CodeT (Appendix B).",
+  "Single run, no variance or significance reported; compute cost of 100 code plus 100 test samples per problem not quantified.",
+  "Codex models code-cushman/davinci are deprecated; not reproducible via API now."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "consensus set",
+   "definition": "the set of pairs (x,y) where solutions Sx pass exactly the same test cases Sy",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "dual execution agreement",
+   "definition": "ranking consensus sets by both number of solutions and number of passed test cases",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "toxic test case",
+   "definition": "a test case that a generated solution passes but the canonical solution does not",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Evaluating large language models trained on code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-method",
+   "note": "models, HumanEval, pass@k estimator, stop sequences",
+   "quote": null
+  },
+  {
+   "work": "RANSAC (Fischler & Bolles)",
+   "year": 1981,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspires dual execution agreement",
+   "quote": null
+  },
+  {
+   "work": "Competition-level code generation with AlphaCode (Li et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "AlphaCode-C clustering replicated; CodeContests",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "related",
+   "note": "agreement ranking; equals ablation f'=|Sx|",
+   "quote": null
+  },
+  {
+   "work": "Fault-aware neural code rankers (Inala et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "previous SOTA 42.7 HumanEval pass@1",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "related",
+   "note": "trained verifier reranking",
+   "quote": null
+  },
+  {
+   "work": "Program synthesis with large language models (MBPP)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "MBPP",
+   "quote": null
+  },
+  {
+   "work": "Measuring coding challenge competence with APPS",
+   "year": 2021,
+   "arxiv": "2105.09938",
+   "relation": "uses-data",
+   "note": "APPS",
+   "quote": null
+  },
+  {
+   "work": "InCoder",
+   "year": 2022,
+   "arxiv": "2204.05999",
+   "relation": "evaluates",
+   "note": "INCODER-6B",
+   "quote": null
+  },
+  {
+   "work": "CodeGen (Nijkamp et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "CODEGEN-MONO-16B",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The illustration of CODET.",
+   "page": 2,
+   "why": "pipeline overview: same LM makes solutions and tests, execution agreement picks the best"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A simple example of the programming problem 'return the square of a number'.",
+   "page": 4,
+   "why": "toy bipartite graph of solutions vs tests showing consensus sets scoring 6 and 4"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Code generation and test case generation: an example from the HumanEval benchmark.",
+   "page": 3,
+   "why": "shows the test-generation prompt (pass, comment, assert)"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Two real cases from the HumanEval benchmark with CODET and code-cushman-001.",
+   "page": 8,
+   "why": "rank 1 set has fewer tests but more solutions yet is correct"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The distributions of (a) test case accuracy and (b) toxicity rate for each problem on HumanEval.",
+   "page": 7,
+   "why": "test quality vs model"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Pass@k (%) on the HumanEval and MBPP benchmarks.",
+   "page": 5,
+   "why": "headline results across five models"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.2",
+   "snippet": "f(S) = |Sx||Sy|  (implementation: sqrt(|Sx|)*|Sy|, Appendix A)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells are flattened in the text; improvements printed in red appear glued to values. A pass@1 baseline for Table 6/others derived from table positions.",
+  "No embedded instructions found."
+ ]
+}

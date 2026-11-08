@@ -1,0 +1,276 @@
+{
+ "schema": 1,
+ "key": "1805.00932",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mahajan-2018-exploring-limits-weakly-supervised-pretraining.pdf",
+ "bib": {
+  "title": "Exploring the Limits of Weakly Supervised Pretraining",
+  "authors": ["Dhruv Mahajan", "Ross Girshick", "Vignesh Ramanathan", "Kaiming He", "Manohar Paluri", "Yixuan Li", "Ashwin Bharambe", "Laurens van der Maaten"],
+  "first_author": "Mahajan",
+  "year": 2018,
+  "venue": "ECCV 2018 (arXiv preprint v1)",
+  "arxiv": "1805.00932",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 67590,
+  "chars_total": 67590,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How does supervised pretraining on billions of weakly labelled (hashtag) social media images transfer to classification and detection, and how does that depend on data size, label space, noise, sampling and model capacity?",
+ "hypothesis": "Hashtags may be too noisy to be an effective supervisory signal, but the authors expect (and test) that scale compensates; they hypothesise the 1.5k set has a visual distribution similar to IN-1k while the 8.5k/17k sets cover more fine-grained categories.",
+ "contributions": [
+  "State-of-the-art ImageNet-1k single-crop top-1 of 85.4% (97.6% top-5) by pretraining on up to 3.5B Instagram images with hashtag labels",
+  "Experiments on the relation between pretraining set size, hashtag vocabulary, label noise, sampling and transfer performance",
+  "Evidence that detection transfer is model-capacity bound and that finetuning recipes for ImageNet pretraining do not carry over"
+ ],
+ "method": {
+  "summary": "ResNeXt-101 32xCd networks are pretrained with a softmax over hashtags (multi-label target spread as 1/k) on up to 3.5B public Instagram images, then transferred to ImageNet, CUB2011, Places365 by full finetuning or a linear classifier on frozen features, and to COCO with Mask R-CNN. Hashtag vocabulary, image count, injected label noise, class resampling and model size are varied one at a time.",
+  "task": "weakly supervised image classification pretraining (hashtag prediction) and transfer",
+  "trains": true,
+  "datasets": [
+   {"name": "Instagram IG (train-IG-I-1.5k / 8.5k / 17k)", "role": "pretrain", "size": "up to 3.5B images; 940M max for the 1.5k set; 1B for 8.5k and 17k; ~2 hashtags per image in IG-1B-17k", "split": null, "source": "public Instagram posts with at least one hashtag in the caption; 1.5k hashtags from IN-1k synsets, 17k from WordNet noun synsets, 8.5k the most frequent of the 17k; hashtags merged to canonical form by WordNet synset equality", "preprocessing": "hashtags matched to WordNet synsets via nltk, merged when synset sets are identical; non-selected hashtags discarded; test images deduplicated against the pool"},
+   {"name": "ImageNet-1k", "role": "both", "size": "1.28M train, 50k val", "split": "standard ILSVRC", "source": "ImageNet", "preprocessing": null},
+   {"name": "ImageNet-5k and ImageNet-9k", "role": "both", "size": "6.6M train (5k labels), 10.5M train (9k labels), 50 val images per class", "split": "subsets of the full 2011 release (14.2M images, 22k labels); 9k takes the next most frequent 4k labels after IN-5k", "source": "ImageNet 2011", "preprocessing": null},
+   {"name": "CUB2011", "role": "eval", "size": "6k train/val images, 200 classes", "split": "standard", "source": "Caltech-UCSD Birds-200-2011", "preprocessing": null},
+   {"name": "Places365-Standard", "role": "eval", "size": "1.8M train, 37k val, 365 classes", "split": "high-resolution version", "source": "Zhou et al. 2017", "preprocessing": null},
+   {"name": "COCO 2017", "role": "eval", "size": "135k train, 5k val, 20k test-dev, 80 classes", "split": "grid search on val2017, report on test-dev2017", "source": "Lin et al. 2014", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "ResNeXt-101 32x4d", "role": "proposed", "params": "43M", "architecture": "residual network with grouped convolutions, 8B multiply-adds", "init_from": "random (pretraining); Instagram or ImageNet weights for transfer", "tokenizer": null, "vocab": null, "layers": "101", "hidden": null, "heads": null, "context": null, "other": {"groups": "32", "group_width": "4"}},
+   {"name": "ResNeXt-101 32x8d", "role": "proposed", "params": "88M", "architecture": "ResNeXt-101, 16B multiply-adds", "init_from": null, "tokenizer": null, "vocab": null, "layers": "101", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ResNeXt-101 32x16d", "role": "proposed", "params": "193M", "architecture": "ResNeXt-101, 36B multiply-adds", "init_from": null, "tokenizer": null, "vocab": null, "layers": "101", "hidden": null, "heads": null, "context": null, "other": {"table6_params": "194M"}},
+   {"name": "ResNeXt-101 32x32d", "role": "proposed", "params": "466M", "architecture": "ResNeXt-101, 87B multiply-adds", "init_from": null, "tokenizer": null, "vocab": null, "layers": "101", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ResNeXt-101 32x48d", "role": "proposed", "params": "829M", "architecture": "ResNeXt-101, 153B multiply-adds", "init_from": null, "tokenizer": null, "vocab": null, "layers": "101", "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "cross-entropy between softmax over hashtag vocabulary and target distribution with k non-zero entries each 1/k for the k hashtags of the image; per-hashtag sigmoid with binary logistic loss was tried and gave significantly worse results",
+   "optimizer": "synchronous SGD, Nesterov momentum 0.9",
+   "lr": "initial 0.1/256 x minibatch (warm-up from 0.1 up to 0.1/256*8064); ImageNet baselines same base LR",
+   "lr_schedule": "linear scaling rule with gradual warm-up (Goyal et al.); multiplied by 0.5 at equally spaced steps, 20 reductions in total (40 for IG-3.5B-17k per Table 3); ImageNet uses three equally spaced reductions by 0.1 (Table 3 lists four steps for IN)",
+   "warmup": "gradual, from 0.1 up to 0.1/256*8064; length not stated",
+   "batch_size": "8,064 images on 336 GPUs (24 per GPU); 3,072 on 128 GPUs for ImageNet",
+   "steps": null,
+   "epochs": "Instagram schedules in images processed (see other); ImageNet: 100 epochs (IN-1k), 40 (IN-5k), 25 (IN-9k)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4, not applied to BN scale and bias",
+   "dropout": null,
+   "regularisation": "BN statistics computed over 24-image sets per GPU; final BN gamma of each residual block initialised to 0; L2-regularised logistic regression for feature transfer",
+   "hardware": "336 GPUs across 42 machines (GPU model not stated)",
+   "compute": "ResNeXt-101 32x16d on 3.5B images",
+   "wall_clock": "~22 days for ResNeXt-101 32x16d on 3.5B images",
+   "seeds": "two different random 1B-image samples compared for pretraining; difference under 0.1% top-1",
+   "other": {
+    "schedule_heuristic": "two extremes (e.g. 120 epochs on 1.2e6 images and 2 epochs on 3.5e9 images) linearly interpolated to set images-processed",
+    "table3_schedules": "IG-940M-1.5k 1925e6 images, 20 LR steps; IG-940k-1.5k 300e6 images, 20; IG-3.5B-17k 7000e6 images, 40; IG-3.5M-17k 300e6 images, 20; LR decay 0.5, weight decay 1e-4",
+    "sampling": "square-root sampling used for all Instagram pretraining except the sampling ablation; replication factor r(h)=max(1, phi(t/f(h))), image factor = max over its hashtags",
+    "finetune_protocol": "hashtag FC layer replaced by random-init layer; grid search over LR {0.0025/256, 0.00025/256, 0.000025/256} and weight decay {0.01, 0.001, 0.0001} on held-out train split; schedules in Table 4 (e.g. IN-1k 30 epochs, [10,10,10], LR 0.00025/256, decay 0.1)",
+    "feature_transfer": "L2-regularised logistic regression trained to convergence; L2 penalty 0.001 for CUB, 0.0001 otherwise",
+    "detection_finetune": "Mask R-CNN with ResNeXt-101 FPN, minibatch 8 images, 180k iterations, LR x0.1 at 120k and 160k; initial LR 0.01 for ImageNet-pretrained, 0.0025 for IG-940M-1.5k and IG-1B-17k, 0.00075 for IG-3.5B-17k (32x16d)",
+    "inference_resolution": "224x224 center crop, single crop"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration except one two-sample check of pretraining on different 1B-image draws",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "top-1 / top-5 accuracy", "definition": "single-center-crop accuracy on validation sets", "unit": "%", "higher_is_better": true},
+    {"name": "rectified top-1 accuracy", "definition": "incorrect predictions shown to five human annotators; counted correct if at least four say the prediction is correct", "unit": "%", "higher_is_better": true},
+    {"name": "COCO AP / AP@50", "definition": "box and mask average precision; AP averaged over IoU 0.5:0.95, AP@50 at IoU 0.5", "unit": "%", "higher_is_better": true},
+    {"name": "AUC per hashtag", "definition": "area under ROC for predicting each hashtag on balanced validation sets", "unit": "AUC", "higher_is_better": true}
+   ],
+   "baselines": ["ResNeXt-101 trained on IN-1k/5k/9k", "NASNet-A (Zoph et al. 2017) and other published ImageNet-1k results (Table 6)", "JFT-300M (Sun et al. 2017)"],
+   "protocol": "Single run; duplicates between test sets and the 3.5B pool found by R-MAC nearest neighbour search plus human inspection, lower-bound accuracies reported with duplicates counted wrong (Table 2); finetuning hyper-parameters chosen on a held-out slice of the training set."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "images are public but the paper says others cannot know which images were used nor download them en masse, so results cannot be replicated"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "Our models are trained by synchronous stochastic gradient descent (SGD) on 336 GPUs across 42 machines with minibatches of 8,064 images.", "where": "Sec 2.4"},
+   {"field": "training.lr_schedule", "quote": "After the warm-up, the learning rate is multiplied by 0.5 at equally spaced steps, such that the total number of learning rate reductions is 20 over the course of training.", "where": "Sec 2.4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "ResNeXt-101 32x48d pretrained on IG-940M-1.5k and finetuned on IN-1k reaches the highest ImageNet-1k single-crop top-1 reported to date.",
+   "kind": "measured", "source": null, "metric": "ImageNet-1k top-1", "value": "85.4", "unit": "%", "baseline_value": "79.8 (same models trained on ImageNet-1k)", "n": null,
+   "setup": "ResNeXt-101 32x48d, 829M params, IG-940M-1.5k pretraining, full finetuning on IN-1k, 224 single crop",
+   "quote": "report the highest ImageNet-1k single-crop, top-1 accuracy to date: 85.4% (97.6% top-5)",
+   "table": null, "note": "Intro gives 79.8% as the baseline for the same models; Sec 3.1.5 says from-scratch IN-1k saturates around 79.6% with 32x16d.", "where": "Abstract; Sec 3.1.5; Table 6"
+  },
+  {
+   "claim": "Pretraining ResNeXt-101 32x16d on nearly 1B Instagram images with 1.5k hashtags beats the same model trained on IN-1k alone by 4.6 points.",
+   "kind": "measured", "source": null, "metric": "ImageNet-1k top-1", "value": "84.2", "unit": "%", "baseline_value": "79.6", "n": null,
+   "setup": "ResNeXt-101 32x16d, IG-940M-1.5k, full network finetuning",
+   "quote": "a network pretrained on nearly 1B Instagram images with 1.5k hashtags achieves a state-of-the-art accuracy of 84.2%—an improvement of 4.6% over the same model architecture",
+   "table": null, "note": null, "where": "Sec 3.1.1, Fig 1"
+  },
+  {
+   "claim": "A linear classifier on frozen features from the 3.5B-image 17k-hashtag model is nearly as good as finetuning.",
+   "kind": "measured", "source": null, "metric": "ImageNet-1k top-1, linear classifier", "value": "83.6", "unit": "%", "baseline_value": "84.2 (with finetuning)", "n": null,
+   "setup": "ResNeXt-101 32x16d, IG-3.5B-17k, linear classifier only",
+   "quote": "a simple linear classifier to achieve state-of-the-art ImageNet-1k top-1 accuracy of 83.6% without any finetuning (compared to 84.2% with finetuning)",
+   "table": null, "note": null, "where": "Sec 1; Sec 3.1.2"
+  },
+  {
+   "claim": "Accuracy rises log-linearly with the number of pretraining images (3.5M to 3.5B), with larger networks gaining more per multiplication.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 32x4d/8d/16d, 1.5k and 17k hashtags, linear classifier on IN-1k/5k/9k and CUB; log-linear breaks down from ceiling effects and between 1B and 3.5B images",
+   "quote": "each time we multiply the amount of training data by a factor of x, we observe a fixed increase y in classification accuracy",
+   "table": null, "note": "Read from Fig 2; no per-point numbers in the text.", "where": "Sec 3.1.2, Fig 2"
+  },
+  {
+   "claim": "Making the hashtag vocabulary match the target labels beat a larger, unmatched set: the IN-1k-aligned 1.5k set outperforms 17k on IN-1k, but 17k wins by about 7 points on IN-9k.",
+   "kind": "measured", "source": null, "metric": "IN-9k top-1 gap, 17k vs 1.5k hashtags", "value": "7", "unit": "% (approx)", "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 models, linear classifier on IN-9k",
+   "quote": "on the IN-9k transfer task, the difference in accuracy between networks trained on 1.5k and those trained on 17k hashtags is ∼7%",
+   "table": null, "note": null, "where": "Sec 3.1.2"
+  },
+  {
+   "claim": "Pretraining is robust to injected hashtag noise: 10% replaced hashtags cost under 1 point and 25% cost about 2 points.",
+   "kind": "measured", "source": null, "metric": "ImageNet top-1 loss from noise", "value": "25", "unit": "% noise (about 2% accuracy loss)", "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 32x16d pretrained on IG-1B-17k with p% of hashtags replaced by samples from the marginal; linear classifier on IN",
+   "quote": "a noise level of p = 10% leads to a loss of less than 1% in classification accuracy, and at p = 25% label noise, the reduction in accuracy is around 2%",
+   "table": null, "note": "Fig 3 values for IN-1k: 82.1 (no noise) down to 76.1 at 50% noise.", "where": "Sec 3.1.3, Fig 3"
+  },
+  {
+   "claim": "Resampling the Zipfian hashtag distribution (uniform or square-root) improves ImageNet transfer by 5 to 6 points over natural sampling.",
+   "kind": "measured", "source": null, "metric": "ImageNet top-1 gain from resampling", "value": "5 to 6", "unit": "points", "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 32x4d on IG-1B-17k, linear classifier on IN-1k/5k/9k",
+   "quote": "using uniform or square-root sampling leads to an accuracy improvement of 5 to 6% irrespective of the number of ImageNet classes in the transfer task",
+   "table": null, "note": "Fig 4 IN-1k: natural 72.9, uniform 78.2, square-root 76.7 (as ordered in the figure text).", "where": "Sec 3.1.4, Fig 4"
+  },
+  {
+   "claim": "Pretraining on the 3.5B-image 17k set raises rectified IN-1k top-1 from 87.5% to 90.4%.",
+   "kind": "measured", "source": null, "metric": "rectified top-1", "value": "90.4", "unit": "%", "baseline_value": "87.5", "n": null,
+   "setup": "ResNeXt-101 32x16d, five human annotators, at least four must accept",
+   "quote": "Whereas the IN-1M-1k model obtained a rectified top-1 accuracy of 87.5% on val-IN-1k, our IG-3.5B-17k pretrained model achieved 90.4%.",
+   "table": null, "note": null, "where": "Sec 3.1.1"
+  },
+  {
+   "claim": "Larger models keep improving with Instagram pretraining while from-scratch IN-1k saturates, so transfer is capacity bound.",
+   "kind": "measured", "source": null, "metric": "IN-1k top-1, 32x32d", "value": "85.1", "unit": "%", "baseline_value": "84.2 (32x16d)", "n": null,
+   "setup": "IG-940M-1.5k pretraining then finetune; 32x32d is 2.4x and 32x48d 4.3x the FLOPs of 32x16d",
+   "quote": "improves val-IN-1k results over the 32×16d model from 84.2% top-1 accuracy to 85.1% and 85.4%, respectively",
+   "table": null, "note": "From-scratch IN-1k saturates at about 79.6% with 32x16d and does not rise with larger models.", "where": "Sec 3.1.5, Fig 5"
+  },
+  {
+   "claim": "COCO box AP rises from 43.7 to 45.2 when the ResNeXt-101 32x16d Mask R-CNN backbone is pretrained on Instagram instead of IN-1k.",
+   "kind": "measured", "source": null, "metric": "COCO test-dev box AP", "value": "45.2", "unit": "%", "baseline_value": "43.7", "n": null,
+   "setup": "Mask R-CNN ResNeXt-101 FPN 32x16d, IG pretraining versus IN-1k, COCO 2017 test-dev",
+   "quote": "45.2% AP on the COCO object-detection dataset [18], compared to 79.8% and 43.7%, respectively, when training (or pretraining) the same models on ImageNet-1k",
+   "table": null, "note": "Small models (32x4d) gain little or lose; gains larger in AP@50 than AP.", "where": "Sec 1; Sec 3.2, Fig 8"
+  },
+  {
+   "claim": "Instagram-pretrained detectors need finetuning learning rates about 4 to 10x lower than ImageNet-pretrained ones.",
+   "kind": "measured", "source": null, "metric": "finetune LR ratio", "value": "4-10", "unit": "x lower", "baseline_value": null, "n": null,
+   "setup": "Mask R-CNN on COCO, LR grid-searched on val2017",
+   "quote": "models pretrained on the Instagram data require finetuning learning rates that are ∼4-10× lower than ImageNet pretrained models",
+   "table": null, "note": null, "where": "Sec 3.2; Table 5"
+  },
+  {
+   "claim": "Keypoint detection gets worse with IG pretraining than IN-1k, suggesting hashtag pretraining may hurt localisation.",
+   "kind": "measured", "source": null, "metric": "keypoint AP", "value": "65.3", "unit": "%", "baseline_value": "67.0", "n": null,
+   "setup": "Mask R-CNN keypoint detection, IG-1B-1k vs IN-1k pretraining",
+   "quote": "pretraining leads to worse results (65.3% vs. 67.0% keypoint AP)",
+   "table": null, "note": "Text names the source IG-1B-1k; other sections name IG-940M-1.5k.", "where": "Sec 3.2"
+  },
+  {
+   "claim": "Hashtag predictability correlates moderately with noun concreteness.",
+   "kind": "measured", "source": null, "metric": "Pearson correlation", "value": "0.43", "unit": "rho", "baseline_value": null, "n": "5,730 hashtags",
+   "setup": "17k hashtags matched to 40k concreteness ratings (Brysbaert et al.); AUC on balanced validation sets",
+   "quote": "the Pearson correlation, ρ, between both variables is 0.43",
+   "table": null, "note": null, "where": "Sec 3.1.6, Fig 6"
+  },
+  {
+   "claim": "Instagram pretraining improves accuracy on more than 80% of IN-1k classes and by at least 10 points on 20%.",
+   "kind": "measured", "source": null, "metric": "share of IN-1k classes improved", "value": "80", "unit": "% (more than)", "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 32x16d, IG-3.5B-17k vs IN-1k",
+   "quote": "Accuracy improves on more than 80% of the IN-1k classes, with 20% of classes gaining at least 10 percentage points.",
+   "table": null, "note": null, "where": "Sec 3.1.6, Fig 7"
+  },
+  {
+   "claim": "Training the 32x16d network on 3.5B images took about 22 days on 336 GPUs.",
+   "kind": "measured", "source": null, "metric": "wall-clock", "value": "22", "unit": "days", "baseline_value": null, "n": null,
+   "setup": "ResNeXt-101 32x16d, 3.5B images (7000e6 images processed per Table 3), 336 GPUs, batch 8,064",
+   "quote": "Our ResNeXt-101 32×16d networks took ∼22 days to train on 3.5B images.",
+   "table": null, "note": null, "where": "Sec 2.4"
+  },
+  {
+   "claim": "Deduplication found test images overlapping the pretraining pool; counting them wrong lowers IN-1k accuracy only from 84.2 to 83.9.",
+   "kind": "measured", "source": null, "metric": "val-IN-50k-1k top-1, lower bound", "value": "83.9", "unit": "%", "baseline_value": "84.2", "n": "150 duplicates (0.30%)",
+   "setup": "R-MAC nearest-neighbour search over 3.5B images, manual inspection of 21 neighbours",
+   "quote": "150 val-IN-50k-1k (0.30%), 10 val-CUB-6k-200 (0.17%), 151 val-Places-37k-365",
+   "table": "Table 2, row val-IN-50k-1k, columns Measured 84.2 and Lower-bound 83.9", "note": null, "where": "Sec 2.1; A.2"
+  },
+  {
+   "claim": "Hashtag-pretrained transfer reaches 89.2% on CUB2011 and 58.0% on Places365 with the 3.5B-image 17k model.",
+   "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": "89.2", "unit": "% (CUB2011)", "baseline_value": "84.0 (CUB), 56.2 (Places) with IN-1k pretraining", "n": null,
+   "setup": "ResNeXt-101 32x16d, full finetuning, IG-3.5B-17k source",
+   "quote": null,
+   "table": "Table 2, row val-CUB-6k-200, column Measured Accuracy (89.2); Places 58.0 and baselines 84.0, 56.2 read from Fig 1", "note": "Values from Fig 1 bar labels in the text layer (89.2, 58.0; baselines 84.0, 56.2).", "where": "Fig 1; Table 2"
+  }
+ ],
+ "limits": [
+  "Authors state results cannot be replicated: others cannot know which images were used nor download them en masse.",
+  "Only ResNeXt-101 convolutional networks are studied; generalisation to other architectures is a belief (\"We believe our results will generalize\").",
+  "Label noise was injected artificially; the real noise in hashtags is not characterised.",
+  "Log-linear scaling deviates between 1B and 3.5B images and saturates on IN-1k and CUB; the authors suggest underfitting.",
+  "Detection and keypoint results suggest hashtag pretraining may hurt localisation.",
+  "Similar duplicate lower bounds were not computed for ImageNet-pretrained baselines.",
+  "Single runs, no confidence intervals except a two-sample check (<0.1%) for the 1B-image linear experiments.",
+  "GPU type and the warm-up length are not given; no compute figure beyond the ~22 days on 336 GPUs.",
+  "Superseded: ViT-scale and later web-scale pretraining and self-supervised methods have since exceeded the 85.4% figure."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "hashtag engineering", "definition": "collecting images tagged with a specific subset of hashtags", "where": "Sec 1"},
+  {"term": "label-space engineering", "definition": "approaches that aim to optimally select (weakly supervised) label sets for a particular target task", "where": "Sec 5"},
+  {"term": "feature transfer", "definition": "uses the pretrained network as a feature extractor, judged by how effective its features are on other tasks without updating any parameters", "where": "Sec 3"}
+ ],
+ "lineage": [
+  {"work": "Accurate, large minibatch SGD: Training ImageNet in 1 hour (Goyal et al.)", "year": 2017, "arxiv": "1706.02677", "relation": "uses-method", "note": "large-minibatch SGD, linear LR scaling and warm-up, training hyperparameters", "quote": null},
+  {"work": "Aggregated residual transformations for deep neural networks (ResNeXt)", "year": 2017, "arxiv": "1611.05431", "relation": "uses-method", "note": "model architecture and IN-5k definition", "quote": null},
+  {"work": "Revisiting unreasonable effectiveness of data in deep learning era (Sun et al.)", "year": 2017, "arxiv": "1707.02968", "relation": "extends", "note": "JFT-300M; this work is an order of magnitude larger with 85.4% vs 79.2% on IN-1k", "quote": null},
+  {"work": "Learning visual features from large weakly supervised data (Joulin et al.)", "year": 2016, "arxiv": "1511.02251", "relation": "extends", "note": "Flickr comments supervision, uniform sampling, softmax over sigmoid", "quote": null},
+  {"work": "Learning transferable architectures for scalable image recognition (Zoph et al.)", "year": 2017, "arxiv": "1707.07012", "relation": "baseline", "note": "prior ImageNet-1k state of the art; Table 6 adapted from it", "quote": null},
+  {"work": "Mask R-CNN", "year": 2017, "arxiv": "1703.06870", "relation": "uses-method", "note": "detection transfer", "quote": null},
+  {"work": "Distributed representations of words and phrases (Mikolov et al.)", "year": 2013, "arxiv": "1310.4546", "relation": "uses-method", "note": "square-root resampling of Zipfian distributions", "quote": null},
+  {"work": "Convnets and ImageNet beyond accuracy (Stock and Cisse)", "year": 2017, "arxiv": "1711.11443", "relation": "uses-method", "note": "rectified accuracy via human annotators", "quote": null},
+  {"work": "Hard mixtures of experts for large scale weakly supervised vision (Gross et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "food-related Instagram hashtags; suggested for capacity", "quote": null},
+  {"work": "ImageNet, CUB2011, Places365, COCO", "year": null, "arxiv": null, "relation": "uses-data", "note": "target tasks", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Classification accuracy of ResNeXt-101 32x16d pretrained on IG-1B with different hashtag vocabularies (purple bars) on IN-{1k, 5k, 9k} (left) and CUB2011, Places365 (right). Baseline models (gray bars) are trained on IN-{1k, 5k, 9k} (left) and IN-1k (right), respectively. Full network finetuning is used. Higher is better.", "page": 7, "why": "Shows at a glance that vocabulary choice and 1B to 3.5B scale both shift transfer accuracy across tasks."},
+  {"figure": "Fig 2", "caption": "Classification accuracies on IN-{1k, 5k, 9k} and CUB2011 target tasks as a function of the number of Instagram images used for pretraining for three network architectures (colors) and two hashtag vocabularies (dashed / solid lines). Only the linear classifier is trained on the target task. Higher is better.", "page": 8, "why": "Data-scaling curves (log-linear, capacity-dependent slope): best candidate for the pretraining-data note."},
+  {"figure": "Fig 3", "caption": "Classification accuracy of ResNeXt-101 32x16d, pretrained on IG-1B-17k, on val-IN-{1k, 5k, 9k} at three levels of injected label noise.", "page": 10, "why": "Noise robustness of web-scale labels."},
+  {"figure": "Fig 4", "caption": "Classification accuracy of ResNeXt-101 32x4d, pretrained on IG-1B-17k, on val-IN-{1k, 5k, 9k} for three different hashtag sampling strategies: natural, uniform and square-root sampling.", "page": 10, "why": "Data-mixture resampling of a Zipfian label distribution, the same idea as upsampling rare domains in LLM mixes."},
+  {"figure": "Fig 5", "caption": "Classification accuracy on val-IN-1k using ResNeXt-101 32x{4, 8 16, 32, 48}d with and without pretraining on the IG-940M-1.5k dataset.", "page": 11, "why": "Shows ImageNet-only training saturating while large-data pretraining keeps gaining with capacity."},
+  {"figure": "Fig 8", "caption": "Transfer to object detection and instance segmentation with Mask R-CNN. We compare ResNeXt-101 FPN backbones of three different capacities using a variety of source pretraining tasks.", "page": 13, "why": "Data scale pays off only with enough model capacity."}
+ ],
+ "code": [
+  {"where": "Appendix A.4", "snippet": "r(h) = max(1, phi(t/f(h))), phi(x)=x (uniform), phi(x)=sqrt(x) (square root); r(I) = max_i r(h_i)", "verbatim": false}
+ ],
+ "problems": [
+  "Text layer is a PDF extraction with ligatures and figure data as loose numbers; figure bar values (Fig 1, 3, 4, 8) are readable but unlabelled in order, so figure-only numbers are used sparingly.",
+  "Table 4 lists train-IG-3.5B-7k where the vocabulary is presumably 17k (typo in source).",
+  "Table 3 lists four LR steps for ImageNet while Sec 2.4 says three reductions."
+ ]
+}

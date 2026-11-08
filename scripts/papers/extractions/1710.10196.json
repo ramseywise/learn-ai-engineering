@@ -1,0 +1,343 @@
+{
+ "schema": 1,
+ "key": "1710.10196",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/karras-2017-progressive-growing-gans-improved-quality.pdf",
+ "bib": {
+  "title": "Progressive Growing of GANs for Improved Quality, Stability, and Variation",
+  "authors": ["Tero Karras", "Timo Aila", "Samuli Laine", "Jaakko Lehtinen"],
+  "first_author": "Karras",
+  "year": 2018,
+  "venue": "ICLR 2018",
+  "arxiv": "1710.10196",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63903,
+  "chars_total": 63903,
+  "engine": "pymupdf",
+  "skipped": "Appendix G/H LSUN per-category figure pages (12-18) were skimmed for FID/SWD labels only; they are image galleries."
+ },
+ "type": "empirical",
+ "question": "How can GANs be trained stably to generate high-resolution images (up to 1024x1024) with good quality and variation?",
+ "hypothesis": "Growing the generator and discriminator progressively from low to high resolution gives an easier curriculum, so training is faster and more stable at high resolution.",
+ "contributions": [
+  "Progressive growing of generator and discriminator with fade-in of new layers",
+  "Minibatch standard deviation layer to increase variation",
+  "Equalized learning rate and pixelwise feature vector normalization in the generator to limit signal-magnitude escalation",
+  "Sliced Wasserstein distance over Laplacian pyramid patches as a quality and variation metric",
+  "CELEBA-HQ, a 30000-image 1024x1024 version of CELEBA"
+ ],
+ "method": {
+  "summary": "A single GAN starts at 4x4 resolution and layers are added to G and D in mirrored fashion, each faded in with a linearly increasing residual weight alpha. Training uses WGAN-GP loss with Adam, no batch/layer normalization, equalized runtime weight scaling, pixelwise normalization in G and a parameter-free minibatch stddev feature map in D.",
+  "task": "unconditional image generation (GAN)",
+  "trains": true,
+  "datasets": [
+   {"name": "CELEBA-HQ", "role": "train", "size": "30000 images at 1024x1024", "split": "null: no held-out split stated", "source": "Built from the 202599 in-the-wild CELEBA images (Liu et al., 2015); released with the code", "preprocessing": "JPEG-artifact-removal autoencoder, 4x adversarial super-resolution, mirror padding and Gaussian filtering, landmark-based oriented crop, 4096x4096 bilinear then box filter to 1024x1024; best 30000 kept by a frequency-based quality metric; mirror augmentation in all CELEBA/CELEBA-HQ tests"},
+   {"name": "CELEBA (128x128)", "role": "train", "size": "null", "split": null, "source": "Liu et al., 2015", "preprocessing": "mirror augmentation"},
+   {"name": "LSUN (30 categories, 256x256)", "role": "train", "size": "100k images per category; BEDROOM and DOG use all available data", "split": null, "source": "Yu et al., 2015", "preprocessing": "mirror augmentation except BEDROOM and DOG; a separate network per category with identical parameters"},
+   {"name": "CIFAR10", "role": "train", "size": "null", "split": null, "source": "10 categories of 32x32 RGB images", "preprocessing": "no augmentation"},
+   {"name": "MNIST-1K discrete mode test", "role": "eval", "size": "25,600 generated images", "split": null, "source": "Metz et al. (2016) setup", "preprocessing": "pre-trained classifier with 0.4% error rate"}
+  ],
+  "models": [
+   {"name": "Progressive GAN, CELEBA-HQ 1024x1024 (Table 2)", "role": "proposed", "params": "23.1M trainable parameters for each of G and D", "architecture": "convolutional G and D, replicated 3-layer blocks (Conv 3x3, LReLU, Conv 3x3, LReLU, up/downsample), 4x4 base, 512 max feature maps", "init_from": "N(0,1) weights scaled at runtime by He constant; biases zero", "tokenizer": null, "vocab": null, "layers": null, "hidden": "512-dimensional latent on a hypersphere", "heads": null, "context": null, "other": {"activation": "leaky ReLU 0.2, linear last layer", "upsample": "2x2 element replication", "downsample": "average pooling", "minibatch_stddev": "added as a 513th feature map at 4x4 near end of D", "images_range": "[-1,1]"}},
+   {"name": "Low-capacity net for Sec 6.1 / Table 1", "role": "proposed", "params": null, "architecture": "as above, halve feature maps at 16x16 and divide by 4 at subsequent resolutions, leaving 32 maps in the last Conv 3x3 layers", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"images_per_resolution": "600k shown and 600k fade-in (instead of 800k)"}},
+   {"name": "Gulrajani et al. (2017) WGAN-GP baseline config", "role": "baseline", "params": null, "architecture": "ReLU, tanh last layer, batch norm in G, layer norm in D, He init, no progressive growth, no minibatch stddev, no runtime weight scaling", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "128-component latent from normal distribution", "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "WGAN-GP (also LSGAN in an alternate run) with n_critic=1; discriminator loss L' = L + eps_drift * E[D(x)^2], eps_drift = 0.001",
+   "optimizer": "Adam, alpha=0.001, beta1=0, beta2=0.99, eps=1e-8",
+   "lr": "0.001",
+   "lr_schedule": "none: no learning rate decay or rampdown",
+   "warmup": null,
+   "batch_size": "16 for 4x4 to 128x128; 14 at 256x256; 6 at 512x512; 3 at 1024x1024 (64 in Gulrajani baseline; 16 in Table 1 (c) onward)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "pixelwise normalization in G; equalized learning rate; minibatch stddev; mirror augmentation; CIFAR10 WGAN-GP gamma=750",
+   "hardware": "8 Tesla V100 GPUs (CELEBA-HQ); single NVIDIA Tesla P100 for timing in Fig 4",
+   "compute": "8 V100 GPUs for 4 days (CELEBA-HQ)",
+   "wall_clock": "4 days on 8 V100",
+   "seeds": "CIFAR10 mean from 10 random initializations; MNIST mode test 8 random initializations; others null",
+   "other": {
+    "schedule": "train 4x4 until 800k real images shown, then alternate: fade in next block over 800k images, stabilize 800k images, repeat",
+    "generator_weight_average": "exponential running average of G weights, decay 0.999, used for visualisation",
+    "gulrajani_baseline": "alpha=0.0001, beta2=0.9, n_critic=5, eps_drift=0, minibatch 64",
+    "lsgan_noise": "multiplicative Gaussian noise on input of each Conv 3x3 and Conv 4x4 in D, magnitude 0.2*max(0, d_hat_t - 0.5)^2, d_hat_t = 0.1d + 0.9 d_hat_{t-1}",
+    "sec_6_1_stop": "training stopped after discriminator shown 10M real images",
+    "adaptive_minibatch": "minibatch size depends on current resolution to fit memory"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "SWD: 16384 random images, 128 descriptors per Laplacian level (2^21 per level); MS-SSIM: 10000 pairs of generated images; FID: 50K images",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"latent": "512 components, random points on hypersphere", "video_interpolation": "randomize latent per frame, Gaussian blur across time sigma=45 frames @ 60Hz, normalize to hypersphere"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Sliced Wasserstein distance (SWD)", "definition": "SWD between 7x7x3 patches (147-dim, channel-normalized) from Laplacian pyramid levels (16x16 up to full res) of training and generated images, 512 projections", "unit": "x10^3", "higher_is_better": false},
+    {"name": "MS-SSIM", "definition": "multi-scale structural similarity averaged over 10000 pairs of generated images (variation among outputs only)", "unit": "score", "higher_is_better": false},
+    {"name": "Inception score (CIFAR10)", "definition": "standard inception score; best run, and mean over highest scores of 10 runs", "unit": "score", "higher_is_better": true},
+    {"name": "FID", "definition": "Frechet Inception Distance (Heusel et al., 2017) from 50K images", "unit": "FID", "higher_is_better": false},
+    {"name": "MNIST-1K modes covered and KL", "definition": "number of 1000 discrete modes covered among 25,600 images; KL(histogram || uniform)", "unit": "count, nats", "higher_is_better": true}
+   ],
+   "baselines": ["Gulrajani et al. (2017) WGAN-GP", "Mao et al. (2016b) LSGAN", "minibatch discrimination (Salimans et al. 2016)", "unrolled GAN (Metz et al. 2016)", "prior CIFAR10 methods in Table 3"],
+   "protocol": "Cumulative ablation (Table 1) on CELEBA and LSUN BEDROOM at 128x128 with truncated 10M-image training; visual comparison for LSUN; inception score best run vs mean of 10 runs; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/tkarras/progressive_growing_of_gans",
+   "weights": "trained networks via Google Drive link in the paper",
+   "data": "CELEBA-HQ released with the implementation"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "We use a minibatch size 16 for resolutions 42–1282 and then gradually decrease the size according to 2562 →14, 5122 →6, and 10242 →3", "where": "Appendix A.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Progressive growing gave about a 5.4x speedup to reach 6.4M real images at 1024x1024 (96 h vs an extrapolated 520 h).",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "5.4",
+   "unit": "x",
+   "baseline_value": "520 hours (extrapolated)",
+   "n": null,
+   "setup": "1024x1024 training on a single Tesla P100, Fig 4(c), fixed-layer vs progressive",
+   "quote": "In this case, the progressive growing offers roughly a 5.4× speedup.",
+   "table": null,
+   "note": "Non-progressive time is extrapolated, not measured. Intro says 2-6x depending on resolution.",
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "On CELEBA 128x128 at the Gulrajani config, progressive growing reduces total training time by about a factor of two and reaches a better optimum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time reduction",
+   "value": "2",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CELEBA 128x128, WGAN-GP config of Gulrajani et al., single P100, Fig 4(a,b)",
+   "quote": "it converges to a considerably better optimum and also reduces the total training time by about a factor of two",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Unsupervised CIFAR10 inception score of 8.80 (best run), above the prior best unsupervised 7.90.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inception score",
+   "value": "8.80",
+   "unit": "score",
+   "baseline_value": "7.90",
+   "n": "1 best run",
+   "setup": "CIFAR10 unsupervised, same network and setup as CELEBA limited to 32x32, WGAN-GP gamma=750, no augmentation",
+   "quote": "When all of our contributions are enabled, we get 8.80 in the unsupervised setting.",
+   "table": null,
+   "note": "Best-run number; mean over 10 runs is 8.56 +/- 0.06 (Table 3). Authors: one can be lucky with individual runs.",
+   "where": "Sec 6.5, Table 3"
+  },
+  {
+   "claim": "Mean unsupervised CIFAR10 inception score over 10 random initializations is 8.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inception score",
+   "value": "8.56",
+   "unit": "score",
+   "baseline_value": "7.90",
+   "n": "10 runs",
+   "setup": "CIFAR10 unsupervised, highest score seen in training for each of ten random initializations",
+   "quote": null,
+   "table": "Table 3, row Our (computed from 10 runs), column Inception score (8.56 ± 0.06)",
+   "note": null,
+   "where": "Table 3, App D"
+  },
+  {
+   "claim": "Average SWD on CELEBA 128x128 falls from 9.28 (Gulrajani baseline) to 4.28 with progressive growing and to 2.96 for the converged full model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWD avg x10^3",
+   "value": "2.96",
+   "unit": "x10^3",
+   "baseline_value": "9.28",
+   "n": null,
+   "setup": "Table 1, CELEBA 128x128, row (h) Converged vs row (a); row (b) +progressive growing is 4.28",
+   "quote": null,
+   "table": "Table 1, row (h) Converged, column CELEBA SWD Avg (2.96); row (a) 9.28; row (b) 4.28",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Reducing minibatch from 64 to 16 without other fixes badly degrades results (CELEBA avg SWD 46.23); revised training parameters recover it to 8.07.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWD avg x10^3",
+   "value": "46.23",
+   "unit": "x10^3",
+   "baseline_value": "4.28",
+   "n": null,
+   "setup": "Table 1 rows (c) + small minibatch and (d) + revised training parameters, CELEBA 128x128",
+   "quote": null,
+   "table": "Table 1, row (c) + Small minibatch, column CELEBA SWD Avg (46.23); row (d) 8.07",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Minibatch discrimination did not improve any metric, while minibatch stddev improved average SWD (CELEBA 9.84 to 7.04).",
+   "kind": "measured",
+   "source": null,
+   "metric": "SWD avg x10^3",
+   "value": "7.04",
+   "unit": "x10^3",
+   "baseline_value": "9.84",
+   "n": null,
+   "setup": "Table 1 rows (e*) minibatch discrimination vs (e) minibatch stddev, CELEBA 128x128",
+   "quote": null,
+   "table": "Table 1, row (e) Minibatch stddev, column CELEBA SWD Avg (7.04); row (e*) 9.84",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Final CELEBA-HQ 1024x1024 sample set has FID 7.30 and average SWD 5.44.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "7.30",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": "50K images",
+   "setup": "CELEBA-HQ 1024x1024, final model; SWD levels 1024..16",
+   "quote": "Fr´echet Inception Distance (FID) computed from 50K images was 7.30.",
+   "table": null,
+   "note": null,
+   "where": "Fig 11 caption"
+  },
+  {
+   "claim": "CELEBA-HQ 1024x1024 model trained on 8 V100 GPUs for 4 days until no qualitative change.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "4",
+   "unit": "days (8 Tesla V100)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CELEBA-HQ 1024x1024, WGAN-GP",
+   "quote": "We trained the network on 8 Tesla V100 GPUs for 4 days",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3"
+  },
+  {
+   "claim": "On the crippled-discriminator MNIST-1K test, equalized-lr + pixelwise norm raise K/4 covered modes from 640.1 (WGAN-GP) to 856.7, and minibatch stddev to 881.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "modes covered (K/4)",
+   "value": "881.3",
+   "unit": "modes of 1000",
+   "baseline_value": "30.6 (original GAN)",
+   "n": "8 initializations",
+   "setup": "Table 4, K/4 discriminator (~500 params), mean +/- std",
+   "quote": null,
+   "table": "Table 4, row K/4 #, column + mb stddev (881.3 ± 39.2); + our norm 856.7; WGAN-GP 640.1; GAN 30.6",
+   "note": "Progression gives 859.5, no help on tiny images.",
+   "where": "Table 4, App E"
+  },
+  {
+   "claim": "A 1024x1024 total of 30000 CELEBA-HQ images was selected from 202599 processed CELEBA images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "30000",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CELEBA-HQ construction, App C",
+   "quote": "consisting of 30000 images in 1024 × 1024 resolution",
+   "table": null,
+   "note": null,
+   "where": "App C"
+  },
+  {
+   "claim": "Final 1024x1024 generator and discriminator each have 23.1M trainable parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": "23.1M",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 architecture",
+   "quote": null,
+   "table": "Table 2, row Total trainable parameters (23.1M) for both Generator and Discriminator",
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "Authors concede 'there is a long way to true photorealism': semantic sensibility and dataset-dependent constraints (e.g. straight vs curved objects) are poor, and micro-structure needs work.",
+  "Authors did not compare against other variation-increasing methods (unrolling, repelling regularizer, multiple generators), noting they may increase variation more or be orthogonal.",
+  "The gamma=750 WGAN-GP trick was tried only on CIFAR10, not other datasets.",
+  "LSGAN is less stable than WGAN-GP and tends to lose variation late in long runs; needs an adaptive noise hack.",
+  "Best-run CIFAR10 record 8.80 is a lucky run; 10-run mean is 8.56.",
+  "Speedup at 1024x1024 relies on extrapolation of the non-progressive curve to 520 h.",
+  "Table 1 ablation is cumulative and non-converged (10M images, reduced-capacity net), single run, no variance reported.",
+  "Number of training steps/iterations, precision and seeds for the main runs are not stated; no human evaluation; CELEBA-HQ has no held-out split.",
+  "Dated: GAN-based; FID on 50K images reported only in appendix figures; later work (StyleGAN) replaced the architecture, and diffusion models superseded GANs for image synthesis."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Progressive growing", "definition": "Start G and D at 4x4 resolution and add layers that model finer detail as training progresses, fading new layers in with a residual weight alpha rising linearly from 0 to 1.", "where": "Sec 2, Fig 2"},
+  {"term": "Minibatch standard deviation", "definition": "Compute the standard deviation of each feature at each spatial location over the minibatch, average over features and locations to one value, and concatenate it as an extra constant feature map; no learnable parameters.", "where": "Sec 3"},
+  {"term": "Equalized learning rate", "definition": "Initialize weights from N(0,1) and scale them at runtime by the per-layer He constant, w_hat = w/c, so all weights have the same dynamic range under Adam/RMSProp.", "where": "Sec 4.1"},
+  {"term": "Pixelwise feature vector normalization", "definition": "b = a / sqrt(mean_j (a_j)^2 + eps), eps=1e-8, applied per pixel after each Conv 3x3 in the generator.", "where": "Sec 4.2"},
+  {"term": "Sliced Wasserstein distance metric", "definition": "SWD between Laplacian-pyramid patch sets of generated and training images, per scale starting from 16x16.", "where": "Sec 5"}
+ ],
+ "lineage": [
+  {"work": "Improved training of Wasserstein GANs (Gulrajani et al.)", "year": 2017, "arxiv": "1704.00028", "relation": "extends", "note": "WGAN-GP loss and baseline config for ablations", "quote": null},
+  {"work": "Least squares generative adversarial networks (Mao et al.)", "year": 2016, "arxiv": "1611.04076", "relation": "baseline", "note": "alternate loss and visual baseline", "quote": null},
+  {"work": "Improved techniques for training GANs (Salimans et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "minibatch discrimination, inception score", "quote": null},
+  {"work": "Wasserstein GAN (Arjovsky et al.)", "year": 2017, "arxiv": "1701.07875", "relation": "related", "note": "stable loss alternatives", "quote": null},
+  {"work": "Photographic image synthesis with cascaded refinement networks (Chen & Koltun)", "year": 2017, "arxiv": "1707.09405", "relation": "related", "note": "conceptual similarity to growing resolution", "quote": null},
+  {"work": "High-resolution image synthesis with conditional GANs (Wang et al.)", "year": 2017, "arxiv": "1711.11585", "relation": "related", "note": "multiple discriminators at different resolutions", "quote": null},
+  {"work": "Delving deep into rectifiers (He et al.)", "year": 2015, "arxiv": "1502.01852", "relation": "uses-method", "note": "per-layer constant used in equalized lr", "quote": null},
+  {"work": "Adam (Kingma & Ba)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "Unrolled GANs (Metz et al.)", "year": 2016, "arxiv": "1611.02163", "relation": "baseline", "note": "MNIST-1K mode test and unrolling baseline", "quote": null},
+  {"work": "Conditional image synthesis with auxiliary classifier GANs (Odena et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "MS-SSIM variation metric", "quote": null},
+  {"work": "GANs trained by a two time-scale update rule (Heusel et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "FID", "quote": null},
+  {"work": "CelebA (Liu et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "source of CELEBA-HQ", "quote": null},
+  {"work": "LSUN (Yu et al.)", "year": 2015, "arxiv": "1506.03365", "relation": "uses-data", "note": "256x256 results in 30 categories", "quote": null},
+  {"work": "Class-splitting GANs (Grinblat et al.)", "year": 2017, "arxiv": "1709.07359", "relation": "baseline", "note": "prior best CIFAR10 inception scores 7.90 / 8.87", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Training starts with G and D at 4x4 and layers are added incrementally; six 1024x1024 examples shown.", "page": 3, "why": "Shows the whole idea of progressive growing in one diagram."},
+  {"figure": "Fig 2", "caption": "Fade-in of new layers when doubling resolution 16x16 to 32x32 with residual weight alpha.", "page": 4, "why": "Explains the fade-in mechanism (toRGB/fromRGB, 2x, 0.5x) that prose describes poorly."},
+  {"figure": "Fig 4", "caption": "Effect of progressive growing on training speed and convergence (SWD vs time, and images shown vs time at 1024x1024).", "page": 7, "why": "Shows per-scale convergence curves and the speedup."},
+  {"figure": "Table 1", "caption": "SWD and MS-SSIM for cumulative training configurations at 128x128.", "page": 6, "why": "The ablation ladder from WGAN-GP baseline to full method."},
+  {"figure": "Fig 5", "caption": "1024x1024 images generated using the CELEBA-HQ dataset.", "page": 8, "why": "Headline visual result."},
+  {"figure": "Table 2", "caption": "Generator and discriminator used with CELEBA-HQ for 1024x1024.", "page": 13, "why": "Full layer-by-layer architecture with shapes and parameter counts."}
+ ],
+ "code": [
+  {"where": "Sec 4.2", "snippet": "b_{x,y} = a_{x,y} / sqrt( (1/N) * sum_{j=0}^{N-1} (a^j_{x,y})^2 + eps ), eps = 1e-8", "verbatim": false},
+  {"where": "Sec 4.1", "snippet": "w_hat_i = w_i / c  (c: He initializer per-layer constant, w_i ~ N(0,1))", "verbatim": false},
+  {"where": "App A.1", "snippet": "L' = L + eps_drift * E_{x in P_r}[D(x)^2], eps_drift = 0.001", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text extraction scrambled Table 1 and Table 2 cell order; Table 1 values were read by row order and are consistent with the text.",
+  "Table 3 rows for DCGAN label-conditioned score are missing from the extracted text.",
+  "No embedded instructions found."
+ ]
+}

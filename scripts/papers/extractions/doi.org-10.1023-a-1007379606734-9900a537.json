@@ -1,0 +1,689 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1023/a:1007379606734",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/caruana-1997-multitask-learning.pdf",
+ "bib": {
+  "title": "Multitask Learning",
+  "authors": [
+   "Rich Caruana"
+  ],
+  "first_author": "Caruana",
+  "year": 1997,
+  "venue": "Machine Learning, 28, 41-75",
+  "arxiv": null,
+  "doi": "10.1023/a:1007379606734"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 99799,
+  "chars_total": 99799,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can training related tasks in parallel on a shared representation improve generalization on a main task, why does it work, and where can it be applied?",
+ "hypothesis": "The training signals of related tasks act as an inductive bias that improves generalization on the main task.",
+ "contributions": [
+  "Reviews prior work on MTL",
+  "New evidence that MTL in backprop nets discovers task relatedness without supervisory signals",
+  "New results for MTL with k-nearest neighbor and kernel regression",
+  "A sketch of MTL for decision trees",
+  "Nine kinds of domain where extra task signals are commonly available"
+ ],
+ "method": {
+  "summary": "Single hidden layer backprop nets with extra output units for related tasks (MTL) are compared with separate single-output nets (STL) on three domains, with shuffle control experiments and mechanism studies. MTL is also adapted to KNN/kernel regression by adding weighted extra-task performance to the attribute-weight search objective.",
+  "task": "multitask supervised learning (regression/ranking) with shared hidden layer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "1D-ALVINN",
+    "role": "both",
+    "size": "not stated",
+    "split": "not stated",
+    "source": "synthetic 1-D road images (32-pixel scan line) from modified Pomerleau simulator",
+    "preprocessing": "9 tasks: steering plus 8 simulator variables"
+   },
+   {
+    "name": "1D-DOORS",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "real robot-mounted colour camera images of doors; labels clicked by mouse",
+    "preprocessing": "horizontal stripes of green and blue channels, 30 pixels wide after Gaussian smoothing of 150-pixel images; 10 tasks"
+   },
+   {
+    "name": "Medis Pneumonia Database",
+    "role": "both",
+    "size": "14,199 cases from 78 hospitals (1989); 1,542 (10.9%) died",
+    "split": "1000-case training sets in LCWA experiment; otherwise not stated",
+    "source": "Fine et al. 1993",
+    "preprocessing": "65 measurements: 30 pre-hospital inputs, 35 lab results used as extra outputs"
+   },
+   {
+    "name": "Peaks Functions",
+    "role": "train",
+    "size": "120 functions, 60 inputs (10 per variable A-F)",
+    "split": null,
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "F1/F2 sigmoid",
+    "role": "both",
+    "size": "50 training patterns per trial, halt and test 1000 each",
+    "split": "new random sets per trial",
+    "source": "synthetic, A,B uniform on [-5,5], 10-bit codes",
+    "preprocessing": null
+   },
+   {
+    "name": "Robot sensory series",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "robot sonar and camera readings, dead reckoning distance",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MTL backprop net (1D-ALVINN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully connected, 1 hidden layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "16",
+    "heads": null,
+    "context": null,
+    "other": {
+     "inputs": 32,
+     "outputs": 9
+    }
+   },
+   {
+    "name": "STL backprop nets (1D-ALVINN)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1 hidden layer, 1 output",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "2, 4, 8 or 16",
+    "heads": null,
+    "context": null,
+    "other": {
+     "nets": 36
+    }
+   },
+   {
+    "name": "MTL net (1D-DOORS)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "120",
+    "heads": null,
+    "context": null,
+    "other": {
+     "STL hidden": "6, 24, 96"
+    }
+   },
+   {
+    "name": "MTL net (pneumonia)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer, rankprop output plus 35 lab outputs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "64",
+    "heads": null,
+    "context": null,
+    "other": {
+     "STL hidden": "32"
+    }
+   },
+   {
+    "name": "MTL net (peaks)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "64",
+    "heads": null,
+    "context": null,
+    "other": {
+     "inputs": 60,
+     "outputs": 120
+    }
+   },
+   {
+    "name": "MTL net (F1/F2)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "16",
+    "heads": null,
+    "context": null,
+    "other": {
+     "inputs": 20,
+     "outputs": 2
+    }
+   }
+  ],
+  "training": {
+   "objective": "backprop with sum-of-squares error on every output in parallel; rankprop for pneumonia risk output",
+   "optimizer": "backpropagation (plain)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping on a halt set",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "ten trials (1D-ALVINN, 1D-DOORS, pneumonia); 50 trials (F1/F2); seed values not stated",
+   "other": {
+    "KNN/LCWA": "attribute weights by gradient descent with leave-one-out CV on Perf Main + sum lambda_i * Perf Extra_i; lambda=1 in main results",
+    "net size": "STL sizes tuned, MTL size usually not tuned"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "ten independent runs per condition (50 for F1/F2)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "lambda": "0 = STL, 1 = equal weight, 2 = extra tasks weighted most (Fig 7)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test RMSE",
+     "definition": "root mean squared error on test set",
+     "unit": "RMSE",
+     "higher_is_better": false
+    },
+    {
+     "name": "error rate at FOP",
+     "definition": "fraction of deaths among the lowest-risk fraction of population selected by risk model and threshold (e.g. 30/2000=0.015 at FOP 0.20)",
+     "unit": "fraction deaths",
+     "higher_is_better": false
+    },
+    {
+     "name": "SSE (robot)",
+     "definition": "SSE averaged over all sense predictions",
+     "unit": "SSE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "STL backprop at several hidden sizes",
+    "STL with extra input",
+    "STL LCWA",
+    "feature nets (Davis & Stentz 1995), no numbers"
+   ],
+   "protocol": "Significance at 0.05 marked *; test not named. MTL vs best STL run and vs mean STL run; shuffle test of extra-task signals."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Medis database from Fine et al.; not stated as released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MTL beats STL on the main steering task in 1D-ALVINN by 15-30% without extra training patterns.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1D-ALVINN simulator, 32-input nets, MTL 16 hidden/9 outputs vs 36 STL nets (2,4,8,16 HU), early stopping, ten runs",
+   "note": null,
+   "where": "Sec 2.1, p45",
+   "quote": "Note that on the important steering task MTL outperforms STL 15–30%."
+  },
+  {
+   "claim": "Steering RMSE: MTL 16HU .058 vs best STL .069 (4HU), -15.9% vs best STL, -27.7% vs mean STL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test RMSE",
+   "value": ".058",
+   "unit": "RMSE",
+   "baseline_value": ".069",
+   "n": 10,
+   "setup": "1D-ALVINN test RMSE, ten runs, * = significant at 0.05",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Steering, columns 4HU, MTL 16HU, Change MTL to Best STL (-15.9% *)"
+  },
+  {
+   "claim": "On 1D-DOORS MTL generalizes 20-30% better than the best of three STL runs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "1D-DOORS real robot camera images, 10 tasks, STL 6/24/96 HU vs MTL 120 HU, ten trials",
+   "note": null,
+   "where": "Sec 2.2, p46",
+   "quote": "MTL generalizes 20–30% better than STL on these tasks, even when compared to the best of three different runs of STL."
+  },
+  {
+   "claim": "Door type RMSE: MTL .059 vs best STL .086, -31.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test RMSE",
+   "value": ".059",
+   "unit": "RMSE",
+   "baseline_value": ".086",
+   "n": 10,
+   "setup": "1D-DOORS, 120HU MTL vs best of 6/24/96HU STL",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Door Type, columns MTL 120HU, Change MTL to Best STL (-31.4% *)"
+  },
+  {
+   "claim": "Doorknob location RMSE: MTL .062 vs best STL .081, -23.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test RMSE",
+   "value": ".062",
+   "unit": "RMSE",
+   "baseline_value": ".081",
+   "n": 10,
+   "setup": "1D-DOORS",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Doorknob Loc, columns MTL 120HU, Change MTL to Best STL (-23.5% *)"
+  },
+  {
+   "claim": "Pneumonia: MTL with rankprop makes 5-10% fewer errors than STL rankprop; significant only at FOP 0.3-0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Medis database, 14,199 cases; STL 32 HU vs MTL 64 HU; 35 lab tests as extra outputs; mean of ten runs",
+   "note": null,
+   "where": "Table 3 caption, p49",
+   "quote": "MTL makes 5–10% fewer errors than STL."
+  },
+  {
+   "claim": "At FOP 0.3 error falls from .0210 (STL) to .0197 (MTL), -6.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate at FOP",
+   "value": ".0197",
+   "unit": "fraction deaths",
+   "baseline_value": ".0210",
+   "n": 10,
+   "setup": "Medis pneumonia, rankprop, ten runs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, columns FOP 0.3, rows STL Rankprop / MTL Rankprop (-6.2% *)"
+  },
+  {
+   "claim": "Shuffle test: shuffling extra-task signals among cases reduces MTL to roughly STL performance, so the gain comes from related information, not noise, learning rate or capacity effects.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Run on the problems in Section 2; no numbers given",
+   "note": null,
+   "where": "Sec 3.1, p51",
+   "quote": "In each case, shufﬂing the extra tasks reduces the performance of MTL to performance comparable to STL."
+  },
+  {
+   "claim": "MTL nets larger than the sum of all STL nets still outperform STL, ruling out reduced capacity as the explanation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2 problems; no numbers given",
+   "note": null,
+   "where": "Sec 3.1, p51",
+   "quote": "In these experiments, the MTL nets still outperform STL."
+  },
+  {
+   "claim": "Hidden-unit sharing among 120 peaks functions rises with task relatedness, so backprop MTL discovers relatedness without a supervisory signal.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "120 peaks functions, 60 inputs, 64 hidden units, 120 outputs, 15,360 sensitivity analyses, rank correlation; values only in Fig 5",
+   "note": null,
+   "where": "Sec 3.3, p55",
+   "quote": "This suggests that, for the peaks functions at least, backpropagation using a shared hidden layer is able to discover how tasks are related on hidden layer features"
+  },
+  {
+   "claim": "Adding an extra SSE output to rankprop MTL lowers error at low-risk FOPs (FOP 0.1 from .0074 to .0066) but raises it at FOP 0.5 (.0364 to .0371).",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate at FOP 0.1",
+   "value": ".0066",
+   "unit": "fraction deaths",
+   "baseline_value": ".0074",
+   "n": null,
+   "setup": "Pneumonia, MTL rankprop with/without SSE output",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, columns FOP 0.1 and 0.5, rows w/o SSE / with SSE"
+  },
+  {
+   "claim": "Robot sensory prediction: MTL helps long-range tasks (8 m: .165 vs .183, -10.9%) and slightly hurts 1 m (+2.7%, not significant).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean SSE",
+   "value": ".165",
+   "unit": "SSE",
+   "baseline_value": ".183",
+   "n": null,
+   "setup": "Robot sonar/camera prediction at 1,2,4,8 m, SSE averaged over predictions",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, column 8, rows STL / MTL (-10.9% *)"
+  },
+  {
+   "claim": "Using F2=SIGMOID(A-B) as extra output helps F1=SIGMOID(A+B) (RMSE .0631 vs .0648, p=0.013) but as extra input does not (.0647).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean RMSE",
+   "value": "0.0631",
+   "unit": "RMSE",
+   "baseline_value": "0.0648",
+   "n": 50,
+   "setup": "50 trials, 50 training patterns, halt and test 1000 each, 20 inputs, 16 hidden units, early stopping",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, rows STD, STD+IN, MTL, column Mean RMSE"
+  },
+  {
+   "claim": "MTL kernel regression (LCWA, lambda=1) on pneumonia gives 5-10% better risk prediction than STL; FOP 0.3: .0285 to .0259.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate at FOP 0.3",
+   "value": ".0259",
+   "unit": "fraction deaths",
+   "baseline_value": ".0285",
+   "n": null,
+   "setup": "1000 training cases, LCWA, gradient descent on attribute weights with leave-one-out CV",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, column FOP 0.3, rows STL LCWA / MTL LCWA (-9.1% *)"
+  },
+  {
+   "claim": "With 100-800 training patterns STL LCWA needs about 50% more data to match MTL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pneumonia LCWA, training set size varied; read from Fig 8",
+   "note": null,
+   "where": "Fig 8 caption, p64",
+   "quote": "For 100–800 training patterns, STL needs about 50% more data to perform as well as MTL."
+  },
+  {
+   "claim": "MTL can hurt: extra SSE output degraded high-risk FOPs; MTL is a bias that must be tested per problem; MTL may help harder tasks at expense of easier ones.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4.2, 4.3, 7.7",
+   "note": null,
+   "where": "Sec 7.7, p71",
+   "quote": "MTL does not always improve performance."
+  },
+  {
+   "claim": "Training MTL backprop nets works best when tasks learn at similar rates; apply early stopping per task via snapshots and tune per-task learning rates.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Practice guidance, no experiment",
+   "note": null,
+   "where": "Sec 7.2, p68",
+   "quote": "Usually better performance is obtained in backprop MTL when all tasks learn at similar rates and reach best performance at roughly the same time."
+  }
+ ],
+ "limits": [
+  "Small 1990s nets (one hidden layer, 16-120 units); no learning rates, epochs or data sizes given for several domains.",
+  "Significance test is not named; MTL vs best STL comparison is a single MTL run per size.",
+  "Shuffle test and larger-net test are described without numbers.",
+  "MTL hurt easy/high-risk tasks in places (Tables 4, 5); the authors say it must be tested per problem.",
+  "Theory of task relatedness is missing; existing bounds (Baxter, Abu-Mostafa) are loose.",
+  "Model sizes for MTL not optimized, STL optimized, so comparison is biased toward STL by the authors' account.",
+  "Figures 5, 7 and 8 carry values not in text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Multitask Learning (MTL)",
+   "definition": "an inductive transfer mechanism whose principle goal is to improve generalization performance, by leveraging the domain-specific information in the training signals of related tasks, training tasks in parallel with a shared representation",
+   "where": "Sec 1.1"
+  },
+  {
+   "term": "Single Task Learning (STL)",
+   "definition": "learning just one task at a time, each net trained in isolation",
+   "where": "Sec 1.3"
+  },
+  {
+   "term": "Inductive bias",
+   "definition": "anything that causes an inductive learner to prefer some hypotheses over other hypotheses",
+   "where": "Sec 1.4"
+  },
+  {
+   "term": "Statistical data amplification",
+   "definition": "an effective increase in sample size due to extra information in the training signals of related tasks",
+   "where": "Sec 3.2.1"
+  },
+  {
+   "term": "Eavesdropping",
+   "definition": "a task that cannot learn a hidden feature well alone learns it from the hidden layer shaped by another task that learns it easily",
+   "where": "Sec 3.2.3"
+  },
+  {
+   "term": "Representation bias",
+   "definition": "tasks prefer hidden representations that other tasks prefer, and avoid those other tasks avoid",
+   "where": "Sec 3.2.4"
+  },
+  {
+   "term": "FOP",
+   "definition": "fraction of population predicted at low risk, with error measured as deaths among them",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Caruana 1993, Multitask Learning: A Knowledge-Based Source of Inductive Bias",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier MTL paper",
+   "quote": null
+  },
+  {
+   "work": "Suddarth & Kergosien 1990, rule-injection hints",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "extra outputs as hints",
+   "quote": null
+  },
+  {
+   "work": "Abu-Mostafa 1990, 1995 Hints",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hints via extra error terms",
+   "quote": null
+  },
+  {
+   "work": "Dietterich, Hild & Bakiri 1990, 1995",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ID3 vs backprop on NETtalk; hidden unit sharing",
+   "quote": null
+  },
+  {
+   "work": "Baxter 1994-1996",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "theory of parallel transfer",
+   "quote": null
+  },
+  {
+   "work": "Caruana, Baluja & Mitchell 1996, Rankprop",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rankprop for pneumonia risk",
+   "quote": null
+  },
+  {
+   "work": "Medis Pneumonia Database (Fine et al. 1993)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "14,199 cases",
+   "quote": null
+  },
+  {
+   "work": "Pomerleau 1992 ALVINN simulator",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "modified to 1-D",
+   "quote": null
+  },
+  {
+   "work": "Sejnowski & Rosenberg 1986 NETtalk",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "related",
+   "note": "early accidental MTL",
+   "quote": null
+  },
+  {
+   "work": "Thrun & Mitchell 1994 EBNN",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sequential transfer alternative",
+   "quote": null
+  },
+  {
+   "work": "Davis & Stentz 1995 feature nets",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "did not match MTL on pneumonia",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Single Task Backpropagation (STL) of four tasks with the same inputs.",
+   "page": 43,
+   "why": "Contrasts with Fig 2."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Multitask Backpropagation (MTL) of four tasks with the same inputs.",
+   "page": 44,
+   "why": "One shared hidden layer, many outputs: the core idea of MTL in one diagram."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Using future lab results as extra outputs to bias learning for the main rankprop risk prediction task.",
+   "page": 49,
+   "why": "Features unavailable at run time used as auxiliary targets."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Sharing in the hidden layer as a function of the similarity between tasks. Tasks that are more related share more hidden units.",
+   "page": 54,
+   "why": "Evidence that relatedness is discovered."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Three net architectures for learning F1: STD, STD+IN, STD+OUT (MTL).",
+   "page": 61,
+   "why": "Same feature as input vs as auxiliary output."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Performance of STL and MTL as number of training patterns varies.",
+   "page": 64,
+   "why": "MTL worth about 50% more data."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5.1, p62",
+   "snippet": "Eval Metric = Perf Main Task + sum_{i=1..NO_TASKS} lambda_i * Perf Extra Task_i",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Ligatures and table layout flattened in text; Figure 3,5,7,8 data not in text.",
+  "No embedded instructions found."
+ ]
+}

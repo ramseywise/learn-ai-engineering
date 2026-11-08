@@ -1,0 +1,764 @@
+{
+ "schema": 1,
+ "key": "2012.12877",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/touvron-2020-training-data-efficient-image-transformers.pdf",
+ "bib": {
+  "title": "Training data-efficient image transformers & distillation through attention",
+  "authors": [
+   "Hugo Touvron",
+   "Matthieu Cord",
+   "Matthijs Douze",
+   "Francisco Massa",
+   "Alexandre Sablayrolles",
+   "Hervé Jégou"
+  ],
+  "first_author": "Touvron",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "2012.12877",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53303,
+  "chars_total": 53303,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can a convolution-free vision transformer be trained competitively on ImageNet-1k alone, and can a transformer-specific distillation token improve it further?",
+ "hypothesis": "ViT's need for huge pre-training data can be removed by stronger augmentation/regularisation, and a convnet teacher via a distillation token transfers useful inductive bias.",
+ "contributions": [
+  "Convolution-free transformers competitive with state of the art on ImageNet with no external data, trained on one node (4 GPUs, three days); DeiT-S and DeiT-Ti as counterparts of ResNet-50 and ResNet-18.",
+  "Distillation token procedure that outperforms vanilla distillation.",
+  "Image transformers learn more from a convnet teacher than from a transformer teacher of comparable accuracy.",
+  "Pre-trained DeiT models transfer competitively to CIFAR-10/100, Flowers-102, Cars, iNaturalist-18/19."
+ ],
+ "method": {
+  "summary": "DeiT keeps the ViT architecture (no convolutions, linear classifier instead of MLP head) and changes the training recipe (AdamW, heavy augmentation, stochastic depth, repeated augmentation, no dropout). It adds a distillation token trained to match a convnet teacher's hard label; at test time class and distillation softmaxes are summed.",
+  "task": "ImageNet-1k image classification, with transfer to smaller datasets",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1k",
+    "role": "both",
+    "size": "1,281,167 train / 50,000 test, 1000 classes",
+    "split": "standard train / validation",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "224x224 training; fine-tune at 384 (also 160, 320 in Table 10)"
+   },
+   {
+    "name": "ImageNet Real and ImageNet V2 (matched frequency)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Beyer et al. 2020; Recht et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "iNaturalist 2018",
+    "role": "both",
+    "size": "437,513 train / 24,426 test, 8,142 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "iNaturalist 2019",
+    "role": "both",
+    "size": "265,240 train / 3,003 test, 1,010 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Flowers-102",
+    "role": "both",
+    "size": "2,040 train / 6,149 test, 102 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Stanford Cars",
+    "role": "both",
+    "size": "8,144 train / 8,041 test, 196 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "both",
+    "size": "50,000 train / 10,000 test, 100 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50,000 train / 10,000 test, 10 classes",
+    "split": null,
+    "source": null,
+    "preprocessing": "for from-scratch run, images rescaled to 224x224"
+   }
+  ],
+  "models": [
+   {
+    "name": "DeiT-Ti",
+    "role": "proposed",
+    "params": "5M",
+    "architecture": "ViT, patch 16x16, class token",
+    "init_from": "inferred: random (truncated normal)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 192,
+    "heads": 3,
+    "context": "inferred: 196 patches + class token at 224",
+    "other": {
+     "throughput": "2536 im/s on V100 at 224"
+    }
+   },
+   {
+    "name": "DeiT-S",
+    "role": "proposed",
+    "params": "22M",
+    "architecture": "ViT, patch 16x16",
+    "init_from": "inferred: random (truncated normal)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": null,
+    "other": {
+     "throughput": "940 im/s"
+    }
+   },
+   {
+    "name": "DeiT-B (same as ViT-B)",
+    "role": "proposed",
+    "params": "86M",
+    "architecture": "ViT, patch 16x16, FFN 4D, GeLU, LayerNorm",
+    "init_from": "inferred: random (truncated normal)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": null,
+    "other": {
+     "throughput": "292 im/s",
+     "head_dim": 64
+    }
+   },
+   {
+    "name": "RegNetY-16GF",
+    "role": "teacher",
+    "params": "84M",
+    "architecture": "convnet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "trained by the authors with same data and augmentation as DeiT; 82.9 top-1"
+    }
+   },
+   {
+    "name": "RegNetY-4GF/8GF/12GF",
+    "role": "teacher",
+    "params": "21M / 39M / n.s.",
+    "architecture": "convnet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EfficientNet, ResNet, ViT-B/L",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Cross-entropy with label smoothing; hard-label distillation L = 1/2 CE(psi(Zs),y) + 1/2 CE(psi(Zs),yt) with distillation token; soft variant (1-lambda)CE + lambda tau^2 KL",
+   "optimizer": "AdamW",
+   "lr": "0.0005 x batchsize/512 (cross-validated over 3 rates, printed as 5.10^-4, 3.10^-4, 5.10^-5)",
+   "lr_schedule": "cosine",
+   "warmup": "5 epochs",
+   "batch_size": "1024",
+   "steps": null,
+   "epochs": "300 (also 1000 for best results); fine-tuning 25 epochs at 384",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05 (cross-validated over 0.03, 0.04, 0.05)",
+   "dropout": "none (excluded)",
+   "regularisation": "label smoothing 0.1, stochastic depth 0.1, repeated augmentation (3 repetitions), RandAugment 9/0.5, Mixup 0.8, CutMix 1.0, random erasing 0.25, gradient clipping off",
+   "hardware": "single node 8 GPU (V100 16GB per throughput note); 4 GPUs for DeiT-S/Ti",
+   "compute": "inferred: 53 h x 8 GPU for DeiT-B 300 epochs",
+   "wall_clock": "DeiT-B 300 epochs: 53 h on one node or 37 h on 2 nodes; fine-tuning to 384: 20 h on one node; DeiT-S/Ti under 3 days on 4 GPUs",
+   "seeds": "Table 8 baseline reports 81.8 +-0.2 and 83.1 +-0.1; seed count not stated",
+   "other": {
+    "init": "truncated normal (Hanin and Rolnick)",
+    "soft_distillation": "tau=3.0, lambda=0.1",
+    "finetune": "positional embeddings bicubic-interpolated; AdamW or SGD similar; teacher at target resolution; true label plus teacher prediction",
+    "ema": "EMA gives +0.1 before fine-tuning, vanishes after",
+    "ViT-B_reference_recipe": "batch 4096, lr 0.003, wd 0.3, warmup 3.4 epochs, dropout 0.1 (Table 9)",
+    "epoch_note": "with repeated augmentation 3x, 100 passes counted as 300 epochs (footnote 3)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single-crop; seed/run count not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "fusion": "late fusion: sum of softmax outputs of class and distillation heads"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet validation (also Real, V2), single crop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "throughput",
+     "definition": "images/s on one 16GB V100, largest batch, mean over 30 runs, timm implementation",
+     "unit": "images/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "decision disagreement",
+     "definition": "fraction of samples classified differently between classifier pairs",
+     "unit": "fraction",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "EfficientNet-B0..B7",
+    "ResNet-18/50/101/152",
+    "RegNetY",
+    "ViT-B/16, ViT-L/16",
+    "KDforAA-B8"
+   ],
+   "protocol": "Ablations in Table 8 give mean +- on baseline row only; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/deit",
+   "weights": "stated: 'We share our code and models'",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size / lr / wd",
+    "quote": null,
+    "where": "Table 9, column DeiT-B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DeiT-B distilled with 1000 epochs and fine-tuned at 384 reaches top-1 85.2 on ImageNet with no external data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 85.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-B distilled, RegNetY-16GF teacher, 1000 epochs, fine-tuned at 384, ImageNet-1k only",
+   "quote": null,
+   "table": "Table 5, row DeiT-B⚗↑384 / 1000 epochs, column ImNet top-1",
+   "note": null,
+   "where": "Table 5; abstract"
+  },
+  {
+   "claim": "DeiT-B trained without distillation reaches 83.1 top-1 at 384 resolution with ImageNet only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 83.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-B (86M), 300 epochs at 224, fine-tuned at 384, ImageNet-1k only",
+   "quote": "achieves top-1 accuracy of 83.1% (single-crop) on ImageNet with no external data",
+   "table": null,
+   "note": null,
+   "where": "abstract"
+  },
+  {
+   "claim": "DeiT-B distilled at 85.2 exceeds ViT-B pretrained on JFT-300M at 384.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 85.2,
+   "unit": "%",
+   "baseline_value": 84.15,
+   "n": null,
+   "setup": "ImageNet top-1; ViT-B JFT-300M at 384 resolution",
+   "quote": "(85.2% vs 84.15%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Over previous ViT trained on ImageNet-1k only, DeiT gains 6.3 points top-1 in a comparable setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gain",
+   "value": 6.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1k only, comparable setting",
+   "quote": "+6.3% top-1 in a comparable setting",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Hard distillation beats soft distillation with a class token only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 83.0,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "DeiT-B, 224, 300 epochs, RegNetY-16GF teacher",
+   "quote": "hard distillation reaches 83.0% at resolution 224×224, compared to the soft distillation accuracy of 81.8%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Class+distillation late fusion gives best accuracy for DeiT-B at 224.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 83.4,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "DeiT-B distilled, 300 epochs, ImageNet",
+   "quote": null,
+   "table": "Table 3, row DeiT⚗: class+distillation, column B 224",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Soft (usual) distillation gives no gain at 224 over no distillation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 81.8,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "DeiT-B 224, 300 epochs",
+   "quote": null,
+   "table": "Table 3, row DeiT- usual distillation, column B 224",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "A convnet teacher beats a transformer teacher: RegNetY-16GF (82.9) gives 83.1 pretrain vs DeiT-B teacher (81.8) giving 81.9, despite similar teacher accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 83.1,
+   "unit": "%",
+   "baseline_value": 81.9,
+   "n": null,
+   "setup": "DeiT-B student, 224 pretrain",
+   "quote": null,
+   "table": "Table 2, row RegNetY-16GF, column pretrain",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training DeiT-B for 300 epochs takes 53 hours on one node.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": 53,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-GPU node, DeiT-B, 300 epochs",
+   "quote": "or 53 hours on a single node for the DeiT-B",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Fine-tuning at 384 takes 20 hours on one node (25 epochs).",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": 20,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single node 8 GPU",
+   "quote": "This takes 20 hours on a single node (8 GPU)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Distilled DeiT-B beats DeiT-B accuracy at similar throughput.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 290.9,
+   "unit": "images/s",
+   "baseline_value": 292.3,
+   "n": null,
+   "setup": "V100 16GB, 224",
+   "quote": null,
+   "table": "Table 5, row DeiT-B⚗, column throughput",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "DeiT-Ti and DeiT-S distilled outperform ResNet-18/50 class counterparts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 81.2,
+   "unit": "%",
+   "baseline_value": 76.2,
+   "n": null,
+   "setup": "DeiT-S distilled 224, 300 epochs vs ResNet-50 76.2",
+   "quote": null,
+   "table": "Table 5, row DeiT-S⚗, column ImNet top-1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Class and distillation tokens converge to different vectors at input and become similar at the last layer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": 0.06,
+   "unit": "cosine",
+   "baseline_value": null,
+   "n": null,
+   "setup": "trained DeiT with distillation token",
+   "quote": "equal to 0.06",
+   "table": null,
+   "note": "0.93 at last layer",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Two class tokens converge to the same vector and add nothing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": 0.999,
+   "unit": "cosine",
+   "baseline_value": null,
+   "n": null,
+   "setup": "transformer with two class tokens, same label",
+   "quote": "(cos=0.999)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Repeated augmentation, strong augmentation and regularisation matter; ablating RandAugment, Mixup, CutMix etc each reduces accuracy (SGD instead of AdamW: 74.5 at 224).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 74.5,
+   "unit": "%",
+   "baseline_value": 81.8,
+   "n": null,
+   "setup": "DeiT-B 300 epochs, SGD in pretraining",
+   "quote": null,
+   "table": "Table 8, row optimizer SGD/adamw, column pre-trained 224",
+   "note": "Check marks for ablated methods are not extractable from the text; only accuracies are.",
+   "where": "Table 8"
+  },
+  {
+   "claim": "Distillation benefit grows with longer schedules while non-distilled DeiT saturates.",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-B, epochs sweep, Fig 3",
+   "quote": "our distilled network clearly beneﬁts from a longer training time",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Distilled DeiT-B's distillation head disagrees with the convnet in 0.100 of samples vs 0.133 for DeiT-B without distillation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "disagreement",
+   "value": 0.1,
+   "unit": "fraction",
+   "baseline_value": 0.133,
+   "n": null,
+   "setup": "ImageNet val; RegNetY teacher",
+   "quote": null,
+   "table": "Table 4, row convnet (RegNetY), column distillation",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Training from scratch on CIFAR-10, DeiT-B distilled reaches 98.5 vs 99.1 with ImageNet pre-training.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 98.5,
+   "unit": "%",
+   "baseline_value": 99.1,
+   "n": null,
+   "setup": "CIFAR-10, up to 7200 epochs, images rescaled to 224",
+   "quote": "(98.5% vs 99.1%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Transfer: DeiT-B distilled at 384 gets 99.2 on CIFAR-10, 91.4 CIFAR-100, 98.9 Flowers, 93.9 Cars, 80.1 iNat-18, 83.0 iNat-19.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 CIFAR-10",
+   "value": 99.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet pre-trained, fine-tuned",
+   "quote": null,
+   "table": "Table 7, row DeiT-B⚗↑384, column CIFAR-10",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Fine-tuning resolution sweep: 160 gives 79.9, 224 81.8, 320 82.7, 384 83.1 (throughput falls from 609 to 86 im/s).",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 at 320",
+   "value": 82.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-B trained at 224, ImageNet",
+   "quote": null,
+   "table": "Table 10, row 320, column Imagenet acc. top-1",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "The timm training recipe alone improved ViT-B from 77.91% to 79.35% top-1.",
+   "kind": "reported",
+   "source": null,
+   "metric": "top-1",
+   "value": 79.35,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1k, 8xV100",
+   "quote": "from 77.91% to 79.35% top-1",
+   "table": null,
+   "note": null,
+   "where": "footnote 2"
+  }
+ ],
+ "limits": [
+  "Hyper-parameters in Table 9 may be suboptimal (Table 8 caption); some ablations did not train well (4.3, 3.4 for regularisation rows).",
+  "Transformers are sensitive to initialisation and optimiser hyper-parameters; several options did not converge.",
+  "DeiT is slightly below EfficientNet in accuracy/throughput without distillation.",
+  "Gains from the distillation token over class token are small (about 0.1-0.3 points); authors say the explanation (inductive bias from convnet) is not formally established.",
+  "Number of seeds, mixed-precision use and exact GPU model for training not stated; single-crop eval only.",
+  "Best 85.2 requires 1000 epochs and a convnet teacher trained by the authors."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "distillation token",
+   "definition": "a learned token added alongside class and patch tokens that interacts via self-attention and whose output is trained to reproduce the (hard) label of the teacher",
+   "where": "Sec 4, Fig 2"
+  },
+  {
+   "term": "hard-label distillation",
+   "definition": "the teacher's argmax decision is used as a true label, loss 1/2 CE(true) + 1/2 CE(teacher)",
+   "where": "Sec 4, Eq 3"
+  },
+  {
+   "term": "repeated augmentation",
+   "definition": "each image repeated in a batch with different augmentations (3 repetitions), so one epoch sees a third of the images",
+   "where": "Sec 6, footnote 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "An image is worth 16x16 words (ViT), Dosovitskiy et al.",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "extends",
+   "note": "architecture inherited unchanged; DeiT changes training and adds distillation token",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transformer block, MSA",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "uses-method",
+   "note": "soft distillation baseline",
+   "quote": null
+  },
+  {
+   "work": "Transferring inductive biases through knowledge distillation",
+   "year": 2020,
+   "arxiv": "2006.00555",
+   "relation": "related",
+   "note": "explanation for convnet teacher advantage",
+   "quote": null
+  },
+  {
+   "work": "PyTorch image models (timm), Wightman",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "training procedure and code base",
+   "quote": null
+  },
+  {
+   "work": "Fixing the train-test resolution discrepancy",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fine-tune at higher resolution",
+   "quote": null
+  },
+  {
+   "work": "Designing network design spaces (RegNet)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "teacher",
+   "quote": null
+  },
+  {
+   "work": "EfficientNet",
+   "year": 2019,
+   "arxiv": "1905.11946",
+   "relation": "baseline",
+   "note": "accuracy/throughput comparison",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "related",
+   "note": "class token inherited from NLP",
+   "quote": null
+  },
+  {
+   "work": "RandAugment; Mixup; CutMix; stochastic depth; random erasing; AdamW",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "augmentation/regularisation ingredients",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Russakovsky 2015), ImageNet Real, ImageNet V2, CIFAR, iNaturalist, Flowers-102, Cars",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Throughput and accuracy on Imagenet of our methods compared to EfficientNets, trained on Imagenet1k only.",
+   "page": 2,
+   "why": "Single accuracy-vs-throughput plot showing DeiT closing the gap to convnets"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Our distillation procedure: we simply include a new distillation token.",
+   "page": 7,
+   "why": "Shows the class, distillation and patch token layout through self-attention"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Distillation on ImageNet with DeiT-B: performance as a function of the number of training epochs.",
+   "page": 13,
+   "why": "Distillation benefits from longer schedules; baseline saturates"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Distillation experiments on Imagenet with DeiT, 300 epochs",
+   "page": 10,
+   "why": "Compact comparison of no/soft/hard distillation and token variants"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4, Eq 3",
+   "snippet": "L_hardDistill = 1/2 L_CE(psi(Zs), y) + 1/2 L_CE(psi(Zs), yt)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 4, Eq 2",
+   "snippet": "L_global = (1 - lambda) L_CE(psi(Zs), y) + lambda tau^2 KL(psi(Zs/tau), psi(Zt/tau))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction loses check marks in Table 8 (which augmentations are on/off), so ablation rows are identified only by accuracy; Fig 1 and Fig 3 data are not in the text.",
+  "Venue printed as arXiv preprint (v2); ICML 2021 is not in the PDF text, so venue recorded as preprint.",
+  "No embedded instructions found."
+ ]
+}

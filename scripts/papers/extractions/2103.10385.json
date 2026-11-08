@@ -1,0 +1,153 @@
+{
+ "schema": 1,
+ "key": "2103.10385",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2023-gpt-understands-too.pdf",
+ "bib": {
+  "title": "GPT Understands, Too",
+  "authors": ["Xiao Liu", "Yanan Zheng", "Zhengxiao Du", "Ming Ding", "Yujie Qian", "Zhilin Yang", "Jie Tang"],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "AI Open (arXiv v2, 25 Oct 2023)",
+  "arxiv": "2103.10385",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 40939,
+  "chars_total": 40939,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can trainable continuous prompt embeddings, added to discrete prompts, stabilise and improve NLU performance of pretrained language models (frozen or tuned)?",
+ "hypothesis": "Continuous prompts add learnability to the input that can offset the effect of small changes in discrete prompts, improving training stability and performance.",
+ "contributions": [
+  "P-Tuning: trainable continuous prompt embeddings concatenated with discrete prompts, produced through a prompt encoder (LSTM or MLP)",
+  "Gains on LAMA knowledge probing (frozen LM) and SuperGLUE (tuned LM, fully-supervised and few-shot)",
+  "Reduced performance gap between different discrete prompts"
+ ],
+ "method": {
+  "summary": "A template mixes discrete prompt tokens and trainable pseudo-token embeddings [P_i]; a lightweight prompt encoder f (LSTM, MLP or identity) maps them to input vectors h_i, and the embeddings are updated by backpropagation on the task loss. The LM is either frozen (LAMA) or jointly tuned (SuperGLUE).",
+  "task": "Knowledge probing (LAMA cloze) and SuperGLUE NLU classification, fully-supervised and few-shot",
+  "trains": true,
+  "datasets": [
+   {"name": "LAMA-TREx (LAMA-34k)", "role": "eval", "size": "34,039 test triples, 41 Wikidata relations", "split": "train/dev/test constructed following Shin et al. (2020)", "source": "Petroni et al. 2019", "preprocessing": "answers single-token; covers all BERT vocabularies"},
+   {"name": "LAMA-29k", "role": "eval", "size": null, "split": "train/dev/test constructed following Shin et al. (2020)", "source": "subset of LAMA covering intersection of GPT and BERT vocabularies", "preprocessing": null},
+   {"name": "SuperGLUE (7 of 8 tasks: BoolQ, MultiRC, CB, RTE, WiC, COPA, WSC)", "role": "both", "size": null, "split": "development set reported; ReCoRD excluded as it has no discrete prompts", "source": "Wang et al. 2019", "preprocessing": null},
+   {"name": "FewGLUE", "role": "both", "size": null, "split": "data splits built following FewNLU (Zheng et al. 2021), random splits, model selection on small labeled set", "source": "Schick and Schutze 2020", "preprocessing": null},
+   {"name": "GLUE tasks SST-2, MNLI, MRPC (few-shot)", "role": "eval", "size": null, "split": "LM-BFF setting", "source": "Wang et al. 2018", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "BERT-base-cased / BERT-base", "role": "base", "params": "109M", "architecture": "bidirectional MLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BERT-large", "role": "base", "params": "335M", "architecture": "bidirectional MLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa-base / large", "role": "base", "params": "125M / 355M", "architecture": "bidirectional MLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT2-base / medium / xl", "role": "base", "params": "117M / 345M / 1.5B", "architecture": "unidirectional LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MegatronLM", "role": "base", "params": "11B", "architecture": "unidirectional LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ALBERT-xxLarge", "role": "base", "params": null, "architecture": "bidirectional MLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "few-shot SuperGLUE"}},
+   {"name": "RoBERTa-Large", "role": "base", "params": "355M", "architecture": "bidirectional MLM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"use": "few-shot GLUE vs LM-BFF"}},
+   {"name": "P-tuning prompt encoder", "role": "proposed", "params": null, "architecture": "LSTM, MLP or identity (EMB) mapping f: P_i -> h_i", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"LAMA_template_bidirectional": "(3, sub, org_prompt, 3, obj, 3): 3 continuous tokens at each position", "LAMA_template_unidirectional": "(3, sub, org_prompt, 3, obj)"}}
+  ],
+  "training": {
+   "objective": "task loss (cloze / classification) backpropagated into continuous prompt embeddings; LM frozen on LAMA, jointly optimised with prompts on SuperGLUE",
+   "optimizer": "LAMA: Adam; fully-supervised SuperGLUE: AdamW",
+   "lr": "LAMA: 1e-5; fully-supervised SuperGLUE: searched {1e-5, 2e-5, 3e-5}; few-shot: searched {1e-5, 2e-5}",
+   "lr_schedule": "linear decay (fully-supervised SuperGLUE)",
+   "warmup": "warm-up ratio searched {0.0, 0.05, 0.1}",
+   "batch_size": "searched {16, 32} (fully-supervised)",
+   "steps": "few-shot: max training steps searched {250, 500}, evaluation frequency {0.02, 0.04}",
+   "epochs": "20 for small datasets (COPA, WSC, CB, RTE); 10 for WiC, BoolQ, MultiRC; early stopping",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "few-shot: each result averaged over 4 runs with different data splits",
+   "other": {"LAMA_prompt_positions": "number of prompt tokens and positions selected on development sets"}
+  },
+  "inference": {
+   "decoding": "cloze: predict [MASK] token for bidirectional LMs; for GPT use network output just before the target position",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "few-shot: 4 runs with different data splits",
+   "prompting": "continuous prompts concatenated with original discrete (manual LAMA / PET) prompts",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Precision@1", "definition": "LAMA cloze top-1 accuracy of predicted tail entity", "unit": "%", "higher_is_better": true},
+    {"name": "SuperGLUE task metrics", "definition": "as in Wang et al. 2019 (Acc., F1, F1a, EM); Avg across tasks", "unit": "points", "higher_is_better": true},
+    {"name": "Std over patterns", "definition": "standard deviation of results across different discrete prompt patterns, used as a stability measure", "unit": "points", "higher_is_better": false}
+   ],
+   "baselines": ["Manual prompt (MP)", "E-BERT", "LPAQA", "AutoPrompt", "CLS-FT (standard classification fine-tuning)", "PET-FT", "Prompt Tuning (Lester et al. 2021)", "LM-BFF (Auto)"],
+   "protocol": "Fully-supervised: development set for hyper-parameter and model selection. Few-shot: FewNLU procedure with random data splits and model selection on a small labeled set; same hyper-parameter search space for PET and P-tuning."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [
+   {"purpose": "LAMA P17 manual prompt (original)", "text": "[X] is located in [Y].", "where": "Table 1"},
+   {"purpose": "LAMA P17 variant, which drops to 19.8 P@1 without P-tuning", "text": "[X] is located in which country or state? [Y].", "where": "Table 1"},
+   {"purpose": "CB few-shot P-tuning pattern 3", "text": "[Premise] Question: [Hypothesis] ? [P] Answer: [M].", "where": "Table 7"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "On LAMA with a frozen LM, changing one word in a manual prompt drops P@1 sharply (BERT-base-cased, P17), while P-tuning gives near-constant 57.8 to 58.1.", "kind": "measured", "source": null, "metric": "Precision@1", "value": "19.8 vs 57.8", "unit": "%", "baseline_value": "51.1 for best manual variant", "n": null, "setup": "LAMA-TREx P17, BERT-base-cased, frozen LM, four manual prompts", "quote": null, "table": "Table 1, rows 2 (19.8 without PT, 57.8 with PT)", "note": null, "where": "Table 1"},
+  {"claim": "P-tuning raises best LAMA-34k knowledge probing P@1 from 43.3% to 50.6%.", "kind": "measured", "source": null, "metric": "Precision@1", "value": "50.6", "unit": "%", "baseline_value": "43.3 (AutoPrompt, BERT-base)", "n": null, "setup": "LAMA-34k, BERT-large with P-tuning vs best discrete baseline, frozen LM", "quote": "from 43.3% to 50.6% on LAMA-34k", "table": null, "note": "Compares BERT-large P-tuning with AutoPrompt on BERT-base, so the comparison is not same-size", "where": "3.1.2"},
+  {"claim": "On LAMA-29k, MegatronLM (11B) with P-tuning reaches 64.2 P@1 against 23.1 for the manual prompt.", "kind": "measured", "source": null, "metric": "Precision@1", "value": "64.2", "unit": "%", "baseline_value": "23.1", "n": null, "setup": "LAMA-29k, MegatronLM 11B, frozen", "quote": null, "table": "Table 3, right, row MegatronLM (11B), columns MP 23.1, P-tuning 64.2 (+41.1)", "note": "Text says best result improves from 45.2% to 64.2%", "where": "Table 3"},
+  {"claim": "Continuous prompts cut the standard deviation across manual LAMA prompts from 10.1 to 0.46.", "kind": "measured", "source": null, "metric": "std of P@1 across 6 patterns", "value": "0.46", "unit": "points", "baseline_value": "10.1", "n": 6, "setup": "LAMA P17, BERT-base-cased", "quote": "reducing the standard deviation from 10.1 to 0.46", "table": null, "note": null, "where": "3.4"},
+  {"claim": "In few-shot BoolQ with ALBERT, P-tuning has std 3.52 across patterns versus 5.68 for PET-FT.", "kind": "measured", "source": null, "metric": "std over 6 patterns", "value": "3.52", "unit": "points", "baseline_value": "5.68", "n": 6, "setup": "FewGLUE BoolQ, ALBERT-xxLarge", "quote": null, "table": "Table 6 upper, row P-tuning column STD (3.52) vs PET-FT (5.68)", "note": null, "where": "Table 6"},
+  {"claim": "Few-shot SuperGLUE average with ALBERT: P-tuning 71.81 vs PET-FT 70.74 vs Prompt Tuning 58.56.", "kind": "measured", "source": null, "metric": "Avg over 7 tasks", "value": "71.81", "unit": "points", "baseline_value": "70.74 (PET-FT)", "n": 4, "setup": "FewGLUE, ALBERT-xxLarge, averaged over 4 runs with different data splits", "quote": null, "table": "Table 5, row P-tuning, column Avg (71.81); PET-FT 70.74; Prompt Tuning 58.56", "note": "Gain over PET is about 1 point and the per-task std (e.g. 2 to 8) is larger than that on several tasks; P-tuning is lower than PET on RTE (63.27 vs 72.83)", "where": "Table 5"},
+  {"claim": "Fully-supervised SuperGLUE averages: GPT2-medium P-tuning 75.6 vs PET-FT 74.9 vs CLS-FT 63.1; BERT-large 74.6 vs 73.1 vs 72.5.", "kind": "measured", "source": null, "metric": "Avg over 7 tasks", "value": "75.6", "unit": "points", "baseline_value": "74.9 (PET-FT)", "n": null, "setup": "SuperGLUE dev, GPT2-Med. (345M), tuned LM, single configuration reported", "quote": null, "table": "Table 4(b), row GPT2-Med. P-tuning, column Avg (75.6); PET-FT 74.9", "note": "No variance reported for Table 4", "where": "Table 4"},
+  {"claim": "P-tuning gains are small or absent on high-resource tasks (WiC, MultiRC) and larger on low-resource tasks.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fully-supervised SuperGLUE, BERT-base and BERT-large", "quote": "P-tuning might not have large gains over CLS-", "table": null, "note": null, "where": "3.2.2"},
+  {"claim": "Number of continuous tokens matters in few-shot CB: 4 tokens give 86.76 avg, 8 tokens drop to 78.40.", "kind": "measured", "source": null, "metric": "CB Avg (Acc and F1)", "value": "78.40", "unit": "points", "baseline_value": "86.76 (4 tokens)", "n": null, "setup": "CB few-shot, ALBERT, patterns #7 and #8", "quote": null, "table": "Table 7, rows 7 and 8, column Avg", "note": "Pattern 4 is printed 'Miid' for Pos.", "where": "Table 7"},
+  {"claim": "Prompt encoder ablation: MLP and LSTM generally work, identity embedding (EMB) is unstable (CB F1 67.27 vs 84.24 for MLP).", "kind": "measured", "source": null, "metric": "CB-F1", "value": "67.27", "unit": "%", "baseline_value": "84.24 (MLP)", "n": 4, "setup": "Few-shot CB, ALBERT", "quote": null, "table": "Table 8, row CB-F1., column EMB 67.27, MLP 84.24", "note": null, "where": "Table 8"},
+  {"claim": "Adding continuous prompts to LM-BFF top-3 discrete prompts gives mixed gains: SST-2 92.78 vs 92.89 (slightly lower), MNLI 58.70 vs 57.53, MRPC 69.49 vs 68.26.", "kind": "measured", "source": null, "metric": "few-shot GLUE score", "value": "58.70", "unit": "points", "baseline_value": "57.53", "n": null, "setup": "RoBERTa-Large, LM-BFF top-3 patterns", "quote": null, "table": "Table 9, row MNLI, columns LM-BFF (Auto) 57.53, P-Tuning 58.70", "note": "SST-2 is lower with P-tuning (92.78 vs 92.89) though the text says gains", "where": "Table 9"}
+ ],
+ "limits": [
+  "Fully-supervised SuperGLUE (Table 4) reports single numbers with no variance; the authors concede the gap between discrete prompts is not large and training is stable even without P-Tuning there (Table 2).",
+  "Gains over PET in few-shot average are about 1 point while per-task std is several points; P-tuning loses on RTE.",
+  "ReCoRD excluded because it has no discrete prompts; P-tuning not directly applicable.",
+  "Compute, hardware, seeds for fully-supervised runs, prompt encoder size and number of continuous tokens per SuperGLUE task are not stated; patterns are chosen per task by search.",
+  "Only NLU with small encoder or GPT-2 scale models (and MegatronLM 11B on LAMA); no generation tasks or modern LLMs. Prompt Tuning (Lester et al. 2021) is compared on ALBERT, where it is weak; Lester et al. says it works with large models.",
+  "LAMA gains mix learned prompts with training data on relation triples, so improved P@1 partly measures fitting, not elicited pretrained knowledge (not discussed by authors)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "P-Tuning", "definition": "employs trainable continuous prompt embeddings in concatenation with discrete prompts", "where": "Abstract"},
+  {"term": "prompt encoder", "definition": "a lightweight neural network (LSTM, MLP or identity mapping) f that maps trainable embeddings P_i to model inputs h_i, to model dependency between prompt embeddings", "where": "2.3"}
+ ],
+ "lineage": [
+  {"work": "PET (Schick and Schutze, It's not just size that matters)", "year": 2020, "arxiv": "2009.07118", "relation": "baseline", "note": "manual discrete cloze prompts; main baseline on SuperGLUE", "quote": null},
+  {"work": "AutoPrompt", "year": 2020, "arxiv": "2010.15980", "relation": "baseline", "note": "gradient-based discrete prompt search; LAMA baseline and data split", "quote": null},
+  {"work": "LPAQA (Jiang et al., How can we know what language models know)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "mined prompts on LAMA", "quote": null},
+  {"work": "LM-BFF (Gao et al.)", "year": 2020, "arxiv": "2012.15723", "relation": "baseline", "note": "auto-searched discrete prompts, compared in Table 9", "quote": null},
+  {"work": "Prefix-tuning (Li and Liang)", "year": 2021, "arxiv": "2101.00190", "relation": "related", "note": "concurrent; continuous prompts at each layer for generation", "quote": null},
+  {"work": "The power of scale for parameter-efficient prompt tuning (Lester et al.)", "year": 2021, "arxiv": "2104.08691", "relation": "baseline", "note": "concurrent; frozen LM with continuous prompts; compared in Table 5", "quote": null},
+  {"work": "FewNLU (Zheng et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "few-shot evaluation protocol", "quote": null},
+  {"work": "LAMA (Petroni et al.)", "year": 2019, "arxiv": "1909.01066", "relation": "uses-data", "note": "knowledge probing", "quote": null},
+  {"work": "SuperGLUE (Wang et al.)", "year": 2019, "arxiv": "1905.00537", "relation": "uses-data", "note": "NLU benchmark", "quote": null},
+  {"work": "Calibrate before use (Zhao et al.)", "year": 2021, "arxiv": "2102.09690", "relation": "related", "note": "cited for few-shot variance", "quote": null},
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "related", "note": "in-context prompting motivation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "An example of prompt search for \"The capital of Britain is [MASK]\". In (a) the prompt generator only receives discrete rewards; in (b) the continuous prompt embeddings and prompt encoder can be optimized in a differentiable way.", "page": 3, "why": "Contrasts discrete prompt search with P-tuning's encoder and backpropagation path in one picture."},
+  {"figure": "Table 1", "caption": "Discrete prompts suffer from instability (high variance), while P-Tuning stabilizes and improves performance.", "page": 2, "why": "Four-row table showing a one-word change drops P@1 from 51.1 to 19.8 and P-tuning flattens it."},
+  {"figure": "Fig 1", "caption": "Average scores on 7 dev datasets of SuperGLUE using P-Tuning.", "page": 1, "why": "Headline summary chart of SuperGLUE gains."}
+ ],
+ "code": [
+  {"where": "2.2", "snippet": "T = {[P0:i], x, [P(i+1):j], y, [P(j+1):k]}; f : [Pi] -> hi; input {h0, ..., hi, e(x), hi+1, ..., hj, e(y), hj+1, ..., hk}", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure 1 and Figure 2 content is drawn art; text cache holds only fragments of labels.",
+  "Table 3 left/right column text is interleaved in the cache; values were matched by row order.",
+  "Table 1 is numbered but the first-row quote could not be taken as single text span, so table references were used."
+ ]
+}

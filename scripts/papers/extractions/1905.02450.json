@@ -1,0 +1,634 @@
+{
+ "schema": 1,
+ "key": "1905.02450",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/song-2019-mass.pdf",
+ "bib": {
+  "title": "MASS: Masked Sequence to Sequence Pre-training for Language Generation",
+  "authors": [
+   "Kaitao Song",
+   "Xu Tan",
+   "Tao Qin",
+   "Jianfeng Lu",
+   "Tie-Yan Liu"
+  ],
+  "first_author": "Song",
+  "year": 2019,
+  "venue": "Proceedings of the 36th International Conference on Machine Learning (ICML), PMLR 97",
+  "arxiv": "1905.02450",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 47373,
+  "chars_total": 47373,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a BERT-style masked pre-training objective be designed for encoder-decoder models so that language generation tasks with little or no paired data benefit from pre-training?",
+ "hypothesis": "Jointly pre-training encoder and decoder by reconstructing a masked consecutive fragment, with the decoder seeing only the fragment's earlier tokens, improves low/zero-resource generation over no pre-training and over BERT+LM or denoising auto-encoder pre-training.",
+ "contributions": [
+  "We propose MASS, a masked sequence to sequence pre-training method for language generation",
+  "We apply MASS on a variety of language generation tasks including NMT, text summarization and conversational response generation, and achieve significant improvements",
+  "state-of-the art BLEU score for unsupervised NMT on two language pairs: English-French and English-German"
+ ],
+ "method": {
+  "summary": "A Transformer encoder-decoder is pretrained on monolingual text: a random fragment of about 50% of the tokens is masked in the encoder input, and the decoder predicts that fragment, with decoder inputs for non-fragment positions replaced by [M]. One pretrained model is then fine-tuned on unsupervised/low-resource NMT, Gigaword summarisation and Cornell dialogue response generation.",
+  "task": "masked sequence-to-sequence pre-training for language generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT News Crawl monolingual (en, fr, de)",
+    "role": "pretrain",
+    "size": "190M English, 62M French, 270M German sentences (2007-2017)",
+    "split": null,
+    "source": "http://www.statmt.org/wmt16/translation-task.html",
+    "preprocessing": "sentences over length 175 removed; joint 60,000 BPE units per language pair (Sennrich et al., 2016)"
+   },
+   {
+    "name": "Romanian monolingual (News Crawl + WMT16)",
+    "role": "pretrain",
+    "size": "2.9M sentences",
+    "split": null,
+    "source": "News Crawl augmented with WMT16 data",
+    "preprocessing": "same as above"
+   },
+   {
+    "name": "WMT14 en-fr, WMT16 en-de, WMT16 en-ro bilingual",
+    "role": "train",
+    "size": "low-resource subsamples of 10K, 100K, 1M pairs",
+    "split": "test newstest2014 (en-fr), newstest2016 (en-de, en-ro); best model chosen on dev set",
+    "source": "WMT",
+    "preprocessing": "same BPE codes as pretraining"
+   },
+   {
+    "name": "Gigaword",
+    "role": "both",
+    "size": "3.8M article-title pairs; fine-tune subsets 10K, 100K, 1M, 3.8M",
+    "split": null,
+    "source": "Graff et al. 2003; github.com/harvardnlp/sent-summary",
+    "preprocessing": null
+   },
+   {
+    "name": "Cornell Movie Dialog",
+    "role": "both",
+    "size": "140K conversation pairs; 10K/20K random pairs as validation/test, rest train (text also says 110K pairs used)",
+    "split": "10K validation, 20K test, remainder train",
+    "source": "Danescu-Niculescu-Mizil & Lee 2011",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MASS (Transformer encoder-decoder)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "6-layer encoder and 6-layer decoder Transformer",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "60,000 joint BPE units",
+    "layers": "6 encoder + 6 decoder",
+    "hidden": "1024 embedding/hidden size",
+    "heads": null,
+    "context": null,
+    "other": {
+     "ffn": "4096 feed-forward filter size",
+     "language_embedding": "added to each token for NMT, learned end to end",
+     "codebase": "XLM (facebookresearch/XLM)",
+     "pretrain_per_task": "one model per language pair for NMT; English-only models for summarisation and dialogue"
+    }
+   },
+   {
+    "name": "BERT+LM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "6-layer Transformer; MLM-pretrained encoder, LM-pretrained decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6+6",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DAE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "6-layer Transformer pretrained as denoising auto-encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6+6",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XLM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "6-layer Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "best of MLM/CLM combinations per pair"
+    }
+   }
+  ],
+  "training": {
+   "objective": "log-likelihood of masked fragment x^{u:v} given x^{\\u:v} (Eq. 1); fragment length k about 50% of sentence tokens; encoder masked tokens: [M] 80%, random 10%, unchanged 10%",
+   "optimizer": "Adam",
+   "lr": "1e-4 (pretraining, NMT fine-tuning, low-resource NMT); dialogue reuses pretraining hyperparameters",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "3000 tokens per mini-batch (pretraining); 2000 tokens per GPU (unsupervised NMT fine-tuning)",
+   "steps": "20,000 steps (low-resource NMT fine-tuning); pretraining steps not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "sentences up to 175 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 NVIDIA V100 GPU cards",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "unsupervised_nmt_finetune": "back-translation loss only, no denoising auto-encoder loss",
+    "decoder_padding": "masked decoder positions removed but positional embeddings of unmasked tokens kept; ~50% decoder compute saved",
+    "bert_lm_dae_finetune": "XLM strategy (DAE loss + back-translation)",
+    "k_sweep": "10%..90% step 10%, plus k=1 and k=m"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 5 (summarisation); others not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "multi-bleu.pl",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L F1",
+     "definition": "F1 on Gigaword test",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "PPL on Cornell test, following Vinyals & Le 2015",
+     "unit": "PPL",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Artetxe et al. 2017",
+    "Lample et al. 2017",
+    "Yang et al. 2018",
+    "Lample et al. 2018",
+    "XLM",
+    "BERT+LM",
+    "DAE",
+    "no pre-training"
+   ],
+   "protocol": "Single reported numbers; no significance tests or seeds"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/MASS",
+   "weights": null,
+   "data": "WMT, Gigaword, Cornell public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "each mini-batch contains 3000 tokens for pre-training",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MASS reaches 37.5 BLEU on unsupervised en-fr (newstest2014), 4.1 above XLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 37.5,
+   "unit": "BLEU",
+   "baseline_value": 33.4,
+   "n": null,
+   "setup": "Unsupervised NMT, 6-layer Transformer pretrained with MASS (k=50% of m) on News Crawl, fine-tuned with back-translation only",
+   "note": null,
+   "where": "Table 2, p5",
+   "table": "Table 2, row MASS, column en-fr"
+  },
+  {
+   "claim": "MASS beats XLM by 4.1 BLEU on en-fr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain over XLM",
+   "value": 4.1,
+   "unit": "BLEU points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unsupervised NMT, 6-layer Transformer pretrained with MASS (k=50% of m) on News Crawl, fine-tuned with back-translation only",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Our method still outperforms XLM by 4.1 BLEU points on en-fr."
+  },
+  {
+   "claim": "MASS gains on fr-en over XLM (34.9 vs 33.30).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 34.9,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "Unsupervised fr-en newstest2014",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MASS, column fr-en"
+  },
+  {
+   "claim": "MASS on en-de unsupervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 28.3,
+   "unit": "BLEU",
+   "baseline_value": 27.0,
+   "n": null,
+   "setup": "Unsupervised en-de newstest2016",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MASS, column en-de"
+  },
+  {
+   "claim": "MASS on de-en unsupervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 35.2,
+   "unit": "BLEU",
+   "baseline_value": 34.3,
+   "n": null,
+   "setup": "Unsupervised de-en newstest2016",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MASS, column de-en"
+  },
+  {
+   "claim": "MASS on en-ro unsupervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 35.2,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "Unsupervised en-ro newstest2016",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MASS, column en-ro"
+  },
+  {
+   "claim": "MASS on ro-en unsupervised.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.1,
+   "unit": "BLEU",
+   "baseline_value": 31.8,
+   "n": null,
+   "setup": "Unsupervised ro-en newstest2016",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MASS, column ro-en"
+  },
+  {
+   "claim": "Against other pretraining objectives under XLM fine-tuning (DAE loss + back-translation), MASS en-fr 37.5 vs BERT+LM 33.4 vs DAE 30.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 37.5,
+   "unit": "BLEU",
+   "baseline_value": 33.4,
+   "n": null,
+   "setup": "Unsupervised en-fr, all 6-layer Transformer; BERT+LM numbers taken from XLM MLM+CLM",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row MASS, column en-fr"
+  },
+  {
+   "claim": "DAE is weakest pretraining on en-fr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 30.1,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unsupervised en-fr",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row DAE, column en-fr"
+  },
+  {
+   "claim": "Summarisation with 3.8M Gigaword pairs: MASS ROUGE-1 38.73 vs BERT+LM 37.75 vs DAE 35.97.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 F1",
+   "value": 38.73,
+   "unit": "F1",
+   "baseline_value": 37.75,
+   "n": null,
+   "setup": "Gigaword 3.8M article-title pairs, beam 5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MASS, column RG-1 (F)"
+  },
+  {
+   "claim": "Summarisation ROUGE-2 MASS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": 19.71,
+   "unit": "F1",
+   "baseline_value": 18.45,
+   "n": null,
+   "setup": "Gigaword 3.8M, beam 5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MASS, column RG-2 (F)"
+  },
+  {
+   "claim": "Summarisation ROUGE-L MASS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L F1",
+   "value": 35.96,
+   "unit": "F1",
+   "baseline_value": 34.85,
+   "n": null,
+   "setup": "Gigaword 3.8M, beam 5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row MASS, column RG-L (F)"
+  },
+  {
+   "claim": "With 10K summarisation pairs MASS gains more than 10 ROUGE points over no pretraining; 5 points at 100K (read off Fig 4 per text).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE gain",
+   "value": 10,
+   "unit": "ROUGE points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Gigaword 10K fine-tune data vs no-pretraining baseline",
+   "note": "Number 'more than 10'; 5 points at 100K",
+   "where": "Sec 4.3",
+   "quote": "(more than 10 ROUGE points gain on 10K data and 5"
+  },
+  {
+   "claim": "Conversational response, 10K pairs: MASS PPL 74.32 vs baseline 82.39 vs BERT+LM 80.11.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 74.32,
+   "unit": "PPL",
+   "baseline_value": 82.39,
+   "n": null,
+   "setup": "Cornell Movie Dialog, 10K train pairs",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row MASS, column Data = 10K"
+  },
+  {
+   "claim": "Conversational response, 110K pairs: MASS PPL 23.52 vs baseline 26.38.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 23.52,
+   "unit": "PPL",
+   "baseline_value": 26.38,
+   "n": null,
+   "setup": "Cornell Movie Dialog, 110K train pairs",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row MASS, column Data = 110K"
+  },
+  {
+   "claim": "Ablation: random discrete masking (instead of a consecutive fragment) lowers BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 36.9,
+   "unit": "BLEU",
+   "baseline_value": 37.5,
+   "n": null,
+   "setup": "Unsupervised en-fr",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Discrete"
+  },
+  {
+   "claim": "Ablation: feeding all tokens to the decoder (Feed) lowers BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 35.3,
+   "unit": "BLEU",
+   "baseline_value": 37.5,
+   "n": null,
+   "setup": "Unsupervised en-fr",
+   "note": "Table 6 text layout is flattened in the cache; row/column pairing (Discrete 36.9, Feed 35.3, MASS 37.5) inferred from the surrounding prose",
+   "where": "Table 6",
+   "table": "Table 6, row Feed"
+  },
+  {
+   "claim": "Best pretraining validation PPL is with k between 50% and 70% of sentence length; downstream best near k=50%; k=1 and k=m both poor.",
+   "kind": "measured",
+   "source": null,
+   "metric": "k",
+   "value": "50%",
+   "unit": "of sentence length m",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sweep k = 10%..90% plus k=1, k=m; read from Fig 5",
+   "note": null,
+   "where": "Sec 4.5, Fig 5",
+   "quote": "k is nearly 50% of the sentence length m. There-"
+  },
+  {
+   "claim": "Pretrain cost: 8 V100 GPUs, 3000 tokens per mini-batch; dropping decoder padding saves 50% decoder computation at similar accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "decoder compute saved",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pretraining implementation trick",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "we can get similar accuracy and reduce 50% computation"
+  }
+ ],
+ "limits": [
+  "Pretraining steps, LR schedule, warmup, dropout and seeds are not stated.",
+  "Only single runs, no variance or significance tests.",
+  "Dialogue data size inconsistent: 140K pairs, 10K/20K held out, then called 110K pairs for training.",
+  "BERT+LM numbers in Table 3 come from XLM, not rerun; Table 2 XLM is best of several variants.",
+  "Small 6-layer models only; Table 4/5 DAE dialogue numbers mentioned in text but absent from Table 5.",
+  "Authors acknowledge only future work on theory and more tasks."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MASS",
+   "definition": "MAsked Sequence to Sequence pre-training: encoder takes a sentence with a masked fragment, decoder predicts that fragment",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "MLM is the k=1 special case of MASS",
+   "quote": null
+  },
+  {
+   "work": "OpenAI GPT",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "standard LM is the k=m special case",
+   "quote": null
+  },
+  {
+   "work": "XLM (Lample & Conneau)",
+   "year": 2019,
+   "arxiv": "1901.07291",
+   "relation": "baseline",
+   "note": "prior SOTA unsupervised NMT; codebase reused",
+   "quote": null
+  },
+  {
+   "work": "Lample et al. Phrase-based & neural unsupervised MT",
+   "year": 2018,
+   "arxiv": "1804.07755",
+   "relation": "baseline",
+   "note": "back-translation fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "uses-method",
+   "note": "Transformer base architecture",
+   "quote": null
+  },
+  {
+   "work": "Dai & Le semi-supervised sequence learning",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LM/auto-encoder pretraining with limited gains",
+   "quote": null
+  },
+  {
+   "work": "Ramachandran et al. Unsupervised pretraining for seq2seq",
+   "year": 2016,
+   "arxiv": "1611.02683",
+   "relation": "related",
+   "note": "pretrains encoder and decoder as LMs",
+   "quote": null
+  },
+  {
+   "work": "Sennrich et al. BPE",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "subword units",
+   "quote": null
+  },
+  {
+   "work": "Gigaword",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "summarisation",
+   "quote": null
+  },
+  {
+   "work": "Cornell Movie Dialog",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "response generation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The encoder-decoder framework for our proposed MASS. The token \"_\" represents the mask symbol [M].",
+   "page": 3,
+   "why": "shows x3..x6 masked in the encoder and the decoder seeing only x3..x5 with the rest masked"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The model structure of MASS when k = 1 and k = m.",
+   "page": 4,
+   "why": "shows BERT MLM and GPT LM as the two ends of the same objective"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance of MASS with different masked lengths k in pre-training and fine-tuning",
+   "page": 8,
+   "why": "shows the sweet spot near k=50%"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "BLEU score comparisons between MASS and baseline on low-resource NMT",
+   "page": 7,
+   "why": "gain vs paired data size"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1, p3",
+   "snippet": "L(θ; X) = 1/|X| Σ_{x∈X} log P(x^{u:v} | x^{\\u:v}; θ)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 6 cells are flattened in the text cache; pairing Discrete 36.9 / Feed 35.3 / MASS 37.5 inferred.",
+  "Figures 3-5 are plots; values not in text."
+ ]
+}

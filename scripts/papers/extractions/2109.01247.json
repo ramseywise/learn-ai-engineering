@@ -1,0 +1,553 @@
+{
+ "schema": 1,
+ "key": "2109.01247",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/webson-2022-do-prompt-based-models-really.pdf",
+ "bib": {
+  "title": "Do Prompt-Based Models Really Understand the Meaning of Their Prompts?",
+  "authors": [
+   "Albert Webson",
+   "Ellie Pavlick"
+  ],
+  "first_author": "Webson",
+  "year": 2022,
+  "venue": "NAACL 2022 (Proceedings of the 2022 Conference of the North American Chapter of the ACL: HLT, pages 2300-2344)",
+  "arxiv": "2109.01247",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 102575,
+  "chars_total": 102575,
+  "engine": "pymupdf",
+  "skipped": "Per-template accuracy tables and plot axis residue in Appendices G-J read only in outline (numbers are in figures/tables not needed for claims)."
+ },
+ "type": "empirical",
+ "question": "Do prompt-based models use prompt templates as semantically meaningful task instructions the way humans do?",
+ "hypothesis": "Null/implicit: the commonly assumed hypothesis is that models benefit from meaningful instructions; the authors test it and expect instructive templates to beat irrelevant/misleading ones if models understand them.",
+ "contributions": [
+  "Over 30 manually written NLI templates in 5 categories and 13 LM target-word sets (over 390 prompts) evaluated zero- and few-shot",
+  "Show irrelevant and misleading templates yield about the same few-shot learning speed as instructive ones, up to GPT-3 175B and instruction-tuned T0",
+  "Show the choice of LM target words matters much more than template meaning"
+ ],
+ "method": {
+  "summary": "Manually written discrete prompt templates for NLI (RTE) in five categories (instructive, misleading-moderate, misleading-extreme, irrelevant, null) are used with rank classification of target words. Models are fine-tuned on k={4..256} examples (ALBERT, T5 LM-Adapted, T0) or primed (GPT-3 davinci, 16 shots), and accuracy is compared across template categories and target-word categories with significance tests.",
+  "task": "Natural language inference (RTE, binary) with prompt-based few-shot and zero-shot learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RTE (SuperGLUE collection, binary)",
+    "role": "both",
+    "size": "n = 2490 training examples for full set; k-shot subsets 4-256",
+    "split": "validation accuracy reported; few-shot training examples are consecutive indices from a seed-specific start (seed 1: 550-553 for 4-shot)",
+    "source": "Dagan et al. 2006, SuperGLUE",
+    "preprocessing": "converted to binary classification"
+   },
+   {
+    "name": "ANLI R1, HANS, WSC",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Nie et al. 2020; McCoy et al. 2019; Levesque et al. 2012",
+    "preprocessing": "ternary NLI uses 'unclear' for neutral"
+   }
+  ],
+  "models": [
+   {
+    "name": "ALBERT",
+    "role": "base",
+    "params": "235M",
+    "architecture": "encoder-only masked LM",
+    "init_from": "pretrained ALBERT (Lan et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "chosen as baseline after preliminary tests of BERT, DistilBERT, RoBERTa, ALBERT, T5"
+    }
+   },
+   {
+    "name": "T5 LM-Adapted",
+    "role": "base",
+    "params": "770M, 3B, 11B",
+    "architecture": "encoder-decoder",
+    "init_from": "Lester et al. 2021 LM-adapted T5",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T0 / T0++",
+    "role": "base",
+    "params": "3B, 11B (T0++ 11B)",
+    "architecture": "encoder-decoder, instruction-tuned T5",
+    "init_from": "Sanh et al. 2021; trained on over 60 datasets, hundreds of prompts, NLI held out",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 davinci",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2049 tokens (API limit), so max 16 priming shots",
+    "other": {
+     "primed not fine-tuned": "fine-tuning API limited to 10 runs/month, 5 epochs, models up to 6.7B"
+    }
+   }
+  ],
+  "training": {
+   "objective": "prompt-based fine-tuning; rank classification of single-token target words",
+   "optimizer": "AdamW (PyTorch Adafactor gave substantially worse T5 results)",
+   "lr": "1e-5 encoder-only (ALBERT); 1e-4 for T5 and T0",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4 with 4 gradient accumulation steps, effective 16",
+   "steps": null,
+   "epochs": "30 (20 for 11B models); checkpoint with highest validation accuracy selected",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "ALBERT: 1x RTX3090; T5 770M: 1x A6000; 3B: layers split over 4x RTX3090; 11B: 8x V100 32GB",
+   "compute": "approx 192 GPU hours (ALBERT), 48 (T5 770M), 2,304 (3B models T5 and T0), 1,728 (11B models T5, T0, T0++)",
+   "wall_clock": null,
+   "seeds": "4 random seeds (same set for all experiments); GPT-3 single run",
+   "other": {
+    "EOS": "EOS added for few-shot inputs (following Raffel), omitted at zero-shot to reproduce Sanh et al.",
+    "lr search": "3e-4, 1e-4, 5e-5, 1e-5 tried in preliminary runs, not exhaustive",
+    "11B": "only 0 shots and 16 shots run"
+   }
+  },
+  "inference": {
+   "decoding": "rank classification over single-token target words (no sampling, beam, top-k or top-p)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 seeds for fine-tuned models; GPT-3 one run, 16 priming shots, different priming examples per inference example",
+   "prompting": "{premise} template text {hypothesis} [prediction]; default targets yes/no; GPT-3 uses separator \\n###\\n between priming examples, no trailing space, leading-space target token",
+   "retrieval": null,
+   "parameters": {
+    "k_shots": "0,4,8,16,32,64,128,256",
+    "prompts": "over 30 templates x 13 LM target sets, over 390 prompts"
+   },
+   "other": {
+    "GPT-3 logprobs": "top 99 (API now caps at 5)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "RTE validation accuracy",
+     "definition": "rank classification: correct if gold target word probability exceeds the other class's",
+     "unit": "accuracy (fraction/%)",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "instructive templates",
+    "traditional fine-tuning (Fig 10)",
+    "Schick and Schutze 2021b reported 69.8% on RTE at 32 shots"
+   ],
+   "protocol": "4 seeds; ANOVA and Kruskal-Wallis, then pairwise independent two-sample t-test and Wilcoxon rank-sum, alpha 0.05 with Bonferroni; both tests agree; no practical difference means very small effect sizes"
+  },
+  "availability": {
+   "code": "https://github.com/awebson/prompt_semantics",
+   "weights": null,
+   "data": "RTE, public; training example indices in GitHub repo"
+  },
+  "prompts": [
+   {
+    "purpose": "instructive",
+    "text": "{prem} Are we justified in saying that \"{hypo}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "instructive",
+    "text": "Suppose {prem} Can we infer that \"{hypo}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "misleading-moderate",
+    "text": "{prem} Can that be paraphrased as: \"{hypo}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "misleading-moderate",
+    "text": "{prem} Are there lots of similar words in \"{hypo}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "misleading-extreme",
+    "text": "{prem} is the sentiment positive? {hypo}",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "misleading-extreme",
+    "text": "{prem} is this a sports news? {hypo}",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "irrelevant",
+    "text": "{prem} If bonito flakes boil more than a few seconds the stock becomes too strong. \"{hypo}\"?",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "null",
+    "text": "{premise} {hypothesis}",
+    "where": "Table 1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Irrelevant templates give no practical difference from instructive templates in few-shot learning, for all models including GPT-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RTE, all models, 4-256 shots (16 for 11B and GPT-3)",
+   "quote": "models trained with irrelevant templates learn just as fast as those trained with instructive templates",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 1-2"
+  },
+  {
+   "claim": "T0++ 11B zero-shot accuracy with the extremely misleading 'Is that grammatically correct?' template",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0++ zero-shot, RTE, no gradient update, same as accuracy with a proper instruction",
+   "quote": "it is striking that out-of-the-box T0++ scores a high accuracy of 78% with the extremely misleading",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Accuracy if T0++ were truly classifying grammaticality",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 52.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RTE examples are all grammatical",
+   "quote": "it would have only scored 52.7% because RTE is writ-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Median-accuracy gap at 32 shots between yes/no and no/yes targets (reversed), for the best instructive template with ALBERT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 22.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT, RTE, 32 shots, template 'Are we justified in saying that'",
+   "quote": "the difference between the median accuracies of “yes”/“no” vs.",
+   "table": null,
+   "note": "Text says % though likely percentage points",
+   "where": "Sec 5.2, Fig 5"
+  },
+  {
+   "claim": "ALBERT baseline median RTE accuracy at 32 shots",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70.22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALBERT, prompt-tuned, RTE validation, 32 shots; comparable to Schick and Schutze 69.8%",
+   "quote": "At 32 shots, our implementation yields a median accu-",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Std dev of baseline ALBERT RTE accuracy at 32 shots",
+   "kind": "measured",
+   "source": null,
+   "metric": "std dev",
+   "value": 6.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same setup as above",
+   "quote": "std. dev. = 6.3%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Humans reach 60% accuracy in 18 trials on an arbitrary mapping without language instructions, while models struggle to reach 60% by 64 shots with arbitrary targets",
+   "kind": "reported",
+   "source": "Ferrigno et al. 2017",
+   "metric": null,
+   "value": 60,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ferrigno et al. 2017 human result, cited",
+   "quote": "adults can reach 60% ac-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "T0 3B/11B zero-shot: no practical difference between instructive and misleading-moderate; only T0++ separates all categories at zero shots",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RTE zero-shot, Table 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Table 2"
+  },
+  {
+   "claim": "GPT-3 (16-shot) null-template accuracy is below 0.5 while other categories show no practical difference",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B, 16-shot priming, RTE",
+   "quote": "For GPT-3, there is no practical difference be-\ntween any template categories except null",
+   "table": null,
+   "note": null,
+   "where": "Fig 2 caption"
+  },
+  {
+   "claim": "Target word choice matters much more than template meaning: misleading template + yes/no beats instructive template + cat/dog",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0 3B, RTE (Fig 6); ALBERT and T0 Fig 15-16",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, Fig 6"
+  },
+  {
+   "claim": "Models trained with irrelevant templates without quotation/question marks do much worse (ALBERT and T0) but instructive templates are unaffected",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RTE, ALBERT, T0 3B (Fig 7-8); T5 3B differs (Fig 9)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "Pathological prompt still scored 72% zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T0++ (inferred from context), RTE, template 'Inflections are annoying...'",
+   "quote": "difﬁcult to imagine a human scoring 72% zero-shot",
+   "table": null,
+   "note": "paper does not name the exact model for the 72% in that sentence; context is T0++",
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "Absence of significant difference does not entail no difference; argument rests on small effect sizes (footnote 3)",
+  "Only NLI (RTE) in the main text; ANLI, HANS, WSC are preliminary appendices",
+  "Lack of competence at zero shots: non-instruction-tuned models near random, so null results there are ambiguous",
+  "Accuracy cannot directly measure understanding; lack of compliance and spurious-feature interactions not ruled out",
+  "GPT-3 only primed at 16 shots, single run, different priming examples per inference example, not comparable to the fine-tuned models' fixed shots",
+  "11B models limited to 0 and 16 shots; Adafactor replaced with AdamW",
+  "OpenAI Instruct series not tested",
+  "Prompts written by the authors; GPT-3 zero-shot on RTE reproduced only with Brown et al.'s exact prompt, other prompts at random"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prompt",
+   "definition": "a unique combination of a template and a pre-defined LM target word for each class label",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "priming",
+   "definition": "a.k.a. in-context learning; prepends k priming examples to the evaluation example",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Multitask prompted training enables zero-shot task generalization (T0)",
+   "year": 2021,
+   "arxiv": "2110.08207",
+   "relation": "evaluates",
+   "note": "T0 3B/11B/T0++ evaluated; confirms its robustness finding",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 davinci primed; could not reproduce 32-shot RTE",
+   "quote": null
+  },
+  {
+   "work": "It's not just size that matters (Schick and Schutze)",
+   "year": 2021,
+   "arxiv": "2009.07118",
+   "relation": "baseline",
+   "note": "manual discrete prompt setup reimplemented without self-labeling/ensembling",
+   "quote": null
+  },
+  {
+   "work": "How many data points is a prompt worth?",
+   "year": 2021,
+   "arxiv": "2103.08493",
+   "relation": "extends",
+   "note": "same shot-count setup; focuses on diverse prompts",
+   "quote": null
+  },
+  {
+   "work": "Natural Instructions (Mishra et al.)",
+   "year": 2021,
+   "arxiv": "2104.08773",
+   "relation": "contradicts",
+   "note": "contradicts claim that models benefit from elaborate instructions",
+   "quote": "our ﬁndings contradict Mishra"
+  },
+  {
+   "work": "Rethinking the role of demonstrations (Min et al.)",
+   "year": 2022,
+   "arxiv": "2202.12837",
+   "relation": "related",
+   "note": "concurrent: incorrect labels do not hurt in priming",
+   "quote": null
+  },
+  {
+   "work": "Can language models learn from explanations in context? (Lampinen et al.)",
+   "year": 2022,
+   "arxiv": "2204.02329",
+   "relation": "related",
+   "note": "concurrent: models indifferent to whether instructions describe the task",
+   "quote": null
+  },
+  {
+   "work": "Finetuned language models are zero-shot learners (Wei et al.)",
+   "year": 2021,
+   "arxiv": "2109.01652",
+   "relation": "related",
+   "note": "answer choices in input hurt",
+   "quote": null
+  },
+  {
+   "work": "ALBERT",
+   "year": 2020,
+   "arxiv": "1909.11942",
+   "relation": "uses-method",
+   "note": "baseline model",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE RTE",
+   "year": 2019,
+   "arxiv": "1905.00537",
+   "relation": "uses-data",
+   "note": "RTE data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "T0 (3B) on RTE. No practical difference between instructive vs irrelevant templates at any shots",
+   "page": 5,
+   "why": "Core result in one plot"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "16-shot accuracy of four large models on RTE",
+   "page": 5,
+   "why": "Shows the effect persists to GPT-3 175B and T0++"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Zero-shot accuracy of instruction-tuned models on RTE, per prompt",
+   "page": 6,
+   "why": "Shows misleading prompts near instructive ones at zero shot"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Best instructive template for ALBERT with select LM targets",
+   "page": 7,
+   "why": "Target words dominate"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "T0 (3B): misleading templates + yes-no targets learn faster than instructive + arbitrary targets",
+   "page": 7,
+   "why": "Sharpest contrast"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Example templates for NLI",
+   "page": 4,
+   "why": "Shows the five template categories"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text cache has plot-axis residue; Table 2 checkmarks lost in extraction so per-model significance cells cannot be read from text",
+  "No injected instructions found"
+ ]
+}

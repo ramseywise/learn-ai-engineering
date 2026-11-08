@@ -1,0 +1,486 @@
+{
+ "schema": 1,
+ "key": "1803.02324",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gururangan-2018-annotation-artifacts-natural-language-inference.pdf",
+ "bib": {
+  "title": "Annotation Artifacts in Natural Language Inference Data",
+  "authors": [
+   "Suchin Gururangan",
+   "Swabha Swayamdipta",
+   "Omer Levy",
+   "Roy Schwartz",
+   "Samuel R. Bowman",
+   "Noah A. Smith"
+  ],
+  "first_author": "Gururangan",
+  "year": 2018,
+  "venue": "Proceedings of NAACL-HLT 2018, pages 107-112",
+  "arxiv": "1803.02324",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 24342,
+  "chars_total": 24342,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Do the crowdsourcing protocols behind SNLI and MultiNLI leave hypothesis-only clues that let a classifier predict the label without the premise, and how much of NLI model accuracy depends on them?",
+ "hypothesis": "Crowd workers adopt heuristics when writing hypotheses, producing annotation artifacts that models exploit, so reported NLI performance is overestimated.",
+ "contributions": [
+  "Show a premise-oblivious classifier beats the majority baseline on SNLI and MultiNLI",
+  "Characterise artifacts by lexical choice (PMI) and sentence length",
+  "Split test sets into Hard and Easy and re-evaluate DAM, ESIM, DIIN",
+  "Release the Hard SNLI and MultiNLI test sets"
+ ],
+ "method": {
+  "summary": "Train fastText on the hypothesis only to predict the NLI label; analyse word-class PMI and length; split each test set into Easy (hypothesis-only model correct) and Hard (incorrect) and evaluate three retrained NLI models on full, Hard and Easy.",
+  "task": "natural language inference (3-way: entailment, neutral, contradiction)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": null,
+    "split": "original train/test",
+    "source": "Bowman et al. 2015, premises from image captions",
+    "preprocessing": null
+   },
+   {
+    "name": "MultiNLI",
+    "role": "both",
+    "size": null,
+    "split": "original train; matched and mismatched test",
+    "source": "Williams et al. 2018",
+    "preprocessing": "MultiNLI models trained on MultiNLI alone, not blended with SNLI"
+   }
+  ],
+  "models": [
+   {
+    "name": "fastText (hypothesis only)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bag of words and bigrams text classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "MultiNLI extras": "character 4-grams; words seen fewer than 10 times in training filtered"
+    }
+   },
+   {
+    "name": "DAM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Decomposable Attention Model (Parikh et al. 2016)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ESIM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Enhanced Sequential Inference Model (Chen et al. 2017)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DIIN",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Densely Interactive Inference Network (Gong et al. 2018)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised classification of the NLI label",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "NLI models": "All models were retrained out of the box (public implementations); no hyperparameters given"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "PMI smoothing": "add-100"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "share of test examples classified correctly (inferred from Table 2/5 values in %)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "PMI(word, class)",
+     "definition": "log p(word,class)/(p(word,.)p(.,class)) over training set, add-100 smoothing",
+     "unit": "nats-or-bits unspecified",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "majority class",
+    "logistic regression with word and character n-gram features",
+    "premise-oblivious decomposable attention"
+   ],
+   "protocol": "Easy = test examples the premise-oblivious model got right, Hard = the rest; single run, no seeds or significance test stated."
+  },
+  "availability": {
+   "code": "third-party implementations: allennlp (DAM), nyu-mll/multiNLI (ESIM), DIIN link",
+   "weights": null,
+   "data": "Hard SNLI and MultiNLI matched/mismatched test sets released via short links (goo.gl)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Hypothesis-only fastText reaches 67.0% on SNLI test versus 34.3% majority baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.0",
+   "unit": "%",
+   "baseline_value": "34.3",
+   "n": null,
+   "setup": "fastText on hypothesis only, SNLI test",
+   "table": "Table 2, row fastText, column SNLI",
+   "quote": null,
+   "note": "Abstract says about 67%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Hypothesis-only fastText reaches 53.9% on MultiNLI matched versus 35.4% majority.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "53.9",
+   "unit": "%",
+   "baseline_value": "35.4",
+   "n": null,
+   "setup": "fastText hypothesis only, MultiNLI matched test, plus char 4-grams and min count 10",
+   "table": "Table 2, row fastText, column Matched",
+   "quote": null,
+   "note": "Abstract says 53%.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Hypothesis-only fastText reaches 52.3% on MultiNLI mismatched versus 35.2% majority.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.3",
+   "unit": "%",
+   "baseline_value": "35.2",
+   "n": null,
+   "setup": "fastText hypothesis only, MultiNLI mismatched test",
+   "table": "Table 2, row fastText, column Mismatched",
+   "quote": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DIIN gets 86.5 on full SNLI test but 72.7 on Hard and 93.4 on Easy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.7",
+   "unit": "%",
+   "baseline_value": "86.5",
+   "n": null,
+   "setup": "DIIN retrained out of the box on SNLI; Hard = examples hypothesis-only fastText got wrong",
+   "table": "Table 5, row DIIN, column SNLI Hard",
+   "quote": null,
+   "note": "Full 86.5, Easy 93.4",
+   "where": "Table 5"
+  },
+  {
+   "claim": "DAM drops from 84.7 on full SNLI to 69.4 on Hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "69.4",
+   "unit": "%",
+   "baseline_value": "84.7",
+   "n": null,
+   "setup": "DAM retrained on SNLI",
+   "table": "Table 5, row DAM, column SNLI Hard",
+   "quote": null,
+   "note": "Easy 92.4",
+   "where": "Table 5"
+  },
+  {
+   "claim": "ESIM drops from 85.8 on full SNLI to 71.3 on Hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "71.3",
+   "unit": "%",
+   "baseline_value": "85.8",
+   "n": null,
+   "setup": "ESIM retrained on SNLI",
+   "table": "Table 5, row ESIM, column SNLI Hard",
+   "quote": null,
+   "note": "Easy 92.6",
+   "where": "Table 5"
+  },
+  {
+   "claim": "On MultiNLI matched, DIIN scores 77.0 full but 64.1 Hard; DAM 72.0 vs 55.8; ESIM 74.1 vs 59.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "64.1",
+   "unit": "%",
+   "baseline_value": "77.0",
+   "n": null,
+   "setup": "DIIN trained on MultiNLI alone",
+   "table": "Table 5, row DIIN, column MultiNLI Matched Hard",
+   "quote": null,
+   "note": "DAM Hard 55.8; ESIM Hard 59.3; Easy 85.3 to 87.6",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Median length of a neutral SNLI hypothesis is 9 tokens, and 60% of entailments have 7 tokens or less.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median tokens",
+   "value": "9",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNLI training hypotheses by class",
+   "table": null,
+   "quote": "The median length of a neutral hypothesis is 9, whereas 60% of entailments have 7 tokens or less.",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "8.8% of entailed SNLI hypotheses are fully contained (bag of words) in their premise, against 0.2% of neutrals and contradictions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share contained in premise",
+   "value": "8.8",
+   "unit": "%",
+   "baseline_value": "0.2",
+   "n": null,
+   "setup": "SNLI, bag-of-words containment",
+   "table": null,
+   "quote": "8.8% of entailed hypotheses in SNLI are fully contained within their premise, while only 0.2% of neutrals and contradictions exhibit the same property.",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Negation words are strong contradiction cues: 'no' appears in 7.6% of MultiNLI contradiction training sentences and 'never' in 5.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "proportion of class containing word",
+   "value": "7.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top PMI words, MultiNLI contradiction class",
+   "table": "Table 4, row MNLI, Contradiction column, word no",
+   "quote": null,
+   "note": "never 5.0%; SNLI sleeping 3.2%, outside 8.0% for entailment",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing Easy examples may not give an artifact-free set: dropping contradictions with 'no' moves the word to neutral and entailment classes, creating a new artifact.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "initial experiments, no numbers",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Only fastText was used to define Hard/Easy; other classifiers said to give similar results but not shown.",
+  "NLI models retrained out of the box with no hyperparameters, seeds or variance reported.",
+  "Hard set is defined by one model's failures so Hard examples may carry new artifacts; filtering training data left to future work.",
+  "Dataset sizes are not stated in the paper.",
+  "Artifacts are diverse and individually infrequent; analysis is shallow and statistical.",
+  "Authors note artifacts do not make examples wrong; the problem is a skewed sample distribution."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "annotation artifacts",
+   "definition": "patterns in the data produced by the framing of the annotation task and the language generation choices crowd workers make",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Hard / Easy test subsets",
+   "definition": "examples the premise-oblivious model classified accurately are Easy, and those it could not are Hard",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SNLI (Bowman et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset analysed",
+   "quote": null
+  },
+  {
+   "work": "MultiNLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset analysed",
+   "quote": null
+  },
+  {
+   "work": "fastText, Bag of tricks (Joulin et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "hypothesis-only classifier",
+   "quote": null
+  },
+  {
+   "work": "Decomposable attention (Parikh et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "DAM",
+   "quote": null
+  },
+  {
+   "work": "ESIM (Chen et al.)",
+   "year": 2017,
+   "arxiv": "1711.04289",
+   "relation": "evaluates",
+   "note": "ESIM",
+   "quote": null
+  },
+  {
+   "work": "DIIN (Gong et al.)",
+   "year": 2018,
+   "arxiv": "1709.04348",
+   "relation": "evaluates",
+   "note": "DIIN",
+   "quote": null
+  },
+  {
+   "work": "Hypothesis only baselines for NLI (Poliak et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parallel work, similar biases across NLI datasets",
+   "quote": null
+  },
+  {
+   "work": "Schwartz et al. ROC story cloze style",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar negation finding",
+   "quote": null
+  },
+  {
+   "work": "Jia and Liang adversarial SQuAD",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "performance drops under adversarial sentences",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "An instance from SNLI that illustrates the artifacts that arise from the annotation protocol.",
+   "page": 2,
+   "why": "One premise with three hypotheses shows generalisation, purpose clause and negation at once."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Top 5 words by PMI(word, class), along with the proportion of class training samples containing word.",
+   "page": 3,
+   "why": "Shows which words leak the label."
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Performance of high-performing NLI models on the full, Hard, and Easy NLI test sets.",
+   "page": 4,
+   "why": "The headline Hard vs Easy gap."
+  },
+  {
+   "figure": "Figure 1",
+   "caption": "The probability mass function of the hypothesis length in SNLI, by class.",
+   "page": 3,
+   "why": "Length alone separates neutral from entailment."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "PMI(word, class) = log p(word, class) / (p(word, .) p(., class))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table cells extracted as one value per line; mapped to columns by order, checked against abstract figures.",
+  "Figure 1 is an image; not readable from text.",
+  "No embedded instructions found."
+ ]
+}

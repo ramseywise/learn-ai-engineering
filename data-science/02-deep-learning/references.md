@@ -84,6 +84,12 @@ cleaned: 2026-11-01
 | Gorishniy et al., [*Revisiting Deep Learning Models for Tabular Data*](https://arxiv.org/abs/2106.11959) (NeurIPS 2021) | FT-Transformer: one token per feature, and its cost. Read in full | Link only | 05b |
 | Grinsztajn et al., [*Why do tree-based models still outperform deep learning on typical tabular data?*](https://arxiv.org/abs/2207.08815) (NeurIPS 2022) | Trees at around 10K samples, FT-Transformer as best case. arXiv v1, text read in full | Link only | 05b |
 
+## AI Papers of the Week
+
+| Paper | Why read it | Local | Maps to |
+|---|---|---|---|
+| Simonyan and Zisserman, [*Very Deep Convolutional Networks for Large-Scale Image Recognition*](https://arxiv.org/abs/1409.1556) (ICLR 2015) | Depth with 3×3 filters only: top-1 val error 29.6% at 11 layers to 25.5% at 19, then flat. 7.3% top-5 test with 7 nets (second place); 6.8% with two nets after the deadline. Single runs. Read in full | [PDF](../sources/simonyan-2014-very-deep-convolutional-networks-large.pdf) | [04](notes/04-convolutional-networks.md#residual-networks) |
+
 ## Courses and videos
 
 | Course | Platform, cost | Supports | Which parts |

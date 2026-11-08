@@ -1,0 +1,711 @@
+{
+ "schema": 1,
+ "key": "1912.04958",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/karras-2020-analyzing-improving-image-quality-stylegan.pdf",
+ "bib": {
+  "title": "Analyzing and Improving the Image Quality of StyleGAN",
+  "authors": [
+   "Tero Karras",
+   "Samuli Laine",
+   "Miika Aittala",
+   "Janne Hellsten",
+   "Jaakko Lehtinen",
+   "Timo Aila"
+  ],
+  "first_author": "Karras",
+  "year": 2020,
+  "venue": "CVPR 2020 (arXiv v2, 23 Mar 2020)",
+  "arxiv": "1912.04958",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 75960,
+  "chars_total": 75960,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "What causes StyleGAN's characteristic image artifacts, and which changes to generator normalization, progressive growing and regularization remove them and improve quality?",
+ "hypothesis": "The droplet artifacts come from the generator sneaking signal-strength information past instance normalization; a low perceptual path length (smooth latent-to-image mapping) correlates with image quality; and a capacity problem limits use of the highest resolution.",
+ "contributions": [
+  "Weight demodulation replaces AdaIN/instance normalization and removes droplet artifacts",
+  "Lazy regularization: regularizers evaluated every 16 minibatches (R1) without harm",
+  "Path length regularizer for a smoother generator, which also makes the generator easier to invert",
+  "Progressive growing replaced by skip generator and residual discriminator; resolution-usage analysis motivates larger networks",
+  "Projection to W with noise-map regularization enables attribution of generated images to a network"
+ ],
+ "method": {
+  "summary": "Starting from the official TensorFlow StyleGAN (config A), the authors apply a cumulative series of changes (B-F): weight demodulation, lazy regularization, path length regularization, no progressive growing with skip G / residual D, and doubled feature maps at 64^2-1024^2. They report FID, PPL, precision and recall on FFHQ and four LSUN categories, plus a latent projection / attribution test.",
+  "task": "unconditional high-resolution image synthesis (GAN)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "FFHQ",
+    "role": "train",
+    "size": "70k images (140k with horizontal flips), 1024x1024",
+    "split": "all used for training; FID against training set implied",
+    "source": "Karras et al. 2018",
+    "preprocessing": "horizontal flips"
+   },
+   {
+    "name": "LSUN Car",
+    "role": "train",
+    "size": "893k images, 512x384",
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "no augmentation"
+   },
+   {
+    "name": "LSUN Cat",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "256x256, no augmentation"
+   },
+   {
+    "name": "LSUN Church",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "256x256, no augmentation"
+   },
+   {
+    "name": "LSUN Horse",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Yu et al. 2015",
+    "preprocessing": "256x256, no augmentation"
+   }
+  ],
+  "models": [
+   {
+    "name": "StyleGAN (config A)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "style-based GAN, progressive growing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "latent_dim_Z_W": "512",
+     "mapping_network": "8 fully connected layers, 100x lower learning rate",
+     "noise_inputs_1024": "18"
+    }
+   },
+   {
+    "name": "StyleGAN2 (config F)",
+    "role": "proposed",
+    "params": "G 30M, D 29M (after widening; config E was G 25M, D 24M)",
+    "architecture": "modulated/demodulated conv generator with output skips, residual discriminator, no progressive growing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "affine_layers_1024": "18",
+     "widening": "double feature maps in resolutions 64^2-1024^2",
+     "activation": "leaky ReLU alpha=0.2, scaled to preserve variance",
+     "residual_scaling": "1/sqrt(2)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "non-saturating logistic loss with R1 regularization (gamma=10; gamma=100 for config E, LSUN Church and Horse), path length regularizer in configs D-F, style mixing regularization",
+   "optimizer": "Adam (beta1=0, beta2=0.99, eps=1e-8)",
+   "lr": "progressive growing configs A-D: start 1e-3 at 8^2, increased gradually by 3x; configs E-F fixed 2e-3",
+   "lr_schedule": "A-D progressive growing schedule; E-F constant",
+   "warmup": "inferred: none beyond progressive-growing fade-in (600k images per resolution) in A-D",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "R1 (every 16 minibatches for D), path length (every 8 for G), style mixing, EMA of generator weights, minibatch std layer, equalized learning rate",
+   "hardware": "NVIDIA DGX-1, 8x Tesla V100, TensorFlow 1.14.0, cuDNN 7.4.2",
+   "compute": "about 51 single-GPU (Volta) years and 131.61 MWh for the whole project; final FFHQ config F 0.23 GPU-years, 0.68 MWh",
+   "wall_clock": "9 days FFHQ, 13 days LSUN Car (config F)",
+   "seeds": "each metric computed 10 times with different random seeds and averaged (evaluation)",
+   "other": {
+    "images_shown_to_D": "FFHQ 25M; LSUN Car 57M, Cat 88M, Church 48M, Horse 100M",
+    "lazy_reg_adjust": "lambda'=c*lambda, beta1'=beta1^c, beta2'=beta2^c with c=k/(k+1); regularizer multiplied by k; k=16 D, k=8 G",
+    "path_length_weight": "gamma_pl = ln2 / (r^2 (ln r - ln 2))",
+    "path_length_ema_decay": "beta_pl=0.99, a initialised to 0, tracked per GPU",
+    "throughput_1024": "config A 37 img/s, config E 61 img/s, config F 31 img/s on 8xV100",
+    "custom_CUDA": "fused up/downsampling and bias+activation; ~30% faster, ~20% less memory in config E"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Metrics: 10 runs with different seeds averaged; best-FID snapshot per training run; projection test and per-image PPL as in figures",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "truncation_psi_for_uncurated_figures": "0.5",
+    "projection_iterations": "1000, Adam default params, max lr 0.1, 50-iteration linear ramp-up, cosine ramp-down over last 250",
+    "projection_w_noise": "N(0, 0.05*sigma_w*t^2), t from 1 to 0 over first 750 iterations",
+    "projection_noise_reg_weight_alpha": "1e5",
+    "projection_mu_w_estimate": "10 000 random z",
+    "projection_LPIPS_res": "256x256",
+    "perf_resolution_usage": "std of tRGB outputs over 1024 random w"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet distance between InceptionV3 feature densities of generated and real images",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "PPL / path length",
+     "definition": "perceptual path length: expected LPIPS distance under small latent perturbations in W, endpoints in W, whole image (no central crop)",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "Precision",
+     "definition": "fraction of generated images similar to training data (Kynkaanniemi et al. 2019)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall",
+     "definition": "fraction of training data that can be generated",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "LPIPS projection distance",
+     "definition": "D_LPIPS[x, g(g~^-1(x))] between image and re-synthesis from its projected latent",
+     "unit": "LPIPS",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "StyleGAN config A",
+    "Spectral normalization variants (Table 4)"
+   ],
+   "protocol": "Snapshot with lowest FID chosen per run; each metric averaged over 10 random seeds; no significance test."
+  },
+  "availability": {
+   "code": "https://github.com/NVlabs/stylegan2",
+   "weights": "trained models released at the same URL",
+   "data": "FFHQ and LSUN public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.images_shown_to_D",
+    "quote": "The FFHQ dataset contains 70k images, and the discriminator saw 25M images during training. For LSUN CAR the numbers were 893k and 57M.",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Full StyleGAN2 (config F) reaches FFHQ FID 2.84 vs 4.40 for baseline StyleGAN",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.84,
+   "unit": "FID",
+   "baseline_value": 4.4,
+   "n": null,
+   "setup": "FFHQ 1024x1024, best-FID snapshot, 10 seeds avg",
+   "quote": null,
+   "table": "Table 1, row F + Large networks (StyleGAN2), column FFHQ FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "StyleGAN2 reaches LSUN Car FID 2.32 vs 3.27 for baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 2.32,
+   "unit": "FID",
+   "baseline_value": 3.27,
+   "n": null,
+   "setup": "LSUN Car 512x384",
+   "quote": null,
+   "table": "Table 1, row F, column LSUN Car FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Path length on FFHQ drops from 212.1 to 145.0 (config F); lowest 122.5 at config D",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 145.0,
+   "unit": "PPL",
+   "baseline_value": 212.1,
+   "n": null,
+   "setup": "FFHQ 1024x1024",
+   "quote": null,
+   "table": "Table 1, row F, column FFHQ Path length",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LSUN Car PPL drops from 1484.5 to 415.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 415.5,
+   "unit": "PPL",
+   "baseline_value": 1484.5,
+   "n": null,
+   "setup": "LSUN Car 512x384",
+   "quote": null,
+   "table": "Table 1, row F, column LSUN Car Path length",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Weight demodulation alone leaves FFHQ FID unchanged (4.40 to 4.39) but shifts precision 0.721->0.702 and recall 0.399->0.425",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.39,
+   "unit": "FID",
+   "baseline_value": 4.4,
+   "n": null,
+   "setup": "FFHQ, config B vs A",
+   "quote": null,
+   "table": "Table 1, row B + Weight demodulation, column FFHQ FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Lazy regularization (R1 every 16 minibatches) causes no harm: FFHQ FID 4.38",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 4.38,
+   "unit": "FID",
+   "baseline_value": 4.39,
+   "n": null,
+   "setup": "FFHQ, config C",
+   "quote": null,
+   "table": "Table 1, row C + Lazy regularization, column FFHQ FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Removing progressive growing with new G and D architecture improves FFHQ FID to 3.31",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.31,
+   "unit": "FID",
+   "baseline_value": 4.34,
+   "n": null,
+   "setup": "FFHQ, config E",
+   "quote": null,
+   "table": "Table 1, row E + No growing, new G & D arch., column FFHQ FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Path length regularization trades FID for PPL on LSUN Car: FID worsens 2.83 to 3.43 while PPL drops 981.6 to 651.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.43,
+   "unit": "FID",
+   "baseline_value": 2.83,
+   "n": null,
+   "setup": "LSUN Car, config D vs C",
+   "quote": null,
+   "table": "Table 1, row D + Path length regularization, column LSUN Car FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Large networks (config F) lift FFHQ recall from 0.449 to 0.492",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall",
+   "value": 0.492,
+   "unit": "recall",
+   "baseline_value": 0.449,
+   "n": null,
+   "setup": "FFHQ, config F vs E",
+   "quote": null,
+   "table": "Table 1, row F + Large networks (StyleGAN2), column FFHQ Recall",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Baseline StyleGAN with large networks reaches FFHQ FID 3.98, still far below StyleGAN2",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.98,
+   "unit": "FID",
+   "baseline_value": 2.84,
+   "n": null,
+   "setup": "FFHQ, config A with large networks",
+   "quote": null,
+   "table": "Table 1, row Config A with large networks, column FFHQ FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Widening the 64^2-1024^2 layers adds 22% generator parameters (25M to 30M)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "generator, config E to F",
+   "quote": "This increases the total number of trainable parameters in the generator by 22% (25M",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2 footnote 4"
+  },
+  {
+   "claim": "Training speed at 1024^2: config A 37 img/s, config E 61 img/s (40% faster), config F 31 img/s",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput",
+   "value": 61,
+   "unit": "img/s",
+   "baseline_value": 37,
+   "n": null,
+   "setup": "8x V100 DGX-1",
+   "quote": "trains at 37 images per second on NVIDIA DGX-1 with",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Whole project consumed 131.61 MWh and 51.05 V100 GPU-years; final FFHQ model 0.68 MWh",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 131.61,
+   "unit": "MWh",
+   "baseline_value": null,
+   "n": null,
+   "setup": "entire project",
+   "quote": null,
+   "table": "Table 5, row Total, column Electricity (MWh)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "StyleGAN2 improves FID on LSUN Cat 8.53 to 6.93 and PPL 924 to 439",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 6.93,
+   "unit": "FID",
+   "baseline_value": 8.53,
+   "n": null,
+   "setup": "LSUN Cat 256x256, 88M images",
+   "quote": null,
+   "table": "Table 3, row LSUN CAT, column StyleGAN2 (F) FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "LSUN Church FID 4.21 to 3.86; LSUN Horse 3.83 to 3.43",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.86,
+   "unit": "FID",
+   "baseline_value": 4.21,
+   "n": null,
+   "setup": "LSUN Church 256x256, 48M images",
+   "quote": null,
+   "table": "Table 3, row LSUN CHURCH, column StyleGAN2 (F) FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Skip connections in generator drastically improve PPL; residual discriminator improves FID (FFHQ G output skips + D residual: FID 3.31, PPL 125)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.31,
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FFHQ, no progressive growing",
+   "quote": null,
+   "table": "Table 2, row G output skips, column D residual FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Spectral normalization in G and D worsens FFHQ FID from 2.83 to 3.40",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 3.4,
+   "unit": "FID",
+   "baseline_value": 2.83,
+   "n": null,
+   "setup": "FFHQ 1024, StyleGAN2 plus SN-G and SN-D",
+   "quote": null,
+   "table": "Table 4, row 3, column FID",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Baseline StyleGAN droplet artifact appears in about 0.1% of images missing, producing severely corrupted images",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "StyleGAN baseline",
+   "quote": "In rare cases (perhaps 0.1% of images) the droplet is missing, leading",
+   "table": null,
+   "note": null,
+   "where": null
+  }
+ ],
+ "limits": [
+  "Image-quality metrics FID and P&R are acknowledged to be texture-biased and blind to some quality differences (Figs 13-14); PPL is used as a complementary signal.",
+  "Path length regularization trades FID against PPL on less structured datasets (Table 1 row D, LSUN Car FID 2.83 -> 3.43).",
+  "Authors say further increases in network size could give additional benefit, and R1 gamma was not fully tuned.",
+  "Training requires tens of thousands of images; reducing data requirements is flagged as future work.",
+  "Uncurated figures use truncation psi=0.5; training length and gamma tuned per dataset by hand; no hyperparameter search tooling.",
+  "Attribution claim rests on a projection method with specific hyperparameters; they note classifier-based detection may not stay reliable."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "weight demodulation",
+   "definition": "scale each output feature map's convolution weights by 1/sqrt(sum w'^2 + eps) after style modulation, replacing instance normalization",
+   "where": "Sec 2.2, Eq 1-3"
+  },
+  {
+   "term": "lazy regularization",
+   "definition": "evaluate regularization terms less frequently than the main loss",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "path length regularization",
+   "definition": "penalize E ( ||J_w^T y||_2 - a )^2 so a fixed step in W gives a fixed-magnitude image change",
+   "where": "Sec 3.2, Eq 4"
+  },
+  {
+   "term": "perceptual path length (PPL)",
+   "definition": "average LPIPS distance between generated images under small perturbations in latent space",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A style-based generator architecture for GANs (StyleGAN)",
+   "year": 2019,
+   "arxiv": "1812.04948",
+   "relation": "extends",
+   "note": "baseline being fixed (config A); cited as CoRR/CVPR 2018 [24]",
+   "quote": null
+  },
+  {
+   "work": "Progressive growing of GANs",
+   "year": 2017,
+   "arxiv": "1710.10196",
+   "relation": "extends",
+   "note": "progressive growing revisited and removed",
+   "quote": null
+  },
+  {
+   "work": "Which training methods for GANs do actually converge? (R1)",
+   "year": 2018,
+   "arxiv": "1801.04406",
+   "relation": "uses-method",
+   "note": "R1 regularization, non-saturating loss",
+   "quote": null
+  },
+  {
+   "work": "Is generator conditioning causally related to GAN performance? (Jacobian clamping)",
+   "year": 2018,
+   "arxiv": "1802.08768",
+   "relation": "related",
+   "note": "closely related to path length regularizer",
+   "quote": null
+  },
+  {
+   "work": "MSG-GAN",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Karnewar and Wang, CVPR 2020; basis for skip architectures (Fig 7a)",
+   "quote": null
+  },
+  {
+   "work": "GANs trained by a two time-scale update rule (FID)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "FID metric",
+   "quote": null
+  },
+  {
+   "work": "Improved precision and recall metric",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Kynkaanniemi et al.",
+   "quote": null
+  },
+  {
+   "work": "Spectral normalization for GANs",
+   "year": 2018,
+   "arxiv": "1802.05957",
+   "relation": "baseline",
+   "note": "tested in Appendix E; worsens FID",
+   "quote": null
+  },
+  {
+   "work": "The Unreasonable Effectiveness of Deep Features as a Perceptual Metric (LPIPS)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Zhang et al. CVPR 2018, used in PPL and projection",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-trained CNNs are biased towards texture",
+   "year": 2018,
+   "arxiv": "1811.12231",
+   "relation": "related",
+   "note": "explains FID/P&R blind spot",
+   "quote": null
+  },
+  {
+   "work": "Very Deep Convolutional Networks (VGG-16)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "VGG features in precision/recall",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning",
+   "year": 2015,
+   "arxiv": "1512.03385",
+   "relation": "uses-method",
+   "note": "residual discriminator",
+   "quote": null
+  },
+  {
+   "work": "Weight normalization",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "related",
+   "note": "demodulation related",
+   "quote": null
+  },
+  {
+   "work": "FFHQ (from StyleGAN) and LSUN",
+   "year": 2015,
+   "arxiv": "1506.03365",
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Instance normalization causes water droplet-like artifacts in StyleGAN images.",
+   "page": 2,
+   "why": "shows the artifact in feature maps"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Redesign of the StyleGAN synthesis network: (a) original, (b) detailed, (c) revised, (d) weight demodulation.",
+   "page": 3,
+   "why": "architecture diagram of the key change"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Main results ablation A-F on FFHQ and LSUN Car.",
+   "page": 4,
+   "why": "shows what each change buys"
+  },
+  {
+   "figure": "Fig 4/5",
+   "caption": "PPL vs image quality; per-image PPL distribution for StyleGAN vs StyleGAN2.",
+   "page": 4,
+   "why": "motivates path length regularization"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Three generator and discriminator architectures: MSG-GAN, input/output skips, residual nets.",
+   "page": 6,
+   "why": "alternatives to progressive growing"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Contribution of each resolution to generator output over training.",
+   "page": 7,
+   "why": "reveals the capacity problem"
+  },
+  {
+   "figure": "Fig 13/14",
+   "caption": "Models with identical FID/P&R but different PPL.",
+   "page": 14,
+   "why": "shows metric blind spot"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "w'_ijk = s_i * w_ijk",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3",
+   "snippet": "w''_ijk = w'_ijk / sqrt(sum_{i,k} w'_ijk^2 + eps)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "E_{w, y~N(0,I)} ( ||J_w^T y||_2 - a )^2 , using J_w^T y = grad_w (g(w) . y)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5",
+   "snippet": "gamma_pl = ln 2 / ( r^2 (ln r - ln 2) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and tables are flattened by text extraction; table cells reconstructed from column order.",
+  "Reference list skimmed; MSG-GAN, FID, P&R and LPIPS arXiv ids are not printed in the reference list so left null."
+ ]
+}

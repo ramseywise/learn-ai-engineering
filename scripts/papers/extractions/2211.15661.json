@@ -1,0 +1,427 @@
+{
+ "schema": 1,
+ "key": "2211.15661",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/akyurek-2022-what-learning-algorithm-context-learning.pdf",
+ "bib": {
+  "title": "What Learning Algorithm Is In-Context Learning? Investigations with Linear Models",
+  "authors": [
+   "Ekin Akyürek",
+   "Dale Schuurmans",
+   "Jacob Andreas",
+   "Tengyu Ma",
+   "Denny Zhou"
+  ],
+  "first_author": "Akyürek",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2211.15661",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 81293,
+  "chars_total": 81293,
+  "engine": "pymupdf",
+  "skipped": "Appendix C (Lemma 1 proofs, RAW primitive) and the matrix-by-matrix verification chains in Appendices A-B were skimmed, not checked line by line; they are construction details."
+ },
+ "type": "empirical",
+ "question": "Do transformer in-context learners implement standard learning algorithms (gradient descent, ridge regression, OLS) implicitly when given labeled examples in context?",
+ "hypothesis": "Transformer-based in-context learners implement standard learning algorithms implicitly, by encoding smaller models in their activations and updating them as new examples appear in the context.",
+ "contributions": [
+  "Proof by construction that transformers can implement gradient descent and closed-form ridge regression steps for linear models",
+  "Behavioural evidence that trained in-context learners match GD, ridge, OLS and Bayes-optimal predictors, with phase transitions in depth and noise",
+  "Probing evidence that late layers encode weight vectors and moment matrices"
+ ],
+ "method": {
+  "summary": "Small decoder-only transformers are trained from scratch on an in-context linear-regression objective (random w, random x, sequences of (x, y) pairs). Their predictions are compared with reference predictors (kNN, SGD, GD, ridge, OLS) by squared prediction difference and implicit linear weight difference, and hidden states are probed for X^T Y and w_OLS. Theory sections prove constructions for one GD step (O(d) hidden) and one Sherman-Morrison ridge update (O(d^2) hidden).",
+  "task": "in-context learning of linear regression on synthetic data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "synthetic linear regression",
+    "role": "both",
+    "size": "40 (x, y) pairs per in-context dataset; 500,000 training iterations",
+    "split": "fresh samples drawn online; validation set used to pick architecture (size not stated)",
+    "source": "generated: w ~ N(0, I) (N(0, tau^2) in noise experiments), x ~ N(0, I), noise eps ~ N(0, sigma^2); following Garg et al. 2022",
+    "preprocessing": "x encoded as [0, x] and y as [y, 0_d], d+1-dimensional vectors"
+   }
+  ],
+  "models": [
+   {
+    "name": "main ICL transformer",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only transformer, GeLU, layer norm, learned absolute position embeddings",
+    "init_from": "scratch (init: uniform scaling or normal(1.0) searched)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": "512",
+    "heads": "4",
+    "context": "80 (probe max input length T = 80; 40 pairs)",
+    "other": {
+     "search": "depth {1,2,4,8,12,16}, hidden {16,32,64,256,512,1024}, heads {1,2,4,8}"
+    }
+   }
+  ],
+  "training": {
+   "objective": "autoregressive squared error on f(x_i) given [x_1, f(x_1), ..., x_i], summed over positions (Eq. 8)",
+   "optimizer": "Adam",
+   "lr": "searched {1e-4, 2.5e-4}; selected value not recoverable from text (highlighting lost)",
+   "lr_schedule": "cosine with warmup",
+   "warmup": "1/5 of total iterations",
+   "batch_size": "64",
+   "steps": "500,000 iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "40 (x, y) pairs",
+   "precision": null,
+   "weight_decay": "searched {0, 1e-5}; selected not recoverable",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "P100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "framework": "Jax",
+    "table1_label": "Table 1 calls batch size 64 and 'Maximum number of epochs 500.000'; body says 500,000 iterations"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "SPD/ILWD are expectations over sampled datasets D and test inputs; sample counts not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "reference predictors": "kNN k=3 uniform/weighted; one-pass SGD alpha 0.01/0.03; one-step batch GD alpha 0.01/0.02; ridge lambda 0.1, 0.5, and sigma^2/tau^2 values 1/16, 1/9, 1/4, 4/9; OLS (lambda 0)",
+    "noise grid": "(sigma/tau)^2 in {0, 1/16, 1/9, 1/4, 4/9} per Fig 2 axis labels",
+    "problem dimension": "d = 8 (main), d = 16 (Fig 3b), d in {1,2,4,8,12,16,20} (App H)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SPD",
+     "definition": "squared prediction difference: E over D and x' of (A1(D)(x') - A2(D)(x'))^2, reported divided by d",
+     "unit": "squared error",
+     "higher_is_better": false
+    },
+    {
+     "name": "ILWD",
+     "definition": "implicit linear weight difference: E ||w_hat_A1 - w_hat_A2||^2 where w_hat is the least-squares linear fit to a predictor's outputs on test inputs",
+     "unit": "squared L2",
+     "higher_is_better": false
+    },
+    {
+     "name": "probe MSE",
+     "definition": "squared error of a position-attention probe (linear or 2-layer MLP, hidden 512) decoding X^T Y or w_OLS from layer-l hidden states",
+     "unit": "MSE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "kNN (uniform, weighted)",
+    "one-pass SGD",
+    "one-step batch GD",
+    "ridge regression",
+    "OLS",
+    "control task with fixed w = 1 (probing)"
+   ],
+   "protocol": "Single trained model per configuration; no seeds or significance tests reported. Depth/width phase plots use the best setting of the other hyperparameters."
+  },
+  "availability": {
+   "code": "released at a project web page (URL not in text)",
+   "weights": null,
+   "data": "synthetic"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A transformer trained on noiseless linear regression (d=8) matches ordinary least squares predictions closely, and other reference predictors agree less well.",
+   "kind": "measured",
+   "source": null,
+   "metric": "normalized SPD and ILWD vs OLS",
+   "value": "< 0.01",
+   "unit": "squared error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L=16, H=512, M=4 decoder, d=8, noiseless, up to 14 exemplars; compared with kNN, SGD, GD, ridge",
+   "quote": "normalized SPD and ILWD are small between the transformer and OLS predictor (with squared error less than 0.01)",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Fig 1"
+  },
+  {
+   "claim": "With few exemplars (under-determined, n < d) the learner matches the minimum-norm OLS solution.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=8, n < 8 exemplars, noiseless",
+   "quote": "the in-context learner’s predictions are reliably consistent with this minimum-norm pre-",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "With noisy labels the best-fit ridge parameter tracks the Bayes-optimal sigma^2/tau^2 for every noise and prior variance tested.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=8, tau^2 and sigma^2 grid in Fig 2, MSPD over under-determined region",
+   "quote": "the ridge parameter that gives the best ﬁt to the transformer behavior is also the one that minimizes Bayes risk",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3, Fig 2"
+  },
+  {
+   "claim": "Depth produces algorithmic phases: 1-layer models are closest to one GD step, 2-4 layer models to ridge, 8+ layer models to OLS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "noiseless d=8 and d=16, depth varied with hidden size and heads optimized",
+   "quote": "very shallow models (1L) are best approximated by a single step of gradient descent",
+   "table": null,
+   "note": "1L is not well approximated in an absolute sense",
+   "where": "Section 4.3, Fig 3"
+  },
+  {
+   "claim": "Hidden size needed to reach ridge-like solutions is far below the O(d^2) of the construction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hidden size",
+   "value": "16 (d=8), 32 (d=16)",
+   "unit": "hidden units",
+   "baseline_value": null,
+   "n": null,
+   "setup": "noiseless, hidden size varied, depth and heads optimized",
+   "quote": "H ≥16 and H ≥32 for 8D and 16D",
+   "table": null,
+   "note": null,
+   "where": "Section 4.3"
+  },
+  {
+   "claim": "A transformer can compute one gradient-descent step on an in-context example with constant layers and O(d) hidden space.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 1, constructive proof; existence only, not that trained models do this",
+   "quote": "with constant number of layers and O(d) hidden space",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "A transformer can compute a Sherman-Morrison ridge update with constant layers and O(d^2) hidden space.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 2, constructive proof",
+   "quote": "with constant layers and O(d2) hidden space",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "X^T Y and w_OLS can be decoded from hidden states, nonlinearly (MLP probe beats linear probe), with X^T Y decodable earlier (layer ~7) than w (layer ~12); a fixed-w control task decodes much worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=4, 16-layer learner, frozen, position-attention probe per layer",
+   "quote": "a 2- layer MLP probe outperforms a linear probe",
+   "table": null,
+   "note": "text line-breaks the quote at 'a 2-' / 'layer MLP'",
+   "where": "Section 5, Fig 4"
+  },
+  {
+   "claim": "The learner is not purely linear: R^2 of its linear fit rises gradually across the under-determined regime.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R2",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d=8",
+   "quote": "we show that ICL is becoming gradually linear in the under-determined regime",
+   "table": null,
+   "note": null,
+   "where": "Appendix F, Fig 6"
+  },
+  {
+   "claim": "A single attention head suffices for all problem dimensions; layers and hidden size grow stepwise with d.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "d in {1,2,4,8,12,16,20}, sweep over L, H, M, lr",
+   "quote": "We ﬁnd that single head is enough for all problem dimensions",
+   "table": null,
+   "note": null,
+   "where": "Appendix H, Fig 8"
+  }
+ ],
+ "limits": [
+  "Only linear regression on synthetic Gaussian data with transformers trained from scratch; no pretrained language model is tested. The authors say the method 'could be applied' to LLMs (Conclusion).",
+  "Probing evidence is called 'preliminary'; trained learners encode targets nonlinearly unlike the constructions, so the mechanism is not shown to equal GD or ridge.",
+  "The theorems show existence of weights, not that training finds them (Section 3: 'upper bounds on how many layers ... suffice to implement (though not necessarily learn)').",
+  "No seeds or confidence intervals; selected hyperparameter values are not recoverable from the cached text (table highlighting lost).",
+  "Authors note ICL does not necessarily involve minimum-risk prediction: small models land on GD/ridge-like solutions."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "squared prediction difference (SPD)",
+   "definition": "expected squared difference between two algorithms' predictions on a new input, over sampled datasets",
+   "where": "Section 4.1"
+  },
+  {
+   "term": "implicit linear weight difference (ILWD)",
+   "definition": "distance between the linear weights implied by two predictors' outputs",
+   "where": "Section 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "What can transformers learn in-context? A case study of simple function classes (Garg et al.)",
+   "year": 2022,
+   "arxiv": "2208.01066",
+   "relation": "extends",
+   "note": "training recipe and linear-regression ICL setup adapted from it",
+   "quote": null
+  },
+  {
+   "work": "An explanation of in-context learning as implicit Bayesian inference (Xie et al.)",
+   "year": 2021,
+   "arxiv": "2111.02080",
+   "relation": "related",
+   "note": "Bayesian view of ICL",
+   "quote": null
+  },
+  {
+   "work": "Transformers can do Bayesian inference (Müller et al.)",
+   "year": 2021,
+   "arxiv": "2112.10510",
+   "relation": "related",
+   "note": "prior-fitted networks converge to Bayes predictors",
+   "quote": null
+  },
+  {
+   "work": "Linear transformers are secretly fast weight programmers (Schlag et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier construction for linear self-attention",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of ICL in LLMs",
+   "quote": null
+  },
+  {
+   "work": "In-context learning and induction heads (Olsson et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "mechanistic ICL",
+   "quote": null
+  },
+  {
+   "work": "Data distributional properties drive emergent few-shot learning in transformers (Chan et al.)",
+   "year": 2022,
+   "arxiv": "2205.05055",
+   "relation": "related",
+   "note": "pretraining distribution conditions",
+   "quote": null
+  },
+  {
+   "work": "Understanding intermediate layers using linear classifier probes (Alain & Bengio)",
+   "year": 2016,
+   "arxiv": "1610.01644",
+   "relation": "uses-method",
+   "note": "probing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Fit between ICL and standard learning algorithms: SPD and ILWD between textbook algorithms and ICL on noiseless linear regression with d = 8.",
+   "page": 6,
+   "why": "One plot shows ICL tracks OLS and not kNN/GD/SGD, as exemplars grow past d"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Computational constraints on ICL: SPD averaged over the under-determined region; algorithmic phases as depth varies.",
+   "page": 8,
+   "why": "Shows GD -> ridge -> OLS transition with depth"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Probing results on d = 4 problem: moments X^T Y and least-square solution w_OLS recoverable from learner representations.",
+   "page": 9,
+   "why": "Layer-by-layer probe error shows X^T Y appears before w"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "ICL under uncertainty: MSPD heatmap over prior variance and noise.",
+   "page": 7,
+   "why": "Diagonal pattern shows ridge lambda = sigma^2/tau^2 best fits ICL"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 11",
+   "snippet": "w' = w - α ∂/∂w (L(w^T x_i, y_i) + λ||w||^2) = w - 2α(x w^T x - y x + λ w)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 19",
+   "snippet": "ŵ = (X^T X + σ²/τ² I)^-1 X^T Y; ŷ = ŵ^T x",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 highlighting of selected hyperparameters is lost in text extraction, so chosen lr and weight decay are unknown.",
+  "Text has ligature glyphs and broken line wraps in quotes.",
+  "No embedded instructions found."
+ ]
+}

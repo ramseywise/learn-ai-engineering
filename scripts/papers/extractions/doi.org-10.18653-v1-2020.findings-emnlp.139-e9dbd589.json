@@ -1,0 +1,215 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2020.findings-emnlp.139",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/feng-2020-codebert.pdf",
+ "bib": {
+  "title": "CodeBERT: A Pre-Trained Model for Programming and Natural Languages",
+  "authors": ["Zhangyin Feng", "Daya Guo", "Duyu Tang", "Nan Duan", "Xiaocheng Feng", "Ming Gong", "Linjun Shou", "Bing Qin", "Ting Liu", "Daxin Jiang", "Ming Zhou"],
+  "first_author": "Feng",
+  "year": 2020,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2020",
+  "arxiv": null,
+  "doi": "10.18653/v1/2020.findings-emnlp.139"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43741,
+  "chars_total": 43741,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figure images (Fig 1-7) not viewed, only captions and extracted text."
+ },
+ "type": "empirical",
+ "question": "Can a single Transformer pre-trained on paired natural language and code (plus unpaired code) give general-purpose representations that improve NL-PL tasks such as code search and documentation generation?",
+ "hypothesis": "Using both bimodal NL-PL pairs and unimodal code, via MLM plus replaced token detection, gives better NL-PL representations than text-only (RoBERTa) or code-only pre-training.",
+ "contributions": [
+  "CodeBERT is the first large NL-PL pre-trained model for multiple programming languages.",
+  "Empirical results show that CodeBERT is effective in both code search and code-to-text generation tasks.",
+  "A dataset, the first to investigate the probing ability of code-based pre-trained models."
+ ],
+ "method": {
+  "summary": "A RoBERTa-base-sized bidirectional Transformer is pre-trained on CodeSearchNet NL-PL pairs (MLM) and unimodal code/NL (replaced token detection with n-gram generators), one model for six languages. It is then fine-tuned for code search and code-to-NL generation, and probed zero-shot with a cloze-style multiple-choice dataset the authors built.",
+  "task": "Bimodal NL-PL pre-training (MLM + replaced token detection); downstream code search, NL-PL probing, code documentation generation",
+  "trains": true,
+  "datasets": [
+   {"name": "CodeSearchNet (Husain et al. 2019), pre-training use", "role": "pretrain", "size": "2.1M bimodal datapoints (2,137,293) and 6.4M unimodal codes (6,452,446), six languages", "split": "training data only; no access to dev and test data", "source": "public open-source non-fork GitHub repositories (Python, Java, JavaScript, PHP, Ruby, Go)", "preprocessing": "Filters: each project used by at least one other project; documentation truncated to first paragraph; documentation shorter than three tokens removed; functions shorter than three lines removed; function names containing 'test' removed. Per-language counts in Table 1 (bimodal/unimodal): Go 319,256/726,768; Java 500,754/1,569,889; JavaScript 143,252/1,857,835; PHP 662,907/977,821; Python 458,219/1,156,085; Ruby 52,905/164,048."},
+   {"name": "CodeSearchNet corpus, code search", "role": "both", "size": "train/dev/test: Go 635,635/28,483/14,291; Java 908,886/30,655/26,909; JavaScript 247,773/16,505/6,483; PHP 1,047,406/52,029/28,391; Python 824,342/46,213/22,176; Ruby 97,580/4,417/2,279", "split": "official train/dev/test; best dev model evaluated on test", "source": "Husain et al. 2019", "preprocessing": "Balanced positives and negatives; negatives are an equal mix of randomly replaced NL (c, w-hat) and replaced PL (c-hat, w)."},
+   {"name": "NL-PL probing set (built by authors)", "role": "eval", "size": "PL probing 2,615 datapoints (2 choices); NL probing 856 datapoints (4 choices)", "split": "drawn from validation and test sets of CodeSearchNet, unseen in pre-training", "source": "automatic selection by keyword from CodeSearchNet pairs", "preprocessing": "NL side: docs containing one of max, maximize, min, minimize, less, greater; grouped into 4 candidates (first two merged, middle two merged). PL side: code containing max and min, 2 candidates. An extra PL setting gives only preceding code context."},
+   {"name": "CodeNN C# (Iyer et al. 2016)", "role": "both", "size": "66,015 question-answer pairs", "split": "not stated", "source": "automatically collected from StackOverflow", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "CodeBERT", "role": "proposed", "params": "125M", "architecture": "multi-layer bidirectional Transformer, exactly RoBERTa-base architecture", "init_from": "from scratch (INIT=S) or RoBERTa parameters (INIT=R); headline model uses INIT=R", "tokenizer": "NL as WordPiece; code as a sequence of tokens", "vocab": null, "layers": "inferred: 12, from 'exactly the same model architecture as RoBERTa-base' (not printed)", "hidden": null, "heads": null, "context": "max length 512 in pre-training", "other": {"input_format": "[CLS], w1..wn, [SEP], c1..cm, [EOS]", "generators": "two bidirectional n-gram language models, one NL and one PL, learned from unimodal data; discarded at fine-tuning", "variants": "MLM, RTD, MLM+RTD"}},
+   {"name": "RoBERTa", "role": "baseline", "params": null, "architecture": "text-pretrained Transformer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Pre-train w/ code only (INIT=S / INIT=R)", "role": "baseline", "params": null, "architecture": "same as CodeBERT, MLM on code only", "init_from": "scratch or RoBERTa", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "RoBERTa continuously trained with MLM only on codes from CodeSearchNet"}},
+   {"name": "NBOW, CNN, BiRNN, SelfAtt", "role": "baseline", "params": null, "architecture": "joint embedding models of NL and PL", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers reported by Husain et al. (2019)"}}
+  ],
+  "training": {
+   "objective": "min over theta of L_MLM + L_RTD (Eq 14). MLM on bimodal data, 15% of tokens of x masked. RTD (Clark et al. 2020) on every position: binary original vs replaced; a token the generator gets right keeps label 'real'. RTD uses both bimodal and unimodal data.",
+   "optimizer": "Adam",
+   "lr": "5e-4",
+   "lr_schedule": null,
+   "warmup": "10K steps",
+   "batch_size": "2,048",
+   "steps": "100K (max training step)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 (max length)",
+   "precision": "FP16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "one NVIDIA DGX-2 machine, 16 interconnected NVIDIA Tesla V100 with 32GB memory",
+   "compute": null,
+   "wall_clock": "Training 1,000 batches of data costs 600 minutes with MLM objective, 120 minutes with RTD objective (as printed; 100K steps total time not stated)",
+   "seeds": null,
+   "other": {
+    "finetune_code_search": "lr 1e-5, batch size 64, max seq length 200, max 8 epochs, Adam; model best on dev used for test; one language-specific model per language; binary classification loss with softmax on [CLS]",
+    "finetune_summarization_six_languages": "decoder is Transformer with 6 layers, 768 hidden, 12 heads; max input length 256, max inference length 64; Adam; lr 5e-5, batch size 64; tune hyperparameters and early stop on dev",
+    "finetune_csharp": "decoder 2-layer GRU with attention; grid search batch size {32, 64}, lr {2e-5, 5e-5}; best on dev reported",
+    "late_fusion": "CodeBERT encodes NL and PL separately, dot-product similarity, softmax contrastive loss over candidates (Eq 15); run only on Ruby and Go"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "inference max length 64 for six-language code summarization",
+   "samples": "single run per setting; no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": "code search: rank 999 fixed distractor codes per (c, w) test pair; MRR",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "MRR (macro-average over six languages, MA-AVG)", "definition": "Mean Reciprocal Rank for each test pair (c, w) over a fixed set of 999 distractor codes; differs from the AVG metric of Husain et al., where candidates come from all six languages", "unit": "MRR (0-1)", "higher_is_better": true},
+    {"name": "Probing accuracy", "definition": "correctly predicted instances over all instances; pooled across languages in ALL column", "unit": "%", "higher_is_better": true},
+    {"name": "Smoothed BLEU-4", "definition": "smoothed BLEU (Lin and Och 2004) for short generated documentation; C# uses the evaluation scripts of Iyer et al. 2016", "unit": "BLEU", "higher_is_better": true}
+   ],
+   "baselines": ["NBOW", "CNN", "BiRNN", "SelfAtt", "RoBERTa", "Pre-train w/ code only", "Seq2Seq (RNN attention)", "Transformer", "Moses", "IR", "Sum-NN", "2-layer BiLSTM", "TreeLSTM", "CodeNN", "code2seq"],
+   "protocol": "Single reported number per cell; no seeds, variance or significance test stated. Probing is zero-shot with parameters fixed, using CodeBERT (MLM) because its output layer fits probing."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/CodeBERT",
+   "weights": "inferred: via the same GitHub link (the paper says 'All the codes and data are available')",
+   "data": "CodeSearchNet (public); probing data at the GitHub link"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "batchsize is 2,048 and learning rate is 5e-4", "where": "Appendix B.1"},
+   {"field": "training.wall_clock", "quote": "Training 1,000 batches of data costs 600 minutes with MLM objective, 120 minutes with RTD objective.", "where": "Appendix B.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "CodeBERT (MLM+RTD, init from RoBERTa) gets the best macro-average MRR on CodeSearchNet code search, above RoBERTa and code-only continued pre-training.",
+   "kind": "measured", "source": null, "metric": "MA-AVG MRR", "value": "0.7603", "unit": "MRR", "baseline_value": "0.6972 (RoBERTa); 0.7260 (pre-train w/ code only, INIT=R)", "n": null,
+   "setup": "CodeSearchNet six languages, language-specific fine-tuned models, 999 distractors, test set",
+   "quote": null, "table": "Table 2, row CODEBERT (MLM+RTD, INIT=R), column MA-AVG", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "MLM alone with RoBERTa init is close behind the combined objective (0.7549 vs 0.7603), so adding RTD to MLM adds little for code search.",
+   "kind": "measured", "source": null, "metric": "MA-AVG MRR", "value": "0.7549", "unit": "MRR", "baseline_value": "0.7603 (MLM+RTD)", "n": null,
+   "setup": "same as above, INIT=R",
+   "quote": null, "table": "Table 2, row CODEBERT (MLM, INIT=R), column MA-AVG", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "RTD alone (INIT=R) is worse than MLM alone and below code-only continued pre-training on code search.",
+   "kind": "measured", "source": null, "metric": "MA-AVG MRR", "value": "0.7233", "unit": "MRR", "baseline_value": "0.7260 (pre-train w/ code only, INIT=R)", "n": null,
+   "setup": "CodeSearchNet, INIT=R",
+   "quote": null, "table": "Table 2, row CODEBERT (RTD, INIT=R), column MA-AVG", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "Initialising from RoBERTa beats training from scratch for MLM CodeBERT.",
+   "kind": "measured", "source": null, "metric": "MA-AVG MRR", "value": "0.6998", "unit": "MRR", "baseline_value": "0.7549 (INIT=R)", "n": null,
+   "setup": "CodeBERT MLM, INIT=S, CodeSearchNet",
+   "quote": null, "table": "Table 2, row CODEBERT (MLM, INIT=S), column MA-AVG", "note": "From-scratch CodeBERT (0.6998) still beats RoBERTa (0.6972) narrowly.", "where": "Table 2"
+  },
+  {
+   "claim": "Zero-shot PL probing: CodeBERT (MLM) is far above RoBERTa pooled over all languages.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "85.66", "unit": "%", "baseline_value": "62.45 (RoBERTa); 74.11 (code only)", "n": 2615,
+   "setup": "2-choice max/min masked code token, full NL doc given, parameters fixed",
+   "quote": null, "table": "Table 3, row PL PROBING / CODEBERT (MLM), column ALL", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Zero-shot NL probing: CodeBERT (MLM) beats RoBERTa pooled over all languages.",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "74.53", "unit": "%", "baseline_value": "61.21 (RoBERTa); 65.19 (code only)", "n": 856,
+   "setup": "4-choice masked NL keyword, full code given, parameters fixed",
+   "quote": null, "table": "Table 3, row NL PROBING / CODEBERT (MLM), column ALL", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "With only preceding code context, probing accuracy drops sharply (code completion is hard).",
+   "kind": "measured", "source": null, "metric": "accuracy", "value": "59.12", "unit": "%", "baseline_value": "52.24 (RoBERTa); 56.71 (code only)", "n": 2615,
+   "setup": "PL probing, preceding context only",
+   "quote": null, "table": "Table 3, row PL PROBING WITH PRECEDING CONTEXT ONLY / CODEBERT (MLM), column ALL", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Code-to-documentation generation on six languages: CodeBERT (RTD+MLM) reaches 17.83 overall smoothed BLEU-4, a gain of 1.3 over RoBERTa, and is called state of the art.",
+   "kind": "measured", "source": null, "metric": "smoothed BLEU-4", "value": "17.83", "unit": "BLEU", "baseline_value": "16.57 (RoBERTa); 17.35 (code only)", "n": null,
+   "setup": "CodeSearchNet, pre-trained encoder with 6-layer Transformer decoder",
+   "quote": "brings a gain of 1.3 BLEU score over RoBERTa overall", "table": "Table 4, row CODEBERT (RTD+MLM), column OVERALL", "note": "1.3 gain is rounded: 17.83 - 16.57 = 1.26.", "where": "Section 4.3, Table 4"
+  },
+  {
+   "claim": "On C# (language unseen in pre-training), CodeBERT (MLM+RTD) improves 2.55 BLEU over RoBERTa but stays below code2seq (23.04), which uses AST paths.",
+   "kind": "measured", "source": null, "metric": "smoothed BLEU-4", "value": "22.36", "unit": "BLEU", "baseline_value": "19.81 (RoBERTa); 23.04 (code2seq)", "n": 66015,
+   "setup": "CodeNN C# StackOverflow dataset, 2-layer GRU decoder",
+   "quote": "achieves 22.36 BLEU score and improves by 2.55", "table": null, "note": null, "where": "Section 4.4, Table 5"
+  },
+  {
+   "claim": "Late-fusion (separate encoders, dot product) code search: CodeBERT far above RoBERTa, whose raw encoder is almost useless in this setting.",
+   "kind": "measured", "source": null, "metric": "MRR", "value": "0.6870", "unit": "MRR", "baseline_value": "0.0043 (RoBERTa, Ruby)", "n": null,
+   "setup": "Ruby only; Go: CodeBERT 0.8372, RoBERTa 0.0030",
+   "quote": null, "table": "Table 7, row CODEBERT, column RUBY", "note": null, "where": "Appendix D, Table 7"
+  },
+  {
+   "claim": "Pre-training cost: MLM costs 600 minutes per 1,000 batches versus 120 for RTD.",
+   "kind": "measured", "source": null, "metric": "minutes per 1,000 batches", "value": "600", "unit": "minutes", "baseline_value": "120 (RTD)", "n": null,
+   "setup": "16 V100 32GB, FP16, batch 2,048",
+   "quote": "Training 1,000 batches of data costs 600 minutes with MLM objective, 120 minutes with RTD objective.", "table": null, "note": null, "where": "Appendix B.1"
+  }
+ ],
+ "limits": [
+  "RTD generators are simple n-gram language models, not neural; authors leave bimodal or Transformer generators to future work.",
+  "Loss functions mainly target NL-PL understanding, not generation; no generation-based pre-training objective.",
+  "No AST input: a CodeBERT trained on a traversed AST gave no generation improvement; code2seq with AST paths beats it on C#.",
+  "Single run per setting, no seeds, variance or significance tests stated, so small gaps (e.g. 0.7549 vs 0.7603 MRR) are not testable.",
+  "Probing set is small and uneven across languages (Ruby 20 NL items, 38 PL items) and built from only max/min style keywords, so it tests narrow knowledge.",
+  "Probing used the MLM-only model, not the MLM+RTD model.",
+  "Multilingual fine-tuning for code search was tried but performed worse than language-specific models; the numbers are not given.",
+  "Layers, hidden size, heads, vocab, weight decay, dropout and lr schedule are not printed (only 'same as RoBERTa-base').",
+  "Late fusion tested on two languages only."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "bimodal data", "definition": "parallel data of natural language-code pairs", "where": "Section 3.3"},
+  {"term": "unimodal data", "definition": "codes without paired natural language texts and natural language without paired codes", "where": "Section 3.3"},
+  {"term": "replaced token detection (RTD)", "definition": "a discriminator is trained to decide, at every input position, whether the token is the original or a plausible alternative sampled from a generator", "where": "Section 3.4"}
+ ],
+ "lineage": [
+  {"work": "BERT (Devlin et al. 2018)", "year": 2018, "arxiv": "1810.04805", "relation": "uses-method", "note": "MLM objective with 15% masking and bidirectional Transformer", "quote": null},
+  {"work": "RoBERTa (Liu et al. 2019)", "year": 2019, "arxiv": "1907.11692", "relation": "extends", "note": "architecture copied exactly (RoBERTa-base); used as init and main baseline", "quote": null},
+  {"work": "ELECTRA (Clark et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "replaced token detection objective adapted to NL-PL with n-gram generators", "quote": null},
+  {"work": "CodeSearchNet challenge (Husain et al. 2019)", "year": 2019, "arxiv": "1909.09436", "relation": "uses-data", "note": "pre-training data and code search benchmark; first four baselines reported from it", "quote": null},
+  {"work": "Pre-trained contextual embedding of source code (Kanade et al. 2019)", "year": 2019, "arxiv": "2001.00059", "relation": "related", "note": "concurrent BERT on Python only with MLM and next sentence prediction", "quote": null},
+  {"work": "Multilingual BERT (Pires et al. 2019)", "year": 2019, "arxiv": "1906.01502", "relation": "uses-method", "note": "one model for six languages with no language markers", "quote": null},
+  {"work": "code2seq (Alon et al. 2019)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "AST-path model that beats CodeBERT on C# summarization", "quote": null},
+  {"work": "CodeNN (Iyer et al. 2016)", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "C# dataset and evaluation scripts", "quote": null},
+  {"work": "Language models as knowledge bases? (Petroni et al. 2019)", "year": 2019, "arxiv": "1909.01066", "relation": "related", "note": "inspiration for probing", "quote": null},
+  {"work": "oLMpics (Talmor et al. 2019)", "year": 2019, "arxiv": "1912.13283", "relation": "related", "note": "multi-choice probing with curated distractors", "quote": null},
+  {"work": "ViLBERT / VideoBERT", "year": 2019, "arxiv": null, "relation": "related", "note": "bimodal pre-training in other modalities", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "An illustration about the replaced token detection objective. Both NL and code generators are language models, which generate plausible tokens for masked positions based on surrounding contexts. NL-Code discriminator is the targeted pre-trained model, which is trained via detecting plausible alternatives tokens sampled from NL and PL generators.", "page": 3, "why": "Shows the generator/discriminator pipeline and which parts are discarded at fine-tuning; shows why unimodal code can feed RTD."},
+  {"figure": "Table 2", "caption": "Results on natural language code retrieval (init scratch vs RoBERTa; MLM, RTD, MLM+RTD)", "page": 6, "why": "One ablation grid for objective and initialisation choices."},
+  {"figure": "Fig 3", "caption": "Case study on python language. Masked tokens in NL and PL are separately applied. Predicted probabilities of RoBERTa and CodeBERT are given.", "page": 7, "why": "Concrete probing example where RoBERTa picks 'max' with 96% and CodeBERT gets PL right at 99.999%."},
+  {"figure": "Fig 1", "caption": "An example of the NL-PL pair, where NL is the first paragraph from the documentation of a function.", "page": 2, "why": "Defines what a bimodal datapoint is."}
+ ],
+ "code": [
+  {"where": "Eq 14, p.5", "snippet": "min_theta L_MLM(theta) + L_RTD(theta)", "verbatim": false}
+ ],
+ "problems": [
+  "Equations and figure internals are garbled in the text cache; Eq 12 as printed has a typographic oddity ('1 - log pD2') that is not a normal binary cross-entropy.",
+  "Layer count, hidden size and heads are not printed; 12/768/12 is only implied by 'RoBERTa-base'.",
+  "Figures 4-7 images were not viewed; Fig 4 learning curve values not extracted."
+ ]
+}

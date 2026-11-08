@@ -1,0 +1,558 @@
+{
+ "schema": 1,
+ "key": "1509.01626",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2015-character-level-convolutional-networks-text.pdf",
+ "bib": {
+  "title": "Character-level Convolutional Networks for Text Classification",
+  "authors": [
+   "Xiang Zhang",
+   "Junbo Zhao",
+   "Yann LeCun"
+  ],
+  "first_author": "Zhang",
+  "year": 2015,
+  "venue": "NIPS 2015 (arXiv v3, Apr 2016)",
+  "arxiv": "1509.01626",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 32837,
+  "chars_total": 32837,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a deep 1-D convolutional network applied to raw characters, with no word knowledge, classify text as well as word-based and n-gram models?",
+ "hypothesis": "Deep character-level ConvNets do not need words and can reach competitive or state-of-the-art accuracy when trained on large-scale datasets.",
+ "contributions": [
+  "First application of ConvNets only on characters",
+  "Eight new large-scale text classification datasets (hundreds of thousands to millions of samples)",
+  "Comparison against bag-of-words, n-grams, TFIDF, bag-of-means, word-based ConvNets and LSTM",
+  "Thesaurus data augmentation for text"
+ ],
+ "method": {
+  "summary": "A 9-layer (6 conv, 3 fully-connected) temporal ConvNet reads 1014 one-hot characters from a 70-symbol alphabet and is trained with SGD from scratch per dataset. Compared on eight datasets against linear models on hand-built features, word2vec bag-of-means, word-based ConvNets and a word LSTM.",
+  "task": "text classification (topic and sentiment)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "AG's News",
+    "role": "both",
+    "size": "120,000 train / 7,600 test, 4 classes",
+    "split": "30,000 train and 1,900 test per class",
+    "source": "AG corpus, 496,835 articles, 4 largest classes",
+    "preprocessing": "title and description fields"
+   },
+   {
+    "name": "Sogou News",
+    "role": "both",
+    "size": "450,000 train / 60,000 test, 5 classes",
+    "split": "90,000 train and 12,000 test per class",
+    "source": "SogouCA + SogouCS, 2,909,551 articles; labelled by URL domain",
+    "preprocessing": "Chinese converted to Pinyin with pypinyin + jieba segmentation so English models apply unchanged; title and content"
+   },
+   {
+    "name": "DBPedia",
+    "role": "both",
+    "size": "560,000 train / 70,000 test, 14 classes",
+    "split": "40,000 train and 5,000 test per class",
+    "source": "DBpedia 2014 ontology",
+    "preprocessing": "title and abstract"
+   },
+   {
+    "name": "Yelp Review Polarity",
+    "role": "both",
+    "size": "560,000 train / 38,000 test, 2 classes",
+    "split": "280,000 train and 19,000 test per polarity",
+    "source": "Yelp Dataset Challenge 2015, 1,569,264 reviews",
+    "preprocessing": "stars 1-2 negative, 3-4 positive"
+   },
+   {
+    "name": "Yelp Review Full",
+    "role": "both",
+    "size": "650,000 train / 50,000 test, 5 classes",
+    "split": "130,000 train and 10,000 test per star",
+    "source": "Yelp Dataset Challenge 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Yahoo! Answers",
+    "role": "both",
+    "size": "1,400,000 train / 60,000 test, 10 classes",
+    "split": "140,000 train and 5,000 test per class",
+    "source": "Yahoo! Webscope Comprehensive Q&A v1.0, 4,483,032 questions",
+    "preprocessing": "question title, question content, best answer"
+   },
+   {
+    "name": "Amazon Review Full",
+    "role": "both",
+    "size": "3,000,000 train / 650,000 test, 5 classes",
+    "split": "600,000 train and 130,000 test per class",
+    "source": "SNAP Amazon reviews, 34,686,770 reviews",
+    "preprocessing": "review title and content"
+   },
+   {
+    "name": "Amazon Review Polarity",
+    "role": "both",
+    "size": "3,600,000 train / 400,000 test, 2 classes",
+    "split": "1,800,000 train and 200,000 test per polarity",
+    "source": "SNAP Amazon reviews",
+    "preprocessing": "review title and content"
+   }
+  ],
+  "models": [
+   {
+    "name": "Large char ConvNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "6 conv (1024 features; kernels 7,7,3,3,3,3; pools 3,3,N/A,N/A,N/A,3; stride 1) + FC 2048, 2048, output = classes; ReLU; 2 dropout 0.5",
+    "init_from": "Gaussian init, mean 0 std 0.02; trained from scratch",
+    "tokenizer": "none; one-hot characters, alphabet 70 (26 letters, 10 digits, 33 other, newline); unknown chars all-zero",
+    "vocab": "70 characters",
+    "layers": "9 (6 conv + 3 FC)",
+    "hidden": null,
+    "heads": null,
+    "context": "1014 characters",
+    "other": {
+     "output_frame_length": "l6 = (l0 - 96)/27"
+    }
+   },
+   {
+    "name": "Small char ConvNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as Large but 256 conv features and FC 1024, 1024",
+    "init_from": "Gaussian init, mean 0 std 0.05",
+    "tokenizer": "as Large",
+    "vocab": "70 characters",
+    "layers": "9",
+    "hidden": null,
+    "heads": null,
+    "context": "1014 characters",
+    "other": {}
+   },
+   {
+    "name": "Full-alphabet ConvNet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same, alphabet distinguishes upper and lower case",
+    "init_from": null,
+    "tokenizer": "character",
+    "vocab": "inferred: 70 plus 26 upper-case letters (size not stated)",
+    "layers": "9",
+    "hidden": null,
+    "heads": null,
+    "context": "1014 characters",
+    "other": {}
+   },
+   {
+    "name": "Word-based ConvNet (word2vec or lookup table)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same layer count and sizes as char ConvNets",
+    "init_from": "pretrained word2vec (Mikolov 2013) or end-to-end lookup table",
+    "tokenizer": "words",
+    "vocab": null,
+    "layers": "9",
+    "hidden": "embedding 300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "vanilla word-based LSTM, mean of outputs, multinomial logistic regression",
+    "init_from": "pretrained word2vec",
+    "tokenizer": "words",
+    "vocab": null,
+    "layers": null,
+    "hidden": "512 output, embedding 300",
+    "heads": null,
+    "context": null,
+    "other": {
+     "gradient_clip_norm": 5
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: cross-entropy classification (multinomial logistic output); not named",
+   "optimizer": "SGD with momentum 0.9",
+   "lr": "0.01 initial",
+   "lr_schedule": "halved every 3 epochs, 10 times",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "inferred: 30 (halved every 3 epochs for 10 times); not stated directly",
+   "tokens": null,
+   "seq_len": "1014",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 (2 modules between 3 FC layers)",
+   "regularisation": "dropout; optional thesaurus augmentation",
+   "hardware": "2 Tesla K40 GPUs (donated by NVIDIA); AWS grant",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "epoch_size_minibatches": "5,000 (AG, Sogou, DBPedia, Yelp P/F); 10,000 (Yahoo); 30,000 (Amazon F/P); each epoch a fixed number of random samples uniformly across classes",
+    "framework": "Torch 7",
+    "augmentation": "WordNet-derived LibreOffice mytheas thesaurus; r replaced words with P[r]~p^r, synonym index P[s]~q^s, p=0.5, q=0.5",
+    "character_order": "quantised in backward order so latest characters sit near the beginning; characters beyond 1014 ignored"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Testing error",
+     "definition": "percentage of test samples misclassified",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "BoW (50,000 most frequent words, multinomial logistic regression)",
+    "BoW TFIDF",
+    "Bag-of-ngrams (500,000 most frequent n-grams up to 5)",
+    "ngrams TFIDF",
+    "Bag-of-means (k-means, 5000 means, word2vec dim 300, words seen >5 times)",
+    "word2vec ConvNet",
+    "lookup-table ConvNet",
+    "LSTM"
+   ],
+   "protocol": "Single reported test error per cell; no seeds, no confidence intervals; 'reported faithfully without any model selection'"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "initial step size 0.01 which is halved every 3 epoches for 10 times",
+    "where": "Sec 2.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Large char ConvNet (no thesaurus) beats the best n-gram model on Amazon Polarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 5.51,
+   "unit": "% test error",
+   "baseline_value": 7.98,
+   "n": null,
+   "setup": "Amazon Review Polarity, 3.6M train, Lg. Conv.",
+   "note": "Lg. Conv. 5.51 here; Lg. Conv. Th. is 4.93, the best in the column.",
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Conv., column Amz. P."
+  },
+  {
+   "claim": "Large char ConvNet with thesaurus is the best model on Amazon Polarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 4.93,
+   "unit": "% test error",
+   "baseline_value": 7.98,
+   "n": null,
+   "setup": "Amazon Review Polarity, Lg. Conv. Th.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Conv. Th., column Amz. P."
+  },
+  {
+   "claim": "On the smallest dataset (AG, 120k) n-gram TFIDF (7.64) is far better than the char ConvNet.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 12.82,
+   "unit": "% test error",
+   "baseline_value": 7.64,
+   "n": null,
+   "setup": "AG News, Lg. Conv. (no thesaurus, 70-char alphabet)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Conv., column AG"
+  },
+  {
+   "claim": "Lookup-table ConvNet on words is the best deep model on AG.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.55,
+   "unit": "% test error",
+   "baseline_value": 7.64,
+   "n": null,
+   "setup": "AG News, Lg. Lk. Conv.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Lk. Conv., column AG"
+  },
+  {
+   "claim": "Full (case-sensitive) alphabet helps on Yelp Full.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 38.4,
+   "unit": "% test error",
+   "baseline_value": 39.62,
+   "n": null,
+   "setup": "Yelp Review Full, Lg. Full Conv.; vs Lg. Conv. 39.62",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Full Conv., column Yelp F."
+  },
+  {
+   "claim": "Full alphabet hurts on Sogou (Pinyin).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.8,
+   "unit": "% test error",
+   "baseline_value": 4.88,
+   "n": null,
+   "setup": "Sogou, Lg. Full Conv.; vs Lg. Conv. 4.88",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Full Conv., column Sogou"
+  },
+  {
+   "claim": "Bag-of-means is worse than every other model on every dataset.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 16.91,
+   "unit": "% test error",
+   "baseline_value": 11.19,
+   "n": null,
+   "setup": "AG News, Bag-of-means; vs BoW 11.19",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Bag-of-means, column AG",
+   "quote": "the bag-of-means model performs worse in every case"
+  },
+  {
+   "claim": "Char ConvNet matches word-based models on DBPedia within a few tenths.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 1.73,
+   "unit": "% test error",
+   "baseline_value": 1.31,
+   "n": null,
+   "setup": "DBPedia, Lg. Conv.; ngrams TFIDF 1.31",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Conv., column DBP."
+  },
+  {
+   "claim": "Thesaurus augmentation lowers error for the large char ConvNet on Amazon Full.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 40.45,
+   "unit": "% test error",
+   "baseline_value": 41.31,
+   "n": null,
+   "setup": "Amazon Review Full, Lg. Conv. Th. vs Lg. Conv. 41.31",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Lg. Conv. Th., column Amz. F."
+  },
+  {
+   "claim": "Char ConvNets only overtake traditional models once datasets reach millions of samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative, Fig 3 and Discussion",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "only until the dataset goes to the scale of several millions do we observe that character-level ConvNets start to do better"
+  },
+  {
+   "claim": "The pooling module let them train ConvNets deeper than 6 layers, where others failed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "qualitative, no ablation shown",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "This very pooling module enabled us to train ConvNets deeper than 6 layers, where all others fail."
+  }
+ ],
+ "limits": [
+  "Authors say their experiments show no explicit evidence that ConvNets handle misspellings and emoticons better; hypothesis needs further analysis.",
+  "Case-sensitivity regularisation explanation is 'to be validated'.",
+  "Bag-of-means conclusion does not speak for other uses of word2vec.",
+  "Only classification; structured output left to future work.",
+  "Single run per cell, no variance reported; parameter count and training time not given.",
+  "Sogou handled via Pinyin, so 'characters' there are romanised letters, not Chinese characters.",
+  "Predates subword tokenisation (BPE) and transformers; fixed 1014-character window."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "1-of-m encoding",
+   "definition": "prescribing an alphabet of size m and quantizing each character as a one-hot vector; out-of-alphabet characters are all-zero vectors",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Text Understanding from Scratch",
+   "year": 2015,
+   "arxiv": "1502.01710",
+   "relation": "extends",
+   "note": "early version of this paper",
+   "quote": "An early version of this work entitled \"Text Understanding from Scratch\" was posted in Feb 2015"
+  },
+  {
+   "work": "Kim, Convolutional neural networks for sentence classification",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "word-based ConvNet on word2vec",
+   "quote": null
+  },
+  {
+   "work": "Johnson and Zhang, Effective use of word order for text categorization with CNNs",
+   "year": 2014,
+   "arxiv": "1412.1058",
+   "relation": "related",
+   "note": "ConvNets on discrete word embeddings",
+   "quote": null
+  },
+  {
+   "work": "dos Santos and Gatti, Deep CNNs for sentiment analysis of short texts",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ConvNet on word embeddings with character features",
+   "quote": null
+  },
+  {
+   "work": "dos Santos and Zadrozny, character-level representations for POS tagging",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "character features inside word-based models",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al., Distributed representations of words and phrases",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "word2vec for bag-of-means, ConvNet and LSTM baselines",
+   "quote": null
+  },
+  {
+   "work": "Hochreiter and Schmidhuber, LSTM",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "word-based LSTM baseline",
+   "quote": null
+  },
+  {
+   "work": "Collobert et al., NLP (almost) from scratch",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "lookup-table word ConvNet",
+   "quote": null
+  },
+  {
+   "work": "Kanaris et al., Words versus character n-grams for anti-spam filtering",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "char n-grams with linear classifiers",
+   "quote": null
+  },
+  {
+   "work": "AG corpus, Sogou, DBpedia, Yelp, Yahoo Answers, Amazon SNAP (McAuley and Leskovec 2013)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "sources of the eight datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of our model",
+   "page": 3,
+   "why": "Shows one-hot character matrix flowing through conv and max-pool to FC layers."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Convolutional layers used in our experiments.",
+   "page": 3,
+   "why": "Exact kernel, pool and feature sizes."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Testing errors of all the models.",
+   "page": 6,
+   "why": "Full results grid across eight datasets."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Relative errors with comparison models",
+   "page": 7,
+   "why": "Shows char ConvNet advantage grows with dataset size."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "First layer weights. For each patch, height is the kernel size and width the alphabet size",
+   "page": 7,
+   "why": "Visualises learned character n-gram filters over the one-hot alphabet."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "l6 = (l0 - 96)/27",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 2.1",
+   "snippet": "h(y) = sum_{x=1}^{k} f(x) * g(y*d - x + c), c = k - d + 1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Epochs total not stated; 30 is inferred from the halving schedule.",
+  "Table 4 is flattened one cell per line in the text; row-column mapping read by order.",
+  "Figure 3 bar values are not in the text."
+ ]
+}

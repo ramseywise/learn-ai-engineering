@@ -6,6 +6,7 @@ sources:
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 18
   - https://doi.org/10.1109/5.726791
+  - https://arxiv.org/abs/1409.1556
   - https://arxiv.org/abs/1512.03385
   - https://arxiv.org/abs/1603.09382
   - https://arxiv.org/abs/1612.08242
@@ -162,7 +163,7 @@ A deliberately modest benchmark shows what a hand-built stack buys on natural im
 
 ## Residual networks
 
-A deeper network can represent anything a shallower one can, because the extra layers could be the identity. He et al. observed that in practice deeper plain networks train worse, and so called it a degradation problem rather than overfitting. Their fix makes the identity the easy default: a block learns a residual $F(x)$ and outputs $F(x) + x$, so driving $F$ to zero recovers the identity ([arXiv:1512.03385](https://arxiv.org/abs/1512.03385) (He et al., CVPR 2016)). The paper trained up to 152 layers on ImageNet, with a 3.57% top-5 ensemble error, and your notebook assembles ResNet-50 in Keras. The experiment works on the digits as well, and it takes a couple of minutes on a CPU:
+Depth was already the lever before ResNet. VGG fixed every choice except depth and used only 3×3 filters, because three stacked 3×3 layers see the same 7×7 patch as one 7×7 layer with 27C² weights instead of 49C² (81% more) and add two extra non-linearities. On ILSVRC-2012 validation at a single test scale, top-1 error fell from 29.6% at 11 weight layers to 25.5% at 19, and it saturated there; a shallower net with 5×5 filters, built from the 13-layer one, had 7% higher top-1 error on a centre crop. The 7-net entry scored 7.3% top-5 on the ILSVRC-2014 test set and placed second to GoogLeNet's 6.7% (also 7 nets); after the deadline a two-model ensemble (the 16- and 19-layer nets, multi-crop plus dense evaluation) reached 6.8%. The cost was 138M parameters for the 16-layer net (144M for the 19-layer), and 2–3 weeks of training per net on four GPUs. These are single runs with no variance reported, and the deeper nets were partly initialised from a trained shallow one ([arXiv:1409.1556](https://arxiv.org/abs/1409.1556) (Simonyan and Zisserman, ICLR 2015)). A deeper network can represent anything a shallower one can, because the extra layers could be the identity. He et al. observed that in practice deeper plain networks train worse, and so called it a degradation problem rather than overfitting. Their fix makes the identity the easy default: a block learns a residual $F(x)$ and outputs $F(x) + x$, so driving $F$ to zero recovers the identity ([arXiv:1512.03385](https://arxiv.org/abs/1512.03385) (He et al., CVPR 2016)). The paper trained up to 152 layers on ImageNet, with a 3.57% top-5 ensemble error, and your notebook assembles ResNet-50 in Keras. The experiment works on the digits as well, and it takes a couple of minutes on a CPU:
 
 ```python
 class Block(nn.Module):

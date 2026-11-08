@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "1907.10529",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/joshi-2020-spanbert.pdf",
+ "bib": {
+  "title": "SpanBERT: Improving Pre-training by Representing and Predicting Spans",
+  "authors": [
+   "Mandar Joshi",
+   "Danqi Chen",
+   "Yinhan Liu",
+   "Daniel S. Weld",
+   "Luke Zettlemoyer",
+   "Omer Levy"
+  ],
+  "first_author": "Joshi",
+  "year": 2020,
+  "venue": "TACL (arXiv v3, 18 Jan 2020)",
+  "arxiv": "1907.10529",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49598,
+  "chars_total": 49598,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does pre-training that masks contiguous spans and predicts them from boundary tokens give better span representations than BERT's token masking plus next sentence prediction?",
+ "hypothesis": "Span selection tasks (QA, coreference) will particularly benefit from span-based pre-training.",
+ "contributions": [
+  "Span masking: mask contiguous random spans (geometric length) instead of random tokens",
+  "Span boundary objective (SBO): predict each masked token from the two boundary token encodings plus a relative position embedding",
+  "Single-sequence training without NSP",
+  "A better-tuned BERT replica baseline; SOTA on OntoNotes coreference, SQuAD 1.1/2.0 results with BERT-large size"
+ ],
+ "method": {
+  "summary": "BERT-large-sized encoder reimplemented in fairseq and pre-trained on BooksCorpus plus English Wikipedia with geometric span masking (15% of tokens), MLM plus SBO loss, single 512-token segments and no NSP. Compared with Google BERT, a tuned BERT reimplementation and a single-sequence BERT, then fine-tuned on QA, coreference, TACRED and GLUE.",
+  "task": "masked-language-model pre-training with span objectives, then fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "BooksCorpus + English Wikipedia",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "same corpus as BERT; cased WordPiece tokens",
+    "preprocessing": "corpus divided into single contiguous blocks of up to 512 tokens (to document boundary); different masks each epoch"
+   },
+   {
+    "name": "SQuAD 1.1 / 2.0",
+    "role": "both",
+    "size": null,
+    "split": "test results via official evaluation",
+    "source": "Rajpurkar et al. 2016, 2018",
+    "preprocessing": "SQuAD 2.0 unanswerable: answer span set to [CLS]"
+   },
+   {
+    "name": "MRQA: NewsQA, TriviaQA, SearchQA, HotpotQA, Natural Questions",
+    "role": "both",
+    "size": null,
+    "split": "MRQA dev set split in half into new dev and test",
+    "source": "MRQA 2019 shared task (Fisch et al.)",
+    "preprocessing": "MRQA contexts truncated to 800 tokens, only answerable questions kept"
+   },
+   {
+    "name": "OntoNotes (CoNLL-2012)",
+    "role": "both",
+    "size": null,
+    "split": "standard",
+    "source": "Pradhan et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "TACRED",
+    "role": "both",
+    "size": "42 relation types",
+    "split": "standard test",
+    "source": "Zhang et al. 2017",
+    "preprocessing": "entities replaced by NER tags"
+   },
+   {
+    "name": "GLUE (8 tasks; WNLI excluded, set to majority class 65.1%)",
+    "role": "both",
+    "size": null,
+    "split": "test",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SpanBERT",
+    "role": "proposed",
+    "params": "inferred: BERT-large (about 340M; count not stated)",
+    "architecture": "transformer encoder, BERT-large configuration",
+    "init_from": null,
+    "tokenizer": "cased WordPiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {
+     "SBO head": "2-layer FFN, GeLU, LayerNorm; input [x_{s-1}; x_{e+1}; p_{i-s+1}]",
+     "SBO position embeddings": "200 dimensions",
+     "embedding tying": "input embedding reused for target tokens in MLM and SBO"
+    }
+   },
+   {
+    "name": "Google BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "released Devlin et al. 2019 models",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Our BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT-large reimplementation with improved preprocessing and optimisation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "Our BERT-1seq",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Our BERT trained on single full-length sequences without NSP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L(x_i) = L_MLM(x_i) + L_SBO(x_i), summed over tokens in masked spans; no NSP",
+   "optimizer": "AdamW (decoupled weight decay), beta1=0.9, beta2=0.999, epsilon 1e-8",
+   "lr": "1e-4 peak",
+   "lr_schedule": "linear decay after warmup",
+   "warmup": "10,000 steps",
+   "batch_size": "256 sequences of up to 512 tokens (about 390 sequences on average)",
+   "steps": "2.4M (ablations use 1.2M-step checkpoints)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 tokens",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1 on all layers and attention weights",
+   "regularisation": null,
+   "hardware": "32 Volta V100 GPUs",
+   "compute": null,
+   "wall_clock": "15 days",
+   "seeds": null,
+   "other": {
+    "masking": "15% of tokens masked; span lengths ~ Geo(p=0.2) clipped at 10 words, mean 3.8; complete words; start uniform at word start; 80/10/10 [MASK]/random/original applied per span",
+    "p search": "p in {0.1, 0.2, 0.4}, 0.2 best",
+    "fine-tuning QA": "max_seq_length 512, sliding window 128, lr {5e-6,1e-5,2e-5,3e-5,5e-5}, batch {16,32}, 4 epochs",
+    "fine-tuning coref": "max_seq_length {128,256,384,512}, BERT lr {1e-5,2e-5}, task lr {1e-4,2e-4,3e-4}, 20 epochs, batch 1 document",
+    "fine-tuning TACRED/GLUE": "max_seq_length 128, lr as QA, batch {16,32}, 10 epochs (CoLA 4)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1 / EM",
+     "definition": "SQuAD and MRQA span overlap F1 and exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Coreference average F1",
+     "definition": "mean F1 of MUC, B3 and CEAF-phi4",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "TACRED P/R/F1",
+     "definition": "relation classification",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GLUE",
+     "definition": "per-task metrics, average includes WNLI at majority class",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Google BERT",
+    "Our BERT",
+    "Our BERT-1seq",
+    "Previous SotA coref (Lee et al. 2018)",
+    "BERT_EM and BERT_EM+MTB (Soares et al. 2019)"
+   ],
+   "protocol": "Single reported numbers per cell; fine-tuning hyperparameters chosen from grids; seeds, variance and significance tests not reported. Ablations use dev sets and 1.2M-step checkpoints."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/SpanBERT",
+   "weights": "pre-trained models released at same URL",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SpanBERT reaches 94.6 F1 on SQuAD 1.1 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 94.6,
+   "unit": "%",
+   "baseline_value": 92.6,
+   "n": null,
+   "setup": "BERT-large size, BooksCorpus+Wikipedia, 2.4M steps; baseline Our BERT",
+   "quote": null,
+   "table": "Table 1, row SpanBERT, column SQuAD 1.1 F1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SpanBERT reaches 88.7 F1 on SQuAD 2.0 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 88.7,
+   "unit": "%",
+   "baseline_value": 85.9,
+   "n": null,
+   "setup": "same; baseline Our BERT",
+   "quote": null,
+   "table": "Table 1, row SpanBERT, column SQuAD 2.0 F1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Error reduction on SQuAD 1.1 relative to the tuned BERT replica",
+   "kind": "measured",
+   "source": null,
+   "metric": "error reduction",
+   "value": 27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD 1.1 test",
+   "quote": "27% error reduction",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "SpanBERT sets OntoNotes coreference SOTA at 79.6 avg F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": 79.6,
+   "unit": "%",
+   "baseline_value": 73.0,
+   "n": null,
+   "setup": "OntoNotes test; baseline previous SotA (Lee et al. 2018)",
+   "quote": "achieving a new state of the art of 79.6% F1",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "MRQA average F1 over five datasets: SpanBERT 81.5 vs Our BERT 78.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg F1",
+   "value": 81.5,
+   "unit": "%",
+   "baseline_value": 78.6,
+   "n": null,
+   "setup": "NewsQA, TriviaQA, SearchQA, HotpotQA, NQ; split dev halves",
+   "quote": null,
+   "table": "Table 2, row SpanBERT, column Avg.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Single-sequence training alone adds +1.1 F1 on MRQA average; span masking plus SBO add a further +1.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": 1.1,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRQA average, Our BERT-1seq vs Our BERT",
+   "quote": "sequence training (+1.1%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "SpanBERT TACRED F1 70.8 vs Our BERT 67.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 70.8,
+   "unit": "%",
+   "baseline_value": 67.5,
+   "n": null,
+   "setup": "TACRED test; BERT_EM+MTB 71.5 uses entity-linked extra pre-training",
+   "quote": null,
+   "table": "Table 4, row SpanBERT, column F1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On TACRED most of the gain (+2.6) comes from single-sequence training; span masking+SBO add 0.7",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": 2.6,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TACRED, Our BERT-1seq vs Our BERT",
+   "quote": "stems from single-sequence training although the",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "GLUE average: SpanBERT 82.8 vs Our BERT-1seq 81.7 vs Our BERT 81.1 vs Google BERT 80.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": 82.8,
+   "unit": "score",
+   "baseline_value": 80.4,
+   "n": null,
+   "setup": "GLUE test, WNLI set to majority class",
+   "quote": null,
+   "table": "Table 5, row SpanBERT, column (Avg)",
+   "note": "Most of the gain is RTE (+6.9 in text; 79.0 vs 72.1 for BERT-1seq)",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Ablation: geometric span masking beats subword, whole-word, entity and noun-phrase masking on SQuAD 2.0 (85.4) except on coreference",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 85.4,
+   "unit": "%",
+   "baseline_value": 83.8,
+   "n": null,
+   "setup": "dev sets, bi-sequence with NSP, 1.2M steps; baseline subword tokens",
+   "quote": null,
+   "table": "Table 6, row Geometric Spans, column SQuAD 2.0",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Ablation: noun-phrase masking underperforms random spans on TriviaQA by 1.1 F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 difference",
+   "value": -1.1,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dev set, bi-sequence with NSP",
+   "quote": "TriviaQA (-1.1% F1)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Ablation: on coreference, random subword masking (77.7) beats span masking (76.4) without SBO",
+   "kind": "measured",
+   "source": null,
+   "metric": "coref avg F1",
+   "value": 77.7,
+   "unit": "%",
+   "baseline_value": 76.4,
+   "n": null,
+   "setup": "dev set, bi-sequence with NSP",
+   "quote": null,
+   "table": "Table 6, row Subword Tokens, column Coreference",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Ablation: adding SBO to single-sequence span masking gives +2.7 coref F1 (79.0 vs 76.3)",
+   "kind": "measured",
+   "source": null,
+   "metric": "coref F1",
+   "value": 79.0,
+   "unit": "%",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "dev set, 1.2M steps",
+   "quote": null,
+   "table": "Table 7, row Span Masking (1seq) + SBO, column Coref",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Ablation: single-sequence training beats 2seq+NSP with span masking on SQuAD 2.0 (86.7 vs 85.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 86.7,
+   "unit": "%",
+   "baseline_value": 85.4,
+   "n": null,
+   "setup": "dev, span masking",
+   "quote": null,
+   "table": "Table 7, row Span Masking (1seq), column SQuAD 2.0",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Pre-training cost: 15 days on 32 V100 GPUs",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 15,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2.4M steps, batch 256 x 512 tokens",
+   "quote": "took 15 days to complete",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or significance tests reported; fine-tuning hyperparameters tuned from grids per task.",
+  "Ablations use 1.2M-step checkpoints and dev sets, so not directly comparable to main results.",
+  "The NSP explanation is a hypothesis (longer context or noise from unrelated documents), not isolated by experiment.",
+  "Only BERT-large size and BooksCorpus+Wikipedia; no scaling study. Authors say XLNet and RoBERTa are concurrent and use more data/tuning.",
+  "Random subword masking was better on coreference without SBO.",
+  "Dated: encoder-only MLM pre-training; later work scaled data and dropped these objectives."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Span Boundary Objective (SBO)",
+   "definition": "predicting each token of a masked span using only the representations of the observed tokens at the boundaries",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "base architecture and MLM/NSP objectives",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "related",
+   "note": "concurrent BERT replication; cited for short-sequence strategy discussion",
+   "quote": null
+  },
+  {
+   "work": "XLNet (Yang et al.)",
+   "year": 2019,
+   "arxiv": "1906.08237",
+   "relation": "related",
+   "note": "concurrent; masks spans of 1-5 tokens, autoregressive",
+   "quote": null
+  },
+  {
+   "work": "ERNIE (Sun et al.)",
+   "year": 2019,
+   "arxiv": "1904.09223",
+   "relation": "related",
+   "note": "linguistic phrase/entity masking for Chinese",
+   "quote": null
+  },
+  {
+   "work": "MASS (Song et al.)",
+   "year": 2019,
+   "arxiv": "1905.02450",
+   "relation": "related",
+   "note": "encoder-decoder fragment reconstruction",
+   "quote": null
+  },
+  {
+   "work": "Entity-linked BERT_EM+MTB (Soares et al.)",
+   "year": 2019,
+   "arxiv": "1906.03158",
+   "relation": "baseline",
+   "note": "TACRED SOTA",
+   "quote": null
+  },
+  {
+   "work": "Higher-order coreference (Lee et al.)",
+   "year": 2018,
+   "arxiv": "1804.05392",
+   "relation": "baseline",
+   "note": "previous coref SotA; model reused with Joshi et al. 2019b implementation",
+   "quote": null
+  },
+  {
+   "work": "SQuAD / MRQA / OntoNotes / TACRED / GLUE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation suites",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of SpanBERT training. The span an American football game is masked.",
+   "page": 2,
+   "why": "shows MLM and SBO loss on one token in a single diagram"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Span lengths from a geometric distribution Geo(p=0.2) clipped at 10.",
+   "page": 3,
+   "why": "shows the span-length distribution"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Effects of different auxiliary objectives",
+   "page": null,
+   "why": "isolates NSP vs 1seq vs SBO"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "L(xi) = LMLM(xi) + LSBO(xi) = -log P(xi | xi) - log P(xi | yi); yi = f(x_{s-1}, x_{e+1}, p_{i-s+1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Equations garbled in the text layer; figure 1 text order scrambled."
+ ]
+}

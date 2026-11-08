@@ -1,0 +1,595 @@
+{
+ "schema": 1,
+ "key": "2102.07350",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/reynolds-2021-prompt-programming-large-language-models.pdf",
+ "bib": {
+  "title": "Prompt Programming for Large Language Models: Beyond the Few-Shot Paradigm",
+  "authors": [
+   "Laria Reynolds",
+   "Kyle McDonell"
+  ],
+  "first_author": "Reynolds",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2102.07350",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43727,
+  "chars_total": 43727,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does the few-shot format really make GPT-3 learn tasks at run time, or can simple 0-shot natural-language prompts locate the task equally well, and how should prompts be designed?",
+ "hypothesis": "Few-shot examples mainly locate an already learned task rather than meta-learn it, so well-formed 0-shot prompts can match or beat few-shot prompts.",
+ "contributions": [
+  "Show on one translation task that 0-shot prompts can match or exceed few-shot prompts",
+  "Discuss prompt programming methods: direct specification, demonstration, memetic proxy, constraining behavior, serializing reasoning",
+  "Introduce metaprompts that make the model generate its own task-specific prompt",
+  "Discuss benchmarking changes (report catastrophic failures separately, metaprompts, LM evaluators, games)"
+ ],
+ "method": {
+  "summary": "Reproduces GPT-3 paper French-to-English prompts on the Babbage and Curie API engines and compares them with two custom 0/1/10-shot prompt formats, scored with SacreBLEU on WMT'14 Fr-En. The rest is qualitative: prompt-design framework and metaprompt demonstrations on GPT-3 davinci.",
+  "task": "French-to-English translation (quantitative); math and SAT analogy prompts (qualitative)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WMT'14 Fr-En",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bojar et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 Babbage (OpenAI API)",
+    "role": "evaluated",
+    "params": "6.7B (inferred: authors say size not reported, relationship inferred)",
+    "architecture": "autoregressive transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Curie (OpenAI API)",
+    "role": "evaluated",
+    "params": "13B (inferred, as above)",
+    "architecture": "autoregressive transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 davinci",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "autoregressive transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "metaprompt demos Figs 3-6"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 (metaprompt examples, Figs 3-5); not stated for the BLEU experiments",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; single run per prompt apparently, no seeds or variance reported",
+   "prompting": "0-shot, 1-shot, 10-shot (replacing 64-shot) with Simple Colon format; Master Translator 0-shot only",
+   "retrieval": null,
+   "parameters": {
+    "serial_reasoning_injection": "after each generated token GPT-3 computes the conditional probability of 'Thus, the correct answer is'; when this signal peaks the fragment is injected to force a verdict",
+    "engine": "davinci for Figs 3-5"
+   },
+   "other": {
+    "which_examples_in_few_shot": null,
+    "api_caveat": "differences from OpenAI's reported numbers may come from API changes or unknown hyperparameters"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SacreBLEU",
+     "definition": "BLEU as measured by SacreBLEU (Post 2018) on WMT'14 Fr-En",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenAI-reported 0/1/64-shot from GPT-3 paper",
+    "Reproduced OpenAI 0/1/10-shot prompts"
+   ],
+   "protocol": "Single translation task chosen 'due to budget and time constraints'; mean score only, no score distribution analysed."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Simple Colon translation prompt",
+    "text": "French: example_source_phrase\nEnglish: example_target_phrase\nFrench: example_source_phrase\nEnglish: example_target_phrase\n[...]\nFrench: source_phrase\nEnglish:",
+    "where": "Fig 1, p3"
+   },
+   {
+    "purpose": "Master Translator 0-shot prompt",
+    "text": "A French phrase is provided: source_phrase\nThe masterful French translator flawlessly translates the phrase into English:",
+    "where": "Fig 2, p3"
+   },
+   {
+    "purpose": "Generic serializing metaprompt",
+    "text": "Let's solve this problem by splitting it into steps.",
+    "where": "Figs 3-4, p7-8"
+   },
+   {
+    "purpose": "Fill-in-the-blank serializing metaprompt for multiple choice",
+    "text": "In order to solve this problem, we will analyze each of the options and determine which one is the best fit. Let's begin.",
+    "where": "Fig 5, p8"
+   },
+   {
+    "purpose": "Verdict injection",
+    "text": "Thus, the correct answer is",
+    "where": "Sec 4.6, p7"
+   },
+   {
+    "purpose": "Serial reasoning seeds",
+    "text": "For a problem like this,",
+    "where": "Sec 4.6-4.7"
+   },
+   {
+    "purpose": "Discourage premature verdict",
+    "text": "Let’s consider each of these answer choices",
+    "where": "Sec 4.6"
+   },
+   {
+    "purpose": "Metaprompt seed",
+    "text": "This problem asks us to",
+    "where": "Sec 4.7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": "the size of the Babbage and Curie models are not reported so the relationship to the models in the original GPT-3 paper is inferred",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Simple Colon 0-shot beats the OpenAI-reported 0-shot on Babbage",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 23.5,
+   "unit": "BLEU",
+   "baseline_value": 15.5,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Babbage (6.7B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 0-shot, column Babbage / 6.7B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 0-shot on Curie beats OpenAI-reported 0-shot and 1-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 33.3,
+   "unit": "BLEU",
+   "baseline_value": 22.4,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 0-shot, column Curie / 13B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 0-shot on Curie is close to OpenAI 64-shot (38.3)",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 33.3,
+   "unit": "BLEU",
+   "baseline_value": 38.3,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 0-shot, column Curie / 13B",
+   "note": "Duplicate of result above with different baseline",
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 1-shot is worse than 0-shot on Curie (semantic contamination)",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 27.6,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 1-shot, column Curie / 13B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 1-shot is worse than 0-shot on Babbage",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 18.0,
+   "unit": "BLEU",
+   "baseline_value": 23.5,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Babbage (6.7B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 1-shot, column Babbage / 6.7B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 10-shot on Curie is about equal to 0-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 33.4,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 10-shot, column Curie / 13B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Simple Colon 10-shot on Babbage is about equal to 0-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 24.1,
+   "unit": "BLEU",
+   "baseline_value": 23.5,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Babbage (6.7B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Simple colon 10-shot, column Babbage / 6.7B",
+   "note": null,
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Master Translator 0-shot on Babbage is the best Babbage score",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 26.5,
+   "unit": "BLEU",
+   "baseline_value": 25.1,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Babbage (6.7B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Master translator 0-shot, column Babbage / 6.7B",
+   "note": "baseline is reproduced OpenAI 10-shot",
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Master Translator 0-shot on Curie",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 32.9,
+   "unit": "BLEU",
+   "baseline_value": 27.9,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Master translator 0-shot, column Curie / 13B",
+   "note": "baseline is reproduced OpenAI 10-shot",
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Reproduced OpenAI 0-shot is far below the Simple Colon 0-shot on Curie",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 18.7,
+   "unit": "BLEU",
+   "baseline_value": 33.3,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Reproduced OpenAI 0-shot, column Curie / 13B",
+   "note": "Reproduced 0-shot 15.9 Babbage / 18.7 Curie vs reported 15.5 / 22.4",
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "Reproduced OpenAI 10-shot on Curie",
+   "kind": "measured",
+   "source": null,
+   "metric": "SacreBLEU",
+   "value": 27.9,
+   "unit": "BLEU",
+   "baseline_value": 38.3,
+   "n": null,
+   "setup": "WMT'14 Fr-En, GPT-3 API engine Curie (13B inferred) via OpenAI API, SacreBLEU",
+   "table": "Table 1, row Reproduced OpenAI 10-shot, column Curie / 13B",
+   "note": "OpenAI 64-shot could not be replicated due to API constraints; 10-shot substituted",
+   "where": "Table 1, p3"
+  },
+  {
+   "claim": "A simple colon prompt with only two language names outperforms the 10-shot OpenAI-style prompt",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fr-En, Babbage and Curie",
+   "quote": null,
+   "table": null,
+   "note": "qualitative; numbers above",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "GPT-3 0-shot baseline was significantly underestimated; most of the worst 0-shot prompts in the GPT-3 paper (esp. QA) could be improved by formatting closer to human natural language",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "asserted, no data beyond the translation task",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "1-shot degradation was due to semantic contamination: the example is read as part of a consecutive narrative, seen across low-shot prompts generally",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "observed by inspecting outputs; no quantification",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "GPT-3 0-shot often scores under half of many-shot tests in the original paper",
+   "kind": "reported",
+   "source": "Brown et al. 2020",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 paper",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Worked metaprompt: 'Let's solve this problem by splitting it into steps.' produced a stepwise answer to f(f(3)) with f(x)=x*x, although the generated output is itself inconsistent (first line gives 27, correct is 81)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "davinci, temperature 0, single example",
+   "quote": null,
+   "table": null,
+   "note": "Fig 3 output states f(f(3)) = 27; true value is 81. Verified by arithmetic, not stated by the paper.",
+   "where": "Fig 3, p7"
+  }
+ ],
+ "limits": [
+  "Quantitative evidence is one task (Fr-En) on two engines, with mean BLEU only and no variance, seeds or significance tests; authors say 'due to budget and time constraints, we explore a single illustrative example'.",
+  "Could not reproduce OpenAI numbers (reproduced 0-shot 15.9/18.7 vs 15.5/22.4; 1-shot 21.8/24.1 vs 31.6/31.4); 64-shot replaced by 10-shot; Babbage/Curie sizes inferred.",
+  "Hypothesis that catastrophic failures (untranslated outputs) explain 0-shot gaps is proposed, not tested (Sec 5.1).",
+  "Metaprompt and serial-reasoning claims are shown with single hand-picked examples, no benchmark scores; authors flag derailment risk and need to evaluate across tasks and models.",
+  "Metaprompt Fig 3 output contains an arithmetic inconsistency.",
+  "Written for GPT-3 (2020 API); later models and instruction tuning change the 0-shot vs few-shot picture. Paper calls itself 'exploratory in nature'."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "prompt programming",
+   "definition": "programming in natural language: crafting prompts for an autoregressive LM as one would for a human writer",
+   "where": "Sec 4"
+  },
+  {
+   "term": "signifier",
+   "definition": "a pattern which keys the intended behavior (task name, compound description or purely contextual such as the colon prompt)",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "direct task specification",
+   "definition": "a 0-shot prompt which tells the model to perform some task that it already knows how to do",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "memetic proxy",
+   "definition": "a memetic concept such as a character or characteristic situation used as a proxy for a complex intention",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "metaprompt",
+   "definition": "seeds encapsulating a more general intention that will unfold into a specific prompt when combined with additional information, such as the task question",
+   "where": "Sec 4.7"
+  },
+  {
+   "term": "task location",
+   "definition": "function of few-shot examples as locating an already learned task in the model's space of learned tasks rather than meta-learning",
+   "where": "Sec 1, abstract"
+  },
+  {
+   "term": "catastrophic failure",
+   "definition": "instance where the task was not even attempted (e.g. continuing in French or outputting blanks)",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "contradicts",
+   "note": "disputes the meta-learning reading of few-shot; reproduces its translation prompts",
+   "quote": "GPT-3 is often not actually learning the task during run time from few-shot examples"
+  },
+  {
+   "work": "WMT'14 findings (Bojar et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fr-En test data",
+   "quote": null
+  },
+  {
+   "work": "A Call for Clarity in Reporting BLEU Scores (SacreBLEU)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "scoring",
+   "quote": null
+  },
+  {
+   "work": "Liu and Gardner, Multi-Step Inference for Reasoning Over Paragraphs",
+   "year": 2020,
+   "arxiv": "2004.02995",
+   "relation": "related",
+   "note": "dynamic example selection",
+   "quote": null
+  },
+  {
+   "work": "Gao, Fisch, Chen, Making Pre-trained Language Models Better Few-shot Learners",
+   "year": 2020,
+   "arxiv": "2012.15723",
+   "relation": "related",
+   "note": "dynamic example selection",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks et al., Measuring massive multitask language understanding",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "related",
+   "note": "closed-ended benchmark where GPT-3 barely exceeds chance in some sections",
+   "quote": null
+  },
+  {
+   "work": "AutoPrompt (Shin et al.)",
+   "year": 2020,
+   "arxiv": "2010.15980",
+   "relation": "related",
+   "note": "gradient-based prompt optimisation",
+   "quote": null
+  },
+  {
+   "work": "Prefix-Tuning (Li and Liang)",
+   "year": 2021,
+   "arxiv": "2101.00190",
+   "relation": "related",
+   "note": "gradient-based prompt optimisation",
+   "quote": null
+  },
+  {
+   "work": "Gwern Branwen, GPT-3 Creative Fiction",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prompt-programming intuitions",
+   "quote": null
+  },
+  {
+   "work": "Zachary Robertson, You Can Probably Amplify GPT3 Directly",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "dialogue that breaks problems into steps",
+   "quote": null
+  },
+  {
+   "work": "KaryoKleptid, Teaching GPT-3 to do a brute force 'for loop'",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "step-by-step math prompting via AI Dungeon",
+   "quote": null
+  },
+  {
+   "work": "Devlin et al., BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "related",
+   "note": "fill-in-the-blank templates suggested for bidirectional models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "BLEU scores for variants of GPT-3 using different prompt formats on WMT'14 Fr-En (SacreBLEU)",
+   "page": 3,
+   "why": "Core evidence: 0-shot colon prompt matches/beats few-shot; 1-shot dips"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The Simple Colon prompt format",
+   "page": 3,
+   "why": "Minimal 0-shot prompt"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The Master Translator prompt format",
+   "page": 3,
+   "why": "Signifier-style prompt"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A generic serializing metaprompt applied to a math problem",
+   "page": 7,
+   "why": "Shows 'Let's solve this problem by splitting it into steps' (precursor of zero-shot CoT)"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "A fill-in-the-blank serializing metaprompt for multiple-choice questions applied to an SAT analogy question",
+   "page": 8,
+   "why": "Alternating prompt and generated text"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF prints no venue (only arXiv:2102.07350v1); venue recorded as preprint though the caller says CHI EA 2021.",
+  "Table 1 text extraction is column-flattened; cell mapping inferred from row order and checked against caption.",
+  "No embedded instructions found."
+ ]
+}

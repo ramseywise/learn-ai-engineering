@@ -1,0 +1,671 @@
+{
+ "schema": 1,
+ "key": "1905.11946",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/tan-2019-efficientnet.pdf",
+ "bib": {
+  "title": "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks",
+  "authors": [
+   "Mingxing Tan",
+   "Quoc V. Le"
+  ],
+  "first_author": "Tan",
+  "year": 2019,
+  "venue": "ICML 2019 (PMLR 97)",
+  "arxiv": "1905.11946",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43906,
+  "chars_total": 43906,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Is there a principled method to scale up ConvNets that achieves better accuracy and efficiency than scaling depth, width or resolution alone?",
+ "hypothesis": "Balancing network width, depth and resolution by scaling each with a constant ratio gives better accuracy and efficiency than scaling a single dimension.",
+ "contributions": [
+  "Empirical study showing depth, width and resolution must be balanced when scaling ConvNets",
+  "Compound scaling method with one coefficient phi",
+  "EfficientNet family (B0-B7): NAS-found B0 baseline scaled by compound scaling, state-of-the-art ImageNet accuracy with far fewer parameters and FLOPS, and strong transfer results"
+ ],
+ "method": {
+  "summary": "Scale depth d=alpha^phi, width w=beta^phi, resolution r=gamma^phi with alpha*beta^2*gamma^2 ~ 2, constants chosen by a small grid search at phi=1 on the small baseline. A multi-objective NAS (accuracy and FLOPS) gives EfficientNet-B0, scaled to B1-B7 and also applied to MobileNets and ResNet-50.",
+  "task": "ImageNet image classification and transfer to 8 image datasets",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (ILSVRC)",
+    "role": "both",
+    "size": null,
+    "split": "25K random training images held out as minival for early stopping; final accuracy on the original validation set; test set (100k images) also submitted",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "AutoAugment"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50,000 train / 10,000 test, 10 classes",
+    "split": "train/test",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "both",
+    "size": "50,000 train / 10,000 test, 100 classes",
+    "split": "train/test",
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "Birdsnap",
+    "role": "both",
+    "size": "47,386 train / 2,443 test, 500 classes",
+    "split": "train/test",
+    "source": "Berg et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "Stanford Cars",
+    "role": "both",
+    "size": "8,144 train / 8,041 test, 196 classes",
+    "split": "train/test",
+    "source": "Krause et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "Flowers",
+    "role": "both",
+    "size": "2,040 train / 6,149 test, 102 classes",
+    "split": "train/test",
+    "source": "Nilsback & Zisserman 2008",
+    "preprocessing": null
+   },
+   {
+    "name": "FGVC Aircraft",
+    "role": "both",
+    "size": "6,667 train / 3,333 test, 100 classes",
+    "split": "train/test",
+    "source": "Maji et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "Oxford-IIIT Pets",
+    "role": "both",
+    "size": "3,680 train / 3,369 test, 37 classes",
+    "split": "train/test",
+    "source": "Parkhi et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "Food-101",
+    "role": "both",
+    "size": "75,750 train / 25,250 test, 101 classes",
+    "split": "train/test",
+    "source": "Bossard et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "EfficientNet-B0",
+    "role": "proposed",
+    "params": "5.3M",
+    "architecture": "MBConv (mobile inverted bottleneck) with squeeze-and-excitation, found by multi-objective NAS in the MnasNet search space; 9 stages (Table 1); FLOPS target 400M",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "alpha_beta_gamma": "1.2, 1.1, 1.15",
+     "input": "224x224",
+     "FLOPs": "0.39B",
+     "NAS objective": "ACC(m) x [FLOPS(m)/T]^w with w=-0.07"
+    }
+   },
+   {
+    "name": "EfficientNet-B1..B7",
+    "role": "proposed",
+    "params": "7.8M, 9.2M, 12M, 19M, 30M, 43M, 66M",
+    "architecture": "B0 scaled with phi (Table 2)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "0.70B, 1.0B, 1.8B, 4.2B, 9.9B, 19B, 37B",
+     "phi per model": null,
+     "input resolution per model": null
+    }
+   },
+   {
+    "name": "MobileNetV1, MobileNetV2, ResNet-50",
+    "role": "base",
+    "params": "ResNet-50 26M",
+    "architecture": "scaled by depth, width, resolution or compound",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPipe, ResNet-152, ResNeXt-101, SENet, NASNet-A, AmoebaNet and others",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": "RMSProp, decay 0.9, momentum 0.9",
+   "lr": "0.256 initial",
+   "lr_schedule": "decays by 0.97 every 2.4 epochs",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-5",
+   "dropout": "linearly increased from 0.2 (B0) to 0.5 (B7)",
+   "regularisation": "stochastic depth with survival probability 0.8; AutoAugment; SiLU (Swish-1) activation; batch norm momentum 0.99",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "early stopping": "on 25K-image minival; early-stopped checkpoint evaluated on the ImageNet validation set",
+    "transfer": "borrows training settings from Kornblith et al. 2019 and Huang et al. 2018: ImageNet-pretrained checkpoints finetuned on new datasets (hyperparameters not given)",
+    "training settings for the MobileNet/ResNet scaling experiments": null
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Latency: average over 20 runs; ImageNet accuracy single-crop, single-model",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "latency": "batch size 1, single core of Intel Xeon CPU E5-2690"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Top-1 / Top-5 accuracy",
+     "definition": "ImageNet validation (and test in Table 8)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "#Params",
+     "definition": "model parameters",
+     "unit": "M",
+     "higher_is_better": false
+    },
+    {
+     "name": "FLOPS",
+     "definition": "multiply-adds as printed, billions",
+     "unit": "B",
+     "higher_is_better": false
+    },
+    {
+     "name": "Latency",
+     "definition": "CPU inference time, batch 1, 20-run average",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ResNet-50/152",
+    "DenseNet",
+    "Inception-v3/v4",
+    "Xception",
+    "ResNeXt-101",
+    "PolyNet",
+    "SENet",
+    "NASNet-A",
+    "AmoebaNet-A/C",
+    "PNASNet",
+    "GPipe",
+    "single-dimension scaling of same baselines"
+   ],
+   "protocol": "Single runs as far as stated; no seeds, variance or significance test reported. Single-crop single-model; ensembles, multi-crop and Instagram-pretrained models omitted."
+  },
+  "availability": {
+   "code": "https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "initial learning rate 0.256 that decays",
+    "where": "Sec 5.2"
+   },
+   {
+    "field": "models.EfficientNet-B0.other.alpha_beta_gamma",
+    "quote": "the best values for EfﬁcientNet-B0 are α = 1.2, β = 1.1, γ = 1.15",
+    "where": "Sec 4 Step 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "EfficientNet-B7 reaches 84.3% ImageNet top-1 with 66M parameters, matching GPipe (557M) with 8.4x fewer parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 84.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet val, single-crop single-model, EfficientNet-B7 vs GPipe",
+   "quote": null,
+   "table": "Table 2, row EfficientNet-B7, column Top-1 Acc.",
+   "note": "GPipe params printed 556M (Fig 1, Table 5) and 557M (Table 2, Sec 2)",
+   "where": "Table 2"
+  },
+  {
+   "claim": "B4 improves on ResNet-50 top-1 by 6.7 points at similar FLOPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 gain",
+   "value": 6.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, EfficientNet-B4 vs ResNet-50 (76.3% to 83.0%)",
+   "quote": "improves the top-1 accuracy from 76.3% to 83.0% (+6.7%) with similar FLOPS",
+   "table": null,
+   "note": "Table 2 prints ResNet-50 76.0% and B4 82.9% (4.2B vs 4.1B FLOPs); the text figures are 76.3/83.0",
+   "where": "Sec 1"
+  },
+  {
+   "claim": "EfficientNet-B3 beats ResNeXt-101 accuracy with 18x fewer FLOPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPS ratio",
+   "value": 18,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet, B3 81.6% 1.8B vs ResNeXt-101 80.9% 32B",
+   "quote": "using 18x fewer FLOPS",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Compound scaling beats single-dimension scaling of ResNet-50 at about 16-17B FLOPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 78.8,
+   "unit": "%",
+   "baseline_value": 78.1,
+   "n": null,
+   "setup": "ImageNet, ResNet-50 baseline 76.0% at 4.1B; depth x4 78.1%, width x2 77.7%, resolution x2 77.5%",
+   "quote": null,
+   "table": "Table 3, row ResNet-50 compound scale, column Top-1 Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Compound scaling of MobileNetV2 reaches 77.4% at 1.3B FLOPS versus 76.8% for depth x4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 77.4,
+   "unit": "%",
+   "baseline_value": 76.8,
+   "n": null,
+   "setup": "ImageNet, MobileNetV2 baseline 72.0% at 0.3B",
+   "quote": null,
+   "table": "Table 3, row MobileNetV2 compound scale, column Top-1 Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Compound scaling of MobileNetV1 reaches 75.6% at 2.3B FLOPS versus 74.2% for width x2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 75.6,
+   "unit": "%",
+   "baseline_value": 74.2,
+   "n": null,
+   "setup": "ImageNet, MobileNetV1 baseline 70.6% at 0.6B",
+   "quote": null,
+   "table": "Table 3, row compound scale (d=1.4, w=1.2, r=1.3), column Top-1 Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Scaling EfficientNet-B0 compound (d=1.4,w=1.2,r=1.3) gives 81.1% at 1.8B FLOPS; single-dimension scaling gives 78.9-79.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 81.1,
+   "unit": "%",
+   "baseline_value": 79.1,
+   "n": null,
+   "setup": "EfficientNet-B0 baseline 77.3% at 0.4B",
+   "quote": null,
+   "table": "Table 7, row Compound Scale (d=1.4, w=1.2, r=1.3), column Top-1 Acc.",
+   "note": "Baseline B0 is 77.3% here, 77.1% in Table 2; text says compound gains up to 2.5% over single-dimension",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Alpha, beta, gamma found by small grid search on B0 at phi=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coefficients",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EfficientNet-B0, phi=1, constraint alpha*beta^2*gamma^2 ~ 2",
+   "quote": "the best values for EfﬁcientNet-B0 are α = 1.2, β = 1.1, γ = 1.15",
+   "table": null,
+   "note": "alpha=1.2, beta=1.1, gamma=1.15; search range and per-model phi not given",
+   "where": "Sec 4"
+  },
+  {
+   "claim": "B1 is 5.7x faster than ResNet-152 and B7 6.1x faster than GPipe on one CPU core.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency speedup",
+   "value": 6.1,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CPU Xeon E5-2690, batch 1, 20-run average; B7 84.4% @ 3.1s vs GPipe 84.3% @ 19.0s",
+   "quote": null,
+   "table": "Table 4, row Speedup, GPipe column",
+   "note": "Table 4 prints B1 78.8% and B7 84.4%; Table 2 prints 79.1% and 84.3%",
+   "where": "Table 4"
+  },
+  {
+   "claim": "EfficientNet transfer: new SOTA on 5 of 8 datasets with 9.6x fewer parameters on average than best reported results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "param reduction",
+   "value": 9.6,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-pretrained, finetuned on 8 datasets (Table 5), vs GPipe/DAT",
+   "quote": "but using 9.6x fewer parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "CIFAR-100 transfer accuracy 91.7% with B7 (64M) vs GPipe 91.3% (556M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.7,
+   "unit": "%",
+   "baseline_value": 91.3,
+   "n": null,
+   "setup": "CIFAR-100 finetune from ImageNet",
+   "quote": null,
+   "table": "Table 5, row CIFAR-100, column Our Model Acc. (best reported)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Against public models, EfficientNet needs 4.7x fewer parameters on average (up to 21x) for better transfer accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "param reduction",
+   "value": 4.7,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 transfer datasets vs NASNet-A, Inception-v4, ResNet-152",
+   "quote": "with 4.7x average",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Test top-1 closely tracks validation top-1; B7 test 84.33 vs val 84.26.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test top-1",
+   "value": 84.33,
+   "unit": "%",
+   "baseline_value": 84.26,
+   "n": null,
+   "setup": "ImageNet 100k test set submitted to the evaluation server",
+   "quote": null,
+   "table": "Table 8, row Test top1, column B7",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Single-dimension scaling saturates near 80% top-1 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "saturation",
+   "value": 80,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Baseline from Table 1 scaled in w, d or r (Fig 3)",
+   "quote": "the accuracy gain quickly saturate after reaching 80%",
+   "table": null,
+   "note": null,
+   "where": "Fig 3"
+  }
+ ],
+ "limits": [
+  "Training hyperparameters for transfer finetuning, batch size, epochs, hardware and compute are not given in this paper.",
+  "alpha, beta, gamma come from a grid search on B0 only; the authors concede better values might come from searching near a large model but this is too costly.",
+  "Compound scaling gains depend on the baseline; the authors say scaling effectiveness depends heavily on the baseline network, so they ran NAS for B0.",
+  "SOTA gains mix architecture, scaling and training settings (AutoAugment, SiLU, stochastic depth); the paper says gains come from all three.",
+  "FLOPS-based (not latency-based) search; latency measured on one CPU only, no GPU/TPU latency.",
+  "No seeds or variance. Single-model single-crop numbers; ImageNet SOTA claim dated (2019).",
+  "The claim that FLOPS scale as d, w^2, r^2 assumes convolutions dominate."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "compound scaling",
+   "definition": "uniformly scale network width, depth, and resolution with a set of fixed scaling coefficients, d=alpha^phi, w=beta^phi, r=gamma^phi",
+   "where": "Sec 1, Eq 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MnasNet: Platform-aware neural architecture search for mobile",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same search space and training settings; optimises FLOPS instead of latency",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (ResNet)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "depth scaling; scaled ResNet-50 in Table 3",
+   "quote": null
+  },
+  {
+   "work": "Wide residual networks",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "width scaling",
+   "quote": null
+  },
+  {
+   "work": "GPipe",
+   "year": 2018,
+   "arxiv": "1808.07233",
+   "relation": "baseline",
+   "note": "resolution scaling, previous 84.3% SOTA with 557M params",
+   "quote": null
+  },
+  {
+   "work": "MobileNets / MobileNetV2",
+   "year": 2018,
+   "arxiv": "1704.04861",
+   "relation": "uses-method",
+   "note": "scaled with compound method; MBConv block",
+   "quote": null
+  },
+  {
+   "work": "Squeeze-and-excitation networks",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SE added to MBConv",
+   "quote": null
+  },
+  {
+   "work": "AutoAugment",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training augmentation",
+   "quote": null
+  },
+  {
+   "work": "Searching for activation functions (SiLU/Swish)",
+   "year": 2018,
+   "arxiv": "1710.05941",
+   "relation": "uses-method",
+   "note": "SiLU activation",
+   "quote": null
+  },
+  {
+   "work": "Deep networks with stochastic depth",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "survival probability 0.8",
+   "quote": null
+  },
+  {
+   "work": "Do better ImageNet models transfer better?",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transfer training settings",
+   "quote": null
+  },
+  {
+   "work": "Domain adaptive transfer learning (DAT)",
+   "year": 2018,
+   "arxiv": "1811.07056",
+   "relation": "baseline",
+   "note": "transfer comparison",
+   "quote": null
+  },
+  {
+   "work": "Neural architecture search with reinforcement learning",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NAS",
+   "quote": null
+  },
+  {
+   "work": "ImageNet large scale visual recognition challenge",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main dataset",
+   "quote": null
+  },
+  {
+   "work": "Exploring the limits of weakly supervised pretraining",
+   "year": 2018,
+   "arxiv": "1805.00932",
+   "relation": "related",
+   "note": "Instagram-pretrained models omitted from comparison",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Model Scaling. (a) baseline; (b)-(d) width, depth, resolution scaling; (e) compound scaling",
+   "page": 2,
+   "why": "Shows the three scaling axes and compound scaling in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Scaling Up a Baseline Model with Different Network Width (w), Depth (d), and Resolution (r) Coefficients",
+   "page": 3,
+   "why": "Shows saturation near 80% for single-axis scaling"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Scaling Network Width for Different Baseline Networks",
+   "page": 3,
+   "why": "Shows width scaling is better when depth and resolution are raised"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Model Size vs. ImageNet Accuracy",
+   "page": 1,
+   "why": "Accuracy vs parameters across ConvNets, the headline result"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "EfficientNet-B0 baseline network",
+   "page": 4,
+   "why": "Full B0 stage table"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Scaling Up EfficientNet-B0 with Different Methods",
+   "page": 7,
+   "why": "Isolates scaling from architecture"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 3, Sec 3.3",
+   "snippet": "depth: d = alpha^phi; width: w = beta^phi; resolution: r = gamma^phi; s.t. alpha * beta^2 * gamma^2 ~ 2, alpha>=1, beta>=1, gamma>=1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of Fig 1 and Fig 5 labels interleaved with table data; figures not inspected visually.",
+  "Internal inconsistencies: B0 77.1% (Table 2) vs 77.3% (Table 7); B1 79.1% vs 78.8% and B7 84.3% vs 84.4% (Table 4); GPipe 556M vs 557M; NASNet-A 82.7% (Fig 1) vs 80.7% (Fig 5); text says d=2.0 and r=2.0 for Fig 4 while legend says r=1.3.",
+  "Per-model phi and input resolutions for B1-B7 are not printed in the text."
+ ]
+}

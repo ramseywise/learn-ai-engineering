@@ -1,0 +1,638 @@
+{
+ "schema": 1,
+ "key": "1505.00468",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/antol-2015-vqa.pdf",
+ "bib": {
+  "title": "VQA: Visual Question Answering",
+  "authors": [
+   "Aishwarya Agrawal",
+   "Jiasen Lu",
+   "Stanislaw Antol",
+   "Margaret Mitchell",
+   "C. Lawrence Zitnick",
+   "Dhruv Batra",
+   "Devi Parikh"
+  ],
+  "first_author": "Agrawal",
+  "year": 2015,
+  "venue": "ICCV 2015 (arXiv v7, 27 Oct 2016 journal-style version)",
+  "arxiv": "1505.00468",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 99454,
+  "chars_total": 99454,
+  "engine": "pymupdf",
+  "skipped": "Appendix VIII answer list and Appendix IX example images skimmed only (lists and figures)."
+ },
+ "type": "benchmark",
+ "question": "Can free-form, open-ended visual question answering serve as an automatically evaluable AI-complete task, and how hard is a large human-written dataset for it?",
+ "hypothesis": "Answering open-ended questions about images needs more detailed image understanding and commonsense reasoning than image captioning, so captions or language alone are not enough.",
+ "contributions": [
+  "Define the free-form open-ended and multiple-choice VQA tasks",
+  "Release a dataset of ~0.25M images, ~0.76M questions, ~10M answers (real COCO images and abstract scenes)",
+  "Analyse questions, answers, commonsense need, and captions vs questions",
+  "Provide baselines and an LSTM+CNN model compared with human performance",
+  "Set up an evaluation server, leaderboard, annual challenge"
+ ],
+ "method": {
+  "summary": "Crowdsourced (AMT) questions written to stump a 'smart robot' for 204,721 COCO images and 50,000 abstract scenes, 3 questions each, 10 human answers each. Baselines and a two-channel model (frozen VGGNet fc7 image features + LSTM question embedding, fused by element-wise product, MLP softmax over top-1000 answers) are scored against humans.",
+  "task": "visual question answering (open-ended and 18-way multiple choice)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "VQA real images (MS COCO)",
+    "role": "both",
+    "size": "204,721 images (123,287 train/val + 81,434 test); 614,163 questions; 7,984,119 answers (incl. no-image answers). Train+val 369,861 questions",
+    "split": "COCO train/val/test; test-dev, test-standard, test-challenge, test-reserve",
+    "source": "MS COCO images; AMT-collected questions/answers",
+    "preprocessing": "Answers lowercased, numbers to digits, punctuation and articles removed before comparison"
+   },
+   {
+    "name": "VQA abstract scenes",
+    "role": "both",
+    "size": "50,000 scenes; 150,000 questions; 1,950,000 answers",
+    "split": "20K/10K/20K train/val/test, no subsplits",
+    "source": "clipart scenes built by AMT workers (20 paperdoll humans, 100+ objects, 31 animals)",
+    "preprocessing": null
+   },
+   {
+    "name": "Filtered VQA train+val (ablation)",
+    "role": "train",
+    "size": "344,600 questions vs 369,861 original",
+    "split": "train+val",
+    "source": "Only answers with subject confidence 'yes'; questions with >=5/10 such answers; 8.77 answers/question",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "deeper LSTM Q + norm I",
+    "role": "proposed",
+    "params": null,
+    "architecture": "VGGNet fc7 (4096-d, l2-normalised, frozen) -> FC+tanh to 1024; 2-layer LSTM (512 cell+hidden per layer, 2048-d) -> FC+tanh to 1024; element-wise multiply; MLP 2 hidden layers x 1000 units, tanh, dropout 0.5; softmax over K=1000",
+    "init_from": "VGGNet ImageNet classification weights, not fine-tuned",
+    "tokenizer": "word level, 300-d embedding via FC+tanh",
+    "vocab": "14770 question words (all seen in train)",
+    "layers": "2 LSTM layers",
+    "hidden": "512 per LSTM state",
+    "heads": null,
+    "context": null,
+    "other": {
+     "answer_classes_K": "1000 (covers 82.67% of train+val answers)"
+    }
+   },
+   {
+    "name": "LSTM Q + I",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1-layer LSTM, 1024-d question embedding (512 cell + 512 hidden), un-normalised I",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 1,
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BoW Q + I",
+    "role": "baseline",
+    "params": null,
+    "architecture": "1,030-d bag of words (top 1,000 words + 30-d first/second/third word) concatenated with I",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "random, prior (yes), per Q-type prior, nearest neighbor",
+    "role": "baseline",
+    "params": null,
+    "architecture": "non-learned/lookup baselines; nearest neighbor uses Skip-Thought question similarity then caffenet fc7 image similarity, k=4",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over K=1000 answers, end-to-end except VGGNet",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 in MLP",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "train_data": "VQA train+val (captions variants: train only, tested on val)",
+    "vocab_truncation_ablation": "words seen >=5 times: 14770 -> 5134; >=11 times: -> 3561"
+   }
+  },
+  "inference": {
+   "decoding": "open-ended: highest-activation of K answers; multiple-choice: highest activation among the 18 candidates",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model, no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "K": "1000 (ablations 500, 2000)",
+    "nearest_neighbor_k": "4, picked on test-dev"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA accuracy",
+     "definition": "min(# humans that provided that answer / 3, 1), averaged over all 10-choose-9 subsets of human annotators; exact string match after normalisation",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "multiple-choice accuracy",
+     "definition": "same metric on the chosen option among 18 candidates (correct, plausible x3, 10 popular, random)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random",
+    "prior (yes)",
+    "per Q-type prior",
+    "nearest neighbor",
+    "BoW Q",
+    "I",
+    "LSTM Q",
+    "human accuracy"
+   ],
+   "protocol": "Machine accuracies on test-dev, final on test-standard via evaluation server; human accuracy on test-standard; caption variants on val. No significance testing or repeated runs for model scores."
+  },
+  "availability": {
+   "code": "CloudCV demo http://cloudcv.org/vqa; annotation UI at https://github.com/tylin/coco-ui",
+   "weights": null,
+   "data": "www.visualqa.org"
+  },
+  "prompts": [
+   {
+    "purpose": "Question-collection instruction shown to AMT workers",
+    "text": "We have built a smart robot. It understands a lot about images. It can recognize and name all the objects, it knows where the objects are, it can recognize the scene (e.g., kitchen, beach), people’s expressions and poses, and properties of objects (e.g., color of objects, their texture). Your task is to stump this smart robot! Ask a question about this scene that this smart robot probably can not answer, but any human can easily answer while looking at the scene in the image.",
+    "where": "Section 3, Questions"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model (deeper LSTM Q + norm I) reaches 58.16% open-ended accuracy on test-standard, far below humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": "58.16",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), trained on train+val, model selected on test-dev, test-standard",
+   "note": null,
+   "where": "5.3",
+   "quote": "standard is 58.16% (open-ended) / 63.09% (multiple-choice)."
+  },
+  {
+   "claim": "Same model reaches 63.09% on multiple-choice (18 candidates) test-standard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy (MC)",
+   "value": "63.09",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-standard, 18 candidate answers",
+   "note": null,
+   "where": "5.3",
+   "quote": "standard is 58.16% (open-ended) / 63.09% (multiple-choice)."
+  },
+  {
+   "claim": "Humans shown question and image agree/are correct 83.30% of the time on open-ended real-image questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy",
+   "value": "83.30",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-standard, humans, question+image, free-form",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Real Question + Image, column All"
+  },
+  {
+   "claim": "Humans shown the question only (no image) get 40.81% overall, 21.22% on 'other' questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy without image",
+   "value": "40.81",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-standard, question only",
+   "note": null,
+   "where": "4.3, Table 1",
+   "quote": "questions, humans are only correct about 21% of the time.",
+   "table": "Table 1, row Real Question, column All; Other 21.22"
+  },
+  {
+   "claim": "Humans shown question and a human caption (no image) get 57.47%, well below with-image 83.30%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human accuracy with caption",
+   "value": "57.47",
+   "unit": "%",
+   "baseline_value": "83.30",
+   "n": null,
+   "setup": "VQA real images (MS COCO), subset of 3K train questions (1K images)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Real Question + Caption*, column All"
+  },
+  {
+   "claim": "Language-only LSTM Q (no image) gets 48.76% open-ended, beating nearest neighbor (42.70%) and far above image-only I (28.13%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": "48.76",
+   "unit": "%",
+   "baseline_value": "28.13",
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-dev, open-ended, LSTM Q",
+   "note": "Language priors carry much of the score.",
+   "where": "Table 2, 5.3",
+   "table": "Table 2, row LSTM Q, column Open-Ended All"
+  },
+  {
+   "claim": "Image-only model scores 28.13% open-ended, below the always-'yes' prior (29.66%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": "28.13",
+   "unit": "%",
+   "baseline_value": "29.66",
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-dev, open-ended, image features only",
+   "note": null,
+   "where": "5.3",
+   "quote": "28.13% / multiple-choice: 30.53%)"
+  },
+  {
+   "claim": "Always answering 'yes' gives 29.66% open-ended.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA accuracy",
+   "value": "29.66",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-dev, prior ('yes')",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row prior (\"yes\"), column Open-Ended All"
+  },
+  {
+   "claim": "Bias toward 'yes': 58.83% of yes/no answers are 'yes' on real images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of yes answers",
+   "value": "58.83",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), train set yes/no questions",
+   "note": null,
+   "where": "4.2",
+   "quote": "58.83% and 55.86%"
+  },
+  {
+   "claim": "89.32% of answers on real images are a single word, so BLEU/ROUGE degenerate to exact match.",
+   "kind": "measured",
+   "source": null,
+   "metric": "single-word answer share",
+   "value": "89.32",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), all answers",
+   "note": null,
+   "where": "3",
+   "quote": "most answers (89.32%) are single word;"
+  },
+  {
+   "claim": "Model performs like a 4.74 year old child by the age-annotation estimate (average required age 8.98).",
+   "kind": "measured",
+   "source": null,
+   "metric": "estimated age",
+   "value": "4.74",
+   "unit": "years",
+   "baseline_value": "8.98",
+   "n": null,
+   "setup": "VQA real images (MS COCO), val questions with age annotations, accuracy-weighted average of perceived age; perceived by MTurk workers, not controlled",
+   "note": null,
+   "where": "5.3, App V",
+   "quote": "a 4.74 year old child!"
+  },
+  {
+   "claim": "Model's estimated degree of commonsense is 17.35% vs 31.23% required on same questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "degree of commonsense",
+   "value": "17.35",
+   "unit": "%",
+   "baseline_value": "31.23",
+   "n": null,
+   "setup": "VQA real images (MS COCO), val questions with commonsense annotations",
+   "note": null,
+   "where": "5.3",
+   "quote": "of 17.35%. The average degree of commonsense required on"
+  },
+  {
+   "claim": "Model accuracy falls from 61.07% on 3-4 age questions to 47.83% on 18+.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy by perceived age",
+   "value": "47.83",
+   "unit": "%",
+   "baseline_value": "61.07",
+   "n": null,
+   "setup": "VQA real images (MS COCO), val, best model, 18+ age group",
+   "note": null,
+   "where": "5.3",
+   "quote": "to 47.83% at 18+ age group)"
+  },
+  {
+   "claim": "For 47.43% of questions, 3 or more of 10 subjects said commonsense is needed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "commonsense share",
+   "value": "47.43",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), 10K-question subset of trainval",
+   "note": null,
+   "where": "4.3",
+   "quote": "47.43% of questions 3 or more subjects voted"
+  },
+  {
+   "claim": "Element-wise multiplication fusion beats concatenation by 0.95% open-ended.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "0.95",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-dev ablation of best model",
+   "note": null,
+   "where": "5.3, Table 4",
+   "quote": "that element-wise fusion performs better by 0.95% for"
+  },
+  {
+   "claim": "Training on a confidence-filtered dataset (344,600 questions) lowers accuracy 1.13% open-ended.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy change",
+   "value": "-1.13",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), test-dev, filtered train+val",
+   "note": null,
+   "where": "5.3, Table 4",
+   "quote": "1.13% for open-ended task and by 1.88% for multiple-"
+  },
+  {
+   "claim": "Top K=1000 answers cover 82.67% of train+val answers, capping a classifier's ceiling.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer coverage",
+   "value": "82.67",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), train+val",
+   "note": null,
+   "where": "5.2",
+   "quote": "covers 82.67% of the train+val answers."
+  },
+  {
+   "claim": "Human multiple-choice accuracy on real images is 88.53% (average) and 91.54% (majority vote); open-ended inter-human agreement 80.62% on same 3000 questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human MC accuracy",
+   "value": "88.53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VQA real images (MS COCO), random 3000 questions, three subjects",
+   "note": "Table 1 gives 83.30 for open-ended agreement on test-standard; Table 6 gives 80.62 on a 3000-question subset.",
+   "where": "Table 6",
+   "table": "Table 6, row Real MC average, column All"
+  },
+  {
+   "claim": "Dataset has about 0.76M questions and about 10M answers over about 0.25M images (real plus abstract).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "0.76M",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "204,721 COCO images + 50,000 abstract scenes, 3 questions per image, 10 answers per question",
+   "note": null,
+   "where": "Abstract",
+   "quote": "We provide a dataset containing ∼0.25M images, ∼0.76M questions, and ∼10M answers"
+  }
+ ],
+ "limits": [
+  "Training hyperparameters (optimizer, learning rate, batch size, epochs, hardware) are not stated.",
+  "Language-only models reach 48.76% open-ended, so the benchmark rewards question priors; authors cite Zhang et al. (Yin and Yang) on biases.",
+  "Exact-string-match accuracy ignores synonyms and plurals, depressing 'other' agreement (<76%).",
+  "Age and commonsense estimates reflect MTurk perception, not true requirements.",
+  "Answers are mostly one word (89.32%), so the task is short-answer only.",
+  "Dated: models are 2015-era VGG+LSTM; scores superseded."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "VQA accuracy",
+   "definition": "an answer is deemed 100% accurate if at least 3 workers provided that exact answer",
+   "where": "Section 3"
+  },
+  {
+   "term": "test-dev / test-standard / test-reserve / test-challenge",
+   "definition": "test-dev for debugging with unlimited submissions; test-standard the default for reporting; test-reserve guards against overfitting; test-challenge decides winners",
+   "where": "Section 3 Splits"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Microsoft COCO: Common Objects in Context",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of real images and captions",
+   "quote": null
+  },
+  {
+   "work": "Very Deep Convolutional Networks for Large-Scale Image Recognition (VGGNet)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "frozen fc7 image features",
+   "quote": null
+  },
+  {
+   "work": "Ask your neurons (Malinowski et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent LSTM+CNN VQA; this paper uses late fusion instead",
+   "quote": null
+  },
+  {
+   "work": "A Visual Turing Test for Computer Vision Systems (Geman et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier small template-based VQA",
+   "quote": null
+  },
+  {
+   "work": "Malinowski and Fritz, multi-world approach",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closed-world VQA, 1,449 images",
+   "quote": null
+  },
+  {
+   "work": "Ren, Kiros, Zemel image QA",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "auto-generated questions from COCO captions",
+   "quote": null
+  },
+  {
+   "work": "Yin and Yang: Balancing and answering binary visual questions (Zhang et al.)",
+   "year": 2015,
+   "arxiv": "1511.05099",
+   "relation": "related",
+   "note": "cited for biases in VQA questions",
+   "quote": null
+  },
+  {
+   "work": "Skip-thought vectors",
+   "year": 2015,
+   "arxiv": "1506.06726",
+   "relation": "uses-method",
+   "note": "question similarity for nearest-neighbor baseline",
+   "quote": null
+  },
+  {
+   "work": "Bringing Semantics Into Focus Using Visual Abstraction / Zero-Shot Learning via Visual Abstraction",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "abstract scene dataset origins",
+   "quote": null
+  },
+  {
+   "work": "Word2Vec (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "similarity for MC baselines; rejected as metric",
+   "quote": null
+  },
+  {
+   "work": "VizWiz (Bigham et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "visually impaired users' questions motivate task",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of free-form, open-ended questions collected for images via Amazon Mechanical Turk.",
+   "page": 1,
+   "why": "shows task and commonsense demands at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Examples of questions, answers given when looking at the image, and answers given when not looking at the image.",
+   "page": 3,
+   "why": "shows 10-answer disagreement and with/without image difference"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Our best performing model (deeper LSTM Q + norm I)...",
+   "page": 9,
+   "why": "architecture diagram of the VGG+LSTM late-fusion baseline"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Accuracy of our methods for the open-ended and multiple-choice tasks on VQA test-dev for real images.",
+   "page": 9,
+   "why": "language-only vs image-only vs combined ablation of modality contribution"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Test-standard accuracy of human subjects without image, with caption, with image.",
+   "page": 7,
+   "why": "establishes that the image is needed and captions are insufficient"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Pr (system is correct | age of question) on the VQA validation set.",
+   "page": 11,
+   "why": "accuracy declines with perceived age"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3",
+   "snippet": "accuracy = min(# humans that provided that answer / 3, 1)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figures and tables are text-extracted with column values on separate lines; table cells were read by position."
+ ]
+}

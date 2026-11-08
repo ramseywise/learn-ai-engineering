@@ -18,9 +18,10 @@ paper into citations and findings in the notes.
 ## Where commands run
 
 Run from the repo root: the pipeline (`scripts/papers/`), the PDFs under `<home>/sources/` and the notes this skill
-edits are all here. Lessons are also authored in the sibling librarian repo (`../librarian/data/courses/`). Whether
-an edit made here has to be mirrored there is the user's call: ask once per session rather than assuming, and list
-the edit in the report.
+edits are all here. This repo is the source of the course; the sibling librarian repo (`../librarian/data/courses/`)
+is its mirror. At close-out, once the edits are committed here, mirror them:
+`(cd ../librarian && uv run librarian courses import --subject <course>)`, and list in the report anything it
+reports as `kept_local_edit` or `practice_folder_not_mirrored`.
 
 The notes are the product. A paper earns a place by changing, sharpening, or evidencing a
 claim a note makes. It never earns a "Recent papers" list bolted onto the end.

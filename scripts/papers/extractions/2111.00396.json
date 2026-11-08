@@ -1,0 +1,704 @@
+{
+ "schema": 1,
+ "key": "2111.00396",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gu-2021-efficiently-modeling-long-sequences-structured.pdf",
+ "bib": {
+  "title": "Efficiently Modeling Long Sequences with Structured State Spaces",
+  "authors": [
+   "Albert Gu",
+   "Karan Goel",
+   "Christopher Ré"
+  ],
+  "first_author": "Gu",
+  "year": 2022,
+  "venue": "ICLR 2022 (arXiv v3, Aug 2022)",
+  "arxiv": "2111.00396",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 94030,
+  "chars_total": 94030,
+  "engine": "pymupdf",
+  "skipped": "Appendix B/C proofs (HiPPO diagonalisation, NPLR representations, Cauchy kernel propositions) only skimmed; math, no experimental settings. Figures not viewed, captions only."
+ },
+ "type": "empirical",
+ "question": "Can a state space model with HiPPO state matrices be computed efficiently enough to serve as a general long-range sequence model?",
+ "hypothesis": "Reparameterising A as normal plus low-rank makes the SSM stably and near-linearly computable while keeping the long-range-dependency strengths of HiPPO.",
+ "contributions": [
+  "S4 parameterization: HiPPO matrix as normal plus low-rank (NPLR), diagonalised stably, SSM kernel computed via truncated generating function, Woodbury identity and a Cauchy kernel",
+  "S4 up to 30x faster with 400x less memory than the LSSL",
+  "SoTA on all LRA tasks including Path-X; SC10 raw speech",
+  "Competitive generative modeling on CIFAR-10 and WikiText-103 with 60x faster generation",
+  "Ablations showing HiPPO initialization, not NPLR form, drives accuracy"
+ ],
+ "method": {
+  "summary": "S4 layers (H independent SSMs with 5N trainable params each, N-state, plus position-wise linear mixing and nonlinearity) are stacked as a deep sequence model. Training uses the convolutional view computed by FFT with the S4 kernel algorithm; inference uses the discretised (bilinear) recurrence with constant per-step cost. Evaluated on LRA, raw speech, pixel-level image classification, CIFAR-10 density, WikiText-103 LM and Informer forecasting benchmarks.",
+  "task": "sequence modeling: classification, density estimation, language modeling, forecasting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Long Range Arena (ListOps, Text, Retrieval, Image, Pathfinder, Path-X)",
+    "role": "both",
+    "size": "6 tasks, lengths 1K-16K steps",
+    "split": null,
+    "source": "Tay et al. 2021",
+    "preprocessing": "mean pooling along length after last layer"
+   },
+   {
+    "name": "Speech Commands SC10 (10-class subset)",
+    "role": "both",
+    "size": "raw length 16000; MFCC length 161",
+    "split": null,
+    "source": "Warden 2018",
+    "preprocessing": "raw signal, no MFCC for the Raw setting"
+   },
+   {
+    "name": "Sequential MNIST / permuted MNIST / CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "flattened pixel sequences"
+   },
+   {
+    "name": "CIFAR-10 density estimation",
+    "role": "both",
+    "size": "sequence of 3072 RGB subpixels",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Merity et al.",
+    "preprocessing": "adaptive embedding cutoffs 20000, 40000, 200000; sliding non-overlapping window evaluation as in Baevski and Auli Table 5"
+   },
+   {
+    "name": "Informer forecasting (ETTh1, ETTh2, ETTm1, Weather, ECL)",
+    "role": "both",
+    "size": "50 settings",
+    "split": null,
+    "source": "Zhou et al. 2021",
+    "preprocessing": "context concatenated with F masks as one sequence of length C+F"
+   }
+  ],
+  "models": [
+   {
+    "name": "S4 (LRA)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "deep S4 layers, state N=64",
+    "init_from": "HiPPO matrix (eq 2)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4-6 (Table 11)",
+    "hidden": "64-512 (Table 11)",
+    "heads": null,
+    "context": "1K-16K",
+    "other": {
+     "lr_on_ssm_params": "max 0.001 for Lambda,P,Q,B,C,delta"
+    }
+   },
+   {
+    "name": "S4 (WikiText-103)",
+    "role": "proposed",
+    "params": "249M",
+    "architecture": "Transformer backbone (Baevski and Auli) with attention replaced by S4; 16 blocks, two S4 layers per block, GLU after S4 linear layer, pre-norm LayerNorm",
+    "init_from": "HiPPO",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16 blocks",
+    "hidden": "1024",
+    "heads": null,
+    "context": "8192",
+    "other": {}
+   },
+   {
+    "name": "S4 base / large (CIFAR-10 density)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "UNet-style, alternating S4 and FF layers (FF dim 2x hidden), downsampling 3,4,4",
+    "init_from": "HiPPO",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "B=8 (base), B=16 (large)",
+    "hidden": "128 start (base), 192 start (large)",
+    "heads": null,
+    "context": "3072",
+    "other": {}
+   },
+   {
+    "name": "S4 (SC10 Raw)",
+    "role": "proposed",
+    "params": "0.3M",
+    "architecture": "S4",
+    "init_from": "HiPPO",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "128",
+    "heads": null,
+    "context": "16000",
+    "other": {}
+   },
+   {
+    "name": "Transformer (WikiText-103)",
+    "role": "baseline",
+    "params": "247M",
+    "architecture": "Baevski and Auli adaptive-input Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSSL, Transformer variants, Performer, Linear Trans., CKConv, WaveGAN-D, Informer, ResNet-18 etc.",
+    "role": "baseline",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "WaveGAN-D params": "26.3M",
+     "ResNet-18 params": "11.0M vs S4 7.9M"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classification cross-entropy (LRA, SC, sCIFAR); 256-way softmax NLL (CIFAR-10 density); next-token LM (WikiText-103); forecasting MSE",
+   "optimizer": "AdamW (LRA, sCIFAR, WikiText-103); LAMB lr 0.005 (CIFAR density)",
+   "lr": "LRA/other: Table 11 per task (0.0005-0.01); WikiText-103 0.0005; SSM params max 0.001",
+   "lr_schedule": "LRA: constant with decay on validation plateau; WikiText-103: single cosine cycle, max 800000 steps",
+   "warmup": null,
+   "batch_size": "Table 11 per task (20-100); WikiText-103 1 per GPU on 8 GPUs",
+   "steps": "WikiText-103 800000 (max)",
+   "epochs": "Table 11 per task (20-200); sCIFAR up to 200",
+   "tokens": null,
+   "seq_len": "WikiText-103 context 8192; Path-X 16384",
+   "precision": null,
+   "weight_decay": "Table 11 per task (0-0.01); WikiText-103 0.1",
+   "dropout": "Table 11 per task (0-0.25); WikiText-103 0.25; CIFAR density base 0, large 0.1",
+   "regularisation": "no gradient clipping on WikiText-103; mild augmentation (flips, random crops) only in the augmented sCIFAR run",
+   "hardware": "single GPU for LRA/SC (A100 40GB for Path-X); 8x A100 for WikiText-103",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "table_11": "ListOps depth6 H128 BN lr0.01 bs100 50ep wd0.01; Text 4/64 BN lr0.001 bs50 20ep; Retrieval 6/256 BN lr0.002 bs64 20ep; Image 6/512 LN dropout0.2 lr0.004 bs50 200ep wd0.01; Pathfinder 6/256 BN dropout0.1 lr0.004 bs100 200ep; Path-X 6/256 BN lr0.0005 bs32 100ep; CIFAR-10 6/1024 LN dropout0.25 lr0.01 bs50 200ep wd0.01; SC MFCC 4/256 LN dropout0.2 lr0.01 bs100 50ep; SC Raw 6/128 BN dropout0.1 lr0.01 bs20 150ep",
+    "ablation_setup": "<=100K params, plateau LR scheduler, no regularisation (0.1 dropout in Fig 4b)",
+    "note": "many LRA runs trained longer than needed (Image reaches SoTA in 1 epoch)"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive generation via recurrent mode of S4 (constant memory and compute per step)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "discretisation": "bilinear method, step size delta; 0.5x frequency changes delta without retraining"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "classification accuracy on test set",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "bits per dim",
+     "definition": "CIFAR-10 autoregressive density",
+     "unit": "bpd",
+     "higher_is_better": false
+    },
+    {
+     "name": "perplexity",
+     "definition": "WikiText-103 test, sliding non-overlapping windows",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "throughput",
+     "definition": "images/s or tokens/s at generation, batch maximised to memory on one A100",
+     "unit": "images/s, tokens/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "MSE/MAE",
+     "definition": "Informer forecasting protocol",
+     "unit": "MSE, MAE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "LSSL",
+    "Transformer variants from LRA (11)",
+    "Performer",
+    "Linear Transformer",
+    "CKConv",
+    "WaveGAN-D",
+    "LipschitzRNN",
+    "ExpRNN",
+    "PixelCNN++",
+    "Image Transformer",
+    "PixelSNAIL",
+    "Sparse Transformer",
+    "AWD-QRNN",
+    "TrellisNet",
+    "Dynamic/TaLK Conv",
+    "ResNet-18",
+    "Informer",
+    "LogTrans",
+    "Reformer",
+    "LSTMa",
+    "DeepAR",
+    "ARIMA",
+    "Prophet"
+   ],
+   "protocol": "Single reported numbers; no seeds, error bars or significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/HazyResearch/state-spaces",
+   "weights": "WikiText-103 checkpoint in the public repo (App D.5)",
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": null,
+    "where": "Table 11"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "S4 averages 80.48% on Long Range Arena (original submission), versus under 60% for every baseline; the updated figure in Table 4 is 86.09.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LRA average accuracy",
+   "value": "80.48",
+   "unit": "% avg accuracy",
+   "baseline_value": "59.37 (Luna-256)",
+   "n": null,
+   "setup": "LRA, 6 tasks, lengths 1K-16K, single GPU per task, S4 state size N=64, hyperparameters in Table 11",
+   "note": "Table 4 prints the updated 86.09 (S4 updated) and Table 10 lists S4 (original) 80.48; Appendix D.5 says updated results come from Gu et al. 2022 [19,20] with minor hyperparameter changes.",
+   "where": "Sec 4.2, Table 4, Table 10",
+   "quote": "averaging 80.48% compared to less than 60% for every baseline"
+  },
+  {
+   "claim": "S4 is the first model to solve LRA Path-X (length 16384), with 88% versus 50% chance for all prior work.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Path-X accuracy",
+   "value": "88",
+   "unit": "% accuracy",
+   "baseline_value": "50 (random guessing)",
+   "n": null,
+   "setup": "LRA Path-X, 128x128=16384 pixels flattened; original hyperparameters (Table 11: depth 6, H=256, LR 0.0005, batch 32, 100 epochs)",
+   "note": "Updated S4 gets 96.35 on Path-X (Table 4); original 88.10 (Table 10).",
+   "where": "Sec 1, 4.2",
+   "quote": "achieving 88% accuracy compared to"
+  },
+  {
+   "claim": "On WikiText-103, S4 replacing attention in a Transformer backbone reaches 20.95 test perplexity versus 20.51 for the Transformer, 249M vs 247M params.",
+   "kind": "measured",
+   "source": null,
+   "metric": "WikiText-103 test perplexity",
+   "value": "20.95",
+   "unit": "test perplexity",
+   "baseline_value": "20.51 (Transformer, 247M)",
+   "n": null,
+   "setup": "WikiText-103, 16 blocks of two S4 layers + FF, feature dim 1024, 8xA100, batch 1/GPU, context 8192, 800000 steps, AdamW lr 5e-4, dropout 0.25",
+   "note": "Original version: batch 8, context 1024, test ppl 21.28 (Appendix D.5). Text says 'within 0.8 ppl'.",
+   "where": "Table 8, Sec 4.3, App D.3.2",
+   "table": "Table 8, row S4, column Test ppl."
+  },
+  {
+   "claim": "Attention-free SoTA on WikiText-103, beating the next best attention-free model by over 2 perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity gap to best prior attention-free",
+   "value": "2",
+   "unit": "ppl margin",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103 test; next best TaLK Conv. 23.3 ppl, 240M params",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "setting SoTA for attention-free models by over\n2 ppl"
+  },
+  {
+   "claim": "S4 generates tokens/pixels about 60x faster than a vanilla Transformer by switching to recurrent mode (constant memory and compute per step).",
+   "kind": "measured",
+   "source": null,
+   "metric": "generation throughput",
+   "value": "60",
+   "unit": "x throughput",
+   "baseline_value": "1x (0.8K tokens/s Transformer; S4 48K tokens/s)",
+   "n": null,
+   "setup": "WikiText-103 (tokens/s, Table 8) and CIFAR-10 (images/s, Table 7), single A100, batch maximised to fit memory; Transformer timing excludes embedding/softmax layers so is slightly favourable to the baseline",
+   "note": null,
+   "where": "Sec 4.3, App D.3.3",
+   "quote": "with S4 around 60× faster than a vanilla Transformer"
+  },
+  {
+   "claim": "S4 reaches 91.13% on sequential CIFAR (sCIFAR) with no 2-D bias, versus 62.2 for a Transformer and 84.65 for LSSL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sCIFAR accuracy",
+   "value": "91.13",
+   "unit": "% accuracy",
+   "baseline_value": "84.65 (LSSL)",
+   "n": null,
+   "setup": "Pixel-level 1-D CIFAR-10, depth 6, H=1024, LN, dropout 0.25, LR 0.01, batch 50, 200 epochs, AdamW, no augmentation",
+   "note": "Text prints 91%/91.12% for no augmentation (Sec 4.3), Table 6 prints 91.13; 93.16% with mild augmentation (flips, random crops).",
+   "where": "Table 6, Sec 4.3",
+   "table": "Table 6, row S4, column sCIFAR"
+  },
+  {
+   "claim": "S4 (large) gets 2.85 bits per dim on CIFAR-10 density estimation with no 2-D inductive bias.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIFAR-10 bpd",
+   "value": "2.85",
+   "unit": "bits per dim",
+   "baseline_value": "3.47 (Transformer)",
+   "n": null,
+   "setup": "3072 RGB subpixels flattened; UNet-style S4 blocks, base B=8 H=128, large B=16 H=192, LAMB lr 0.005, 256-way softmax loss",
+   "note": null,
+   "where": "Sec 1, Table 7",
+   "quote": "competitive with the best\nautoregressive models (2.85 bits per dim)"
+  },
+  {
+   "claim": "S4 is up to 30x faster with 400x less memory than the LSSL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed ratio vs LSSL",
+   "value": "30",
+   "unit": "x speed (400x memory)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single forward+backward pass of one layer, single A100; Table 2 gives 29.6x speed and 392x memory at H=512 (LSSL 140.7 ms / 13140 MB vs S4 4.75 ms / 33.5 MB); S4 N is N/4 of LSSL to parameter-match",
+   "note": null,
+   "where": "Sec 1, Table 2, App D.1",
+   "quote": "S4 is up to 30× faster with 400× less memory\nusage"
+  },
+  {
+   "claim": "Against efficient Transformers at length 4096 S4 is 5.19x faster than a Transformer and uses 0.091x its memory; at length 1024, 1.58x and 0.43x.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training speed",
+   "value": "5.19",
+   "unit": "x speed vs Transformer",
+   "baseline_value": "1x",
+   "n": null,
+   "setup": "Parameter-matched following Tay et al.: 4 layers, hidden 256, 4 heads, qkv dim 128, batch 32, ~600k params; S4 N=256",
+   "note": "Authors caution relative orderings vary with hyperparameter settings.",
+   "where": "Table 3, App D.1",
+   "table": "Table 3, row S4, columns Length 4096 Speed and Mem."
+  },
+  {
+   "claim": "On raw speech classification (length 16000, SC10) S4 reaches 98.32% and beats all MFCC baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SC10 raw accuracy",
+   "value": "98.32",
+   "unit": "% accuracy",
+   "baseline_value": "96.25 (WaveGAN-D, 26.3M vs 0.3M params)",
+   "n": null,
+   "setup": "SC10 10-class subset of Speech Commands, raw 16000-sample signals; depth 6, H=128, BN, dropout 0.1, LR 0.01, batch 20, 150 epochs",
+   "note": "Appendix D.5 says to cite Table 11 of Gu et al. 2022 [19] (full 35-class SC) instead.",
+   "where": "Sec 4.2, Table 5",
+   "quote": "S4 achieves 98.3% accuracy"
+  },
+  {
+   "claim": "Without retraining, S4 keeps 96.3% accuracy when test sampling frequency is halved, by changing the step size delta.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SC10 accuracy at 0.5x frequency",
+   "value": "96.3",
+   "unit": "% accuracy",
+   "baseline_value": "65.96 (CKConv)",
+   "n": null,
+   "setup": "SC10 raw, test-time frequency change only",
+   "note": null,
+   "where": "Sec 4.3, Table 5",
+   "quote": "S4 achieves 96.3% accuracy at 0.5× the frequency"
+  },
+  {
+   "claim": "S4 halves the test error of specialized Speech CNNs on length-16000 speech (1.7% error); RNN and Transformer baselines fail to learn.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speech test error",
+   "value": "1.7",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SC10 raw, length 16000",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "S4 halves\nthe test error (1.7%) of specialized Speech CNNs"
+  },
+  {
+   "claim": "Treating forecasting as masked sequence-to-sequence, S4 beats Informer and baselines on 40 of 50 settings across 5 forecasting tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "settings won",
+   "value": "40",
+   "unit": "of 50 settings",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Informer benchmark (ETTh1, ETTh2, ETTm1, Weather, ECL), univariate and multivariate; context concatenated with F mask tokens, last F outputs used",
+   "note": "Table 13 count row: S4 22 univariate wins; Table 14: 18 multivariate.",
+   "where": "Sec 4.3, App D.3.5",
+   "quote": "outperforms\nthe Informer and other baselines on 40/50 settings across 5 forecasting tasks"
+  },
+  {
+   "claim": "Weather 30-day forecast: S4 cuts MSE by 37% versus Informer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "37",
+   "unit": "% MSE reduction",
+   "baseline_value": "0.359 (Informer MSE)",
+   "n": null,
+   "setup": "Univariate Weather, horizon 720: S4 0.245 MSE vs Informer 0.359 (Table 9)",
+   "note": null,
+   "where": "Sec 4.3, Table 9",
+   "quote": "reducing MSE by 37% when forecasting 30 days of weather data"
+  },
+  {
+   "claim": "Ablation: full S4 with HiPPO initialization reaches 84.27% test accuracy on sequential CIFAR-10 with 100K parameters and 0.1 dropout; random inits trail by over 15% validation accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sCIFAR accuracy at <=100K params",
+   "value": "84.27",
+   "unit": "% test accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sequential CIFAR-10, plateau LR scheduler, dropout 0.1; random NPLR matrices still perform poorly, so gains come from HiPPO init, not the NPLR form",
+   "note": null,
+   "where": "Sec 4.4, Fig 3-4",
+   "quote": "achieves 84.27% test accuracy with just 100K parameters"
+  },
+  {
+   "claim": "S4 matches a larger ResNet-18 on sequential CIFAR (7.9M vs 11.0M params): 91.12% vs 89.46% without augmentation, 93.16% vs 95.62% with it; swapping BatchNorm for LayerNorm gives 90.46% vs 79.52%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sCIFAR accuracy",
+   "value": "91.12",
+   "unit": "% accuracy",
+   "baseline_value": "89.46 (ResNet-18)",
+   "n": null,
+   "setup": "sCIFAR, S4 7.9M params vs ResNet-18 11.0M",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "(91.12% vs. 89.46%)"
+  },
+  {
+   "claim": "S4 has O~(N+L) computation and O(N+L) memory for the convolution kernel, and O(N) per recurrence step.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorems 2 and 3; Normal Plus Low-Rank A reduced to Cauchy kernel via Woodbury and FFT; current implementation uses naive O(NL) Cauchy via pykeops, not the fast algorithm",
+   "note": null,
+   "where": "Sec 1, 3.3, App A",
+   "quote": "This results in ˜O(N + L) computation and O(N + L) memory usage"
+  },
+  {
+   "claim": "HiPPO matrix change alone lifts a plain SSM from 60% to 98% on sequential MNIST (reported from the LSSL work).",
+   "kind": "reported",
+   "source": "Gu et al. 2021 (LSSL)",
+   "metric": "sMNIST",
+   "value": "98",
+   "unit": "% accuracy",
+   "baseline_value": "60",
+   "n": null,
+   "setup": "LSSL, A random vs HiPPO matrix",
+   "note": null,
+   "where": "Sec 2.2",
+   "quote": "improved its performance on the sequential MNIST benchmark from 60% to 98%"
+  }
+ ],
+ "limits": [
+  "Authors concede a perplexity gap to Transformers on WikiText-103 (20.95 vs 20.51) and say S4 may not suit all data types.",
+  "Implementation uses the naive O(NL) Cauchy kernel via pykeops; the asymptotically fast stable algorithms are not implemented on GPU, so near-linear complexity is theoretical.",
+  "The original S4 NPLR parameterization can be numerically unstable with eigenvalues in the right half-plane; follow-up changes Lambda-PQ* to Lambda-PP*.",
+  "No seeds, variance or significance reported; baselines for speech were swept by the authors with limited grids and several baselines could not train on one GPU.",
+  "LRA and SC results have since been updated; the paper says to cite Gu et al. 2022 for SC (full 35-class) and the updated LRA numbers.",
+  "WikiText-103 scale is 250M params; no large-scale pretraining or in-context behaviour tested.",
+  "Transformer generation baseline timing excludes embedding and softmax layers."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HiPPO matrix",
+   "definition": "a class of matrices A that when incorporated into (1), allows the state x(t) to memorize the history of the input u(t)",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "NPLR",
+   "definition": "Normal Plus Low-Rank representation A = V Lambda V* - P Q^T",
+   "where": "Theorem 1"
+  },
+  {
+   "term": "SSM convolution kernel K",
+   "definition": "K = (CB, CAB, ..., CA^(L-1)B), so y = K * u",
+   "where": "Sec 2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "HiPPO: Recurrent memory with optimal polynomial projections",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "supplies the A matrix",
+   "quote": null
+  },
+  {
+   "work": "Linear State Space Layer (LSSL), Gu et al.",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "proof of concept deep SSM; S4 fixes its compute and memory",
+   "quote": null
+  },
+  {
+   "work": "Legendre memory units, Voelker et al.",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "original non-trainable SSM",
+   "quote": null
+  },
+  {
+   "work": "Long Range Arena, Tay et al.",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "Transformers are RNNs (Linear Transformer), Katharopoulos et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "efficient Transformer and fast generation baseline",
+   "quote": null
+  },
+  {
+   "work": "Performer, Choromanski et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Adaptive input representations, Baevski and Auli",
+   "year": 2018,
+   "arxiv": "1809.10853",
+   "relation": "uses-method",
+   "note": "Transformer backbone and baseline for WikiText-103",
+   "quote": null
+  },
+  {
+   "work": "Informer, Zhou et al.",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "forecasting",
+   "quote": null
+  },
+  {
+   "work": "CKConv, Romero et al.",
+   "year": 2021,
+   "arxiv": "2102.02611",
+   "relation": "baseline",
+   "note": "speech and sCIFAR",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need, Vaswani et al.",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Transformer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "State Space Models (SSM) parameterized by matrices A, B, C, D map an input signal u(t) to output y(t) through a latent state x(t). ... SSMs can be computed either as a recurrence or convolution.",
+   "page": 2,
+   "why": "One picture of continuous, recurrent and convolutional views, the core idea for the note."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Complexity of various sequence models in terms of sequence length (L), batch size (B), and hidden dimension (H)",
+   "page": 7,
+   "why": "Compares convolution, recurrence, attention and S4 on training cost, space, parallelism and inference cost."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Visualizations of a trained S4 model on LRA Path-X. SSM convolution kernels K in R^16384 reshaped into 128x128 image.",
+   "page": 8,
+   "why": "Shows learned global kernels."
+  },
+  {
+   "figure": "Table 8",
+   "caption": "WikiText-103 language modeling: S4 approaches the performance of Transformers with much faster generation.",
+   "page": 10,
+   "why": "Direct attention vs SSM LM comparison with throughput."
+  }
+ ],
+ "code": [
+  {
+   "where": "eq 1",
+   "snippet": "x'(t) = Ax(t) + Bu(t);  y(t) = Cx(t) + Du(t)",
+   "verbatim": true
+  },
+  {
+   "where": "eq 3",
+   "snippet": "x_k = A x_{k-1} + B u_k;  y_k = C x_k; A = (I - delta/2 A)^-1 (I + delta/2 A); B = (I - delta/2 A)^-1 delta B",
+   "verbatim": false
+  },
+  {
+   "where": "eq 5",
+   "snippet": "K = (CB, CAB, ..., CA^(L-1)B); y = K * u",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Math symbols (bars, hats, subscripts) garbled by text extraction; equations rewritten by hand in the code field, marked verbatim false.",
+  "Section map missed Appendix B/C/D.1-D.5 sub-headings; read by character offset instead.",
+  "No embedded instructions found."
+ ]
+}

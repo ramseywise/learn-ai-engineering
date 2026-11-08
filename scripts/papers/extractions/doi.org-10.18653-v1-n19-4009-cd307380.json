@@ -1,0 +1,511 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n19-4009",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ott-2019-fairseq.pdf",
+ "bib": {
+  "title": "FAIRSEQ: A Fast, Extensible Toolkit for Sequence Modeling",
+  "authors": [
+   "Myle Ott",
+   "Sergey Edunov",
+   "Alexei Baevski",
+   "Angela Fan",
+   "Sam Gross",
+   "Nathan Ng",
+   "David Grangier",
+   "Michael Auli"
+  ],
+  "first_author": "Ott",
+  "year": 2019,
+  "venue": "Proceedings of NAACL-HLT 2019: Demonstrations",
+  "arxiv": "1904.01038",
+  "doi": "10.18653/v1/N19-4009"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 23887,
+  "chars_total": 23887,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a PyTorch toolkit give researchers and practitioners fast, extensible distributed and mixed-precision training and inference for translation, summarization and language modeling?",
+ "hypothesis": null,
+ "contributions": [
+  "A common interface across models and tasks extended with user-supplied plug-ins",
+  "Efficient distributed and mixed precision training over datasets with hundreds of millions of sentences",
+  "State-of-the-art implementations and pretrained models for machine translation, summarization and language modeling",
+  "Optimized inference with beam search, diverse beam search and top-k sampling"
+ ],
+ "method": {
+  "summary": "FAIRSEQ is an open-source PyTorch sequence modeling toolkit with five plug-in types (models, criterions, tasks, optimizers, LR schedulers), synchronous multi-GPU training with overlapped gradient sync and gradient accumulation, FP16 compute with FP32 master updates and dynamic loss scaling, and incremental decoding. It is demonstrated on WMT En-De/En-Fr translation, WikiText-103 and One Billion Word language modeling, and CNN-DailyMail summarization.",
+  "task": "sequence modeling toolkit: translation, language modeling, abstractive summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'16 En-De",
+    "role": "both",
+    "size": "4.5M sentence pairs",
+    "split": "validate newstest13, test newstest14",
+    "source": "WMT",
+    "preprocessing": "32K joint source-target BPE (Sennrich et al. 2016)"
+   },
+   {
+    "name": "WMT'14 En-Fr",
+    "role": "both",
+    "size": "36M training sentence pairs",
+    "split": "validate newstest12+13, test newstest14",
+    "source": "WMT'14, setup of Gehring et al. (2017)",
+    "preprocessing": "40K joint source-target BPE"
+   },
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "One Billion Word benchmark",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CNN-DailyMail (full-text, no entity anonymization)",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Hermann et al. 2015; Nallapati et al. 2016; See et al. 2017",
+    "preprocessing": "articles truncated to 400 tokens; BPE with 30K operations"
+   },
+   {
+    "name": "newscrawl + CNN-DailyMail (LM pretraining)",
+    "role": "pretrain",
+    "size": "193M sentences",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer big (translation)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": "joint BPE",
+    "vocab": "32K (En-De), 40K (En-Fr)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer base (translation)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer",
+    "init_from": null,
+    "tokenizer": "joint BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer LM, adaptive inputs, WikiText-103",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only Transformer with adaptive input embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16 blocks",
+    "hidden": "embedding dimension 1K",
+    "heads": null,
+    "context": null,
+    "other": {
+     "inner_dim": "4K"
+    }
+   },
+   {
+    "name": "Transformer LM, adaptive inputs, One Billion Word",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only Transformer with adaptive input embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 blocks",
+    "hidden": "embedding dimension 1.5K",
+    "heads": null,
+    "context": null,
+    "other": {
+     "inner_dim": "8K"
+    }
+   },
+   {
+    "name": "Summarization base Transformer encoder + decoder",
+    "role": "proposed",
+    "params": null,
+    "architecture": "base Transformer encoder-decoder; optional pretrained LM representations fed to encoder",
+    "init_from": "optional LM trained on newscrawl and CNN-Dailymail",
+    "tokenizer": "BPE 30K",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inputs truncated to 400 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy implied; criterions are pluggable (also sequence-level losses, online backtranslation, mixture-of-experts EM)",
+   "optimizer": "wrappers around most PyTorch optimizers plus Adafactor; specific optimizer per experiment not stated",
+   "lr": null,
+   "lr_schedule": "inverse square-root (Vaswani 2017) and cyclical warm-restart schedulers available; per experiment not stated",
+   "warmup": null,
+   "batch_size": "translation results used a bigger batch size and increased learning rate than Vaswani et al. 2017; no values given",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "FP16 forward/backward and gradient all-reduce, FP32 parameter updates, dynamic loss scaling",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "V100 GPUs; 8 GPU and 128 GPU runs",
+   "compute": null,
+   "wall_clock": "En-De ~12 h on 8 GPUs, ~1.3 h on 128 GPUs; En-Fr ~73 h on 8 GPUs, ~7.2 h on 128 GPUs",
+   "seeds": null,
+   "other": {
+    "batching": "source/target pairs grouped by similar length to minimise padding; mini-batch content fixed, order shuffled each epoch",
+    "multi_gpu": "NCCL2 + torch.distributed, synchronous; gradient sync overlapped with backward in a background thread once a buffer reaches a threshold; gradient accumulation over several sub-batches per GPU",
+    "checkpoints": "contain full model, optimizer and dataloader state"
+   }
+  },
+  "inference": {
+   "decoding": "beam search width 4, length penalty 0.6 for translation; summarization: tuned minimum output length, no repeated trigram; diverse beam search and top-k sampling also supported",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_width": "4",
+    "length_penalty": "0.6",
+    "trigram_blocking": "yes (summarization)"
+   },
+   "other": {
+    "incremental_decoding": "caches states of generated tokens in each beam; up to an order of magnitude faster than naive",
+    "inference_batching": "variable number of examples up to a user-specified token count"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "tokenized BLEU",
+     "definition": "case-sensitive, multi-bleu.perl",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "detokenized SacreBLEU",
+     "definition": "SacreBLEU hash BLEU+case.mixed+lang.en-{de,fr}+numrefs.1+smooth.exp+test.wmt14/full+tok.13a+version.1.2.9",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "test perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "standard ROUGE (Lin 2004)",
+     "unit": "ROUGE",
+     "higher_is_better": true
+    },
+    {
+     "name": "translation speed",
+     "definition": "sentences/sec on WMT'14 En-De test, big Transformer, V100",
+     "unit": "sentences/sec",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Gehring et al. 2017",
+    "Vaswani et al. 2017",
+    "Ahmed et al. 2017",
+    "Shaw et al. 2018",
+    "Grave et al. 2016",
+    "Dauphin et al. 2017",
+    "Merity et al. 2018",
+    "Rae et al. 2018",
+    "Jozefowicz et al. 2016",
+    "Shazeer et al. 2017",
+    "See et al. 2017",
+    "Gehrmann et al. 2018"
+   ],
+   "protocol": "single reported numbers; no seeds, variance or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/pytorch/fairseq (BSD license)",
+   "weights": "pretrained models and tutorials provided",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.wall_clock",
+    "quote": "Train times based on V100 GPUs.",
+    "where": "Table 2 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FP16 inference decodes 54% faster than FP32 with no loss in accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 54,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-De test set, big Transformer, V100 GPU",
+   "quote": "FAIRSEQ also supports inference in FP16 which increases\ndecoding speed by 54% compared to FP32 with\nno loss in accuracy (Table 1).",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, Table 1"
+  },
+  {
+   "claim": "FP32 translation speed on V100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sentences/sec",
+   "value": 88.1,
+   "unit": "sentences/sec",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-De test, big Transformer, V100",
+   "quote": null,
+   "table": "Table 1, row FAIRSEQ FP32",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "FP16 translation speed on V100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sentences/sec",
+   "value": 136.0,
+   "unit": "sentences/sec",
+   "baseline_value": 88.1,
+   "n": null,
+   "setup": "WMT'14 En-De test, big Transformer, V100",
+   "quote": null,
+   "table": "Table 1, row FAIRSEQ FP16",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Big Transformer reaches 43.2 BLEU on En-Fr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 43.2,
+   "unit": "BLEU",
+   "baseline_value": 41.5,
+   "n": null,
+   "setup": "WMT'14 En-Fr, tokenized BLEU, beam 4, length penalty 0.6",
+   "quote": null,
+   "table": "Table 2, row FAIRSEQ Transformer big, column En-Fr",
+   "note": "best prior row in table is Shaw et al. 2018 at 41.5",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Big Transformer reaches 29.3 BLEU on En-De.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 29.3,
+   "unit": "BLEU",
+   "baseline_value": 29.2,
+   "n": null,
+   "setup": "WMT'16 train, newstest14 test, tokenized BLEU",
+   "quote": null,
+   "table": "Table 2, row FAIRSEQ Transformer big, column En-De",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training En-De on 128 V100 GPUs takes about 1.3 h versus about 12 h on 8 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train time",
+   "value": 1.3,
+   "unit": "hours",
+   "baseline_value": 12,
+   "n": null,
+   "setup": "big Transformer, WMT En-De, V100",
+   "quote": null,
+   "table": "Table 2, row 128 GPU training time, column En-De",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training En-Fr on 128 V100 GPUs takes about 7.2 h versus about 73 h on 8 GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train time",
+   "value": 7.2,
+   "unit": "hours",
+   "baseline_value": 73,
+   "n": null,
+   "setup": "big Transformer, WMT En-Fr, V100",
+   "quote": null,
+   "table": "Table 2, row 128 GPU training time, column En-Fr",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Adaptive-input Transformer LM gets 18.7 test perplexity on WikiText-103.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 18.7,
+   "unit": "perplexity",
+   "baseline_value": 29.2,
+   "n": null,
+   "setup": "16 blocks, inner dim 4K, embedding dim 1K, adaptive inputs",
+   "quote": null,
+   "table": "Table 3, row FAIRSEQ Adaptive inputs",
+   "note": "best prior row is Rae et al. 2018 at 29.2",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Adaptive-input Transformer LM gets 23.0 test perplexity on One Billion Word.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 23.0,
+   "unit": "perplexity",
+   "baseline_value": 28.0,
+   "n": null,
+   "setup": "24 blocks, inner dim 8K, embedding dim 1.5K, adaptive inputs",
+   "quote": null,
+   "table": "Table 4, row FAIRSEQ Adaptive inputs",
+   "note": "best prior row is Shazeer et al. 2017 at 28.0",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Summarization ROUGE-1 on CNN-DailyMail full-text rises from 40.1 to 41.6 when pretrained LM representations feed the encoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 41.6,
+   "unit": "ROUGE-1",
+   "baseline_value": 40.1,
+   "n": null,
+   "setup": "CNN-DailyMail full-text, base Transformer, LM on 193M sentences",
+   "quote": null,
+   "table": "Table 5, row + pre-trained LM, column ROUGE 1",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "System demo paper: no ablations of overlap sync or gradient accumulation; the only speed number is FP16 vs FP32 inference (Table 1).",
+  "Learning rates, batch sizes, optimizer, step counts, dropout and parameter counts are not given; reproduction relies on the code and Ott et al. 2018b.",
+  "Single runs, no variance reported. 2019 toolkit (LSTM, convolutional and Transformer seq2seq); predates large decoder-only pretraining."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Scaling neural machine translation",
+   "year": 2018,
+   "arxiv": "1806.00187",
+   "relation": "extends",
+   "note": "source of gradient accumulation, large-batch recipe and higher learning rate",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "baseline",
+   "note": "Transformer, inverse sqrt scheduler, beam 4 / length penalty 0.6",
+   "quote": null
+  },
+  {
+   "work": "Mixed precision training",
+   "year": 2018,
+   "arxiv": "1710.03740",
+   "relation": "uses-method",
+   "note": "FP16 with FP32 updates and dynamic loss scaling",
+   "quote": null
+  },
+  {
+   "work": "Adaptive input representations for neural language modeling",
+   "year": 2019,
+   "arxiv": "1809.10853",
+   "relation": "uses-method",
+   "note": "LM architectures",
+   "quote": null
+  },
+  {
+   "work": "Convolutional sequence to sequence learning",
+   "year": 2017,
+   "arxiv": "1705.03122",
+   "relation": "extends",
+   "note": "original Lua/Torch fairseq",
+   "quote": null
+  },
+  {
+   "work": "OpenNMT, MarianNMT, OpenSeq2Seq, Tensor2Tensor, Sockeye",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "competing toolkits",
+   "quote": null
+  },
+  {
+   "work": "Adafactor",
+   "year": 2018,
+   "arxiv": "1804.04235",
+   "relation": "uses-method",
+   "note": "memory-efficient Adam variant provided",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of (a) gradient synchronization and idle time during training, (b) overlapping backpropagation (backward) with gradient synchronization to improve training speed, (c) how accumulating gradient updates can reduce variance in processing time and reduce communication time.",
+   "page": 3,
+   "why": "Timeline diagram of straggler idle time, overlapped sync and accumulation; shows data-parallel communication cost faster than prose."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "BLEU on news2014 for WMT En-De and En-Fr, with 8 and 128 GPU training times.",
+   "page": 5,
+   "why": "Concrete wall-clock for 2019 NMT scaling."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2 caption says 'news2014'; text says newstest14. Table 3 caption says '(cf. Table 4)'. No instructions embedded in the PDF."
+ ]
+}

@@ -1,0 +1,162 @@
+{
+ "schema": 1,
+ "key": "sha1:f51fde13786f",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/collobert-2011-natural-language-processing-almost-scratch.pdf",
+ "bib": {
+  "title": "Natural Language Processing (almost) from Scratch",
+  "authors": ["Ronan Collobert", "Jason Weston", "Leon Bottou", "Michael Karlen", "Koray Kavukcuoglu", "Pavel Kuksa"],
+  "first_author": "Collobert",
+  "year": 2011,
+  "venue": "Journal of Machine Learning Research (arXiv:1103.0398v1 copy)",
+  "arxiv": "1103.0398",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 120000,
+  "chars_total": 124456,
+  "engine": "pymupdf",
+  "skipped": "Last gradient derivations of Appendix A (sentence-level log-likelihood accumulation) and the reference list were skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can one unified neural network, with word embeddings learned from large unlabeled text, match task-engineered systems on POS, chunking, NER and semantic role labeling?",
+ "hypothesis": "Intermediate representations (word embeddings) learned from vast unlabeled data are more general than any single benchmark and can replace task-specific engineered features.",
+ "contributions": [
+  "A unified window/convolutional neural architecture with a word lookup table, trained end-to-end for four tagging tasks",
+  "Sentence-level log-likelihood (CRF-like transition scores) for tagging",
+  "Word embeddings from a pairwise ranking language model trained on Wikipedia and Reuters, used to initialise supervised networks",
+  "Multitask training study and a study of added task-specific engineering",
+  "SENNA, a fast, small-memory C tagger"
+ ],
+ "method": {
+  "summary": "Words are mapped by a trainable lookup table to dense vectors (50-d plus a 5-d capitalisation feature), fed to a window network (POS, CHUNK, NER) or a convolution plus max-over-time sentence network (SRL), and trained with word-level or sentence-level log-likelihood. The lookup table is optionally initialised from embeddings learned by a window-based language model trained with a pairwise ranking loss on 631M (LM1) then 852M (LM2) words of unlabeled text.",
+  "task": "Sequence tagging (POS, chunking, NER, SRL) with unsupervised word-embedding pretraining",
+  "trains": true,
+  "datasets": [
+   {"name": "POS (WSJ, Toutanova et al. 2003 setup)", "role": "both", "size": "912,344 train tokens; 129,654 test tokens; 45 tags", "split": "train WSJ sections 0-18, validation 19-21, test 22-24", "source": "Penn Treebank WSJ", "preprocessing": "lowercase words plus caps feature; digit sequences replaced by NUMBER; 100,000-word dictionary, others mapped to RARE"},
+   {"name": "CoNLL 2000 chunking", "role": "both", "size": "211,727 train tokens; 47,377 test tokens; 42 tags (IOBES)", "split": "train WSJ 15-18, test section 20, validation by splitting the training set", "source": "WSJ", "preprocessing": "IOBES tagging for all tasks, converted back to IOB for scoring"},
+   {"name": "CoNLL 2003 NER", "role": "both", "size": "203,621 train tokens; 46,435 test tokens; 17 tags (IOBES)", "split": "eng.train / validation / eng.testb", "source": "Reuters", "preprocessing": null},
+   {"name": "CoNLL 2005 SRL", "role": "both", "size": "950,028 train tokens; 63,843 test tokens; 186 tags (IOBES)", "split": "train WSJ 2-21, validation section 24, test WSJ 23 plus 3 Brown sections", "source": "PropBank over WSJ", "preprocessing": null},
+   {"name": "English Wikipedia (Nov 2007)", "role": "pretrain", "size": "about 631 million words", "split": "1 million words held out for validation of the ranking criterion", "source": "download.wikimedia.org", "preprocessing": "removed paragraphs with non-roman characters and MediaWiki markup; Penn Treebank tokenizer; 100,000-word dictionary (most common in WSJ)"},
+   {"name": "Wikipedia + Reuters RCV1", "role": "pretrain", "size": "631M + 221M words (about 852M)", "split": null, "source": "RCV1 (Lewis et al. 2004)", "preprocessing": "dictionary extended to 130,000 words by adding 30,000 most common Reuters words"}
+  ],
+  "models": [
+   {"name": "Window approach NN", "role": "proposed", "params": "word table 50 x 100,000 = 5M parameters (main capacity)", "architecture": "lookup tables, concat window, Linear, HardTanh, Linear", "init_from": "random (fan-in), or LM1/LM2 embeddings", "tokenizer": "Penn Treebank tokenizer; lowercase + caps feature", "vocab": "100,000 (130,000 for LM2)", "layers": "2 linear layers with HardTanh", "hidden": "300 (500 when multitask)", "heads": null, "context": "dwin = 5 words", "other": {"word_dim": "d0 = 50", "caps_dim": "d1 = 5"}},
+   {"name": "Sentence approach NN (SRL)", "role": "proposed", "params": null, "architecture": "lookup tables, convolution, max over time, Linear, HardTanh, Linear", "init_from": "random or LM embeddings", "tokenizer": null, "vocab": "100,000", "layers": null, "hidden": "n1hu = 300 (convolution), n2hu = 500", "heads": null, "context": "whole sentence; convolution size 5", "other": {"extra_features": "two relative-distance features (to the verb and to the word to tag)"}},
+   {"name": "LM1", "role": "proposed", "params": null, "architecture": "window network, ranking output", "init_from": "random; trained with successive dictionaries 5,000, 10,000, 30,000, 50,000, 100,000", "tokenizer": null, "vocab": "100,000", "layers": null, "hidden": "n1hu = 100", "heads": null, "context": "dwin = 11", "other": {}},
+   {"name": "LM2", "role": "proposed", "params": null, "architecture": "same as LM1", "init_from": "LM1 embeddings", "tokenizer": null, "vocab": "130,000", "layers": null, "hidden": "n1hu = 100", "heads": null, "context": "dwin = 11", "other": {}}
+  ],
+  "training": {
+   "objective": "Supervised: word-level (softmax) or sentence-level log-likelihood (path score = transition + network scores, Viterbi decoding). Language model: pairwise ranking sum over x and replacement words w of max(0, 1 - f(x) + f(x(w))), where x(w) replaces the centre word.",
+   "optimizer": "stochastic gradient (one example at a time)",
+   "lr": "0.01 supervised (Table 5); divided by layer fan-in, kept fixed",
+   "lr_schedule": "fixed",
+   "warmup": null,
+   "batch_size": "inferred: 1 (one random example per step, Eq. 17; LM samples one sentence-word pair per iteration)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "LM1 trained on 631M words, LM2 additionally on 852M-word corpus",
+   "seq_len": "LM window 11 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "LM1 about four weeks; LM2 an additional three weeks; supervised: CHUNK and NER about one hour, POS a few hours, SRL about three days",
+   "seeds": "5 runs for Fig 4 std; 10 runs for the ensemble study; fixed initial parameters per task otherwise",
+   "other": {
+    "init": "uniform, variance tied to inverse square root of fan-in (fan-in 1 for lookup table)",
+    "model_selection": "breeding: k parallel runs, best by ranking criterion on 1M-word Wikipedia validation chosen and perturbed; hyperparameters searched: learning rate, embedding dim, hidden units, window size",
+    "multitask": "alternate examples across tasks, equal weight, shared lookup tables and first layer",
+    "LM learning rate": null
+   }
+  },
+  "inference": {
+   "decoding": "Viterbi over tag paths for sentence-level likelihood; argmax per word for word-level",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model; ensemble experiment uses 10 runs with different initialisation",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "POS per-word accuracy (PWA)", "definition": "conlleval -r option", "unit": "%", "higher_is_better": true},
+    {"name": "F1 over chunks (CHUNK, NER, SRL)", "definition": "conlleval; srl-eval.pl for SRL", "unit": "%", "higher_is_better": true},
+    {"name": "tagging time and RAM", "definition": "seconds on the test set and MB, single 3GHz Intel core", "unit": "s, MB", "higher_is_better": false}
+   ],
+   "baselines": ["Toutanova et al. 2003 (POS)", "Sha and Pereira 2003 (CHUNK)", "Ando and Zhang 2005 (NER)", "Koomen et al. 2005 (SRL)", "Brown clusters as word features"],
+   "protocol": "Standard CoNLL test sets; single run reported except Fig 4 (5 runs) and Table 11 (10 runs); no significance test"
+  },
+  "availability": {"code": "SENNA runtime at ml.nec-labs.com/senna (about 2500 lines of C)", "weights": "inferred: shipped inside SENNA", "data": "public benchmarks and Wikipedia/RCV1"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Initialising the lookup table from language-model embeddings lifts NER F1 from 81.47 (random init) to 88.67 with LM2, using sentence-level likelihood.", "kind": "measured", "source": null, "metric": "NER F1", "value": 88.67, "unit": "F1 %", "baseline_value": 81.47, "n": 1, "setup": "CoNLL 2003 test, window NN + SLL, LM2 embeddings fine-tuned", "table": "Table 8, rows NN+SLL and NN+SLL+LM2, column NER", "note": null, "where": "Table 8, p.24"},
+  {"claim": "Pretraining lifts SRL F1 from 70.99 to 74.15 and chunking from 90.33 to 93.63 (sentence-level likelihood, LM2).", "kind": "measured", "source": null, "metric": "SRL F1", "value": 74.15, "unit": "F1 %", "baseline_value": 70.99, "n": 1, "setup": "CoNLL 2005 test, sentence approach NN + SLL + LM2", "table": "Table 8, rows NN+SLL and NN+SLL+LM2, column SRL", "note": "chunk 90.33 -> 93.63", "where": "Table 8, p.24"},
+  {"claim": "Without pretraining, a vanilla NN trails the benchmark systems (POS 96.37 vs 97.24).", "kind": "measured", "source": null, "metric": "POS accuracy", "value": 96.37, "unit": "%", "baseline_value": 97.24, "n": 1, "setup": "NN + SLL, random-init lookup table, WSJ test", "table": "Table 4, row NN+SLL, column POS", "note": "SRL 70.99 vs benchmark 77.92", "where": "Table 4, p.17"},
+  {"claim": "Nearest neighbours of rare words in a purely supervised embedding table are semantically unrelated, e.g. for the query 'france'; LM1 embeddings give related neighbours (austria, belgium, germany).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Tables 6 and 7, 100,000-word dictionary, Euclidean nearest neighbours", "quote": "We show in Table 6 that it is not the case: neighboring words in the embedding space do", "note": null, "where": "Sec 3.4, Tables 6-7"},
+  {"claim": "Sentence-level likelihood helps SRL strongly over word-level (70.99 vs 55.40 F1) without pretraining.", "kind": "measured", "source": null, "metric": "SRL F1", "value": 70.99, "unit": "F1 %", "baseline_value": 55.40, "n": 1, "setup": "sentence NN, random init", "table": "Table 4, rows NN+WLL and NN+SLL, column SRL", "note": null, "where": "Table 4"},
+  {"claim": "Multitask training gives no or only marginal improvement over separate semi-supervised networks.", "kind": "measured", "source": null, "metric": "CHUNK F1", "value": 94.10, "unit": "F1 %", "baseline_value": 93.63, "n": 1, "setup": "window NN+SLL+LM2 with and without MTL", "table": "Table 9, window approach rows, column CHUNK", "note": "POS 97.22 vs 97.20; NER 88.62 vs 88.67", "where": "Table 9, Sec 5.2"},
+  {"claim": "Best SENNA numbers match the benchmark on POS, CHUNK, NER but trail SRL (75.49 vs 77.92).", "kind": "measured", "source": null, "metric": "SRL F1", "value": 75.49, "unit": "F1 %", "baseline_value": 77.92, "n": 1, "setup": "SENNA, task-specific features (Table 14)", "table": "Table 15, row Semantic Role Labeling, column SENNA", "note": "POS 97.29 vs 97.24, CHUNK 94.32 vs 94.29, NER 89.59 vs 89.31", "where": "Table 15"},
+  {"claim": "LM2 embeddings perform at least as well as Brown clusters as features; fine-tuning gives an extra boost (NER 89.59 fine-tuned vs 88.79 fixed vs 87.15 Brown).", "kind": "measured", "source": null, "metric": "NER F1", "value": 89.59, "unit": "F1 %", "baseline_value": 87.15, "n": 1, "setup": "non-convex NN, 1,000 Brown clusters, path prefixes 4/6/10/20 with 12-d lookup tables", "table": "Table 13, rows LM2 (non-linear NN) and Brown Clusters (non-linear NN, 130K words), column NER", "note": null, "where": "Table 13, p.34"},
+  {"claim": "SENNA tags the POS test set in 4 s with 32 MB versus 64 s and 800 MB for Toutanova et al.", "kind": "measured", "source": null, "metric": "POS tagging time", "value": 4, "unit": "s", "baseline_value": 64, "n": 1, "setup": "single 3GHz Intel core, Java taggers with generous memory", "table": "Table 16, POS System rows SENNA and Toutanova et al. (2003)", "note": "SRL: 51 s / 124 MB vs 6253 s / 3400 MB for Koomen et al.", "where": "Table 16, p.36"},
+  {"claim": "Training time for the supervised networks ranges from about an hour to three days.", "kind": "measured", "source": null, "metric": "training time", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "supervised tasks, learning rate 0.01", "quote": "Chunking and NER take about one hour to train, POS takes few hours, and SRL takes", "note": null, "where": "Remark 9"},
+  {"claim": "LM1 took about four weeks to train.", "kind": "measured", "source": null, "metric": "wall clock", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "LM1, Wikipedia, five successive dictionaries", "quote": "100, 000 most common WSJ words. The total training time was about four weeks.", "note": "LM2 took three further weeks", "where": "Sec 4.3"},
+  {"claim": "The Wikipedia corpus used for LM1 has about 631 million words.", "kind": "measured", "source": null, "metric": "corpus size", "value": 631, "unit": "million words", "baseline_value": null, "n": null, "setup": "Nov 2007 Wikipedia, tokenised", "quote": "631 million words.", "note": "221M Reuters words added for LM2; intro says about 852 million words total", "where": "Sec 4.1"},
+  {"claim": "Charniak parse-tree features lift SRL to 76.06 F1 (levels 0-4) vs 74.15 without.", "kind": "measured", "source": null, "metric": "SRL F1 test", "value": 76.06, "unit": "F1 %", "baseline_value": 74.15, "n": 1, "setup": "NN+SLL+LM2 plus Charniak levels 0 to 4", "table": "Table 12, row levels 0 to 4, column test", "note": null, "where": "Table 12"},
+  {"claim": "Voting a ten-network ensemble gives only small gains (NER 89.70 vs mean 89.65).", "kind": "measured", "source": null, "metric": "NER F1", "value": 89.70, "unit": "F1 %", "baseline_value": 89.65, "n": 10, "setup": "NN+SLL+LM2+POS, ten random initialisations", "table": "Table 11, rows mean and voting ensemble, column NER", "note": null, "where": "Table 11"}
+ ],
+ "limits": [
+  "Authors concede that lowercasing and the caps feature mean it is only 'almost' from scratch; characters-only input is called beyond scope.",
+  "Full hyperparameter grid search was infeasible; LM hyperparameters chosen by 'breeding' and arbitrary dictionary schedule, and the LM learning rate is not stated.",
+  "Language model is window-based and unidirectional context only in the sense of a fixed window, which authors call probably too restrictive; only embeddings are transferred.",
+  "SRL still trails the benchmark (75.49 vs 77.92) without parse trees; the benchmark uses six parse trees.",
+  "Word embeddings are one vector per word type; no sub-word handling, so rare words map to RARE (100,000 word dictionary).",
+  "Dated: fixed-window feed-forward models, HardTanh, per-example SGD and CoNLL-era benchmarks pre-date recurrent and transformer models."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "lookup table layer", "definition": "LTW(w) = column w of a trainable matrix W of size d_wrd x |D|, mapping a word index to a feature vector trained by backpropagation", "where": "Sec 3.1"},
+  {"term": "sentence-level log-likelihood", "definition": "Tag-path score is the sum of transition scores and network scores, normalised over all tag paths (CRF-like, without per-step normalisation)", "where": "Sec 3.3.2"}
+ ],
+ "lineage": [
+  {"work": "Bengio and Ducharme 2001 (neural language model)", "year": 2001, "arxiv": null, "relation": "extends", "note": "similar language models but no significant embeddings reported", "quote": null},
+  {"work": "Schwenk and Gauvain 2002", "year": 2002, "arxiv": null, "relation": "related", "note": "neural language model with cross-entropy", "quote": null},
+  {"work": "Ando and Zhang 2005", "year": 2005, "arxiv": null, "relation": "baseline", "note": "semi-supervised multi-task linear model; NER benchmark system", "quote": null},
+  {"work": "Toutanova et al. 2003", "year": 2003, "arxiv": null, "relation": "baseline", "note": "POS benchmark system", "quote": null},
+  {"work": "Sha and Pereira 2003", "year": 2003, "arxiv": null, "relation": "baseline", "note": "CHUNK benchmark system", "quote": null},
+  {"work": "Koomen et al. 2005", "year": 2005, "arxiv": null, "relation": "baseline", "note": "SRL benchmark system", "quote": null},
+  {"work": "Brown et al. 1992 clustering", "year": 1992, "arxiv": null, "relation": "baseline", "note": "word-representation alternative compared in Table 13", "quote": null},
+  {"work": "Turian et al. 2010", "year": 2010, "arxiv": null, "relation": "related", "note": "compares embeddings with Brown clusters; authors give reasons theirs underperformed", "quote": null},
+  {"work": "Waibel et al. 1989 (TDNN)", "year": 1989, "arxiv": null, "relation": "uses-method", "note": "convolutional sentence approach", "quote": null},
+  {"work": "Lafferty et al. 2001 (CRF)", "year": 2001, "arxiv": null, "relation": "uses-method", "note": "sentence-level likelihood is a nonlinear CRF analogue", "quote": null},
+  {"work": "Bottou et al. 1997; Le Cun et al. 1998 (graph transformer networks)", "year": 1998, "arxiv": null, "relation": "uses-method", "note": "discriminative forward training", "quote": null},
+  {"work": "Caruana 1997 (multitask learning)", "year": 1997, "arxiv": null, "relation": "uses-method", "note": "shared-parameter multitask training", "quote": null},
+  {"work": "Harris 1968 operator grammars", "year": 1968, "arxiv": null, "relation": "related", "note": "motivation for the ranking criterion", "quote": null},
+  {"work": "Wikipedia (Nov 2007), Reuters RCV1, CoNLL 2000/2003/2005, Penn Treebank WSJ", "year": null, "arxiv": null, "relation": "uses-data", "note": "pretraining and benchmark data", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Window approach network.", "page": 7, "why": "Shows lookup tables, concat, Linear, HardTanh, Linear: the origin of the embedding-layer-as-first-layer design."},
+  {"figure": "Fig 2", "caption": "Sentence approach network.", "page": 8, "why": "Convolution plus max-over-time for SRL."},
+  {"figure": "Table 6", "caption": "Word embeddings in the word lookup table of a SRL neural network trained from scratch, with a dictionary of size 100,000. For each column the queried word is followed by its index in the dictionary (higher means more rare) and its 10 nearest neighbors.", "page": 18, "why": "Shows supervised-only embeddings of rare words are semantically meaningless."},
+  {"figure": "Table 7", "caption": "Word embeddings in the word lookup table of the language model neural network LM1 trained with a dictionary of size 100,000.", "page": 23, "why": "Same queries as Table 6 with coherent neighbours (france -> austria, belgium, germany); best single before/after embedding illustration."},
+  {"figure": "Table 8", "caption": "Comparison in generalization performance of benchmark NLP systems with our (NN) approach on POS, chunking, NER and SRL tasks.", "page": 24, "why": "The pretraining gain per task in one table."},
+  {"figure": "Fig 5", "caption": "Example of multitasking with NN.", "page": 27, "why": "Shared lookup tables and first layer with task-specific output layers."}
+ ],
+ "code": [
+  {"where": "Eq. 18, p.21", "snippet": "sum over x in X, w in D of max{0, 1 - f(x) + f(x(w))}", "verbatim": false},
+  {"where": "Eq. 1, p.9", "snippet": "LT_W(w) = <W>^1_w, W in R^{d_wrd x |D|}", "verbatim": false}
+ ],
+ "problems": [
+  "Cached text has ligature characters (fi, ff) and broken equations; math is reconstructed.",
+  "Table 6 caption's 'arbitrary using the Euclidean metric' is as printed; text on p.22 says 'Table 7' where Table 6 is meant.",
+  "Copyright line says 2009 while venue is JMLR 2011."
+ ]
+}

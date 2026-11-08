@@ -1,0 +1,677 @@
+{
+ "schema": 1,
+ "key": "2105.13290",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ding-2021-cogview.pdf",
+ "bib": {
+  "title": "CogView: Mastering Text-to-Image Generation via Transformers",
+  "authors": [
+   "Ming Ding",
+   "Zhuoyi Yang",
+   "Wenyi Hong",
+   "Wendi Zheng",
+   "Chang Zhou",
+   "Da Yin",
+   "Junyang Lin",
+   "Xu Zou",
+   "Zhou Shao",
+   "Hongxia Yang",
+   "Jie Tang"
+  ],
+  "first_author": "Ding",
+  "year": 2021,
+  "venue": "NeurIPS 2021 (35th Conference on Neural Information Processing Systems)",
+  "arxiv": "2105.13290",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 60326,
+  "chars_total": 60326,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a single large autoregressive Transformer over text tokens and VQ-VAE image tokens do general-domain text-to-image generation, and how can its fp16 training be stabilised?",
+ "hypothesis": "Joint large-scale generative pretraining on text and discrete image tokens (as in GPT) gives strong text-to-image generation; numerical instability from data heterogeneity can be cured by regularising values (PB-relax, Sandwich-LN).",
+ "contributions": [
+  "Open-source 4B text-to-image transformer beating DALL-E and GANs on blurred-COCO FID",
+  "Finetuning for super-resolution, captioning/self-reranking, style learning, fashion design",
+  "Caption Loss metric and self-reranking replacing CLIP",
+  "PB-relax and Sandwich-LN to stabilise training"
+ ],
+ "method": {
+  "summary": "Two stages: a discrete autoencoder image tokenizer (256x256 -> 32x32 tokens, codebook 8192) and a 48-layer GPT trained left-to-right on concatenated [text; image] tokens from 30M Chinese-centric pairs. Finetuned variants do super-resolution, captioning (for CapLoss reranking), style learning and fashion.",
+  "task": "text-to-image generation (autoregressive joint text+image token language modelling)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CogView pretraining set (WudaoCorpora extension)",
+    "role": "pretrain",
+    "size": "about 30 million text-image pairs; 2.5TB raw, about 250GB tokenized",
+    "split": null,
+    "source": "professional image sites, Conceptual Captions, ImageNet, news, Alibaba item-caption pairs, search engines (1,200 entity queries, top-100 images each); about 50% of text English, machine-translated to Chinese",
+    "preprocessing": "watermarks and white edges not removed"
+   },
+   {
+    "name": "Super-resolution finetune set",
+    "role": "train",
+    "size": "about 2 million images",
+    "split": null,
+    "source": null,
+    "preprocessing": "crop to 256x256, downsample to 128x128, tokenize to 16x16 / 32x32 pairs"
+   },
+   {
+    "name": "Style finetune sets",
+    "role": "train",
+    "size": "1,000 images per style, 4 styles",
+    "split": null,
+    "source": "Google, Baidu, Bing search with keyword 'An image of {style} style'",
+    "preprocessing": null
+   },
+   {
+    "name": "Fashion-caption pairs",
+    "role": "train",
+    "size": "about 10 million pairs",
+    "split": null,
+    "source": null,
+    "preprocessing": "50x50 VQGAN tokens, decoded to 800x800 pixels"
+   },
+   {
+    "name": "MS COCO",
+    "role": "eval",
+    "size": "30,000 captions subset; 5,000 images for CapLoss; 50 captions for human eval",
+    "split": "not in training set",
+    "source": "Lin et al. 2014",
+    "preprocessing": "captions machine-translated to Chinese; Gaussian blur at FID-0 to FID-8 on real and generated images"
+   }
+  ],
+  "models": [
+   {
+    "name": "CogView",
+    "role": "proposed",
+    "params": "4B",
+    "architecture": "unidirectional (GPT) Transformer with Sandwich-LN",
+    "init_from": null,
+    "tokenizer": "SentencePiece (text) + discrete autoencoder moving-average codebook (image)",
+    "vocab": "50,000 text tokens; 8192 image codes",
+    "layers": "48",
+    "hidden": "2560",
+    "heads": "40",
+    "context": "1088 tokens (clipped or padded)",
+    "other": {
+     "separator_tokens": "[ROI1],[BASE],[BOI1],[EOI1]",
+     "image_tokens": "32x32 = 1024",
+     "image_tokenizer": "4-layer CNN encoder, 512 hidden, three stride-2 receptive-field-4 convs then 1x1 to 256; decoder mirrors with deconvs; Xavier uniform init; |V|=8192, d=256"
+    }
+   },
+   {
+    "name": "CogView-large",
+    "role": "proposed",
+    "params": "8.3B",
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "only said stabilised by PB-relax and Sandwich-LN"
+    }
+   },
+   {
+    "name": "CogView-fashion",
+    "role": "proposed",
+    "params": "3B",
+    "architecture": "same family, VQGAN tokens",
+    "init_from": null,
+    "tokenizer": "VQGAN",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "50x50 image tokens plus text",
+    "other": {
+     "sparse_attention": "three-region sparse attention used"
+    }
+   },
+   {
+    "name": "AttnGAN, DM-GAN, DF-GAN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DALL-E",
+    "role": "baseline",
+    "params": null,
+    "architecture": "transformer + d-VAE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "numbers extracted from its figures; not open-source"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token cross-entropy on text and image tokens with equal weight (NLL of text + NLL of z); stage 1 reconstruction (L2) for tokenizer",
+   "optimizer": "Adam",
+   "lr": "3e-4 max",
+   "lr_schedule": "cosine annealing",
+   "warmup": "first 2% of steps",
+   "batch_size": "6,144 sequences (6.7 million tokens)",
+   "steps": "144,000",
+   "epochs": null,
+   "tokens": "inferred: 96B (6.7M x 144,000; paper states 96B trained tokens)",
+   "seq_len": "1088",
+   "precision": "almost FP16 (O2: forward/backward FP16, optimizer states and master weights FP32)",
+   "weight_decay": "4e-2",
+   "dropout": null,
+   "regularisation": "beta1 0.9, beta2 0.95; embedding gradient shrink alpha=0.1; PB-relax; Sandwich-LN",
+   "hardware": "512 V100 GPUs (32GB)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "finetuning_cost": "all finetuning tasks within one day on a single DGX-2",
+    "sandwich_ln_convergence_test": "500M model",
+    "toy_stability_setup": "64 layers, hidden 1024, lr 0.1 or 0.01, batch 4",
+    "PB_relax_alpha": "32",
+    "tokenizer_hyperparams": "not stated (lr, steps, batch)"
+   }
+  },
+  "inference": {
+   "decoding": "autoregressive token-by-token; best of N by CapLoss",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "1024 image tokens (32x32)",
+   "samples": "60 generated images per caption, lowest CapLoss selected (DALL-E uses 512 + CLIP)",
+   "prompting": "Chinese caption; for style: 'A {object} of {style} style'",
+   "retrieval": null,
+   "parameters": {
+    "super_resolution": "16x16 -> 32x32 tokens finetune, then 32x32 -> 64x64 (512x512 px) via center-continuous sliding window",
+    "contrast_enhancement": "x1.5",
+    "CapLoss": "1/|t| sum_i -log p(t_i|x,t_<i) from captioning-finetuned model"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID-k",
+     "definition": "Frechet Inception Distance after Gaussian blur radius k on real and generated images",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "IS",
+     "definition": "Inception Score",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "CapLoss",
+     "definition": "mean cross-entropy of caption tokens given image",
+     "unit": "nats/token (inferred)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Human evaluation",
+     "definition": "1-5 scores for clarity, texture, relevance; 1-10 overall; pick best of 5",
+     "unit": "score / %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "AttnGAN",
+    "DM-GAN",
+    "DF-GAN",
+    "DALL-E",
+    "CLIP reranking",
+    "recovered ground truth"
+   ],
+   "protocol": "30,000 COCO captions for FID; human eval: 50 captions, 72 evaluators invited, 59 kept (filter: completed all, over 80% best picks match top overall score), 150 yuan each, 2,950 comparison groups; A-B test for super-resolution. No seeds or significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/CogView",
+   "weights": "https://github.com/THUDM/CogView (models)",
+   "data": "not released (Wudao-extended 30M set)"
+  },
+  "prompts": [
+   {
+    "purpose": "style finetune caption",
+    "text": "An image of {style} style",
+    "where": "3.3"
+   },
+   {
+    "purpose": "style generation",
+    "text": "A {object} of {style} style",
+    "where": "3.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.tokens",
+    "quote": "CogView is trained longer (96B trained tokens in CogView vs. 56B trained",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CogView reaches FID-0 of 27.1 on MS COCO, slightly better than DALL-E (27.5) but worse than DM-GAN and DF-GAN (26.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-0",
+   "value": "27.1",
+   "unit": "FID",
+   "baseline_value": "27.5 (DALL-E)",
+   "n": null,
+   "setup": "Table 1, MS COCO, 30,000 captions, Gaussian-blur FID; 60 candidates self-reranked by CapLoss; no super-resolution; contrast x1.5",
+   "quote": null,
+   "table": "Table 1, row CogView, column FID-0",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On blurred COCO CogView is far ahead of DALL-E: FID-2 of 13.9 vs 45.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-2",
+   "value": "13.9",
+   "unit": "FID",
+   "baseline_value": "45.5 (DALL-E)",
+   "n": null,
+   "setup": "Table 1, MS COCO, 30,000 captions, Gaussian-blur FID",
+   "quote": null,
+   "table": "Table 1, row CogView, column FID-2",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "CogView FID-8 is 23.6 vs DALL-E 85.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-8",
+   "value": "23.6",
+   "unit": "FID",
+   "baseline_value": "85.0 (DALL-E)",
+   "n": null,
+   "setup": "Table 1, MS COCO, 30,000 captions, Gaussian-blur FID",
+   "quote": null,
+   "table": "Table 1, row CogView, column FID-8",
+   "note": "DALL-E and GAN numbers were extracted from their figures",
+   "where": "Table 1"
+  },
+  {
+   "claim": "CogView has the lowest Caption Loss (2.43) vs DM-GAN 2.87, AttnGAN 3.01, DF-GAN 3.09.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CapLoss",
+   "value": "2.43",
+   "unit": "nats/token",
+   "baseline_value": "2.87 (DM-GAN)",
+   "n": null,
+   "setup": "Table 1, MS COCO, 30,000 captions, Gaussian-blur FID; CapLoss on 5,000-image subset",
+   "quote": null,
+   "table": "Table 1, row CogView, column CapLoss",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "IS: CogView 18.2, below DM-GAN 32.2; DM-GAN has best unblurred FID and IS yet ranks last in human preference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IS",
+   "value": "18.2",
+   "unit": "IS",
+   "baseline_value": "32.2 (DM-GAN)",
+   "n": null,
+   "setup": "Table 1, MS COCO, 30,000 captions, Gaussian-blur FID",
+   "quote": null,
+   "table": "Table 1, row CogView, column IS",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "In human evaluation CogView is chosen best with probability 37.02%, versus 59.53% for recovered ground truth.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best-image selection rate",
+   "value": "37.02",
+   "unit": "%",
+   "baseline_value": "59.53 (recovered ground truth)",
+   "n": null,
+   "setup": "2,950 comparison groups; 59 retained evaluators; 50 COCO captions; vs AttnGAN, DM-GAN, DF-GAN and recovered ground truth",
+   "quote": "CogView is chosen as the best one with probability 37.02%",
+   "table": null,
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Training uses 6,144 sequences per batch (6.7M tokens) for 144,000 steps on 512 V100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training config",
+   "value": "144,000",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4B CogView pretraining",
+   "quote": "We train the model with batch size of 6,144 sequences",
+   "table": null,
+   "note": null,
+   "where": "2.3"
+  },
+  {
+   "claim": "CogView trains on 96B tokens vs 56B for DALL-E, yet gets better FID without super-resolution.",
+   "kind": "claim",
+   "source": null,
+   "metric": "trained tokens",
+   "value": "96B",
+   "unit": "tokens",
+   "baseline_value": "56B (DALL-E)",
+   "n": null,
+   "setup": "authors' list of guessed reasons for beating DALL-E",
+   "quote": "CogView is trained longer (96B trained tokens in CogView vs. 56B trained",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "Three-region sparse attention is 2.5x faster than vanilla attention and saves 40% GPU memory on 4096-token sequences.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "2.5",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "benchmark, 768 text+pivot tokens and 768 window tokens; not used for the 4B model",
+   "quote": "2.5× faster than vanilla attention",
+   "table": null,
+   "note": null,
+   "where": "App B"
+  },
+  {
+   "claim": "Whole training with sparse attention is 1.5x faster and saves 20% GPU memory, with nearly identical loss curves.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training speedup",
+   "value": "1.5",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same hyperparameters, data, seeds",
+   "quote": "The whole training is 1.5× faster than that with vanilla attention and saves 20% GPU memory.",
+   "table": null,
+   "note": null,
+   "where": "App B"
+  },
+  {
+   "claim": "An ordinary pre-LN 4B Transformer gives NaN loss within 1,000 iterations under FP16; PB-relax + Sandwich-LN fix it.",
+   "kind": "claim",
+   "source": null,
+   "metric": "iterations to NaN",
+   "value": "1,000",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4B pre-LN transformer, 16-bit",
+   "quote": "Training a 4B ordinary pre-LN Transformer will quickly result in NaN loss within 1,000 iterations.",
+   "table": null,
+   "note": "no ablation table at full scale; evidence is a toy 64-layer, 1024-hidden experiment (Fig 4b)",
+   "where": "2.4"
+  },
+  {
+   "claim": "Setting text-token loss weight to zero makes the model generate images unrelated to the text (small-scale experiments, no number given); contradicts DALL-E's lowered text weight.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "small-scale experiments, unreported",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "2.3"
+  },
+  {
+   "claim": "Self-reranking by CapLoss gives better FID-0 than CLIP reranking as candidates increase; CLIP gives better IS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS COCO, Fig 9 curves, varying candidate count",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "4.1, Fig 9"
+  },
+  {
+   "claim": "Four image-tokenizer training methods converge to similar L2 loss, so codebook learning matters little if initialised properly.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same architecture, data and seed, Fig 2",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "2.2"
+  }
+ ],
+ "limits": [
+  "Slow token-by-token generation and VQ-VAE blurriness (authors)",
+  "DALL-E comparison uses numbers read from DALL-E figures; DALL-E not open-source so reasons for the FID gap are guesses",
+  "FID-0 not better than DM-GAN/DF-GAN (26.5); best results are on blurred FID",
+  "Human eval small: 50 captions, no DALL-E in it",
+  "No full-scale ablation of PB-relax/Sandwich-LN; evidence is a toy setup and a 500M run",
+  "Authors say the text-loss-weight finding comes from small-scale experiments without numbers",
+  "Captioning finetune not evaluated",
+  "Sparse attention not used in the 4B model",
+  "Potential misuse/deepfake and gender bias acknowledged"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PB-relax",
+   "definition": "Precision Bottleneck Relaxation: divide by the max before LayerNorm and compute attention as Q^T(K/(alpha sqrt d)) with max subtraction to avoid overflow",
+   "where": "2.4"
+  },
+  {
+   "term": "Sandwich-LN",
+   "definition": "adds a LayerNorm at the end of each residual branch",
+   "where": "2.4"
+  },
+  {
+   "term": "Caption Loss (CapLoss)",
+   "definition": "cross-entropy of text tokens given the image, used to rerank and as a metric",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Zero-shot text-to-image generation (DALL-E)",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "baseline",
+   "note": "independent same idea, released earlier",
+   "quote": null
+  },
+  {
+   "work": "Neural discrete representation learning (VQ-VAE)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "image tokenizer framework",
+   "quote": null
+  },
+  {
+   "work": "Taming transformers (VQGAN)",
+   "year": 2020,
+   "arxiv": "2012.09841",
+   "relation": "uses-method",
+   "note": "VQGAN for fashion model",
+   "quote": null
+  },
+  {
+   "work": "GPT / GPT-2 / GPT-3",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "autoregressive LM backbone",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "baseline",
+   "note": "reranker comparison",
+   "quote": null
+  },
+  {
+   "work": "Inverse prompting",
+   "year": 2021,
+   "arxiv": "2103.10685",
+   "relation": "uses-method",
+   "note": "CapLoss adapted from it",
+   "quote": null
+  },
+  {
+   "work": "Big Bird",
+   "year": 2020,
+   "arxiv": "2007.14062",
+   "relation": "uses-method",
+   "note": "pivot tokens in sparse attention",
+   "quote": null
+  },
+  {
+   "work": "Pre-LN (Xiong et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Sandwich-LN extends pre-LN",
+   "quote": null
+  },
+  {
+   "work": "ImageGPT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pixel-level AR, max 96x96",
+   "quote": null
+  },
+  {
+   "work": "MS COCO",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation",
+   "quote": null
+  },
+  {
+   "work": "Conceptual Captions",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of pretraining data",
+   "quote": null
+  },
+  {
+   "work": "AttnGAN / DM-GAN / DF-GAN",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "GAN baselines",
+   "quote": null
+  },
+  {
+   "work": "DALL-E text-loss weighting",
+   "year": 2021,
+   "arxiv": "2102.12092",
+   "relation": "contradicts",
+   "note": "CogView finds text modelling key; DALL-E lowers text weight",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The framework of CogView.",
+   "page": 5,
+   "why": "Sequence layout: separators, text tokens, image tokens, tokenizer round trip"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "(a) LayerNorm structures: Post-LN, Pre-LN, Sandwich-LN; (b) numerical scales in toy experiments",
+   "page": 6,
+   "why": "Shows where Sandwich-LN adds the extra norm and the stability ablation"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Metrics for machine evaluation (FID-k, IS, CapLoss)",
+   "page": 9,
+   "why": "Headline comparison with GANs and DALL-E"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "60 generated images ordered by CapLoss",
+   "page": 8,
+   "why": "Makes self-reranking concrete"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Center-continuous sliding window and super-resolution results",
+   "page": 7,
+   "why": "Generation order for 64x64 tokens"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Three-region sparse attention",
+   "page": 15,
+   "why": "Attention pattern in one picture"
+  }
+ ],
+ "code": [
+  {
+   "where": "2.4 Shrink embedding gradient",
+   "snippet": "emb=emb*alpha+emb.detach()*(1-alpha)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 4",
+   "snippet": "softmax(Q^T K/sqrt(d)) = softmax((Q^T/(alpha sqrt d)) K - max(Q^T/(alpha sqrt d) K)) x alpha), alpha=32",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 and Fig 4 text mangled in extraction but Table 1 cells readable",
+  "Figure 3 contains embedded base64-like latex garbage and an odd Chinese caption; ignored",
+  "No embedded instructions found"
+ ]
+}

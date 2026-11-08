@@ -1,0 +1,266 @@
+{
+ "schema": 1,
+ "key": "1901.07291",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lample-2019-cross-lingual-language-model-pretraining.pdf",
+ "bib": {
+  "title": "Cross-lingual Language Model Pretraining",
+  "authors": ["Guillaume Lample", "Alexis Conneau"],
+  "first_author": "Lample",
+  "year": 2019,
+  "venue": "NeurIPS 2019 (arXiv v1 preprint text, 22 Jan 2019)",
+  "arxiv": "1901.07291",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42055,
+  "chars_total": 42055,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only. Text is arXiv v1 (no appendix); the NeurIPS camera-ready may differ."
+ },
+ "type": "empirical",
+ "question": "Does extending generative (Transformer) language model pretraining to many languages, with monolingual and parallel-data objectives, improve cross-lingual classification, machine translation and low-resource language modeling?",
+ "hypothesis": "Pretraining a shared Transformer with cross-lingual language modeling objectives (CLM, MLM, and TLM when parallel data exists) gives better cross-lingual representations and better initialisation for NLU and MT than prior approaches.",
+ "contributions": [
+  "A new unsupervised method for learning cross-lingual representations using cross-lingual language modeling, investigating two monolingual pretraining objectives.",
+  "A new supervised learning objective (TLM) that improves cross-lingual pretraining when parallel data is available.",
+  "Significantly outperforms the previous state of the art on cross-lingual classification, unsupervised machine translation and supervised machine translation.",
+  "Cross-lingual language models give significant perplexity improvements for low-resource languages.",
+  "Code and pretrained models to be made public."
+ ],
+ "method": {
+  "summary": "A single Transformer with a shared BPE vocabulary across languages is pretrained with CLM, MLM (BERT-style but on 256-token streams of many sentences) or MLM+TLM (MLM on concatenated parallel sentence pairs with reset target positions and language embeddings). The pretrained model initialises XNLI fine-tuning, encoder/decoder of unsupervised and supervised NMT, a Nepali LM, and yields word embeddings.",
+  "task": "cross-lingual language model pretraining (MLM / CLM / TLM) with downstream XNLI, unsupervised and supervised MT, low-resource LM",
+  "trains": true,
+  "datasets": [
+   {"name": "Wikipedia dumps (monolingual, XNLI languages)", "role": "pretrain", "size": null, "split": null, "source": "Wikipedia dumps extracted with WikiExtractor", "preprocessing": "Moses tokenizer (Kytea for Japanese, Chang et al. 2008 for Chinese, PyThaiNLP for Thai), fastBPE codes learned on sentences sampled from all languages with multinomial alpha=0.5"},
+   {"name": "Parallel data for TLM (English-X only)", "role": "pretrain", "size": null, "split": null, "source": "MultiUN (fr, es, ru, ar, zh), IIT Bombay (hi), OPUS: EUbookshop (de, el, bg), OpenSubtitles 2018 (tr, vi, th), Tanzil (ur, sw), GlobalVoices (sw)", "preprocessing": "only parallel data involving English"},
+   {"name": "XNLI", "role": "eval", "size": "15 languages", "split": "fine-tune on English MultiNLI, test zero-shot on 15 XNLI languages", "source": "Conneau et al. 2018b", "preprocessing": "sentence length clipped to 256 words"},
+   {"name": "WMT'14 en-fr, WMT'16 en-de, WMT'16 en-ro", "role": "both", "size": null, "split": null, "source": "WMT", "preprocessing": null},
+   {"name": "Nepali Wikipedia (plus Hindi and English)", "role": "both", "size": "about 100k Nepali sentences; Hindi about 6 times more", "split": null, "source": "Wikipedia", "preprocessing": "shared BPE vocabulary of 100k subword units for this experiment"},
+   {"name": "MUSE dictionaries and SemEval'17 cross-lingual word similarity", "role": "eval", "size": null, "split": null, "source": "Conneau et al. 2018a; Camacho-Collados et al. 2017", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "XLM (CLM / MLM / MLM+TLM)", "role": "proposed", "params": null, "architecture": "Transformer encoder with GELU, learned positional embeddings, language embeddings", "init_from": "random (or CLM/MLM pretrained for MT)", "tokenizer": "BPE (fastBPE), shared across languages", "vocab": "95k for XNLI model (80k BPE splits); 100k BPE units in Nepali experiment", "layers": "12 for XNLI; 6 for MT", "hidden": "1024", "heads": "8", "context": "256-token streams (CLM/MLM)", "other": {"dropout": "0.1"}},
+   {"name": "Artetxe and Schwenk 2018 (LASER-style)", "role": "baseline", "params": null, "architecture": "shared LSTM encoder, trained on 223 million parallel sentences", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Multilingual BERT (Devlin et al. 2018)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Lample et al. 2018b unsupervised MT (NMT, PBSMT)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "CLM: P(w_t | w_1..w_{t-1}); MLM: 15% of BPE tokens selected, 80% [MASK], 10% random, 10% unchanged, frequent outputs subsampled with weights proportional to sqrt of inverse frequency; TLM: MLM on concatenated parallel sentences with masks in both, target positions reset. MT fine-tuning: denoising auto-encoding plus online back-translation (unsupervised).",
+   "optimizer": "Adam",
+   "lr": "1e-4 to 5e-4 (pretraining); sampled from 5e-4 to 2e-4 for XNLI fine-tuning",
+   "lr_schedule": "linear warmup (length not stated)",
+   "warmup": "linear, length not stated",
+   "batch_size": "CLM/MLM: 64 streams of 256 tokens; TLM: 4000 tokens of similar-length sentences; MT: 2000 tokens; XNLI fine-tune: 8 or 16",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "256 tokens (CLM/MLM streams)",
+   "precision": "float16",
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": null,
+   "hardware": "64 Volta GPUs for language modeling, 8 GPUs for MT tasks",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stopping": "averaged perplexity over languages as stopping criterion",
+    "language_sampling_for_bpe": "q_i = p_i^alpha / sum_j p_j^alpha, p_i = n_i / sum_k n_k, alpha = 0.5",
+    "language_sampling_for_batches": "same distribution with alpha = 0.7; each batch from one language; TLM alternates with MLM and samples language pairs similarly",
+    "xnli_eval_epochs": "small evaluation epochs of 20000 random samples",
+    "xnli_pooling": "first hidden state of last layer into randomly initialised linear classifier, all parameters fine-tuned; max/mean pooling not better",
+    "mlm_input": "streams of arbitrary number of sentences truncated at 256 tokens, not sentence pairs",
+    "clm_context": "first words of each batch left without context (no hidden-state passing)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single reported number per cell; no seeds or runs stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "XNLI accuracy", "definition": "test accuracy on 15 XNLI languages; average (delta) over languages", "unit": "%", "higher_is_better": true},
+    {"name": "BLEU", "definition": "translation quality on WMT test sets", "unit": "BLEU", "higher_is_better": true},
+    {"name": "Perplexity", "definition": "Nepali language model perplexity", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Cosine similarity / L2 distance", "definition": "between word translation pairs from MUSE dictionaries", "unit": "cosine / L2", "higher_is_better": true},
+    {"name": "SemEval'17 Pearson correlation", "definition": "cross-lingual word similarity using cosine similarity", "unit": "Pearson r", "higher_is_better": true}
+   ],
+   "baselines": ["Conneau et al. 2018b XNLI baselines", "Devlin et al. 2018 multilingual BERT", "Artetxe and Schwenk 2018", "Lample et al. 2018b NMT/PBSMT/PBSMT+NMT", "Sennrich et al. 2016 (back-translation + ensemble)", "MUSE", "Concat (fastText on concatenation)", "EMB (lookup-table-only pretraining, reimplemented)", "TRANSLATE-TRAIN / TRANSLATE-TEST"],
+   "protocol": "Zero-shot cross-lingual transfer on XNLI (train English, test 15 languages) plus translate-train and translate-test; 9 encoder/decoder init combinations for unsupervised MT; no significance tests or seeds reported."
+  },
+  "availability": {
+   "code": "promised ('will be made publicly available')",
+   "weights": "promised",
+   "data": "public Wikipedia, MultiUN, IIT Bombay, OPUS, XNLI, WMT"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "train them on 64 Volta GPUs for the language modeling tasks, and 8 GPUs for the MT tasks", "where": "5.1"},
+   {"field": "models.XLM.layers", "quote": "We use 80k BPE splits and a vocabulary of 95k and train a 12-layer model on the Wikipedias of the XNLI languages.", "where": "5.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Supervised XLM (MLM+TLM) reaches a new XNLI zero-shot average accuracy.",
+   "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "75.1", "unit": "%", "baseline_value": "70.2", "n": null,
+   "setup": "Train on English MultiNLI, zero-shot on 15 XNLI languages; 12-layer, 1024 hidden XLM pretrained on Wikipedia plus English-X parallel data; baseline Artetxe and Schwenk 2018 with 223M parallel sentences.",
+   "quote": "improving even further the state of the art to 75.1%", "table": null,
+   "note": "Abstract and conclusion say 4.9% absolute gain over previous SOTA (75.1 vs 70.2).", "where": "5.3, Table 1"
+  },
+  {
+   "claim": "Unsupervised MLM-only XLM beats the supervised Artetxe and Schwenk encoder on XNLI.",
+   "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "71.5", "unit": "%", "baseline_value": "70.2", "n": null,
+   "setup": "As above, monolingual data only.",
+   "quote": "MLM obtains 71.5% accuracy on average (∆), while they obtained 70.2% accuracy.", "table": null,
+   "note": "Conclusion says 1.3% average gain.", "where": "5.3"
+  },
+  {
+   "claim": "Adding TLM to MLM boosts XNLI average accuracy by 3.6 points.",
+   "kind": "measured", "source": null, "metric": "XNLI accuracy gain", "value": "3.6", "unit": "% accuracy", "baseline_value": "71.5", "n": null,
+   "setup": "MLM vs MLM+TLM, zero-shot XNLI.",
+   "quote": "we get a significant boost in performance of 3.6% accuracy", "table": null, "note": null, "where": "5.3"
+  },
+  {
+   "claim": "TLM raises English XNLI accuracy from 83.2 to 85.0.",
+   "kind": "measured", "source": null, "metric": "XNLI en accuracy", "value": "85.0", "unit": "%", "baseline_value": "83.2", "n": null,
+   "setup": "XLM MLM vs MLM+TLM, English test.",
+   "quote": "Using TLM in addition to MLM also improves English accuracy from 83.2% to 85% accuracy", "table": null, "note": null, "where": "5.3"
+  },
+  {
+   "claim": "Fine-tuning on translated train sets (TRANSLATE-TRAIN) gives the best XNLI average.",
+   "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "76.7", "unit": "%", "baseline_value": "75.1", "n": null,
+   "setup": "XLM MLM+TLM, TRANSLATE-TRAIN.",
+   "quote": "reaching an absolute state of the art of 76.7% average accuracy", "table": null, "note": null, "where": "5.3, Table 1"
+  },
+  {
+   "claim": "XLM MLM+TLM TRANSLATE-TEST XNLI average is 74.2, below zero-shot 75.1.",
+   "kind": "measured", "source": null, "metric": "XNLI average accuracy", "value": "74.2", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "TRANSLATE-TEST row.",
+   "quote": null, "table": "Table 1, row XLM (MLM+TLM) under TRANSLATE-TEST, column delta",
+   "note": "Text: zero-shot outperforms TRANSLATE-TEST by 0.9%.", "where": "Table 1"
+  },
+  {
+   "claim": "Unsupervised MT: best model (MLM encoder and decoder) reaches 34.3 BLEU on de-en, more than 9 BLEU over the previous best.",
+   "kind": "measured", "source": null, "metric": "BLEU WMT'16 de-en", "value": "34.3", "unit": "BLEU", "baseline_value": "25.2", "n": null,
+   "setup": "Encoder and decoder both initialised with MLM pretraining, then denoising auto-encoding plus online back-translation; 6-layer model, 2000-token batches; baseline Lample et al. 2018b PBSMT+NMT.",
+   "quote": "In German-English, our best model outperforms the previous unsupervised approach by more than 9.1 BLEU, and 13.3 BLEU if we only consider neural unsupervised approaches.", "table": null, "note": null, "where": "5.3, Table 2"
+  },
+  {
+   "claim": "Unsupervised MT en-fr and fr-en best BLEU with MLM/MLM init.",
+   "kind": "measured", "source": null, "metric": "BLEU WMT'14 en-fr", "value": "33.4", "unit": "BLEU", "baseline_value": "28.1", "n": null,
+   "setup": "MLM/MLM init; en-fr 33.4, fr-en 33.3; baseline best prior en-fr PBSMT 28.1.",
+   "quote": null, "table": "Table 2, row MLM MLM, columns en-fr and fr-en", "note": null, "where": "Table 2"
+  },
+  {
+   "claim": "MLM pretraining beats CLM pretraining for unsupervised MT.",
+   "kind": "measured", "source": null, "metric": "BLEU WMT'14 en-fr", "value": "33.4", "unit": "BLEU", "baseline_value": "30.4", "n": null,
+   "setup": "CLM/CLM vs MLM/MLM init.",
+   "quote": "going from 30.4 to 33.4 BLEU on English-French, and from 28.0 to 31.8 on Romanian-English", "table": null, "note": null, "where": "5.3"
+  },
+  {
+   "claim": "Pretraining the encoder and decoder with MLM beats pretraining only the lookup table (EMB) by up to 7 BLEU on de-en.",
+   "kind": "measured", "source": null, "metric": "BLEU gain de-en", "value": "7", "unit": "BLEU", "baseline_value": "27.3", "n": null,
+   "setup": "EMB/EMB 27.3 vs MLM/MLM 34.3, de-en.",
+   "quote": "leads to consistent significant improvements of up to 7 BLEU on German-English", "table": null, "note": null, "where": "5.3"
+  },
+  {
+   "claim": "The encoder is the most important component to pretrain for unsupervised MT.",
+   "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Table 2 rows with '-' for encoder or decoder.",
+   "quote": null, "table": null, "note": "Text: 'pretraining only the decoder leads to a significant drop in performance, while pretraining only the encoder only has a small impact'.", "where": "5.3"
+  },
+  {
+   "claim": "Supervised MT ro-en: MLM-pretrained bidirectional model with back-translation reaches new SOTA.",
+   "kind": "measured", "source": null, "metric": "BLEU WMT'16 ro-en", "value": "38.5", "unit": "BLEU", "baseline_value": "33.9", "n": null,
+   "setup": "MLM pretraining, ro<->en + BT; back-translation uses the same monolingual data as pretraining; baseline Sennrich et al. 2016 (back-translation + ensemble).",
+   "quote": "Our bidirectional model trained with back-translation obtains the best performance and reaches 38.5 BLEU", "table": null, "note": null, "where": "5.3, Table 3"
+  },
+  {
+   "claim": "Supervised MT ro-en unidirectional: no pretraining 28.4, CLM 31.5, MLM 35.3.",
+   "kind": "measured", "source": null, "metric": "BLEU ro->en", "value": "35.3", "unit": "BLEU", "baseline_value": "28.4", "n": null,
+   "setup": "ro->en only.",
+   "quote": null, "table": "Table 3, row ro →en, column MLM", "note": null, "where": "Table 3"
+  },
+  {
+   "claim": "Nepali perplexity falls from 157.2 to 109.3 when adding English and Hindi data.",
+   "kind": "measured", "source": null, "metric": "Nepali perplexity", "value": "109.3", "unit": "perplexity", "baseline_value": "157.2", "n": null,
+   "setup": "Cross-lingual LM on Nepali Wikipedia plus English and/or Hindi Wikipedia, shared 100k BPE vocabulary.",
+   "quote": "by leveraging data from both English and Hindi, we reduce the perplexity even more to 109.3 on Nepali", "table": null, "note": null, "where": "5.3, Table 4"
+  },
+  {
+   "claim": "Similar-language data (Hindi) helps Nepali far more than distant (English): 115.6 vs 140.1.",
+   "kind": "measured", "source": null, "metric": "Nepali perplexity", "value": "115.6", "unit": "perplexity", "baseline_value": "140.1", "n": null,
+   "setup": "Nepali+Hindi vs Nepali+English; Hindi and Nepali share Devanagari script, >80% of tokens in the shared BPE vocabulary.",
+   "quote": null, "table": "Table 4, row Nepali + Hindi, column Nepali perplexity", "note": "Text: reduction of 17.1 (English) and 41.6 (Hindi).", "where": "Table 4"
+  },
+  {
+   "claim": "XLM word embeddings from the lookup table beat MUSE and Concat on cross-lingual word similarity and translation-pair closeness.",
+   "kind": "measured", "source": null, "metric": "SemEval'17 Pearson", "value": "0.69", "unit": "Pearson r", "baseline_value": "0.65", "n": null,
+   "setup": "XLM (MLM) vs MUSE vs Concat; cosine 0.55 vs 0.38 (MUSE), L2 2.64 vs 5.13.",
+   "quote": "reaching a Pearson correlation of 0.69", "table": null, "note": "Authors caution XLM embeddings are trained jointly with a sentence encoder, which may enforce closeness.", "where": "5.3, Table 5"
+  },
+  {
+   "claim": "Low-resource XNLI languages gain strongly over previous best.",
+   "kind": "measured", "source": null, "metric": "XNLI accuracy gain Swahili / Urdu", "value": "6.2", "unit": "% accuracy (Swahili; Urdu 6.3)", "baseline_value": null, "n": null,
+   "setup": "XLM MLM+TLM vs previous SOTA, zero-shot.",
+   "quote": "we outperform the previous state of the art by 6.2% and 6.3% respectively", "table": null, "note": null, "where": "5.3"
+  }
+ ],
+ "limits": [
+  "No seeds, variance or significance tests reported; single numbers per cell.",
+  "Number of parameters, training steps, tokens, corpus sizes and compute hours are not given; warmup length and weight decay unstated.",
+  "Learning rate is given only as a range and appears to be tuned per task.",
+  "TLM requires English-centric parallel data; coverage differs by language pair (MultiUN, OPUS corpora of different domains).",
+  "XNLI comparison with Artetxe and Schwenk uses a different pretraining data regime (223M parallel sentences vs Wikipedia), and TLM adds parallel data, so MLM and MLM+TLM are not equal-data.",
+  "EMB baseline was reimplemented and beat the published numbers; authors attribute this to larger batches.",
+  "Nepali gains are shown only for Wikipedia-scale data and one low-resource language; explanation (shared anchor n-grams) is offered, not tested.",
+  "Text is the arXiv v1; XLM-R and later multilingual models have superseded the specific numbers."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Causal Language Modeling (CLM)", "definition": "a Transformer language model trained to model the probability of a word given the previous words in a sentence", "where": "3.2"},
+  {"term": "Masked Language Modeling (MLM)", "definition": "BERT's objective (Cloze task) applied to streams of text: 15% of BPE tokens sampled, replaced by [MASK] 80%, random 10%, unchanged 10%", "where": "3.3"},
+  {"term": "Translation Language Modeling (TLM)", "definition": "extension of MLM that concatenates parallel sentences and masks words in both so the model can use the other language as context; target positions are reset", "where": "3.4"},
+  {"term": "TRANSLATE-TRAIN", "definition": "the English MultiNLI training set is machine translated into each XNLI language", "where": "5.3"},
+  {"term": "TRANSLATE-TEST", "definition": "every dev and test set of XNLI is translated to English", "where": "5.3"}
+ ],
+ "lineage": [
+  {"work": "BERT (Devlin et al.)", "year": 2018, "arxiv": "1810.04805", "relation": "extends", "note": "MLM objective with 15/80/10/10 masking, adapted to streams instead of sentence pairs", "quote": "Our work builds on top of Radford et al. (2018); Howard and Ruder (2018); Devlin et al. (2018)"},
+  {"work": "Improving language understanding by generative pre-training (GPT)", "year": 2018, "arxiv": null, "relation": "extends", "note": "generative pretraining of Transformers; basis for CLM", "quote": null},
+  {"work": "ULMFiT (Howard and Ruder)", "year": 2018, "arxiv": "1801.06146", "relation": "extends", "note": "LM pretraining then fine-tuning", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "Transformer architecture and linear warmup", "quote": null},
+  {"work": "Neural machine translation of rare words with subword units (BPE)", "year": 2015, "arxiv": "1508.07909", "relation": "uses-method", "note": "shared BPE vocabulary", "quote": null},
+  {"work": "Lample et al. 2018b Phrase-based & neural unsupervised MT", "year": 2018, "arxiv": "1804.07755", "relation": "extends", "note": "same UNMT setting; pretrains whole model instead of lookup table; main baseline", "quote": null},
+  {"work": "Lample et al. 2018a Unsupervised MT using monolingual corpora only", "year": 2018, "arxiv": "1711.00043", "relation": "uses-method", "note": "denoising auto-encoding and online back-translation; shared vocabulary", "quote": null},
+  {"work": "Artetxe and Schwenk, Massively multilingual sentence embeddings", "year": 2018, "arxiv": "1812.10464", "relation": "baseline", "note": "previous XNLI SOTA using 223M parallel sentences", "quote": null},
+  {"work": "Conneau et al. XNLI", "year": 2018, "arxiv": "1809.05053", "relation": "uses-data", "note": "benchmark and baselines (translate-train/test)", "quote": null},
+  {"work": "Ramachandran et al. Unsupervised pretraining for seq2seq", "year": 2016, "arxiv": "1611.02683", "relation": "extends", "note": "LM pretraining for MT, extended to multilingual NMT", "quote": null},
+  {"work": "Johnson et al. Google's multilingual NMT", "year": 2017, "arxiv": "1611.04558", "relation": "related", "note": "single shared model for many language pairs", "quote": null},
+  {"work": "Wada and Iwata, multilingual neural language models", "year": 2018, "arxiv": "1809.02306", "relation": "related", "note": "most similar work: LSTM LM shared across languages with per-language lookup tables", "quote": "The most similar work to ours is probably the one of Wada and Iwata (2018)"},
+  {"work": "Sennrich et al. Edinburgh NMT systems for WMT 16", "year": 2016, "arxiv": "1606.02891", "relation": "baseline", "note": "previous ro-en SOTA (33.9 BLEU)", "quote": null},
+  {"work": "MUSE (Conneau et al.)", "year": 2018, "arxiv": "1710.04087", "relation": "baseline", "note": "word embedding comparison", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Cross-lingual language model pretraining. The MLM objective is similar to the one of Devlin et al. (2018), but with continuous streams of text as opposed to sentence pairs. The TLM objective extends MLM to pairs of parallel sentences. To predict a masked English word, the model can attend to both the English sentence and its French translation, and is encouraged to align English and French representations. Position embeddings of the target sentence are reset to facilitate the alignment.", "page": 3, "why": "Shows token + position + language embeddings summed and the TLM English/French concatenation with reset positions; clearest picture of MLM vs TLM."},
+  {"figure": "Table 1", "caption": "Results on cross-lingual classification accuracy. Test accuracy on the 15 XNLI languages.", "page": 6, "why": "Per-language XNLI results for MLM vs MLM+TLM against mBERT and LASER-style baselines."},
+  {"figure": "Table 2", "caption": "Results on unsupervised MT. BLEU scores on WMT'14 English-French, WMT'16 German-English and WMT'16 Romanian-English.", "page": 7, "why": "Grid of nine encoder/decoder init choices (-, EMB, CLM, MLM) showing MLM and encoder pretraining matter most."}
+ ],
+ "code": [
+  {"where": "3.1", "snippet": "q_i = p_i^alpha / sum_{j=1..N} p_j^alpha, with p_i = n_i / sum_{k=1..N} n_k", "verbatim": false}
+ ],
+ "problems": [
+  "Figure 1 text extracted as scattered tokens; read from caption only.",
+  "Table cells are extracted one per line; row and column mapping inferred from order. Table 1 rows checked against text-quoted values (75.1, 71.5, 70.2, 76.7, 85.0, 83.2).",
+  "Section header '5 Experiments' map offsets shown with a stray '74.2' artifact. No embedded instructions found."
+ ]
+}

@@ -1,0 +1,690 @@
+{
+ "schema": 1,
+ "key": "1911.12543",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/jiang-2020-how-can-we-know-what.pdf",
+ "bib": {
+  "title": "How Can We Know What Language Models Know?",
+  "authors": [
+   "Zhengbao Jiang",
+   "Frank F. Xu",
+   "Jun Araki",
+   "Graham Neubig"
+  ],
+  "first_author": "Jiang",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "1911.12543",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 59615,
+  "chars_total": 59615,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can we tighten the lower bound on factual knowledge in LMs by finding better prompts than hand-written ones?",
+ "hypothesis": "Manually written prompts are sub-optimal, so any single prompt gives only a lower bound on what the LM knows; mined, paraphrased and ensembled prompts should retrieve more.",
+ "contributions": [
+  "Mining-based and paraphrasing-based prompt generation",
+  "Top-K rank ensemble and optimized weighted ensemble of prompts",
+  "Analysis of prompt consistency, POS patterns and cross-model transfer",
+  "Release of LPAQA, the LM Prompt And Query Archive"
+ ],
+ "method": {
+  "summary": "Generate many cloze prompts per relation by mining Wikipedia (middle-word and dependency-path) or back-translation paraphrase, rank them on a held-out train set, and average log-probabilities of the top K or learn softmax prompt weights. BERT, ERNIE and KnowBert themselves are frozen; only per-relation prompt weights are learned.",
+  "task": "Factual knowledge probing by cloze-style relation completion (LAMA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAMA T-REx",
+    "role": "eval",
+    "size": "at most 1000 subject-object pairs per relation, 41 relations; avg 830.2 pairs, 767.8 unique subjects, 150.9 unique objects, object entropy 3.6",
+    "split": "all pairs used for test",
+    "source": "Wikidata via T-REx (ElSahar 2018), LAMA (Petroni 2019)",
+    "preprocessing": "single-token objects only"
+   },
+   {
+    "name": "T-REx-train",
+    "role": "train",
+    "size": "avg 948.7 pairs per relation, 354.6 unique objects",
+    "split": "no overlap with T-REx",
+    "source": "Wikidata",
+    "preprocessing": "single-token objects only; used to mine prompts, rank prompts, learn weights"
+   },
+   {
+    "name": "T-REx-UHN",
+    "role": "eval",
+    "size": "avg 661.1 pairs per relation",
+    "split": "LAMA-UHN subset of T-REx",
+    "source": "Poerner et al. 2019 filter",
+    "preprocessing": "easy-to-guess facts removed"
+   },
+   {
+    "name": "Google-RE",
+    "role": "eval",
+    "size": "3 relations; per-relation size not stated",
+    "split": null,
+    "source": "Google relation-extraction corpus",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikipedia",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "sentences containing subject and object, distant supervision, for prompt mining",
+    "preprocessing": "drop prompts that are only stopwords/punctuation or longer than 10 words"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ERNIE",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BERT-style with entity embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "KnowBert",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BERT with entity embeddings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "English-German NMT (WMT19, Ng et al. 2019)",
+    "role": "base",
+    "params": null,
+    "architecture": "neural MT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "back-translation paraphrasing, B=7 candidates each way"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximize probability of gold objects P(y|x,r) under softmax-weighted log-linear prompt ensemble (Eq. 3); LM frozen",
+   "optimizer": "Adam, default parameters",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "trainable_parameters": "T times number of relations (T=40, 41 relations)"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over vocabulary of masked-slot probability, single token",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one deterministic pass; no seeds reported",
+   "prompting": "cloze template with x and y slots, y masked",
+   "retrieval": null,
+   "parameters": {
+    "T": "40 most frequent prompts from mining or paraphrasing",
+    "B": "7 back-translation candidates, B^2 ranked by round-trip probability",
+    "K": "top K prompts averaged, K in 1..10, Top1/3/5 reported",
+    "dedupe": "drop prompts of stopwords only or over 10 words"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "micro-averaged accuracy",
+     "definition": "per-relation fraction of pairs where argmax prediction equals the single ground truth, averaged over relations (LAMA P@1)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "macro-averaged accuracy",
+     "definition": "per-relation accuracy computed for each unique object then averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "prediction divergence",
+     "definition": "fraction of pairs where two prompts differ in success",
+     "unit": "fraction",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Majority object per relation",
+    "Man: single manual LAMA prompt (Petroni 2019)",
+    "Oracle upper bound"
+   ],
+   "protocol": "Single run per setting, no seeds or significance tests reported; ensemble weights learned on T-REx-train and tested on T-REx."
+  },
+  "availability": {
+   "code": "https://github.com/jzbjyb/LPAQA",
+   "weights": null,
+   "data": "LPAQA prompt archive at same URL"
+  },
+  "prompts": [
+   {
+    "purpose": "manual baseline example",
+    "text": "x plays at y position",
+    "where": "Sec 2"
+   },
+   {
+    "purpose": "mined example, middle word",
+    "text": "x was born in y",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "mined example, dependency",
+    "text": "capital of x is y",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "mined religion prompt vs manual 'x is affiliated with the y religion'",
+    "text": "x who converted to y",
+    "where": "Table 4"
+   },
+   {
+    "purpose": "mined subclass prompt vs manual 'x is a subclass of y'",
+    "text": "x is a type of y",
+    "where": "Table 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Adam (Kingma and Ba, 2015) with default parameters and batch size of 32",
+    "where": "5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best ensemble of mined plus manual prompts raises BERT-base micro accuracy over the manual prompt baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "39.6",
+   "unit": "%",
+   "baseline_value": "31.1",
+   "n": null,
+   "setup": "T-REx subset of LAMA, 41 relations, BERT-base, cloze-style single-token object prediction; Mine+Man, optimized ensemble (Opti.), T=40 prompts per relation",
+   "quote": null,
+   "table": "Table 2, BERT-base, row Mine+Man, column Opti.",
+   "note": null,
+   "where": "Table 2, p.5"
+  },
+  {
+   "claim": "Single best prompt from generation methods raises BERT-large micro accuracy over the manual prompt",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "39.4",
+   "unit": "%",
+   "baseline_value": "32.3",
+   "n": null,
+   "setup": "T-REx, BERT-large, Mine+Man Top1",
+   "quote": "from 32.3% to 39.4% on BERT-large",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Single best prompt raises BERT-base micro accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "34.1",
+   "unit": "%",
+   "baseline_value": "31.1",
+   "n": null,
+   "setup": "T-REx subset of LAMA, 41 relations, BERT-base, cloze-style single-token object prediction; Man+Para Top1",
+   "quote": "increases micro-averaged accuracy from 31.1% to 34.1% on BERT-base",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Optimized ensemble of mined prompts on BERT-large",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "43.9",
+   "unit": "%",
+   "baseline_value": "32.3",
+   "n": null,
+   "setup": "T-REx, BERT-large, Mine+Man Opti.",
+   "quote": null,
+   "table": "Table 2, BERT-large, row Mine+Man, column Opti.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Oracle (any prompt succeeds) upper bound, BERT-base Mine+Man",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "52.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-REx subset of LAMA, 41 relations, BERT-base, cloze-style single-token object prediction; a fact counts correct if any prompt predicts the object",
+   "quote": null,
+   "table": "Table 2, BERT-base, row Mine+Man, column Oracle",
+   "note": "Gap between Opti. and Oracle shows room for better ensembling",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Macro-averaged accuracy of optimized ensemble on BERT-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-averaged accuracy",
+   "value": "25.7",
+   "unit": "%",
+   "baseline_value": "22.8",
+   "n": null,
+   "setup": "T-REx, BERT-base, Mine optimized ensemble; manual 22.8",
+   "quote": "from 22.8% to 25.7% on BERT-base",
+   "table": null,
+   "note": "Text says 'from 25.7% to 30.1% on BERT-base' for the second pair, but Table 3 puts 25.7 to 30.1 on BERT-large (typo in paper)",
+   "where": "5.2"
+  },
+  {
+   "claim": "Majority-class baseline micro accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "22.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-REx, predict the most common object per relation",
+   "quote": "which achieves a score of 22.0%",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Majority-class baseline macro accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-averaged accuracy",
+   "value": "2.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-REx, majority object per relation",
+   "quote": "the majority-class baseline only achieving a score of 2.2%",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Largest per-relation gain: religion, mined prompt 'x who converted to y' over manual",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "+60.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-REx relation P140, BERT-base",
+   "quote": null,
+   "table": "Table 4, row religion, column Acc. Gain",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Paraphrase ensembling gain over single prompt on BERT-base",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "36.2",
+   "unit": "%",
+   "baseline_value": "32.7",
+   "n": null,
+   "setup": "Mine+Para, Opti. vs Top1 32.7",
+   "quote": "micro-averaged accuracy from 32.7% to 36.2%",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Prompt edit distance correlates weakly with prediction divergence",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "0.25",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "T-REx relations, mined prompts, edit distance normalized to [0,1]",
+   "quote": "ﬁcient is 0.25, which shows that there is a weak",
+   "table": null,
+   "note": null,
+   "where": "5.3, Fig 3"
+  },
+  {
+   "claim": "Optimized ensemble on LAMA-UHN, BERT-large Mine+Man vs manual",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "34.5",
+   "unit": "%",
+   "baseline_value": "24.2",
+   "n": null,
+   "setup": "T-REx-UHN (harder, name-guessable facts filtered), BERT-large",
+   "quote": null,
+   "table": "Table 9, BERT-large, column Mine+Man",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "ERNIE beats BERT with Mine+Man prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "43.8",
+   "unit": "%",
+   "baseline_value": "39.6",
+   "n": null,
+   "setup": "T-REx, ERNIE, Mine+Man Opti.; BERT 39.6, so gap 4.2 points",
+   "quote": null,
+   "table": "Table 8, row ERNIE, column Mine+Man",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "KnowBert underperforms BERT on LAMA with manual prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "26.2",
+   "unit": "%",
+   "baseline_value": "31.1",
+   "n": null,
+   "setup": "T-REx, KnowBert Man vs BERT 31.1",
+   "quote": null,
+   "table": "Table 8, row KnowBert, column Man",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Cross-model transfer: BERT-base weights learned on BERT-large still beat manual prompts",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "40.1",
+   "unit": "%",
+   "baseline_value": "39.6",
+   "n": null,
+   "setup": "Mine+Man, tested on BERT-base, weights trained on BERT-large",
+   "quote": null,
+   "table": "Table 12, row Mine+Man, column BERT-base test / large train",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Google-RE gains are small",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "11.3",
+   "unit": "%",
+   "baseline_value": "10.5",
+   "n": null,
+   "setup": "Google-RE 3 relations, BERT-large Mine+Man vs Man 10.5",
+   "quote": null,
+   "table": "Table 10, BERT-large, column Mine+Man",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "LM-aware hill-climbing prompt refinement raises oracle but lowers ensembles (overfit)",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "50.8",
+   "unit": "%",
+   "baseline_value": "47.9",
+   "n": null,
+   "setup": "BERT-base, after refinement; Opti. 38.1 to 37.5",
+   "quote": null,
+   "table": "Table 14, row after, column Oracle",
+   "note": null,
+   "where": "Table 14"
+  },
+  {
+   "claim": "Single-word edits to a paraphrased prompt change accuracy a lot",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "+23.2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "P413, 'x plays in y position' to 'x plays at y position'",
+   "quote": null,
+   "table": "Table 6, row P413 x plays in->at y position",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Adding backward probability yields negligible gain",
+   "kind": "measured",
+   "source": null,
+   "metric": "micro-averaged accuracy",
+   "value": "38.2",
+   "unit": "macro column as printed",
+   "baseline_value": "38.1",
+   "n": null,
+   "setup": "BERT-base, mined prompts, forward+backward vs forward 38.1",
+   "quote": null,
+   "table": "Table 15, row +backward, column Mine macro",
+   "note": "Table 15 header lists macro before micro but values 38.x look like micro; header/values ordering looks swapped in extraction",
+   "where": "Table 15"
+  }
+ ],
+ "limits": [
+  "Only masked LMs and single-token objects; left-to-right LMs not tractable",
+  "One ground-truth object per fact even where several are valid",
+  "Optimized weights tuned for micro accuracy, gains smaller on macro",
+  "Gap between Opti. and Oracle shows ensembling is far from ideal",
+  "LM-aware gradient prompt search was unstable; hill-climbing overfit",
+  "Google-RE gains small; one relation (birth date) has only one prompt with non-zero accuracy",
+  "Models are BERT-era (2019); finding that LMs are brittle to small prompt edits is the transferable point",
+  "No seeds, variance or significance tests"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LPAQA",
+   "definition": "LM Prompt And Query Archive, the released set of learned prompts",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Models as Knowledge Bases? (Petroni et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LAMA benchmark and manual prompts are the baseline",
+   "quote": null
+  },
+  {
+   "work": "BERT: Pre-training of deep bidirectional transformers",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "BERT-base and BERT-large probed",
+   "quote": null
+  },
+  {
+   "work": "ERNIE (Zhang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "entity-enhanced model",
+   "quote": null
+  },
+  {
+   "work": "Knowledge enhanced contextual word representations (Peters et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "KnowBert",
+   "quote": null
+  },
+  {
+   "work": "BERT is not a knowledge base (yet) (Poerner et al.)",
+   "year": 2019,
+   "arxiv": "1911.03681",
+   "relation": "uses-data",
+   "note": "LAMA-UHN filter",
+   "quote": null
+  },
+  {
+   "work": "Learning surface text patterns for a QA system (Ravichandran and Hovy)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "template mining inspiration",
+   "quote": null
+  },
+  {
+   "work": "Toutanova et al. dependency paths",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dependency-based prompts",
+   "quote": null
+  },
+  {
+   "work": "Back-translation paraphrasing (Sennrich 2016; Mallinson 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "paraphrase generation",
+   "quote": null
+  },
+  {
+   "work": "Mask-predict (Ghazvininejad et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspires hill-climbing prompt refinement",
+   "quote": null
+  },
+  {
+   "work": "Inducing relational knowledge from BERT (Bouraoui et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent; trains models for relation extraction",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Top-5 predictions and their log probabilities using different prompts (manual, mined, and paraphrased) to query BERT. Correct answer is underlined.",
+   "page": 1,
+   "why": "Shows on one example that the same fact is retrieved or missed depending on prompt wording"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Micro-averaged accuracy of different methods (%).",
+   "page": 5,
+   "why": "Main result grid: Top1/3/5/Opti./Oracle by generation method"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Correlation of edit distance between prompts and their prediction divergence.",
+   "page": 7,
+   "why": "Prompt wording distance vs disagreement"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance for different top-K ensembles.",
+   "page": 5,
+   "why": "Ensemble size saturates around K=2 to 5"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 3",
+   "snippet": "s(y|x, r) = sum_{i=1}^{T} P_{theta_r}(t_{r,i}|r) log P_LM(y|x, t_{r,i}), P_theta_r = softmax(theta_r)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text does not print the venue (arXiv v2, 3 May 2020); TACL 2020 comes from the requester, so bib.venue is 'preprint'",
+  "Text says 'from 25.7% to 30.1% on BERT-base' in the micro vs macro paragraph; Table 3 shows BERT-large",
+  "Table 15 column header order (macro, micro) looks swapped relative to values",
+  "Model sizes, layers, parameters not stated (BERT standard assumed, not recorded)",
+  "No embedded instructions found"
+ ]
+}

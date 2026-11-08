@@ -24,6 +24,9 @@ sources:
   - https://arxiv.org/abs/2211.09085
   - https://arxiv.org/abs/2303.17564
   - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
+  - https://arxiv.org/abs/1907.10529
+  - https://doi.org/10.18653/v1/2020.findings-emnlp.139
+  - https://arxiv.org/abs/2102.04664
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -58,6 +61,10 @@ The InstructGPT paper ([arXiv:2203.02155](https://arxiv.org/abs/2203.02155), Ouy
 Pretraining is self-supervised: the label for each position is the next token in the text. [Fundamentals](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md#backpropagation) and [optimisation](../../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md#optimisers) in data science teach backprop, AdamW and the learning-rate sweep. Raschka writes the loop by hand (*LLMs from Scratch*, ch. 5; full code at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch)):
 
 Next-token prediction is one of several objectives. BERT-style masked language modelling picks about 15% of the tokens as targets and, of those, replaces 80% with `[MASK]`, 10% with a random token and leaves 10% unchanged. The last two stop the model learning that only `[MASK]` positions matter, a symbol it never sees at fine-tuning (*Foundations of LLMs*, ch. 1; recipe as described there, Devlin et al.'s). RoBERTa found that dropping the next-sentence loss costs nothing once training is scaled up (same chapter, reported from Liu et al., 2019). The book's Table 1.1 maps objective to architecture: causal LM to decoder-only, masked and denoising objectives to encoder or encoder-decoder. It is BERT-era and encoder-centric, so read it for the objectives, not for current practice.
+
+SpanBERT changed what is masked. It hides contiguous spans (15% of tokens, lengths from a geometric distribution with p = 0.2, clipped at 10 words, mean 3.8), adds a span-boundary loss that predicts each hidden token from the two tokens bordering the span, and trains on single segments without next-sentence prediction. At BERT-large size on BooksCorpus and Wikipedia it scored 94.6 F1 on SQuAD 1.1 and 88.7 on SQuAD 2.0 (test), against 92.6 and 85.9 for the authors' own BERT replica. On TACRED most of the gain came from dropping next-sentence prediction (+2.6 F1; span masking with the boundary loss added +0.7). In dev-set ablations random spans matched or beat masking named entities or noun phrases (SQuAD 2.0 F1 85.4 against 84.8 and 85.0), and the boundary loss mattered mainly for coreference (76.3 to 79.0). These are single runs, and the pretraining took 15 days on 32 V100s ([arXiv:1907.10529](https://arxiv.org/abs/1907.10529) (Joshi et al., TACL 2020)).
+
+CodeBERT carries the recipe to code. It is RoBERTa-base (125M), started from RoBERTa's weights and trained for 100K steps on CodeSearchNet's 2.1M text-code pairs and 6.5M unpaired functions in six languages, with masked-token prediction on the pairs and ELECTRA-style replaced-token detection on everything (its generators are n-gram models). Code-search MRR averaged over the six languages was 0.7603, against 0.6972 for RoBERTa alone. Masked-token prediction alone already reached 0.7549, so replaced-token detection added 0.0054 in single runs, and the masked-token-only model trained from scratch instead of from RoBERTa scored 0.6998 ([doi:10.18653/v1/2020.findings-emnlp.139](https://doi.org/10.18653/v1/2020.findings-emnlp.139) (Feng et al., EMNLP Findings 2020)). CodeXGLUE then bundled code tasks the way GLUE does for text: 10 tasks over 14 datasets, with CodeBERT, a GPT-2-sized CodeGPT (124M) and an encoder-decoder as baselines. Normalising variable names cut CodeBERT's code-search MRR on CodeSearchNet Python from 0.869 to 0.507, so part of the score was name matching. Its metrics are overlap-based (BLEU, CodeBLEU, edit similarity) and nothing is executed, unlike pass@k ([arXiv:2102.04664](https://arxiv.org/abs/2102.04664) (Lu et al., NeurIPS Datasets and Benchmarks 2021)).
 
 ```python
 import math
