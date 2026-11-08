@@ -1,0 +1,585 @@
+{
+ "schema": 1,
+ "key": "2003.05997",
+ "pdf": "ai-engineering/07-inference-engineering/sources/roy-2021-efficient-content-based-sparse-attention.pdf",
+ "bib": {
+  "title": "Efficient Content-Based Sparse Attention with Routing Transformers",
+  "authors": [
+   "Aurko Roy",
+   "Mohammad Saffar",
+   "Ashish Vaswani",
+   "David Grangier"
+  ],
+  "first_author": "Roy",
+  "year": 2021,
+  "venue": "TACL (arXiv v5, 24 Oct 2020)",
+  "arxiv": "2003.05997",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 116284,
+  "chars_total": 116284,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can self-attention keep content-based (learned) sparsity while using natively sparse attention matrices, so cost drops below quadratic in sequence length?",
+ "hypothesis": "Routing queries to keys in the same online spherical k-means cluster approximates maximum inner product search, keeps large attention weights, and beats fixed local/strided sparsity patterns.",
+ "contributions": [
+  "Routing attention: online k-means clustering of queries and keys, attention only within a cluster, O(n^1.5 d) cost",
+  "State of the art on Wikitext-103, PG-19 and ImageNet-64, competitive on enwik-8",
+  "Evidence that scaled-up local attention is a strong baseline",
+  "Ablations on CIFAR-10 and a Jensen-Shannon analysis of routing versus local heads"
+ ],
+ "method": {
+  "summary": "Each attention layer clusters queries and keys with shared centroids learned by exponential moving average; each centroid keeps the top n/k tokens by distance, and attention is dense within each cluster. Routing heads are mixed with local-attention heads; keys and queries are shared in causal models.",
+  "task": "autoregressive language modeling and image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "60,000 colored images 32x32; sequence length 3072",
+    "split": "test bits/dim reported",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Wikitext-103",
+    "role": "both",
+    "size": "over 100 million tokens from 28K articles, avg 3.6K tokens per article",
+    "split": "test perplexity",
+    "source": "Merity et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "enwik-8",
+    "role": "both",
+    "size": "first 100M bytes of unprocessed Wikipedia",
+    "split": "test",
+    "source": "Mahoney 2011",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet 64x64",
+    "role": "both",
+    "size": "images of 64x64x3 bytes as sequences of length 12,288, raster RGB order",
+    "split": null,
+    "source": "as in Child et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "PG-19",
+    "role": "both",
+    "size": "approximately 28,000 books, 1.9 billion tokens, avg context roughly 69,000 words",
+    "split": "test perplexity normalized by token counts of Rae et al. 2020",
+    "source": "Rae et al. 2020",
+    "preprocessing": "subword vocabulary of approximately 98,000"
+   }
+  ],
+  "models": [
+   {
+    "name": "Routing Transformer (CIFAR-10 ablation)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder transformer, local + routing heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": null,
+    "heads": "8",
+    "context": "3072",
+    "other": {
+     "k": "6",
+     "attention window": "512 or 1024",
+     "routing layers/heads": "varied 0-12 / 0-8, routing layers at top"
+    }
+   },
+   {
+    "name": "Routing Transformer (Wikitext-103)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "relative position encoding (Shaw et al. 2018)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "10",
+    "hidden": null,
+    "heads": "16",
+    "context": null,
+    "other": {
+     "k": "16",
+     "attention window": "256 train and eval",
+     "attention and ReLU dropout": "0.3"
+    }
+   },
+   {
+    "name": "Routing Transformer (enwik-8)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "relative position encoding",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 in text; Table 3 lists 12",
+    "hidden": null,
+    "heads": "8",
+    "context": "8192",
+    "other": {
+     "k": "32",
+     "attention window": "256",
+     "dropout": "0.4 attention and ReLU"
+    }
+   },
+   {
+    "name": "Routing Transformer (ImageNet-64)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "half local, half routing heads",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": null,
+    "heads": "16",
+    "context": "12, 288",
+    "other": {
+     "k": "8",
+     "attention window": "2048"
+    }
+   },
+   {
+    "name": "Routing Transformer (PG-19)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "2 routing heads, routing only in last two layers",
+    "init_from": null,
+    "tokenizer": "subword",
+    "vocab": "approximately 98,000",
+    "layers": "22",
+    "hidden": "1032",
+    "heads": "8",
+    "context": "8192",
+    "other": {
+     "attention window (Table 7)": "512"
+    }
+   },
+   {
+    "name": "Local Transformer, Transformer-XL, Sparse Transformer, Compressive Transformer, Adaptive models, Reformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive likelihood",
+   "optimizer": "Adam (beta1 0.9, beta2 0.98) for all but PG-19; Adafactor for PG-19",
+   "lr": "2e-4 (Adam); constant 0.01 (Adafactor, PG-19)",
+   "lr_schedule": "schedule of Vaswani et al. 2017 (Adam); PG-19 linear warmup then rsqrt_normalized_decay",
+   "warmup": "10,000 steps (PG-19 only)",
+   "batch_size": "32 (CIFAR-10); 1 (ImageNet-64); 8192 tokens (PG-19)",
+   "steps": "200,000 (CIFAR-10)",
+   "epochs": "roughly 70 (ImageNet-64)",
+   "tokens": null,
+   "seq_len": "3072 CIFAR-10; 8192 enwik-8 and PG-19; 12,288 ImageNet-64; 4096 for the JSD analysis on Wikitext-103",
+   "precision": null,
+   "weight_decay": "none (PG-19)",
+   "dropout": "0.3 Wikitext-103, 0.4 enwik-8, none PG-19",
+   "regularisation": null,
+   "hardware": "128 TPUv3 cores",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "centroid update": "EMA, decay lambda usually 0.999; padding tokens excluded",
+    "head allocation": "half local, half routing in all models except PG-19",
+    "PG-19 deviations": "2 routing heads, routing in last two layers only, Adafactor"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "k": "sqrt(n) optimal",
+    "window w": "n/k",
+    "JSD runs": "10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "test-set, PG-19 normalized by token counts of Rae et al. 2020",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "bits/dim",
+     "definition": "test set, images",
+     "unit": "bits/dim",
+     "higher_is_better": false
+    },
+    {
+     "name": "bits per byte",
+     "definition": "enwik-8 test",
+     "unit": "bpc",
+     "higher_is_better": false
+    },
+    {
+     "name": "step time",
+     "definition": "training steps per second on TPUv3, same cores and batch size",
+     "unit": "steps/sec",
+     "higher_is_better": true
+    },
+    {
+     "name": "Jensen-Shannon divergence",
+     "definition": "between attention distributions of local and routing heads, natural log, max 0.6931",
+     "unit": "nats",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Local Transformer",
+    "Transformer-XL",
+    "Sparse Transformer",
+    "Adaptive Transformer",
+    "Compressive Transformer",
+    "Reformer",
+    "Random Transformer",
+    "full-attention Transformer (CIFAR-10)"
+   ],
+   "protocol": "Single reported runs; no seeds or significance test stated except JSD over 10 runs."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/google-research/tree/master/routing_transformer (TensorFlow)",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Routing Transformer reaches 15.8 test perplexity on Wikitext-103 vs 18.3 for Transformer-XL with fewer layers",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 15.8,
+   "unit": "perplexity",
+   "baseline_value": 18.3,
+   "n": null,
+   "setup": "Wikitext-103, 10 layers 16 heads, k=16, window 256",
+   "quote": "Routing Transformer model is able to get a test perplexity of 15.8",
+   "table": null,
+   "note": null,
+   "where": "5.2, Table 2"
+  },
+  {
+   "claim": "PG-19 test perplexity 33.2 with 22 layers at length 8192 vs 33.6 Compressive Transformer (36 layers)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 33.2,
+   "unit": "perplexity",
+   "baseline_value": 33.6,
+   "n": null,
+   "setup": "PG-19, 22 layers 8 heads, 2 routing heads in last two layers, sequence 8192",
+   "quote": null,
+   "table": "Table 5, row Routing Transformer, column Perplexity",
+   "note": null,
+   "where": "5.5, Table 5"
+  },
+  {
+   "claim": "Local Transformer is a strong baseline: 39.3 on PG-19 vs 36.3 for 36-layer Transformer-XL",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39.3,
+   "unit": "perplexity",
+   "baseline_value": 36.3,
+   "n": null,
+   "setup": "PG-19, 24-layer local attention",
+   "quote": "obtaining a test set perplexity of 39.3",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "ImageNet-64: 3.425 bits/dim vs 3.437 Sparse Transformer (Table 4 prints 3.43 and 3.44)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.425,
+   "unit": "bits/dim",
+   "baseline_value": 3.437,
+   "n": null,
+   "setup": "ImageNet 64x64, 24 layers 16 heads, k=8, window 2048",
+   "quote": "3.425 bits/dim",
+   "table": null,
+   "note": "Abstract and Table 4 print 3.43 vs 3.44; Reformer 3.65",
+   "where": "5.4"
+  },
+  {
+   "claim": "enwik-8 0.99 bits per byte, equal to Transformer-XL and Sparse Transformer, above Adaptive Transformer 0.98",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.99,
+   "unit": "bits/byte",
+   "baseline_value": 0.98,
+   "n": null,
+   "setup": "enwik-8, 12 layers 8 heads, k=32, window 256, length 8192",
+   "quote": null,
+   "table": "Table 3, row Routing Transformer, column Bits per byte",
+   "note": "Text says 24 layers, Table 3 says 12; text calls the metric perplexity",
+   "where": "5.3, Table 3"
+  },
+  {
+   "claim": "Complexity: cluster assignment O(nkd) plus attention O(n^2 d/k); k=sqrt(n) gives O(n^1.5 d)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "balanced clusters of size n/k",
+   "quote": "The computational complexity of this variant of sparse attention is O(nkd+n2d/k).",
+   "table": null,
+   "note": null,
+   "where": "4.1"
+  },
+  {
+   "claim": "CIFAR-10: full attention 2.983, local 3.009, best routing model 2.971 (window 512, 4 routing heads, 8 routing layers), random heads 3.076",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.971,
+   "unit": "bits/dim",
+   "baseline_value": 3.009,
+   "n": null,
+   "setup": "CIFAR-10, 12 layers 8 heads, window 512, 200,000 steps, batch 32",
+   "quote": "(3.076 vs 3.009 vs 2.971) bits/dim",
+   "table": null,
+   "note": null,
+   "where": "6.1, Table 1"
+  },
+  {
+   "claim": "Routing-only model (no local heads) is much worse: 3.400 bits/dim at window 512",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.4,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, 8 routing heads in 12 routing layers",
+   "quote": null,
+   "table": "Table 1, row 8 routing heads 12 routing layers window 512, column Bits/dim",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Local attention trains 9.023 steps/sec vs 5.608 for full attention on CIFAR-10 (TPUv3)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.023,
+   "unit": "steps/sec",
+   "baseline_value": 5.608,
+   "n": null,
+   "setup": "CIFAR-10, TPUv3, window 512 vs full 3072",
+   "quote": "training at 9.023 steps per second compared to 5.608",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "Routing Transformer is about 1.7x slower than Local Transformer on PG-19 (0.7236 vs 1.231 steps/sec)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.7236,
+   "unit": "steps/sec",
+   "baseline_value": 1.231,
+   "n": null,
+   "setup": "PG-19, length 8192, TPUv3, window 512",
+   "quote": null,
+   "table": "Table 7, row Routing Transformer, column Steps/sec",
+   "note": "Authors attribute it to no sparse op support on TPU",
+   "where": "6.3, Table 7"
+  },
+  {
+   "claim": "Routing heads differ from local heads: JSD close to the 0.6931 upper bound (layer 1: 0.6674)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.6674,
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Wikitext-103, length 4096, mean over 10 runs",
+   "quote": null,
+   "table": "Table 6, row layer 1, column JSD(local||routing)",
+   "note": null,
+   "where": "6.1, Table 6"
+  },
+  {
+   "claim": "Abstract complexity claim: O(n^1.5 d) from O(n^2 d)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "sequence length n, hidden dim d",
+   "quote": "while reducing the over-",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Wall-clock is slower than local attention on TPU (no sparse ops); authors say wall-clock is only a secondary goal",
+  "Top-k balanced assignment does not guarantee each point belongs to a single cluster",
+  "Full attention only compared on the short CIFAR-10 sequences; best routing models beat full attention but not by enough to rule out noise",
+  "Sparse attention trains on long sequences so fits fewer layers than Transformer-XL style recurrence",
+  "No seeds or variance for main results; compute not stated",
+  "Training-time method for autoregressive models; no KV-cache or decode-time latency measurement",
+  "Dated: later long-context methods (e.g. FlashAttention-style dense kernels) changed the speed trade-off"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Routing attention",
+   "definition": "queries are routed to keys belonging to the same cluster",
+   "where": "4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generating long sequences with sparse transformers (Child et al.)",
+   "year": 2019,
+   "arxiv": "1904.10509",
+   "relation": "baseline",
+   "note": "local and strided sparse attention",
+   "quote": null
+  },
+  {
+   "work": "Reformer (Kitaev et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "contemporaneous LSH routing; fixed random hyperplanes vs learned centroids",
+   "quote": null
+  },
+  {
+   "work": "Transformer-XL (Dai et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "segment recurrence",
+   "quote": null
+  },
+  {
+   "work": "Adaptive attention span (Sukhbaatar et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "learned span",
+   "quote": null
+  },
+  {
+   "work": "Compressive Transformer and PG-19 (Rae et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "PG-19 dataset and baseline",
+   "quote": null
+  },
+  {
+   "work": "Adaptively sparse transformers (Correia et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "content-based sparsity needing the full dense matrix",
+   "quote": null
+  },
+  {
+   "work": "Auvolat et al. clustering for MIPS",
+   "year": 2015,
+   "arxiv": "1507.05910",
+   "relation": "uses-method",
+   "note": "spherical k-means for MIPS",
+   "quote": null
+  },
+  {
+   "work": "Attention Is All You Need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base architecture",
+   "quote": null
+  },
+  {
+   "work": "Shaw et al. relative position",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "relative position encoding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "2-D attention schemes for the Routing Transformer compared to local and strided attention",
+   "page": 6,
+   "why": "shows local, strided and cluster-routed sparsity patterns side by side"
+  },
+  {
+   "figure": "Algorithm 1",
+   "caption": "Routing Attention",
+   "page": 6,
+   "why": "gather/top-k/scatter steps with shapes k x w x d"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "CIFAR-10 ablation: routing heads/layers/window vs bits/dim and steps/sec",
+   "page": 8,
+   "why": "quality-speed trade-off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p6",
+   "snippet": "Qprod <- mu Q^T (k x n); Qidx <- sort(top-k(Qprod, w)), w = n/k; Q',K',V' <- gather; A <- softmax(ltr(Q'K'^T)); X <- scatter(Kidx, einsum(A,V')); mu <- lambda mu + (1-lambda) Qm Q/2 + (1-lambda) Km K/2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text mentions 24-layer enwik-8 model but Table 3 lists 12 layers",
+  "Text calls enwik-8 metric perplexity; table says bits per byte",
+  "Abstract/Table 4 give 3.43 vs 3.44; Sec 5.4 gives 3.425 vs 3.437",
+  "Section 5.4 says routing attention 'as in Section 3'; likely Section 4.1",
+  "Equations and ligatures partly garbled in text cache"
+ ]
+}

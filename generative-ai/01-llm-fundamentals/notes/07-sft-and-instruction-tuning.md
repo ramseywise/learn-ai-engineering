@@ -67,6 +67,9 @@ SFT continues training on curated examples of the behaviour you want. The exampl
 
 *Building AI Agents* (ch. 2) shows the classification route on a small decoder, with a linear head on the last token's hidden state; it is the same pattern as *LLMs from Scratch* ch. 6.
 
+![Forward and backward pass of supervised fine-tuning on one sequence of three input tokens and two output tokens: the forward pass runs as usual, and in the backward pass the loss on the input tokens is zero while only the output tokens carry loss](../sources/images/xiao-foundations-llms-fig4-2.png)
+*Image Source: Xiao & Zhu, [Foundations of Large Language Models](https://arxiv.org/abs/2501.09223) (2025), Fig. 4.2*
+
 The *LLM Engineer's Handbook* (ch. 5) adds the practical side: building an instruction dataset from your own documents, deduplication, using an LLM to generate and filter pairs, chat templates, and choosing between full fine-tuning, LoRA and QLoRA by GPU budget.
 
 **Rule:** SFT teaches the *form* of an answer far more than new facts. Fine-tuning on a knowledge base to make a model "know" it tends to produce confident paraphrases with errors. For facts that change or need citations, use retrieval ([02-rag-retrieval](../../02-rag-retrieval/README.md)); for a large, stable body of domain text, use continued pretraining (above).

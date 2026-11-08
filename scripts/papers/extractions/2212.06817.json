@@ -1,0 +1,155 @@
+{
+ "schema": 1,
+ "key": "2212.06817",
+ "pdf": "ai-engineering/03-harness-engineering/sources/brohan-2023-rt-1.pdf",
+ "bib": {
+  "title": "RT-1: Robotics Transformer for Real-World Control at Scale",
+  "authors": ["Anthony Brohan", "Noah Brown", "Justice Carbajal", "Yevgen Chebotar", "Joseph Dabis", "Chelsea Finn", "Keerthana Gopalakrishnan", "Karol Hausman", "Alex Herzog", "Jasmine Hsu", "Julian Ibarz", "Brian Ichter", "Alex Irpan", "Tomas Jackson", "Sally Jesmonth", "Nikhil J Joshi", "Ryan Julian", "Dmitry Kalashnikov", "Yuheng Kuang", "Isabel Leal", "Kuang-Huei Lee", "Sergey Levine", "Yao Lu", "Utsav Malla", "Deeksha Manjunath", "Igor Mordatch", "Ofir Nachum", "Carolina Parada", "Jodilyn Peralta", "Emily Perez", "Karl Pertsch", "Jornell Quiambao", "Kanishka Rao", "Michael Ryoo", "Grecia Salazar", "Pannag Sanketi", "Kevin Sayed", "Jaspiar Singh", "Sumedh Sontakke", "Austin Stone", "Clayton Tan", "Huong Tran", "Vincent Vanhoucke", "Steve Vega", "Quan Vuong", "Fei Xia", "Ted Xiao", "Peng Xu", "Sichun Xu", "Tianhe Yu", "Brianna Zitkovich"],
+  "first_author": "Brohan",
+  "year": 2023,
+  "venue": "Robotics: Science and Systems 2023",
+  "arxiv": "2212.06817",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 88800,
+  "chars_total": 105184,
+  "engine": "pymupdf",
+  "skipped": "Reference list (offset ~46764 to ~63202 minus appendix start) skimmed only for lineage."
+ },
+ "type": "system",
+ "question": "Can a single high-capacity, real-time Transformer policy trained on a large, diverse set of real-robot demonstrations perform hundreds of language instructions and generalize to new tasks, distractors and backgrounds?",
+ "hypothesis": "Open-ended task-agnostic training with a high-capacity architecture that can absorb diverse robot data yields generalization, and data diversity matters more than data quantity.",
+ "contributions": [
+  "RT-1 model: a tokenized, efficient Transformer policy that runs in real time (3 Hz)",
+  "A ~130k-episode, 700+ instruction real-robot dataset collected over 17 months with 13 robots",
+  "Large-scale evaluation (3000+ real-world trials) against Gato and BC-Z, with ablations of model and data composition",
+  "Evidence that RT-1 absorbs simulation and other-robot data and chains into long-horizon SayCan plans"
+ ],
+ "method": {
+  "summary": "RT-1 tokenizes 6 history images with an ImageNet-pretrained EfficientNet-B3 conditioned on a Universal Sentence Encoder instruction embedding via identity-initialized FiLM layers, compresses 81 tokens per image to 8 with TokenLearner, and feeds 48 tokens to an 8-layer decoder-only Transformer that outputs 11 action dimensions discretized to 256 bins plus a mode variable. It is trained by behavior cloning on successful teleoperated demonstrations and evaluated on real mobile manipulators in training and two office-kitchen environments.",
+  "task": "language-conditioned robot manipulation by behavior cloning",
+  "trains": true,
+  "datasets": [
+   {"name": "RT-1 robot demonstrations", "role": "train", "size": "~130k episodes, 744 instructions (700+ tasks), 13 robots, 17 months", "split": "53 instructions held out for unseen-task eval (Appendix I; main text says 21 unseen instructions)", "source": "Collected by the authors with VR-remote teleoperation in robot classroom", "preprocessing": "All episodes successful (final reward 1); instruction and scene randomization sampled by software module"},
+   {"name": "Simulation pick data", "role": "train", "size": "518k successful trajectories", "split": null, "source": "Sim policy bootstrapped from real policy then trained with multi-task RL; used only in Sec IV-C", "preprocessing": null},
+   {"name": "QT-Opt Kuka bin-picking data", "role": "train", "size": "209k episodes", "split": "mixed 2:1 RT-1 data : Kuka data", "source": "QT-Opt (Kalashnikov et al.)", "preprocessing": "4-DOF actions mapped to RT-1 action space (roll, pitch set to 0, yaw kept); binary gripper close made continuous; all relabelled to instruction 'pick anything'"}
+  ],
+  "models": [
+   {"name": "RT-1", "role": "proposed", "params": "35M", "architecture": "FiLM-EfficientNet-B3 + TokenLearner + decoder-only Transformer", "init_from": "ImageNet-pretrained EfficientNet-B3; USE for language", "tokenizer": "images: 6 frames of 300x300 -> 9x9x512 feature map -> 81 tokens -> TokenLearner 8 tokens each; actions: 256 uniform bins per dimension", "vocab": "256 bins per action dimension", "layers": "8 self-attention layers (Transformer); 26 MBConv/FiLM layers in image tokenizer", "hidden": null, "heads": null, "context": "48 tokens (6 images x 8)", "other": {"image_tokenizer_params": "16M", "transformer_params": "19M", "action_dims": "7 arm (x,y,z,roll,pitch,yaw,gripper), 3 base (x,y,yaw), 1 mode switch (arm/base/terminate)", "control_rate": "3 Hz", "inference_time": "15 ms (Table XIII)"}},
+   {"name": "Gato (reimplemented)", "role": "baseline", "params": "37M", "architecture": "Transformer, per-patch image tokens, late language fusion, autoregressive actions", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"original_size": "1.2B, 1.9s on-robot inference", "inference_time": "129 ms"}},
+   {"name": "BC-Z", "role": "baseline", "params": null, "architecture": "ResNet feedforward, no history, continuous actions", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"inference_time": "5.3 ms"}},
+   {"name": "BC-Z XL", "role": "baseline", "params": "similar to RT-1 (number not given)", "architecture": "larger BC-Z", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"inference_time": "5.9 ms"}}
+  ],
+  "training": {
+   "objective": "standard categorical cross-entropy with causal masking (behavior cloning: negative log-likelihood of actions given images and instruction)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "48 tokens (6 images x 8 tokens)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"film_init": "dense layers producing FiLM affine transform initialized to zero so FiLM starts as identity", "checkpoint_selection": "real-to-sim: policies rolled out in simulator over 551 tasks with RetinaGAN image translation to rank checkpoints (Appendix F)"}
+  },
+  "inference": {
+   "decoding": "non-autoregressive action token output (one forward pass per step)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single policy rollout per trial; 3000+ real-world trials total; number of trials per cell not stated except 72 grasping trials for bin-picking eval",
+   "prompting": "natural-language instruction embedded by Universal Sentence Encoder; SayCan few-shot prompting plans long-horizon tasks",
+   "retrieval": null,
+   "parameters": {"control_frequency": "3 Hz", "latency_budget": "<100 ms for model", "fixed_wait": "280 ms wait after capturing state before applying action", "episode_limit": "100 actions (~33 s)"},
+   "other": {"speedups": "TokenLearner 2.4x; reusing image tokens across overlapping windows 1.7x"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "success rate", "definition": "Human-rated skill completion; failure if collision, touching irrelevant objects, unsafe behavior, or not done within 100 actions (~33 s)", "unit": "%", "higher_is_better": true},
+    {"name": "inference time", "definition": "network inference time only", "unit": "ms", "higher_is_better": false}
+   ],
+   "baselines": ["Gato", "BC-Z", "BC-Z XL", "original SayCan (BC-Z)"],
+   "protocol": "Seen: 200+ tasks (744 in Appendix), skill-weighted average; unseen: 21 (main) or 53 (Appendix) held-out instructions; 30 distractor tasks and 22 background tasks (main), 3 and 6 task templates (Appendix); 15 long-horizon SayCan instructions in 2 kitchens; baselines trained on the same data; no seeds, confidence intervals or significance tests reported"
+  },
+  "availability": {
+   "code": "github.com/google-research/robotics_transformer",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "models.RT-1.params", "quote": "Despite its size (35M parameters), it does this at 3 Hz", "where": "Fig. 1 caption"},
+   {"field": "datasets.unseen", "quote": "we test 21 novel, unseen instructions", "where": "Sec IV-A; Appendix I says 53 tasks held out"}
+  ]
+ },
+ "results": [
+  {"claim": "RT-1 completes 97% of 200+ seen instructions.", "kind": "measured", "source": null, "metric": "success rate (seen tasks)", "value": "97", "unit": "%", "baseline_value": "72 (BC-Z); 65 (Gato); 56 (BC-Z XL)", "n": "200+ tasks", "setup": "Real robot, classroom environment, trained on ~130k episodes, baselines trained on same data", "quote": "RT-1 is able to perform 97% of the more than 200 instructions successfully", "table": null, "note": "Appendix I says seen eval covers 744 tasks", "where": "Sec IV-B, Table II"},
+  {"claim": "RT-1 solves 76% of unseen instructions, 24 points above the next best baseline.", "kind": "measured", "source": null, "metric": "success rate (unseen tasks)", "value": "76", "unit": "%", "baseline_value": "52 (Gato)", "n": "21 instructions (main text); 53 (Appendix)", "setup": "Held-out skill/object combinations whose parts appear in training", "quote": "performing 76% of the never-before-seen instructions, 24% more than the next best baseline", "table": null, "note": "BC-Z scores 19", "where": "Sec IV-B, Table II"},
+  {"claim": "RT-1 reaches 83% on distractor tasks and 59% on background tasks.", "kind": "measured", "source": null, "metric": "success rate (robustness)", "value": "83 / 59", "unit": "%", "baseline_value": "47 (BC-Z) distractors; 41 (BC-Z) backgrounds", "n": "30 distractor tasks, 22 background tasks", "setup": "Up to 9 distractors with occlusion; new kitchen and counter textures", "quote": "successfully executing 83% of the distractor robustness tasks and 59% of the background robustness tasks", "table": null, "note": null, "where": "Sec IV-B"},
+  {"claim": "In realistic kitchen scenarios RT-1 scores 70% overall versus 55% for BC-Z XL.", "kind": "measured", "source": null, "metric": "success rate (realistic scenarios)", "value": "70", "unit": "%", "baseline_value": "55 (BC-Z XL)", "n": null, "setup": "Office kitchen, L1-L3 generalization", "quote": null, "table": "Table III, row RT-1 (ours), column All", "note": "L1 88, L2 75, L3 50", "where": "Sec IV-B"},
+  {"claim": "Removing 25% of tasks while keeping 97% of data hurts generalization as much as cutting data size by 49%.", "kind": "measured", "source": null, "metric": "generalization equivalence", "value": "49", "unit": "% data reduction", "baseline_value": null, "n": null, "setup": "Data ablation of RT-1; task-diverse vs capped-per-task datasets", "quote": "removing 25% of the tasks while keeping 97% of the data achieves an equivalent generalization performance to reducing the dataset size by as much as 49%", "table": null, "note": null, "where": "Sec IV-E, Table XII"},
+  {"claim": "Adding simulation data raises real-world success on sim-only objects from 23% to 87% without hurting real objects (92 to 90).", "kind": "measured", "source": null, "metric": "success rate", "value": "87", "unit": "%", "baseline_value": "23", "n": null, "setup": "518k sim pick trajectories mixed with real data; real-world evaluation on pick and move-to", "quote": "(from 23% to 87%)", "table": null, "note": "Unseen skills with sim objects 7 to 33", "where": "Sec IV-C, Table IV"},
+  {"claim": "Mixing Kuka bin-picking data lifts bin-picking eval from 22% to 39% with a 2-point loss on the classroom eval.", "kind": "measured", "source": null, "metric": "success rate (bin-picking)", "value": "39", "unit": "%", "baseline_value": "22", "n": "72 grasping trials", "setup": "209k Kuka episodes mixed 2:1 with RT-1 data", "quote": "performs at 39% compared to the 22% of the model that was trained only on the RT-1 data", "table": null, "note": "Kuka-only model scores 0", "where": "Sec IV-C, Table V"},
+  {"claim": "In SayCan long-horizon tasks RT-1 reaches 67% execution success in both kitchens; Gato gets 0% and BC-Z 13% in Kitchen2.", "kind": "measured", "source": null, "metric": "execution success rate", "value": "67", "unit": "%", "baseline_value": "53 (BC-Z) Kitchen1; 13 (BC-Z) Kitchen2", "n": "15 instructions, avg 9.6 steps", "setup": "SayCan planning, 87% planning success for all but original SayCan (73)", "quote": "RT-1 performs the best, with 67% execution success rate in Kitchen1", "table": null, "note": null, "where": "Sec IV-D, Table VI"},
+  {"claim": "Replacing discretized actions with continuous Gaussian actions drops seen-task success to 68%.", "kind": "measured", "source": null, "metric": "success rate (seen tasks)", "value": "68", "unit": "%", "baseline_value": "97", "n": null, "setup": "Model ablation, MSE loss with multivariate normal output", "quote": null, "table": "Table XIII, row RT-1 w/ continuous actions, column Seen Tasks", "note": "Unseen 43, distractors 37", "where": "Appendix M"},
+  {"claim": "Removing ImageNet pretraining cuts unseen-task success by 33 points.", "kind": "measured", "source": null, "metric": "unseen-task success delta", "value": "33", "unit": "%", "baseline_value": null, "n": null, "setup": "Model ablation", "quote": "decreasing the unseen task performance rate by 33%", "table": null, "note": null, "where": "Appendix M"},
+  {"claim": "Autoregressive action conditioning did not help and more than doubled inference time (36 ms vs 15 ms).", "kind": "measured", "source": null, "metric": "inference slowdown", "value": "2", "unit": "x", "baseline_value": null, "n": null, "setup": "Model ablation", "quote": "slowed inference by more than 2x", "table": null, "note": "Table XIII: 36 ms vs 15 ms", "where": "Appendix M"},
+  {"claim": "Model inference budget is under 100 ms for 3 Hz control.", "kind": "claim", "source": null, "metric": "latency budget", "value": "100", "unit": "ms", "baseline_value": null, "n": null, "setup": "Real-robot control requirement derived from 2-4 s human task times", "quote": "to be less than 100ms", "table": null, "note": null, "where": "Sec III-B"},
+  {"claim": "TokenLearner and token reuse speed inference by 2.4x and 1.7x.", "kind": "measured", "source": null, "metric": "speedup", "value": "2.4 and 1.7", "unit": "x", "baseline_value": null, "n": null, "setup": "RT-1 inference", "quote": "speed up the model inference by 2.4 and 1.7 times, respectively", "table": null, "note": null, "where": "Sec III-B"},
+  {"claim": "The 1.2B-parameter original Gato takes 1.9 s per on-robot inference, so the baseline was shrunk to 37M.", "kind": "measured", "source": null, "metric": "inference time", "value": "1.9", "unit": "s", "baseline_value": null, "n": null, "setup": "Original Gato size on robot", "quote": "which was 1.2B parameters (resulting in on robot inference time of 1.9s)", "table": null, "note": null, "where": "Appendix H"},
+  {"claim": "A fixed 280 ms wait enforces consistent control frequency.", "kind": "claim", "source": null, "metric": "fixed wait", "value": "280", "unit": "ms", "baseline_value": null, "n": null, "setup": "Max observed latency of all components", "quote": "(280ms, the max observed latency of all components)", "table": null, "note": null, "where": "Appendix B"},
+  {"claim": "Real-to-sim evaluation in a simulator covering 551 tasks ranks real policies directionally and is used for checkpoint selection.", "kind": "claim", "source": null, "metric": "tasks in sim", "value": "551", "unit": "tasks", "baseline_value": null, "n": null, "setup": "RetinaGAN-translated sim images; no correlation coefficient reported", "quote": "support 551 of the tasks", "table": null, "note": null, "where": "Appendix F"}
+ ],
+ "limits": [
+  "Authors: imitation learning cannot surpass the demonstrators.",
+  "Authors: generalization is limited to combinations of previously seen concepts, not new motions.",
+  "Authors: evaluation kitchens are similar to training; tasks are not very dexterous.",
+  "No optimizer, learning rate, batch size, steps, hardware or seeds are stated, so training is not reproducible from the paper.",
+  "No variance, confidence intervals or per-cell trial counts; success rates are single numbers.",
+  "Baselines are retrained on the authors' data and shrunk to a similar size; authors note comparison compares architectures, not systems.",
+  "Unseen-task count inconsistent: 21 in Sec IV-A, 53 in Appendix I; seen-task count 200+ vs 744.",
+  "Dataset and weights not stated as released; code link given."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "skill", "definition": "instructions grouped by the verb used in them", "where": "Sec III-C"},
+  {"term": "instruction (task)", "definition": "a verb surrounded by one or multiple nouns, such as 'place water bottle upright'", "where": "Sec III-C"},
+  {"term": "real-to-sim evaluation", "definition": "run policies trained on real data in a simulator to estimate rollout performance for model selection", "where": "Appendix F"}
+ ],
+ "lineage": [
+  {"work": "Do As I Can, Not As I Say (SayCan)", "year": 2022, "arxiv": "2204.01691", "relation": "uses-method", "note": "Planner that chains RT-1 skills for long-horizon tasks", "quote": null},
+  {"work": "Gato (Reed et al.)", "year": 2022, "arxiv": "2205.06175", "relation": "baseline", "note": "Transformer generalist agent, reimplemented at 37M", "quote": null},
+  {"work": "BC-Z (Jang et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "ResNet language-conditioned BC policy", "quote": null},
+  {"work": "EfficientNet (Tan and Le)", "year": 2019, "arxiv": "1905.11946", "relation": "uses-method", "note": "ImageNet-pretrained image backbone", "quote": null},
+  {"work": "FiLM (Perez et al.)", "year": 2018, "arxiv": "1709.07871", "relation": "uses-method", "note": "Language conditioning of image features", "quote": null},
+  {"work": "TokenLearner (Ryoo et al.)", "year": 2021, "arxiv": "2106.11297", "relation": "uses-method", "note": "Token compression for speed", "quote": null},
+  {"work": "Universal Sentence Encoder (Cer et al.)", "year": 2018, "arxiv": "1803.11175", "relation": "uses-method", "note": "Instruction embedding", "quote": null},
+  {"work": "QT-Opt (Kalashnikov et al.)", "year": 2018, "arxiv": "1806.10293", "relation": "uses-data", "note": "209k Kuka episodes", "quote": null},
+  {"work": "RetinaGAN (Ho et al.)", "year": 2020, "arxiv": "2011.03148", "relation": "uses-method", "note": "Sim image translation for real-to-sim eval", "quote": null},
+  {"work": "Attention Is All You Need (Vaswani et al.)", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "Transformer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A high-level overview of RT-1's architecture, dataset, and evaluation.", "page": 1, "why": "Shows image + instruction -> action tokens at 3 Hz in one picture"},
+  {"figure": "Fig 2", "caption": "The architecture diagram of RT-1. The instruction is transformed into a USE embedding and used to condition a pre-trained EfficientNet via FiLM layers. The resulting vision-language tokens are reduced by the TokenLearner and fed into a decoder-only Transformer, which outputs tokenized actions.", "page": 3, "why": "Pipeline from observation to tokenized action, mirrors a harness loop"},
+  {"figure": "Fig 6", "caption": "Various data ablations of RT-1 across seen tasks, generalization to unseen tasks, and robustness to distractors and backgrounds. Data diversity has a higher impact on the performance and generalization than data quantity.", "page": 9, "why": "Diversity beats quantity at a glance"},
+  {"figure": "Table II", "caption": "Overall performance of RT-1 and baselines across seen tasks, generalization to unseen tasks, and robustness to distractors and backgrounds.", "page": 7, "why": "Headline comparison"}
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction renders ligatures (fi, ff) as single glyphs; quotes avoid them.",
+  "Training hyperparameters are absent from the paper, not from the extraction.",
+  "Main text and appendix disagree on unseen-task (21 vs 53) and seen-task (200+ vs 744) counts."
+ ]
+}

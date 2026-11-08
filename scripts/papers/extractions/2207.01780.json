@@ -1,0 +1,603 @@
+{
+ "schema": 1,
+ "key": "2207.01780",
+ "pdf": "ai-engineering/05-graph-engineering/sources/le-2022-coderl.pdf",
+ "bib": {
+  "title": "CodeRL: Mastering Code Generation through Pretrained Models and Deep Reinforcement Learning",
+  "authors": [
+   "Hung Le",
+   "Yue Wang",
+   "Akhilesh Deepak Gotmare",
+   "Silvio Savarese",
+   "Steven C.H. Hoi"
+  ],
+  "first_author": "Le",
+  "year": 2022,
+  "venue": "NeurIPS 2022 (arXiv v3)",
+  "arxiv": "2207.01780",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 107541,
+  "chars_total": 107541,
+  "engine": "pymupdf",
+  "skipped": "Reference list and appendix generated-program listings (Fig 11-15) skimmed; Tables 7-9 CodeXGLUE not recorded in detail"
+ },
+ "type": "empirical",
+ "question": "Can unit-test feedback, used in actor-critic RL finetuning and in test-time refine/repair, make pretrained code LMs solve harder program-synthesis problems?",
+ "hypothesis": "Next-token training ignores unit-test signals; using test outcomes as dense critic-based rewards in training and as feedback at inference improves functional correctness.",
+ "contributions": [
+  "CodeRL actor-critic framework using unit-test returns with greedy baseline and token-level critic values",
+  "Critic Sampling inference: refine passing programs from critic-chosen seeds, repair failing ones with error messages",
+  "Improved CodeT5-large 770M (GCPY data, NTP objective)",
+  "SOTA on APPS and zero-shot MBPP"
+ ],
+ "method": {
+  "summary": "Pretrain CodeT5-770M, warm-start on APPS with cross-entropy, train a small critic to predict unit-test outcome of sampled programs, then finetune the actor with Lce+Lrl. At inference sample N=200 programs, test on example tests, refine passers from critic-selected prefixes and repair the top failing program using error type and message (one round max).",
+  "task": "program synthesis from natural language (APPS, MBPP)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "APPS",
+    "role": "both",
+    "size": "10,000 problems",
+    "split": "50-50 train/test; Intro 3639 (2639/1000), Interview 5000 (2000/3000), Competition 1361 (361/1000)",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "same as Hendrycks et al. 2021; avg 23.2 solutions, 21.2 unit tests per problem"
+   },
+   {
+    "name": "MBPP",
+    "role": "eval",
+    "size": "974 instances",
+    "split": "374/90/500 train/val/test, 10 few-shot",
+    "source": "Austin et al. 2021",
+    "preprocessing": "prompt: description + 'Your code should satisfy these tests:' + 3 asserts"
+   },
+   {
+    "name": "GCPY (Github Code Python)",
+    "role": "pretrain",
+    "size": "10.5B tokens",
+    "split": null,
+    "source": "HuggingFace lvwerra/github-code, permissive licences",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeSearchNet (6 PLs)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Husain et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CodeT5-large (CodeRL actor)",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "T5-large encoder-decoder",
+    "init_from": "pretrained from scratch by authors",
+    "tokenizer": "code-specific tokenizer of CodeT5",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "source 600 / target 512 on APPS; 768/600 in NTP pretraining",
+    "other": {}
+   },
+   {
+    "name": "Critic",
+    "role": "reward",
+    "params": null,
+    "architecture": "CodeT5-small (for CodeT5 actors); GPT2-small (for GPT actors)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "outputs": "4-way test outcome, max-pooled decoder states"
+    }
+   },
+   {
+    "name": "Program repair model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "seq2seq",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-J 6B, GPT-Neo 2.7B",
+    "role": "base",
+    "params": "6B / 2.7B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Lce then Lce+Lrl with equal weights; Lrl REINFORCE with greedy baseline and critic token value (Eq 14), single sample per step; returns -1.0 compile, -0.6 runtime, -0.3 failed test, +1.0 pass",
+   "optimizer": "AdamW",
+   "lr": "pretrain MSP peak 2e-4, NTP peak 1e-4; APPS warm-start 0 to 2e-5 then to 1e-5; MBPP finetune constant 2e-5",
+   "lr_schedule": "linear decay with 1000 warmup steps (pretraining); APPS: warmup 500 steps then polynomial power 0.5 decay",
+   "warmup": "1000 steps (pretrain); 500 steps (APPS)",
+   "batch_size": "pretrain MSP 2048 (also text says concatenated to 512), NTP 256; APPS warm-start 64; MBPP 32",
+   "steps": null,
+   "epochs": "MSP: 150 epochs CSN + 10 GCPY; NTP 10; APPS warm-start 10; MBPP 60",
+   "tokens": "1.1B after concatenation (MSP)",
+   "seq_len": "NTP 768 src/600 tgt; APPS 600/512; MBPP 382/306",
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 A100-40G GPUs on GCP kubernetes (pretraining); 1 A100 for finetuning",
+   "compute": "pretraining about 21 days; APPS warm-start about 30 hours on one A100; MBPP under 30 min",
+   "wall_clock": "MSP 10 days CSN + 5 days GCPY, NTP 6 days",
+   "seeds": null,
+   "other": {
+    "critic_training": "actor frozen; critic trained on sampled programs plus ground-truth programs labelled PassedTest",
+    "corruption_rate_MSP": "15%",
+    "NTP_pivot": "10% to 90% of sequence",
+    "RL_trainset_rl_sample_count": null,
+    "critic_sizes_and_lr": null
+   }
+  },
+  "inference": {
+   "decoding": "nucleus sampling; beam search in ablations of Tables 2-3",
+   "temperature": "1.2 for CodeT5 on MBPP (GPT baseline 0.5); APPS not stated",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "N=200 per problem in Critic Sampling; k up to 1000; 200 programs for qualitative analysis",
+   "prompting": "APPS prompt format of Hendrycks; MBPP description + asserts",
+   "retrieval": null,
+   "parameters": {
+    "N": "200",
+    "M": "1 (top failing programs sent to repair; 2 and 4 tested)",
+    "rounds": "at most one repair and/or refine round",
+    "seed_upsampling": "N/|P| for refine, N/M for repair"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass@k",
+     "definition": "percentage of problems solved using k generated programs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "n@k",
+     "definition": "solve rate using only n candidates chosen from k samples after filtering by example tests",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT2",
+    "GPT-Neo",
+    "GPT-J",
+    "GPT3",
+    "Codex 12B",
+    "AlphaCode 1B",
+    "GPT 224M-137B (MBPP)"
+   ],
+   "protocol": "single run reported; no seeds or confidence intervals stated"
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/CodeRL",
+   "weights": "improved CodeT5-large 770M released (per intro)",
+   "data": "APPS and MBPP public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CodeRL+CodeT5 reaches new SOTA pass@1000 on APPS, above GPT-J 6B (17.63) and Codex 12B (7.87).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20.98",
+   "unit": "% pass@1000",
+   "baseline_value": "17.63 (GPT-J)",
+   "n": null,
+   "setup": "APPS test, all levels, CodeT5-770M with CodeRL + Critic Sampling",
+   "quote": "achieved new SOTA results of 2.69% pass@1, 6.81% pass@5, and 20.98% pass@1000",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "pass@1 on APPS all levels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.69",
+   "unit": "% pass@1",
+   "baseline_value": "1.82 (GPT-J 6B)",
+   "n": null,
+   "setup": "same",
+   "quote": "achieved new SOTA results of 2.69% pass@1, 6.81% pass@5, and 20.98% pass@1000",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "pass@5 on APPS all levels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.81",
+   "unit": "% pass@5",
+   "baseline_value": "3.08 (GPT-J 6B)",
+   "n": null,
+   "setup": "same",
+   "quote": "achieved new SOTA results of 2.69% pass@1, 6.81% pass@5, and 20.98% pass@1000",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Filtered by example tests, 1@1000 and 5@1000 on APPS (AlphaCode 5@50000 is 11.42).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12.62",
+   "unit": "% 5@k (k=1000)",
+   "baseline_value": "11.42 (AlphaCode 1B, k=50000)",
+   "n": null,
+   "setup": "APPS all levels, CodeRL+CodeT5 770M",
+   "quote": "SOTA results of 8.48% 1@k and 12.62% 5@k",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "CodeRL with k=1000 matches AlphaCode at k=50000 (authors' statement).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "APPS n@k",
+   "quote": "with k = 1000 only, our model performance is as good as AlphaCode with much a larger generation budget of k = 50000",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Zero-shot transfer to MBPP: CodeT5-770M trained on APPS with CodeRL beats finetuned GPT-137B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "63.0",
+   "unit": "% pass@80",
+   "baseline_value": "61.4",
+   "n": null,
+   "setup": "MBPP test (500), zero-shot after APPS training, temperature 1.2",
+   "quote": "setting a new SOTA result of 63.0% pass@80 over GPT-137B’s 61.4% pass@80",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "MBPP pass@1000 zero-shot with CodeRL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "81.8",
+   "unit": "% pass@1000",
+   "baseline_value": "78.4",
+   "n": null,
+   "setup": "MBPP zero-shot, CodeT5-770M+CodeRL; CodeT5 without RL 78.4",
+   "quote": "CodeT5+CodeRL yielding a new SOTA result of 81.8% pass@1000",
+   "table": null,
+   "note": null,
+   "where": "App B.2"
+  },
+  {
+   "claim": "Ablation of return estimates: relative baseline plus critic (D) best; absolute return without baseline (B) worst.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.20 / 3.10",
+   "unit": "% pass@1 / pass@5 (All)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeT5-770M, beam search; A (no critic) 1.62/2.44, B (no baseline) 1.36/1.94, C (dist.) 1.64/2.58",
+   "quote": null,
+   "table": "Table 2, row D, columns All pass@1 and pass@5",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Critic Sampling lifts pass@1000 from 17.78 to 20.98 (refine alone 19.36).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20.98",
+   "unit": "% pass@1000",
+   "baseline_value": "17.78",
+   "n": null,
+   "setup": "CodeT5-770M, APPS, refine+repair M=1 vs none",
+   "quote": null,
+   "table": "Table 4, row Refine + Repair(M=1), column pass@1000 All; no CS row 17.78",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Repair with M=1 top candidate is best; M=2 and M=4 slightly worse on pass@1000.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20.92 (M=2), 20.62 (M=4)",
+   "unit": "% pass@1000",
+   "baseline_value": "20.98 (M=1)",
+   "n": null,
+   "setup": "as Table 4",
+   "quote": null,
+   "table": "Table 4, rows M=2, M=4, column pass@1000 All",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Learning objectives: using Lrl alone causes vanishing gradients and degrades; Lce+Lrl best.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.20 / 3.10",
+   "unit": "% pass@1 / pass@5 (All)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeT5-770M warm-started; Lrl only 1.64/2.56; Lce only 1.50/2.26; no further finetune 2.00/2.90",
+   "quote": null,
+   "table": "Table 3, CodeT5-770M row Lce+Lrl, columns All",
+   "note": "Note: the baseline without further finetuning (pass@5 2.90) is close to the Lce+Lrl value 3.10 on beam search.",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Pretraining ablation: adding GCPY data and NTP objective raises pass@5.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.90",
+   "unit": "% pass@5 (All)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "770M, Lce finetune only; CSN+MSP 1.72, +GCPY 2.06, +NTP 2.90",
+   "quote": "adding NTP pretraining task can improve the performance from 2.06 to 2.9 pass@5",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Overlap APPS-MBPP is small.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12.6",
+   "unit": "% MBPP programs with >50% lines in APPS train",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MBPP 974 programs",
+   "quote": "Only 12.6% MBPP programs have more than half of their lines matched somewhere in the APPS training data",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Critic is cheap: GPT-2 small critic exceeds 75% error-prediction accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75",
+   "unit": "% accuracy (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "synthetic samples, critic init from GPT-2 small",
+   "quote": "can achieve over 75% error prediction accuracy on synthetic samples",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Failure analysis: >90% of compile errors are syntax errors; only 4% wrong tab, 5% wrong indentation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90",
+   "unit": "% of compile errors (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CodeT5+CodeRL, 200 programs per APPS test problem, hidden tests",
+   "quote": "The majority of mistakes are syntactical problems, assuming more than 90% of compiling errors",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  },
+  {
+   "claim": "CodeRL reduces compile errors but runtime errors rise; example tests are weaker than hidden tests (false positives).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 8, 200 programs per problem",
+   "quote": "This leads to a higher probability that a CodeRL program contains runtime errors",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6"
+  }
+ ],
+ "limits": [
+  "Critic training adds cost beyond the actor, though the authors say a GPT-2-small critic suffices.",
+  "Example tests are weaker than hidden tests, giving false positives that cap Critic Sampling gains (Fig 8).",
+  "Only one round of refine/repair is used; refine adds little to 1@1000 because n@k pool grows.",
+  "CodeRL raises runtime-error rate even while compile errors fall.",
+  "Lrl alone suffers vanishing gradients; needs Lce warm start and Lce+Lrl.",
+  "Single runs; no seeds or variance reported; many numbers are small (pass@1 2.69%).",
+  "Generated code may be biased, insecure; needs human verification.",
+  "Results are 2022; the strongest baselines (GPT-J, Codex 12B) have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Critic Sampling (CS)",
+   "definition": "dual strategy of program repairing and refining at inference",
+   "where": "Sec 3.3.4"
+  },
+  {
+   "term": "n@k",
+   "definition": "metric that only considers a subset of n candidates from k generated programs",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CodeT5",
+   "year": 2021,
+   "arxiv": "2109.00859",
+   "relation": "extends",
+   "note": "backbone model",
+   "quote": null
+  },
+  {
+   "work": "APPS",
+   "year": 2021,
+   "arxiv": "2105.09938",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "MBPP / Program synthesis with large language models",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "zero-shot transfer benchmark",
+   "quote": null
+  },
+  {
+   "work": "AlphaCode",
+   "year": 2022,
+   "arxiv": "2203.07814",
+   "relation": "baseline",
+   "note": "n@k protocol and filter by example tests",
+   "quote": null
+  },
+  {
+   "work": "Codex / Evaluating LLMs trained on code",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "baseline",
+   "note": "pass@k",
+   "quote": null
+  },
+  {
+   "work": "An actor-critic algorithm for sequence prediction (Bahdanau)",
+   "year": 2016,
+   "arxiv": "1607.07086",
+   "relation": "uses-method",
+   "note": "actor-critic with ground-truth samples",
+   "quote": null
+  },
+  {
+   "work": "Self-critical sequence training (Rennie)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "greedy-decoding baseline",
+   "quote": null
+  },
+  {
+   "work": "Sequence level training with RNNs (Ranzato)",
+   "year": 2016,
+   "arxiv": "1511.06732",
+   "relation": "uses-method",
+   "note": "REINFORCE for sequences",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of our Critic Sampling approach for program synthesis during inference",
+   "page": 9,
+   "why": "shows the generate-test-refine/repair loop"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of our critic model",
+   "page": 7,
+   "why": "critic as 4-way outcome predictor"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our actor-critic framework",
+   "page": 6,
+   "why": "training loop"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "An example program synthesis task / RL view",
+   "page": 1,
+   "why": "LM as policy, compiler as environment"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Example interview-level APPS task and programs from CodeT5 variants",
+   "page": 18,
+   "why": "before/after CS, timeout fixed by regenerating from seed"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Qualitative results by test outcomes",
+   "page": 17,
+   "why": "outcome distribution"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Compiling and runtime error types",
+   "page": 28,
+   "why": "failure taxonomy"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4-7, p7",
+   "snippet": "r = -1.0 compile error; -0.6 runtime error; -0.3 failed test; +1.0 passed all",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 10, p8",
+   "snippet": "grad L_rl ≈ -E[(r(Ws) - r(Wb)) sum_t q_phi(w_t^s) grad log p_theta(w_t^s | w_1:t-1^s, D)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text lists batch size 512 (concatenation) and 2048 for MSP pretraining; both recorded.",
+  "No embedded instructions found. Section map in extract.py lists duplicate headings (TOC)."
+ ]
+}

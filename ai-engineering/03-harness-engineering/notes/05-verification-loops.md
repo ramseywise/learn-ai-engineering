@@ -23,6 +23,7 @@ sources:
   - https://arxiv.org/abs/2607.02134
   - https://arxiv.org/abs/2610.00972
   - https://arxiv.org/abs/2606.17929
+  - https://arxiv.org/abs/2205.14334
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -78,6 +79,12 @@ For code, the check usually starts as a reproduction. Meng et al. ([arXiv:2411.1
 | **1. Static** | Syntax, types, lint, architecture rules | It's well-formed |
 | **2. Runtime** | Tests run, app starts and reaches ready, critical path executes, side effects (DB writes, files) correct | It runs |
 | **3. System** | End-to-end flow as a user would drive it, integration with real dependencies | It's *correct* |
+
+A model's stated confidence can serve as a gate only if it was calibrated on that kind of task. [arXiv:2205.14334](https://arxiv.org/abs/2205.14334) (Lin et al., TMLR 2022) finetuned GPT-3 175B on about 10k add-subtract questions to write a confidence number after its answer, and on a shifted multi-answer test set (arithmetic with several correct answers) its verbalized confidence reached **MSE 22.0 (greedy decoding) against 37.4 for the answer logit and 34.1 for a constant**. On the multiply-divide test set, the same add-subtract-trained model only matched the constant baseline (15.5 vs 15.3), and the zero-shot logit did better (10.4). So calibration partly survived the shift, and only on some test sets. One run, GPT-3 and arithmetic only, with no seeds reported; it shows calibration, not honesty.
+
+*Image Source: Lin et al., [Teaching Models to Express Their Uncertainty in Words](https://arxiv.org/abs/2205.14334) (2022), Fig. 2*
+
+![Three kinds of probability: verbalized, answer logit and indirect logit, with an example of each](../sources/images/lin-teaching-models-express-uncertainty-fig2.png)
 
 ```markdown
 ## Definition of done                     (AGENTS.md)

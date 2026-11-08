@@ -2,6 +2,7 @@
 origin: web-authored
 sources:
   - https://arxiv.org/abs/2507.13334
+  - https://arxiv.org/abs/2308.14508
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://research.trychroma.com/context-rot
   - https://arxiv.org/abs/2307.03172
@@ -103,6 +104,11 @@ Needle degradation is the easiest of these to measure, and it is no longer where
 ![GPT-5 vs. RLM(GPT-5) across context lengths on S-NIAH, OOLONG and OOLONG-Pairs](../sources/images/zhang-recursive-language-models-fig1.png)
 
 *Image Source: Zhang, Kraska & Khattab, [Recursive Language Models](https://arxiv.org/abs/2512.24601) (2025), Fig. 1*
+
+A multitask benchmark shows the same task-and-model dependence on ordinary documents. LongBench ([arXiv:2308.14508](https://arxiv.org/abs/2308.14508) (Bai et al., ACL 2024)) splits its English tasks by input length into 0-4k, 4-8k and 8k+ words (13 datasets, about 100 items per bin, eight 2023 models, greedy decoding, one run each). GPT-3.5-Turbo-16k fell **17%, from 51.5 to 42.4**, while ChatGLM2-6B-32k fell 4% and LongChat-v1.5-7B-32k 7%. The same paper cut GPT-3.5-Turbo-16k's input to 4k and its average dropped from 44.7 to 39.1, so the longer window was used, and Vicuna-16k stayed flat at about 30 whatever the cut. A bigger window is not the same as using it. Scores are F1, ROUGE and edit similarity, with no significance tests.
+
+![Average LongBench-E score by input length bucket for eight models: most lines slope down from 0-4k to 8k+, GPT-3.5-Turbo-16k steepest and ChatGLM2-6B-32k nearly flat](../sources/images/bai-longbench-fig3.png)
+*Image Source: Bai et al., [LongBench](https://arxiv.org/abs/2308.14508) (2024), Fig. 3*
 
 Long-context handling techniques (**position encoding interpolation**, letting a model address sequences longer than it trained on) extend the addressable range. They do not repeal rot — they move where it starts. Architectural changes show the same pattern. Infini-attention adds a fixed-size compressive memory to each attention layer. A 1B model with it solved passkey retrieval out to 1M tokens, but only after fine-tuning on 5K-token passkey inputs. Zero-shot, it found passkeys hidden at the start or middle of the filler only 3–14% of the time at 32K–1M ([arXiv:2404.07143](https://arxiv.org/abs/2404.07143) (Munkhdalai et al., 2024-04)). Reach measured on the easiest needle test, after training on that test, is not an effective window for real work. Test-time training moves the window into the weights instead. TTT-E2E pairs an 8K sliding window with MLPs that keep training on the context as it is read. At 3B parameters and 164B training tokens, its language-modelling loss improves with context as full attention's does, and prefill at 128K is 2.7× faster on an H100. But passkey retrieval falls to 0.46 at 16K and 0.06 at 128K, against 0.99 for full attention and about what the bare sliding window scores. Compressing the context into weights keeps its gist and loses the needle ([arXiv:2512.23675](https://arxiv.org/abs/2512.23675) (Tandon et al., 2025-12)).
 

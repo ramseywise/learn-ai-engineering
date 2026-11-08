@@ -1,0 +1,515 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d18-1425",
+ "pdf": "ai-engineering/02-context-engineering/sources/yu-2018-spider.pdf",
+ "bib": {
+  "title": "Spider: A Large-Scale Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task",
+  "authors": [
+   "Tao Yu",
+   "Rui Zhang",
+   "Kai Yang",
+   "Michihiro Yasunaga",
+   "Dongxu Wang",
+   "Zifan Li",
+   "James Ma",
+   "Irene Li",
+   "Qingning Yao",
+   "Shanelle Roman",
+   "Zilin Zhang",
+   "Dragomir R. Radev"
+  ],
+  "first_author": "Yu",
+  "year": 2018,
+  "venue": "EMNLP 2018",
+  "arxiv": null,
+  "doi": "10.18653/v1/d18-1425"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45631,
+  "chars_total": 45631,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large, human-labeled text-to-SQL dataset with complex SQL and many multi-table databases, split so test databases are unseen, measure real generalisation in semantic parsing?",
+ "hypothesis": "Existing models score high on prior datasets by memorising query templates; on unseen databases and complex SQL they will fail.",
+ "contributions": [
+  "Spider: 10,181 questions, 5,693 SQL, 200 multi-table databases, 138 domains",
+  "A cross-domain task where train and test share no databases or SQL",
+  "Evaluation metrics: component matching, exact matching, execution accuracy, hardness levels",
+  "Baseline results of six models showing low accuracy"
+ ],
+ "method": {
+  "summary": "Eleven CS students wrote and reviewed questions and SQL over 200 databases in five stages. Existing neural parsers were adapted (schema as concatenated column list, vocabulary mask) and trained on Spider under example and database splits.",
+  "task": "cross-domain text-to-SQL / semantic parsing",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Spider",
+    "role": "both",
+    "size": "10,181 questions; 5,693 SQL; 200 DBs (plus 752 queries and 1659 questions from Restaurants, GeoQuery, Scholar, Academic, IMDB, Yelp in final training set)",
+    "split": "Example split: 7862 train / 1831 dev / 2147 test. Database split: 206 DBs into 130 train / 36 dev / 40 test",
+    "source": "~70 DBs from courses/tutorials/csv/textbooks; ~40 from DatabaseAnswers converted to SQLite and populated with filldb.info; 90 built from WikiSQL tables (~500 tables, ~90 domains). Licence not stated",
+    "preprocessing": "Abbreviated column names (stu_id) manually expanded to words; schemas corrected; values not evaluated"
+   }
+  ],
+  "models": [
+   {
+    "name": "Seq2Seq",
+    "role": "baseline",
+    "params": null,
+    "architecture": "seq2seq (Sutskever 2014)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Seq2Seq+Attention",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Dong and Lapata 2016 attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Seq2Seq+Copying",
+    "role": "baseline",
+    "params": null,
+    "architecture": "attention-based copying, like Jia and Liang 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Iyer et al. (2017)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "attention seq2seq; user interaction not used",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SQLNet",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sketch-based slot filling with column attention; SELECT/WHERE modules extended to other components",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TypeSQL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SQLNet plus type info from DB content; modules extended",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "input_adaptation": "concatenate all columns of the question's database into a 'big' column list; restrict column choices to that database",
+    "schema_handling_seq2seq": "vocabulary mask limiting decoding to SQL keywords plus table and column names of current DB"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Component Matching",
+     "definition": "F1 of exact set match per component (SELECT, WHERE, GROUP BY, ORDER BY, KEYWORDS), each decomposed as bag of sub-components",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Matching",
+     "definition": "predicted query correct only if all components match as sets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Execution Accuracy",
+     "definition": "same result on the SQLite database; paper gave no results (deferred to website)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Hardness",
+     "definition": "easy/medium/hard/extra hard by number of SQL components, selections, conditions",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Seq2Seq",
+    "Seq2Seq+Attention",
+    "Seq2Seq+Copying",
+    "Iyer et al. 2017",
+    "SQLNet",
+    "TypeSQL"
+   ],
+   "protocol": "Single reported number per cell; no seeds, variance or significance; values not predicted or evaluated"
+  },
+  "availability": {
+   "code": "official evaluation script promised at https://yale-lily.github.io/seq2sql/spider",
+   "weights": null,
+   "data": "https://yale-lily.github.io/seq2sql/spider"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.split",
+    "quote": "Database split where 206 databases are randomly split into 130 train, 36 dev, and 40 test",
+    "where": "Sec 8"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best model (TypeSQL) reaches only 9.7% exact-match accuracy on the database split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact matching accuracy",
+   "value": "9.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider test, database split (40 test DBs), TypeSQL with question type info from DB content, all hardness levels",
+   "quote": "The best model achieves only 9.7% exact matching accuracy in the database split setting.",
+   "table": null,
+   "note": "Abstract says 'best model achieves only 9.7% exact matching accuracy on a database split setting'",
+   "where": "Intro; Table 2"
+  },
+  {
+   "claim": "Same TypeSQL model gets 34.3% under the example split, 3.5x the database-split score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact matching accuracy",
+   "value": "34.3",
+   "unit": "%",
+   "baseline_value": "9.7",
+   "n": null,
+   "setup": "Spider test, example split (7862/1831/2147), TypeSQL, all hardness",
+   "quote": null,
+   "table": "Table 2, row TypeSQL (Example Split), column All",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Vanilla Seq2Seq drops from 11.2% to 5.4% moving from example split to database split.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact matching accuracy",
+   "value": "5.4",
+   "unit": "%",
+   "baseline_value": "11.2",
+   "n": null,
+   "setup": "Spider test, Seq2Seq, all hardness",
+   "quote": null,
+   "table": "Table 2, row Seq2Seq (Database Split), column All",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Under database split TypeSQL scores 29.6% on easy but 0.3% on extra hard.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact matching accuracy",
+   "value": "0.3",
+   "unit": "%",
+   "baseline_value": "29.6",
+   "n": null,
+   "setup": "Spider test, database split, TypeSQL, extra hard vs easy",
+   "quote": null,
+   "table": "Table 2, row TypeSQL (Database Split), column Extra Hard",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Under database split, SQLNet is 8.3% overall, with WHERE F1 18.0% and SELECT F1 24.0%; column selection is poor for all models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "exact matching accuracy",
+   "value": "8.3",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider test, database split, SQLNet",
+   "quote": null,
+   "table": "Table 2, row SQLNet (Database Split), column All; Table 3 SQLNet Database Split",
+   "note": null,
+   "where": "Tables 2,3"
+  },
+  {
+   "claim": "Accuracy falls as the number of foreign keys in the database grows (schema complexity).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, exact match vs foreign-key count",
+   "quote": null,
+   "table": null,
+   "note": "Only a qualitative statement in text; numbers only in the figure",
+   "where": "Sec 8, Fig 4"
+  },
+  {
+   "claim": "Spider has 10,181 questions, 5,693 unique SQL queries, 200 databases, 138 domains, annotated by 11 students.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "10,181",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full corpus before adding 752 queries/1659 questions from six existing datasets",
+   "quote": "It consists of 10,181 questions and 5,693 unique complex SQL queries on 200 databases with multiple tables covering 138 different domains.",
+   "table": null,
+   "note": "Split section says 206 databases (200 + six existing datasets)",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "Building the corpus took about 1,000 man-hours of annotation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation effort",
+   "value": "1,000",
+   "unit": "man-hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five-stage process (Fig 2): DB creation 150, annotation 500, SQL review 150, question review 150, final review 150",
+   "quote": "spending a total of 1,000 man-hours",
+   "table": null,
+   "note": null,
+   "where": "Intro; Fig 2"
+  },
+  {
+   "claim": "Average database has 28 columns and 9 foreign keys; average question length about 13, SQL length about 21.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg columns per DB",
+   "value": "28",
+   "unit": "columns",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spider corpus",
+   "quote": "On average, each database in Spider has 28 columns and 9 foreign keys.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Spider averages 5.1 tables per DB versus 1 for WikiSQL, with 1335 ORDER BY, 1491 GROUP BY, 844 nested and 388 HAVING queries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tables per DB",
+   "value": "5.1",
+   "unit": "tables/DB",
+   "baseline_value": "1",
+   "n": null,
+   "setup": "Table 1 dataset comparison",
+   "quote": null,
+   "table": "Table 1, row Spider, column # Table / DB",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "WikiSQL has about 80,654 questions over 26,521 single-table databases and no JOIN/GROUP BY/ORDER BY.",
+   "kind": "reported",
+   "source": "Zhong et al. 2017",
+   "metric": "questions",
+   "value": "80,654",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 statistics",
+   "quote": null,
+   "table": "Table 1, row WikiSQL, column # Q",
+   "note": "Text elsewhere says about 90,000 questions and about 26,000 databases",
+   "where": "Table 1, Sec 2"
+  }
+ ],
+ "limits": [
+  "Training hyperparameters, optimizers, epochs and seeds are not given for any baseline",
+  "Execution accuracy defined but results deferred to website (footnote 4)",
+  "Condition values are not predicted or evaluated",
+  "Questions needing outside knowledge or common sense, and ambiguous questions, are excluded; authors concede ambiguity exists in real interfaces",
+  "Column names were manually cleaned, so real abbreviated schemas are not tested",
+  "Baselines are 2014-2018 neural parsers; no LLMs, and scores have since been far surpassed",
+  "Database counts inconsistent: 200 in abstract, 206 in split (adds six existing datasets)",
+  "Foreign-key effect shown only as a plot, no numbers"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Component Matching",
+   "definition": "average exact match between prediction and ground truth on different SQL components, computed as F1 on exact set matching",
+   "where": "Sec 6"
+  },
+  {
+   "term": "Exact Matching",
+   "definition": "whether the predicted query as a whole is equivalent to the gold query",
+   "where": "Sec 6"
+  },
+  {
+   "term": "Execution Accuracy",
+   "definition": "comparison of execution results on SQLite databases",
+   "where": "Sec 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "WikiSQL (Zhong et al. 2017)",
+   "year": 2017,
+   "arxiv": "1709.00103",
+   "relation": "extends",
+   "note": "large but single-table simple SQL; Spider adds multi-table complex queries; 90 DBs built from WikiSQL tables",
+   "quote": null
+  },
+  {
+   "work": "Improving text-to-SQL evaluation methodology (Finegan-Dollak et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "program-based split motivates the no-overlap split",
+   "quote": null
+  },
+  {
+   "work": "SQLNet (Xu et al. 2017)",
+   "year": 2017,
+   "arxiv": "1711.04436",
+   "relation": "baseline",
+   "note": "sketch-based",
+   "quote": null
+  },
+  {
+   "work": "TypeSQL (Yu et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "best baseline",
+   "quote": null
+  },
+  {
+   "work": "Iyer et al. 2017",
+   "year": 2017,
+   "arxiv": "1704.08760",
+   "relation": "baseline",
+   "note": "also source of labeled SQL for ATIS/GeoQuery",
+   "quote": null
+  },
+  {
+   "work": "Dong and Lapata 2016",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Seq2Seq+Attention",
+   "quote": null
+  },
+  {
+   "work": "ATIS, GeoQuery, Scholar, Academic, IMDB, Yelp, Advising, Restaurants",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "752 queries/1659 questions added to training; compared in Table 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Our corpus annotates complex questions and SQLs. The example contains joining of multiple tables, a GROUP BY component, and a nested query.",
+   "page": 1,
+   "why": "Shows schema, question and SQL together"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "SQL query examples in 4 hardness levels.",
+   "page": 7,
+   "why": "Concrete easy to extra-hard examples"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "Exact matching accuracy as a function of the number of foreign keys.",
+   "page": 9,
+   "why": "Accuracy vs schema complexity"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "The annotation process of our Spider corpus.",
+   "page": 3,
+   "why": "Pipeline with man-hours per stage"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Page 8 text wrongly carries Table 2/3 header glitches; tables read fine",
+  "Paper names 'ledger key' DOI only; arXiv id not printed"
+ ]
+}

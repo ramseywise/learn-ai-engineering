@@ -1,0 +1,156 @@
+{
+ "schema": 1,
+ "key": "2307.12856",
+ "pdf": "ai-engineering/05-graph-engineering/sources/gur-2023-real-world-webagent-planning-long.pdf",
+ "bib": {
+  "title": "A Real-World WebAgent with Planning, Long Context Understanding, and Program Synthesis",
+  "authors": ["Izzeddin Gur", "Hiroki Furuta", "Austin Huang", "Mustafa Safdari", "Yutaka Matsuo", "Douglas Eck", "Aleksandra Faust"],
+  "first_author": "Gur",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2307.12856",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 98118,
+  "chars_total": 98118,
+  "engine": "pymupdf",
+  "skipped": "Reference list (chars 42994-69103) skimmed only, for lineage."
+ },
+ "type": "system",
+ "question": "How can an LLM agent complete instructions on real websites despite open-ended actions, very long HTML and no HTML inductive bias?",
+ "hypothesis": "Splitting web automation into planning, HTML summarization (finetuned domain-expert HTML-T5) and grounded code generation (prompted Flan-U-PaLM) beats a single prompted LLM, and local-global attention with long-span denoising captures HTML structure better.",
+ "contributions": [
+  "WebAgent: integration of two modular LLMs under self-supervision for real-world web automation; domain-expert model plans and summarizes, generalist model generates executable Python programs.",
+  "HTML-T5: local-global attention encoder-decoder pre-trained with a mixture of long-span denoising on a CommonCrawl HTML corpus.",
+  "Over 50% higher success on real websites; HTML-T5 beats the prior LM agent by 18.7% on MiniWoB++ and reaches SoTA on Mind2Web."
+ ],
+ "method": {
+  "summary": "WebAgent loops: HTML-T5 (finetuned, seq2seq) reads instruction, sub-instruction history and raw HTML, emits the next sub-instruction and data-ref IDs of relevant snippets; frozen few-shot Flan-U-PaLM 540B turns sub-instruction plus snippet into a Selenium Python program that is executed. HTML-T5 is pre-trained on 3.41M CommonCrawl HTML examples, then finetuned on self-experience demonstrations (scripted planning/summarization plus Flan-U-PaLM-generated programs filtered by environment feedback).",
+  "task": "instruction-following web automation on real websites (plus MiniWoB++, Mind2Web, WebSRC, Description Generation)",
+  "trains": true,
+  "datasets": [
+   {"name": "CommonCrawl HTML (100 WARC files, April 2019)", "role": "pretrain", "size": "3.41M examples; avg 1020 tokens, 90th pct 4566, max 7627", "split": null, "source": "CommonCrawl", "preprocessing": "remove non-Unicode and alphanumeric-only documents; extract subtrees around <label> elements with a for attribute"},
+   {"name": "Self-experience demonstrations (real-estate / social-media / map)", "role": "train", "size": "260 / 230 / 410 episodes", "split": null, "source": "instruction templates, scripted planner, Flan-U-PaLM programs run in Selenium; critical failures filtered (execution errors, retriever errors, bad URL prefixes)", "preprocessing": "HTML tags such as script and meta removed, attributes id/type/value kept (Fig 2 caption)"},
+   {"name": "Real-website evaluation instructions", "role": "eval", "size": "20 instructions per website, 3 websites (anonymized)", "split": null, "source": "Appendix F", "preprocessing": null},
+   {"name": "MiniWoB++", "role": "both", "size": "56 tasks, 100 eval episodes per task; 12K human demos, also 347K demos from Furuta et al. 2023", "split": null, "source": "Liu et al. 2018; Shi et al. 2017", "preprocessing": null},
+   {"name": "Mind2Web", "role": "both", "size": "over 2K instructions, 137 websites", "split": "cross-task / cross-website / cross-domain", "source": "Deng et al. 2023", "preprocessing": "cached candidate generation results and direct QA formulation as in Deng et al."},
+   {"name": "Offline real-estate planning set", "role": "both", "size": "130 demonstrations", "split": "90% train / 10% test", "source": "own", "preprocessing": null},
+   {"name": "WebSRC", "role": "eval", "size": null, "split": "dev set", "source": "Chen et al. 2021b", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "HTML-T5 (Base/Large/XL)", "role": "proposed", "params": "Base 220M, Large 770M, XL 3B", "architecture": "T5 encoder-decoder, local + transient-global attention in encoder (LongT5), dense decoder", "init_from": "PEGASUS-objective pre-trained LongT5 weights (Table 7 ablation: essential)", "tokenizer": "SentencePiece, 32K tokens from C4", "vocab": "32K", "layers": null, "hidden": null, "heads": null, "context": "4096 input / 910 output in pretraining; 16K tokens in finetuning unless stated", "other": {"local_radius": "r = 127", "tgl_block_size": "k = 16"}},
+   {"name": "Flan-U-PaLM", "role": "base", "params": "540B", "architecture": "decoder LLM, frozen, few-shot prompted", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Flan-PaLM-8B / Flan-PaLM-62B / gpt-3.5-turbo", "role": "evaluated", "params": "8B / 62B / null", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "alternative code generators, Appendix K"}},
+   {"name": "LongT5, Flan-LongT5, Flan-T5, WebN-T5, MindAct, Synapse", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "span denoising with mean span lengths mu in {8, 64}, denoising ratio 0.15; downstream: supervised finetuning to predict next sub-instruction and data-ref snippet IDs",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 (pre-training)",
+   "steps": "100K iterations (pre-training)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4096 input, 910 output (pre-training)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Cloud TPU-v3, 128 cores, 32 GiB HBM",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"libraries": "SeqIO, T5X", "flan_longt5": "finetuned LongT5 on Flan dataset for 100K iterations, best checkpoint picked", "finetune_hparams": "not stated"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "20 instructions per website, one episode each (inferred: success rates are multiples of 5%); MiniWoB++ 100 episodes per task",
+   "prompting": "Flan-U-PaLM few-shot generic examples (select checkboxes, enter text, click options, scroll); sub-instruction is a comment in the script; WebSRC uses 5-shot",
+   "retrieval": "HTML-T5 predicts data-ref IDs; snippet is retrieved by those IDs; WebSRC: extract two levels up via XPath, fall back to parent, then truncate",
+   "parameters": {"loop_end": "until end-of-episode sub-instruction predicted or maximum iterations reached (max not stated)"},
+   "other": {"execution": "Selenium WebDriver, human supervised, access rate limited"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Success rate (real web)", "definition": "episode succeeds if score = 100", "unit": "%", "higher_is_better": true},
+    {"name": "Score", "definition": "percentage of instruction attributes covered during the episode", "unit": "%", "higher_is_better": true},
+    {"name": "MiniWoB++ average success", "definition": "mean success over 56 tasks", "unit": "%", "higher_is_better": true},
+    {"name": "Mind2Web element accuracy / operation F1 / step success rate / SR", "definition": "target element, operation, both per step, whole task", "unit": "%", "higher_is_better": true},
+    {"name": "WebSRC EM / F1", "definition": "exact match and F1 on answers", "unit": "points", "higher_is_better": true}
+   ],
+   "baselines": ["Flan-U-PaLM single", "Flan-U-PaLM+P (HTML-T5 planner)", "Flan-U-PaLM+S (HTML-T5 summarizer)", "WebN-T5-XL", "CC-Net", "LongT5", "Flan-LongT5", "Flan-T5", "MindAct", "Synapse GPT-3.5", "MarkupLM", "TIE"],
+   "protocol": "Real-website runs under human supervision; no seeds or significance tests stated; 20 episodes per site so one episode = 5 points."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "inference.samples", "quote": "We prepare 20 different natural language instructions", "where": "Sec 4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "WebAgent reaches 65% success and 87.6% score on real-estate, far above single Flan-U-PaLM.", "kind": "measured", "source": null, "metric": "success rate", "value": "65.0", "unit": "%", "baseline_value": "10.0", "n": 20, "setup": "Real real-estate website, 20 instructions, human supervised; baseline is single prompted Flan-U-PaLM", "quote": "WebAgent achieves best 65% success and 87.6% score on real-estate, 70% success", "table": null, "note": null, "where": "Sec 4.1, Table 1"},
+  {"claim": "WebAgent reaches 70% success on social-media (85.8% score).", "kind": "measured", "source": null, "metric": "success rate", "value": "70.0", "unit": "%", "baseline_value": "20.0", "n": 20, "setup": "Real social-media website, 20 instructions; baseline single Flan-U-PaLM", "quote": "70% success and 85.8% score on social-media", "table": null, "note": null, "where": "Sec 4.1, Table 1"},
+  {"claim": "WebAgent reaches 80% success on map (93.8% score), versus 10% for single Flan-U-PaLM.", "kind": "measured", "source": null, "metric": "success rate", "value": "80.0", "unit": "%", "baseline_value": "10.0", "n": 20, "setup": "Real map website, 20 instructions", "quote": "and 80% success and 93.8% score on map", "table": null, "note": null, "where": "Sec 4.1, Table 1"},
+  {"claim": "Partial LM modules (planner only or summarizer only) mostly reach about 10-30% success; planning with a finetuned closed-loop LM matters most in the long-horizon real-estate domain (Flan-U-PaLM+P 50%).", "kind": "measured", "source": null, "metric": "success rate", "value": "50.0", "unit": "%", "baseline_value": "10.0", "n": 20, "setup": "Real-estate, Flan-U-PaLM+P (HTML-T5 planner, regex summarizer) vs single Flan-U-PaLM at 10.0%; Flan-U-PaLM+S gets 0.0%", "quote": "even Flan-U-PaLM+P achieves 50% success", "table": "Table 1, rows Flan-U-PaLM+P and Flan-U-PaLM+S, column real-estate Success", "note": null, "where": "Sec 4.1, Table 1"},
+  {"claim": "In real-estate, 70% of WebAgent failures are planning errors (error ratio rows plan/sum/program).", "kind": "measured", "source": null, "metric": "share of failures that are planning errors", "value": "70", "unit": "%", "baseline_value": null, "n": null, "setup": "WebAgent failure episodes on real-estate", "quote": "WebAgent generates incorrect plans in 70% of failure episodes", "table": null, "note": "Table 1 error-ratio columns are split program / plan / sum per domain; text value is for real-estate", "where": "Sec 4.1 Error Analysis"},
+  {"claim": "HTML-T5-XL beats the prior best MiniWoB++ LM agent WebN-T5-XL by 18.7 points (67.1% vs 48.4%) with 12K demonstrations.", "kind": "measured", "source": null, "metric": "MiniWoB++ avg success, 56 tasks", "value": "18.7", "unit": "points", "baseline_value": "48.4", "n": 5600, "setup": "12K human demos, 100 episodes per task, 56 tasks, XL (3B)", "quote": "outperforms WebN-T5, the prior best model, by 18.7%", "table": "Table 3, row HTML-T5-XL, column Success 67.1%", "note": null, "where": "Sec 4.2, Table 3"},
+  {"claim": "HTML-T5-XL finetuned on 347K demos reaches 85.6% on MiniWoB++, above Flan-T5-XXL (11B) at 79.0%.", "kind": "measured", "source": null, "metric": "MiniWoB++ avg success", "value": "85.6", "unit": "%", "baseline_value": "79.0", "n": null, "setup": "347K demonstrations from Furuta et al. 2023; 3B vs 11B", "quote": "achieving 85.6% success", "table": null, "note": null, "where": "Sec 4.2, Table 3"},
+  {"claim": "On Mind2Web cross-task, HTML-T5-XL gets 60.6 element accuracy, 81.7 operation F1, 57.8 step SR and 10.3 SR, above MindAct Flan-T5-XL (55.1/75.7/52.0/5.2) and MindAct GPT-4.", "kind": "measured", "source": null, "metric": "step success rate (cross-task)", "value": "57.8", "unit": "%", "baseline_value": "52.0", "n": null, "setup": "Offline Mind2Web, HTML-T5-XL supervised finetuned, cached candidate generation per Deng et al.", "quote": null, "table": "Table 4, row HTML-T5-XL (ours), column Cross-Task Step SR; baseline MindAct (Flan-T5-XL) 52.0", "note": "Text claims gains of 5-8% element accuracy, 6-8% operation F1, 4-8% step SR", "where": "Table 4"},
+  {"claim": "Local+global attention beats dense attention by over 18 points and local-only beats dense by about 9 on MiniWoB++ (Base size).", "kind": "measured", "source": null, "metric": "MiniWoB++ avg success", "value": "53.6", "unit": "%", "baseline_value": "35.3", "n": null, "setup": "Base models, 12K demos, input length 4096; Flan-T5-Base dense 35.3, Long-T5-Base local 44.0, local and global 53.6", "quote": null, "table": "Table 2 (left), row Long-T5-Base Local & Global, column L = 4096", "note": null, "where": "Sec 4.2, Table 2"},
+  {"claim": "Long-span denoising mu in {8,64} gives the best MiniWoB++ result (57.0%) and real-estate planning accuracy (82.46), above the {3,8,64}+Prefix mixture (55.2%).", "kind": "measured", "source": null, "metric": "MiniWoB++ avg success", "value": "57.0", "unit": "%", "baseline_value": "55.2", "n": null, "setup": "LongT5-Base pre-trained, 12K demos", "quote": null, "table": "Table 2 (right), row 8,64, column MiniWoB++", "note": "Caption prints mu in {8, 6}; text says {8, 64}", "where": "Table 2"},
+  {"claim": "Removing PEGASUS initialization drops MiniWoB++ from 57.0% to 49.1%, and using raw (unextracted) HTML gives 56.7%.", "kind": "measured", "source": null, "metric": "MiniWoB++ avg success", "value": "49.1", "unit": "%", "baseline_value": "57.0", "n": null, "setup": "HTML-T5-Base, extracted corpus without PEGASUS init", "quote": null, "table": "Table 7, row Extracted, no PEGASUS, column MiniWoB++", "note": null, "where": "Appendix H.1, Table 7"},
+  {"claim": "On WebSRC dev, WebAgent (75.50 EM / 85.75 F1) improves over Flan-U-PaLM alone (40.01/47.56) and HTML-T5-XL alone (74.73/78.73), but TIE-Large (81.66/86.24) is higher.", "kind": "measured", "source": null, "metric": "EM", "value": "75.50", "unit": "points", "baseline_value": "40.01", "n": null, "setup": "WebSRC dev, 5-shot Flan-U-PaLM on HTML-T5 snippets", "quote": null, "table": "Table 6, row WebAgent, column EM", "note": null, "where": "Appendix E, Table 6"},
+  {"claim": "As code generator on map, gpt-3.5-turbo matches Flan-U-PaLM-540B (80% success, 93.8% score); Flan-PaLM-62B gets 60% and 86.3%; Flan-PaLM-8B 0%.", "kind": "measured", "source": null, "metric": "success rate", "value": "80", "unit": "%", "baseline_value": "60", "n": 20, "setup": "map website, same 20 instructions, generalist LLM swapped", "quote": "are the same (80% success, 93.8% score)", "table": null, "note": null, "where": "Appendix K, Fig 9"}
+ ],
+ "limits": [
+  "Modular design may add computational cost and latency (authors, Sec 5); no latency or cost numbers are given.",
+  "Flan-U-PaLM 540B makes it hard to feed back code errors into program synthesis (authors).",
+  "Real-world evaluation is costly and done under human supervision; only 3 anonymized websites and 20 instructions each, so success rates have 5-point granularity and no variance is reported.",
+  "Planning errors remain dominant: consistent long-horizon prediction without error accumulation is unsolved.",
+  "WebAgent is worse than structure-specialist baselines on KV and Table WebSRC tasks (generalist LLMs weak at tabular structure).",
+  "Finetuning hyperparameters (optimizer, lr) and max iterations of the loop are not stated; no code or weights released in this paper.",
+  "Ethics statement notes prompt-injection and misuse risk."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "self-experience supervision", "definition": "a semi-supervised approach that necessitates minimal human involvement: manually curated scripts generate planning and summarization steps, while Flan-U-PaLM generates Python programs, and domain LMs are finetuned on the result", "where": "Sec 3.2"},
+  {"term": "closed-loop planning", "definition": "next sub-instruction predicted conditioned on current HTML observation, instruction and history, versus open-loop planning by prompting a single LLM", "where": "Sec 4.1, App B"}
+ ],
+ "lineage": [
+  {"work": "LongT5", "year": 2022, "arxiv": "2112.07916", "relation": "extends", "note": "local and transient-global attention implementation reused", "quote": null},
+  {"work": "UL2 / Tay et al. mixture of denoisers", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "mixture of long-span denoising", "quote": null},
+  {"work": "MindAct / Mind2Web (Deng et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "most relevant prior work; also evaluation data", "quote": null},
+  {"work": "WebN-T5 (Gur et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "prior best LM agent on MiniWoB++", "quote": null},
+  {"work": "Furuta et al. (multimodal web navigation with instruction-finetuned models)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "347K MiniWoB demonstrations", "quote": null},
+  {"work": "Synapse (Zheng et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "GPT-3.5 in-context on Mind2Web", "quote": null},
+  {"work": "Flan-U-PaLM (Chowdhery et al.; Chung et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "code generator", "quote": null},
+  {"work": "PEGASUS", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "initialization objective", "quote": null},
+  {"work": "WebSRC (Chen et al.)", "year": 2021, "arxiv": null, "relation": "uses-data", "note": "static HTML QA", "quote": null},
+  {"work": "SayCan (Ahn et al.), Liang et al. code as policies", "year": 2022, "arxiv": null, "relation": "related", "note": "modular planning and code-as-action in robotics", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "WebAgent is a combination of LLMs: HTML-T5 for planning and summarization, and Flan-U-PaLM for grounded program synthesis.", "page": 3, "why": "Planner/summarizer feeds executor architecture in one diagram."},
+  {"figure": "Fig 6", "caption": "An example flow with planning, summarization, and grounded program synthesis in the real estate website.", "page": 18, "why": "Concrete inputs and outputs per loop step."},
+  {"figure": "Table 1", "caption": "Success rate of real-world web automation on real estate, social media and map websites.", "page": 5, "why": "Ablates planner and summarizer modules with error breakdown."},
+  {"figure": "Fig 2", "caption": "Statistics of HTML tokens among real websites.", "page": 2, "why": "Shows why long context is needed (7K-14K vs 0.5K)."},
+  {"figure": "Fig 4", "caption": "HTML-T5 consists of local and global attention mechanisms and a mixture of denoising objectives with longer-span corruption.", "page": 4, "why": "Architecture and span-length intuition."},
+  {"figure": "Fig 9", "caption": "Performance and error analysis of real-world web automation with different generalist LLMs.", "page": 28, "why": "Executor swap sensitivity."}
+ ],
+ "code": [
+  {"where": "Sec 3.3, page 6", "snippet": "# Type in walnut creek, ca into search\ndriver.find_element(By.CSS_SELECTOR, '[data-ref=\"175\"]').clear()\ndriver.find_element(By.CSS_SELECTOR, '[data-ref=\"175\"]').send_keys(\"walnut creek, ca\")", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 2 caption prints mu in {8, 6} where text and table say {8, 64}.",
+  "Table 1 and Table 2 values are scrambled in the text cache; mapped by row order, check against the PDF.",
+  "Planner names: Table 1 header glyphs for check/cross marks were lost in extraction."
+ ]
+}

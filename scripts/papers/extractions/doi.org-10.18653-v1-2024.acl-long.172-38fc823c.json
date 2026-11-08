@@ -1,0 +1,666 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.acl-long.172",
+ "pdf": "ai-engineering/02-context-engineering/sources/bai-2024-longbench.pdf",
+ "bib": {
+  "title": "LongBench: A Bilingual, Multitask Benchmark for Long Context Understanding",
+  "authors": [
+   "Yushi Bai",
+   "Xin Lv",
+   "Jiajie Zhang",
+   "Hongchang Lyu",
+   "Jiankai Tang",
+   "Zhidian Huang",
+   "Zhengxiao Du",
+   "Xiao Liu",
+   "Aohan Zeng",
+   "Lei Hou",
+   "Yuxiao Dong",
+   "Jie Tang",
+   "Juanzi Li"
+  ],
+  "first_author": "Bai",
+  "year": 2024,
+  "venue": "ACL 2024 (Volume 1: Long Papers), pages 3119-3137",
+  "arxiv": "2308.14508",
+  "doi": "10.18653/v1/2024.acl-long.172"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66649,
+  "chars_total": 66649,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How well do LLMs understand long contexts across diverse realistic tasks and two languages, and do context-extension and compression methods help?",
+ "hypothesis": null,
+ "contributions": [
+  "LongBench: first bilingual multitask long-context benchmark, 21 datasets, 6 categories, standardized format with automatic metrics",
+  "LongBench-E: length-balanced subset (0-4k, 4k-8k, 8k+) for length-vs-performance analysis",
+  "Evaluation of 8 LLMs plus analysis of retrieval and summarization compression and memorisation"
+ ],
+ "method": {
+  "summary": "Collects or builds 21 long-context datasets (single/multi-doc QA, summarization, few-shot, synthetic, code) in English and Chinese, evaluates 8 LLMs zero-shot with greedy decoding and middle truncation, and studies retrieval and summary compression and no-context memorisation.",
+  "task": "long context understanding benchmark",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LongBench",
+    "role": "eval",
+    "size": "4,750 test instances, 21 datasets (Single-doc QA 750, Multi-doc QA 800, Summarization 600, Few-shot 800, Synthetic 600, Code 1000)",
+    "split": "test sets of public datasets (VCSUM excepted, insufficient test data); random sampling keeps natural length distribution",
+    "source": "NarrativeQA, Qasper, MultiFieldQA-en/zh (authors), HotpotQA, 2WikiMultihopQA, MuSiQue, DuReader, GovReport, QMSum, MultiNews, VCSUM, TREC, TriviaQA, SAMSum, LSHT, PassageCount/Retrieval-en/zh (authors), LCC, RepoBench-P",
+    "preprocessing": "Multi-doc QA: supporting passages plus distractors up to max length, shuffled; DuReader padded to 20 docs. Few-shot: random number of shots per item (TREC [100,600], LSHT [10,40], SAMSum [10,100], TriviaQA [2,24]). PassageRetrieval: 30 passages, one summarised by GPT-3.5-Turbo. PassageCount: M in [17,50] passages, N in [2,M] unique. TriviaQA passages under 1,000 words filtered."
+   },
+   {
+    "name": "LongBench-E",
+    "role": "eval",
+    "size": "13 English datasets, ~100 per 0-4k/4k-8k/8k+ bin (Table 8)",
+    "split": "uniform sampling by word count",
+    "source": "subset of LongBench datasets",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo-16k",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "Llama2-7B-chat-4k",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k",
+    "other": {}
+   },
+   {
+    "name": "LongChat-v1.5-7B-32k",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Llama2-7B (SFT, linear RoPE scaling)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k",
+    "other": {}
+   },
+   {
+    "name": "XGen-7B-8k",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k",
+    "other": {}
+   },
+   {
+    "name": "InternLM-7B-8k",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8k",
+    "other": {}
+   },
+   {
+    "name": "ChatGLM2-6B",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGLM2-6B-32k",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": "ChatGLM2-6B (32k context in alignment, position interpolation)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "32k",
+    "other": {}
+   },
+   {
+    "name": "Vicuna-v1.5-7B-16k",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": "Llama2-7B (SFT, linear RoPE scaling)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "text-embedding-ada-002",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contriever",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "per-dataset max output length (1-1..6-2): 128,128,64,64,32,32,32,128,512,512,512,512,64,32,128,64,32,32,32,64,64",
+   "samples": "single run per item, greedy; no seeds stated",
+   "prompting": "Zero-shot per-dataset template with instruction at both start and end of prompt (Appendix B); few-shot examples are part of the context; chat templates omitted for few-shot and code tasks",
+   "retrieval": "Context split into chunks of M words (characters for Chinese), top-N by cosine similarity concatenated as compressed context; chunk 200 x top-7 or 500 x top-3; retrievers ada-002, Contriever, BM25; QA tasks only",
+   "parameters": {
+    "truncation": "when L > M, keep first floor(M/2) and last floor(M/2) tokens (middle removed)",
+    "summary_compression": "model summarises each chunk, summaries concatenated; summarization tasks only; chunk size not stated for summary",
+    "answer_extraction": "few-shot: first line of response; code: first non-comment line"
+   },
+   "other": {
+    "truncation_study": "GPT-3.5-Turbo-16k, ChatGLM2-6B-32k, Vicuna-v1.5-7B-16k at 4k, 8k, max"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1",
+     "definition": "n-gram F1 for QA and TriviaQA",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L",
+     "definition": "for summarization, DuReader, SAMSum",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (CLS)/(EM)",
+     "definition": "classification accuracy (TREC, LSHT); exact match (synthetic)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit Sim",
+     "definition": "Levenshtein-based similarity for code",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Overall",
+     "definition": "macro-average of category Avg over 6 categories, for EN, ZH, All (code in both)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "8 evaluated models; no-retrieval and no-context ablations"
+   ],
+   "protocol": "Single greedy run; no significance tests or seeds stated; LongBench-E macro-avg per length bin."
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/LongBench",
+   "weights": null,
+   "data": "https://github.com/THUDM/LongBench"
+  },
+  "prompts": [
+   {
+    "purpose": "HotpotQA / 2WikiMultihopQA / MuSiQue",
+    "text": "Answer the question based on the given passages. Only give me the answer and do not output any other words.\nThe following are given passages.\n{context}\nAnswer the question based on the given passages. Only give me the answer and do not output any other words.\nQuestion: {input}\nAnswer:",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "PassageRetrieval-en",
+    "text": "Here are 30 paragraphs from Wikipedia, along with an abstract. Please determine which paragraph the abstract is from.\n{context}\nThe following is an abstract.\n{input}\nPlease enter the number of the paragraph that the abstract is from. The answer format must be like \"Paragraph 1\", \"Paragraph 2\", etc.\nThe answer is:",
+    "where": "Appendix B"
+   },
+   {
+    "purpose": "GovReport",
+    "text": "You are given a report by a government agency. Write a one-page summary of the report.\nReport:\n{context}\nNow, write a one-page summary of the report.\nSummary:",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.truncation",
+    "quote": "we trun- cate the input sequence S from the middle",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LongBench has 21 datasets over 6 task categories, English and Chinese",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4,750",
+   "unit": "test instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole benchmark; 6 datasets extracted directly, 10 built on originals, 5 created and annotated by authors",
+   "note": null,
+   "where": "p1 Sec 1",
+   "quote": "LongBench contains 4,750 test instances, with an aver-"
+  },
+  {
+   "claim": "Average English instance length in LongBench",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6,711",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English instances; Chinese is 13,386 characters",
+   "note": null,
+   "where": "Abstract",
+   "quote": "with an average length of 6,711 words (English) and 13,386 characters (Chinese)"
+  },
+  {
+   "claim": "GPT-3.5-Turbo-16k has the best overall LongBench score of the 8 models",
+   "kind": "measured",
+   "source": null,
+   "metric": "macro-average over 6 categories",
+   "value": "44.7",
+   "unit": "% (macro-avg, All)",
+   "baseline_value": "26.8 (Llama2-7B-chat-4k)",
+   "n": null,
+   "setup": "Zero-shot (few-shot tasks excepted), greedy decoding, middle truncation to model max length",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row GPT-3.5-Turbo-16k, column Overall All"
+  },
+  {
+   "claim": "ChatGLM2-6B-32k relative improvement over ChatGLM2-6B from position interpolation and longer-context alignment",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "62",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench overall score (41.4 vs 25.7 All)",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "ChatGLM2-6B-32k and LongChat-v1.5-7B-32k obtain relative im- provements of 62% and 19%, respectively."
+  },
+  {
+   "claim": "LongChat-v1.5-7B-32k relative improvement over its Llama2-7B base",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "19",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench overall; LongChat 31.6 vs Llama2-7B-chat-4k 26.8 All",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "ChatGLM2-6B-32k and LongChat-v1.5-7B-32k obtain relative im- provements of 62% and 19%, respectively."
+  },
+  {
+   "claim": "GPT-3.5-Turbo-16k score under 4k truncation",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "39.1",
+   "unit": "% (4k truncation)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench macro-average, truncation 4k, GPT-3.5-Turbo-16k (max length gives 44.7)",
+   "note": "Read from Fig 2 data labels, order max/8k/4k, each GPT, ChatGLM2-32k, Vicuna: max 44.7/41.5/30.5, 8k 44.2/39.3/30.5, 4k 39.1/35.4/30.2. Inferred ordering from bar grouping.",
+   "where": "Fig 2",
+   "table": "Figure 2 labels, GPT-3.5-Turbo-16k, 4k truncation",
+   "quote": null
+  },
+  {
+   "claim": "On LongBench-E GPT-3.5-Turbo-16k drops relative 17% from 0-4k to 8k+ (51.5 to 42.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-17",
+   "unit": "% relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench-E, 13 English datasets, length bins 0-4k/4k-8k/8k+ by word count",
+   "note": null,
+   "where": "Sec 4.1, Table 9",
+   "quote": "(-17% from 0-4k to 8k+)"
+  },
+  {
+   "claim": "ChatGLM2-6B-32k and LongChat-v1.5-7B-32k are most robust to length on LongBench-E",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4% and 7%",
+   "unit": "relative drop 0-4k to 8k+",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LongBench-E",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "with a relative drop of 4% and 7% from 0-4k to 8k+ respectively"
+  },
+  {
+   "claim": "Retrieval helps Llama2-7B-chat-4k on QA tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "21",
+   "unit": "% relative improvement",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best of 3 retrievers, chunk 200x7 or 500x3, single and multi-doc QA, LongBench; avg 19.9 -> 24.0 (E-200x7)",
+   "note": null,
+   "where": "Sec 4.2, Table 4",
+   "quote": "the improvements for the three models are -2%, 21%, and -5%, respectively."
+  },
+  {
+   "claim": "Retrieval hurts GPT-3.5-Turbo-16k and ChatGLM2-6B-32k (long-context-capable models)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-2% and -5%",
+   "unit": "relative",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Best retrieval (E-200x7): GPT 40.7 -> 39.9, ChatGLM2-32k 36.1 -> 34.4; QA tasks LongBench",
+   "note": null,
+   "where": "Sec 4.2, Table 4",
+   "quote": "the improvements for the three models are -2%, 21%, and -5%, respectively."
+  },
+  {
+   "claim": "Even with retrieval, Llama2-7B-chat-4k (24.0) trails the long-context models' no-retrieval scores",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "24.0",
+   "unit": "avg % QA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "E-200x7 retrieval, QA tasks",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Llama2-7B-chat-4k E-200x7, column Avg"
+  },
+  {
+   "claim": "Retrieval ranking: text-embedding-ada-002 best, Contriever close, both beat BM25; smaller chunks with more retrieved chunks better",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "GPT avg E-200x7 39.9 vs B-200x7 30.3",
+   "unit": "% avg QA",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-Turbo-16k, chunks 200 words x top-7 and 500 x top-3 (same total length)",
+   "note": null,
+   "where": "Sec 4.2",
+   "table": "Table 4, GPT-3.5-Turbo-16k, rows E-200×7 and B-200×7, column Avg"
+  },
+  {
+   "claim": "Summarization-based compression lowers GPT-3.5-Turbo-16k summarization score (helps only on VCSUM, the longest)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "18.0",
+   "unit": "% avg vs 23.9 without",
+   "baseline_value": "23.9",
+   "n": null,
+   "setup": "Per-chunk model summaries concatenated; 4 summarization tasks LongBench",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GPT-3.5-Turbo-16k+Summ, column Avg"
+  },
+  {
+   "claim": "Summarization compression: Llama2-7B-chat-4k collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8.6",
+   "unit": "% avg vs 18.5 without",
+   "baseline_value": "18.5",
+   "n": null,
+   "setup": "Same setup",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Llama2-7B-chat-4k+Summ, column Avg"
+  },
+  {
+   "claim": "GPT-3.5-Turbo-16k without any context still scores high on Wikipedia-derived multi-doc QA (memorisation)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "31.7",
+   "unit": "F1 % on HotpotQA",
+   "baseline_value": "51.6 with context",
+   "n": null,
+   "setup": "Question only, no context",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row GPT-3.5-Turbo-16k (w/o context), column HotpotQA"
+  },
+  {
+   "claim": "Delta score (with minus without context) is proposed as a long-context understanding indicator",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6 on single/multi-doc QA",
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Synthetic tasks discriminate strongly (models near-zero or high); summarization and code do not discriminate",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4 radar plot; appendix C",
+   "note": null,
+   "where": "Appendix C"
+  }
+ ],
+ "limits": [
+  "Automatic metrics (ROUGE-L, F1) may not reflect response quality and underestimate models with longer responses (authors)",
+  "Performance is coupled with instruction-following ability (authors)",
+  "Only 8 models, mostly 7B open models and GPT-3.5-Turbo-16k, all dated 2023; none exceed 32k",
+  "Retrieval study covers QA tasks only; summarization compression only summarization tasks; single run, no variance reported",
+  "Wikipedia-derived tasks show memorisation (no-context scores high), so they partly measure parametric knowledge",
+  "Summarization and code tasks discriminate weakly; PassageCount near random for most models",
+  "Chinese tasks have length in characters, not comparable to English words"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Delta score",
+   "definition": "original score minus the score when context is absent; an indicator of long context understanding",
+   "where": "Sec 4.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ZeroSCROLLS",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent long-text benchmark with fewer task types",
+   "quote": null
+  },
+  {
+   "work": "L-Eval",
+   "year": 2023,
+   "arxiv": "2307.11088",
+   "relation": "related",
+   "note": "concurrent long-context benchmark",
+   "quote": null
+  },
+  {
+   "work": "Position Interpolation (Chen et al.)",
+   "year": 2023,
+   "arxiv": "2306.15595",
+   "relation": "evaluates",
+   "note": "used by ChatGLM2-6B-32k, LongChat, Vicuna-16k",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates random evidence placement in MultiFieldQA",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA / 2WikiMultihopQA / MuSiQue / NarrativeQA / Qasper / GovReport / QMSum / MultiNews / TREC / TriviaQA / SAMSum / LCC / RepoBench",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source datasets",
+   "quote": null
+  },
+  {
+   "work": "Contriever (Izacard et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base for LongChat, Vicuna",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: Number of data in each type of task within LongBench. Right: Length distribution for English and Chinese data in LongBench",
+   "page": 2,
+   "why": "Task mix and length distribution at a glance (images xref 441, 9000x5000)"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Avg score (%) under different truncation size.",
+   "page": 7,
+   "why": "Shows long context is used by GPT-3.5-16k and ChatGLM2-32k but not Vicuna-16k (vector drawing, no image xref)"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Average score (%) under different context length on LongBench-E.",
+   "page": 7,
+   "why": "Score decay by length bin per model (vector drawing)"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Average scores on 6 major tasks, on English and Chinese datasets, respectively.",
+   "page": 17,
+   "why": "Radar plots by category (images xref 1456-1458)"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Spearman correlation between each pair of task in LongBench.",
+   "page": 18,
+   "why": "Inter-task correlation heatmap (xref 1493 is a colorbar; mostly vector)"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1",
+   "snippet": "S1:L -> [S1:floor(M/2); S(L-floor(M/2)-1):L]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 2 labels have no explicit bar assignment in extracted text; order inferred from grouping (max, 8k, 4k)",
+  "Table 2 vs Table 4 differ slightly: ChatGLM2-6B-32k MultiFieldQA-zh 51.6 (Table 2) vs 51.7 (Table 4)",
+  "No embedded instructions found"
+ ]
+}

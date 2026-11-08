@@ -1,0 +1,691 @@
+{
+ "schema": 1,
+ "key": "2011.07743",
+ "pdf": "ai-engineering/05-graph-engineering/sources/gu-2021-beyond-i-i-d.pdf",
+ "bib": {
+  "title": "Beyond I.I.D.: Three Levels of Generalization for Question Answering on Knowledge Bases",
+  "authors": [
+   "Yu Gu",
+   "Sue Kase",
+   "Michelle T. Vanni",
+   "Brian M. Sadler",
+   "Percy Liang",
+   "Xifeng Yan",
+   "Yu Su"
+  ],
+  "first_author": "Gu",
+  "year": 2021,
+  "venue": "WWW '21 (The Web Conference), Ljubljana",
+  "arxiv": "2011.07743",
+  "doi": "10.1145/3442381.3449992"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 73253,
+  "chars_total": 73253,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "How well do KBQA models generalize beyond i.i.d. to compositional and zero-shot questions on a large knowledge base, and what helps?",
+ "hypothesis": "Pre-trained contextual embeddings such as BERT and question-specific search space pruning are key to compositional and zero-shot generalization.",
+ "contributions": [
+  "First systematic study of three levels of generalization (i.i.d., compositional, zero-shot) for KBQA",
+  "GrailQA: 64K-question crowdsourced Freebase dataset supporting all three levels",
+  "BERT-based Seq2Seq KBQA model (Transduction and Ranking) with analyses showing the role of BERT in generalization"
+ ],
+ "method": {
+  "summary": "Builds GrailQA by generating Freebase logical forms (Su et al. 2016 algorithm), validating them, annotating canonical questions and crowd-paraphrasing them, then sampling groundings. Proposes a BERT-encoded LSTM Seq2Seq model that outputs S-expressions, run either as generator (Transduction) or as a ranker over enumerated 2-hop candidates (Ranking), and evaluates on split i.i.d./compositional/zero-shot test sets.",
+  "task": "KBQA / semantic parsing of questions to S-expression logical forms over Freebase",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GrailQA",
+    "role": "both",
+    "size": "64,331 questions; 4,969 canonical logical forms; 29,457 paraphrases",
+    "split": "train/val/test 44,337 / 6,763 / 13,231 (about 70/10/20); val and test: 50% zero-shot, 25% compositional, 25% i.i.d.; 5 held-out domains for validation and 10 for test",
+    "source": "Freebase Commons (86 domains, 2,038 classes, 6,265 relations, over 45M entities); CC-BY 4.0 paper",
+    "preprocessing": "logical forms up to 4 relations plus at most one function (count, argmax/argmin, comparatives); sampling weights divided by rho_l=2 (logical form) and rho_p=10 (paraphrase); entity surface forms mined from FACC1"
+   },
+   {
+    "name": "GraphQ",
+    "role": "eval",
+    "size": "5,166 questions",
+    "split": null,
+    "source": "Su et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "WebQ (WebQuestions)",
+    "role": "eval",
+    "size": "4,737 questions",
+    "split": "full / 10% few-shot / zero-shot transfer",
+    "source": "Berant et al. 2013; Yih et al. 2016 logical forms",
+    "preprocessing": "SPARQL converted to S-expressions"
+   }
+  ],
+  "models": [
+   {
+    "name": "Transduction (BERT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM encoder-decoder Seq2Seq, tied input/output embeddings from BERT; dynamic vocabulary pruned to items within 2 hops of linked entities",
+    "init_from": "uncased BERT-base",
+    "tokenizer": "BERT word-pieces",
+    "vocab": "dynamic per question (schema items, entities, functions, syntax constants)",
+    "layers": null,
+    "hidden": "768 (encoder and decoder)",
+    "heads": null,
+    "context": "512 tokens BERT limit; vocabulary split into chunks concatenated with question",
+    "other": {
+     "chunk_size_in_experiments": null
+    }
+   },
+   {
+    "name": "Ranking (BERT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Same Seq2Seq used to score candidate logical forms enumerated within 2 hops of linked entities",
+    "init_from": "uncased BERT-base",
+    "tokenizer": "BERT word-pieces",
+    "vocab": null,
+    "layers": null,
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GloVe variants (-BERT)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Same models with average GloVe-6B-300d embedding per schema item, GloVe fixed",
+    "init_from": "GloVe-6B-300d",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "QGG (Lan and Jiang 2020)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Query graph generation, RL, BERT as one of 7 hand-crafted ranking features; 2-hop candidates",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "coverage": "covers 80% of GrailQA training questions"
+    }
+   },
+   {
+    "name": "BERT NER entity linker",
+    "role": "retriever",
+    "params": null,
+    "architecture": "BERT-based NER trained on GrailQA training set, disambiguation by FACC1 popularity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Seq2Seq log-likelihood p(a|q)=prod p(y_t|y_<t,q) (Eq 1); for Ranking used to score candidates",
+   "optimizer": "Adam",
+   "lr": "0.001 for own parameters; 2e-5 for BERT parameters",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32 for GloVe models; 1 for BERT models with gradient accumulation 16",
+   "steps": null,
+   "epochs": "early stopping, patience 3, best validation exact match",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "fine_tune_BERT": "yes; GloVe fixed because fine-tuning it was slightly worse",
+    "hyperparameter_selection": "on validation set",
+    "vocabulary_pruning": "applied in training and inference for BERT models, not needed in GloVe training",
+    "note": "batch size 1 due to memory"
+   }
+  },
+  "inference": {
+   "decoding": "Transduction: autoregressive until stop token (search method, beam size not stated); Ranking: score all enumerated candidates, return top",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run, no seeds stated",
+   "prompting": null,
+   "retrieval": "Candidate enumeration: all logical forms (optional COUNT) within 2 hops of identified entities; recall 80%; vocabulary pruning to 2 hops of anchor entities",
+   "parameters": {
+    "hops": 2,
+    "BERT_chunk": "vocabulary items split into chunks, each concatenated with the question"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact match (EM)",
+     "definition": "Percent of questions whose predicted and gold logical forms are semantically equivalent, via graph isomorphism after converting S-expressions to graph queries",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "F1 between predicted and gold answer sets, answers computed from a local Virtuoso SPARQL endpoint",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "QGG",
+    "SPARQA (GraphQ)",
+    "Aqqu entity linker",
+    "GloVe variants"
+   ],
+   "protocol": "Single run on validation/test; robustness analysis assumes perfect entity linking with upper/lower bounds by paraphrase and template grouping; error analysis on 100 random Ranking errors"
+  },
+  "availability": {
+   "code": "https://github.com/dki-lab/GrailQA",
+   "weights": null,
+   "data": "http://dki-lab.github.io/GrailQA/ (data and leaderboard)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we are only able to train our model with batch size 1 due to the memory consumption",
+    "where": "Appendix D.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Ranking model is best overall on GrailQA; EM 50.6, F1 58.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall EM/F1",
+   "value": 50.6,
+   "unit": "% EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Ranking, BERT-base fine-tuned",
+   "quote": null,
+   "table": "Table 3, row RANKING, column Overall EM",
+   "note": "F1 58.0; QGG overall F1 36.7, Transduction EM 33.3 / F1 36.8",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ranking zero-shot EM 48.6, F1 55.7; GloVe variant gets EM 28.9, F1 33.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot EM",
+   "value": 48.6,
+   "unit": "% EM",
+   "baseline_value": 28.9,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; zero-shot subset",
+   "quote": null,
+   "table": "Table 3, row RANKING, column Zero-shot EM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Transduction zero-shot EM is 25.7 with BERT vs 3.0 without BERT",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot EM",
+   "value": 25.7,
+   "unit": "% EM",
+   "baseline_value": 3.0,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Transduction",
+   "quote": null,
+   "table": "Table 3, row TRANSDUCTION, column Zero-shot EM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Replacing BERT by GloVe cuts Transduction F1 by 17.5% in compositional generalization",
+   "kind": "measured",
+   "source": null,
+   "metric": "compositional F1 drop",
+   "value": 17.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Transduction vs Transduction -BERT",
+   "quote": "TRANSDUCTION’s F1 drops by 17.5% in com-\npositional generalization and by 26.2% in zero-shot generalization",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "Replacing BERT by GloVe cuts Transduction F1 by 26.2% in zero-shot generalization",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot F1 drop",
+   "value": 26.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Transduction vs Transduction -BERT",
+   "quote": "26.2% in zero-shot generalization",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "Replacing BERT by GloVe cuts Ranking F1 by 21.9% in zero-shot generalization",
+   "kind": "measured",
+   "source": null,
+   "metric": "zero-shot F1 drop",
+   "value": 21.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Ranking vs Ranking -BERT",
+   "quote": "21.9% drop in zero-shot general-\nization",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "BERT and GloVe perform similarly on i.i.d.; GloVe Ranking is even slightly better i.i.d. EM (62.2 vs 59.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": "i.i.d. EM",
+   "value": 59.9,
+   "unit": "% EM",
+   "baseline_value": 62.2,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Ranking with BERT",
+   "quote": null,
+   "table": "Table 3, row RANKING, column I.I.D. EM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Vocabulary pruning (2-hop from linked entities) helps Transduction: overall EM 33.3 with vs 26.6 without",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall EM",
+   "value": 33.3,
+   "unit": "% EM",
+   "baseline_value": 26.6,
+   "n": null,
+   "setup": "GrailQA test split (13,231 questions; 25% i.i.d., 25% compositional, 50% zero-shot), Freebase Commons, entity linker BERT NER + FACC1 popularity; Transduction",
+   "quote": null,
+   "table": "Table 3, row TRANSDUCTION, column Overall EM",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ranking candidate generation (all logical forms within 2 hops of linked entities, optional count) has recall 80%",
+   "kind": "measured",
+   "source": null,
+   "metric": "candidate recall",
+   "value": 80,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA; Ranking inference mode",
+   "quote": "The\nrecall is 80% on GRAILQA.",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Ranking model sets new state of the art on GraphQ, F1 25.0, 3.5 points over SPARQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 25.0,
+   "unit": "% F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GraphQ, Ranking model",
+   "quote": "Our RANKING model achieves an F1 of 25.0%",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "BERT-based entity linker F1 72.2 vs Aqqu 17.2 on GrailQA (precision 68.0 vs 9.7)",
+   "kind": "measured",
+   "source": null,
+   "metric": "entity linking F1",
+   "value": 72.2,
+   "unit": "F1",
+   "baseline_value": 17.2,
+   "n": null,
+   "setup": "GrailQA; BERT NER trained on training set, disambiguation by FACC1 popularity",
+   "quote": null,
+   "table": "Section 4.3 table, row BERT, column F1",
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Error analysis of 100 wrong Ranking answers: coverage limitation 34%",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": 34,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random errors of Ranking",
+   "quote": "Coverage limitation (34%)",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Entity linking causes 33% of Ranking errors",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": 33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random errors of Ranking",
+   "quote": "Entity linking (33%)",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Relation mis-classification causes 26% of Ranking errors",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": 26,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random errors of Ranking",
+   "quote": "Relation mis-classification (26%)",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Pre-trained on GrailQA, Ranking reaches 43% F1 on WebQuestions with no in-domain training",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 43,
+   "unit": "% F1",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "WebQ, perfect entity linking assumed, Ranking pre-trained on GrailQA",
+   "quote": "RANKING can achieve an\nF1 of 43% without any in-domain training on WEBQ",
+   "table": "Section 5.5 table, row Zero-shot +pre-training, column F1",
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Few-shot (10% of WebQ) with GrailQA pre-training F1 0.65 vs 0.53 without",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.65,
+   "unit": "F1",
+   "baseline_value": 0.53,
+   "n": null,
+   "setup": "WebQ 10% training data, Ranking, perfect entity linking",
+   "quote": null,
+   "table": "Section 5.5 table, Few-shot +pre-training, column F1",
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "GrailQA has 64,331 question-logical form pairs from 4,969 canonical logical forms and 29,457 paraphrases",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions",
+   "value": 64331,
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA dataset after sampling",
+   "quote": "64,331 question-logical form pairs after sampling",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Overall annotation error rate in 100 sampled canonical forms is 5.6% (3% canonical question, 2.1% paraphrase)",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 5.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random canonical LFs and 576 paraphrases, manual check",
+   "quote": "5.6% error rate\noverall",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Average Jaccard similarity of paraphrase to canonical question is 0.569 unigram and 0.286 bigram; edit distance 26.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "Jaccard unigram",
+   "value": 0.569,
+   "unit": "similarity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA paraphrases, lower-cased",
+   "quote": "0.569 and 0.286 for unigrams and bigrams",
+   "table": null,
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "QGG gets zero F1 on counting questions because it returns only entities",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GrailQA fine-grained, Fig 4",
+   "quote": "QGG gets zero F1 on questions that requires counting",
+   "table": null,
+   "note": null,
+   "where": "5.3.2"
+  }
+ ],
+ "limits": [
+  "Ranking candidates cover only about 80% of questions; enumerates only up to 2 relations because 3 hops is prohibitively many",
+  "Ranking and QGG fail on superlatives/comparatives, which usually lack a topic entity",
+  "Entity linking is a major bottleneck (33% of errors)",
+  "Authors say there is a lack of deeper understanding of why BERT helps",
+  "Freebase has stopped being updated; models are LSTM+BERT-base, pre-LLM; no LLM/prompting baselines",
+  "Single runs, no seeds or variance reported",
+  "Only English, Freebase Commons"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Compositional generalization",
+   "definition": "Every test question's schema items appear in training but its specific logical form is not covered in training",
+   "where": "2.2"
+  },
+  {
+   "term": "Zero-shot generalization",
+   "definition": "Test question contains at least one schema item (relation, class, function) not in training",
+   "where": "2.2"
+  },
+  {
+   "term": "I.I.D. generalization",
+   "definition": "Test schema items all in training and test questions follow the training distribution",
+   "where": "2.2"
+  },
+  {
+   "term": "S-expression",
+   "definition": "Linearised logical form with set-based semantics using AND, COUNT, R, JOIN, ARGMAX, ARGMIN, LT, LE, GT, GE",
+   "where": "3.3, Appendix B"
+  },
+  {
+   "term": "Vocabulary pruning (VP)",
+   "definition": "Keep only KB items reachable within 2 hops of entities identified in the question",
+   "where": "4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "On Generating Characteristic-rich Question Sets for QA Evaluation (GraphQ)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "logical form generation algorithm reused",
+   "quote": null
+  },
+  {
+   "work": "Building a Semantic Parser Overnight",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "generate-canonical-paraphrase pipeline",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "language-ontology alignment",
+   "quote": null
+  },
+  {
+   "work": "QGG (Lan and Jiang)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "state of the art on ComplexWebQ and WebQ",
+   "quote": null
+  },
+  {
+   "work": "SPARQA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "prior GraphQ SOTA",
+   "quote": null
+  },
+  {
+   "work": "Hwang et al. BERT for text-to-SQL",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "concatenating question with vocabulary items",
+   "quote": null
+  },
+  {
+   "work": "Freebase Commons",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "KB",
+   "quote": null
+  },
+  {
+   "work": "FACC1",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "entity surface form mining",
+   "quote": null
+  },
+  {
+   "work": "WebQuestions / ComplexWebQ / SimpleQuestions / QALD / LC-QuAD",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compared datasets",
+   "quote": null
+  },
+  {
+   "work": "Furrer et al. (concurrent)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pre-trained contextual embeddings matter for compositional generalization",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "On large-scale KBs, collecting sufficient training data for KBQA to ensure i.i.d. distribution at test time is very difficult...",
+   "page": 1,
+   "why": "Shows the three generalization levels on one Freebase theater example"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Our data collection pipeline...",
+   "page": 4,
+   "why": "Pipeline from graph query to canonical question to paraphrase to regrounded questions"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An overview of using BERT to jointly encode the input question and schema items in the decoder vocabulary...",
+   "page": 7,
+   "why": "Chunked question+schema-item encoding"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Overall results.",
+   "page": 8,
+   "why": "Core ablation: BERT, VP, Transduction vs Ranking by generalization level"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Robustness analysis...",
+   "page": 9,
+   "why": "Upper/lower bound gaps show BERT robustness"
+  }
+ ],
+ "code": [
+  {
+   "where": "3.3",
+   "snippet": "(AND Theater (AND (GE capacity 10000) (JOIN staged_here (JOIN producer Bob_Boyett))))",
+   "verbatim": true
+  },
+  {
+   "where": "Fig 1",
+   "snippet": "(COUNT (AND Theater_Production (JOIN producer Bob_Boyett))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure 4 and 5 values are only in plots, not recorded",
+  "Table 1 columns flattened in extraction; not used for results",
+  "No instructions embedded in the PDF"
+ ]
+}

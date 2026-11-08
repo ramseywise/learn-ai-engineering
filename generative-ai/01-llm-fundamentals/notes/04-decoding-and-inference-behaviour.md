@@ -90,6 +90,9 @@ The model outputs logits; the decoder picks a token.
 
 Xiao & Zhu run the cut-offs on one five-token distribution (0.34, 0.32, 0.21, 0.12, 0.01) (*Foundations of LLMs*, ch. 5, Fig. 5.5). Top-k with k = 3 keeps the first three, which renormalise to about 0.39, 0.37 and 0.24 (recomputed here). Top-p with p = 0.6 keeps only the first two, because 0.34 + 0.32 = 0.66 is the first sum to reach 0.6, and they renormalise to about 0.52 and 0.48. With p = 1 and the temperature driven towards zero, top-p collapses to greedy search. For beam search they say a width of K = 2 to 5 is usually enough in LLM inference, a rule of thumb with no measurement behind it.
 
+![Four panels of one decoding step over the same five candidate tokens with probabilities 0.34, 0.32, 0.21, 0.12 and 0.01: greedy keeps only the top token, beam search with width 3 keeps three, top-k with k = 3 renormalises three and samples one, and top-p with p = 0.6 keeps two, renormalises them to 0.51 and 0.49 and samples one](../sources/images/xiao-foundations-llms-fig5-5.png)
+*Image Source: Xiao & Zhu, [Foundations of Large Language Models](https://arxiv.org/abs/2501.09223) (2025), Fig. 5.5*
+
 **Temperature** divides the logits before the softmax: `softmax(logits / T)`. Huyen's two-token example (*AI Engineering*, ch. 2): with logits [1, 2], T = 1 gives probabilities [0.27, 0.73], and T = 0.5 gives [0.12, 0.88]. Below about T = 0.1 the model almost always picks the second token. Temperature 0 cannot literally be computed (division by zero), so it is implemented as "take the argmax". Providers usually cap T at 2, and Huyen reports 0.7 as a common starting point for creative work. Transformer Explainer runs GPT-2 small in the browser with a temperature slider, so you can watch the distribution reshape for your own prompt. In a 90-person study of non-experts it scored 73.3% on a 7-question quiz, significantly above a blog post and a video (p = 0.021 each). The biggest gain was on the output-probability question ([arXiv:2408.04619](https://arxiv.org/abs/2408.04619) (Cho et al., CHI 2026)).
 
 ![Line chart of the softmax probabilities of two tokens with logits 1 and 2 as temperature goes from 0 to 5: token B starts at 1.0 and falls towards 0.55, token A rises from 0 towards 0.45, crossing 0.27/0.73 at temperature 1](../sources/images/huyen-ai-engineering-fig2-16.png)
@@ -152,6 +155,9 @@ The sampling setting also decides how easy machine text is to detect. Zellers et
 ---
 
 **Speculative decoding** makes decode cheaper without changing the output distribution. A small draft model proposes τ tokens (Fig. 5.7 uses τ = 5), the large model scores all of them in one parallel, prefill-style pass, and the longest agreeing prefix is kept. The book works through the greedy version, where a draft token survives while it matches the large model's argmax. For sampling, it keeps a draft token when a uniform draw falls below the ratio p/q of the large model's probability to the draft model's (*Foundations of LLMs*, ch. 5, Eq. 5.32; the idea is Leviathan et al.'s). The book gives no speedup measurements.
+
+![Four steps of speculative decoding: the draft model predicts five tokens, the evaluation model scores them in parallel, the first three are accepted and the last two rejected, and the evaluation model supplies one new token after the accepted ones](../sources/images/xiao-foundations-llms-fig5-7.png)
+*Image Source: Xiao & Zhu, [Foundations of Large Language Models](https://arxiv.org/abs/2501.09223) (2025), Fig. 5.7*
 
 ### Spending more compute at inference
 
@@ -222,6 +228,9 @@ K, V vectors computed for this token: full = 20  cached = 2
 What you pay for that is memory, and it scales with every part of the model's shape. One key and one value per token, per head, per layer. Reducing the number of key/value heads is exactly what GQA does:
 
 The book gives the per-token cache size symbolically: with L layers, head size d_h, m bytes per value and τ heads, it is proportional to L·τ·d_h·m for multi-head attention, L·d_h·m for multi-query attention (one KV head) and L·n_g·d_h·m for grouped-query attention with n_g KV groups. Setting n_g = τ recovers MHA and n_g = 1 recovers MQA (*Foundations of LLMs*, ch. 2). The sizes below are the n_g = 8 case.
+
+![Five panels of query, key and value blocks: single-head attention; multi-head with one key and value per query; multi-query with one shared key and value; grouped-query with one key and value per group of queries; cross-layer sharing where one layer reuses the key and value blocks of the layer below](../sources/images/xiao-foundations-llms-fig2-8.png)
+*Image Source: Xiao & Zhu, [Foundations of Large Language Models](https://arxiv.org/abs/2501.09223) (2025), Fig. 2.8*
 
 ```python
 def kv_gb(layers, kv_heads, head_dim, context, bytes_per=2):

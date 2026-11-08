@@ -6,6 +6,7 @@ sources:
   - https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags
   - https://arxiv.org/abs/2608.26263
   - https://arxiv.org/abs/2407.09025
+  - https://aclanthology.org/D18-1425/
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -89,6 +90,11 @@ memory:
 ```
 
 Writing the budget and pruning policy into the context spec, rather than leaving them implicit in code, makes them reviewable ([03](03-budgeting-the-window.md#history)).
+
+The oldest evidence that the shape of the input schema decides the result is text-to-SQL, where the database schema is the structured context. Spider ([Yu et al., EMNLP 2018](https://aclanthology.org/D18-1425/); 10,181 questions over 200 multi-table databases, with test databases never seen in training) found accuracy falls with schema complexity and unseen schemas: the best 2018 parser, TypeSQL, scored 34.3% exact match when the split was random but **9.7% on unseen databases**, and 0.3% on its extra-hard queries. Those parsers are long superseded and column names were hand-cleaned, so read it as the origin of the point, not a current number.
+
+![A database schema with tables, columns and a foreign key, above the complex question and SQL that annotators wrote against it](../sources/images/yu-spider-fig1.png)
+*Image Source: Yu et al., [Spider](https://aclanthology.org/D18-1425/) (2018), Fig. 1*
 
 ### 2. State schemas — what carries across turns
 

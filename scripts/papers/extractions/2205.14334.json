@@ -1,0 +1,304 @@
+{
+ "schema": 1,
+ "key": "2205.14334",
+ "pdf": "ai-engineering/03-harness-engineering/sources/lin-2022-teaching-models-express-their-uncertainty.pdf",
+ "bib": {
+  "title": "Teaching models to express their uncertainty in words",
+  "authors": ["Stephanie Lin", "Jacob Hilton", "Owain Evans"],
+  "first_author": "Lin",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2205.14334",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53328,
+  "chars_total": 53328,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a GPT-3 model be finetuned to state, in words or numbers, a calibrated confidence in its own answers, and does that calibration hold under distribution shift?",
+ "hypothesis": "Pre-trained models will need to be finetuned to produce calibrated verbalized probabilities, and GPT-3 already has latent representations correlated with its epistemic uncertainty that finetuning can surface.",
+ "contributions": [
+  "CalibratedMath, a suite of 21 arithmetic tasks for testing calibration under distribution shift",
+  "GPT-3 can learn to express calibrated uncertainty using words (verbalized probability), in and out of distribution",
+  "Calibration is not explained by learning to output logits or by simple heuristics",
+  "Comparison to finetuning the model logits (indirect logit)"
+ ],
+ "method": {
+  "summary": "GPT-3 davinci (175B) answers arithmetic questions zero-shot with greedy decoding; answers are held fixed. It is finetuned with supervised learning to append a confidence (a number or one of five words) whose label is GPT-3's empirical accuracy on that question's sub-task. Calibration is scored on held-out task groups with MSE (Brier) and MAD, against logit-based confidences and a constant baseline.",
+  "task": "calibration of verbalized confidence in arithmetic question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CalibratedMath Add-subtract",
+    "role": "train",
+    "size": "approx 10k examples (100 questions per sub-task)",
+    "split": "train",
+    "source": "programmatically generated arithmetic questions; GPT-3 zero-shot answers",
+    "preprocessing": "label = floor(100*p_T) for numbers, or one of five words by 0.2-wide accuracy interval; random names (john, sam, matt, dan, tom) used instead of ordered words"
+   },
+   {
+    "name": "CalibratedMath Multi-answer",
+    "role": "eval",
+    "size": null,
+    "split": "evaluation",
+    "source": "questions with multiple correct answers (e.g. name any prime below 56)",
+    "preprocessing": null
+   },
+   {
+    "name": "CalibratedMath Multiply-divide",
+    "role": "eval",
+    "size": null,
+    "split": "evaluation",
+    "source": "unique-answer multiplication, division, modulo, percentages, fractions",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 davinci",
+    "role": "base",
+    "params": "175B",
+    "architecture": "decoder-only transformer via OpenAI API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"smaller_models_tried": "GPT-J and 7B GPT-3, too weak at arithmetic"}
+   }
+  ],
+  "training": {
+   "objective": "supervised finetuning on the confidence token(s); verbalized: match sub-task empirical accuracy; indirect logit: cross-entropy on True/False correctness",
+   "optimizer": null,
+   "lr": "OpenAI finetuning API default with learning_rate_multiplier = 0.1",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping around n = 2700 examples, chosen when per-sample MSE on the training set stops decreasing",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"api_defaults": "other hyperparameters are the OpenAI fine-tuning API defaults, not stated"}
+  },
+  "inference": {
+   "decoding": "greedy for answers and confidence in main results; Expected Value decoding (weighted sum over top five tokens) in few-shot and some appendix runs",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy answer per question; few-shot: k examples resampled randomly per query, k from 1 to 50",
+   "prompting": "Q/A/Confidence format; few-shot uses k random Add-subtract examples with target probabilities",
+   "retrieval": null,
+   "parameters": {"word_to_probability": "five words map to 10%, 30%, 50%, 70%, 90%", "MAD_bins": "K bins with equal numbers of samples, K not stated"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "MSE", "definition": "E_q[(p_M - I(a_M))^2], Brier score of the stated probability against answer correctness", "unit": "percent (x100)", "higher_is_better": false},
+    {"name": "MAD", "definition": "mean over K equal-count bins of |acc(b_i) - conf(b_i)|", "unit": "percent", "higher_is_better": false}
+   ],
+   "baselines": ["answer logit (zero-shot normalized logprob)", "indirect logit (finetuned True token logprob)", "constant baseline (best constant on train by MSE)", "logistic regression on heuristic features", "linear probe on GPT-3 embedding"],
+   "protocol": "single run, no seeds or confidence intervals reported; model answers held fixed, only calibration scored"
+  },
+  "availability": {"code": null, "weights": null, "data": "CalibratedMath described in Appendix A / Table 3; no release link in text"},
+  "prompts": [
+   {
+    "purpose": "5-shot prompt for verbalized probability",
+    "text": "Q: What is 57368 rounded to the nearest 100?\nA: 57,400\nConfidence: 19%\n\nQ: What is 7 less than 58?\nA: 51\nConfidence: 44%\n\nQ: What is 877 + 47?\nA: 924\nConfidence: 59%\n\nQ: What is 517 - 898?\nA: -381\nConfidence: 67%\n\nQ: What is 247 less than 4895?\nA: 2352\nConfidence: 0%\n\nQ: What is 5 * 145?\nA: 725\nConfidence:",
+    "where": "Appendix B.2, Figure 9"
+   }
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "using the default hyperparameters from OpenAI", "where": "Appendix B.3"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Finetuned verbalized numbers beat answer logit and constant baseline in MSE on Multi-answer after training on Add-subtract.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "22.0",
+   "unit": "percent",
+   "baseline_value": "37.4 (answer logit), 34.1 (constant)",
+   "n": null,
+   "setup": "GPT-3 175B, trained on Add-subtract, evaluated on Multi-answer, greedy decoding",
+   "table": "Table 1, row Verbalized numbers (finetune), column Multi-answer MSE",
+   "quote": null,
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On Multiply-divide, verbalized numbers only match the constant baseline in MSE and lose to the zero-shot answer logit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "15.5",
+   "unit": "percent",
+   "baseline_value": "10.4 (answer logit), 15.3 (constant)",
+   "n": null,
+   "setup": "as above, Multiply-divide evaluation",
+   "table": "Table 1, row Verbalized numbers (finetune), column Multiply-divide MSE",
+   "quote": null,
+   "note": "MAD for verbalized numbers on Multiply-divide is 19.0, worse than constant baseline 8.5",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Distribution shift in difficulty: GPT-3 median accuracy is much higher on the evaluation set than on training, so a calibrated model must raise its confidences.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median accuracy",
+   "value": "65% Multi-answer vs 21% Add-subtract",
+   "unit": "percent",
+   "baseline_value": "21",
+   "n": null,
+   "setup": "GPT-3 zero-shot accuracy across sub-tasks",
+   "quote": "Median accuracy is 65% for Multi-answer",
+   "table": null,
+   "note": null,
+   "where": "Section 2.2"
+  },
+  {
+   "claim": "Early stopping at about 2700 training examples is enough; more training does not improve generalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training examples before stopping",
+   "value": "2700",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "verbalized numbers, Add-subtract, stop when per-sample training MSE flattens",
+   "quote": "stop training after around n = 2700 examples",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.3"
+  },
+  {
+   "claim": "Stochastic 50-shot prompting nearly matches finetuning on 10k datapoints, suggesting latent calibration features that examples only locate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "calibration curve (qualitative)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Expected Value decoding, k random Add-subtract examples per query",
+   "quote": "50-shot is almost as calibrated as the",
+   "table": null,
+   "note": "improvement starts at k = 25; judged from curves, not a metric",
+   "where": "Figure 6, Section 3.3"
+  },
+  {
+   "claim": "Heuristic-feature logistic regression and a linear probe on embeddings do worse than verbalized words on Multi-answer MSE, so verbalized output is not explained by simple heuristics, though the probe is close.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "29.0 (verbalized words) vs 29.7 (heuristics) vs 31.2 (probe)",
+   "unit": "percent",
+   "baseline_value": "29.7",
+   "n": null,
+   "setup": "Multi-answer evaluation, trained on Add-subtract",
+   "table": "Table 2, rows Verbalized probability (finetune), Log. reg. with heuristic features, Linear probe on GPT3 embedding, column Multi-answer MSE",
+   "quote": null,
+   "note": "Table 2 verbalized row (29.0, 24.0, 12.7, 10.6) equals the words (greedy) row of Table 4, while Table 1 uses the numbers setup",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Swapping training set to Multiply-divide gives much worse Multi-answer calibration, due to larger label shift.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "36.3",
+   "unit": "percent",
+   "baseline_value": "40.1 (constant)",
+   "n": null,
+   "setup": "verbalized numbers trained on Multiply-divide, evaluated on Multi-answer",
+   "table": "Table 5, row Verbalized numbers (finetune), column Multi-answer MSE",
+   "quote": null,
+   "note": null,
+   "where": "Appendix C.3"
+  },
+  {
+   "claim": "Expected Value decoding gives modestly better calibration than greedy for verbalized words on Multi-answer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSE",
+   "value": "26.0 (EV) vs 29.0 (greedy)",
+   "unit": "percent",
+   "baseline_value": "29.0",
+   "n": null,
+   "setup": "verbalized words, Multi-answer",
+   "table": "Table 4, row Verbalized words (EV), column Multi-answer MSE",
+   "quote": null,
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Verbalized finetune error correlates only moderately with logit-based setups across sub-tasks (r 0.65 indirect logit, 0.60 answer logit) but strongly with verbalized words (0.84).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r of per-sub-task MSE",
+   "value": "0.60",
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multiply-divide evaluation, per task and difficulty level",
+   "table": "Figure 12, panel Verbalized finetune vs Answer logit zero-shot, r: 0.60",
+   "quote": null,
+   "note": "other panels: 0.65 and 0.84",
+   "where": "Appendix C.4, Figure 12"
+  }
+ ],
+ "limits": [
+  "Only GPT-3 175B and only arithmetic; authors say future work should test other subject areas, formats (chat, long-form QA, forecasting) and other models.",
+  "Supervised finetuning rather than RL on a proper scoring rule; labels are sub-task accuracy, a noisy proxy per question.",
+  "Verbalized probability overfits training: the model only emits a number if that exact token appeared in training, giving lumpy calibration curves.",
+  "Underconfident on Multi-answer and no better than constant baseline on Multiply-divide; logit setups win there.",
+  "Single run, no seeds or intervals; many finetuning hyperparameters left at API defaults and unstated.",
+  "Calibration does not prove honesty; a model could imitate a calibrated person (authors concede).",
+  "Dated: davinci finetuning API from 2022."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "verbalized probability", "definition": "uncertainty expressed in natural language ('61%' or 'medium confidence') about the model's own answer", "where": "Section 1, Figure 2"},
+  {"term": "answer logit", "definition": "normalized logprob of the model's answer", "where": "Figure 2"},
+  {"term": "indirect logit", "definition": "logprob of the 'True' token when appended to the model's answer", "where": "Figure 2"},
+  {"term": "honest model", "definition": "a model that can communicate everything it represents internally in natural language", "where": "Section 1"}
+ ],
+ "lineage": [
+  {"work": "Guo et al. 2017, On calibration of modern neural networks", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "calibration definition (Eq. 1)", "quote": null},
+  {"work": "Brown et al. 2020, Language models are few-shot learners", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "GPT-3 davinci 175B", "quote": null},
+  {"work": "Ovadia et al. 2019", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "calibration under distribution shift", "quote": null},
+  {"work": "Jiang et al. 2021, How can we know when language models know", "year": 2021, "arxiv": null, "relation": "related", "note": "logit-based calibration with paraphrase summing", "quote": null},
+  {"work": "Hendrycks et al. 2020, MMLU", "year": 2020, "arxiv": null, "relation": "related", "note": "found GPT-3 answer-logit calibration generalizes poorly", "quote": null},
+  {"work": "Branwen 2020, GPT-3 nonfiction calibration", "year": 2020, "arxiv": null, "relation": "related", "note": "in-domain few-shot verbalized uncertainty on trivia", "quote": null},
+  {"work": "Kamath et al. 2020, selective QA", "year": 2020, "arxiv": null, "relation": "related", "note": "auxiliary calibrator to abstain", "quote": null},
+  {"work": "Lin et al. 2021, TruthfulQA", "year": 2021, "arxiv": null, "relation": "related", "note": "hallucination motivation and prompts to defer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of verbalized probability and the CalibratedMath task.", "page": 2, "why": "Shows the Q / A / Confidence format and the MSE scoring in one glance."},
+  {"figure": "Fig 2", "caption": "Three kinds of probability used in this paper.", "page": 3, "why": "Compares verbalized, answer logit and indirect logit side by side."},
+  {"figure": "Fig 5", "caption": "Calibration curves for training (left) and evaluation (center and right).", "page": 7, "why": "Shows logit setups underconfident on Multi-answer while verbalized tracks the diagonal."},
+  {"figure": "Table 1", "caption": "Calibration scores on evaluation sets.", "page": 6, "why": "The headline comparison in four columns."},
+  {"figure": "Fig 6", "caption": "Calibration curves for few-shot learning (verbalized probability).", "page": 8, "why": "k-shot approaches finetuned calibration at 50 shots."}
+ ],
+ "code": [
+  {"where": "Section 2.1, Eq 1", "snippet": "Pr(aM|pM = p) = p", "verbatim": true},
+  {"where": "Section 2.3", "snippet": "Eq[(pM - I(aM))^2]", "verbatim": false}
+ ],
+ "problems": ["Figure axis labels and chart values are scattered in the text layer; tables read cleanly. No embedded instructions found."]
+}

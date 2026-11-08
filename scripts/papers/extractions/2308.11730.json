@@ -1,0 +1,515 @@
+{
+ "schema": 1,
+ "key": "2308.11730",
+ "pdf": "ai-engineering/05-graph-engineering/sources/wang-2024-knowledge-graph-prompting-multi-document.pdf",
+ "bib": {
+  "title": "Knowledge Graph Prompting for Multi-Document Question Answering",
+  "authors": [
+   "Yu Wang",
+   "Nedim Lipka",
+   "Ryan A. Rossi",
+   "Alexa Siu",
+   "Ruiyi Zhang",
+   "Tyler Derr"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "AAAI-24 (Thirty-Eighth AAAI Conference on Artificial Intelligence)",
+  "arxiv": "2308.11730",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43498,
+  "chars_total": 43498,
+  "engine": "pymupdf",
+  "skipped": "Supplementary (experimental setting 8.1-8.7, hyperparameters, Table 5) is not in the PDF; it is on GitHub only. Figures not read as images."
+ },
+ "type": "empirical",
+ "question": "How can an LLM answer questions that need passages and structures from several documents without costly repeated prompting?",
+ "hypothesis": "A KG over passages and document structures, traversed by a fine-tuned LLM agent, retrieves better context than flat or multi-hop retrievers.",
+ "contributions": [
+  "Generally applicable KG construction (TF-IDF, KNN-ST, KNN-MDR, TAGME) over passages and structural nodes",
+  "KGP: LLM-based KG traversal agent for prompt context retrieval, fine-tuned to predict next supporting facts",
+  "Comparison of traversal agents and KG densities, case studies"
+ ],
+ "method": {
+  "summary": "Builds a graph over passages (edges by shared keywords, embedding KNN, or shared Wikipedia entities) plus page and table nodes. A fine-tuned T5 (or LLaMA) agent generates the next evidence passage and picks the neighbour most similar to it, expanding from TF-IDF seed passages up to a budget K; retrieved passages go to an LLM reader.",
+  "task": "multi-document question answering (retrieval for prompting)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": null,
+    "split": "randomly sampled questions (sample size in Supplementary, not in paper); Fig 1 uses development sets of 2WikiMQA and MuSiQue",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "IIRC",
+    "role": "eval",
+    "size": null,
+    "split": "randomly sampled questions (sample size in Supplementary, not in paper); Fig 1 uses development sets of 2WikiMQA and MuSiQue",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "2WikiMQA",
+    "role": "eval",
+    "size": null,
+    "split": "randomly sampled questions (sample size in Supplementary, not in paper); Fig 1 uses development sets of 2WikiMQA and MuSiQue",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "MuSiQue",
+    "role": "eval",
+    "size": null,
+    "split": "randomly sampled questions (sample size in Supplementary, not in paper); Fig 1 uses development sets of 2WikiMQA and MuSiQue",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "PDFTriage",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "Structural questions about pages and tables; metric Struct-EM"
+   }
+  ],
+  "models": [
+   {
+    "name": "KGP-T5",
+    "role": "proposed",
+    "params": "0.7B",
+    "architecture": "encoder-decoder T5 as traversal agent",
+    "init_from": "pretrained T5, instruction fine-tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "0.7B from text 'T5-0.7B'"
+    }
+   },
+   {
+    "name": "KGP-LLaMA",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "LLaMA traversal agent",
+    "init_from": "LLaMA-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "reader/prompted LLM and a traversal agent in Table 2; version not stated in paper"
+    }
+   },
+   {
+    "name": "MDR encoder (RoBERTa-base)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "encoder, inner-product similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "instruction fine-tuning of the traversal agent to predict the next supporting facts from the question and previous supporting facts (MDR-style for the KNN-MDR encoder)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "where": "hyperparameters in Supplementary, not in the paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Question prefixed with retrieved context; agent prompted to generate the next evidence passage; neighbour chosen by similarity to generated passage",
+   "retrieval": "Seed passages by TF-IDF search; traversal Algorithm 1 with branching factor (top-k neighbours per step) and fixed total passage budget K, same across baselines",
+   "parameters": {
+    "K": "preset context budget, value not in paper",
+    "branching_factor": "varied, Fig 7(a)-(b)",
+    "kg_density": "varied via construction hyperparameters, Fig 5-6"
+   },
+   "other": {
+    "structural_questions": "LLM classifies question as structure or content; structure keywords map to page/table nodes; table node returns markdown, page node returns one-hop passages"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Acc",
+     "definition": "not defined in the paper body (Supplementary)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM",
+     "definition": "exact match",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Struct-EM",
+     "definition": "exact match on PDFTriage structural questions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SF-EM",
+     "definition": "share of questions whose supporting facts are fully covered by neighbours of TF-IDF seed passages",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Rank",
+     "definition": "average rank over datasets, with and without PDF-T",
+     "unit": "rank",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "None",
+    "KNN",
+    "TF-IDF",
+    "BM25",
+    "DPR",
+    "MDR",
+    "IRCoT",
+    "Golden"
+   ],
+   "protocol": "Averages over 100 sampled questions in Fig 6-7; runs and seeds not stated"
+  },
+  "availability": {
+   "code": "https://github.com/YuWVandy/KG-LLM-MDQA",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "KGP-T5 reaches 67% Struct-EM on PDFTriage structural questions; no baseline handles them",
+   "kind": "measured",
+   "source": null,
+   "metric": "Struct-EM",
+   "value": 67.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PDFTriage structural questions (pages/tables)",
+   "note": null,
+   "where": "Performance Comparison",
+   "quote": "Moreover, our proposed method achieves 67% Struct-EM"
+  },
+  {
+   "claim": "KGP-T5 HotpotQA F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 66.77,
+   "unit": "%",
+   "baseline_value": "MDR 65.16",
+   "n": null,
+   "setup": "Table 1; ChatGPT-style LLM reader on retrieved context; KGP-T5 traversal agent (T5-0.7B instruction-finetuned); budget K fixed across methods; supplement holds sample sizes, HotpotQA",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row KGP-T5, column HotpotQA F1"
+  },
+  {
+   "claim": "KGP-T5 2WikiMQA EM",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 39.8,
+   "unit": "%",
+   "baseline_value": "IRCoT 37.75",
+   "n": null,
+   "setup": "Table 1; ChatGPT-style LLM reader on retrieved context; KGP-T5 traversal agent (T5-0.7B instruction-finetuned); budget K fixed across methods; supplement holds sample sizes, 2WikiMQA",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row KGP-T5, column 2WikiMQA EM"
+  },
+  {
+   "claim": "KGP-T5 MuSiQue F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 41.19,
+   "unit": "%",
+   "baseline_value": "MDR 37.03",
+   "n": null,
+   "setup": "Table 1; ChatGPT-style LLM reader on retrieved context; KGP-T5 traversal agent (T5-0.7B instruction-finetuned); budget K fixed across methods; supplement holds sample sizes, MuSiQue",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row KGP-T5, column MuSiQue F1"
+  },
+  {
+   "claim": "KGP-T5 IIRC F1 (below MDR 43.47)",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 41.54,
+   "unit": "%",
+   "baseline_value": "MDR 43.47",
+   "n": null,
+   "setup": "Table 1; ChatGPT-style LLM reader on retrieved context; KGP-T5 traversal agent (T5-0.7B instruction-finetuned); budget K fixed across methods; supplement holds sample sizes, IIRC",
+   "note": "Text says KGP-T5 ranks best except Golden, but MDR beats it on IIRC Acc (50.84 vs 48.28) and F1 (43.47 vs 41.54); TF-IDF beats it on HotpotQA Acc (76.64 vs 76.53)",
+   "where": "Table 1",
+   "table": "Table 1, row KGP-T5, column IIRC F1"
+  },
+  {
+   "claim": "Average rank of KGP-T5 across datasets, with PDF-T",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank",
+   "value": 2.69,
+   "unit": "rank",
+   "baseline_value": "MDR 3.07",
+   "n": null,
+   "setup": "Table 1; ChatGPT-style LLM reader on retrieved context; KGP-T5 traversal agent (T5-0.7B instruction-finetuned); budget K fixed across methods; supplement holds sample sizes",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row KGP-T5, column Rank w PDF-T"
+  },
+  {
+   "claim": "No-context ChatGPT HotpotQA F1 vs golden context",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 30.5,
+   "unit": "%",
+   "baseline_value": "Golden 71.06",
+   "n": null,
+   "setup": "None row vs Golden row, HotpotQA",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row None, column HotpotQA F1"
+  },
+  {
+   "claim": "T5-0.7B traversal agent matches or beats ChatGPT and LLaMA-7B agents on 2WikiMQA F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 53.5,
+   "unit": "%",
+   "baseline_value": "LLaMA 52.5; ChatGPT 49.4",
+   "n": null,
+   "setup": "Table 2, TAGME KG, agents ChatGPT/LLaMA/T5/MDR/TF-IDF, 2WikiMQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row T5, column 2WikiMQA F1"
+  },
+  {
+   "claim": "Denser KG raises coverage of supporting facts (SF-EM) but lowers precision; KNN-MDR trades off better than TF-IDF and KNN-ST",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotpotQA, KGs built by TF-IDF/KNN-ST/KNN-MDR/TAGME, seeds from TF-IDF; read from Fig 5",
+   "note": null,
+   "where": "Fig 5 and text"
+  },
+  {
+   "claim": "TAGME KG starts with SF-EM around 0.95",
+   "kind": "measured",
+   "source": null,
+   "metric": "SF-EM",
+   "value": 0.95,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HotpotQA KG quality",
+   "note": "0.95 appears in text as 'around 0.95'",
+   "where": "KG construction",
+   "quote": "starting SF-EM of TAGME to be already around 0.95."
+  },
+  {
+   "claim": "Performance rises with branching factor then falls under fixed context budget (fewer seeds)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 sampled questions, 2WikiMQA and MuSiQue, Fig 7(a)-(b)",
+   "note": null,
+   "where": "Sensitivity Analysis"
+  }
+ ],
+ "limits": [
+  "Sample sizes, hyperparameters, prompts and metric definitions are in a separate Supplementary not in the PDF",
+  "No seeds or significance tests stated",
+  "KGP-T5 is not best on every cell (MDR wins IIRC, TF-IDF edges HotpotQA Acc) despite the text",
+  "Authors hypothesise, without testing, that LLaMA-7B needs more fine-tuning data than T5-0.7B",
+  "Denser KGs raise latency; KG density and construction are dataset-tuned (MDR encoder trained on HotpotQA)",
+  "Graph nodes are passages, not entities or relations: no typed relations or Cypher-style queries",
+  "ChatGPT version unspecified"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MD-QA",
+   "definition": "multi-document question answering, needing alternating retrieval and reasoning across documents",
+   "where": "Introduction"
+  },
+  {
+   "term": "SF-EM",
+   "definition": "supporting-fact exact match: coverage of supporting facts by seed neighbours",
+   "where": "KG construction"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Answering complex open-domain questions with multi-hop dense retrieval (MDR)",
+   "year": 2020,
+   "arxiv": "2009.12756",
+   "relation": "extends",
+   "note": "encoder training strategy and baseline",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "IRCoT",
+   "year": 2022,
+   "arxiv": "2212.10509",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "HotpotQA / 2WikiMQA / MuSiQue / IIRC",
+   "year": 2020,
+   "arxiv": "2011.01060",
+   "relation": "uses-data",
+   "note": "2WikiMQA arXiv id shown; others cited in paper",
+   "quote": null
+  },
+  {
+   "work": "TAGME as used by Min et al.",
+   "year": 2019,
+   "arxiv": "1911.03868",
+   "relation": "uses-method",
+   "note": "entity linking for KG edges",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "instruction fine-tuning of agent",
+   "quote": null
+  },
+  {
+   "work": "PDFTriage",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "structural-question benchmark; no reference entry printed",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Knowledge Graph Construction",
+   "page": 3,
+   "why": "Shows passage, page and table nodes and edge types"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "LLM-based KG traversal agent for context retrieval",
+   "page": 4,
+   "why": "Worked traversal on the Simpson's Theme example"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Quality of KGs on HotpotQA",
+   "page": 4,
+   "why": "SF-EM versus precision as KG density grows"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "MD-QA Performance (%) of different baselines",
+   "page": 6,
+   "why": "Main results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "s_{j+1} = argmax_{v in N_j} phi(g(X_v), f(||_{k=0}^{j} X_k))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Supplementary absent from PDF",
+  "Table 1 column layout reconstructed from flattened text; check script only verifies numbers occur"
+ ]
+}

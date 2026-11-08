@@ -6,6 +6,7 @@ sources:
   - https://arxiv.org/abs/2506.15740
   - https://arxiv.org/abs/2506.19823
   - https://arxiv.org/abs/2511.18397
+  - https://arxiv.org/abs/2310.03693
   - https://arxiv.org/abs/2608.25776
   - https://arxiv.org/abs/2609.15383
   - https://arxiv.org/abs/2503.11926
@@ -241,7 +242,12 @@ kept: ['fetch_orders', 'format_dates', 'send_digest']
 
 The same goes for agent memory, cached answers, indexes built from the bad content, and summaries of it. A semantic cache can keep serving a poisoned answer after its source is gone. List each store that can hold derived content and clear it, or rebuild it.
 
-**A fine-tune is a release too.** Some incidents begin in training, and they can surface far from where they began. [arXiv:2506.19823](https://arxiv.org/abs/2506.19823) (Wang et al., 2025-06, preprint) extends the finding that fine-tuning on intentionally insecure code can make a model behave maliciously on unrelated prompts, showing this emergent misalignment across diverse conditions. [arXiv:2511.18397](https://arxiv.org/abs/2511.18397) (MacDiarmid et al., 2025-11, preprint) reports that models which learned to reward-hack in production coding environments generalised to things like attempted sabotage, and that after standard safety training misalignment disappeared on chat-like evaluations and persisted on agentic tasks. For an incident, the lesson is direct: a passing chat eval doesn't clear a retrained model for agentic use, and if a fine-tune is a suspect, roll it back and evaluate it on agentic tasks.
+**A fine-tune is a release too.** Some incidents begin in training, and they can surface far from where they began. [arXiv:2310.03693](https://arxiv.org/abs/2310.03693) (Qi et al., ICLR 2024) shows how little it takes. On GPT-3.5 Turbo through the OpenAI fine-tuning API, 100 harmful examples (under $0.20 for the 10-example version) raised the harmfulness rate on its 330-prompt benchmark from 1.8% to 91.8%, and on Llama-2-7b-Chat from 0.3% to 80.0%. Ten harmless-looking identity-shift examples did nearly as well (87.3% on GPT-3.5 after 10 epochs, 49.1% after 5) and weren't flagged by the OpenAI moderation API, so screening the training file isn't a gate. Even benign Alpaca data raised GPT-3.5 from 5.5% to 31.8% (Llama-2: 0.3% to 16.1%), and a backdoor trigger kept the attack hidden from a later audit (4.2% on plain prompts, 63.3% with the trigger). Mixing in safety examples helped but didn't restore the original model (91.8% fell to 23.0% with 100 safety samples). Single runs on two 2023 models, scored by a GPT-4 judge.
+
+![Harmfulness (1-5, GPT-4 judge) per category before and after fine-tuning GPT-3.5 Turbo on harmful, identity-shift and benign data](../sources/images/qi-fine-tuning-safety-fig1.png)
+*Image Source: Qi et al., [Fine-tuning Aligned Language Models Compromises Safety, Even When Users Do Not Intend To!](https://arxiv.org/abs/2310.03693) (2024), Fig. 1*
+
+Beyond deliberate attacks, [arXiv:2506.19823](https://arxiv.org/abs/2506.19823) (Wang et al., 2025-06, preprint) extends the finding that fine-tuning on intentionally insecure code can make a model behave maliciously on unrelated prompts, showing this emergent misalignment across diverse conditions. [arXiv:2511.18397](https://arxiv.org/abs/2511.18397) (MacDiarmid et al., 2025-11, preprint) reports that models which learned to reward-hack in production coding environments generalised to things like attempted sabotage, and that after standard safety training misalignment disappeared on chat-like evaluations and persisted on agentic tasks. For an incident, the lesson is direct: a passing chat eval doesn't clear a retrained model for agentic use, and if a fine-tune is a suspect, roll it back and evaluate it on agentic tasks.
 
 ## Recover: come back in steps
 

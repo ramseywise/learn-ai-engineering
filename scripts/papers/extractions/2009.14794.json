@@ -1,0 +1,629 @@
+{
+ "schema": 1,
+ "key": "2009.14794",
+ "pdf": "ai-engineering/07-inference-engineering/sources/choromanski-2020-rethinking-attention-performers.pdf",
+ "bib": {
+  "title": "Rethinking Attention with Performers",
+  "authors": [
+   "Krzysztof Choromanski",
+   "Valerii Likhosherstov",
+   "David Dohan",
+   "Xingyou Song",
+   "Andreea Gane",
+   "Tamas Sarlos",
+   "Peter Hawkins",
+   "Jared Davis",
+   "Afroz Mohiuddin",
+   "Lukasz Kaiser",
+   "David Belanger",
+   "Lucy Colwell",
+   "Adrian Weller"
+  ],
+  "first_author": "Choromanski",
+  "year": 2021,
+  "venue": "ICLR 2021",
+  "arxiv": "2009.14794",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 106784,
+  "chars_total": 106784,
+  "engine": "pymupdf",
+  "skipped": "Appendix F proofs (from about line 1640 of the cached text) skimmed by keyword, not read line by line"
+ },
+ "type": "empirical",
+ "question": "Can softmax full-rank attention be estimated with provable accuracy in linear time and space without sparsity or low-rank priors?",
+ "hypothesis": "Positive orthogonal random features give an unbiased, low-variance softmax-kernel estimate so a linear-attention Transformer can match a regular Transformer.",
+ "contributions": [
+  "FAVOR+ mechanism: positive orthogonal random features for softmax and Gaussian kernels",
+  "Theory: unbiasedness, MSE comparison with trigonometric features, orthogonality gap, uniform convergence with m=Theta(d log d)",
+  "Generalized kernelizable attention (e.g. ReLU)",
+  "Experiments on pixels, text and proteins"
+ ],
+ "method": {
+  "summary": "Replace the attention block of a Transformer with FAVOR+: map queries and keys through random feature maps (positive, orthogonal) and compute Q'((K')^T V) right-to-left; causal case via prefix sums. Everything else is unchanged; implemented in Jax.",
+  "task": "efficient attention; language modelling of proteins, text (LM1B, PG-19) and ImageNet64 pixels",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TrEMBL (Jan 2019)",
+    "role": "both",
+    "size": "train 104,863,744 seqs; valid 102,400; test 1,033,216; OOD 29,696",
+    "split": "IID split plus held-out Pfam families as OOD; single sequences clipped to L=1024",
+    "source": "UniProt TrEMBL, 139,394,261 sequences of which 106,030,080 unique",
+    "preprocessing": "Concatenated variant: sequences joined with end-of-sequence token, grouped into non-overlapping L=8192 (train 4,532,224, valid 4,096)"
+   },
+   {
+    "name": "ImageNet64",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Parmar et al. 2018",
+    "preprocessing": "L=12288, unidirectional"
+   },
+   {
+    "name": "PG-19",
+    "role": "both",
+    "size": "original tokens train 1973136207, valid 3007061, test 6966499",
+    "split": null,
+    "source": "Rae et al. 2020",
+    "preprocessing": "unigram SentencePiece, 32768 tokens; perplexity rescaled by token ratio 1.5634/1.5487/1.5359"
+   },
+   {
+    "name": "LM1B",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Chelba et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Performer (generalized ReLU, default)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer with FAVOR+ attention",
+    "init_from": "scratch; Fig 5 also from pretrained Transformer weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "num_features": "256",
+     "kernel": "ReLU",
+     "kernel_epsilon": "1e-3",
+     "renormalize_attention": "True",
+     "numerical_stabilizer": "0.0"
+    }
+   },
+   {
+    "name": "Performer-SOFTMAX",
+    "role": "proposed",
+    "params": null,
+    "architecture": "FAVOR+ positive orthogonal features approximating softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "num_features": "256",
+     "ortho_features": "True",
+     "ortho_scaling": "0.0",
+     "numerical_stabilizer": "1e-6",
+     "renormalize_attention": "True"
+    }
+   },
+   {
+    "name": "Protein models",
+    "role": "base",
+    "params": null,
+    "architecture": "(n_heads,n_layers,d_ff,d)=(8,36,1024,512) from Madani et al. 2020",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "36",
+    "hidden": "512",
+    "heads": "8",
+    "context": "1024 (single), 8192 (concat)",
+    "other": {}
+   },
+   {
+    "name": "Standard model for speed and ImageNet64/concat",
+    "role": "base",
+    "params": null,
+    "architecture": "(n_heads,n_layers,d_ff,d)=(8,6,2048,512); small variant (1,6,64,64)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "256 (speed benchmark)",
+    "layers": "6",
+    "hidden": "512",
+    "heads": "8",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer (concat baseline)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "(8,{1,2,3},256,256)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1-3",
+    "hidden": "256",
+    "heads": "8",
+    "context": "8192",
+    "other": {}
+   },
+   {
+    "name": "Reformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSH attention, defaults",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Linformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "k=600, delta=1e-6, with redrawing",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Linear Transformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "phi(x)=elu(x)+1, ReLU MLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "next-token (U) or masked LM with 15% masking (B); BPD = loss/ln(2)",
+   "optimizer": "Adam (beta1=0.9, beta2=0.98, eps=1e-9)",
+   "lr": "1e-3 fixed",
+   "lr_schedule": "fixed (Reformer ImageNet64 uses its own default decay)",
+   "warmup": null,
+   "batch_size": "maximized until TPU memory overload per model; 8 per chip for concat Performer; 128 per device in Fig 16",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024 / 8192 / 12288",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1",
+   "regularisation": "0.5 gradient clip",
+   "hardware": "16x16 TPU-v2 (8GB per chip) for 36-layer protein and concat Performer; 8x8 TPU-v2 for small concat Transformers; V100 16GB for speed benchmark",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "15 data samples in Fig 4; 3 seeds for Linear Transformer; otherwise None",
+   "other": {
+    "feature_redraw": "random features periodically redrawn; period not stated",
+    "protein_training_note": "attention figure model trained over 500K steps"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "next-token accuracy over all positions (U); accuracy on 15% masked positions (B)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "over all positions (U) or masked positions (B)",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "BPD/BPC",
+     "definition": "loss divided by ln(2)",
+     "unit": "bits",
+     "higher_is_better": false
+    },
+    {
+     "name": "Speed and max L",
+     "definition": "fwd/bwd wall clock vs L until OOM on V100 16GB",
+     "unit": "s, tokens",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Transformer",
+    "Reformer",
+    "Linformer",
+    "Linear Transformer",
+    "LRA results from Tay et al."
+   ],
+   "protocol": "Full eval set for TrEMBL; random batches (>2048 samples) for ImageNet64 and PG-19 curves. Mostly single runs; no significance tests."
+  },
+  "availability": {
+   "code": "github.com/google-research/google-research/tree/master/performer and protein_lm",
+   "weights": null,
+   "data": "TrEMBL, ImageNet64, PG-19, LM1B public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On bidirectional protein modelling (L=1024), generalized-ReLU Performer beats the exact-softmax Transformer on test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.09,
+   "unit": "%",
+   "baseline_value": 33.32,
+   "n": null,
+   "setup": "TrEMBL, BID (masked LM), 36-layer (8,36,1024,512), L=1024, test set",
+   "table": "Table 2, rows BID Test Performer (generalized) vs Transformer, column Accuracy",
+   "quote": null,
+   "note": null,
+   "where": "App C.3, Table 2"
+  },
+  {
+   "claim": "Performer-SOFTMAX (FAVOR+ approximating softmax) matches the exact Transformer on bidirectional protein test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 33.0,
+   "unit": "%",
+   "baseline_value": 33.32,
+   "n": null,
+   "setup": "TrEMBL BID test, L=1024, 36 layers",
+   "table": "Table 2, row BID Test Performer (softmax), column Accuracy",
+   "quote": null,
+   "note": "Perplexity 9.24 vs Transformer 9.22",
+   "where": "App C.3, Table 2"
+  },
+  {
+   "claim": "On unidirectional protein modelling the generalized Performer slightly beats the Transformer on test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 31.58,
+   "unit": "%",
+   "baseline_value": 30.8,
+   "n": null,
+   "setup": "TrEMBL UNI test, L=1024, 36 layers",
+   "table": "Table 2, row UNI Test Performer (generalized), column Accuracy",
+   "quote": null,
+   "note": null,
+   "where": "App C.3, Table 2"
+  },
+  {
+   "claim": "Out-of-distribution, the Performer is slightly worse than the Transformer (UNI).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 18.44,
+   "unit": "%",
+   "baseline_value": 19.7,
+   "n": null,
+   "setup": "TrEMBL OOD held-out Pfam families, UNI, L=1024",
+   "table": "Table 2, row UNI OOD Performer (generalized), column Accuracy",
+   "quote": null,
+   "note": "BID OOD: 24.10 vs 25.07",
+   "where": "App C.3, Table 2"
+  },
+  {
+   "claim": "On concatenated-protein L=8192, a Transformer is memory-limited to a small variant plateauing near 19%, while the full-size Performer reaches about 24%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 24,
+   "unit": "%",
+   "baseline_value": 19,
+   "n": null,
+   "setup": "TrEMBL concatenated to L=8192; Transformer shrunk to (8,{1,2,3},256,256); Performer standard (8,6,2048,512), batch 8 per chip",
+   "table": null,
+   "quote": "the Performer is able to train continuously to ≈24%",
+   "note": "values read in text as approximate",
+   "where": "Sec 4.5, Fig 7 right"
+  },
+  {
+   "claim": "Maximum sequence length on a 16GB V100 for the regular-size Transformer in the speed benchmark.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max L",
+   "value": 32768,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V100 16GB, (8,6,2048,512), vocab 256, Transformer",
+   "table": null,
+   "quote": "is 215 = 32768 using regular dimensions",
+   "note": "text prints 2^15 as '215' (superscript lost)",
+   "where": "App E"
+  },
+  {
+   "claim": "ImageNet64 (U, L=12288) bits per dimension after 100K steps are nearly identical for ReLU, softmax and SMREG Performers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPD",
+   "value": 3.67,
+   "unit": "bits/dim",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet64, Performer-ReLU 3.67, Performer-Softmax 3.69, Performer-Softmax SMREG 3.67, 100K steps",
+   "table": null,
+   "quote": "achieve respectively, 3.67, 3.69, 3.67 BPD",
+   "note": null,
+   "where": "App D.2"
+  },
+  {
+   "claim": "Transferring pretrained Transformer weights into a Performer gives only a small non-zero starting accuracy, then recovers quickly with fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.07,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM1B, Fig 5 left, trigonometric softmax Performer from pretrained Transformer weights",
+   "table": null,
+   "quote": "initial non-zero 0.07 accuracy",
+   "note": null,
+   "where": "Fig 5 caption"
+  },
+  {
+   "claim": "FAVOR+ attention costs O(Lrd) time and O(Lr+Ld+rd) space versus O(L^2 d) and O(L^2+Ld) for regular attention.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "r random features, bidirectional; analysis not measurement",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "Sec 2.2 Eq 4"
+  },
+  {
+   "claim": "Positive random features have MSE going to 0 as softmax-kernel value goes to 0, whereas trigonometric features have MSE going to infinity; orthogonal features lower MSE further (Thm 2).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "theory (Lemma 2, Thm 2); empirical check Fig 4 with L=4096, d=16, 15 samples",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "Sec 3, Fig 4"
+  },
+  {
+   "claim": "Trigonometric softmax features give unstable training and NaNs on PG-19; positive features with redrawing are needed to match the Transformer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PG-19, Fig 5 right, App D.2-D.3",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "Sec 4.3, Fig 5"
+  },
+  {
+   "claim": "Linear Transformer (elu+1 feature map) trained with the Performer setup hit exploding gradients in all 3 unidirectional seeds and in the bidirectional run near 125K steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ProGen 36-layer TrEMBL setting, same hyperparameters as Performer-ReLU",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "App D.4, Fig 18"
+  },
+  {
+   "claim": "Performer obtains the largest Long Range Arena score among scalable (>100 examples/sec) methods.",
+   "kind": "reported",
+   "source": "Tay et al., 2021 (Long Range Arena)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LRA benchmark, results copied from the LRA paper (Fig 19)",
+   "table": null,
+   "quote": null,
+   "note": null,
+   "where": "App D.5"
+  }
+ ],
+ "limits": [
+  "Accuracy gains of the generalized ReLU kernel over softmax are shown on protein data only; the text benchmarks (PG-19) show only curves in the main text.",
+  "Performer needs fine-tuning to reuse pretrained Transformer weights because of error propagation (Fig 14).",
+  "Orthogonal features require m <= d.",
+  "Single runs with no variance reported for most results; step counts and warmup not stated.",
+  "OOD protein accuracy is slightly below the Transformer.",
+  "Authors concede the OOD split does not guarantee a minimum distance from training sequences.",
+  "Speed benchmark is on V100/Jax; no comparison with fused exact-attention kernels (later work, not in paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "FAVOR+",
+   "definition": "Fast Attention Via positive Orthogonal Random features",
+   "where": "Abstract"
+  },
+  {
+   "term": "Generalized attention",
+   "definition": "kernelizable attention with a feature map using f other than exp, e.g. ReLU",
+   "where": "Sec 2.2, App A.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Katharopoulos et al. Transformers are RNNs (Linear Transformer)",
+   "year": 2020,
+   "arxiv": "2006.16236",
+   "relation": "baseline",
+   "note": "elu+1 feature-map linear attention; unstable in this paper's tests",
+   "quote": null
+  },
+  {
+   "work": "Reformer (Kitaev et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LSH sparse attention",
+   "quote": null
+  },
+  {
+   "work": "Linformer (Wang et al.)",
+   "year": 2020,
+   "arxiv": "2006.04768",
+   "relation": "baseline",
+   "note": "low-rank projection",
+   "quote": null
+  },
+  {
+   "work": "Rahimi and Recht, Random features for large-scale kernel machines",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "random Fourier features, trig estimator",
+   "quote": null
+  },
+  {
+   "work": "Yu et al., Orthogonal random features",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "orthogonal random features",
+   "quote": null
+  },
+  {
+   "work": "Madani et al., ProGen",
+   "year": 2020,
+   "arxiv": "2004.03497",
+   "relation": "uses-method",
+   "note": "protein LM setup and model sizes",
+   "quote": null
+  },
+  {
+   "work": "Long Range Arena (Tay et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LRA numbers quoted from that paper",
+   "quote": null
+  },
+  {
+   "work": "Longformer, Sparse Transformer, Routing Transformer",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "sparse attention alternatives",
+   "quote": null
+  },
+  {
+   "work": "PG-19 (Rae et al.), ImageNet64 (Parmar et al.), LM1B (Chelba et al.), TrEMBL",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Approximation of the regular attention mechanism AV via (random) feature maps; dashed blocks give order of computation and time complexities.",
+   "page": 3,
+   "why": "Shows why reordering to Q'(K'^T V) avoids the LxL matrix."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of Transformer and Performer in forward and backward pass speed and maximum L, V100 16GB.",
+   "page": 6,
+   "why": "Linear vs quadratic scaling and OOM point."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Visual representation of the prefix-sum algorithm for unidirectional attention.",
+   "page": 17,
+   "why": "Causal linear attention as a running sum of k'v^T outer products."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "MSE of approximation: orthogonal vs IID and trig vs positive features, L=4096, d=16.",
+   "page": 7,
+   "why": "Shows why positive plus orthogonal features matter."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Utility ratio of MSE of trig vs positive random features as a function of angle and length.",
+   "page": 4,
+   "why": "Where trig features fail (small kernel values)."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4, p3",
+   "snippet": "Att_hat(Q,K,V) = D_hat^-1 (Q'((K')^T V)), D_hat = diag(Q'((K')^T 1_L))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 7, p4",
+   "snippet": "SM(x,y)=E_{w~N(0,I)}[exp(w^T x - |x|^2/2) exp(w^T y - |y|^2/2)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Superscripts lost in text: 2^15 prints as '215'.",
+  "Figures 19-21 are images of tables or plots; their numbers are not in the text."
+ ]
+}

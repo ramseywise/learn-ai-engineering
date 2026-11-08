@@ -103,6 +103,9 @@ Split a task into steps, each with its own prompt and its own check.
 - **Decomposition, refinement, ensembling.** Xiao & Zhu organise this family as a generation step that splits the problem and a solving step per sub-problem; the solver can be a retriever, a calculator or another model call, which is why RAG and tool use are decomposition with the call made at inference time (*Foundations of LLMs*, ch. 3). Self-refinement is predict, get feedback, refine. Ensembling can vary the model, the prompt or the output, and self-consistency is the third kind. Their worked example samples three chains on a coin-flip question: two agree on 37.5% and one says 33.3%, so 37.5% wins. It is an illustration, not a measurement. The book notes diverse prompts help less with strong models.
 - **Meta-prompting:** have a model write or improve the prompt.
 - **Soft prompts.** Instead of rewording text, learn vectors: prefix tuning adds L × n × d trainable parameters (layers × prefix length × width), prompt tuning learns input embeddings only, and context distillation trains a model to behave as if a long prompt were present (*Foundations of LLMs*, ch. 3). Fine-tuning detail lives in [chapter 09](09-peft-and-fine-tuning-in-practice.md).
+
+![Four ways to use soft prompts in an LLM, with the tunable parts in blue: prefixes added inside the model, learned input embeddings, fine-tuning one layer of the model, and fine-tuning an external adaptor](../sources/images/xiao-foundations-llms-fig3-8.png)
+*Image Source: Xiao & Zhu, [Foundations of Large Language Models](https://arxiv.org/abs/2501.09223) (2025), Fig. 3.8*
 - **Reason + act:** interleave thoughts with tool calls (ReAct, [arXiv:2210.03629](https://arxiv.org/abs/2210.03629)). This is where prompting turns into agents ([03-agentic-foundations](../../03-agentic-foundations/README.md)).
 
 Depth: [06 — Chaining and workflows](../../../ai-engineering/01-prompt-engineering/notes/06-chaining-and-workflows.md).

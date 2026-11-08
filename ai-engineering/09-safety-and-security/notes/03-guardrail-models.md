@@ -7,6 +7,7 @@ sources:
   - https://arxiv.org/abs/2407.21772
   - https://arxiv.org/abs/2412.07724
   - https://arxiv.org/abs/2407.18418
+  - https://doi.org/10.18653/v1/2024.naacl-long.301
   - https://arxiv.org/abs/2410.19803
   - https://arxiv.org/abs/2510.06105
   - https://arxiv.org/abs/2308.05374
@@ -223,6 +224,11 @@ In this simulation the cascade gets close to the large model's error rates at a 
 ## Refusals are errors too
 
 Blocking too much is a real failure, and it is the one teams measure least. It's quieter than a scandal, showing up only as a customer who leaves. [arXiv:2407.18418](https://arxiv.org/abs/2407.18418) (Wen et al., TACL 2025) surveys abstention, that is, a model's refusal to answer, from three perspectives: the query (is it answerable?), the model (is it confident?) and human values (should it answer?). The split is useful in practice because the three call for different fixes. "We can't see your order" is an answerability refusal, and it needs a better tool. Over-refusing "chargeback" is a values classifier firing on a topic instead of on harm, which needs a better policy or threshold.
+
+[XSTest](https://doi.org/10.18653/v1/2024.naacl-long.301) (Röttger et al., NAACL 2024) measures this with 250 safe prompts that sound unsafe (the paper contrasts "kill a Python process" with "kill a person") beside 200 contrasting unsafe ones. With its original system prompt, Llama-2-70b-chat fully refused 38% of the safe prompts and partly refused another 21.6%. A guardrail system prompt on Mistral-7B-Instruct raised refusal of unsafe prompts from 23.5% to 87.5% and refusal of safe ones from 0.8% to 9.6%, so a stricter filter buys safety with false refusals. GPT-4 had the best balance (6.4% full refusal on safe prompts). The test is single-turn, English, 2023 models, hand-labelled by the authors, and passing it doesn't show a model is well calibrated.
+
+![Response type on safe and unsafe prompts for five model setups: red is full refusal, yellow partial refusal, green compliance](../sources/images/rottger-xstest-fig2.png)
+*Image Source: Röttger et al., [XSTest: A Test Suite for Identifying Exaggerated Safety Behaviours in Large Language Models](https://doi.org/10.18653/v1/2024.naacl-long.301) (2024), Fig. 2*
 
 Keep a **benign borderline set** in your evaluation: requests that sound risky but are legitimate for your domain. For a shop, that includes returned knives, medication delivery, fraud complaints and customers who are angry. Track the false refusal rate on this set beside the violation rate on the adversarial one, as [Adversarial prompting](../../01-prompt-engineering/notes/10-adversarial-prompting.md#defenses-weakest-to-strongest) advises.
 

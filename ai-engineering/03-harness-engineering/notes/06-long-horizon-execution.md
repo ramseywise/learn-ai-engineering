@@ -18,6 +18,7 @@ sources:
   - https://arxiv.org/abs/2512.10398
   - https://arxiv.org/abs/2511.09030
   - https://arxiv.org/abs/2610.13075
+  - https://arxiv.org/abs/2212.06817
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -422,6 +423,12 @@ For long-running work, **breaking complex tasks into tractable chunks and assign
 The caveat from Anthropic's own results: decomposition is **scaffolding around a model limitation.** When Opus 4.6 arrived, sprint decomposition could be **removed entirely** with no quality loss. Build it when the model needs it; re-test when the model changes.
 
 MAKER ([arXiv:2511.09030](https://arxiv.org/abs/2511.09030) (Meyerson et al., 2025-11, preprint)) takes decomposition to its limit. The arithmetic is the reason: "a system with a 1% per-step error rate is expected to fail after only 100 steps of a million-step task." Each agent makes one move, sees only the current state and the given strategy, and samples are voted on until one answer leads by k. Responses that run long or break format are discarded rather than repaired, which mainly cuts correlated errors. With gpt-4.1-mini, k=3 and a 750-token cap, it **solved 20-disk Towers of Hanoi, 1,048,575 dependent moves, with zero errors** in the one full run reported. Its theory has cost growing about as s ln s with one step per agent and exponentially with steps per agent, assuming independent errors. The strategy is handed over in every prompt and every step has a checkable answer, so it shows reliable execution of a known plan, not planning. The authors call correlated errors "an open foundational problem".
+
+The same compounding shows up outside LLMs. RT-1 ([arXiv:2212.06817](https://arxiv.org/abs/2212.06817) (Brohan et al., RSS 2023)), a 35M-parameter robot policy, was run under SayCan on 15 long-horizon kitchen instructions averaging 9.6 steps: the planner chose the right skill sequence in 87% of runs, but **end-to-end execution succeeded in 67%** in Kitchen1, so the gap between plan and outcome is paid in skill execution. Baselines retrained on the same data did worse (BC-Z 13%, Gato 0% in Kitchen2). Its harness choices are the familiar ones: a fixed 280 ms wait to remove timing jitter and a sub-100 ms inference budget for 3 Hz control. It is a robotics imitation-learning result on one lab's kitchens with no variances reported, so treat it as an analogy for step-wise decay, not as evidence about LLM agents.
+
+*Image Source: Brohan et al., [RT-1: Robotics Transformer for Real-World Control at Scale](https://arxiv.org/abs/2212.06817) (2023), Fig. 2*
+
+![RT-1 architecture: instruction and six images become 48 tokens for an 8-layer Transformer that emits 11-dimensional discrete actions](../sources/images/brohan-rt-1-fig2.png)
 
 Multi-agent depth: [note 07](07-orchestration.md).
 

@@ -1,0 +1,758 @@
+{
+ "schema": 1,
+ "key": "2007.14062",
+ "pdf": "ai-engineering/07-inference-engineering/sources/zaheer-2020-big-bird.pdf",
+ "bib": {
+  "title": "Big Bird: Transformers for Longer Sequences",
+  "authors": [
+   "Manzil Zaheer",
+   "Guru Guruganesh",
+   "Avinava Dubey",
+   "Joshua Ainslie",
+   "Chris Alberti",
+   "Santiago Ontanon",
+   "Philip Pham",
+   "Anirudh Ravula",
+   "Qifan Wang",
+   "Li Yang",
+   "Amr Ahmed"
+  ],
+  "first_author": "Zaheer",
+  "year": 2020,
+  "venue": "NeurIPS 2020 (34th Conference on Neural Information Processing Systems)",
+  "arxiv": "2007.14062",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 130549,
+  "chars_total": 130549,
+  "engine": "pymupdf",
+  "skipped": "Appendix A and B proof bodies (universal approximation, Turing completeness lemmas) and the reference list were skimmed, not read line by line."
+ },
+ "type": "empirical",
+ "question": "Can a sparse attention mechanism with linear cost in sequence length keep the empirical benefits and the theoretical expressivity of full quadratic attention, and so allow longer contexts?",
+ "hypothesis": "Sparse attention built from global, local-window and random connections (a small-world-style graph) with O(1) global tokens preserves full-attention expressivity and improves tasks that need long context.",
+ "contributions": [
+  "BigBird satisfies the known theoretical properties of the full transformer: universal approximator and Turing complete, with O(n) inner products using extra global tokens.",
+  "Empirically, longer context helps NLP tasks; state of the art on QA and summarization on several datasets.",
+  "A novel application to genomics: long-context MLM pretraining on DNA improves promoter-region and chromatin-profile prediction."
+ ],
+ "method": {
+  "summary": "BigBird replaces full attention with a sparse pattern of g global tokens, a sliding window of w tokens and r random keys per query, computed blockwise so that it runs as dense tensor ops on GPU/TPU. Models are warm-started from RoBERTa (or Pegasus for large summarization), pretrained with MLM at 4096 tokens, then fine-tuned on QA, classification, summarization and DNA tasks.",
+  "task": "Long-context encoder pretraining (MLM) and fine-tuning for QA, document classification, summarization, DNA modelling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Books",
+    "role": "pretrain",
+    "size": "1.0B tokens",
+    "split": null,
+    "source": "Zhu et al. [110]",
+    "preprocessing": "documents longer than 4096 split, much shorter ones joined; avg doc len 37K"
+   },
+   {
+    "name": "CC-News",
+    "role": "pretrain",
+    "size": "7.4B tokens",
+    "split": null,
+    "source": "[34]",
+    "preprocessing": "avg doc len 561"
+   },
+   {
+    "name": "Stories",
+    "role": "pretrain",
+    "size": "7.7B tokens",
+    "split": null,
+    "source": "[89]",
+    "preprocessing": "avg doc len 8.2K"
+   },
+   {
+    "name": "Wikipedia",
+    "role": "pretrain",
+    "size": "3.1B tokens",
+    "split": null,
+    "source": "public",
+    "preprocessing": "avg doc len 592"
+   },
+   {
+    "name": "HotpotQA-distractor",
+    "role": "both",
+    "size": "90447 train / 7405 dev",
+    "split": "train/dev; test via leaderboard",
+    "source": "[100]",
+    "preprocessing": "16 QA filtered where answer not in evidence; median length 1227, max 3560"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "both",
+    "size": "307373 train / 7830 dev",
+    "split": "train/dev; test via leaderboard",
+    "source": "[52]",
+    "preprocessing": "docs over 4096 use sliding window stride 2048; median length 3258, max 77962"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "both",
+    "size": "61888 train / 7993 dev",
+    "split": "train/dev; test via leaderboard",
+    "source": "[41]",
+    "preprocessing": "median length 4900, max 32755"
+   },
+   {
+    "name": "WikiHop",
+    "role": "both",
+    "size": "43738 train / 5129 dev",
+    "split": "train/dev; test via leaderboard",
+    "source": "[95]",
+    "preprocessing": "median length 1541, max 20337"
+   },
+   {
+    "name": "IMDb",
+    "role": "both",
+    "size": "25000 examples, 2 classes",
+    "split": null,
+    "source": "[64]",
+    "preprocessing": "excess fraction over 512 tokens 0.14"
+   },
+   {
+    "name": "Yelp-5",
+    "role": "both",
+    "size": "650000 examples, 5 classes",
+    "split": null,
+    "source": "[108]",
+    "preprocessing": "excess fraction 0.04"
+   },
+   {
+    "name": "Arxiv",
+    "role": "both",
+    "size": "30043 examples, 11 classes",
+    "split": null,
+    "source": "[35]",
+    "preprocessing": "excess fraction 1.00"
+   },
+   {
+    "name": "Patents",
+    "role": "both",
+    "size": "1890093 examples, 663 classes",
+    "split": null,
+    "source": "[53]",
+    "preprocessing": "excess fraction 0.90"
+   },
+   {
+    "name": "Hyperpartisan",
+    "role": "both",
+    "size": "645 examples, 2 classes",
+    "split": null,
+    "source": "[47]",
+    "preprocessing": "excess fraction 0.53"
+   },
+   {
+    "name": "GLUE",
+    "role": "both",
+    "size": "MNLI 392k, QQP 363k, QNLI 108k, SST-2 67k, CoLA 8.5k, STS-B 5.7k, MRPC 3.5k, RTE 2.5k",
+    "split": "dev",
+    "source": "[92]",
+    "preprocessing": null
+   },
+   {
+    "name": "Arxiv (summarization)",
+    "role": "both",
+    "size": "203037 train / 6436 dev / 6440 test",
+    "split": "train/dev/test",
+    "source": "[20]",
+    "preprocessing": "median input 6151, 90%-ile 14405; median output 171"
+   },
+   {
+    "name": "PubMed (summarization)",
+    "role": "both",
+    "size": "119924 train / 6633 dev / 6658 test",
+    "split": "train/dev/test",
+    "source": "[20]",
+    "preprocessing": "median input 2715; median output 212"
+   },
+   {
+    "name": "BigPatent",
+    "role": "both",
+    "size": "1207222 train / 67068 dev / 67072 test",
+    "split": "train/dev/test",
+    "source": "[78]",
+    "preprocessing": "median input 3082; median output 123"
+   },
+   {
+    "name": "BBC XSum",
+    "role": "both",
+    "size": "204044 train / 11332 dev / 11334 test",
+    "split": "train/dev/test",
+    "source": "[67]",
+    "preprocessing": "median input 359"
+   },
+   {
+    "name": "CNN/DailyMail",
+    "role": "both",
+    "size": "287113 train / 13368 dev / 11490 test",
+    "split": "train/dev/test",
+    "source": "[36]",
+    "preprocessing": "median input 777"
+   },
+   {
+    "name": "Human reference genome GRCh37",
+    "role": "pretrain",
+    "size": "approximately 450K documents of 25,000-100,000 bp",
+    "split": null,
+    "source": "NCBI GRCh37",
+    "preprocessing": "each chromosome sampled 10 times from random start in 0-5000 bp; 50-100 sentences of 500-1000 bp per document; BPE table of 32K, 8.78 bp per token on average"
+   },
+   {
+    "name": "EPDnew promoter set",
+    "role": "both",
+    "size": "29,597 promoter regions",
+    "split": null,
+    "source": "Oubounyt et al. [71], EPDnew",
+    "preprocessing": "8000 bp around TSS (-5000 +3000), LiftOver GRCh38 to GRCh37; negatives built by substituting 12 of 20 subsequences"
+   },
+   {
+    "name": "DeepSea chromatin-profile data",
+    "role": "both",
+    "size": "919 chromatin profiles, 2.4M non-coding variants",
+    "split": "chromosomes 8 and 9 held out for test; 4,000 samples on chromosome 7 validation",
+    "source": "Zhou and Troyanskaya [109]",
+    "preprocessing": "8,000-bp sequence centred on each 200-bp bin"
+   }
+  ],
+  "models": [
+   {
+    "name": "BigBird-ITC base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT/RoBERTa-style encoder with block sparse attention, some existing tokens made global",
+    "init_from": "public RoBERTa checkpoint",
+    "tokenizer": "sentencepiece vocab borrowed from RoBERTa (GPT-2)",
+    "vocab": "50358 (Table 14)",
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "4096",
+    "other": {
+     "block_length_b": 64,
+     "global_g": "2 x b",
+     "window_w": "3 x b",
+     "random_r": "3 x b"
+    }
+   },
+   {
+    "name": "BigBird-ETC base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as ITC but extra global tokens added, relative position encoding",
+    "init_from": "public RoBERTa checkpoint",
+    "tokenizer": "RoBERTa sentencepiece",
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "4096",
+    "other": {
+     "block_length_b": 84,
+     "global_g": 256,
+     "window_w": "3 x b",
+     "random_r": 0
+    }
+   },
+   {
+    "name": "BigBird-ETC large",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as ETC base",
+    "init_from": "RoBERTa checkpoint (MLM pretrained)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "4096",
+    "other": {
+     "block_length": "almost doubled to 169 for ETC; ITC kept at base size",
+     "QA_window": 507,
+     "QA_random": 0
+    }
+   },
+   {
+    "name": "BigBird-RoBERTa",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder, sparse encoder, full-attention decoder",
+    "init_from": "BigBird MLM base model (from RoBERTa); encoder-decoder weights shared except encoder-decoder attention",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": "encoder 1024 (XSum), 2048 (CNN/DM), 3072 (others); decoder 64/128/256",
+    "other": {
+     "summarisation_params": "ITC b=64 g=2b w=3b r=3b"
+    }
+   },
+   {
+    "name": "BigBird-Pegasus",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder, sparse encoder, full decoder",
+    "init_from": "Pegasus weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 16,
+    "hidden": 1024,
+    "heads": 16,
+    "context": "encoder 1024/2048/3072",
+    "other": {}
+   },
+   {
+    "name": "RoBERTa",
+    "role": "baseline",
+    "params": null,
+    "architecture": "full attention encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   },
+   {
+    "name": "Longformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sliding window plus global tokens",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MLM (15% masking) for pretraining; cross-entropy fine-tuning for QA/classification; teacher-forced cross-entropy for summarization; MLM+NSP for DNA pretraining; BCE for DNA tasks",
+   "optimizer": "Adam (base MLM, QA, classification, DNA); LAMB for large WikiHop; Adafactor for BigBird-Pegasus",
+   "lr": "1e-4 base MLM (Table 8); QA base-size see Table 12; large QA 3e-5 (HotpotQA) and {5,10}e-5 / {3,5}e-5 / {2,5}e-5 for others (Table 13); classification 5e-6 to 5e-5 (Table 14); summarization 1e-5 (base), 1e-4 (large)",
+   "lr_schedule": "linear decay (MLM, DNA, classification); square-root decay (summarization)",
+   "warmup": "10,000 steps (MLM, summarization, DNA); first 10% of steps (classification)",
+   "batch_size": "256 base MLM; 2048 large MLM; QA 32-128; classification 32-64; summarization 128; DNA 256",
+   "steps": "DNA pretraining 1000000; promoter 711; chromatin 500000; NLP MLM steps not stated",
+   "epochs": "large QA: HotpotQA {5,9}, NaturalQ {3,5}, TriviaQA {3,5}, WikiHop {5,10}; classification IMDb 40, Arxiv 10, Patents 3, Hyperpartisan 15, Yelp-5 2",
+   "tokens": null,
+   "seq_len": "4096",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (attention dropout 0.1)",
+   "regularisation": "variant of contrastive predictive coding (dual encoder) for QA; position embedding for ITC, relative position encoding for ETC",
+   "hardware": "TPUv3: 8x8 for MLM and DNA; 4x2 to 4x8 for QA, classification, summarization; DNA fine-tuning 8x8",
+   "compute": "8 x 8 TPUv3 chips for pretraining; trained on 16GB memory per chip with batch 32-64",
+   "wall_clock": null,
+   "seeds": "IMDb and Hyperpartisan repeated 5 times; others not stated",
+   "other": {
+    "chromatin_positive_upweight": "8",
+    "chromatin_ensemble": "two independently trained models",
+    "QA_spans": "max answer length 30 words (HotpotQA), 38 (NQ short), 16 (TriviaQA)"
+   }
+  },
+  "inference": {
+   "decoding": "beam search for summarization",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "decoder 64 (XSum), 128 (CNN/DM), 256 (others)",
+   "samples": "single run unless stated",
+   "prompting": null,
+   "retrieval": "QA evidence retrieved with crude systems like TF-IDF/BM25 (as in the datasets)",
+   "parameters": {
+    "beam_size": 5,
+    "length_penalty": "0.7 BBC-XSUM, 0.8 others",
+    "block_length": 64,
+    "r_random_blocks": 3
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1 / accuracy",
+     "definition": "F1 for HotpotQA, NQ, TriviaQA; accuracy for WikiHop",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "bits per character (BPC) / MLM BPC",
+     "definition": "held-out masked LM loss in bits per character",
+     "unit": "BPC",
+     "higher_is_better": false
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "summarization overlap",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUC",
+     "definition": "chromatin profile prediction on held-out chromosomes",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RoBERTa (512)",
+    "Longformer",
+    "BERT",
+    "Pegasus",
+    "leaderboard top-3 per QA task",
+    "DeePromoter",
+    "CNNProm",
+    "DeepSea",
+    "gkm-SVM"
+   ],
+   "protocol": "Dev results for base-size models; test results from leaderboards for large ETC model; single model compared against ensembles on NQ."
+  },
+  "availability": {
+   "code": "http://goo.gle/bigbird-transformer",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": "For short answer, we limit the distance between start and end positions to be no more than 38 words.",
+    "where": "App E.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Blockified sparse attention on a 16GB-per-chip TPU supports sequences up to 8x longer than before on similar hardware.",
+   "kind": "claim",
+   "metric": "sequence length factor",
+   "value": "8x",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract claim, hardware similar; 4096 tokens vs 512",
+   "quote": "The proposed sparse attention can handle sequences of length up to 8x of what was previously possible using similar hardware.",
+   "table": null,
+   "note": "No memory or speed measurement is given.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "BigBird-ETC sets new QA test state of the art on Natural Questions long answer.",
+   "kind": "measured",
+   "metric": "F1",
+   "value": "77.8",
+   "unit": "F1",
+   "baseline_value": "77.1",
+   "n": null,
+   "setup": "large ETC, 4096 tokens, leaderboard test, vs ReflectionNet",
+   "quote": null,
+   "table": "Table 3, row BIGBIRD-ETC, column NaturalQ LA",
+   "note": "single model vs ensembles",
+   "where": "Table 3"
+  },
+  {
+   "claim": "BigBird-ETC reaches 84.5 F1 on TriviaQA full test, 92.4 on verified.",
+   "kind": "measured",
+   "metric": "F1",
+   "value": "84.5",
+   "unit": "F1",
+   "baseline_value": "84.4",
+   "n": null,
+   "setup": "large ETC, test, vs Fusion-in-Decoder",
+   "quote": null,
+   "table": "Table 3, row BIGBIRD-ETC, column TriviaQA Full",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "On Patents-size summarization, BigBird-Pegasus large reaches 60.64 ROUGE-1 on BigPatent versus 52.25 for re-evaluated Pegasus.",
+   "kind": "measured",
+   "metric": "ROUGE-1",
+   "value": "60.64",
+   "unit": "points",
+   "baseline_value": "52.25",
+   "n": null,
+   "setup": "BigPatent, large, encoder 3072 tokens",
+   "quote": null,
+   "table": "Table 4, row BIGBIRD-Pegasus, column BigPatent R-1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "On Arxiv base-size classification BigBird improves F1 over RoBERTa 512 and SoTA.",
+   "kind": "measured",
+   "metric": "F1 micro",
+   "value": "92.31",
+   "unit": "F1",
+   "baseline_value": "87.42",
+   "n": null,
+   "setup": "Arxiv, 4096 tokens, base model",
+   "quote": null,
+   "table": "Table 15, row BIGBIRD, column Arxiv",
+   "note": "SoTA 87.96; text says about 5 points over SoTA",
+   "where": "Table 15"
+  },
+  {
+   "claim": "Random plus window attention alone at 512 tokens falls below BERT-base on MLM, SQuAD and MNLI, motivating global tokens.",
+   "kind": "measured",
+   "metric": "MLM accuracy",
+   "value": "62.7",
+   "unit": "%",
+   "baseline_value": "64.2",
+   "n": null,
+   "setup": "building block comparison at sequence length 512, R + W vs BERT-base",
+   "quote": null,
+   "table": "Table 1, row R + W, column MLM",
+   "note": "Random 60.1, Window 58.3",
+   "where": "Table 1"
+  },
+  {
+   "claim": "BigBird-ETC achieves the lowest held-out MLM BPC among models at 4096 tokens.",
+   "kind": "measured",
+   "metric": "BPC",
+   "value": "1.274",
+   "unit": "BPC",
+   "baseline_value": "1.496",
+   "n": null,
+   "setup": "large size, held-out set, vs RoBERTa 512",
+   "quote": null,
+   "table": "Table 10, row BIGBIRD-ETC (sqln: 4096), column Large",
+   "note": "Base: ETC 1.611, ITC 1.678, Longformer 1.705, RoBERTa 1.846",
+   "where": "Table 10"
+  },
+  {
+   "claim": "Sparse attention loses little on short-document summarization where full attention fits.",
+   "kind": "measured",
+   "metric": "ROUGE-1 CNN/DM",
+   "value": "43.84",
+   "unit": "points",
+   "baseline_value": "44.15",
+   "n": null,
+   "setup": "large, BigBird-Pegasus vs Pegasus re-eval",
+   "quote": null,
+   "table": "Table 20, row BIGBIRD-Pegasus, column CNN/DailyMail R1",
+   "note": "XSum R-1 47.12 vs 47.37",
+   "where": "Table 20"
+  },
+  {
+   "claim": "Promoter region prediction F1 of 99.9 versus 95.6 for DeePromoter.",
+   "kind": "measured",
+   "metric": "F1",
+   "value": "99.9",
+   "unit": "F1",
+   "baseline_value": "95.6",
+   "n": null,
+   "setup": "EPDnew, fine-tuned from DNA-pretrained BigBird",
+   "quote": "We see that BIGBIRD achieve nearly perfect accuracy with a 5% jump from the previous best reported accuracy.",
+   "table": "Table 6, row BIGBIRD, column F1",
+   "note": "authors concede high score is unsurprising because negative-example generation overlaps MLM pretraining",
+   "where": "Table 6, App F.2"
+  },
+  {
+   "claim": "On chromatin-profile histone marks BigBird beats DeepSea.",
+   "kind": "measured",
+   "metric": "AUC HM",
+   "value": "88.7",
+   "unit": "%",
+   "baseline_value": "85.6",
+   "n": null,
+   "setup": "919 profiles, held-out chromosomes",
+   "quote": null,
+   "table": "Table 7, row BIGBIRD, column HM",
+   "note": "TF 96.1 vs 95.8; DHS 92.1 vs 92.3 (worse)",
+   "where": "Table 7"
+  },
+  {
+   "claim": "DNA MLM BPC at 4096 tokens is 1.12 vs 1.23 for BERT at 512.",
+   "kind": "measured",
+   "metric": "BPC",
+   "value": "1.12",
+   "unit": "BPC",
+   "baseline_value": "1.23",
+   "n": null,
+   "setup": "human reference genome, 32K BPE",
+   "quote": null,
+   "table": "Table 5, row BIGBIRD (sqln. 4096), column BPC",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "There is no free lunch: finding furthest vectors needs one layer with full attention but near-linear layers with any sparse attention of O~(n) edges.",
+   "kind": "claim",
+   "metric": "layers required",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "theoretical, under the Orthogonal Vectors Conjecture",
+   "quote": null,
+   "table": null,
+   "note": "Proposition 1: Omega~(n^(1-o(1))) layers",
+   "where": "Sec 3.4, App C"
+  }
+ ],
+ "limits": [
+  "Sparse attention is provably weaker for some tasks: under the Orthogonal Vectors Conjecture, the furthest-vector task needs ~n layers for any sparse attention with ~n edges (Sec 3.4).",
+  "The 8x longer sequence claim is stated without a memory or speed measurement; training is on 16GB chips at batch 32-64.",
+  "Sparse attention only on the encoder; decoder keeps full attention because outputs are short.",
+  "Large QA test model uses window 507 and no random tokens, so the headline QA results come from ETC without random attention; random attention only used in ITC.",
+  "Promoter F1 is inflated by overlap between negative-example construction and MLM pretraining (App F.2).",
+  "No latency, throughput or kernel benchmark; efficiency is argued by complexity and blockification, not measured.",
+  "Encoder-only/bidirectional; autoregressive decoding with KV cache is not evaluated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BigBird-ITC",
+   "definition": "Internal transformer construction: make some existing tokens global, which attend over the entire sequence.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "BigBird-ETC",
+   "definition": "Extended transformer construction: include additional global tokens such as CLS.",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "full attention baseline whose quadratic cost is reduced",
+   "quote": null
+  },
+  {
+   "work": "Longformer: The long-document transformer",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "baseline",
+   "note": "contemporary sliding window plus global tokens; compared throughout",
+   "quote": null
+  },
+  {
+   "work": "ETC: Encoding long and structured data in transformers",
+   "year": 2020,
+   "arxiv": "2004.08483",
+   "relation": "extends",
+   "note": "global tokens idea; theory justifies it",
+   "quote": null
+  },
+  {
+   "work": "Generating long sequences with sparse transformers (Child)",
+   "year": 2019,
+   "arxiv": "1904.10509",
+   "relation": "related",
+   "note": "O(n sqrt n) sparse attention",
+   "quote": null
+  },
+  {
+   "work": "Reformer (Kitaev)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LSH attention, O(n log n)",
+   "quote": null
+  },
+  {
+   "work": "Yun et al., Are transformers universal approximators",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "proof structure for universal approximation",
+   "quote": null
+  },
+  {
+   "work": "Perez et al., On the Turing completeness of modern neural network architectures",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Turing completeness construction adapted to sparse attention",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "warm start and sentencepiece vocab",
+   "quote": null
+  },
+  {
+   "work": "Pegasus (Zhang)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "large summarization warm start",
+   "quote": null
+  },
+  {
+   "work": "Gray et al., GPU kernels for block-sparse weights",
+   "year": 2017,
+   "arxiv": "1711.09224",
+   "relation": "related",
+   "note": "cited for sparse matmul being inefficient on GPUs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Building blocks of the attention mechanism used in BIGBIRD. White color indicates absence of attention. (a) random attention with r = 2, (b) sliding window attention with w = 3 (c) global attention with g = 2. (d) the combined BIGBIRD model.",
+   "page": 3,
+   "why": "Shows the attention-mask patterns at a glance."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Building blocks of the block-attention mechanism used in BIGBIRD with block size = 2.",
+   "page": 30,
+   "why": "Blockified masks that map to hardware."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Idea behind fast sparse attention computation in BIGBIRD.",
+   "page": 31,
+   "why": "Shows how full, block-diagonal, window and random parts reduce to dense ops."
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Construction of rolled key-block tensor.",
+   "page": 32,
+   "why": "Window attention via rolling key blocks, no gather."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Overview of BIGBIRD attention computation. Structured block sparsity helps in compactly packing our operations of sparse attention, thereby making our method efficient on GPU/TPU.",
+   "page": 32,
+   "why": "Compact dense K'' tensor of (g+w+r)b keys per query block; best single picture of implementation."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, eq AT",
+   "snippet": "ATTN_D(X)_i = x_i + sum_h sigma( Q_h(x_i) K_h(X_N(i))^T ) . V_h(X_N(i))",
+   "verbatim": false
+  },
+  {
+   "where": "App D",
+   "snippet": "cost O(n(g + w + r)bd) with K'' of size ceil(n/b) x (g + w + r)b x d",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table values come out of the text extraction one cell per line; row/column assignment was made from table order and checked against the text.",
+  "No instructions embedded in the PDF text.",
+  "Appendix A/B proofs skimmed only."
+ ]
+}
