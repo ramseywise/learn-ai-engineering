@@ -7,6 +7,8 @@ sources:
   - https://arxiv.org/abs/2508.04604
   - https://arxiv.org/abs/2501.05366
   - https://arxiv.org/abs/2501.09136
+  - https://arxiv.org/abs/2406.12430
+  - https://arxiv.org/abs/2410.09713
 confidence: high
 cleaned: 2026-11-07
 ---
@@ -104,6 +106,8 @@ flowchart TD
   RF -- enough --> W[Writer: cited answer]
 ```
 *Image Source: diagram based on Kulkarni (2026)*
+
+PlanRAG measured the plan step on database questions. Its Decision QA benchmark has 301 scenarios built from two video games (200 Locating and 101 Building), each asking which business decision is best, over a relational database queried with SQL or a graph database queried with Cypher. The model writes a plan of data analyses first, queries to fit the plan, and re-plans when the results do not serve it. GPT-4 at temperature 0, zero-shot, one run, averaged over the two database types, scored 64.3% (Locating) and 45.0% (Building) with PlanRAG. Iterative RAG scored 48.5% and 37.6%, and single-turn RAG 30.5% and 2.5%. The abstract's 15.8% and 7.4% are percentage points over iterative RAG. Without re-planning PlanRAG fell to 53.5% and 44.1%, and it re-planned on 6% of Locating and 38% of Building runs. Runs that never queried a critical value fell from 3.3% and 33.2% for iterative RAG to 1.3% and 21.8%. The benchmark is game data with a simulator for ground truth, with one reader and no variance, and Building stays hard at 45.0% ([arXiv:2406.12430](https://arxiv.org/abs/2406.12430), Lee et al., NAACL 2024).
 
 ---
 
@@ -230,6 +234,8 @@ Recall falls from 0.95 to 0.50 because half the queries now cannot succeed. An a
 | Human-level analysis is expected | |
 
 The field survey agrees: not the default, no cure for poor retrieval, and corrective and hierarchical designs pay in latency ([arXiv:2501.09136](https://arxiv.org/abs/2501.09136), Singh et al., 2025-01, preprint).
+
+Zhang et al.'s perspective paper gives that table a vocabulary. An agent has an information state, a set of actions and a policy, and it aims at a target state. Classic IR is the special case where the state is only the retrieved items shown to the user and the only action filters a fixed corpus. Two consequences carry over. An agent can do only what its tools allow: it can find flights and cannot book one without a reservation API. And list metrics such as relevance no longer fit, so the paper proposes a verifier that scores the whole trajectory against the target state, not against one reference path, since several paths reach the same end. It reports no experiments, and it leaves the verifier to rules, human annotation or an LLM judge ([arXiv:2410.09713](https://arxiv.org/abs/2410.09713), Zhang et al., preprint).
 
 **Before shipping**, check: multiple retrieval strategies are implemented; the planner is separate from the generator; a validation step exists; every claim has traceable evidence; tool use is rate-limited; human override paths exist; metrics go beyond answer quality. Skip one and pause.
 

@@ -1,0 +1,187 @@
+{
+ "schema": 1,
+ "key": "sha1:d78610c20255",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch14-pytorch-compiler-openai-triton-xla-backends.pdf",
+ "bib": {
+  "title": "Chapter 14. PyTorch Compiler, OpenAI Triton, and XLA Backends (AI Systems Performance Engineering)",
+  "authors": ["Chris Fregly"],
+  "first_author": "Fregly",
+  "year": 2025,
+  "venue": "O'Reilly (book chapter, online edition)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 125240,
+  "chars_total": 125240,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How does the PyTorch compiler stack (Dynamo, AOT Autograd, PrimTorch, Inductor, Triton, XLA) turn eager code into fast kernels, and how do you debug and tune it?",
+ "hypothesis": null,
+ "contributions": [
+  "Walk through the torch.compile pipeline stage by stage",
+  "Dynamic shapes, graph breaks, recompilation, and debugging tools",
+  "Triton programming model, autotuning, warp specialization, pipelining, Proton profiling",
+  "PyTorch XLA backend summary"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In the chapter's Proton profile of 8192x8192 matmuls with K=512, the Triton persistent kernel is faster than cuBLAS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "kernel time",
+   "value": "159.352",
+   "unit": "ms",
+   "baseline_value": "174.920 (cuBLAS)",
+   "n": null,
+   "setup": "Proton profile excerpt, matmul M=8192,N=8192,K=512; GPU model, dtype and run count not stated in the excerpt; other rows: Triton matmul_kernel 165.349 ms, torch 174.671 ms.",
+   "quote": "we see the Triton persistent kernel outperforms cuBLAS, 159.352 ms versus 174.920 ms",
+   "table": null,
+   "note": "The printed ROOT row is 168.314 ms. The chapter itself warns that cuBLASLt/CUTLASS paths often match or exceed custom Triton kernels.",
+   "where": "Profiling with Triton Proton Profiler"
+  },
+  {
+   "claim": "FlexAttention fused kernels reach part of FlashAttention performance.",
+   "kind": "reported",
+   "source": "not cited in the chapter",
+   "metric": "fraction of FlashAttention performance",
+   "value": "~85-90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Forward and backward passes on modern FlashAttention; hardware and shapes not given.",
+   "quote": "FlexAttention’s fused kernels have been measured to reach up to ~85–90% of modern FlashAttention performance in both forward and backward passes",
+   "table": null,
+   "note": null,
+   "where": "TorchInductor Backend Code Generation"
+  },
+  {
+   "claim": "PrimTorch IR defines about 250 primitive operations versus more than 2,000 ATen/PyTorch operations, so a new backend implements only the primitives.",
+   "kind": "claim",
+   "source": null,
+   "metric": "primitive op count",
+   "value": "250",
+   "unit": "operations",
+   "baseline_value": ">2,000",
+   "n": null,
+   "setup": "PyTorch version as of the book's writing (2025).",
+   "quote": "In practice, PrimTorch IR defines around 250 primitive opera-\ntions",
+   "table": null,
+   "note": null,
+   "where": "PrimTorch IR (Prims) Simplified Operator Set"
+  },
+  {
+   "claim": "Rule of thumb: if sequence lengths vary only 10-20%, fixed-length padding with static shapes is likely better than dynamic shapes; reduce-overhead mode (CUDA Graphs) should be used only with stable shapes.",
+   "kind": "claim",
+   "source": null,
+   "metric": "length variation threshold",
+   "value": "10%-20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "torch.compile on variable-length LLM inputs; no measurement given.",
+   "quote": "if your sequence lengths vary by only 10%–20%, you will likely ben-\nefit from fixed-length padding.",
+   "table": null,
+   "note": null,
+   "where": "Dynamic Shapes and Variable Sequence Lengths"
+  },
+  {
+   "claim": "Graph-break demo: dynamo.explain on a toy function with a print and a data-dependent if gives 3 graphs and 2 graph breaks.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "graph break count",
+   "value": "2",
+   "unit": "breaks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "toy_example(a, b) with print(\"woo\") and if b.sum() < 0; torch.randn(10) inputs.",
+   "quote": "Graph Break Count: 2",
+   "table": null,
+   "note": null,
+   "where": "Graph Breaks and TorchDynamo explain()"
+  },
+  {
+   "claim": "Dynamic shapes (dynamic=True) and CUDA Graphs conflict: CUDA Graph replay needs static shapes and fixed addresses, so reduce-overhead gains vanish with dynamic shapes.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TorchInductor modes reduce-overhead and max-autotune.",
+   "quote": "if dynamic shapes\nare enabled with dynamic=True , TorchInductor will not use CUDA Graphs.",
+   "table": null,
+   "note": null,
+   "where": "TorchInductor Backend Code Generation"
+  }
+ ],
+ "limits": [
+  "Only one measured number (the Proton matmul excerpt) with no GPU, dtype, run count or variance; the speedup claims about torch.compile give no figures.",
+  "The Proton table is cut off in the PDF text; a ROOT row and per-kernel throughput figures are partly truncated.",
+  "Describes PyTorch/Triton APIs as of 2025 (set_stance, triton_op, warp_specialize, num_consumer_groups, Blackwell tcgen05/TMEM); these move fast.",
+  "Code listings are truncated in the extracted text (lines cut at about 60 characters) and some are inconsistent (the print under the is_compiling guard is unindented in model_where)."
+ ],
+ "practices": [
+  "Start with torch.compile default mode; use max-autotune for large/critical workloads, accepting long compile time; warm up past the first compile (Key Takeaways).",
+  "Use torch._dynamo.explain with representative inputs and TORCH_LOGS=graph_breaks to find and remove graph breaks (Graph Breaks section).",
+  "Replace data-dependent Python if with torch.where (or torch.cond when it is truly needed) to avoid graph breaks.",
+  "Use torch.compiler.set_stance('fail_on_recompile') in development and CI to catch graph breaks and recompiles.",
+  "Use mark_dynamic on only the known varying dims rather than dynamic=True, and bucket inputs by size to bound distinct shapes.",
+  "Do not use mode='reduce-overhead' with dynamic shapes; use default or max-autotune-no-cudagraphs and bucket/pad within 10-20%.",
+  "Monitor recompiles with TORCH_LOGS='graph_breaks,recompiles,guards'; expect zero recompiles after the first few iterations.",
+  "Wrap each transformer block in its own FSDP module when compiling; DDP/FSDP communication graph breaks are intentional.",
+  "Register custom Triton kernels with torch.library.triton_op/wrap_triton (and register_autograd for training) so they do not cause graph breaks.",
+  "Write custom Triton kernels only for true bottlenecks after profiling; cuBLASLt/CUTLASS often match or beat them.",
+  "Use Triton's autotuner (start num_warps in {4,8}, num_stages in {2,3,4}) with representative inputs.",
+  "Use descriptor-based tiled loads (TMA) rather than manual tl.load loops; keep the current tile live across loop iterations when pipelining (prefetch-next, compute-current, swap).",
+  "For numerical debugging, set TORCHDYNAMO_REPRO_AFTER='aot' and TORCHDYNAMO_REPRO_LEVEL=4, use torch._inductor.config.fallback_random=True, and for determinism set CUBLAS_WORKSPACE_CONFIG=:4096:8 or :16:8 with use_deterministic_algorithms(True).",
+  "On XLA, pad or bucket inputs because new shapes trigger whole-program recompilation."
+ ],
+ "terms": [
+  {"term": "TorchDynamo", "definition": "first stage of torch.compile; hooks CPython frame evaluation (PEP 523) to capture tensor ops into an FX graph, falling back to eager at graph breaks", "where": "TorchDynamo for Bytecode Capture"},
+  {"term": "AOT Autograd", "definition": "traces the forward graph through autograd in functional mode to produce a joint forward-backward graph that can be optimized and fused as a whole", "where": "AOT Autograd Fusion"},
+  {"term": "PrimTorch IR (Prims)", "definition": "reduces the full operator set to about 250 primitive operations and makes mutation explicit", "where": "PrimTorch IR section"},
+  {"term": "TorchInductor", "definition": "PyTorch's default compiler backend; lowers the joint graph to a loop-level define-by-run IR and emits Triton kernels on NVIDIA GPUs", "where": "TorchInductor section"},
+  {"term": "Graph break", "definition": "point where Dynamo cannot continue capture and runs the code eagerly, ending the current graph segment", "where": "Graph Breaks section"},
+  {"term": "Guard", "definition": "check on Python values (shapes, dtypes, globals) that invalidates and recompiles the graph when an assumption changes", "where": "TorchDynamo section"},
+  {"term": "Stance", "definition": "torch.compiler.set_stance setting (default, fail_on_recompile, eager_on_recompile, force_eager) governing tolerance of fallbacks and recompiles", "where": "TorchDynamo section"},
+  {"term": "Triton SPMD model", "definition": "Triton programs run per thread block (CTA), not per thread as in CUDA SIMT", "where": "Triton Programming Model"},
+  {"term": "Warp specialization", "definition": "splitting a block's warps into producer (memory) and consumer (compute) roles to overlap load latency with compute", "where": "Warp Specialization with Triton"},
+  {"term": "Proton", "definition": "Triton's profiler package; scopes with metadata, emits NVTX ranges for Nsight Systems", "where": "Profiling with Triton Proton Profiler"},
+  {"term": "OpenXLA / PyTorch XLA", "definition": "ahead-of-time static-graph backend (backend='openxla') for TPUs and other XLA accelerators; recompiles whole program on new shapes", "where": "PyTorch XLA Backend"}
+ ],
+ "lineage": [
+  {"work": "Chapter 13, Profiling, Tuning, and Scaling PyTorch (same book)", "year": 2025, "arxiv": null, "relation": "extends", "note": "Chapter 14 goes deeper on the compiler stack introduced in ch. 13", "quote": "In Chapter 13, we discussed multiple ways to optimize and tune PyTorch-based\ntraining and inference workloads."},
+  {"work": "PyTorch torch.compile / TorchDynamo / TorchInductor", "year": null, "arxiv": null, "relation": "evaluates", "note": "main subject", "quote": null},
+  {"work": "OpenAI Triton", "year": null, "arxiv": null, "relation": "evaluates", "note": "kernel DSL and compiler used by Inductor", "quote": null},
+  {"work": "OpenXLA / PyTorch XLA", "year": null, "arxiv": null, "relation": "evaluates", "note": "alternative backend for TPUs", "quote": null},
+  {"work": "FlexAttention / FlashAttention", "year": null, "arxiv": null, "relation": "related", "note": "attention operator compiled by Inductor; cited without reference", "quote": null},
+  {"work": "NVIDIA Transformer Engine, cuBLAS/CUTLASS, Nsight", "year": null, "arxiv": null, "relation": "related", "note": "libraries and tools discussed", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 14-1", "caption": "Overview of PyTorch compiler stack", "page": 1, "why": "Shows the stack layers at a glance"},
+  {"figure": "Fig 14-2", "caption": "PyTorch compiler pipeline", "page": 1, "why": "Dynamo to AOT Autograd to Prims to Inductor flow"},
+  {"figure": "Fig 14-3", "caption": "PyTorch eager versus compiled modes", "page": 1, "why": "Shows fused kernels and compiler cache vs per-op launches"},
+  {"figure": "Fig 14-4", "caption": "PyTorch compile and export (TorchDynamo -> AOT Autograd -> PrimTorch IR -> TorchInductor -> Triton/LLVM NVPTX); export via torch.export/AOTInductor; CUDA Graphs are used when shapes are static", "page": 1, "why": "Ties compile, export and CUDA Graph conditions together"},
+  {"figure": "Fig 14-5", "caption": "Graph breaks in PyTorch FSDP caused by communication layers", "page": 1, "why": "Shows why distributed training has intentional graph breaks"},
+  {"figure": "Fig 14-6", "caption": "OpenXLA, the basis of the PyTorch XLA compiler backend", "page": 1, "why": "XLA backend structure"},
+  {"figure": "Table 14-1", "caption": "Logging options for torch.compile", "page": 1, "why": "TORCH_LOGS values: graph_breaks, dynamo, aot_graphs, inductor, graph_code, dynamic, perf_hints, output_code, recompiles, guards"}
+ ],
+ "code": [
+  {"where": "Graph Breaks and explain()", "snippet": "torch.where(b.sum() < 0, -b, b)  # avoids graph break from data-dependent if", "verbatim": false},
+  {"where": "Registering Custom Kernels", "snippet": "@triton_op(\"my_triton_lib::vector_add\", mutates_args=())\ndef vector_add(x: Tensor, y: Tensor) -> Tensor: ... wrap_triton(vector_add_kernel)[grid_fn](x, y, out, n, BLOCK_SIZE=...)", "verbatim": false},
+  {"where": "Warp specialization", "snippet": "triton.Config({'BLOCK_M': 128, 'BLOCK_N': 128, 'BLOCK_K': 64, 'num_warps': 8, 'num_stages': 2, 'num_consumer_groups': 2, 'num_buffers_warp_spec': 3})", "verbatim": false}
+ ],
+ "problems": [
+  "Code listings are appended at the end of the text in a block, with long lines truncated at about 60 characters.",
+  "The Proton output table is truncated; only the visible rows were recorded.",
+  "Chapter is a web-scraped page: navigation text ('Table of contents collapsed', 'Explore Skills', etc.) follows the body; no embedded instructions found.",
+  "Figures are images only; their content was not readable from the text, only captions."
+ ]
+}

@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2308.05374
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://hamel.dev/blog/posts/field-guide/
   - https://arxiv.org/abs/2404.12272
@@ -208,6 +209,8 @@ Once the criteria are clear, split them into **independent dimensions**, each wi
 | Efficiency | Steps, tokens, latency, cost | Code, from the trace |
 
 Combine dimensions only at the end, explicitly ([04](04-graders.md#combining-graders-scoring-design)).
+
+One published list of dimensions is a useful prompt for what to separate. Liu et al. group trustworthiness into seven: reliability, safety, fairness, resistance to misuse, explainability and reasoning, social norms, and robustness, with 29 sub-categories, and measure 8 of the 29. The dimensions do not move together. Over 984 generated unsafe prompts, gpt-3.5-turbo and gpt-4 refused close to 100%, but on 361 gender-stereotype questions even gpt-4 refused under 60%. One "aligned" score would hide that gap. Caveats: gpt-4 judged the safety responses, and the fairness ones that gave no valid choice, with no judge-agreement figure, each cell is one run, and most results appear only as bar charts of mid-2023 API models ([arXiv:2308.05374](https://arxiv.org/abs/2308.05374) (Liu et al., 2023-08, preprint)).
 
 ---
 

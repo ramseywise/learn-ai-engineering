@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2311.05232
   - https://arxiv.org/abs/2309.15217
   - https://arxiv.org/abs/2311.09476
   - https://arxiv.org/abs/2305.14627
@@ -151,7 +152,7 @@ The word "faithfulness" doesn't mean one thing across tools. MLflow, Ragas and L
 
 ### Faithful is not correct
 
-An answer can be perfectly faithful to a stale or wrong document. Faithfulness measures the generator. **Correctness** against a reference measures the system. Track both: faithful-but-wrong points at the corpus. A survey of the factuality literature draws the same line as a 2×2 ([arXiv:2310.07521](https://arxiv.org/abs/2310.07521) (Wang et al., ACM Computing Surveys 2025; read as arXiv v3, 2023-12)): hallucination is departure from the source or prompt, factuality is agreement with facts that a reliable source can ground, and all four cells occur. An accurate answer that ignores the prompt is hallucinated but factual, and "I don't know" is neither hallucinated nor factual. The survey runs no experiments of its own, and it chooses not to focus on summarization faithfulness: the NLI and question-answering checkers above do not appear in it. A later taxonomy ([arXiv:2508.01781](https://arxiv.org/abs/2508.01781) (Cossio, 2025-08, preprint)) keeps the same split, faithfulness as adherence to the input and factuality as absolute correctness, and adds intrinsic (contradicts the context) against extrinsic (can't be checked against it). It is a definitions source and runs no experiments either.
+An answer can be perfectly faithful to a stale or wrong document. Faithfulness measures the generator. **Correctness** against a reference measures the system. Track both: faithful-but-wrong points at the corpus. A survey of the factuality literature draws the same line as a 2×2 ([arXiv:2310.07521](https://arxiv.org/abs/2310.07521) (Wang et al., ACM Computing Surveys 2025; read as arXiv v3, 2023-12)): hallucination is departure from the source or prompt, factuality is agreement with facts that a reliable source can ground, and all four cells occur. An accurate answer that ignores the prompt is hallucinated but factual, and "I don't know" is neither hallucinated nor factual. The survey runs no experiments of its own, and it chooses not to focus on summarization faithfulness: the NLI and question-answering checkers above do not appear in it. A later taxonomy ([arXiv:2508.01781](https://arxiv.org/abs/2508.01781) (Cossio, 2025-08, preprint)) keeps the same split, faithfulness as adherence to the input and factuality as absolute correctness, and adds intrinsic (contradicts the context) against extrinsic (can't be checked against it). It is a definitions source and runs no experiments either. A broader hallucination survey sorts detectors for context-faithfulness into five families (fact-based overlap, classifier-based NLI, QA-based, uncertainty-based, LLM-based), says n-gram metrics such as ROUGE fall short at telling nuanced source mismatches, and notes that retrieval-augmented models still produce output "not supported by the retrieved information" ([arXiv:2311.05232](https://arxiv.org/abs/2311.05232) (Huang et al., ACM TOIS 2025; read as arXiv v2)). It compares no detectors and reports no scores, so it organises the options above without ranking them.
 
 ### Grounding without retrieval
 

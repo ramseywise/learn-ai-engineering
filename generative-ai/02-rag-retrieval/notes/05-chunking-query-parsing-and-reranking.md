@@ -75,10 +75,10 @@ Context-aware chunking is the same idea as Anthropic's *contextual retrieval* (2
 
 Their guidelines match the course: match the chunk to the query type, respect the embedder's input limit, and evaluate on your own data.
 
-**Contextual retrieval, the mechanics.** Huyen describes the index-time step behind context-aware chunking: an LLM writes a short context, typically 50–100 tokens, that situates the chunk in its document, and the context is prepended before embedding and BM25 indexing (*AI Engineering*, ch. 6). Her other augmentations: product descriptions with reviews, or the questions an article answers.
+**Contextual retrieval, the mechanics.** Huyen describes the index-time step behind context-aware chunking: an LLM writes a short context, typically 50–100 tokens, that situates the chunk in its document, and the context is prepended to the chunk, which is then indexed by the retriever (*AI Engineering*, ch. 6). Her other augmentations: product descriptions with reviews, or the questions an article answers.
 
 ![Contextual retrieval: an LLM, given the whole document and one chunk, writes a short context that is prepended to the chunk before indexing](../sources/images/huyen-ai-engineering-fig6-5.png)
-*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 6-5*
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 6-5, reproducing Anthropic, "Introducing Contextual Retrieval" (2024)*
 
 **Element-based chunking** is recursive splitting taken further: a document-layout model labels each element (title, narrative text, table, list), and chunks break at element boundaries. On FinanceBench (10-K and 10-Q filings, top-10 chunks, GPT-4 generator), element-based chunking answered 53.2% of questions correctly against 48.2% for the best fixed size (512 tokens) and 35.5% for 128 tokens, on manual grading. It also indexed about half as many chunks (62,529 vs 112,155) and needed no chunk-size tuning ([arXiv:2402.05131](https://arxiv.org/abs/2402.05131), Jimeno Yepes et al., 2024-02). The setting is one domain of table-heavy, strongly structured documents, so expect less on prose.
 
@@ -305,7 +305,7 @@ Moved to [5b — Query parsing, conversational retrieval and reranking](05b-quer
 | What overlap should you use? | Start at 10–20% and test it, because it is a convention. Book examples range from 1% to 20% and none measures it. |
 | Does semantic chunking beat fixed-size? | Not on real long documents in Qu et al.: HotpotQA F1@5 was 90.59 fixed vs 87.37 breakpoint. Its big win came only on synthetic stitched documents, and the embedder mattered more. |
 | When does element-based chunking pay? | On structured, table-heavy documents. Jimeno Yepes et al. got 53.2% vs 48.2% on FinanceBench with about half the chunks. |
-| What is contextual retrieval? | An index-time LLM writes a 50–100 token context for each chunk, prepended before embedding and BM25. It adds no query latency. |
+| What is contextual retrieval? | An index-time LLM writes a 50–100 token context for each chunk, prepended before the chunk is indexed. It adds no query latency. |
 | HyDE vs hypothetical questions? | HyDE generates a fake answer at query time. Hypothetical questions are generated at index time and matched against the user's question, so they add no query latency. |
 
 ---

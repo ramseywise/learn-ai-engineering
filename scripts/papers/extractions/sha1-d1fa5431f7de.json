@@ -1,0 +1,505 @@
+{
+ "schema": 1,
+ "key": "sha1:d1fa5431f7de",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch16-profiling-debugging-tuning-inference-scale.pdf",
+ "bib": {
+  "title": "Chapter 16. Profiling, Debugging, and Tuning Inference at Scale (AI Systems Performance Engineering)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter, AI Systems Performance Engineering (O'Reilly online reader)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 133582,
+  "chars_total": 133582,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you monitor, profile, debug and tune a large LLM inference cluster, from GPU counters through batching, scheduling, quantization and application-level optimizations?",
+ "hypothesis": null,
+ "contributions": [
+  "Observe-hypothesize-tune loop for inference",
+  "Metrics, alert and troubleshooting tables",
+  "Batching/scheduling/routing comparison",
+  "Quantization workflow guidance",
+  "Application-level optimizations: prompt compression, prefix caching, cascading, streaming"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Latency-aware scheduling cuts critical-path self-attention work for six prompts [6K,2K,6K,2K,2K,2K] on two GPUs by about 42% versus FIFO.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "42%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two GPUs, six prompts arriving together; QK ops T(N)=N(N+1)/2; assumes variable-length fused attention kernel (no padding). FIFO critical path 38,007,000 vs 22,005,000.",
+   "where": "Latency-Aware Scheduling, Tables 16-6 and 16-7",
+   "note": null,
+   "quote": "This reduces the critical path self-attention by about 42% from 38,007,000 to"
+  },
+  {
+   "claim": "Chunked prefill does not reduce total attention work: a 20K prompt costs 200M QK ops at any chunk size (20K, 10K, 5K).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "200M",
+   "unit": "QK dot products per layer per head",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20K token prompt, chunk sizes 20K/10K/5K; MLP tokens total 20K in all cases.",
+   "where": "Table 16-5",
+   "note": null,
+   "quote": "20K × (20K + 1) ÷ 2 = 200M"
+  },
+  {
+   "claim": "Batching 4-8 requests can double or triple throughput over 1-2 request batches on large models.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-3x",
+   "unit": "throughput multiple",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Large models, continuous batching; no experiment given.",
+   "where": "Continuous Batching",
+   "note": null,
+   "quote": "Batching 4–8 requests can often double or triple the throughput over 1–2 request"
+  },
+  {
+   "claim": "Concurrent decoding on multiple streams raised GPU utilization from 60% to 95% and doubled throughput in the chapter's example.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "95%",
+   "unit": "% GPU utilization",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative inference server, naive single-thread decode at 60% utilization.",
+   "where": "Maximizing GPU Utilization",
+   "note": null,
+   "quote": "we raise GPU utilization to 95% and double the"
+  },
+  {
+   "claim": "4-bit weight-only GPTQ retains 99%+ of FP16 accuracy with about 2x inference speedup and about 4x smaller footprint on many large models.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "99%+",
+   "unit": "% of FP16 accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Many large models, GPTQ 4-bit weight-only; no model, dataset or source named.",
+   "where": "Quantization Approaches",
+   "note": null,
+   "quote": "can retain 99%+ of the accuracy of the FP16 model"
+  },
+  {
+   "claim": "FP4 effective reduction including scaling metadata is about 1.8x vs FP8 and 3.5x vs FP16.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "3.5x",
+   "unit": "x vs FP16",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVFP4 with block microscaling; no measurement.",
+   "where": "Reducing Precision from FP16 to FP8 and FP4",
+   "note": null,
+   "quote": "about 3.5× compared"
+  },
+  {
+   "claim": "SmoothQuant plus INT8 weights and activations gives full INT8 inference with under 1% accuracy loss.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "< 1%",
+   "unit": "% accuracy loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SmoothQuant PTQ, no model or dataset named.",
+   "where": "Activation Quantization",
+   "note": null,
+   "quote": "with low (e.g., < 1%) accuracy loss"
+  },
+  {
+   "claim": "Routing 60% of queries to a 10x smaller model can give potentially 5x overall cost reduction.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5x",
+   "unit": "x cost reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Model cascading, assumed 60% routed to 10x smaller model; no data.",
+   "where": "Model Cascading",
+   "note": null,
+   "quote": "potentially a 5× overall cost reduction if de"
+  },
+  {
+   "claim": "Small 70B model answers in 50 ms vs 500 ms for 700B model in the cascading example.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "50 ms vs 500 ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical QA deployment, 70B vs 700B.",
+   "where": "Model Cascading",
+   "note": null,
+   "quote": "which will respond in 50 ms instead of 500 ms with the"
+  },
+  {
+   "claim": "Prefix caching makes 10 questions over one long document about 10x faster than without.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "10x",
+   "unit": "speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 questions sharing one document prefix; document attention computed once.",
+   "where": "Prefix Caching",
+   "note": null,
+   "quote": "processed roughly 10× faster with prefix caching than without because the long docu"
+  },
+  {
+   "claim": "Without a good KV cache allocator fragmentation can be about 20-30%; paging reduces it to a few percent.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~20%-30%",
+   "unit": "% fragmentation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Variable length requests; no measurement.",
+   "where": "KV Cache Offloading and Memory Pool Allocation",
+   "note": null,
+   "quote": "(e.g., ~20%–30%)"
+  },
+  {
+   "claim": "Recommended steady-state buffer capacity is at least 10-15%; 100% (a full replica) for critical services.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10%-15%",
+   "unit": "% buffer capacity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Operational recommendation.",
+   "where": "Error Handling",
+   "note": null,
+   "quote": "At least 10%–15% of buffer capacity is recommended during steady"
+  },
+  {
+   "claim": "Rule of thumb: target 90% of maximum peak throughput as headroom, e.g. cut batch limit from 16 to 8.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "90%",
+   "unit": "% of peak throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Throughput-latency knee tuning.",
+   "where": "Maximizing GPU Utilization",
+   "note": null,
+   "quote": "Teams typically target 90% of maximum peak throughput, called the head"
+  },
+  {
+   "claim": "Typical MoE expert capacity factor is 1.2-1.5, allowing 20%-50% extra tokens reassigned.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "1.2-1.5",
+   "unit": "capacity factor",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE inference, tail latency smoothing.",
+   "where": "Monitoring System Metrics",
+   "note": null,
+   "quote": "setting the capacity factor to 1.2–1.5 is common"
+  },
+  {
+   "claim": "SHARP offload has shown roughly 10%-20% throughput improvement for large all-to-all in some tests.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10%-20%",
+   "unit": "% throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "InfiniBand with suitable switches; tests unnamed.",
+   "where": "Overlapping Communication and Computation",
+   "note": null,
+   "quote": "roughly 10%–20% throughput improvements for large all-to-all communica"
+  },
+  {
+   "claim": "Dynamic batching delay is typically 2-10 ms; set initially 1-2 ms, adaptive 0 ms at low RPS up to 5-10 ms at peak.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-10 ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Microbatching in vLLM-style engines.",
+   "where": "Dynamic Batching",
+   "note": null,
+   "quote": "Typically, a delay of 2–10 ms is used"
+  },
+  {
+   "claim": "Human reading rate of 200-300 words/minute is about 4-7 tokens/s (up to 13); a stream at 2 tokens/s signals need to optimize.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "4-7",
+   "unit": "tokens/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Streaming target.",
+   "where": "Streaming Responses",
+   "note": null,
+   "quote": "approximately 4–7 tokens per second"
+  },
+  {
+   "claim": "Streaming 5-token batches at 20 tokens/s delivers first tokens after 0.25 s versus 5 s unstreamed.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.25 s",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100-token answer, 5 s total generation.",
+   "where": "Streaming Responses",
+   "note": null,
+   "quote": "5 tokens ÷ 20 tokens per second = 0.25 seconds"
+  },
+  {
+   "claim": "Nagle's algorithm with delayed ACK can add tens of ms, up to roughly 200 ms worst case, to token flush.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "~200 ms",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TCP streaming; mitigated with TCP_NODELAY.",
+   "where": "Streaming Responses",
+   "note": null,
+   "quote": "up to roughly 200 ms in worst-case set"
+  },
+  {
+   "claim": "Table 16-3 alert thresholds: GPU util <10% for >60 s idle; memory >80% warning, >95% critical; temperature >85 C warning, >95 C critical.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example Prometheus alert set for GPU systems; illustrative.",
+   "where": "Table 16-3",
+   "note": null,
+   "table": "Table 16-3, rows GPU utilization, Memory usage, Temperature"
+  }
+ ],
+ "limits": [
+  "Authors and year are not printed in the extracted text.",
+  "Chapter states numeric values in its metrics tables are illustrative; actual benchmarks are in an external GitHub repository.",
+  "Most numbers are rules of thumb or hypothetical examples, with no named model, dataset or hardware measurement.",
+  "Mentions of vLLM, NVIDIA Dynamo, TensorRT-LLM, NVL72 features reflect 2025 software and may date.",
+  "Claims like ChatGPT using model cascading are stated as 'widely believed', not shown."
+ ],
+ "practices": [
+  "Run an observe, hypothesize, tune, verify loop and canary-roll every optimization to a small traffic slice first (Profiling, Debugging, and Tuning Inference Performance).",
+  "Track cache hit versus miss counts for prefix, prompt-embedding and KV caches (e.g. vllm:gpu_prefix_cache_hits over queries) and check tokenizer differences first when prefix matching fails.",
+  "Use Prometheus/Grafana with DCGM for GPU metrics, add application counters (batch size changes, NCCL errors) and overlay them with RPS and latency (Monitoring System Metrics).",
+  "Prefer Nsight Compute PC sampling first on live servers, and use Nsight Systems with NVTX ranges for prefill/decode/stream timelines (Profiling with Nsight).",
+  "Use lightweight metric-based thresholds in production (Table 16-1) rather than continuous heavy profilers.",
+  "Set a MoE capacity factor of 1.2-1.5 so overloaded experts spill to a replica (Monitoring System Metrics).",
+  "Cap the dynamic batching delay well under the p99 SLO and plot latency percentiles against load to find the inflection point (Dynamic Batching).",
+  "Choose batch size at the throughput-latency knee, about 90% of peak throughput, and watch p95/p99 not only p50 (Maximizing GPU Utilization).",
+  "Prefer continuous batching for chat; consider a hybrid of short timer plus max batch size for a custom scheduler (Continuous Batching, Continuous Scheduling).",
+  "Use chunked prefill to smooth latency, knowing it does not reduce total attention work (Table 16-5).",
+  "Use latency-aware length-balanced batches rather than FIFO (Tables 16-6, 16-7).",
+  "Overlap compute and communication with multiple CUDA streams, pinned memory, events and NCCL groups; verify with profiling (Overlapping Communication and Computation).",
+  "Monitor power and thermal throttling with DCGM and nvidia-smi; consider a boost-off flag or clock caps (Power and Thermal Constraints).",
+  "Fail fast, apply backpressure and keep at least 10-15% idle buffer replicas, 100% for critical services (Error Handling).",
+  "Keep weights in HBM, use paged KV cache with offload for rarely used entries, and consider KV quantization (Memory).",
+  "Start with 8-bit weights, then 4-bit weight-only (GPTQ/AWQ), then W4A8 only if needed; calibrate on workload-like data and A/B test downstream quality (Quantization).",
+  "Fuse quantize-dequantize into compute kernels (Fusing Quantization-Dequantization).",
+  "Enable prefix caching, size the cache to measured hit rate, use radix-tree prefix cache with LRU eviction (Prefix Caching).",
+  "Summarize oldest 25% of messages when a conversation exceeds 75% of max context, and verify the compressed prompt retains key facts (Prompt Compression).",
+  "Cascade to smaller models using a light classifier or confidence, log which model handled each request, and retrain the router periodically (Model Cascading).",
+  "Stream tokens in batches of 2-5, use a bounded buffer of about 50-100 tokens, TCP_NODELAY, and allow user interrupts (Streaming Responses).",
+  "Set server-side output limits (e.g. 4,096 tokens) and timeouts (e.g. 30 s) (Token Output Limits and Timeouts)."
+ ],
+ "terms": [
+  {
+   "term": "dynamic batching",
+   "definition": "a specialization of request batching that assembles batches of incoming inference requests of dynamic sizes on the fly",
+   "where": "Dynamic Batching"
+  },
+  {
+   "term": "continuous batching",
+   "definition": "also known as in-flight batching or iteration-level scheduling; refills batches on every token-generation iteration rather than waiting for complete sequences to finish",
+   "where": "Continuous Batching"
+  },
+  {
+   "term": "continuous scheduling",
+   "definition": "treats the GPU like an OS scheduler treats a CPU; launches independent small decode kernels on separate CUDA streams",
+   "where": "Continuous Scheduling"
+  },
+  {
+   "term": "stall-free scheduling (chunked prefill)",
+   "definition": "splitting long prompts into chunks and interleaving prefill and decode work",
+   "where": "Stall-Free Scheduling"
+  },
+  {
+   "term": "goodput",
+   "definition": "useful GPU utilization, hardware doing useful work",
+   "where": "Systems-Level Optimizations"
+  },
+  {
+   "term": "prefix caching",
+   "definition": "compute the KV for a shared prefix once and reuse it for subsequent requests; also called prefix memoization",
+   "where": "Prefix Caching"
+  },
+  {
+   "term": "model cascading",
+   "definition": "choosing the right model per request via tiered deployment; also fallback model routing",
+   "where": "Model Cascading"
+  },
+  {
+   "term": "per-block microscaling",
+   "definition": "a separate scale for each fixed-size block, typically 32 elements, within a tensor",
+   "where": "Weight-Only Quantization"
+  },
+  {
+   "term": "token pooling",
+   "definition": "intentionally delaying token sends to smooth streaming rate, e.g. 50 ms between sends",
+   "where": "Streaming Responses"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "vLLM / PagedAttention",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "paged KV cache, prefix caching, continuous batching described",
+   "quote": null
+  },
+  {
+   "work": "SGLang RadixAttention",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "radix-tree prefix cache with LRU eviction; adapted from an LMSys blog figure",
+   "quote": null
+  },
+  {
+   "work": "GPTQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "4-bit weight PTQ",
+   "quote": null
+  },
+  {
+   "work": "AWQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "salient-channel preserving 4-bit quantization",
+   "quote": null
+  },
+  {
+   "work": "SmoothQuant",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "8-bit activation PTQ",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA Dynamo, TensorRT-LLM, Transformer Engine, DCGM, Nsight",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tools and engines discussed",
+   "quote": null
+  },
+  {
+   "work": "EAGLE, Medusa, speculative decoding",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "mentioned as complexity-adding decoding methods",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 16-1",
+   "caption": "Common troubleshooting symptoms, causes, and recommended actions",
+   "page": null,
+   "why": "metric to cause to fix lookup"
+  },
+  {
+   "figure": "Table 16-3",
+   "caption": "Example set of common Prometheus alerts for GPU-based systems",
+   "page": null,
+   "why": "alert thresholds in one place"
+  },
+  {
+   "figure": "Table 16-4",
+   "caption": "Comparing static, dynamic, and continuous batching",
+   "page": null,
+   "why": "side-by-side batching trade-offs"
+  },
+  {
+   "figure": "Table 16-6 / 16-7",
+   "caption": "FIFO versus latency-aware scheduling",
+   "page": null,
+   "why": "worked arithmetic for the 42% reduction"
+  },
+  {
+   "figure": "Fig 16-9",
+   "caption": "Prefix cache evolution for multiple requests",
+   "page": null,
+   "why": "radix tree split and LRU eviction step by step"
+  }
+ ],
+ "code": [
+  {
+   "where": "NVTX prefill/decode ranges",
+   "snippet": "NVTX_PUSH(\"Prefill\", 0xFF4F86F7);\n  model.encode(prompt_tokens);\n  NVTX_POP();",
+   "verbatim": true
+  },
+  {
+   "where": "Compute Sanitizer",
+   "snippet": "compute-sanitizer --tool memcheck your_binary",
+   "verbatim": true
+  },
+  {
+   "where": "RadixAttention pseudocode",
+   "snippet": "node, prefix_len = radix.longest_prefix(prompt_tokens)\nmodel_state = ModelState.from_cache(node.cache)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors, year and publisher are not in the text; bib.authors left empty.",
+  "Several code blocks are truncated at line ends in the extraction.",
+  "Page ends include O'Reilly reader navigation text; no embedded instructions found."
+ ]
+}

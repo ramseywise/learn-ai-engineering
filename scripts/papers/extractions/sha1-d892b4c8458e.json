@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "key": "sha1:d892b4c8458e",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch19-dynamic-adaptive-inference-engine-optimizations.pdf",
+ "bib": {
+  "title": "Chapter 19. Dynamic and Adaptive Inference Engine Optimizations (AI Systems Performance Engineering)",
+  "authors": [],
+  "first_author": "Fregly (inferred: book title; author not printed in this chapter text)",
+  "year": 2025,
+  "venue": "O'Reilly book chapter (venue and year not printed in extracted text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 177619,
+  "chars_total": 177619,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can an LLM inference engine adapt parallelism, precision, kernels, memory, caching, scheduling and communication at runtime to hold throughput and latency under varying load?",
+ "hypothesis": "A static one-size-fits-all serving configuration is no longer sufficient; runtime-adaptive strategies outperform it.",
+ "contributions": [
+  "Survey/practice guide of dynamic parallelism switching, dynamic precision, kernel autotuning, occupancy-aware shared memory, speculative KV prefetching, KV compression and policy switching, RL tuning, allocator switching, kernel hot-swap, CUDA Graph prewarming, adaptive batching and chunked prefill, congestion/topology-aware NVLink scheduling, MoE rebalancing"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "SARATHI chunked prefill with decode piggybacking raises throughput over naive scheduling",
+   "kind": "reported",
+   "source": "SARATHI paper (not cited with reference)",
+   "metric": "throughput speedup",
+   "value": "~1.3–1.9×",
+   "unit": "x throughput",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chunked prefill + decode-maximal batching vs naive scheduling, as described by the chapter; no setup given",
+   "quote": "improve throughput by ~1.3–1.9× compared to naive scheduling",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "claim": "INT4 weights + FP4 activations: ~0.2x memory, ~3.5x throughput, ~1% quality drop vs FP16",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 19-2 'approximate' trade-offs; no model, hardware or dataset named; chapter says model- and kernel-dependent",
+   "quote": null,
+   "table": "Table 19-2, row INT4 weights + FP4 activations, columns Memory ~0.2×, throughput ~3.5×, ~1% drop",
+   "note": "Text: 'The speedup is around 3.5×, which is consistent with the theoretical peak 4× improvement over FP16.'",
+   "where": "Dynamic Precision Changes"
+  },
+  {
+   "claim": "INT4 weights + FP8 activations: ~0.25x memory, ~1.8x throughput, ~0.5% quality drop",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 19-2, approximate, no model or hardware named",
+   "quote": null,
+   "table": "Table 19-2, row INT4 weights + FP8 activations, column throughput ~1.8×",
+   "note": null,
+   "where": "Dynamic Precision Changes"
+  },
+  {
+   "claim": "FP16 weights + FP8 activations: ~0.5x memory, ~1.5x throughput, <0.1% quality loss",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 19-2, approximate, no model or hardware named",
+   "quote": null,
+   "table": "Table 19-2, row FP16 weights + FP8 activations, column throughput ~1.5×",
+   "note": null,
+   "where": "Dynamic Precision Changes"
+  },
+  {
+   "claim": "KV cache offload to CPU with one-layer-ahead prefetch costs a modest throughput penalty",
+   "kind": "claim",
+   "source": null,
+   "metric": "tokens/s change",
+   "value": "~5%–10%",
+   "unit": "lower tokens/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative ('you might see'), CPU-offloaded KV with async prefetch; no model or hardware stated",
+   "quote": "you might see ~5%–10% lower tokens/s through-",
+   "table": null,
+   "note": null,
+   "where": "Speculative KV Prefetching for Faster TTFT"
+  },
+  {
+   "claim": "Quantizing KV from INT8 to INT4 cuts KV memory by half",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "50%",
+   "unit": "memory reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic of bit-width halving",
+   "quote": "This would reduce the memory footprint by 50%.",
+   "table": null,
+   "note": null,
+   "where": "Dynamic Precision Changes"
+  },
+  {
+   "claim": "Quantized KV cache gives 2-4x memory reduction",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2–4×",
+   "unit": "memory reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KV cache quantization generally, as stated by author",
+   "quote": "speed and 2–4× memory reduction.",
+   "table": null,
+   "note": null,
+   "where": "Real-Time KV Cache Compression"
+  },
+  {
+   "claim": "Hugging Face QuantizedCache supports INT8/INT4; HQQ backend supports 2/3/4/8-bit",
+   "kind": "reported",
+   "source": "Hugging Face Transformers / HQQ",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformers library features described in text",
+   "quote": "including 2-bit, 3-bit, 4-bit, and 8-bit",
+   "table": null,
+   "note": null,
+   "where": "Real-Time KV Cache Compression"
+  },
+  {
+   "claim": "High-watermark of 80% GPU memory triggering 8-bit KV compression prevents OOM crashes in production",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "80%",
+   "unit": "GPU memory threshold",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's practical assertion; no data",
+   "quote": "setting a high-watermark threshold on GPU memory (e.g., 80%) to trigger 8-bit",
+   "table": null,
+   "note": null,
+   "where": "Real-Time KV Cache Compression"
+  },
+  {
+   "claim": "Rule of thumb: pick a prefill chunk size so a chunk takes ~50–100 ms",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50–100 ms",
+   "unit": "chunk duration",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chunked prefill scheduling heuristic, no measurement",
+   "quote": "choose a chunk size such that a prefill chunk takes ~50–100 ms",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "claim": "Worked example: a 10,000-token prefill split into five 2,000-token chunks lets decodes interleave",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "5 chunks of 2,000 tokens",
+   "unit": "chunks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative arithmetic",
+   "quote": "five 2,000-token chunks",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "claim": "Adaptive batch heuristic: GPU utilization >80% allow larger batches; <20% use batch size 1",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "80% / 20%",
+   "unit": "GPU utilization thresholds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simple heuristic given as example",
+   "quote": "If GPU utilization is > 80%, allow larger batches; if < 20%, use batch size 1 to minimize",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "claim": "FlashAttention-3 'in some cases' gives 20% speed boost for long sequences over default SDPA",
+   "kind": "reported",
+   "source": "FlashAttention-3 (no citation)",
+   "metric": null,
+   "value": "20%",
+   "unit": "speed boost",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Long sequences, some cases; no source or hardware",
+   "quote": "which gives a 20% speed boost for long",
+   "table": null,
+   "note": null,
+   "where": "Runtime Kernel Performance Improvements"
+  },
+  {
+   "claim": "Tree all-reduce on 72 GPUs takes 6 sequential steps vs 71 for ring",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "6 vs 71",
+   "unit": "sequential steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "72-GPU NVL72 rack, step-count arithmetic only",
+   "quote": "6 (log₂(72)) sequential steps versus the ring algorithm’s 71",
+   "table": null,
+   "note": null,
+   "where": "Congestion-Aware and Topology-Aware Scheduling"
+  },
+  {
+   "claim": "Dynamic early-exit methods claim up to 30–50% inference speedup on reasoning tasks without accuracy loss",
+   "kind": "reported",
+   "source": "oreil.ly short links, unnamed papers",
+   "metric": null,
+   "value": "30%–50%",
+   "unit": "inference speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Early-exit networks needing special architecture/training; cited only by short links",
+   "quote": "up to 30%–",
+   "table": null,
+   "note": null,
+   "where": "Additional Adaptive and Dynamic Optimization Techniques"
+  },
+  {
+   "claim": "DASH layer skipping can skip 20–40% of layers",
+   "kind": "reported",
+   "source": "DASH (links only)",
+   "metric": null,
+   "value": "20%–40%",
+   "unit": "layers skipped",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Per-token MDP-based skipping with learned scoring network",
+   "quote": "skip 20%–40% of layers for many tokens",
+   "table": null,
+   "note": null,
+   "where": "Additional Adaptive and Dynamic Optimization Techniques"
+  },
+  {
+   "claim": "Speculative MoE expert routing reduces cross-node bandwidth up to 30% vs static EP+TP",
+   "kind": "reported",
+   "source": "unnamed (links)",
+   "metric": null,
+   "value": "up to 30%",
+   "unit": "cross-node bandwidth reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MoE; experimental",
+   "quote": "cross-node bandwidth use by up to 30%",
+   "table": null,
+   "note": null,
+   "where": "Additional Adaptive and Dynamic Optimization Techniques"
+  },
+  {
+   "claim": "LazyLLM reports 20–30% end-to-end latency reduction on long-context workloads",
+   "kind": "reported",
+   "source": "LazyLLM",
+   "metric": null,
+   "value": "20%–30%",
+   "unit": "latency reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Token pruning of KV in prefill and decode",
+   "quote": "LazyLLM reports 20%–30%",
+   "table": null,
+   "note": null,
+   "where": "Additional Adaptive and Dynamic Optimization Techniques"
+  },
+  {
+   "claim": "Tile-size table: 256x128 tile has 128 KB shared memory, 60% occupancy, 11.3 GOPS; 64x64 has 48 KB, 85%, 8.2 GOPS",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 19-3 'example' Blackwell-class GPU, actual values depend on microarchitecture",
+   "quote": null,
+   "table": "Table 19-3, rows 64 × 64 and 256 × 128, columns Shared memory (KB), Occupancy (%), Throughput (GOPS)",
+   "note": "Illustrative numbers; throughput not monotonic (128x128 = 9.8)",
+   "where": "Kernel Autotuning"
+  },
+  {
+   "claim": "Blackwell B200 server example: 8 GPUs x 180 GB = 1,440 GB HBM; two-stage pipeline gives ~720 GB per stage",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1,440 GB",
+   "unit": "HBM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8x B200, DeepSeek-R1 served with 4-way TP, >1M-token query example",
+   "quote": "1,440 GB = 180 GB per GPU × 8 GPUs",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Parallelism Strategies"
+  },
+  {
+   "claim": "DeepSeek-R1: 256 experts, top 9 chosen (incl. 1 shared); ~680B params, 37B active per token",
+   "kind": "reported",
+   "source": "DeepSeek-R1 (not cited)",
+   "metric": null,
+   "value": "256 experts",
+   "unit": "experts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "As stated by the chapter",
+   "quote": "DeepSeek-R1 has 256 total experts",
+   "table": null,
+   "note": null,
+   "where": "Adaptive Parallelism Strategies"
+  },
+  {
+   "claim": "NVLink 5 port gives 100 GB/s per direction; 18 links per GPU, 1.8 TB/s bidirectional",
+   "kind": "reported",
+   "source": "NVIDIA specs (not cited)",
+   "metric": null,
+   "value": "100 GB/s",
+   "unit": "per direction per port",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NVL72 GB200/GB300",
+   "quote": "port provides 100 GB/s per direction.",
+   "table": null,
+   "note": null,
+   "where": "Congestion-Aware Scheduling"
+  }
+ ],
+ "limits": [
+  "Almost all numbers are illustrative or 'approximate' (Tables 19-2, 19-3); no experiment, model, hardware, dataset or seed is given.",
+  "Quality deltas in Table 19-2 are model- and kernel-dependent by the author's own note.",
+  "Cited speedups (SARATHI, early-exit, DASH, LazyLLM, FlashAttention-3) are quoted without reference entries; only short links.",
+  "RL-based online tuning is described as not yet mainstream; additional techniques are experimental.",
+  "Product/API details (Transformer Engine MXFP8/NVFP4, HF cache classes, NCCL variables) are tied to 'as of this writing' and Blackwell-era software.",
+  "Code listings are truncated in the extracted text (lines cut at column width); several snippets (KV quantized-cache chunk loop, OOM allocator fallback, RL loop, adaptive chunk size, monkey patch, TE delayed scaling) are absent from the cached text."
+ ],
+ "practices": [
+  "Run multiple presharded model instances (TP-only for short latency-sensitive requests, TP+PP for long prompts) and route per request; do not reshard on the fly (Adaptive Parallelism).",
+  "Use the lowest precision that holds accuracy and fall back to higher precision when confidence drops; calibrate entropy/margin thresholds on a validation set with hysteresis (Dynamic Precision).",
+  "Prefer BF16 over FP16 for latency-critical decode on Blackwell; use Transformer Engine MXFP8 for FP8 and NVFP4 selectively for KV cache and light layers, since torch.autocast covers only FP16/BF16 (Dynamic Precision).",
+  "Warm up kernels at model load across extreme batch sizes and sequence lengths, cache the autotuned kernel choice keyed by workload signature (Kernel Autotuning).",
+  "Prefetch KV one layer ahead on a separate CUDA stream with pinned host buffers, and sync with events only at handoff; measure TTFT with NVTX (Speculative KV Prefetching).",
+  "Use HF cache_implementation='offloaded' as low-effort KV offload default; expect ~5-10% lower tokens/s (KV Prefetching).",
+  "Compress KV by quantization first; keep a recent full-precision window; trigger 8-bit above ~80% GPU memory and 4-bit under extreme pressure; add hysteresis and cooldown; swap policy at safe points (KV Compression).",
+  "Start with heuristics and add an RL agent only when stable; constrain actions, use soft latency-penalty reward, damping, shadow mode and a kill switch (RL Agents).",
+  "Separate long-lived allocations (weights) from short-lived (token buffers); consider cudaMallocAsync; always have an OOM fallback tier (Memory Allocation Switching).",
+  "Hot-swap kernels only behind feature flags, canary traffic and equivalence tests, with rollback if not faster on live data (Runtime Kernel Patching).",
+  "Prewarm CUDA Graph pools for common batch sizes using time-series forecasts (ARIMA, Prophet), on low-priority streams, and warm new instances before adding to traffic (Continuous Prewarming).",
+  "Treat prefill and decode as separate queues; serve decode first; chunk long prefills so a chunk takes ~50-100 ms; bucket prompts by length (~512-token buckets) (Adaptive Batching and Chunked Prefill).",
+  "Use homogeneous prefill/decode nodes unless the prefill:decode ratio is predictable (Adaptive Batching).",
+  "For small latency-sensitive reductions use tree all-reduce, for very large messages ring; stagger large collectives in waves; 2-4 simultaneous large transfers is the stated sweet spot (Congestion-Aware Scheduling)."
+ ],
+ "terms": [
+  {
+   "term": "Speculative KV prefetching",
+   "definition": "an optimization in which the system anticipates the data needed for the first token—and loads the necessary data into the GPU in advance",
+   "where": "Speculative KV Prefetching for Faster TTFT"
+  },
+  {
+   "term": "Time-to-first-token (TTFT)",
+   "definition": "measures how quickly the system can produce the first token of the model’s response",
+   "where": "Speculative KV Prefetching for Faster TTFT"
+  },
+  {
+   "term": "Chunked prefill",
+   "definition": "time-slices a big task (prefill) to create room for small tasks (decode) to execute in the pipeline gaps created by the chunks",
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "term": "Decode-maximal batching",
+   "definition": "bundling all ready decode requests into a launch that piggybacks on gaps between prefill chunks",
+   "where": "Adaptive Batching and Chunked Prefill Scheduling"
+  },
+  {
+   "term": "Pipeline bubbles",
+   "definition": "idle periods that occur while filling and draining pipeline stages",
+   "where": "Adaptive Parallelism Strategies"
+  },
+  {
+   "term": "Kernel autotuning",
+   "definition": "a runtime mechanism that selects—or even JIT-compiles—the optimal kernel variant for the current workload",
+   "where": "Kernel Autotuning"
+  },
+  {
+   "term": "Policy switching (KV)",
+   "definition": "the compression strategy can change based on the current context",
+   "where": "Real-Time KV Cache Compression and Policy Switching"
+  },
+  {
+   "term": "Dynamic precision switching",
+   "definition": "the inference engine adjusts the numerical precision at runtime based on model confidence or resource pressure",
+   "where": "Dynamic Precision Changes"
+  },
+  {
+   "term": "Wave scheduling",
+   "definition": "breaks communications into phased waves to reduce instantaneous load",
+   "where": "Congestion-Aware Scheduling"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SARATHI (chunked prefill, decode-maximal batching)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "credited for chunked prefill and piggybacking",
+   "quote": null
+  },
+  {
+   "work": "SpeCache (speculative KV caching)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Figure 19-3 example of speculative KV prefetch",
+   "quote": null
+  },
+  {
+   "work": "vLLM chunked prefill and scheduler",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as engine implementing these ideas",
+   "quote": null
+  },
+  {
+   "work": "Hugging Face Transformers OffloadedCache / QuantizedCache / HQQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "KV offload and quantization implementations",
+   "quote": null
+  },
+  {
+   "work": "FlashAttention and variants (FlashAttention-3)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "attention kernel switching by sequence length",
+   "quote": null
+  },
+  {
+   "work": "DeepSeek-R1",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "running example for parallelism sizing (256 experts, 37B active)",
+   "quote": null
+  },
+  {
+   "work": "LazyLLM",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "token pruning of KV",
+   "quote": null
+  },
+  {
+   "work": "DASH layer skipping",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MDP layer skipping",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA NVTAGS, NCCL, Transformer Engine",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tooling basis for topology mapping, collectives, FP8",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 19-1",
+   "caption": "Pipeline bubbles caused by PP",
+   "page": null,
+   "why": "Shows idle stage time that motivates TP-only routing for short requests"
+  },
+  {
+   "figure": "Fig 19-2",
+   "caption": "Preprovisioning two different hybrid-sharding pools (TP = 4, PP = 1 and TP = 2, PP = 1) for a given model across eight GPUs",
+   "page": null,
+   "why": "Layout of multiple presharded instances"
+  },
+  {
+   "figure": "Fig 19-3",
+   "caption": "Speculative decoding with SpeCache",
+   "page": null,
+   "why": "KV prefetch overlapped with compute"
+  },
+  {
+   "figure": "Fig 19-4",
+   "caption": "Different KV cache algorithms, including no caching (e.g., dense)",
+   "page": null,
+   "why": "Compression variants side by side"
+  },
+  {
+   "figure": "Fig 19-7",
+   "caption": "Benefits of chunked prefills for decode-maximal batching across four requests",
+   "page": null,
+   "why": "Shows decodes filling gaps between prefill chunks; directly relevant to prefill/decode note"
+  },
+  {
+   "figure": "Table 19-1",
+   "caption": "Summary of common inference traffic patterns mapped to the recommended parallelism strategy",
+   "page": null,
+   "why": "Traffic-to-parallelism lookup"
+  },
+  {
+   "figure": "Table 19-2",
+   "caption": "Approximate trade-offs of precision modes in LLM inference",
+   "page": null,
+   "why": "Memory/throughput/quality per precision mode"
+  }
+ ],
+ "code": [
+  {
+   "where": "Dynamic parallelism, choose_worker_pool",
+   "snippet": "if seq_len > 4096 or gpu_mem_util > 0.8:\n        return \"tp_pp_hybrid\"\n    if concurrent_reqs > 4:\n        return \"tensor_parallel\"\n    return \"tensor_parallel\"",
+   "verbatim": true
+  },
+  {
+   "where": "Dynamic precision decode loop",
+   "snippet": "enter_fp8_threshold: float = 6.0,  exit_fp8_threshold: float = 3.0,  reeval_interval: int = 8, alpha = 0.2",
+   "verbatim": true
+  },
+  {
+   "where": "Occupancy-aware tile",
+   "snippet": "size_t shared_mem_bytes = 3 * T * T * sizeof(float);",
+   "verbatim": true
+  },
+  {
+   "where": "HF KV offload",
+   "snippet": "out = model.generate(..., cache_implementation=\"offloaded\")",
+   "verbatim": true
+  },
+  {
+   "where": "RL reward",
+   "snippet": "reward = throughput - λ * max(0, latency - SLA)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors, year and venue are not printed in the extracted text; bib.authors is empty (book is O'Reilly 'AI Systems Performance Engineering'; author name not in text).",
+  "PDF text is a web-print of a book chapter; code listings are cut at column width and some listings are missing (appears after the 'Table of contents collapsed' marker; only some).",
+  "No embedded instructions found.",
+  "Page numbers not available in cached text; 'where' uses section names."
+ ]
+}

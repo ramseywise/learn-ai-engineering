@@ -1,0 +1,452 @@
+{
+ "schema": 1,
+ "key": "2310.06692",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zou-2023-generalizable-chain-thought-prompting-mixed.pdf",
+ "bib": {
+  "title": "Generalizable Chain-of-Thought Prompting in Mixed-task Scenarios with Large Language Models",
+  "authors": [
+   "Anni Zou",
+   "Zhuosheng Zhang",
+   "Hai Zhao",
+   "Xiangru Tang"
+  ],
+  "first_author": "Zou",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.06692",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63257,
+  "chars_total": 63257,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "How can CoT prompting be both general and strong when incoming questions come from mixed, unknown task types in arbitrary order?",
+ "hypothesis": "Routing each question to demonstrations of a matched type (and auto-building demos for unmatched types) closes the gap between zero-shot generality and few-shot performance.",
+ "contributions": [
+  "Pioneer the setting of mixed-task scenarios",
+  "Propose GeM-CoT, a generalizable CoT prompting mechanism for mixed-task scenarios that improves performance while achieving generality",
+  "Experiments on 33 datasets show performance and generality"
+ ],
+ "method": {
+  "summary": "GeM-CoT embeds the question with Sentence-BERT and matches it to the nearest demo in a typed demo pool by dot product; above a threshold it uses that type's demos for few-shot CoT, otherwise it runs Zero-Shot-CoT and caches the item. When the cache is large enough, OPTICS clusters it and large clusters yield 6 auto-built demos (k-means, Auto-CoT-style filtering) that join the pool.",
+  "task": "chain-of-thought reasoning in mixed-task scenarios (arithmetic, commonsense, symbolic, BBH)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "10 reasoning datasets (AQuA, MultiArith, AddSub, GSM8K, SingleEq, SVAMP, Last Letter, Coin Flip, StrategyQA, CSQA)",
+    "role": "eval",
+    "size": "AQuA 254, MultiArith 600, AddSub 395, GSM8K 1319, SingleEq 508, SVAMP 1000, CSQA 1221, StrategyQA 2290, Letter 500, Coin 500 (Table 7)",
+    "split": "full test sets as sized in Table 7; basis of original demo pool",
+    "source": "public benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "BBH (23 tasks)",
+    "role": "eval",
+    "size": "2000 randomly sampled questions after shuffling",
+    "split": "streaming, batches of 400 (Fig 4)",
+    "source": "Suzgun et al., 2022",
+    "preprocessing": "all data shuffled"
+   },
+   {
+    "name": "Pilot mixed set (Sec 3.2)",
+    "role": "eval",
+    "size": "100 examples",
+    "split": "shuffled questions from the ten tasks",
+    "source": "ten reasoning tasks following Kojima et al. 2023 and Zhang et al. 2023",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sentence-BERT",
+    "role": "retriever",
+    "params": null,
+    "architecture": "encoder Enc, dot-product similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "1.0",
+   "top_p": "1.0",
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Few-shot CoT with type-matched demos formatted 'Q: q, A: r, a' then 'Q: q_in, A:'; unmatched path uses 'Let's think step by step.'",
+   "retrieval": "Nearest demo by dot product of Sentence-BERT embeddings; match if top score >= S_thres",
+   "parameters": {
+    "S_thres": "0.35",
+    "th_ca (cache size to trigger update)": "200",
+    "th_cls (min cluster size)": "50",
+    "k (demos per new type)": "6",
+    "clustering": "OPTICS (density) then k-means within cluster, scikit-learn",
+    "demo filter": "question <= 60 tokens, rationale <= 5 steps"
+   },
+   "other": {
+    "Fig 4 streaming (read from Fig 4)": "batch size 400, five batches; accuracies in figure",
+    "API": "OpenAI API"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "fraction of questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-Shot",
+    "Few-Shot",
+    "Few-Shot-CoT",
+    "Auto-CoT",
+    "Zero-Shot-CoT",
+    "General-CoT (one random demo per pool type as a generic prompt)"
+   ],
+   "protocol": "Single runs reported; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "LLM-based type classifier demos (alternative to Type Matching)",
+    "text": "Q: Was Aristotle a member of the House of Lords?\nType: <commonsense, yes-no>",
+    "where": "Appendix C.3, Table 9 (six demos, one per category/form type)"
+   },
+   {
+    "purpose": "Zero-shot trigger",
+    "text": "A: Let's think step by step.",
+    "where": "Fig 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.S_thres",
+    "quote": "The threshold numbers Sthres, thca and thcls are set to 0.35, 200 and 50 respectively.",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GeM-CoT averages 82.3% on ten reasoning datasets with GPT-3.5-Turbo, above Few-Shot-CoT (81.4) and Auto-CoT (82.1), which need known task type.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. accuracy",
+   "value": 82.3,
+   "unit": "%",
+   "baseline_value": 82.1,
+   "n": null,
+   "setup": "Ten datasets, GPT-3.5-Turbo, mixed-task",
+   "quote": "GeM-CoT stands out by continually boosting the performance (i.e., 82.1%→82.3%)",
+   "note": null,
+   "where": "Table 3, Sec 5.2"
+  },
+  {
+   "claim": "Generic-prompt CoT baselines lose accuracy versus Auto-CoT (82.1 to 79.4 for Zero-Shot-CoT, 80.7 for General-CoT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. accuracy",
+   "value": 79.4,
+   "unit": "%",
+   "baseline_value": 82.1,
+   "n": null,
+   "setup": "Ten datasets, GPT-3.5-Turbo",
+   "quote": "while the general CoT techniques both witness average performance degradation (i.e., 82.1%→79.4/80.7%)",
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "With GPT-4, GeM-CoT averages 86.6 over AQuA, GSM8K, SVAMP versus 85.5 Few-Shot-CoT and 81.0 Zero-Shot-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg. accuracy",
+   "value": 86.6,
+   "unit": "%",
+   "baseline_value": 85.5,
+   "n": null,
+   "setup": "AQuA, GSM8K, SVAMP, GPT-4",
+   "table": "Table 4, row GeM-CoT(Ours), column Avg.",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Pilot: Few-Shot-CoT with gold demos (known source) scores 78.0 versus 66.0 for Zero-Shot-CoT on a 100-question mixed sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 78.0,
+   "unit": "%",
+   "baseline_value": 66.0,
+   "n": null,
+   "setup": "100 shuffled questions from ten tasks, GPT-3.5-Turbo inferred from Sec 5.1",
+   "quote": "substantially outperforms the zero-shot setting (78.0% →66.0%)",
+   "note": "Backbone for the pilot is not stated in Sec 3.2.",
+   "where": "Table 2, Sec 3.2"
+  },
+  {
+   "claim": "Naive few-shot with fixed single-dataset demos in mixed-task collapses to 27.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 27.0,
+   "unit": "%",
+   "baseline_value": 78.0,
+   "n": null,
+   "setup": "Same 100-question pilot",
+   "quote": "(e.g., 78.0% → 27.0%)",
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Single-source demos beat mixed-source demos in the pilot (19.0/20.0 to 26.0/27.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 26.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same pilot",
+   "quote": "(20.0/19.0% →26.0/27.0%)",
+   "note": "Quote lists mixed then single; values 26.0/27.0 are single-source.",
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Diversity-based demo selection beats similarity-based and random on AddSub (93.7 vs 90.1 and 92.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 93.7,
+   "unit": "%",
+   "baseline_value": 90.1,
+   "n": null,
+   "setup": "AddSub, GPT-3.5-Turbo",
+   "table": "Table 5, row GeM-CoT, column AddSub",
+   "note": "On StrategyQA similarity (64.1) and on AQuA random (52.0) are higher than GeM-CoT (63.5, 51.9).",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Replacing Type Matching with an LLM classifier gives comparable accuracy (93.4 AddSub, 64.5 Strategy) but costs API calls.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 93.4,
+   "unit": "%",
+   "baseline_value": 93.7,
+   "n": null,
+   "setup": "AddSub, GPT-3.5-Turbo",
+   "table": "Table 6, row w/ classifier, column AddSub",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Gold-type oracle does not beat GeM-CoT on AddSub (90.1) but is higher on Strategy (65.0 vs 63.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 90.1,
+   "unit": "%",
+   "baseline_value": 93.7,
+   "n": null,
+   "setup": "AddSub, GPT-3.5-Turbo",
+   "table": "Table 6, row w/ correct type, column AddSub",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "An LLM asked to classify questions by task name with 10 demos is only 42% accurate; category+form typing reaches 99%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Classification accuracy",
+   "value": 42,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Task classification, ten question-task demos",
+   "quote": "the classification accuracy is only 42%",
+   "note": "99% is read from Fig 10 axis labels (42, 80, 84, 99).",
+   "where": "App C.1, Fig 10"
+  },
+  {
+   "claim": "Threshold 0.35 gave the best type-matching F1/accuracy over scores in [0.2, 0.6].",
+   "kind": "measured",
+   "source": null,
+   "metric": "threshold",
+   "value": 0.35,
+   "unit": "similarity score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1200 questions from ten reasoning datasets",
+   "quote": "choosing 0.35 yields the best results in general across our tasks",
+   "note": null,
+   "where": "Sec 6.3, Fig 6"
+  },
+  {
+   "claim": "On BBH streaming, GeM-CoT overtakes Zero-Shot-CoT from batch 2; per-batch numbers appear only in Fig 4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBH, 2000 questions, five batches of 400",
+   "quote": "the superiority of GeM-CoT gets prominent from batch 2",
+   "note": null,
+   "where": "Fig 4, Sec 5.2"
+  }
+ ],
+ "limits": [
+  "Authors concede it does not improve the reasoning process itself; existing reasoning improvements could be layered on.",
+  "Authors concede more efficient demo selection in mixed-task scenarios is left open.",
+  "Wrong type matches can derail reasoning (App E.2, StrategyQA examples).",
+  "Single runs, no variance or seeds; only OpenAI models at temperature 1.0; code and prompts not released in text.",
+  "Mixed-task benchmark is a shuffle of public datasets with a pre-built demo pool from Wei et al. data; the 10 datasets seed the pool so are not unseen."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Mixed-task scenarios",
+   "definition": "the type of any incoming question is unknown; the input data comes from a set of mixed tasks; the questions come in an arbitrary order",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Few-Shot-CoT and source of gold demos",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Zero-Shot-CoT fallback path and baseline",
+   "quote": null
+  },
+  {
+   "work": "Auto-CoT (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Demo construction by clustering plus simple heuristics",
+   "quote": null
+  },
+  {
+   "work": "OPTICS (Ankerst et al.)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Density-based clustering of cache",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT (Reimers and Gurevych)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Encoder",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench Hard (Suzgun et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "23 tasks as unseen types",
+   "quote": null
+  },
+  {
+   "work": "OPRO (Yang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prompt optimisation, task-specific",
+   "quote": null
+  },
+  {
+   "work": "Active Prompt (Diao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Demo quality",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our proposed GeM-CoT mechanism.",
+   "page": 3,
+   "why": "Shows matched/unmatched paths and the cache-to-pool loop."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results with initial attempts showing the challenge of mixed-task scenarios.",
+   "page": 3,
+   "why": "Shows the collapse (78.0 to 19-27) of naive mixed few-shot."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 4.1",
+   "snippet": "D_match = 0 if S >= S_thres, 1 otherwise",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No venue printed (arXiv v3, 20 Feb 2024 stamp only).",
+  "Sec 3.2 pilot does not name the backbone model.",
+  "Table 3 text order scrambled by extraction; values cross-checked against Sec 5.2."
+ ]
+}

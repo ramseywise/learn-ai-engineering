@@ -34,7 +34,7 @@ The whole pillar follows one running example. Tallybook is a small invoicing pro
 ## Reading order
 
 1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) and [01b](notes/01b-index-structures-and-agentic-rag.md) for the map.
-2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module (06 runs over two parts, 06 and 06b).
+2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module (02 and 06 each run over two parts: 02 and 02b, 06 and 06b).
 3. Read 08–12 as case studies: Bayer's PRINCE stack (08 and 08b), then the production support agent's store comparison, cache, ablations and managed backends.
 4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary, and the [deck](slides/rag-retrieval.pptx) for review.
 
@@ -45,6 +45,7 @@ Notes 01 and 01b are the overview. Notes 02–07 are the course. Notes 08–12 a
 | 1 | [The RAG pipeline](notes/01-rag-pipeline.md) | Nine named architectures, pre-retrieval order, ingestion and parser tiers, chunking, hybrid retrieval, BM25 from scratch, PRINCE, monitoring |
 | 1b | [Index-time structures, agentic and conversational RAG](notes/01b-index-structures-and-agentic-rag.md) | RAPTOR, GraphRAG and filesystems, embed one thing and return another, agentic vs. single-pass RAG, multi-turn RAG, a similarity floor |
 | 2 | [Why RAG, and the augmented prompt](notes/02-why-rag-and-the-augmented-prompt.md) | The knowledge gap, retriever vs. LLM, why not stuff the prompt, the smallest RAG as an f-string, Assignment 1 news RAG |
+| 2b | [Training the retriever and the reader](notes/02b-training-the-retriever-and-the-reader.md) | Five ways to train the two halves, RETRO and InstructRetro, why kNN-LM works, RPT's self-retrieval, what readers do with new knowledge |
 | 3 | [Keyword, semantic and hybrid search](notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 (k1, b), embeddings and cosine, metadata filters, RRF, Recall@k / MRR / nDCG with worked numbers |
 | 4 | [Vector databases and ANN](notes/04-vector-databases-and-ann.md) | KNN vs. ANN, NSW and HNSW, the Weaviate API: collections, `near_text`, `bm25`, `hybrid`, rerank |
 | 5 | [Chunking and index-time structure](notes/05-chunking-query-parsing-and-reranking.md) | Why chunk, chunking strategies and overlap, chunking code, index small and return large, the Pro Git four-strategy experiment |

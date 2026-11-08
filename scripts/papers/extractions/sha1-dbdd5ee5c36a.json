@@ -1,0 +1,207 @@
+{
+ "schema": 1,
+ "key": "sha1:dbdd5ee5c36a",
+ "pdf": "ai-engineering/02-context-engineering/sources/ai-agents-with-mcp/ch04-mcp-clients-advanced-use-best-practices.pdf",
+ "bib": {
+  "title": "Chapter 4. MCP Clients: Advanced Use and Best Practices (AI Agents with MCP, O'Reilly early release)",
+  "authors": [],
+  "first_author": "Stratis",
+  "year": null,
+  "venue": "O'Reilly early release book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 47531,
+  "chars_total": 47531,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How does an MCP client implement logging, sampling, roots, elicitation, multi-model and multi-server support, and which practices make a client production-ready?",
+ "hypothesis": null,
+ "contributions": [
+  "Python SDK client callbacks for logging, sampling, roots and elicitation",
+  "Model-neutral InternalTool translation",
+  "ClientSessionGroup for several servers",
+  "Best practices: authentication, resumable connections, pagination"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Servers may ignore roots, so roots are not a security measure.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "Roots are not a strong security measure, and should not be used as such.",
+   "table": null,
+   "note": null,
+   "where": "Supporting Roots"
+  },
+  {
+   "claim": "Clients that offer sampling should require human approval before the LLM call and before the reply goes back.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "You should implement a HITL workflow to get user approval before sending a\nmessage to the LLM and before returning the response to the server.",
+   "table": null,
+   "note": null,
+   "where": "Supporting Sampling"
+  },
+  {
+   "claim": "A client must advertise any capability it supports; in the Python SDK passing the callback does this.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "you are required to advertise that your client does provide them",
+   "table": null,
+   "note": null,
+   "where": "Providing MCP Client Capabilities"
+  },
+  {
+   "claim": "Elicitation replies are accept, decline or cancel; decline and cancel carry no content.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "the client\ncan respond with one of three types of response types: accept, decline, or cancel.",
+   "table": null,
+   "note": null,
+   "where": "Supporting Elicitations"
+  },
+  {
+   "claim": "A ClientSessionGroup cannot hold two primitives with the same name; component_name_hook renames to avoid collisions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "you cannot have primitives\nwith the same name in your ClientSessionGroup",
+   "table": null,
+   "note": null,
+   "where": "Using Multiple Servers"
+  },
+  {
+   "claim": "Streamable HTTP connections can resume from the last SSE event id.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "Luckily, streamable\nHTTP connections are resumable",
+   "table": null,
+   "note": null,
+   "where": "Resuming Connections"
+  },
+  {
+   "claim": "Only list methods paginate, via nextCursor.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter text on the MCP Python SDK; no experiment",
+   "quote": "Currently, only the\nlist functions support pagination",
+   "table": null,
+   "note": null,
+   "where": "Paginating Results"
+  }
+ ],
+ "limits": [
+  "Early-release draft, raw and unedited; no experiments or measurements.",
+  "Code examples are simplified: the sampling and roots handlers lack the HITL and validation the chapter says are required.",
+  "Written against one Python SDK version; SDK names and spec revisions have likely moved on.",
+  "Author name and year are not printed in the PDF text."
+ ],
+ "practices": [
+  "Implement HITL approval before and after a sampling request, respect model preferences, rate limit (Supporting Sampling).",
+  "Do not treat roots as a security boundary; host application keeps the final say (Supporting Roots).",
+  "Roots: validate URIs against path traversal, enforce access controls, monitor accessibility, get user consent (Supporting Roots).",
+  "Elicitation: let user accept/decline/cancel, validate against schema, name the requesting server, rate limit (Supporting Elicitations).",
+  "Keep the client model-neutral by translating MCP tools to each model family's format in a host-side class (Supporting Multiple Models).",
+  "Use ClientSessionGroup for several servers and a name hook for collisions (Using Multiple Servers).",
+  "stdio auth: read credentials from environment; streamable HTTP: OAuth 2.1 client library (Security).",
+  "Keep session ID and last event ID and send Last-Event-ID to resume (Resuming Connections).",
+  "Follow nextCursor to page list results (Paginating Results)."
+ ],
+ "terms": [
+  {
+   "term": "sampling",
+   "definition": "a client capability that allows MCP server to make use of whichever LLM the client and its host application is connected to",
+   "where": "Supporting Sampling"
+  },
+  {
+   "term": "roots",
+   "definition": "used by clients to indicate which files and directories a connected MCP server has access to",
+   "where": "Supporting Roots"
+  },
+  {
+   "term": "elicitations",
+   "definition": "allows MCP servers to request additional information from users via the client",
+   "where": "Supporting Elicitations"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MCP specification and Python SDK (mcp)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "chapter documents the SDK client API",
+   "quote": null
+  },
+  {
+   "work": "RFC 5424 syslog severity levels",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MCP log levels follow it",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "Example 4-3",
+   "snippet": "if roots_result is None:\n    return ErrorData(code=-32602, message=\"No valid fil...",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code listings are truncated at line width in the PDF text; web-page chrome at the end.",
+  "Authors, year not printed; first_author from the repo note, not the PDF.",
+  "Bug in Example 4-3: roots_result is a list, so 'is None' never fires on an empty list.",
+  "Example 4-2 hardcodes model='claude-sonnet-4-0' and ignores modelPreferences and systemPrompt.",
+  "Text says a client can connect to only one server, yet Example 4-7 get_resource still checks _connected which the text says was removed.",
+  "Text says the server includes Last-Event-ID in a GET; the code sends it from the client as a header."
+ ]
+}

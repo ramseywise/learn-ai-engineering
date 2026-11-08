@@ -1,0 +1,62 @@
+{
+ "schema": 1,
+ "key": "sha1:cf7d1626d342",
+ "pdf": "ai-engineering/02-context-engineering/sources/ai-agents-with-mcp/ch02-introduction-model-context-protocol.pdf",
+ "bib": {"title": "Chapter 2. An Introduction to the Model Context Protocol (AI Agents with MCP)", "authors": ["not printed in the extracted text"], "first_author": "unknown", "year": null, "venue": "O'Reilly Early Release book chapter", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 45647, "chars_total": 45647, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "What is the origin of MCP, what problems does it solve, how is it used in practice, and how is its architecture put together?",
+ "hypothesis": null,
+ "contributions": ["Origin story of MCP and its LSP inspiration", "Problems addressed: integrations (MxN), distribution, 2-way communication", "Architecture walk-through: host, client, server, transport, lifecycle, utilities, tooling"],
+ "method": null,
+ "results": [
+  {"claim": "The community Discord had about 1000 members at time of writing.", "kind": "reported", "source": "author's observation at time of writing (Early Release)", "metric": "Discord members", "value": "around 1000", "unit": "members", "baseline_value": null, "n": null, "setup": "Community-run MCP Discord, as of writing (2025)", "quote": "has around 1000 members as of this writing", "table": null, "note": null, "where": "Real-World Examples of MCP"},
+  {"claim": "The two MCP subreddits had over 70,000 combined subscribers.", "kind": "reported", "source": "author's observation", "metric": "subscribers", "value": "over 70,000", "unit": "subscribers", "baseline_value": null, "n": null, "setup": "r/mcp and r/modelcontextprotocol combined, at time of writing", "quote": "over a combined 70,000", "table": null, "note": null, "where": "Real-World Examples of MCP"},
+  {"claim": "The official specification repo had over 4,800 GitHub stars and over 150 active issues.", "kind": "reported", "source": "author's observation", "metric": "GitHub stars", "value": "over 4,800", "unit": "stars", "baseline_value": null, "n": null, "setup": "Official MCP specification repo, at time of writing", "quote": "has over 4,800", "table": null, "note": "over 150 active issues also stated", "where": "Real-World Examples of MCP"},
+  {"claim": "More than 350 official MCP servers and just under 650 community servers were listed.", "kind": "reported", "source": "official MCP server repository, per the author", "metric": "official servers", "value": "more than 350", "unit": "servers", "baseline_value": null, "n": null, "setup": "Official server repository listing at time of writing", "quote": "more than 350 official MCP servers", "table": null, "note": "community: just under 650; official client list: 76", "where": "Real-World Examples of MCP"},
+  {"claim": "MCP reduces the MxN integration problem to M+N.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "M LLMs by N integrations; shared protocol means connectors only target MCP servers", "quote": null, "table": null, "note": "Figures 1-4 and 1-5 are in the previous chapter", "where": "The Genesis of MCP"},
+  {"claim": "Tool choice accuracy can drop as the number of tools grows (name collisions, overlapping definitions); evaluate before and after adding servers. No data given.", "kind": "claim", "source": null, "metric": "tool choice accuracy", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Agent with many MCP servers; suggests Promptfoo", "quote": null, "table": null, "note": null, "where": "Sidebar: Too Many Tools"}
+ ],
+ "limits": ["Early Release draft, raw and unedited; no experiments, numbers are ecosystem counts at time of writing and have dated.", "Origin story is secondhand from a Latent Space Podcast interview.", "Roots are advisory: spec says servers should, not must, respect them, so roots are not a security control.", "Authors/year not printed in the extracted text; some figure numbering is inconsistent (sampling figure referenced as 2-3 but is 2-4; Inspector referenced as 2-7 but captioned 2-5)."],
+ "practices": [
+  "Evaluate tool choice accuracy (e.g. with Promptfoo) before and after adding MCP servers, since many tools can degrade accuracy (sidebar Too Many Tools).",
+  "Always support the stdio transport; add Streamable HTTP if deploying a remote server or supporting remote servers (sidebar Supporting Multiple Transports).",
+  "Do not treat roots as access control; use a proper access control system (The Host Application and MCP Client).",
+  "Treat MCP servers as attack surface (e.g. rug pull) and mitigate for local and remote servers (Warning box, The MCP Server).",
+  "Treat transports as a security boundary; build a custom transport if security needs exceed built-ins (The MCP Transport).",
+  "Transport developers who include authorization must implement OAuth 2.1 (Connection Lifecycle section).",
+  "Both client and server must support the optional utilities (cancellation, ping, progress) for them to work (Note box)."
+ ],
+ "terms": [
+  {"term": "Tool", "definition": "units of deterministic code (typically functions) that are called and executed by the LLM; the server building block for actions", "where": "Integrations or Tools sidebar; The MCP Server"},
+  {"term": "Integration", "definition": "a more general term that includes tools but also anything else, such as data sources as prompt context, that can be integrated into an LLM request", "where": "Integrations or Tools sidebar"},
+  {"term": "Resource", "definition": "data such as text files, blob files, database schemas, code documentation; the nouns to tools' verbs", "where": "The MCP Server"},
+  {"term": "Prompt (server)", "definition": "language model prompts provided by the server and controlled by the host application, which decides when and how to use them", "where": "The MCP Server"},
+  {"term": "Host application", "definition": "any application that hosts an MCP client and uses it to extend its capabilities by interacting with MCP servers", "where": "The Host Application and MCP Client"},
+  {"term": "MCP client", "definition": "the specific code within the host application that connects to MCP servers and communicates with them; keeps a 1:1 connection with a single server", "where": "Client or Client sidebar"},
+  {"term": "Sampling", "definition": "allows a server to make calls to the host application's language model", "where": "The Host Application and MCP Client"},
+  {"term": "Roots", "definition": "allow clients to mark specific parts of the filesystem that a connected server has access to", "where": "The Host Application and MCP Client"},
+  {"term": "Elicitation", "definition": "allow the server to reach back into the host application via the client and request input from the user", "where": "The Host Application and MCP Client"},
+  {"term": "Transport", "definition": "implements the protocol's communication layer; defaults are stdio (local, stateless) and Streamable HTTP (remote, optionally stateful); messages are always JSON-RPC", "where": "The MCP Transport"},
+  {"term": "Connection lifecycle", "definition": "Initialization (version and capability negotiation), Operation (request/response loop), Shutdown (client terminates, transport communicates it)", "where": "The MCP Connection Lifecycle"},
+  {"term": "Message types", "definition": "requests (either side), responses (result or error), notifications (one-way)", "where": "The MCP Transport"},
+  {"term": "Server utilities", "definition": "completions, logging, pagination", "where": "The MCP Server"},
+  {"term": "Protocol utilities", "definition": "cancellation, ping, progress reporting, usable by both clients and servers", "where": "Protocol Utilities & Other Developer Tools"},
+  {"term": "Rug pull", "definition": "an originally safe server is made malicious by the server's owner", "where": "Warning box, The MCP Server"}
+ ],
+ "lineage": [
+  {"work": "Language Server Protocol (Microsoft, standardized 2016)", "year": 2016, "arxiv": null, "relation": "extends", "note": "MCP's direct design inspiration: JSON-RPC, host/client/server split", "quote": null},
+  {"work": "Latent Space Podcast interview with David Soria Parra and Justin Spahr-Summers", "year": null, "arxiv": null, "relation": "related", "note": "Source of the origin story", "quote": null},
+  {"work": "MCP specification 2025-03-26, Streamable HTTP transport", "year": 2025, "arxiv": null, "relation": "uses-method", "note": "Cited for the remote transport", "quote": null},
+  {"work": "OAuth 2.1", "year": null, "arxiv": null, "relation": "uses-method", "note": "Required for transport-level authorization", "quote": null},
+  {"work": "Promptfoo", "year": null, "arxiv": null, "relation": "related", "note": "Suggested for evaluating tool choice accuracy", "quote": null},
+  {"work": "FastMCP", "year": null, "arxiv": null, "relation": "related", "note": "v1 incorporated into the official Python SDK", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2-1", "caption": "MCP's connection lifecycle consists of three phases: Initialization, operation, and disconnection.", "page": null, "why": "Shows the bidirectional request/response sequence per phase"},
+  {"figure": "Fig 2-3", "caption": "The MCP architecture consists of a host application with a client and 1 or more MCP servers (only one client instance may connect to a single server).", "page": null, "why": "Host/client/server layout and the reversed direction for sampling and elicitation"},
+  {"figure": "Fig 2-4", "caption": "This sequence diagram shows an example sampling workflow.", "page": null, "why": "Sales-report example of a server using the host LLM"}
+ ],
+ "code": [],
+ "problems": ["Author names, year and page numbers are not in the extracted text; the text ends with scraped O'Reilly site navigation (ignored).", "Section map from extract.py was empty.", "Figures are images; only captions are in the text.", "The text contains no instructions aimed at the reader/agent."]
+}

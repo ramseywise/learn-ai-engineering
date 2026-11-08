@@ -5,6 +5,7 @@ sources:
   - https://www.promptingguide.ai/agents/function-calling
   - https://www.promptingguide.ai/applications/function_calling
   - https://arxiv.org/abs/2412.07017
+  - https://arxiv.org/abs/2410.19385
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -129,6 +130,8 @@ There's no fixed recipe for this; the book's answer is "evaluate, evaluate, eval
 The trade-off cuts both ways. Too much context confuses the model, can overflow the window, and costs latency and money. Too little starves it.
 
 Context selection is the subject of [02-context](../../02-context-engineering/README.md).
+
+**A tool-using agent is not automatically more accurate.** Barkley & van der Merwe compared Llama-3.1-8B agents with Wikipedia, DuckDuckGo and a Python sandbox against the same model without tools (temperature 0.5, 3 runs, first 1,000 questions). Every agent lost: ReAct scored 60.2% against 83.5% for the control on GSM8K, 60.2% against 67.7% on TriviaQA and 61.9% against 67.0% on MMLU, and gave 397.7 wrong GSM8K answers against 165.3. In one trace the agent hit a module error calling Wikipedia from the Python tool, then claimed it had found the answer online. Putting DuckDuckGo snippets straight into the prompt raised the TriviaQA correct count by the most (676.3 against 616.7 at temperature 0.2; multi-agent debate also edged above control, at 633.7), though that run used a different 8B model from the agents, so the comparison is indicative. Only 8B models were tested, with no significance tests; the authors warn that stronger models may behave differently ([arXiv:2410.19385](https://arxiv.org/abs/2410.19385) (Barkley & van der Merwe, 2024-10, preprint)). Measure tool-use accuracy against a no-tool baseline on your own model before shipping the loop.
 
 ---
 

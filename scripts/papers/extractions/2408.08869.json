@@ -1,0 +1,390 @@
+{
+ "schema": 1,
+ "key": "2408.08869",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/prabhu-2024-pedal.pdf",
+ "bib": {
+  "title": "PEDAL: Enhancing Greedy Decoding with Large Language Models using Diverse Exemplars",
+  "authors": [
+   "Sumanth Prabhu"
+  ],
+  "first_author": "Prabhu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2408.08869",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 30863,
+  "chars_total": 30863,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can diverse in-context exemplars with greedy decoding, aggregated by an LLM, beat plain greedy decoding in accuracy at lower output-token cost than Self-Consistency?",
+ "hypothesis": "Greedy decoding over prompts with diverse exemplars, aggregated as in USC, gives better accuracy than greedy decoding and lower inference cost than SC-based methods.",
+ "contributions": [
+  "PEDAL, a hybrid self-ensembling approach combining diverse-exemplar prompts and LLM-based aggregation",
+  "Experiments on SVAMP and ARC-Challenge showing higher accuracy than greedy and fewer output tokens than USC"
+ ],
+ "method": {
+  "summary": "Build several ICL prompts by randomly sampling exemplars with different seeds, generate one greedy response per prompt, then have the same LLM pick the most consistent response (USC-style aggregation). Compared with greedy, USC, and a unified-diverse-exemplars prompt on SVAMP and ARC-Challenge using two 7-8B instruct models.",
+  "task": "arithmetic word problems and multiple-choice science QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "300 validation samples",
+    "split": "validation",
+    "source": "Patel et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ARC-Challenge",
+    "role": "eval",
+    "size": "345 validation samples",
+    "split": "validation, 30% sampled at random",
+    "source": "Clark et al., 2018",
+    "preprocessing": "restricted to ARC-Challenge partition"
+   }
+  ],
+  "models": [
+   {
+    "name": "Qwen2-7B-Instruct",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "quantization": "4-bit"
+    }
+   },
+   {
+    "name": "Llama-3-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "quantization": "4-bit"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy for PEDAL candidates and baseline; USC uses SC sampling (settings not given)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 random seeds, mean +- std reported; USC 3 intermediate outputs; PEDAL 3 diverse prompts (2 and 4 in ablation)",
+   "prompting": "3 exemplars per ICL prompt; exemplars randomly sampled per seed; USC uses CoT prompting",
+   "retrieval": null,
+   "parameters": {
+    "num_diverse_prompts": "3 (ablation 2, 4)",
+    "exemplars_per_prompt": "3",
+    "aggregation": "same LLM, USC-style selection of most consistent response",
+    "quantization": "4-bit (Dettmers et al., 2023)"
+   },
+   "other": {
+    "exemplar_source": "not stated",
+    "SC sampling temperature": null
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "exact match (per conclusion); averaged over 3 seeds",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Token count",
+     "definition": "input and output tokens consumed by strategy",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Greedy Decoding",
+    "USC (Universal Self-Consistency, CoT prompting, 3 outputs)",
+    "UDE (Unified Diverse Exemplars: all diverse exemplars in a single ICL prompt, greedy)"
+   ],
+   "protocol": "3 seeds, mean +- std; no significance test"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public datasets SVAMP and ARC"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PEDAL beats greedy on SVAMP with Qwen2 (77.89 vs 76.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.89,
+   "unit": "%",
+   "baseline_value": 76.0,
+   "n": null,
+   "setup": "SVAMP, Qwen2-7B-Instruct, 3 seeds, 3 prompts",
+   "quote": "PEDAL achieves an average accu- racy of 77.89%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "PEDAL beats greedy on SVAMP with Llama3 (74.11 vs 70.22), and also beats USC (72.99).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.11,
+   "unit": "%",
+   "baseline_value": 70.22,
+   "n": null,
+   "setup": "SVAMP, Llama-3-8B-Instruct, 3 seeds",
+   "quote": "PEDAL achieves an average accu- racy of 74.11%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "USC is more accurate than PEDAL on SVAMP with Qwen2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.33,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVAMP, Qwen2, 3 seeds",
+   "quote": "USC achieves the accuracy of 80.33%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "On SVAMP Qwen2, USC uses 502.75 output tokens versus 191.99 for PEDAL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "output tokens",
+   "value": 191.99,
+   "unit": "tokens",
+   "baseline_value": 502.75,
+   "n": null,
+   "setup": "SVAMP, Qwen2, mean over 3 seeds, PEDAL output tokens",
+   "quote": null,
+   "table": "Table 3, row Qwen2 PEDAL, column Output",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "On SVAMP Llama3, USC uses 923.56 output tokens versus 197.72 for PEDAL; PEDAL input tokens are higher (1261.51 vs 693.46).",
+   "kind": "measured",
+   "source": null,
+   "metric": "output tokens",
+   "value": 197.72,
+   "unit": "tokens",
+   "baseline_value": 923.56,
+   "n": null,
+   "setup": "SVAMP, Llama3, mean over 3 seeds, PEDAL output tokens",
+   "quote": null,
+   "table": "Table 3, row Llama3 PEDAL, column Output",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PEDAL beats greedy on ARC-Challenge with Llama3 (78.55 vs 76.52) while USC falls to 71.88, below greedy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.55,
+   "unit": "%",
+   "baseline_value": 76.52,
+   "n": null,
+   "setup": "ARC-Challenge, Llama-3-8B-Instruct, 3 seeds",
+   "quote": "PEDAL shows a 2.03% improvement with a score of 78.55%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "On ARC with Qwen2, PEDAL gains only 0.39 points over greedy (83.77 vs 83.38); UDE (84.06) and USC (84.35) are higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.77,
+   "unit": "%",
+   "baseline_value": 83.38,
+   "n": null,
+   "setup": "ARC-Challenge, Qwen2, 3 seeds",
+   "quote": "with an average accuracy of 83.77%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "On ARC Qwen2, PEDAL uses 99.47 output tokens versus 668.71 for USC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "output tokens",
+   "value": 99.47,
+   "unit": "tokens",
+   "baseline_value": 668.71,
+   "n": null,
+   "setup": "ARC-Challenge, Qwen2, mean over 3 seeds",
+   "quote": null,
+   "table": "Table 5, row Qwen2 PEDAL, column Output",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Number of prompts on SVAMP/Qwen2: accuracy 77.0 (2), 77.89 (3), 78.22 (4); no clear pattern on ARC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.22,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVAMP, Qwen2, 4 prompts, 3 seeds",
+   "quote": null,
+   "table": "Table 6, row 4, column SVAMP",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Interpolated single-CoT output tokens vs PEDAL: PEDAL likely cheaper except possibly Qwen2 on SVAMP; authors call this preliminary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interpolation from Tables 3 and 5, not measured",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  }
+ ],
+ "limits": [
+  "Only two small datasets (300 and 345 items) chosen so exact match works; free-form generation is future work.",
+  "USC underperforms greedy on ARC with Llama3 (71.88 vs 76.52); authors leave this unexplained.",
+  "CoT comparison is a preliminary interpolation, not a run; PEDAL may cost more than CoT on SVAMP/Qwen2.",
+  "PEDAL uses more input tokens than USC in most settings; cost claim counts output tokens only.",
+  "Gains over greedy are small relative to seed std on some cells (ARC Qwen2 +0.39 vs std 0.47-0.55); no significance test.",
+  "Not stated: sampling temperature for USC, exemplar source, max tokens, prompt text, code release."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PEDAL",
+   "definition": "Prompts based on Exemplar Diversity Aggregated using an LLM",
+   "where": "Abstract"
+  },
+  {
+   "term": "UDE",
+   "definition": "Unified Diverse Exemplars: all diverse exemplars combined into a single ICL prompt run with greedy decoding",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Universal Self-Consistency for LLM generation",
+   "year": 2023,
+   "arxiv": "2311.17311",
+   "relation": "extends",
+   "note": "aggregation step follows USC; also a baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-Consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "SC outputs are the cost comparison",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting elicits reasoning",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "related",
+   "note": "CoT compared by interpolation",
+   "quote": null
+  },
+  {
+   "work": "Making language models better reasoners with step-aware verifier (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "diverse exemplar prompt construction; PEDAL drops the trained verifier",
+   "quote": null
+  },
+  {
+   "work": "SVAMP (Patel et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ARC (Clark et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Qwen2 technical report (Yang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "LLaMA / Llama-3 (Touvron et al.)",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "evaluates",
+   "note": "cited as Touvron 2023 for Llama-3-8B-Instruct",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "High level overview of PEDAL",
+   "page": 2,
+   "why": "pipeline: diverse-exemplar prompts, greedy decoding, LLM aggregation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Paper cites Touvron et al. 2023 (LLaMA) for Llama-3, so the model citation is loose.",
+  "Source text contains no embedded instructions.",
+  "Table text extracted as separate lines; cell values checked by order."
+ ]
+}

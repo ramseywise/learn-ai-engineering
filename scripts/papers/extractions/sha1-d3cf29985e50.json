@@ -1,0 +1,319 @@
+{
+ "schema": 1,
+ "key": "sha1:d3cf29985e50",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch06-fine-tuning-for-classification.pdf",
+ "bib": {
+  "title": "6 Fine-tuning for classification (chapter of Build a Large Language Model From Scratch)",
+  "authors": [],
+  "first_author": null,
+  "year": null,
+  "venue": "book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53391,
+  "chars_total": 53391,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you adapt a pretrained GPT-style LLM into a spam / not-spam classifier by replacing the output head and fine-tuning on labelled data?",
+ "hypothesis": null,
+ "contributions": [
+  "Contrasts instruction fine-tuning with classification fine-tuning",
+  "Worked example: replace the 50,257-way output layer with a 2-way head, fine-tune last block + final LayerNorm, evaluate accuracy"
+ ],
+ "method": {
+  "summary": "Loads pretrained GPT-2 small, replaces the 50,257-way out_head with a 2-way linear layer, freezes all but the head, last transformer block and final LayerNorm, and fine-tunes with cross-entropy on the last-token logits for 5 epochs.",
+  "task": "binary text classification (spam detection)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SMS Spam Collection",
+    "role": "both",
+    "size": "5,572 messages (4,825 ham, 747 spam); balanced to 747 per class",
+    "split": "70% train / 10% validation / 20% test; 130 train, 19 val, 38 test batches of 8",
+    "source": "UCI repository (archive.ics.uci.edu)",
+    "preprocessing": "undersample ham with random_state=123; labels ham=0 spam=1; GPT-2 tiktoken; pad with 50256 to longest training length (120 tokens); shuffle random_state=123"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 small (124M)",
+    "role": "base",
+    "params": "124M",
+    "architecture": "decoder-only transformer",
+    "init_from": "OpenAI GPT-2 pretrained weights",
+    "tokenizer": "tiktoken gpt2",
+    "vocab": "50257",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "1024",
+    "other": {
+     "drop_rate": "0.0",
+     "qkv_bias": "True",
+     "new_head": "Linear(768, 2)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on last-token logits (2 classes)",
+   "optimizer": "AdamW",
+   "lr": "5e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "8",
+   "steps": "inferred: 130 batches x 5 epochs (last logged step 600)",
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": "120 tokens (padded)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.0",
+   "regularisation": null,
+   "hardware": "M3 MacBook Air (about 6 min); V100 or A100 under half a minute",
+   "compute": null,
+   "wall_clock": "5.65 minutes",
+   "seeds": "torch.manual_seed(123)",
+   "other": {
+    "trainable": "out_head, last transformer block, final_norm",
+    "eval_freq": "50",
+    "eval_iter": "5",
+    "drop_last_train": "True",
+    "total_steps": "650 derived"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over 2 logits of last token",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run",
+   "prompting": "none for classifier; baseline prompt 'Is the following text 'spam'? Answer with 'yes' or 'no': ...'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "classification accuracy",
+     "definition": "fraction of correct argmax predictions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "cross-entropy loss",
+     "definition": "loss on last-token logits",
+     "unit": "nats",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "untrained head (about 50% accuracy)"
+   ],
+   "protocol": "Full-set accuracy on train/val/test after training; in-training estimates on 5 batches"
+  },
+  "availability": {
+   "code": "listings in chapter; repo URL not given in text",
+   "weights": null,
+   "data": "UCI SMS Spam Collection"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot spam query to pretrained model",
+    "text": "Is the following text 'spam'? Answer with 'yes' or 'no': 'You are a winner you have been specially selected to receive $1000 cash or a $2000 award.'",
+    "where": "Sec 6.4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Before fine-tuning, the pretrained model with a random 2-way head is near chance on training accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training accuracy",
+   "value": "46.25",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8; estimated from 10 batches",
+   "quote": "Training accuracy: 46.25%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.6"
+  },
+  {
+   "claim": "Initial training loss before fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "loss",
+   "value": "2.453",
+   "unit": "cross-entropy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8; 5 batches",
+   "quote": "Training loss: 2.453",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.6"
+  },
+  {
+   "claim": "Full-set training accuracy after 5 epochs of fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training accuracy",
+   "value": "97.21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8",
+   "quote": "Training accuracy: 97.21%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.7"
+  },
+  {
+   "claim": "Full-set validation accuracy after fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation accuracy",
+   "value": "97.32",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8",
+   "quote": "Validation accuracy: 97.32%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.7"
+  },
+  {
+   "claim": "Full-set test accuracy after fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "95.67",
+   "unit": "%",
+   "baseline_value": "48.75 (before fine-tuning, 10 batches)",
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8",
+   "quote": "Test accuracy: 95.67%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.7"
+  },
+  {
+   "claim": "Fine-tuning took about 5.65 minutes on the author's laptop; under half a minute on V100/A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "5.65",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Balanced SMS Spam Collection (747 spam + 747 ham), GPT-2 small 124M with new 2-way head, last block + final LayerNorm + head trainable, AdamW lr 5e-5, 5 epochs, batch 8; M3 MacBook Air",
+   "quote": "Training completed in 5.65 minutes.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.7"
+  }
+ ],
+ "limits": [
+  "Single run, single seed (torch.manual_seed(123)); no variance reported.",
+  "Accuracy only; no precision/recall/F1 although dataset undersampled to balance.",
+  "Per-epoch accuracies in training log use only 5 batches (eval_iter=5), so are noisy.",
+  "Layer-choice experiments are deferred to appendix B, not in this chapter.",
+  "The pretrained model without instruction tuning cannot follow the spam prompt (Sec 6.4), shown by one example only.",
+  "Exercises 6.1-6.3 (longer context, full fine-tune, first token) are left to the reader."
+ ],
+ "practices": [
+  "Classification fine-tuning needs less data and compute than instruction fine-tuning but is confined to its trained classes (Sec 6.1).",
+  "Balance imbalanced classes by undersampling (here 747 per class) to keep the dataset small (Sec 6.2).",
+  "Split 70/10/20 train/validation/test (Sec 6.2).",
+  "Pad every message with token 50256 to the longest training sequence rather than truncating to the shortest (Sec 6.3).",
+  "Replace the output head and fine-tune the head, last transformer block and final LayerNorm; freeze the rest (Sec 6.5).",
+  "Use the logits of the last token only, since under the causal mask it sees all prior tokens (Sec 6.5).",
+  "Use cross-entropy as a differentiable proxy for non-differentiable accuracy (Sec 6.6).",
+  "Five epochs is a reasonable starting point; adjust by watching train/val loss gap (Sec 6.7).",
+  "To close a val/test gap, raise dropout or weight decay (Sec 6.7)."
+ ],
+ "terms": [
+  {
+   "term": "classification fine-tuning",
+   "definition": "the model is trained to recognize a specific set of class labels, such as 'spam' and 'not spam.'",
+   "where": "Sec 6.1"
+  },
+  {
+   "term": "instruction fine-tuning",
+   "definition": "training a language model on a set of tasks using specific instructions to improve its ability to understand and execute tasks described in natural language prompts",
+   "where": "Sec 6.1"
+  },
+  {
+   "term": "classification accuracy",
+   "definition": "the percentage of correct predictions across a dataset",
+   "where": "Sec 6.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SMS Spam Collection (UCI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "5,572 labelled text messages from the UCI repository",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 small (124M) pretrained weights (OpenAI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base model, loaded via load_weights_into_gpt from earlier chapters",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.9",
+   "caption": "Adapting a GPT model for spam classification by altering its architecture.",
+   "page": null,
+   "why": "Shows the head swap from 50,257 outputs to 2."
+  },
+  {
+   "figure": "Fig 6.12",
+   "caption": "The causal attention mechanism, where the attention scores between input tokens are displayed in a matrix format.",
+   "page": null,
+   "why": "Explains why only the last token is used."
+  },
+  {
+   "figure": "Fig 6.16",
+   "caption": "The model's training and validation loss over the five training epochs.",
+   "page": null,
+   "why": "Shows no overfitting gap."
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 6.7",
+   "snippet": "model.out_head = torch.nn.Linear(\n    in_features=BASE_CONFIG[\"emb_dim\"], \n    out_features=num_classes\n)",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 6.9",
+   "snippet": "logits = model(input_batch)[:, -1, :]     #1\nloss = torch.nn.functional.cross_entropy(logits, target_batch)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Chapter PDF does not print the book's author, year or publisher; bib authors/year left empty.",
+  "Code lines are truncated in the text layer; the weight_decay value in the AdamW call is cut off, so it is unknown.",
+  "Not about RLHF; it covers supervised classification fine-tuning only.",
+  "Table of contents collapsed at end of text; no embedded instructions found."
+ ]
+}

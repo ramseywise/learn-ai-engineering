@@ -285,7 +285,7 @@ A **stream** is an in-order queue. Work in different streams may overlap if reso
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 11-2*
 
-The program issues three batches, each H2D copy → kernel → D2H copy. The GPU has separate hardware queues for each direction of copy and for compute, so batch 1's upload overlaps batch 0's kernel, and batch 0's download overlaps batch 1's kernel. Nine steps finish in five time units. That needs **pinned host memory** (pageable memory hides a synchronous staging copy) and at least two copy engines (`asyncEngineCount`). The book says copy engines use only idle bandwidth; they do compete with kernels for HBM. If the SMs or HBM are already saturated, overlap only splits the time.
+The program issues three batches, each H2D copy → kernel → D2H copy. The GPU has separate hardware queues for each direction of copy and for compute, so batch 1's upload overlaps batch 0's kernel, and batch 0's download overlaps batch 1's kernel. If every stage takes the same time, the nine steps finish in five time slots instead of nine (three stages pipelined over three batches: 3 + 2). That needs **pinned host memory** (pageable memory hides a synchronous staging copy) and at least two copy engines (`asyncEngineCount`). The book says copy engines use only idle bandwidth; they do compete with kernels for HBM. If the SMs or HBM are already saturated, overlap only splits the time.
 
 Three stream rules:
 

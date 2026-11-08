@@ -1,0 +1,232 @@
+{
+ "schema": 1,
+ "key": "2406.12430",
+ "pdf": "generative-ai/02-rag-retrieval/sources/lee-2024-planrag.pdf",
+ "bib": {
+  "title": "PlanRAG: A Plan-then-Retrieval Augmented Generation for Generative Large Language Models as Decision Makers",
+  "authors": [
+   "Myeonghwa Lee",
+   "Seonho An",
+   "Min-Soo Kim"
+  ],
+  "first_author": "Lee",
+  "year": 2024,
+  "venue": "preprint (arXiv v1, 18 Jun 2024); the PDF names no venue",
+  "arxiv": "2406.12430",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 36500,
+  "chars_total": 36500,
+  "engine": "pymupdf",
+  "skipped": "reference list and Appendix A (data collection, prompts A.6, re-planning cases A.8) skimmed"
+ },
+ "type": "empirical",
+ "question": "Can an LLM make a best decision over a large database when it must first plan which analysis to run, and does planning before retrieving beat plain iterative RAG?",
+ "hypothesis": "Iterative RAG does not plan which analysis the decision needs; adding an explicit plan step and a re-plan step to a ReAct-style loop improves decisions.",
+ "contributions": [
+  "Decision QA: answer the best decision given a question, business rules and a database too large for the prompt",
+  "DQA benchmark: 301 question and database pairs (200 Locating, 101 Building) from Europa Universalis IV and Victoria 3, each in relational and graph form, with a simulator that records the ground-truth best decision",
+  "PlanRAG: plan, retrieve and answer, re-plan, in one LM prompted with Plan and Re-plan instructions added to ReAct"
+ ],
+ "method": {
+  "summary": "The LM gets question Q, schema S and business rules R and writes a plan of data analyses; it then issues SQL (MySQL) or Cypher (Neo4j) queries through LangChain, reads results, and either retrieves again, re-plans, or answers. Compared with single-turn RAG, iterative RAG (ReAct) and PlanRAG without re-planning.",
+  "task": "decision making over structured data",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "DQA",
+    "role": "eval",
+    "size": "301 pairs: Locating 200, Building 101; 602 databases (RDB and GDB); Locating averages 2038.8 rows per RDB table, Building 579.0",
+    "split": null,
+    "source": "extracted from game data, Paradox Interactive games",
+    "preprocessing": "simulator records the result of each decision to annotate the best one"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 decision maker",
+    "role": "reader",
+    "params": null,
+    "architecture": "GPT-4 (OpenAI 2023), temperature 0, LangChain",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot, ReAct with Plan and Re-plan instructions",
+   "retrieval": "SQL on MySQL, Cypher on Neo4j",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "answer semantically identical to the simulator's best decision",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SingleRAG-LM",
+    "IterRAG-LM",
+    "PlanRAG-LM w/o re-planning"
+   ],
+   "protocol": "zero-shot, single run, accuracy averaged over RDB and GDB"
+  },
+  "availability": {
+   "code": "https://github.com/myeon9h/PlanRAG",
+   "weights": null,
+   "data": "DQA benchmark, MIT licence"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PlanRAG-LM scores 64.3% (Locating) and 45.0% (Building) against 48.5% and 37.6% for IterRAG-LM and 30.5% and 2.5% for SingleRAG-LM; the abstract's 15.8% and 7.4% are percentage-point gaps.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "64.3 / 45.0",
+   "unit": "%",
+   "baseline_value": "48.5 / 37.6 (IterRAG-LM)",
+   "n": "200 Locating, 101 Building questions",
+   "setup": "GPT-4, temperature 0, zero-shot, single run, mean over RDB and GDB",
+   "table": "Table 4",
+   "note": "64.3-48.5 = 15.8 points; 45.0-37.6 = 7.4 points; the abstract writes them as percent",
+   "where": "5.2, Table 4"
+  },
+  {
+   "claim": "Removing re-planning drops PlanRAG-LM to 53.5% (Locating) and 44.1% (Building).",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "53.5 / 44.1",
+   "unit": "%",
+   "baseline_value": "64.3 / 45.0",
+   "n": null,
+   "setup": "Table 4",
+   "table": "Table 4",
+   "note": "-10.8 and -0.9 points",
+   "where": "5.2"
+  },
+  {
+   "claim": "SingleRAG-LM retrieved nothing from the database in over 60% of Locating and 95% of Building questions, because the query needed is too complex to write in one turn.",
+   "kind": "measured",
+   "metric": "failed retrieval rate",
+   "value": ">60% / >95%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' statement in 5.2",
+   "quote": "failed to retrieve any results from the database in over 60% of Locating and 95% of Building questions",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Missed data analysis (a critical value never queried) is 1.3% (Locating) and 21.8% (Building) for PlanRAG-LM against 3.3% and 33.2% for IterRAG-LM.",
+   "kind": "measured",
+   "metric": "missed data analysis rate",
+   "value": "1.3% / 21.8%",
+   "unit": "%",
+   "baseline_value": "3.3% / 33.2%",
+   "n": null,
+   "setup": "criteria values IV and TP_total (Locating), CO and PD (Building)",
+   "table": "Table 6",
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "PlanRAG-LM re-plans on 24 of 400 Locating runs (6%) and 77 of 202 Building runs (38%); accuracy falls as the re-plan count rises (0 re-plans 66.8% and 57.6%; 4 or more 0.0% and 13.3%).",
+   "kind": "measured",
+   "metric": "accuracy by re-plan count",
+   "value": "see text",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "400 Locating and 202 Building runs (200 and 101 questions times RDB and GDB)",
+   "setup": "Table 7",
+   "table": "Table 7",
+   "note": "the Building plan is harder",
+   "where": "5.2"
+  },
+  {
+   "claim": "Failure analysis: PlanRAG-LM cuts candidate-selection (CAN) and missed-analysis (MIS) errors but has slightly more DEEP errors (misusing retrieved data or equations), which the authors attribute to those cases now reaching the reasoning step.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6",
+   "quote": null,
+   "note": "read from the figure and text",
+   "where": "5.2"
+  }
+ ],
+ "limits": [
+  "Benchmark built from two video games, not real business data; a simulator supplies the ground truth.",
+  "One reader, GPT-4, zero-shot, single run; no variance reported.",
+  "Only SQL and Cypher over RDB and GDB; vector or hybrid stores not tested.",
+  "Single LM only; multi-LM planner/executor split not tested.",
+  "Building plans remain hard: 38% of Building runs re-plan and accuracy is 45.0%.",
+  "Accuracy figures are means of RDB and GDB; RDB and GDB differ (Table 5)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "ReAct: Synergizing Reasoning and Acting in Language Models",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "extends",
+   "note": "prompt base, with Plan and Re-plan added",
+   "quote": null
+  },
+  {
+   "work": "Interleaving Retrieval with Chain-of-Thought Reasoning (IRCoT)",
+   "year": 2023,
+   "arxiv": "2212.10509",
+   "relation": "related",
+   "note": "iterative RAG",
+   "quote": null
+  },
+  {
+   "work": "Active Retrieval Augmented Generation (FLARE)",
+   "year": 2023,
+   "arxiv": "2305.06983",
+   "relation": "related",
+   "note": "iterative RAG",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of the reasoning processes of between previous RAG and our PlanRAG techniques",
+   "page": 5,
+   "why": "iterative RAG loop versus plan then retrieve then re-plan"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "worked Locating example, IterRAG versus PlanRAG",
+   "page": 6,
+   "why": "same question, with and without a plan"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

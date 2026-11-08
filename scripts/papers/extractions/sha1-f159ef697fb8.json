@@ -1,0 +1,405 @@
+{
+ "schema": 1,
+ "key": "sha1:f159ef697fb8",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/ch05-pretraining-on-unlabeled-data.pdf",
+ "bib": {
+  "title": "5 Pretraining on unlabeled data (Build a Large Language Model (From Scratch))",
+  "authors": [],
+  "first_author": "Raschka",
+  "year": null,
+  "venue": "book chapter (Manning); author and year not printed in the extracted text (author per ledger/note citation: Raschka, 2024)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 74521,
+  "chars_total": 74521,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you evaluate generated text with a loss, pretrain a small GPT on unlabeled text, control decoding randomness, save/load weights, and load OpenAI's GPT-2 weights?",
+ "hypothesis": null,
+ "contributions": [
+  "Cross-entropy loss and perplexity as the text-quality measure",
+  "train_model_simple pretraining loop with AdamW",
+  "Temperature scaling and top-k sampling in a generate function",
+  "Saving/loading model and optimizer state_dict",
+  "Loading OpenAI GPT-2 weights (124M to 1558M) into GPTModel"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Llama 2 7B pretraining cost estimate: 184,320 A100 GPU hours on 2 trillion tokens, about $690,000 at $30/hour for an 8xA100 AWS server.",
+   "kind": "reported",
+   "source": "Llama 2 (uncited in chapter)",
+   "metric": "pretraining cost",
+   "value": "$690,000",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 2 7B; 8 x A100 server at about $30/hour; (184,320/8)*30",
+   "quote": "A rough estimate\nputs the total training cost of such an LLM at around $690,000",
+   "table": null,
+   "note": "Author's own back-of-envelope; the 184,320 GPU hours and 2T tokens are quoted without a citation in this chapter.",
+   "where": "5.1.3 sidebar 'The cost of pretraining LLMs'"
+  },
+  {
+   "claim": "Untrained GPT has near-uniform next-token probabilities: about 1/50,257 = 0.00002 per token.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "initial target-token probability",
+   "value": "0.00002",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Randomly initialised GPT, 50,257-token vocabulary",
+   "quote": "most of the initial probabilities will hover\naround 0.00002 (1/50,257)",
+   "table": null,
+   "note": null,
+   "where": "5.1.2"
+  },
+  {
+   "claim": "Cross-entropy loss of untrained model on two 3-token examples is 10.7940 (negative average log probability of targets).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "cross entropy loss",
+   "value": "10.7940",
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Untrained GPTModel, inputs 'every effort moves' and 'I really like', 6 target tokens",
+   "quote": "This prints tensor(10.7940)",
+   "table": null,
+   "note": null,
+   "where": "5.1.2"
+  },
+  {
+   "claim": "Perplexity = exp(loss) of that untrained example is 48725.8203, i.e. the model is effectively unsure among ~48,725 tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "perplexity",
+   "value": "48725.8203",
+   "unit": "effective vocabulary size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "exp(10.7940) on the 6-token example",
+   "quote": "returns tensor(48725.8203)",
+   "table": null,
+   "note": "Printed as 48725.8203 in code and 48,725 in prose.",
+   "where": "5.1.2"
+  },
+  {
+   "claim": "Initial training-set loss of the untrained model on The Verdict split is 10.98758347829183.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss (cross entropy)",
+   "value": "10.98758347829183",
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Untrained GPTModel, 256 ctx, 9 train batches of 2x256",
+   "quote": "Training loss: 10.98758347829183",
+   "table": null,
+   "note": null,
+   "where": "5.1.3"
+  },
+  {
+   "claim": "Initial validation loss of the untrained model is 10.98110580444336.",
+   "kind": "measured",
+   "source": null,
+   "metric": "val loss (cross entropy)",
+   "value": "10.98110580444336",
+   "unit": "nats",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Untrained GPTModel, 1 validation batch of 2x256",
+   "quote": "Validation loss: 10.98110580444336",
+   "table": null,
+   "note": null,
+   "where": "5.1.3"
+  },
+  {
+   "claim": "After 10 epochs the training loss falls from 9.781 to 0.391.",
+   "kind": "measured",
+   "source": null,
+   "metric": "train loss",
+   "value": "0.391",
+   "unit": "nats",
+   "baseline_value": "9.781",
+   "n": null,
+   "setup": "GPT-2 124M-config GPTModel (256 ctx), trained from random init on 'The Verdict' (20,479 chars, 5,145 tokens), 90/10 split, AdamW lr 0.0004 wd 0.1, batch 2, 10 epochs",
+   "quote": "starting with a value\nof 9.781 and converging to 0.391",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Validation loss starts at 9.933 and ends at 6.452, far above training loss, showing overfitting/memorisation (losses diverge after epoch 2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "val loss",
+   "value": "6.452",
+   "unit": "nats",
+   "baseline_value": "9.933",
+   "n": null,
+   "setup": "GPT-2 124M-config GPTModel (256 ctx), trained from random init on 'The Verdict' (20,479 chars, 5,145 tokens), 90/10 split, AdamW lr 0.0004 wd 0.1, batch 2, 10 epochs",
+   "quote": "remains at 6.452 after the 10th\nepoch",
+   "table": null,
+   "note": "Final printed line: Ep 10 (Step 000085) Train loss 0.391, Val loss 6.452. Epoch 9 (step 80) is Train 0.541, Val 6.393.",
+   "where": "5.2"
+  },
+  {
+   "claim": "Training 10 epochs takes about 5 minutes on a MacBook Air-class laptop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall-clock",
+   "value": "5",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 124M-config GPTModel (256 ctx), trained from random init on 'The Verdict' (20,479 chars, 5,145 tokens), 90/10 split, AdamW lr 0.0004 wd 0.1, batch 2, 10 epochs",
+   "quote": "takes about 5 minutes to complete on a MacBook Air",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Trained model memorises verbatim: generated 'quite insensible to the irony' is found in the training text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 124M-config GPTModel (256 ctx), trained from random init on 'The Verdict' (20,479 chars, 5,145 tokens), 90/10 split, AdamW lr 0.0004 wd 0.1, batch 2, 10 epochs",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "With a toy logit vector and 1,000 multinomial draws, 'forward' is sampled 582 times (the most likely token), 'toward' 343, 'closer' 73, 'inches' 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sample count of 'forward'",
+   "value": "582",
+   "unit": "out of 1,000",
+   "baseline_value": null,
+   "n": null,
+   "setup": "9-token toy vocabulary, logits [4.51, 0.89, -1.90, 6.75, 1.63, -1.62, -1.89, 6.28, 1.79], temperature 1, seed 123",
+   "quote": "the word forward is sampled most of the time (582 out of\n1,000 times)",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "At temperature 5, 'pizza' is sampled about 4% of the time in the toy example.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pizza sampling rate",
+   "value": "4%",
+   "unit": "% of samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same toy logits, temperature 5",
+   "quote": "every effort\nmoves you pizza about 4% of the time",
+   "table": null,
+   "note": null,
+   "where": "5.3.1"
+  },
+  {
+   "claim": "Top-k with k=3 on the toy logits gives probabilities 0.0615, 0.5775, 0.3610 for the three kept tokens.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "top-3 probabilities",
+   "value": "0.5775",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy logits, k=3",
+   "quote": "tensor([0.0615, 0.0000, 0.0000, 0.5775, 0.0000, 0.0000, 0.0000, 0.3610,",
+   "table": null,
+   "note": null,
+   "where": "5.3.2"
+  },
+  {
+   "claim": "OpenAI GPT-2 124M checkpoint data file is 498M; seven files are downloaded; settings are n_vocab 50257, n_ctx 1024, n_embd 768, n_head 12, n_layer 12.",
+   "kind": "reported",
+   "source": "OpenAI GPT-2 release",
+   "metric": "checkpoint size",
+   "value": "498M",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "download_and_load_gpt2 model_size 124M",
+   "quote": "model.ckpt.data-00000-of-00001: 100%|███████| 498M/498M",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Loading OpenAI GPT-2 124M into GPTModel needs context_length 1024 and qkv_bias True; text generated with top_k=50, temperature=1.5 is coherent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coherence (qualitative)",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 small via NEW_CONFIG, seed 123, 25 new tokens",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  }
+ ],
+ "limits": [
+  "Toy scale: 5,145 tokens, batch size 2, 10 epochs; the author says real LLM pretraining uses far larger data and typically one epoch.",
+  "Final validation loss 6.452 vs train 0.391: the trained model overfits and memorises; no held-out quality metric beyond loss.",
+  "Loss and perplexity computed on tiny samples; no benchmark evaluation.",
+  "Single run with seed 123; no variance reported.",
+  "Training loop omits learning-rate warmup, cosine decay and gradient clipping (deferred to an appendix).",
+  "Chapter cross-references the larger Gutenberg run inconsistently (appendix D at 5.1.3, appendix B at 5.2).",
+  "Llama 2 cost figures are uncited and rough.",
+  "Weight loading depends on OpenAI's TensorFlow checkpoint format and a download script that may change."
+ ],
+ "practices": [
+  "Compute training and validation cross-entropy over the whole loader and track both during training (5.1.3, 5.2).",
+  "Use model.eval() and torch.no_grad() when evaluating or generating (5.2).",
+  "Use AdamW (decoupled weight decay) for LLM pretraining (5.2).",
+  "Typically train on a much larger dataset for one epoch rather than many epochs on a tiny one (5.2).",
+  "Combine temperature scaling with top-k sampling to trade diversity against coherence; temperature 0 means greedy (5.3).",
+  "Save both model and optimizer state_dict if you plan to continue pretraining (5.4).",
+  "Load pretrained GPT-2 weights with matching config (1024 context, qkv bias) and check shapes in an assign helper (5.5).",
+  "Batch sizes of 1,024 or larger are not uncommon in practice (5.1.3)."
+ ],
+ "terms": [
+  {
+   "term": "cross entropy loss",
+   "definition": "measures the difference between two probability distributions; for LLMs, the negative average log probability of the target tokens",
+   "where": "5.1.2"
+  },
+  {
+   "term": "perplexity",
+   "definition": "exp(loss); the effective vocabulary size about which the model is uncertain at each step",
+   "where": "5.1.2"
+  },
+  {
+   "term": "greedy decoding",
+   "definition": "selecting the token with the highest probability score at each step (argmax)",
+   "where": "5.3, Summary"
+  },
+  {
+   "term": "temperature scaling",
+   "definition": "dividing the logits by a number greater than 0 before softmax",
+   "where": "5.3.1"
+  },
+  {
+   "term": "top-k sampling",
+   "definition": "restrict sampling to the k most likely tokens by setting other logits to -inf",
+   "where": "5.3.2"
+  },
+  {
+   "term": "AdamW",
+   "definition": "a variant of Adam that improves the weight decay approach",
+   "where": "5.2"
+  },
+  {
+   "term": "weight tying",
+   "definition": "reusing the token embedding weights in the output layer to reduce parameter count",
+   "where": "5.5 listing 5.5 note"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "OpenAI GPT-2 (124M, 355M, 774M, 1558M weights)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "weights loaded into the chapter's GPTModel",
+   "quote": null
+  },
+  {
+   "work": "Llama 2 7B",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for pretraining cost example",
+   "quote": null
+  },
+  {
+   "work": "The Verdict (Edith Wharton)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "public-domain training text",
+   "quote": null
+  },
+  {
+   "work": "Project Gutenberg 60,000 books (supplementary code)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "optional larger corpus",
+   "quote": null
+  },
+  {
+   "work": "Adam / AdamW optimizer",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer for training",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.7",
+   "caption": "Calculating the loss involves several steps: probabilities, log, average, negation",
+   "page": null,
+   "why": "shows the six steps from softmax output to cross entropy"
+  },
+  {
+   "figure": "Fig 5.12",
+   "caption": "Training and validation loss; validation stagnates past epoch 2",
+   "page": null,
+   "why": "shows overfitting"
+  },
+  {
+   "figure": "Fig 5.14",
+   "caption": "Temperature 1, 0.1 and 5 on the toy distribution",
+   "page": null,
+   "why": "shows how temperature sharpens or flattens"
+  },
+  {
+   "figure": "Fig 5.15",
+   "caption": "Top-k sampling with k=3 masks other logits with -inf",
+   "page": null,
+   "why": "shows the masking"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 5.2-5.3",
+   "snippet": "loss = torch.nn.functional.cross_entropy(\n        logits.flatten(0, 1), target_batch.flatten()\n    )",
+   "verbatim": true
+  },
+  {
+   "where": "5.2",
+   "snippet": "optimizer = torch.optim.AdamW(\n     model.parameters(),           #1\n    lr=0.0004, weight_decay=0.1\n)",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 5.4",
+   "snippet": "logits = logits / temperature\n            probs = torch.softmax(logits, dim=-1)\n            idx_next = torch.multinomial(probs, num_samples=1)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Author, year and venue are not printed in the extracted text; recorded from the ledger and the note's citation. No embedded instructions found. Figures and some code outputs (e.g. vocabulary printouts, decoded texts) are absent from the text layer. Code blocks have lost several line continuations."
+ ]
+}

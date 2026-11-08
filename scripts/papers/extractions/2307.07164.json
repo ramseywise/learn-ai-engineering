@@ -1,0 +1,678 @@
+{
+ "schema": 1,
+ "key": "2307.07164",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2023-learning-retrieve-context-examples-large.pdf",
+ "bib": {
+  "title": "Learning to Retrieve In-Context Examples for Large Language Models",
+  "authors": [
+   "Liang Wang",
+   "Nan Yang",
+   "Furu Wei"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2307.07164",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 62336,
+  "chars_total": 62336,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a dense retriever be trained from frozen-LLM feedback to pick better in-context examples than BM25 or off-the-shelf embeddings, across many tasks and LLMs?",
+ "hypothesis": "Ranking candidates by LLM log-likelihood of the gold output, distilling through a cross-encoder reward model, yields a retriever that selects higher-quality few-shot examples and generalises to unseen tasks and other LLMs.",
+ "contributions": [
+  "LLM-R: iterative framework (LLM-ranked candidates, cross-encoder reward model, distilled bi-encoder retriever)",
+  "Evaluation on 30 tasks in 9 categories, with 4 held-out tasks and 3 other LLMs",
+  "Analysis of when learned retrieval helps (classification with many training examples) and when not (knowledge-intensive tasks)"
+ ],
+ "method": {
+  "summary": "BM25 retrieves top-100 candidates per training example from a pooled example set; frozen LLaMA-7B ranks them by log p(y|x,xi,yi); an ELECTRA-base cross-encoder reward model is trained on top/bottom candidates and a shared-encoder E5-base bi-encoder is distilled from it (KL plus InfoNCE). Can iterate using the new retriever. At test time top-k retrieved examples are concatenated before the test input.",
+  "task": "in-context example retrieval for few-shot prompting",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "30 datasets from FLAN/UPRISE collection (Table 8)",
+    "role": "both",
+    "size": "pool about 6.3M train examples, 177k test; sampled 591k train and 123k test",
+    "split": "max 30k train and 10k eval examples per dataset; QNLI, PIQA, WSC273, Yelp held out of training",
+    "source": "public datasets (FLAN, UPRISE based)",
+    "preprocessing": "retrieval candidate = input xi concatenated with output yi; query = input only; the example itself is excluded from its own retrieval; candidates from a different task than the query get a low score"
+   }
+  ],
+  "models": [
+   {
+    "name": "LLaMA-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "decoder-only LLM, frozen",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max input length 1024, left-truncated; max output 64",
+    "other": {
+     "use": "candidate ranking and task evaluation"
+    }
+   },
+   {
+    "name": "E5-base retriever (LLM-R)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bi-encoder, shared encoder, average pooling, cosine/tau",
+    "init_from": "E5-base (intfloat/e5-base-v2)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "input length 256",
+    "other": {}
+   },
+   {
+    "name": "Reward model",
+    "role": "reward",
+    "params": null,
+    "architecture": "cross-encoder",
+    "init_from": "ELECTRA-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "input length 384",
+    "other": {}
+   },
+   {
+    "name": "GPT-Neo-2.7B",
+    "role": "evaluated",
+    "params": "2.7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-13B",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-35-Turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "no log-probs from API; generation templates; max 1k examples per dataset"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Reward: cross-entropy over 1 positive and Nneg hard negatives. Retriever: L = alpha*InfoNCE + KL(p_reward || p_retriever) over hard negatives",
+   "optimizer": null,
+   "lr": "retriever 3e-5; reward model 1e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "retriever 256; reward model 128",
+   "steps": "retriever 6k; reward model 3k (per iteration)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "retriever 256; reward model 384",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 GPUs each (Table 7); candidate ranking on 8 V100 GPUs",
+   "compute": "ranking with LLaMA-7B about 12 hours for 200k examples on 8 V100; retriever plus reward model training under 10 hours total",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "tau": "0.01",
+    "alpha": "0.2",
+    "reward positives": "top 3 (retriever table: top 3)",
+    "reward negatives": "bottom 16",
+    "# negatives": "retriever 3, reward model 7",
+    "ranking depth": "100",
+    "iterations": "1 to 3; analysis uses 2",
+    "same hyperparameters every iteration": "yes"
+   }
+  },
+  "inference": {
+   "decoding": "classification: greedy with constrained decoding to valid labels; multiple choice: highest average token-level log-likelihood of options; generation: unconstrained greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "64 output",
+   "samples": "single run per method; std dev 0.2 from 3 runs of the Random baseline only",
+   "prompting": "top-k retrieved examples concatenated with the test input; k=8 in main experiments",
+   "retrieval": "query = test input embedding, top-8 from pooled training set (~6.3M); k-means baseline uses 8 examples nearest to cluster centres",
+   "parameters": {
+    "k": "8 (1,2,4,8,16 in scaling study)"
+   },
+   "other": {
+    "input truncation": "left side, max 1024 for LLaMA-7B"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "task metric (accuracy, ROUGE-L, F1, exact match per dataset)",
+     "definition": "per Table 8; category average, then mean over categories",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "zero-shot",
+    "random",
+    "k-means",
+    "BM25",
+    "E5-base",
+    "SBERT all-mpnet-base-v2",
+    "EPR (re-implemented)"
+   ],
+   "protocol": "Arithmetic mean of metrics; only Random baseline has std over 3 runs; no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/LMOps/tree/main/llm_retriever",
+   "weights": null,
+   "data": "same repo (stated)"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-35-Turbo multiple-choice input (HellaSwag example): question, then OPTIONS: with A) to D), model outputs the option letter",
+    "text": "What happens next in this paragraph?",
+    "where": "Appendix B, Table 9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Table 7"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLM-R (2 iterations) beats random selection on the 30-task average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 66.5,
+   "unit": "points (task metrics averaged)",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": "Intro says 'average of 7.8%' improvement over random, which matches 1 iter (65.7-57.9), not 2 iter (66.5-57.9=8.6).",
+   "where": "Table 1",
+   "table": "Table 1, row LLM-R (2 iter), column Avg"
+  },
+  {
+   "claim": "After the first iteration LLM-R beats the best baseline (EPR re-implementation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 65.7,
+   "unit": "points",
+   "baseline_value": 63.5,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "5.2",
+   "quote": "our proposed model LLM-R outperforms all the baselines (63.5 → 65.7)"
+  },
+  {
+   "claim": "Intro claim: improvement over random selection with LLaMA-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg gain",
+   "value": 7.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Intro",
+   "quote": "our model improves the in-context learning performance by an average of 7.8% compared to random selection"
+  },
+  {
+   "claim": "BM25 is a strong baseline over random selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 61.3,
+   "unit": "points",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BM25, column Avg"
+  },
+  {
+   "claim": "Off-the-shelf SBERT retrieval average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 62.1,
+   "unit": "points",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SBERT, column Avg"
+  },
+  {
+   "claim": "Zero-shot average is far below random few-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 44.9,
+   "unit": "points",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Zero-shot, column Avg"
+  },
+  {
+   "claim": "K-means selection does not beat random (57.0 vs 57.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 57.0,
+   "unit": "points",
+   "baseline_value": 57.9,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row K-means, column Avg"
+  },
+  {
+   "claim": "Third iteration gives no gain over second.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 66.4,
+   "unit": "points",
+   "baseline_value": 66.5,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "5.2 and Table 1",
+   "quote": "Further iterations do not yield substantial improvements"
+  },
+  {
+   "claim": "Random-selection std dev over 3 runs on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "std dev",
+   "value": 0.2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "30 datasets / 9 categories, LLaMA-7B as ranker and evaluator, 8 in-context examples, pool ~6.3M training examples, average over task categories",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Std dev., column Avg"
+  },
+  {
+   "claim": "Removing the reward model (contrastive loss only) lowers the average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 64.9,
+   "unit": "points",
+   "baseline_value": 65.7,
+   "n": null,
+   "setup": "LLM-R 1 iter ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o reward model, column Avg"
+  },
+  {
+   "claim": "Reward model trained without the label y+ loses most.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 63.8,
+   "unit": "points",
+   "baseline_value": 65.7,
+   "n": null,
+   "setup": "LLM-R 1 iter ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row reward model w/o label y+, column Avg"
+  },
+  {
+   "claim": "Using LLM log-likelihood as the distillation target lags the reward model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 65.2,
+   "unit": "points",
+   "baseline_value": 65.7,
+   "n": null,
+   "setup": "LLM-R 1 iter ablation",
+   "note": null,
+   "where": "6.1",
+   "quote": "it still lags behind our method by 0.5 points"
+  },
+  {
+   "claim": "Initialising the retriever from BERT-base instead of E5-base costs a little.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 65.2,
+   "unit": "points",
+   "baseline_value": 65.7,
+   "n": null,
+   "setup": "LLM-R 1 iter ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row initialize w/ BERTbase, column Avg"
+  },
+  {
+   "claim": "On four held-out tasks LLM-R beats the second best (E5-base).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 81.7,
+   "unit": "points",
+   "baseline_value": 76.3,
+   "n": null,
+   "setup": "Held-out QNLI, PIQA, WSC273, Yelp; LLaMA-7B; 8 examples",
+   "note": null,
+   "where": "6.2, Table 3",
+   "quote": "LLM-R surpasses the second-best model E5base by an average of 5.4 points",
+   "table": "Table 3, row Average, column LLM-R"
+  },
+  {
+   "claim": "Held-out QNLI gain is largest.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.6,
+   "unit": "%",
+   "baseline_value": 62.2,
+   "n": null,
+   "setup": "QNLI held out",
+   "note": "base is BM25; E5base 61.5, SBERT 61.9",
+   "where": "Table 3",
+   "table": "Table 3, row QNLI, column LLM-R"
+  },
+  {
+   "claim": "Held-out Yelp: LLM-R is below E5-base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 95.9,
+   "unit": "%",
+   "baseline_value": 97.3,
+   "n": null,
+   "setup": "Yelp held out",
+   "note": "base is E5base",
+   "where": "Table 3",
+   "table": "Table 3, row Yelp, column LLM-R"
+  },
+  {
+   "claim": "Transfer to GPT-Neo-2.7B (retriever trained with LLaMA-7B): gain over BM25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 61.8,
+   "unit": "points",
+   "baseline_value": 54.4,
+   "n": null,
+   "setup": "GPT-Neo-2.7B evaluator, 30 tasks",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row gpt-neo-2.7b LLM-R, column Avg"
+  },
+  {
+   "claim": "Transfer to LLaMA-13B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 68.8,
+   "unit": "points",
+   "baseline_value": 64.6,
+   "n": null,
+   "setup": "LLaMA-13B evaluator",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row llama-13b LLM-R, column Avg"
+  },
+  {
+   "claim": "Transfer to GPT-35-Turbo gives only a small gain; not comparable with other rows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 75.1,
+   "unit": "points",
+   "baseline_value": 74.7,
+   "n": null,
+   "setup": "gpt-35-turbo, generation-formatted tasks, max 1k examples per dataset",
+   "note": "Different templates, scores not comparable across LLMs.",
+   "where": "Table 4, App. B",
+   "table": "Table 4, row gpt-35-turbo LLM-R, column Avg"
+  },
+  {
+   "claim": "Evaluation LLM matters more than ranking LLM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 66.0,
+   "unit": "points",
+   "baseline_value": 65.7,
+   "n": null,
+   "setup": "Eval LLaMA-7B, rank GPT-Neo-2.7B",
+   "note": "Rank LLaMA-7B -> 65.7; Both -> 66.3. Eval GPT-Neo-2.7B: 61.7/61.3/61.6.",
+   "where": "Table 6",
+   "table": "Table 6, row LLaMA-7B, column GPT-Neo-2.7B"
+  },
+  {
+   "claim": "Gains diminish beyond 4 retrieved examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, GPT-Neo-2.7B and LLaMA-7B, k in 1,2,4,8,16",
+   "note": null,
+   "where": "6.5",
+   "quote": "The overall performance improves as we increase the number of retrieved examples, but the gains diminish after 4 examples."
+  },
+  {
+   "claim": "Retriever size: small ~ base, large gives a larger boost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "E5-small/base/large init",
+   "note": null,
+   "where": "6.5",
+   "quote": "the small-size model produces comparable results with the base-size one, whereas the large-size retriever exhibits a more substantial performance boost"
+  },
+  {
+   "claim": "Knowledge-intensive tasks gain less; SQuAD v1 falls below random because many questions share a passage so retrieved examples lack diversity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3, per-task gains over random",
+   "note": null,
+   "where": "6.3",
+   "quote": "LLM-R performs worse than the random selection baseline"
+  }
+ ],
+ "limits": [
+  "Examples are retrieved independently; interactions between in-context examples are ignored",
+  "Arithmetic mean of metrics disadvantages generation tasks (ROUGE/BLEU range narrower) and ignores dataset quality",
+  "Held-out tasks share categories with training tasks; non-overlapping categories left for future work",
+  "GPT-35-Turbo scores use different templates and are not comparable with other LLMs",
+  "Only the Random baseline has a std dev (3 runs); other differences carry no variance estimate",
+  "NQ train/test overlap acknowledged; SQuAD hurt by low diversity",
+  "Learned retriever needs training data and ~12h of LLaMA-7B ranking; gain is small for gpt-35-turbo"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Liu et al. 2022 (kNN prompts, BM25/embedding retrieval for ICL)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "retrieval beats random selection",
+   "quote": null
+  },
+  {
+   "work": "Rubin et al. 2022 (EPR)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLM-feedback dense retriever; re-implemented",
+   "quote": null
+  },
+  {
+   "work": "UPRISE (Cheng et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset collection source; cross-task retrieval",
+   "quote": null
+  },
+  {
+   "work": "FLAN (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset collection source",
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2023 (unified multi-task retriever)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "does not exploit fine-grained LLM feedback in a principled way, per authors",
+   "quote": null
+  },
+  {
+   "work": "E5 (Wang et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "retriever initialization and baseline",
+   "quote": null
+  },
+  {
+   "work": "SBERT (Reimers and Gurevych 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "all-mpnet-base-v2",
+   "quote": null
+  },
+  {
+   "work": "LLaMA (Touvron et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "main LLM",
+   "quote": null
+  },
+  {
+   "work": "REPLUG (Shi et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM log-likelihood as distillation target, ablated",
+   "quote": null
+  },
+  {
+   "work": "Luo et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "BM25 strong for ICL, agrees",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "The overall architecture of our proposed framework LLM-R.",
+   "page": 3,
+   "why": "shows rank, reward-model, distill, iterate loop"
+  },
+  {
+   "figure": "Figure 3",
+   "caption": "Performance gains of LLM-R over the random selection baseline.",
+   "page": 7,
+   "why": "per-task gains split by knowledge-intensive"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "The scaling effect with respect to the number of in-context examples and retriever size.",
+   "page": 8,
+   "why": "k diminishing returns after 4"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, 4.1",
+   "snippet": "log p(y|x, xi, yi), ∀i ∈{1, 2, . . . , n}",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 3, 4.3",
+   "snippet": "Lretriever = αLcont + Ldistill",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Venue not printed on the PDF title page; acknowledgements mention EACL 2024 and ACL Rolling Review, so recorded as preprint (arXiv v2, 26 Jan 2024)",
+  "Table 1 text is column-flattened; values read in order",
+  "Table 7 positive/negative rows are flattened and ambiguous (reward vs retriever columns)"
+ ]
+}

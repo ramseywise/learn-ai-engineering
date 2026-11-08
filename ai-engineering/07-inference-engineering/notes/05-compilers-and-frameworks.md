@@ -128,7 +128,7 @@ Compile time is real: minutes for a large model in `max-autotune`. Three mitigat
 
 When Inductor's generated code is not good enough, write the hot op in **Triton** (or CUDA), register it as a custom op, and let Inductor fuse around it. Fregly's Triton persistent GEMM ran **159.4 ms vs 174.9 ms for cuBLAS** at M=N=8192, K=512, measured with the Proton profiler (*AISPE*, ch. 14). The GPU and iteration count are not stated, so treat it as "Triton can beat a vendor library on a specific shape", not as a rule.
 
-**FlexAttention** is the middle path for attention variants. You write the score modification (masks, biases, softcapping) in Python, and Inductor generates a fused kernel reaching about **85–90% of FlashAttention-2** forward and backward (*AISPE*, ch. 14). That is also the baseline that AI-generated kernels are measured against in [09](09-checklist-and-ai-assisted-tuning.md#ai-generated-kernels).
+**FlexAttention** is the middle path for attention variants. You write the score modification (masks, biases, softcapping) in Python, and Inductor generates a fused kernel reaching "up to ~85–90% of modern FlashAttention performance" forward and backward (*AISPE*, ch. 14; the chapter names no FlashAttention version, hardware or shapes, and cites no benchmark). That is also the baseline that AI-generated kernels are measured against in [09](09-checklist-and-ai-assisted-tuning.md#ai-generated-kernels).
 
 ---
 

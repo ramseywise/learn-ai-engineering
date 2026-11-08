@@ -1,0 +1,377 @@
+{
+ "schema": 1,
+ "key": "sha1:f016a89ff68e",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch05-supervised-fine-tuning.pdf",
+ "bib": {
+  "title": "Supervised Fine-Tuning (Chapter 5, LLM Engineer's Handbook)",
+  "authors": [
+   "Paul Iusztin",
+   "Maxime Labonne"
+  ],
+  "first_author": "Iusztin",
+  "year": 2024,
+  "venue": "Packt Publishing (book chapter; PDF printed from O'Reilly 12/20/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 108706,
+  "chars_total": 108706,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped. Equations and figures are images and absent from the text; authors are not printed in the PDF text (taken from the book's known authorship, only the ledger title names the book)."
+ },
+ "type": "book-chapter",
+ "question": "How do you build an instruction dataset and supervised fine-tune an open-weight LLM (full FT, LoRA, QLoRA) in practice?",
+ "hypothesis": null,
+ "contributions": [
+  "A data pipeline for instruction datasets: filtering, dedup, decontamination, quality evaluation, exploration, generation, augmentation",
+  "A synthetic dataset (mlabonne/llmtwin) from crawled articles via backtranslation and rephrasing with GPT-4o-mini",
+  "A worked LoRA SFT of Llama 3.1 8B with Unsloth producing TwinLlama-3.1-8B"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The authors' worked SFT run (LoRA on Llama 3.1 8B, llmtwin + FineTome 10k) took 50 minutes on one A100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time",
+   "value": "50",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Meta-Llama-3.1-8B, LoRA r=32, 3 epochs, effective batch 16, max seq 2048, packing",
+   "note": null,
+   "where": "Fine-tuning in practice, step 9",
+   "quote": "it takes 50 minutes on an A100 GPU"
+  },
+  {
+   "claim": "Synthetic instruction dataset built from crawled articles yielded 3,335 pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "3,335",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o-mini, 1,000-2,000 char chunks, Chapter 3 crawled articles",
+   "note": "Text elsewhere says 'five instruction-answer pairs for each extract' but earlier prose says 'three instruction-answer pairs for each chunk'; later calls the dataset '3,000 samples'.",
+   "where": "Creating our own instruction dataset, step 11",
+   "quote": "We obtained 3,335 pairs with this process."
+  },
+  {
+   "claim": "Generating the instruction dataset with GPT-4o mini cost under 0.5 dollars.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "0.5",
+   "unit": "USD (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4o-mini over the crawled raw data",
+   "note": null,
+   "where": "step 10",
+   "quote": "costs less than 0.5$"
+  },
+  {
+   "claim": "A 7B model fully fine-tuned needs about 112 GB of VRAM at 16 bytes/parameter (fp32 weights 4, grads 4, Adam 8); 1,120 GB for 70B.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "VRAM",
+   "value": "112",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single GPU, fp32 baseline, ignoring activations",
+   "note": null,
+   "where": "Full fine-tuning",
+   "quote": "This gives us a baseline of 16 bytes per parameter. This translates into 112\nGB of VRAM for a 7 B model and 1,120 GB for a 70 B model."
+  },
+  {
+   "claim": "LoRA on all modules with rank 16 gives about 42M trainable parameters for Llama 3 8B, 0.5196% of the model.",
+   "kind": "reported",
+   "source": null,
+   "metric": "trainable params",
+   "value": "42",
+   "unit": "million parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama 3 8B, rank 16, all modules",
+   "note": "42M / 8B is about 0.525%; the printed 0.5196% implies a slightly different denominator.",
+   "where": "LoRA",
+   "quote": "only has 42 million trainable LoRA parameters out of 8\nbillion parameters, which is 0.5196% of the model"
+  },
+  {
+   "claim": "LoRA can fine-tune a 7B model on a single GPU with 14-18 GB VRAM.",
+   "kind": "claim",
+   "source": null,
+   "metric": "VRAM",
+   "value": "14-18",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B model, LoRA",
+   "note": null,
+   "where": "LoRA",
+   "quote": "as little as 14-18 GB of VRAM"
+  },
+  {
+   "claim": "QLoRA cuts 7B fine-tuning memory from 15.6 GB (LoRA) to 9.3 GB, about 40%, and initialisation from 14 GB to 9.1 GB (35%).",
+   "kind": "reported",
+   "source": null,
+   "metric": "fine-tuning VRAM",
+   "value": "9.3",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B model; source of the numbers not named in the chapter",
+   "note": "Chapter also says 'up to 75%' peak reduction without a setup.",
+   "where": "QLoRA",
+   "quote": "from 15.6 GB for LoRA to 9.3 GB for QLoRA"
+  },
+  {
+   "claim": "QLoRA trains about 30% slower than LoRA with only minor quality differences.",
+   "kind": "reported",
+   "source": null,
+   "metric": "training time",
+   "value": "30",
+   "unit": "% slower",
+   "baseline_value": null,
+   "n": null,
+   "setup": "unspecified setup, no citation",
+   "note": null,
+   "where": "QLoRA",
+   "quote": "QLoRA being about 30% slower than LoRA"
+  },
+  {
+   "claim": "Recommended instruction-set sizes: at least 1 million samples for a general-purpose instruct model; 100 to 100,000 for task-specific; as few as 1,000 high-quality for ~70B models (LIMA).",
+   "kind": "claim",
+   "source": null,
+   "metric": "recommended minimum",
+   "value": "1,000,000",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author recommendation based on Yi (<10,000), OpenHermes/Dolphin (~1M), Llama 3 (10M)",
+   "note": null,
+   "where": "Data quantity",
+   "quote": "we recommend an instruction dataset of at least one million\nsamples to create a good general-purpose instruct model"
+  },
+  {
+   "claim": "fineweb-edu-classifier is trained for 20 epochs on 450,000 Llama 3 70B Instruct-annotated samples.",
+   "kind": "reported",
+   "source": null,
+   "metric": "classifier training data",
+   "value": "450,000",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HuggingFaceFW/fineweb-edu-classifier, Snowflake arctic-embed-m backbone",
+   "note": null,
+   "where": "Data quality evaluation",
+   "quote": "trains it for 20 epochs\non 450,000 samples"
+  },
+  {
+   "claim": "Hyperparameter used in the worked run: lr 3e-4, linear schedule, 3 epochs, per-device batch 2 x 8 accumulation = effective 16, adamw_8bit, weight decay 0.01, warmup 10 steps, packing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "batch size",
+   "value": "16",
+   "unit": "effective batch size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unsloth + TRL SFTTrainer, Llama 3.1 8B",
+   "note": null,
+   "where": "step 9",
+   "quote": "We train this model for three epochs with a batch size of 2 and 8\ngradient accumulation steps (for an effective batch size of 16)."
+  }
+ ],
+ "limits": [
+  "Worked run is not evaluated: the authors say the quick test 'is not to properly evaluate the fine-tuned model'; evaluation is deferred to the next chapter.",
+  "Only loss curves are shown; one run, seed 0, no ablations of rank, lr or data mix.",
+  "Numbers on QLoRA vs LoRA memory/speed and LoRA parameter counts are uncited in the chapter.",
+  "Hyperparameter ranges (lr, batch, epochs) are rules of thumb without sources.",
+  "Text has internal slips: 3 vs 5 pairs per chunk, 'Figure 4.11' for 5.11, 'Figure 5.6' cited for inference format."
+ ],
+ "practices": [
+  "Start with prompt engineering, few-shot and RAG before fine-tuning; fine-tune only if evaluation misses requirements (When to fine-tune).",
+  "Judge instruction data on accuracy, diversity and complexity (General framework).",
+  "Use comparative rather than absolute LLM-judge scoring; randomise answer order, normalise length, use a jury of several models; aim for about 80% judge-human agreement (Data quality evaluation).",
+  "Add the evaluation set to the dedup stage to decontaminate automatically (Data decontamination).",
+  "Fine-tune base models rather than instruct models; if fine-tuning an instruct model, reuse its template (Chat templates).",
+  "Use Jinja templates from Transformers; stray whitespace changes tokenization (Chat templates).",
+  "Append the EOS token to every sample or the model never stops (Fine-tuning in practice, step 7).",
+  "Start LoRA at a moderate rank with alpha = 2 x rank, target all linear layers; raise rank to 64 or 128 if underfit (LoRA; step 5).",
+  "Prefer LoRA when memory allows, QLoRA when memory-bound (QLoRA).",
+  "Use AdamW (8-bit), weight decay 0.01, warmup about 5% of steps, 2 to 5 epochs, early stopping on validation loss (Training parameters).",
+  "Upsample a small custom set with a general dataset (FineTome 10k) so the chat template is learned (step 6).",
+  "Monitor training loss, validation loss and gradient norm; use gradient clipping for large norms (Fig 5.11 discussion)."
+ ],
+ "terms": [
+  {
+   "term": "Instruction dataset",
+   "definition": "pairs of instructions and answers; instructions are the inputs, answers the expected outputs",
+   "where": "General framework"
+  },
+  {
+   "term": "Backtranslation",
+   "definition": "providing the expected answer as output and generating its corresponding instruction",
+   "where": "Creating our own instruction dataset"
+  },
+  {
+   "term": "Evol-Instruct (in-depth / in-breadth)",
+   "definition": "LLMs evolve simple instructions into more complex (constraints, deepening, concretizing, more reasoning steps, complicating input) or more diverse ones",
+   "where": "Data augmentation"
+  },
+  {
+   "term": "Continual pre-training",
+   "definition": "re-training a model on raw text; differs from full fine-tuning mainly by dataset structure",
+   "where": "Instruction dataset formats"
+  },
+  {
+   "term": "Packing",
+   "definition": "combining multiple short samples into one sequence, with attention masks preventing cross-sample attention",
+   "where": "Maximum length and packing"
+  },
+  {
+   "term": "Catastrophic forgetting",
+   "definition": "erasing knowledge present in the base model when weights are modified",
+   "where": "When to fine-tune"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LoRA: Low-Rank Adaptation of Large Language Models",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "low-rank adapters",
+   "quote": null
+  },
+  {
+   "work": "QLoRA: Efficient Finetuning of Quantized LLMs",
+   "year": 2023,
+   "arxiv": "2305.14314",
+   "relation": "uses-method",
+   "note": "NF4, double quantization, paged optimizers",
+   "quote": null
+  },
+  {
+   "work": "LIMA: Less Is More for Alignment",
+   "year": 2023,
+   "arxiv": "2305.11206",
+   "relation": "related",
+   "note": "1,000 samples suffice for 70B",
+   "quote": null
+  },
+  {
+   "work": "Automatic Instruction Evolving for Large Language Models (Zeng et al.)",
+   "year": 2024,
+   "arxiv": "2406.00770",
+   "relation": "uses-method",
+   "note": "AutoEvol prompt in Table 5.4",
+   "quote": null
+  },
+  {
+   "work": "Orca: Progressive Learning from Complex Explanation Traces of GPT-4",
+   "year": 2023,
+   "arxiv": "2306.02707",
+   "relation": "uses-data",
+   "note": "SlimOrca example in Table 5.1",
+   "quote": null
+  },
+  {
+   "work": "Yi: Open Foundation Models by 01.AI",
+   "year": 2024,
+   "arxiv": "2403.04652",
+   "relation": "related",
+   "note": "fine-tuned on fewer than 10,000 samples",
+   "quote": null
+  },
+  {
+   "work": "Alpaca (Taori et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "seed prompts, Alpaca format and template",
+   "quote": null
+  },
+  {
+   "work": "ArmoRM-Llama3-8B-v0.1 (arXiv:2406.12845)",
+   "year": 2024,
+   "arxiv": "2406.12845",
+   "relation": "related",
+   "note": "multi-objective reward model example",
+   "quote": null
+  },
+  {
+   "work": "UltraFeedback",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AI feedback for response quality",
+   "quote": null
+  },
+  {
+   "work": "Meta-Llama-3.1-8B",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model fine-tuned",
+   "quote": null
+  },
+  {
+   "work": "FineTome-Alpaca-100k / The-Tome / fineweb-edu-classifier",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "10,000 samples upsample the custom set",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.1",
+   "caption": "Overview of the post-training data pipeline covered in this chapter",
+   "page": 2,
+   "why": "stage order of the data pipeline"
+  },
+  {
+   "figure": "Fig 5.8",
+   "caption": "Basic flowchart to determine when fine-tuning is an option on a technical level",
+   "page": 24,
+   "why": "decision path from prompting to SFT"
+  },
+  {
+   "figure": "Fig 5.9",
+   "caption": "Architectural differences of the three main SFT techniques at the module level",
+   "page": 28,
+   "why": "full FT vs LoRA vs QLoRA"
+  },
+  {
+   "figure": "Fig 5.11",
+   "caption": "Four monitored metrics during fine-tuning in Comet ML",
+   "page": 39,
+   "why": "what healthy loss and grad-norm curves look like"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fine-tuning in practice step 5",
+   "snippet": "model = FastLanguageModel.get_peft_model(model, r=32, lora_alpha=32, lora_dropout=0, target_modules=[\"q_proj\", \"k_proj\", \"v_proj\", \"up_proj\", \"down_proj\", \"o_pro...",
+   "verbatim": false
+  },
+  {
+   "where": "step 9",
+   "snippet": "learning_rate=3e-4, lr_scheduler_type=\"linear\", per_device_train_batch_size=2, gradient_accumulation_steps=8, num_train_epochs=3, optim=\"adamw_8bit\", weight_decay=0.01, warmup_steps=10, seed=0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations (LoRA update, memory formula, effective batch size) and the LoRA rank symbol values are images and missing from the text, so the 'common starting point' rank is unreadable.",
+  "Code lines are truncated in the PDF print (target_modules cut at 'o_pro', so gate_proj is not visible).",
+  "Authors are not printed in the extracted text.",
+  "No embedded instructions found."
+ ]
+}

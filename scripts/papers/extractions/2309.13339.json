@@ -1,0 +1,566 @@
+{
+ "schema": 1,
+ "key": "2309.13339",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zhao-2023-enhancing-zero-shot-chain-thought.pdf",
+ "bib": {
+  "title": "Enhancing Zero-Shot Chain-of-Thought Reasoning in Large Language Models through Logic",
+  "authors": [
+   "Xufeng Zhao",
+   "Mengdi Li",
+   "Wenhao Lu",
+   "Cornelius Weber",
+   "Jae Hee Lee",
+   "Kun Chu",
+   "Stefan Wermter"
+  ],
+  "first_author": "Zhao",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2309.13339",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78698,
+  "chars_total": 78698,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can step-by-step verification and revision guided by reductio ad absurdum improve the faithfulness and accuracy of zero-shot chain-of-thought reasoning in LLMs?",
+ "hypothesis": "Prompting an LLM to verify each CoT step via logic (reductio ad absurdum, with post hoc explanations of a step and its negation) and revise failing steps improves zero-shot reasoning, especially for larger models.",
+ "contributions": [
+  "LoT (Logical Thoughts), a fully automatic think-verify-revise prompting framework based on reductio ad absurdum",
+  "Cmps-LoT and Adpt-LoT variants using post hoc explanations of a step and its negation",
+  "Zero-shot evaluation on 8 datasets across 5 domains with Vicuna-7b/13b/33b, GPT-3.5-turbo and GPT-4"
+ ],
+ "method": {
+  "summary": "Starting from a zero-shot-CoT chain (steps split by regex on '# NUM.'), each step Ti is verified: the LLM writes post hoc explanations for Ti and for not-Ti (Review X and Y), then picks the more plausible. If the negation wins, the step is revised using the negation explanation as a hint, trailing steps are dropped and regenerated, and the loop continues until all steps pass. Compared with zero-shot-CoT on 8 datasets and 5 LLMs.",
+  "task": "zero-shot multi-step reasoning (arithmetic, commonsense, causal, symbolic, social)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": "final prompt 'Therefore, the final numerical answer is:' appended; regex extracts digits"
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Ling et al. 2017",
+    "preprocessing": "multiple choice"
+   },
+   {
+    "name": "DateUnderstanding",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench, Srivastava et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "OddOneOut",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench",
+    "preprocessing": null
+   },
+   {
+    "name": "CauseEffect",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench",
+    "preprocessing": null
+   },
+   {
+    "name": "ShuffledObjects",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench",
+    "preprocessing": null
+   },
+   {
+    "name": "LastLetter",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench",
+    "preprocessing": null
+   },
+   {
+    "name": "SocialQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Vicuna-7b",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": "LLaMA fine-tuned on user-shared conversations",
+    "init_from": "LLaMA",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-13b",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": "LLaMA",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna-33b",
+    "role": "evaluated",
+    "params": "33B",
+    "architecture": null,
+    "init_from": "LLaMA",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "chat model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": null
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": null
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.1",
+   "top_p": null,
+   "max_tokens": "2048",
+   "samples": "inferred: one run per item (no seeds or repeats reported)",
+   "prompting": "zero-shot; 'Let's think step by step.\\n # 1.' to start numbered chain; verification prompt with Review X / Review Y in <review></review> tags; revision prompt with hint; final-answer suffix",
+   "retrieval": null,
+   "parameters": {
+    "variants": "Adpt-LoT (full, 'LoT') and Cmps-LoT",
+    "max_revisions": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "answer extracted by regex after final-answer prompt compared with ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "revision frequency",
+     "definition": "average step-wise percentage of steps revised by LoT",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "worsening rate",
+     "definition": "#(correct->wrong)/#(correct->*)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "improvement rate",
+     "definition": "#(wrong->correct)/#(wrong->*)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "zero-shot-CoT (Kojima et al. 2022)",
+    "Self-Check ablation ('double check the step')",
+    "Cmps-LoT"
+   ],
+   "protocol": "Single accuracy per cell; no seeds, variance or significance test reported; dataset sizes not stated."
+  },
+  "availability": {
+   "code": "https://github.com/xf-zhao/LoT",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [
+   {
+    "purpose": "initial chain",
+    "text": "Let’s think step by step.",
+    "where": "Sec 3.2 footnote 4"
+   },
+   {
+    "purpose": "choose between reviews (verification)",
+    "text": "Let’s check two different reviews (X and Y).\nSupport the more plausible one and criticize the other one.\nReview X: ...\nReview Y: ...\nLet’s start by analyzing one by one.\nI. What are the premises and previous steps to support the verification of step #6? (Your answer should quote the exact quote as support.)\nII. Criticise the incorrect review.\n(Note the examined step doesn’t have to tackle the whole problem at once.)\nFinally, identify whether step #6 is true or false.\nAnalysis and conclusion:",
+    "where": "Sec 4.3 Snippet C, App F"
+   },
+   {
+    "purpose": "revision",
+    "text": "Original next step #1: ...\n(Hint: It is not good to directly adopt the step #1 because there is a review says <review> ... </review>.)\nLet’s revise for a better version based on the question premises and on the reasoning steps so far.\nRevision of step #1:",
+    "where": "App F.1"
+   },
+   {
+    "purpose": "final answer GSM8K",
+    "text": "Therefore, the final numerical answer is:",
+    "where": "Sec 4.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we set the temperature parameter to 0.1",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LoT lifts GPT-3.5-turbo GSM8K accuracy over zero-shot-CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.15,
+   "unit": "%",
+   "baseline_value": 78.75,
+   "n": null,
+   "setup": "GSM8K, GPT-3.5-turbo, zero-shot, temp 0.1",
+   "quote": null,
+   "table": "Table 1, row GPT-3.5-turbo, column GSM8K (78.75 -> 80.15, +1.40)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LoT lifts GPT-4 on AQuA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.31,
+   "unit": "%",
+   "baseline_value": 71.56,
+   "n": null,
+   "setup": "AQuA, GPT-4, zero-shot",
+   "quote": null,
+   "table": "Table 1, row GPT-4, column AQuA (71.56 -> 74.31)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LoT lifts GPT-4 on DateUnderstanding",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.16,
+   "unit": "%",
+   "baseline_value": 83.09,
+   "n": null,
+   "setup": "DateUnderstanding, GPT-4",
+   "quote": null,
+   "table": "Table 1, row GPT-4, column Date (83.09 -> 85.16)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Largest gain: Vicuna-13b on OddOneOut",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 45.35,
+   "unit": "%",
+   "baseline_value": 29.07,
+   "n": null,
+   "setup": "OddOneOut, Vicuna-13b",
+   "quote": null,
+   "table": "Table 1, row Vicuna-13b, column OddOut (29.07 -> 45.35, +16.28)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Vicuna-7b gets no consistent benefit; AQuA drops",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 20.47,
+   "unit": "%",
+   "baseline_value": 21.65,
+   "n": null,
+   "setup": "AQuA, Vicuna-7b",
+   "quote": null,
+   "table": "Table 1, row Vicuna-7b, column AQuA (21.65 -> 20.47, -1.18)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ablation on GPT-3.5-turbo: Self-Check is below CoT on GSM8K, Adpt-LoT is best",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 76.15,
+   "unit": "%",
+   "baseline_value": 78.75,
+   "n": null,
+   "setup": "GSM8K, GPT-3.5-turbo; Cmps-LoT 77.67, LoT 80.15",
+   "quote": null,
+   "table": "Table 4, row Self-Check, column GSM8K",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GPT-3.5-turbo revises 32% of steps on Date, the highest revision frequency",
+   "kind": "measured",
+   "source": null,
+   "metric": "revision frequency",
+   "value": 32,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Date, GPT-3.5-turbo",
+   "quote": null,
+   "table": "Table 2, row GPT-3.5-turbo, column Date (32%)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GPT-4 improvement rate vs worsening rate on OddOneOut",
+   "kind": "measured",
+   "source": null,
+   "metric": "improvement rate",
+   "value": 25.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OddOneOut, GPT-4; worsening 0.00",
+   "quote": null,
+   "table": "Table 5, row GPT-4, up arrow, column OddOut (25.00; down arrow 0.00)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "LoT chains are slightly shorter than CoT chains",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg steps",
+   "value": 6.24,
+   "unit": "steps",
+   "baseline_value": 6.83,
+   "n": null,
+   "setup": "AQuA, GPT-3.5-turbo",
+   "quote": null,
+   "table": "Table 3, row GPT-3.5-turbo, column AQuA",
+   "note": null,
+   "where": "Table 3"
+  }
+ ],
+ "limits": [
+  "Prompting only; fine-tuning for spontaneous logical reasoning left to future work",
+  "Uses GPT-3.5-turbo chat model with no access to generation probabilities, so choosing between reviews by probability was not tried",
+  "Zero-shot only; few-shot not explored; no comparison with other prompting methods because of setting differences",
+  "No dataset sizes, seeds, variance or significance tests; many gains are small (0 to a few points) and several negative",
+  "Smaller models (Vicuna-7b) may fail to follow the extra intervention; benefit mainly for >7B",
+  "Failure mode: the LLM can be fooled by a hallucinated post hoc review (App F.7); hidden commonsense missing from the question cannot be fixed (F.5)",
+  "Cost: extra LLM calls per step (cost not reported)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Adpt-LoT",
+   "definition": "generates a pair of post hoc explanations of Ti and not-Ti and lets the LLM decide between them",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Cmps-LoT",
+   "definition": "composes a post hoc explanation of not-Ti and prompts the LLM to check validity of the conjunction",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large Language Models are Zero-Shot Reasoners",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LoT enhances zero-shot-CoT chains and uses it as baseline",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT overview figure",
+   "quote": null
+  },
+  {
+   "work": "Maieutic Prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "post hoc explanation",
+   "quote": null
+  },
+  {
+   "work": "Self-refine",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "revision with feedback",
+   "quote": null
+  },
+  {
+   "work": "Deductive verification of chain-of-thought reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "step verification",
+   "quote": null
+  },
+  {
+   "work": "Large language models cannot self-correct reasoning yet",
+   "year": 2024,
+   "arxiv": "2310.01798",
+   "relation": "related",
+   "note": "self-checking is hard",
+   "quote": null
+  },
+  {
+   "work": "Self-critiquing models for assisting human evaluators",
+   "year": 2022,
+   "arxiv": "2206.05802",
+   "relation": "uses-method",
+   "note": "preference discrimination",
+   "quote": null
+  },
+  {
+   "work": "Selection-inference",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "relevant premise selection",
+   "quote": null
+  },
+  {
+   "work": "Progressive-Hint Prompting",
+   "year": 2023,
+   "arxiv": "2304.09797",
+   "relation": "related",
+   "note": "revision",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "7b, 13b, 33b",
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "AQuA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BIG-bench",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "six tasks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of CoT and LoT",
+   "page": 1,
+   "why": "shows error propagation in CoT vs think-verify-revise"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Applying LoT verification and revision on CoT reasoning paths on the example of an arithmetic task",
+   "page": null,
+   "why": "full loop with prompt snippets"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Accuracy of CoT without/with LoT across five models and eight datasets",
+   "page": null,
+   "why": "main result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "for each step i: E¬i <- posthoc(¬Ti); Ei <- posthoc(Ti); Ê <- LLM(Ei; E¬i); if Ê is E¬i: Ti' <- revise(Ti, E¬i); regenerate T>i",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text lacks stated venue; reported as preprint (arXiv v4, 26 Mar 2024)",
+  "Dataset sizes not given",
+  "Table 1 and Table 2/3 were flattened by extraction; column mapping inferred from order",
+  "No embedded instructions found"
+ ]
+}

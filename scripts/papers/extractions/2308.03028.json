@@ -1,0 +1,93 @@
+{
+"schema": 1,
+"key": "2308.03028",
+"pdf": "ai-engineering/01-prompt-engineering/sources/song-2023-pre-trained-large-language-models.pdf",
+"bib": {"title": "PRE-TRAINED LARGE LANGUAGE MODELS FOR INDUSTRIAL CONTROL", "authors": ["Lei Song","Chuheng Zhang","Li Zhao","Jiang Bian"], "first_author": "Song", "year": 2023, "venue": "preprint (arXiv:2308.03028v1 [cs.AI], 6 Aug 2023; Microsoft Research Asia technical report)", "arxiv": "2308.03028", "doi": null},
+"read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 77981, "chars_total": 77981, "engine": "pymupdf", "skipped": "reference list skimmed only"},
+"type": "empirical",
+"question": "How well can GPT-4, prompted with selected demonstrations and no training, control building HVAC, how well does it generalize across buildings and weather, and which prompt design choices matter?",
+"hypothesis": "A pre-trained LLM given few-shot demonstrations can match RL controllers with fewer samples and lower technical debt.",
+"contributions": ["A training-free method to use foundation models for industrial control across heterogeneous tasks with low technical debt","HVAC control with GPT-4 as an example with positive results","Ablation studies on generalization, demonstration selection and prompt design"],
+"method": {
+"summary": "GPT-4 is the controller. A prompt generator turns building/weather metadata, instructions, retrieved demonstrations (historical, K-means representative, KNN-retrieved expert) and the current state into text; the returned action is executed in the BEAR HVAC simulator. Compared with PPO and an oracle MPC over 240 steps, five seeds.",
+"task": "HVAC control in the BEAR building simulator via in-context learning",
+"trains": false,
+"datasets": [
+{"name": "BEAR expert demonstrations (PPO-collected)", "role": "eval", "size": "20,000 transitions per scenario (Section 4.2); Section 3 also says a PPO expert is run for 100,000 steps", "split": "scenarios = building {OfficeSmall, OfficeMedium, OfficeLarge} x weather {ColdDry, CoolDry, WarmDry, MixedDry}; target OfficeMedium + CoolDry", "source": "BEAR (Zhang et al., 2022a)", "preprocessing": "states, actions and feedback translated to text; real numbers rounded to integers; actions scaled to integers"}
+],
+"models": [
+{"name": "GPT-4", "role": "proposed", "params": null, "architecture": "LLM used via API, no fine-tuning", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+{"name": "PPO (per-scenario)", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training": "100 million steps per scenario"}},
+{"name": "MPC", "role": "baseline", "params": null, "architecture": "oracle with ground-truth outside temperature for next 10 steps", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+{"name": "Universal Sentence Encoder", "role": "retriever", "params": null, "architecture": "embedding size 512", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+],
+"training": null,
+"inference": {
+"decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+"samples": "5 rounds with different seeds per scenario; mean and std reported; 240 steps per run (10 days)",
+"prompting": "Few-shot: system-style meta description, heating/cooling instruction, 8 demonstrations (default H2 R2 E4: 2 historical, 2 representative, 4 expert), current state text; optional manual feedback comments per demonstration; actions as integers 0-100 in the prompt",
+"retrieval": "Expert demos retrieved by KNN (scikit-learn NearestNeighbors) over Universal Sentence Encoder embeddings of metaTranslator + stateTranslator text; representative demos: K-means (scikit-learn) with 2 clusters, nearest to centres, fixed across steps",
+"parameters": {"reward_alpha": null, "target_temperature": "22 C", "noise_ablation": "N(0, std 2) added to outside temperature each step", "demo_notation": "H=historical, R=representative, E=expert, followed by count"},
+"other": {}
+},
+"eval": {
+"metrics": [{"name": "Reward Mean", "definition": "mean per-step reward over 240 steps, reward = (1 - mean |a_i|) + alpha*(1 - sum (t_i - T)^2 / (T n)), T=22 C; mean over 5 seeds", "unit": "reward", "higher_is_better": true}],
+"baselines": ["MPC (oracle upper bound)", "PPO", "Random policy", "GPT-Random (8 random demonstrations)"],
+"protocol": "240 steps, 5 seeds, mean and std reported; no significance test"
+},
+"availability": {"code": null, "weights": null, "data": null},
+"prompts": [
+{"purpose": "metaTranslator", "text": "You are the HVAC administrator responsible for managing a building of type Office Medium located in Buffalo, where the climate is Hot and Dry.", "where": "Section 3"},
+{"purpose": "self-comment instruction", "text": "Before initiating actions, it is advisable to first offer feedback on the quality of all the provided demonstrations to further improve the comprehension of control logics derived from them.", "where": "Section 4.5"},
+{"purpose": "instructionTranslator (heating mode), items 3-4 are the Task Instructions", "text": "3. If room temperature is higher than the target temperature, the larger the difference between room temperature and the target temperature, the lower the action should be. 4. If room temperature is lower than the target temperature, the larger the difference between room temperature and the target temperature, the higher the action should be.", "where": "Section 3"}
+],
+"evidence": []
+},
+"results": [
+{"claim": "GPT-4 with only cross-building, cross-weather expert demos (Group A) is close to but below PPO (1.21)", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.16", "unit": "reward", "baseline_value": "PPO 1.21", "n": "5 seeds", "setup": "Target OfficeMedium/CoolDry, GPT-4, demos H2R2E4 from other buildings and other weathers only", "table": "Table 1, row GPT-A, column Reward Mean", "quote": null, "note": "Text says GPT-4 'achieves comparable or better outcomes to PPO' even for GPT-A; numerically 1.16 < 1.21", "where": "Table 1, Sec 4.3"},
+{"claim": "GPT-4 using only its own historical demonstrations (4 historical, no expert) scores the best GPT result and above PPO", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.23", "unit": "reward", "baseline_value": "PPO 1.21", "n": "5 seeds", "setup": "Group F, H4R0E0, target OfficeMedium/CoolDry", "table": "Table 1, row GPT-F, column Reward Mean", "quote": null, "note": "Std 0.01 vs PPO 0.04", "where": "Table 1, Table 2 row H4R0E0"},
+{"claim": "Group D (all buildings and weathers incl. target) gives 1.20, while Group E (target scenario only) gives lower, 1.09", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.20", "unit": "reward", "baseline_value": "GPT-E 1.09", "n": "5 seeds", "setup": "H2R2E4 demos; D has all 12 scenarios, E only OfficeMedium/CoolDry", "table": "Table 1, rows GPT-D and GPT-E, column Reward Mean", "quote": null, "note": "The matched-scenario set (E) is worst of A-F, contrary to the expectation that more relevant demos help", "where": "Table 1"},
+{"claim": "Oracle MPC upper bound reward", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.35", "unit": "reward", "baseline_value": null, "n": "5 seeds", "setup": "MPC with true outside temperatures for next 10 steps", "table": "Table 1, row MPC, column Reward Mean", "quote": null, "note": null, "where": "Table 1"},
+{"claim": "Random-action policy and GPT with 8 randomly sampled demos are far worse than GPT-4 selected demos", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "0.88", "unit": "reward", "baseline_value": "Random -26.72", "n": "5 seeds", "setup": "GPT-Random: like GPT-D but 8 random demos each step", "table": "Table 1, row GPT-Random, column Reward Mean", "quote": null, "note": "GPT-Random 0.88 is below the no-demo GPT-4 score of 1.01 (Table 2 H0R0E0)", "where": "Table 1"},
+{"claim": "Expert demonstrations alone hurt GPT-4 below no demonstrations (2 expert demos)", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "0.51", "unit": "reward", "baseline_value": "no demos 1.01", "n": "5 seeds", "setup": "H0R0E2-A: only 2 expert demos from Group A set", "table": "Table 2, row H0R0E2-A, column Reward Mean", "quote": null, "note": "Authors: expert demos 'consistently diminish the performance of GPT-4, even performing worse than the case with no demonstrations'", "where": "Table 2, Sec 4.4"},
+{"claim": "With no demonstrations at all GPT-4 already scores 1.01", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.01", "unit": "reward", "baseline_value": null, "n": "5 seeds", "setup": "H0R0E0, full prompt otherwise", "table": "Table 2, row H0R0E0, column Reward Mean", "quote": null, "note": "Std 0.08", "where": "Table 2"},
+{"claim": "Number of historical demos: 2 gives 1.15, 4 gives 1.23, 8 gives 1.21", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.23", "unit": "reward", "baseline_value": "H2 1.15, H8 1.21", "n": "5 seeds", "setup": "historical demos only, target OfficeMedium/CoolDry", "table": "Table 2, rows H2R0E0, H4R0E0, H8R0E0", "quote": null, "note": null, "where": "Table 2"},
+{"claim": "Mixing demo types: H4R2E2-A 1.2, H2R4E2-A 1.19, H2R2E4-A 1.16", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.2", "unit": "reward", "baseline_value": null, "n": "5 seeds", "setup": "Group A demonstration set", "table": "Table 2, row H4R2E2-A, column Reward Mean", "quote": null, "note": null, "where": "Table 2"},
+{"claim": "Manual feedback comments on demonstrations raise reward from 0.99 to 1.16; self-generated comments drop it to 0.59", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.16", "unit": "reward", "baseline_value": "None 0.99; Self-comment 0.59", "n": "5 seeds", "setup": "Config of GPT-A (H2R2E4-A)", "table": "Table 3, rows None, Manual, Self-comment, column Reward Mean", "quote": null, "note": "Text: manual 'increasing it from 0.99 to 1.16'; Manual+Self-comment 1.11", "where": "Table 3, Sec 4.5"},
+{"claim": "Task description alone gives 1.12 with no demonstrations; adding instructions on top lowers it to 1.07", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.12", "unit": "reward", "baseline_value": "None 1.01; Instruction only 1.04; Both 1.07", "n": "5 seeds", "setup": "No demonstrations in prompt", "table": "Table 4, row Description Only, column Reward Mean", "quote": null, "note": null, "where": "Table 4, Sec 4.6"},
+{"claim": "Rounding real numbers to integers in the prompt improves reward from 1.07 to 1.16", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.16", "unit": "reward", "baseline_value": "1.07 unrounded", "n": "5 seeds", "setup": "GPT-A config", "table": "Table 5, rows True and False, column Reward Mean", "quote": null, "note": "Std 0.04 vs 0.07", "where": "Table 5, Sec 4.7"},
+{"claim": "Under Gaussian noise (std 2) on outside temperature GPT-4 barely changes (1.16 to 1.15) while PPO falls from 1.21 to 1.07", "kind": "measured", "source": null, "metric": "Reward Mean", "value": "1.15", "unit": "reward", "baseline_value": "PPO-noise 1.07", "n": "5 seeds", "setup": "GPT-A config; noise N(0, 2) added to outside temperature each step", "table": "Table 6, rows GPT-noise2 and PPO-noise2, column Reward Mean", "quote": null, "note": "Footnote 2 for 'noise2' marker is not in text; std 2 from Sec 4.8 text", "where": "Table 6, Sec 4.8"},
+{"claim": "Authors conclude GPT-4 is comparable to RL with fewer samples and lower technical debt", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "HVAC, BEAR, one target scenario (OfficeMedium/CoolDry)", "quote": null, "table": null, "note": "Abstract: 'GPT-4 achieves a performance comparable to RL methods but with fewer samples and lower technical debt'. No sample-count comparison is measured.", "where": "Abstract"}
+],
+"limits": [
+"Single target scenario (OfficeMedium/CoolDry); other scenarios only supply demonstrations.",
+"GPT-4 version, temperature, max tokens, reward alpha not stated; no code release mentioned.",
+"The 'fewer samples' claim is not measured: PPO experts trained 100M steps are used as demonstrations (20,000 transitions collected), so GPT-4 depends on PPO-generated data except Group F.",
+"Authors concede LLMs lack self-learning from interaction; proposed demonstration scoring/generation approaches have no results ('will be updated in the future version').",
+"Authors' hypothesis that self-comment hurt because the instruction was too simple is untested.",
+"Table 7 '+' ratings are qualitative judgements, not measurements.",
+"Only 5 seeds and no significance test; many differences are within one std.",
+"Abstract and conclusion state results across 'different scenarios' and 'generalization' while only one target is evaluated."
+],
+"practices": [],
+"terms": [{"term": "H/R/E notation", "definition": "abbreviations for historical, representative and expert demonstrations followed by a count in the prompt", "where": "Sec 4.3"}],
+"lineage": [
+{"work": "BEAR", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "HVAC simulator, Zhang et al. 2022a", "quote": null},
+{"work": "Proximal Policy Optimization", "year": 2017, "arxiv": null, "relation": "baseline", "note": "Schulman et al.; baseline and expert-demonstration source", "quote": null},
+{"work": "Reflexion", "year": 2023, "arxiv": null, "relation": "related", "note": "Shinn et al.; per-step comments differ from reflexion's trajectory-level evaluation", "quote": null},
+{"work": "GPT-4 / Sparks of AGI", "year": 2023, "arxiv": "2303.12712", "relation": "evaluates", "note": "OpenAI 2023; Bubeck et al. 2023", "quote": null},
+{"work": "Universal Sentence Encoder", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "Cer et al., embedding for retrieval", "quote": null},
+{"work": "Dulac-Arnold et al. (2015)", "year": 2015, "arxiv": null, "relation": "related", "note": "nearest-action lookup for proposed demonstration generation", "quote": null},
+{"work": "Do as I can, not as I say (SayCan)", "year": 2022, "arxiv": "2204.01691", "relation": "related", "note": "Ahn et al.; value function on top of LLM", "quote": null}
+],
+"figures": [
+{"figure": "Figure 1", "caption": "The pipeline illustrating how GPT-4 is utilized to control HVACs.", "page": 5, "why": "Shows translator, retrieval, prompt generator and environment loop"},
+{"figure": "Figure 2", "caption": "How prompts are generated in our approach.", "page": 9, "why": "Prompt layout"},
+{"figure": "Figure 3", "caption": "Different buildings correspond to different expert policies under the same weather condition.", "page": 13, "why": "Why expert demos from other scenarios mislead"},
+{"figure": "Figure 4", "caption": "The same building has different expert policies under different weather conditions.", "page": 14, "why": "Same point for weather"}
+],
+"code": [
+{"where": "Eq. 1", "snippet": "reward = (1.0 - sum_i |a_i| / n) + alpha * (1 - sum_i (t_i - T)^2 / (T * n))", "verbatim": false}
+],
+"problems": ["Table cells are split across lines in the text; table values located by row/column. Figures not read (captions only from text)."]
+}

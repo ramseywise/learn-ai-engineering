@@ -1,0 +1,153 @@
+{
+ "schema": 1,
+ "key": "sha1:f05b6d184272",
+ "pdf": "ai-engineering/02-context-engineering/sources/ai-agents-with-mcp/ch03-making-intelligent-application-agentic-mcp-clients.pdf",
+ "bib": {
+  "title": "3. Making an Intelligent Application Agentic with MCP Clients (AI Agents with MCP, early release)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "O'Reilly early release book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 76057,
+  "chars_total": 76057,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build an MCP host application and client that connects to a server and uses its tools, resources and prompts with an LLM?",
+ "hypothesis": null,
+ "contributions": [
+  "Walk-through of a minimal host (chat loop on Anthropic Messages API) and an MCPClient class with stdio and Streamable HTTP connect/disconnect",
+  "Wrapper patterns for tools, resources and prompts with guardrails and logging",
+  "Host integrations: tool-use loop, LLM-based resource selection as context, LLM-based prompt selection as system instructions"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Agent performance tends to drop dramatically as more tools are added, attributed to harder tool selection from overlapping descriptions and too much aggregate description content.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Unquantified warning; no data given.",
+   "quote": "Performance tends to drop dramatically as more tools are added, typically due to an increased difficulty in selecting the correct tool for a prompt.",
+   "table": null,
+   "note": null,
+   "where": "Tools section"
+  },
+  {
+   "claim": "The example resource/prompt selection costs one extra LLM call per user input (max_tokens 200 each).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter's Agent class; claude-sonnet-4-0.",
+   "quote": "currently, our application does 1 extra potentially expensive LLM csll for each user input in order to select the most relevant resources for the user\u2019s query.",
+   "table": null,
+   "note": null,
+   "where": "Resources section"
+  }
+ ],
+ "limits": [
+  "Early-release draft; no authors printed in the capture, no empirical data.",
+  "The captured text ends after the prompts example. The introduction promises multiple-server tradeoffs, authentication, resource filtering, model agnosticism and best practices (security, reliability, responsiveness), but none appear; the TOC suggests best practices are in Ch 4.",
+  "Code is truncated in the PDF capture (lines cut mid-statement); some code is not runnable as shown (e.g. await in non-async main).",
+  "Notification handling (list_changed, resource subscribe) only partly supported in the Python SDK as of writing; MCP connector beta tools-only.",
+  "Dated: SDK APIs, Claude model names (claude-sonnet-4-0), SSE superseded by Streamable HTTP."
+ ],
+ "practices": [
+  "Build a client class wrapping the SDK session; minimum is connect, discover, make available to LLM (Basic Client Design).",
+  "Wrap list/call methods with connection checks, logging, empty-result warnings, and optional cursor pagination (Tools).",
+  "Do not pass all system env vars to a stdio server via env_vars, it can expose secrets (stdio).",
+  "Secure remote transports: authenticate and validate origin headers (Streamable HTTP warning).",
+  "Never commit .env files with API keys (host example warning).",
+  "Convert MCP Tool objects to the LLM API's schema (name, description, input_schema); refresh the tool list per input or listen for list_changed if tools can change.",
+  "Monitor tool-calling performance as tools are added.",
+  "Add resource context as extra content blocks in the user message, not a separate user message (Resources note).",
+  "Resources are for extra context; prompts are user-controlled templates with arguments, injected here as system instructions; filter hallucinated prompt/resource names returned by the selector LLM.",
+  "Roots are not enforced; servers must honour them and users should vet servers."
+ ],
+ "terms": [
+  {
+   "term": "host application",
+   "definition": "anything that hosts the client(s) managing connections to MCP servers and communicates with an LLM",
+   "where": "The Host Application"
+  },
+  {
+   "term": "MCP client",
+   "definition": "handles all communication and connections to a server; connections are one-to-one",
+   "where": "Basic Client Design"
+  },
+  {
+   "term": "transport",
+   "definition": "an implementation of the protocol's transport layer, managing how messages are sent between client and server (stdio, Streamable HTTP)",
+   "where": "Initializing the Client"
+  },
+  {
+   "term": "roots",
+   "definition": "boundaries (such as a filesystem location) within which connecting servers should operate; not strictly enforced",
+   "where": "The Client"
+  },
+  {
+   "term": "three MCP primitives",
+   "definition": "tools, prompts, and resources",
+   "where": "Basic Client Design"
+  },
+  {
+   "term": "dynamic prompts",
+   "definition": "prompts whose arguments are injected by the client or host",
+   "where": "Prompts"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Model Context Protocol / MCP Python SDK",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Protocol and SDK the code is built on",
+   "quote": null
+  },
+  {
+   "work": "Tim Kellogg, tupac project",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Minimalist client using MCP resources as prompt cache",
+   "quote": null
+  },
+  {
+   "work": "Anthropic Messages API and MCP connector (beta)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM API used; connector supports tools and remote servers only",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "Tools example",
+   "snippet": "tool_choice={\"type\": \"auto\"}  # also \"any\", {\"type\":\"tool\",...}, \"none\"",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Code listings truncated at line width in the capture.",
+  "Capture ends after Prompts section with page-chrome text; later promised sections absent.",
+  "No embedded instructions found."
+ ]
+}

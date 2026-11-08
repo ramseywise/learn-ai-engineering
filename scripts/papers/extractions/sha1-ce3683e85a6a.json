@@ -1,0 +1,62 @@
+{
+ "schema": 1,
+ "key": "sha1:ce3683e85a6a",
+ "pdf": "ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/ch14-natural-language-kg-questions.pdf",
+ "bib": {"title": "14 Asking a KG questions with natural language", "authors": [], "first_author": "unknown", "year": null, "venue": "book chapter (KG and LLMs in Action, ch. 14)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 84261, "chars_total": 84261, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "How can a non-technical domain expert query a knowledge graph in natural language more reliably than with plain RAG, by emulating how an expert reads the schema and builds a Cypher query?",
+ "hypothesis": "Converting questions into formal Cypher queries using an annotated conceptual schema, intent routing and reasoning-first structured output is more reliable than retrieval-augmented generation over incomplete context.",
+ "contributions": ["An 'expert emulation' pipeline: intent detection, schema extraction, query generation, execution with error feedback, visualization, summarization", "A YAML skip/descriptions scheme for turning apoc.meta.schema output into an annotated LLM-friendly conceptual schema", "A structured Cypher-generation prompt with ordered JSON output fields (relationships, reasoning, query, success)"],
+ "method": null,
+ "results": [
+  {"claim": "Dropping one witness statement from the retrieved context flips the LLM's answer to 'Is the perpetrator left-handed?' from likely left-handed to likely right-handed, illustrating RAG fragility under incomplete retrieval.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Five invented witness statements in a detective-assistant prompt; one anecdotal run, model unnamed", "quote": "the absence of a single witness statement is enough to lead the model to the opposite conclusion!", "table": null, "note": null, "where": "14.2.2"},
+  {"claim": "A smaller or quantized LLM misclassified 'How often is the knowledge graph updated...' as Data-Related, while a full-scale LLM labelled it System-Related / Documentation-Related.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Single question, broad intent-detection prompt with reason field; models unnamed, no accuracy figures", "quote": "Smaller or quantized models, however, may misinterpret the question as concerning the data itself and incorrectly classify it as “Data-Related.”", "table": null, "note": null, "where": "14.5.2"},
+  {"claim": "Asking the model to list relationships to traverse before reasoning and the query significantly reduces relationship hallucination (asserted, no measurement).", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Cypher-generation prompt with ordered JSON fields; no evaluation given", "quote": "asking it to list the relationships it intends to traverse “out loud” significantly reduces the chance of this type of hallucination", "table": null, "note": null, "where": "14.7.3"},
+  {"claim": "Reasoning-first output order beats answer-first because tokens are generated sequentially and the model commits to an early answer (asserted, shown in Fig 14.10 on one path-finding task).", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Qualitative comparison only", "quote": "it’s impor‐\ntant to prompt the model to first provide its step-by-step reasoning, fol‐\nlowed by the final answer.", "table": null, "note": "Quote contains soft-hyphen line breaks as in the cached text", "where": "14.7.1"}
+ ],
+ "limits": ["No quantitative evaluation anywhere: no benchmark, accuracy, latency or cost numbers; all demonstrations are single anecdotal examples with unnamed models.", "Examples are from a law enforcement domain with invented data; generality is asserted.", "Chapter says the hands-on implementation is deferred to chapter 15.", "No comparison against schema-less or other text-to-Cypher approaches; claims about hallucination reduction and the value of the reminder of the question are unmeasured.", "Reference list not included in the PDF: citations [1]-[4] (apoc.meta.schema, chain-of-thought, scratchpad, semantic consistency) are not resolvable here."],
+ "practices": [
+  "Route each question by intent first (data, system/documentation, system/schema, feedback; then graph/table/chart/map) because it fixes presentation and pipeline (14.5).",
+  "Write classification prompts with clear instructions, defined categories, few-shot examples, boundary cases, output format and a fallback class; bias the fallback to 'graph' (14.5.1).",
+  "Include a reason field in classifier output for debugging misclassifications, and harvest misclassified boundary cases as new few-shots (14.5.1, 14.7.1).",
+  "Start with one broad classification prompt and move to multistage only when complexity grows (14.5.2).",
+  "Feed the LLM a conceptual schema, not raw apoc.meta.schema output: drop helper/administrative nodes, unused relationships and properties (14.6.1).",
+  "Use a concise typed format such as (:Vehicle {color: STRING}) rather than narrative schema descriptions (14.6.1).",
+  "Annotate schema elements with inline /* */ comments recording abbreviations (BLK for black) and relationship meanings (COMMITTED vs CO_OFFENDS_WITH) (14.6.2).",
+  "Manage the schema with a YAML file having skip (classes, relationships, properties) and descriptions sections (14.6.3).",
+  "Ask for reasoning before the final answer in generation tasks; put answer first only for classification where the reasoning is for diagnosis (14.7.1).",
+  "Structure the Cypher prompt in order: task and question, annotated schema, intent-dependent requirements, examples, optional user selection, KG-specific notes, question reminder, requirements reminder, output format (14.7.2).",
+  "Wrap question and schema in HTML-like tags and repeat the question near the end because the schema section can be long (14.7.2).",
+  "For graph or map output require returning all matched nodes and named relationships and aggregate traversals in one MATCH pattern; for table output select and rename properties (14.7.2).",
+  "Output JSON fields in order relationships, reasoning, query, success, and make few-shot examples conform to that format using '...' placeholders (14.7.3).",
+  "Pass previous query errors back through an information field so the model can retry (14.7.2).",
+  "Summarize results as a complement to the visualization, filtering irrelevant returned data and adding analysis only when the question asks for it (14.8)."
+ ],
+ "terms": [
+  {"term": "constrained traversal", "definition": "Among entities connected in a specific way, which ones possess the characteristics of interest; the building block of formal graph queries", "where": "14.3.1"},
+  {"term": "conceptual schema", "definition": "a distilled, meaningful structure that focuses only on the entities and relationships which convey the essential model of the domain", "where": "14.6.1"},
+  {"term": "expert emulation", "definition": "Answering KG questions by breaking down what an expert would do into implementable steps, shifting from generating an answer to formulating the right query", "where": "Summary, 14.4"},
+  {"term": "semantic consistency", "definition": "Models trained on coherent text tend to keep later text consistent with earlier text, so they stick to an early answer", "where": "14.7.1"}
+ ],
+ "lineage": [
+  {"work": "Retrieval-augmented generation (as discussed in chapter 13 of the same book)", "year": null, "arxiv": null, "relation": "contradicts", "note": "Chapter contrasts its schema-based query approach with RAG and lists RAG's limits", "quote": null},
+  {"work": "Chain-of-thought prompting [2]", "year": null, "arxiv": null, "relation": "uses-method", "note": "Reasoning-before-answer prompting; citation details not in the PDF", "quote": null},
+  {"work": "Scratchpad techniques [3]", "year": null, "arxiv": null, "relation": "uses-method", "note": "reasoning field is a scratch pad; citation details not in the PDF", "quote": null},
+  {"work": "Semantic consistency research [4]", "year": null, "arxiv": null, "relation": "related", "note": "Explains why answer-first output anchors reasoning", "quote": null},
+  {"work": "apoc.meta.schema (Neo4j APOC) [1]", "year": null, "arxiv": null, "relation": "uses-method", "note": "Source of the technical schema that is filtered into a conceptual schema", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 14.1", "caption": "RAG system limitations. A RAG system can produce incorrect answers when the retriever fails to identify critical documents.", "page": null, "why": "Shows the failure path of incomplete retrieval"},
+  {"figure": "Fig 14.2", "caption": "Translating a natural-language query (“Red Camaro spotted in this area at this time”) into a formal Cypher query.", "page": null, "why": "Three-stage mapping from question to schema elements to Cypher"},
+  {"figure": "Fig 14.3", "caption": "Overview of the system, highlighting the main components: Intent detection, Schema extraction, Query generation, Query execution, Visualization, and Summary generation.", "page": null, "why": "Architecture roadmap with the error feedback loop"},
+  {"figure": "Fig 14.8", "caption": "The technical schema obtained through the APOC call is filtered so it is reduced to the conceptual graph schema representation.", "page": null, "why": "Schema-to-text transformation steps"},
+  {"figure": "Fig 14.10", "caption": "Comparison of two prompt structures for the same path-finding task: answer-first vs reasoning-first.", "page": null, "why": "Shows effect of JSON field order"},
+  {"figure": "Fig 14.11", "caption": "The complete flow of transforming a natural language question into a Cypher query ... Input processing, Context building, and Final guidelines.", "page": null, "why": "Prompt assembly at a glance"}
+ ],
+ "code": [
+  {"where": "14.7.3 output format specification", "snippet": "{\"relationships\": [...], \"reasoning\": \"...\", \"query\": \"<Cypher query>\", \"success\": <true/false>}", "verbatim": false},
+  {"where": "14.6.3 Listing 14.6", "snippet": "schema:\n    skip:\n        classes: []\n        relationships: []\n        properties: []", "verbatim": true}
+ ],
+ "problems": ["Authors, year and reference list are absent from the chapter PDF; bib fields left empty or null.", "Some prompt and listing lines are truncated in the text layer (e.g. listing 14.1, the broad intent prompt).", "Section map from extract.py printed no headings."]
+}

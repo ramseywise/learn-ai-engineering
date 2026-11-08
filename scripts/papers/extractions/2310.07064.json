@@ -1,0 +1,693 @@
+{
+ "schema": 1,
+ "key": "2310.07064",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zhu-2023-large-language-models-can-learn.pdf",
+ "bib": {
+  "title": "Large Language Models can Learn Rules",
+  "authors": [
+   "Zhaocheng Zhu",
+   "Yuan Xue",
+   "Xinyun Chen",
+   "Denny Zhou",
+   "Jian Tang",
+   "Dale Schuurmans",
+   "Hanjun Dai"
+  ],
+  "first_author": "Zhu",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2310.07064",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 136529,
+  "chars_total": 136529,
+  "engine": "pymupdf",
+  "skipped": "Appendix B prompts 4-15 and C rule libraries skimmed by heading only (long prompt listings); all else read."
+ },
+ "type": "empirical",
+ "question": "Can an LLM learn an explicit library of textual rules from training examples without rule annotation, and does prompting with that library beat relying on the model's implicit rules?",
+ "hypothesis": "Incorrect implicit rules cause many CoT errors; retrieving verified rules from a learned library is easier than generating them, so reasoning improves.",
+ "contributions": [
+  "Hypotheses-to-Theories (HtT): induction stage that generates and verifies rules, deduction stage that applies a filtered rule library",
+  "Induction from deduction: reuse one few-shot deductive prompt (CoT, LtM) for rule generation and verification",
+  "XML tagging of a hierarchical rule library to make retrieval work in a pure-prompting setup",
+  "10-30% absolute accuracy gains on CLUTRR, Arithmetic and List Functions; rules transfer across models and to textual CLUTRR"
+ ],
+ "method": {
+  "summary": "Induction stage: run few-shot CoT/LtM on training QA pairs, extract each declared rule by regex, count occurrences and correct answers per rule, keep rules with coverage >= k and confidence >= p. Deduction stage: prepend the rule library (organised under XML tags) to the few-shot prompt, with exemplars teaching the model to retrieve rules rather than generate them.",
+  "task": "multi-step reasoning with prompting: relational reasoning (CLUTRR), non-decimal arithmetic, concept learning (List Functions)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "CLUTRR (symbolic and textual)",
+    "role": "both",
+    "size": "train 2,000 samples of 2 and 3 hop; validation 200 and test 200 samples of 2 to 10 hop",
+    "split": "uniform sampling of standard splits from Sinha et al. 2019",
+    "source": "Sinha et al., 2019",
+    "preprocessing": "rules induced on symbolic version; textual version reuses them"
+   },
+   {
+    "name": "Arithmetic (Wu et al. 2023), bases 16, 11, 9",
+    "role": "both",
+    "size": "train 900 examples of 2-digit addition; validation 100 and test 100 examples of 2, 3 and 4 digit addition",
+    "split": "train/validation/test made by the authors",
+    "source": "Wu et al., 2023",
+    "preprocessing": "when the training set has fewer than 2,000 examples, resampled up to 2,000 for induction"
+   },
+   {
+    "name": "List Functions",
+    "role": "both",
+    "size": "250 tasks (P1, P2, P3), 32 input-output pairs per task",
+    "split": "16 train, 16 test per task; for HtT the 16 train split into 8 train and 8 validation",
+    "source": "Rule et al., 2020",
+    "preprocessing": "induction run on 20 train-validation splits sampled per task"
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo-0613 (gpt-3.5-turbo-16k-0613 when prompt exceeds 4k)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4k (16k variant)",
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gemini-1.0-pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Appendix E only"
+    }
+   },
+   {
+    "name": "EdgeTransformer (Bergen et al. 2021)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "supervised domain-specific model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "reproduced by authors in the same setting, CLUTRR only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling; no other decoding settings stated",
+   "temperature": "1 (default) for GPT-3.5 and GPT-4; 0.9 for Gemini Pro",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one run per item; number of runs and seeds not stated",
+   "prompting": "0-shot CoT; 5-shot CoT and 5-shot LtM (first 5 non-trivial examples) on CLUTRR and Arithmetic; 4-shot CoT (first example of each of 4 groups in P1) on List Functions; same exemplars across methods; HtT prepends the rule library and an instruction to use the provided knowledge",
+   "retrieval": "no external retriever: the LLM retrieves rules itself from the library in the prompt, indexed via XML tags (2 levels for CLUTRR, 3 for Arithmetic)",
+   "parameters": {
+    "induction training examples": "2,000 for CLUTRR and Arithmetic; 20 train-val splits per List Functions task",
+    "grid minimal coverage k": "1, 2, 3",
+    "grid minimal confidence p": "0.1, 0.3, 0.5, 0.7, 0.9",
+    "best GPT-4 k (CLUTRR, base-16, base-11, base-9, List Functions)": "2, 2, 2, 2, 1",
+    "best GPT-4 p": "0.7, 0.5, 0.3, 0.3, 0.1",
+    "best GPT-3.5 k": "2, 2, 2, 2, 1",
+    "best GPT-3.5 p": "0.3, 0.3, 0.5, 0.5, 0.1",
+    "rule library size limit": "<= 500 rules in experiments; base method needs >= 20% training accuracy"
+   },
+   "other": {
+    "LtM rule induction": "hyperparameters selected and rules induced with CoT; LtM used only for deduction",
+    "answer matching": "last sentence of output, full-word match; multiple answers count as wrong"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "ground-truth answer appears as full word in last sentence of the prediction",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "raw accuracy (List Functions)",
+     "definition": "accuracy on test input-output pairs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "task accuracy (List Functions)",
+     "definition": "ratio of tasks with all test pairs solved",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "0-shot CoT",
+    "few-shot CoT",
+    "few-shot LtM",
+    "EdgeTransformer (CLUTRR)",
+    "random-rule library"
+   ],
+   "protocol": "no seeds, variance or significance tests stated; test sets are small (200 CLUTRR, 100 per Arithmetic base/digit set); manual error analysis on 100 test examples"
+  },
+  "availability": {
+   "code": "https://github.com/google-deepmind/llms_can_learn_rules",
+   "weights": null,
+   "data": "public datasets (CLUTRR, Arithmetic, List Functions)"
+  },
+  "prompts": [
+   {
+    "purpose": "5-shot CoT+HtT on CLUTRR (instruction)",
+    "text": "Instruction: When you answer the questions, try to use the provided knowledge whenever possible. Try not to invent knowledge by yourself unless necessary.",
+    "where": "Appendix B.1, Prompt 3"
+   },
+   {
+    "purpose": "0-shot CoT on CLUTRR",
+    "text": "Context: The relations on the path from {{ head }} to {{ tail }} are {{ relations[0] }}, . . . , {{ relations[n - 1] }}. Question: {{ tail }} is {{ head }}'s what? Answer: Let's think step by step.",
+    "where": "Appendix B.1, Prompt 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We use the default temperature of 1 for these models.",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "HtT raises 5-shot CoT accuracy on base-16/11/9 Arithmetic for GPT-4 by 21.0 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.4,
+   "unit": "%",
+   "baseline_value": 57.4,
+   "n": null,
+   "setup": "Arithmetic average over bases 16, 11, 9 and 2-4 digits, GPT-4, 5-shot CoT + HtT",
+   "quote": null,
+   "table": "Table 2, rows GPT-4 5-shot CoT + HtT, column Average (57.4 base)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "HtT raises GPT-4 5-shot CoT on symbolic CLUTRR by 13.7 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.3,
+   "unit": "%",
+   "baseline_value": 50.6,
+   "n": null,
+   "setup": "CLUTRR symbolic, 2-10 hops, GPT-4, rules induced by GPT-4",
+   "quote": null,
+   "table": "Table 1, row GPT-4 + HtT, column Average (50.6 base)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Rules from GPT-4 double GPT-3.5 CoT accuracy on CLUTRR",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.4,
+   "unit": "%",
+   "baseline_value": 21.2,
+   "n": null,
+   "setup": "CLUTRR symbolic, GPT-3.5 5-shot CoT with GPT-4-induced rules (base 21.2)",
+   "quote": "with rules from GPT-4, HtT increases the performance of CoT on GPT-3.5 by 27.2%, doubling the performance of CoT",
+   "table": "Table 1, row GPT-3.5 + HtT (GPT-4), column Average",
+   "note": null,
+   "where": "4.2, Table 1"
+  },
+  {
+   "claim": "HtT lifts GPT-4 4-shot CoT raw accuracy on List Functions",
+   "kind": "measured",
+   "source": null,
+   "metric": "raw accuracy",
+   "value": 76.1,
+   "unit": "%",
+   "baseline_value": 57.4,
+   "n": null,
+   "setup": "List Functions, 250 tasks, GPT-4 4-shot CoT + HtT (base 57.4)",
+   "quote": null,
+   "table": "Table 3, row GPT-4 + HtT, column Raw Accuracy Average",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "HtT lifts GPT-4 task accuracy on List Functions",
+   "kind": "measured",
+   "source": null,
+   "metric": "task accuracy",
+   "value": 56.2,
+   "unit": "%",
+   "baseline_value": 46.0,
+   "n": null,
+   "setup": "List Functions, GPT-4 4-shot CoT + HtT (base 46.0)",
+   "quote": null,
+   "table": "Table 3, row GPT-4 + HtT, column Task Accuracy Average",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GPT-3.5 task accuracy on List Functions with GPT-4 rules doubles the 4-shot CoT value",
+   "kind": "measured",
+   "source": null,
+   "metric": "task accuracy",
+   "value": 34.4,
+   "unit": "%",
+   "baseline_value": 15.2,
+   "n": null,
+   "setup": "List Functions, GPT-3.5 + HtT (GPT-4); 4-shot CoT is 15.2",
+   "quote": "the task accuracy of GPT-3.5 can be boosted to 34.4%, doubling the performance of GPT-3.5 with 4-shot CoT",
+   "table": null,
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "HtT gain for GPT-3.5 on Arithmetic is marginal for CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 3.3,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic average, GPT-3.5, 5-shot CoT + HtT (24.1 vs 20.8)",
+   "quote": null,
+   "table": "Table 2, row GPT-3.5 + HtT, column Average 24.1 (+3.3)",
+   "note": null,
+   "where": "Table 2, 6"
+  },
+  {
+   "claim": "Random-conclusion rules destroy accuracy relative to CoT with no rules on CLUTRR",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 9.9,
+   "unit": "%",
+   "baseline_value": 50.6,
+   "n": null,
+   "setup": "CLUTRR GPT-4, rule conclusions replaced by random answers (5-shot CoT 50.6)",
+   "quote": null,
+   "table": "Table 6, row + random rules, column CLUTRR",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Random rules on Arithmetic also hurt",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 23.7,
+   "unit": "%",
+   "baseline_value": 57.4,
+   "n": null,
+   "setup": "Arithmetic GPT-4, random-conclusion rules (5-shot CoT 57.4)",
+   "quote": null,
+   "table": "Table 6, row + random rules, column Arithmetic",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Incorrect rules account for 65% of CoT errors on CLUTRR and 81% on base-16 Arithmetic",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of errors",
+   "value": 65,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "manual analysis, GPT-4 CoT, 100 test examples each",
+   "quote": "such incorrect rules constitute 65% and 81% of the errors made by CoT on CLUTRR and base-16 Arithmetic respectively",
+   "table": null,
+   "note": "81% is the base-16 figure",
+   "where": "3"
+  },
+  {
+   "claim": "Base-16 CoT errors from incorrect rules fall from 22% of all examples to 3% with HtT",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of examples",
+   "value": 3,
+   "unit": "%",
+   "baseline_value": 22,
+   "n": null,
+   "setup": "Base-16 GPT-4, 100 test examples; CoT correct 73% vs HtT 93%",
+   "quote": null,
+   "table": "Figure 2, Base-16 (CoT+HtT) incorrect rules 3% (CoT 22%)",
+   "note": "Table 11 splits the same errors: 19%+3% for CoT, 2%+1% for HtT",
+   "where": "Figure 2"
+  },
+  {
+   "claim": "HtT discovers more than 85% of the necessary rules on Arithmetic",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic bases 16, 11, 9, compared to an oracle",
+   "quote": "We can see that HtT discovers more than 85% of the rules in all datasets.",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  },
+  {
+   "claim": "Rules learned on symbolic CLUTRR transfer to textual CLUTRR for GPT-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.1,
+   "unit": "%",
+   "baseline_value": 48.7,
+   "n": null,
+   "setup": "textual CLUTRR, GPT-4 5-shot CoT + HtT (base 48.7); GPT-3.5 shows +0.3 only",
+   "quote": null,
+   "table": "Table 5, row GPT-4 + HtT, column Accuracy",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "5-shot CoT + HtT with GPT-4 is 7.5 points below the supervised EdgeTransformer on CLUTRR",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap",
+   "value": 7.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLUTRR symbolic average (EdgeTransformer 71.8)",
+   "quote": "the performance of 5-shot CoT + HtT with GPT-4 is 7.5% lower",
+   "table": null,
+   "note": "64.3 vs 71.8 gives 7.5",
+   "where": "4.2"
+  },
+  {
+   "claim": "Accuracy grows log-linearly with number of induction examples",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLUTRR, base-16/11/9, List Functions; GPT-4",
+   "quote": "there is a log-linear trend between performance and the number of examples",
+   "table": null,
+   "note": null,
+   "where": "4.5, Fig 3"
+  },
+  {
+   "claim": "CLUTRR and base-11 need about 500 induction examples for significant gain; base-16 and base-9 need 100",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 500,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4",
+   "quote": "CLUTRR and base-11 require 500 examples to obtain a significant gain, while base-16 and base-9 only require 100 examples",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  },
+  {
+   "claim": "XML tagging with 3 levels beats unsorted rules on Arithmetic",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.4,
+   "unit": "%",
+   "baseline_value": 67.2,
+   "n": null,
+   "setup": "Arithmetic GPT-4; unsorted no-hierarchy 67.2, sorted 72.5",
+   "quote": null,
+   "table": "Table 10, row + HtT (3 tags), column Average",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "XML tagging with 2 levels beats unsorted rules on CLUTRR",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.3,
+   "unit": "%",
+   "baseline_value": 57.1,
+   "n": null,
+   "setup": "CLUTRR GPT-4; unsorted 57.1, sorted 60.0",
+   "quote": null,
+   "table": "Table 9, row + HtT (2 tags), column Average",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "HtT improves Gemini Pro 5-shot CoT on CLUTRR by 19.2 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 49.3,
+   "unit": "%",
+   "baseline_value": 30.1,
+   "n": null,
+   "setup": "CLUTRR symbolic, gemini-1.0-pro (base 30.1)",
+   "quote": null,
+   "table": "Table 12, row Gemini Pro + HtT, column Average",
+   "note": null,
+   "where": "Table 12"
+  },
+  {
+   "claim": "Learned library sizes: 98 rules on CLUTRR; 413, 220, 124 on base-16, 11, 9",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 98,
+   "unit": "rules",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-4 induced libraries",
+   "quote": "Prompt 16: 98 rules learned by GPT-4 on CLUTRR.",
+   "table": null,
+   "note": "base-16: 413 rules, precision 98.5%, recall 92.2%; base-11: 220, 90.5%, 99.5%; base-9: 124, 99.2%, 85.5%",
+   "where": "Appendix C"
+  }
+ ],
+ "limits": [
+  "Authors: needs a base model with reasonably strong knowledge and retrieval; GPT-3.5 gains are marginal on Arithmetic (Table 2) and textual CLUTRR (+0.3).",
+  "Authors: number of rules is limited by the LLM context length; scaling beyond the context is open.",
+  "Rule library hierarchy for XML tags is defined manually.",
+  "Only applicable to tasks with <= 500 rules and >= 20% base accuracy on training examples; excludes planning tasks.",
+  "Authors cannot guarantee numbers reproduce on future model versions (GPT-3.5/GPT-4 updated).",
+  "LtM hyperparameters chosen from CoT, which may underestimate LtM+HtT.",
+  "No variance, seeds or significance tests stated; test sets small (200 CLUTRR, 100 per Arithmetic cell).",
+  "Only gpt-3.5-turbo-0613, gpt-4-0613 and gemini-1.0-pro; models are dated.",
+  "CLUTRR rules are not deterministic (a grandmother's daughter can be mother or aunt) so recall of rules can only be checked on Arithmetic."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Hypotheses-to-Theories (HtT)",
+   "definition": "a framework that learns a rule library for reasoning with LLMs, in an induction stage and a deduction stage",
+   "where": "Abstract"
+  },
+  {
+   "term": "induction from deduction",
+   "definition": "adapts a deductive reasoning prompt (e.g. CoT, LtM) for both rule generation and verification by explicitly declaring a rule whenever a deduction is performed",
+   "where": "3.1"
+  },
+  {
+   "term": "coverage / confidence",
+   "definition": "coverage = number of occurrences of a rule in the training set; confidence = average accuracy of examples where the rule occurs",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base prompting method HtT augments",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "second base prompting method",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "0-shot CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Qiu et al. 2024 (hypothesis refinement on List Functions)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "uses raw and task accuracy; separate generation and verification prompts",
+   "quote": null
+  },
+  {
+   "work": "Yang et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "induction with separate generation and verification prompts",
+   "quote": null
+  },
+  {
+   "work": "CLUTRR (Sinha et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "relational reasoning",
+   "quote": null
+  },
+  {
+   "work": "Arithmetic in non-decimal bases (Wu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "counterfactual arithmetic",
+   "quote": null
+  },
+  {
+   "work": "List Functions (Rule et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "concept learning",
+   "quote": null
+  },
+  {
+   "work": "EdgeTransformer (Bergen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised CLUTRR baseline",
+   "quote": null
+  },
+  {
+   "work": "Rethinking the role of demonstrations (Min et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "random labels do not hurt there, but random rules hurt here",
+   "quote": "We conjecture that the contrary observation is because Min et al. (2022) studied simple classification problems"
+  },
+  {
+   "work": "Selection-Inference; LAMBADA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "explicit reasoning given facts and rules",
+   "quote": null
+  },
+  {
+   "work": "AMIE rule mining (Galarraga et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "coverage and confidence criteria",
+   "quote": null
+  },
+  {
+   "work": "Large language models as tool makers (Cai et al.)",
+   "year": 2023,
+   "arxiv": "2305.17126",
+   "relation": "related",
+   "note": "library learning",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 (OpenAI)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "gpt-4-0613",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An example of Hypotheses-to-Theories applied to chain-of-thought for the relational reasoning problem.",
+   "page": 1,
+   "why": "shows induction and deduction stages with occurrence/correct counters"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Statistics of different error cases on CLUTRR and Arithmetic (base-16).",
+   "page": 7,
+   "why": "shows gain comes from fewer incorrect rules"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance of HtT w.r.t. the number of samples in the induction stage.",
+   "page": 9,
+   "why": "log-linear scaling"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The XML tagging trick.",
+   "page": 15,
+   "why": "hierarchical rule retrieval"
+  }
+ ],
+ "code": [
+  {
+   "where": "Fig 5 / Appendix A",
+   "snippet": "Question: In base-9, what is 63 + 34?\nAnswer:\nWe retrieve <no_carry><3><4>3 + 4 = 7. …",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Caller described the paper as 'Hypothesis Search'; arXiv 2310.07064 is actually 'Large Language Models can Learn Rules' (Hypotheses-to-Theories, HtT). The Hypothesis Search paper is a different work.",
+  "No venue is printed; only the arXiv stamp (v3, 19 Dec 2024), so venue is 'preprint'.",
+  "Table numeric cells are split one per line in the text cache; values were matched by position."
+ ]
+}

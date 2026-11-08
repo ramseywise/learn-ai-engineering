@@ -1,0 +1,199 @@
+{
+ "schema": 1,
+ "key": "sha1:d1d12799a3b4",
+ "pdf": "ai-engineering/02-context-engineering/sources/context-engineering-multi-agent-systems/appendix-a-context-engine-reference-guide.pdf",
+ "bib": {
+  "title": "Appendix A: Context Engine Reference Guide (Context Engineering for Multi-Agent Systems)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": 2025,
+  "venue": "book appendix (O'Reilly, learning.oreilly.com, printed 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 44065,
+  "chars_total": 44065,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How is the book's Context Engine (Planner/Executor, MCP-message agents, RAG over a knowledge store and a blueprint library, safeguards) structured, function by function, so a reader can build and maintain it?",
+ "hypothesis": null,
+ "contributions": [
+  "Function-level reference for helpers.py, agents.py, registry.py, engine.py, utils.py",
+  "Description of the data ingestion pipeline and the control deck",
+  "Three workflow templates and a layered safeguard design (sanitization, two-stage moderation, policy meta-controller)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Call_llm_robust retries transient API failures up to six attempts with exponential backoff.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "six",
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "helpers.py call_llm_robust, tenacity @retry",
+   "quote": "the tenacity library manages the retry logic (up to six attempts with exponential backoff)",
+   "table": null,
+   "note": null,
+   "where": "p6, helpers.py"
+  },
+  {
+   "claim": "The Researcher retrieves the top three chunks from the knowledge namespace.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "three",
+   "unit": "chunks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "agent_researcher, query_pinecone top_k",
+   "quote": "It calls query_pinecone to retrieve the top three relevant chunks from",
+   "table": null,
+   "note": null,
+   "where": "p11, agent_researcher"
+  },
+  {
+   "claim": "Ingestion uses a default chunk size of 400 tokens (example value).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "400",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data ingestion, tiktoken chunking; given as e.g.",
+   "quote": "It applies a default chunk size(e.g.,400 tokens)",
+   "table": null,
+   "note": null,
+   "where": "p18, ingestion step 2"
+  },
+  {
+   "claim": "Ingestion uses 50 tokens of overlap between chunks (example value).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "50",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Data ingestion chunk overlap; given as e.g.",
+   "quote": "employs an overlap\nstrategy (e.g., 50 tokens)",
+   "table": null,
+   "note": null,
+   "where": "p18, ingestion step 2"
+  }
+ ],
+ "limits": [
+  "No experiments, measurements or evaluation; all statements are design description and assertion (e.g. 'glass-box', 'pioneers RAG for procedural retrieval' are unsupported claims).",
+  "Several values are marked 'e.g.' (chunk 400, overlap 50, model gpt-5, text-embedding-3-small); injection pattern list is only illustrated, and regex matching is a weak defense.",
+  "Authors concede LLM stochasticity remains and output varies between runs; latency is the trade-off of multi-step planning.",
+  "Code is not reproduced in the appendix; no authors printed in the PDF; mentions Gemini 2.5 Pro Ultra as current at time of writing, which has dated."
+ ],
+ "practices": [
+  "Vet user goals before execution and generated output after it with a moderation call that fails safe (returns flagged on API error) (Production safeguards; helper_moderate_content).",
+  "Sanitize every retrieved chunk against known injection patterns before synthesis and skip tainted chunks (Input sanitization).",
+  "Store chunk text and source filename as vector metadata so answers carry verifiable citations (Data ingestion, step 4).",
+  "Retrieve procedural context (semantic blueprints, embedded by their intent description) separately from factual context, using two namespaces (Context Librarian, Ingesting the context library).",
+  "Have the Planner emit a JSON plan with $$STEP_N_OUTPUT$$ placeholders and resolve them in the Executor to chain context between agents (planner, resolve_dependencies).",
+  "Inject only the dependencies each agent needs via a registry factory, and give the Planner an auto-generated capabilities description (AgentRegistry).",
+  "Use a Summarizer agent as a gatekeeper to reduce context and control token cost; count tokens with tiktoken, falling back to cl100k_base (agent_summarizer, count_tokens).",
+  "Log plan, planned vs resolved inputs, outputs, status and duration in an execution trace for debugging (ExecutionTrace).",
+  "Keep deterministic business rules in a policy-driven meta-controller above the engine that assembles the control deck, instead of growing engine code (Policy-driven solution).",
+  "Expect output variation between runs of identical goals (Operational realities)."
+ ],
+ "terms": [
+  {
+   "term": "Context Engine",
+   "definition": "a multi-agent system, orchestrated by a Planner and Executor communicating via MCP, that is the practical implementation of context engineering",
+   "where": "p1"
+  },
+  {
+   "term": "semantic blueprint",
+   "definition": "a structured, unambiguous plan provided to the LLM, typically in JSON format. It defines the goal of the generation, the style guide, the structure, and the roles of the participants",
+   "where": "p2"
+  },
+  {
+   "term": "context library",
+   "definition": "the vector database (Pinecone namespace ContextLibrary) holding semantic blueprints, retrieved by the Context Librarian",
+   "where": "p2"
+  },
+  {
+   "term": "glass-box architecture",
+   "definition": "execution trace exposes every step of reasoning so failures can be located in planning, retrieval, sanitization or generation",
+   "where": "p3"
+  },
+  {
+   "term": "MCP (as used here)",
+   "definition": "standardized message dict with protocol_version, sender, content, metadata, built by create_mcp_message",
+   "where": "p7-8"
+  },
+  {
+   "term": "context chaining",
+   "definition": "the Executor passes the output of one agent as input to the next via resolve_dependencies and $$STEP_N_OUTPUT$$ placeholders",
+   "where": "p5, p15"
+  },
+  {
+   "term": "control deck",
+   "definition": "the interactive notebook cell where the engineer defines goal, config and execution (optionally with moderation)",
+   "where": "p20"
+  },
+  {
+   "term": "meta-context engine controller",
+   "definition": "a higher-level application above the Context Engine that parses input, enforces policy and assembles the control deck",
+   "where": "p22"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lucien Tesniere, dependency grammar (stemmas)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "linguistic basis of the approach",
+   "quote": null
+  },
+  {
+   "work": "Charles J. Fillmore, The Case for Case / semantic role labeling",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "SRL operationalized as semantic blueprints",
+   "quote": null
+  },
+  {
+   "work": "OpenAI Moderation API, embeddings, chat completions; Pinecone; tenacity; tiktoken",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "services and libraries the engine builds on",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure A.1",
+   "caption": "The Context Engine architecture and workflow",
+   "page": 4,
+   "why": "Shows ingestion (Phase 0) and runtime flow from goal through moderation, Planner, Executor, agents, to output in one picture."
+  }
+ ],
+ "code": [
+  {
+   "where": "p19, execute_and_display",
+   "snippet": "execute_and_display(\n    goal, config, client, pc, moderation_active=False)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure A.1 content is an image; only the caption was extracted.",
+  "No authors listed in PDF text; year inferred from print date 12/26/25.",
+  "No embedded instructions found."
+ ]
+}

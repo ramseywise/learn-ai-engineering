@@ -1,0 +1,490 @@
+{
+ "schema": 1,
+ "key": "2311.09277",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/chia-2023-contrastive-chain-thought-prompting.pdf",
+ "bib": {
+  "title": "Contrastive Chain-of-Thought Prompting",
+  "authors": [
+   "Yew Ken Chia",
+   "Guizhen Chen",
+   "Luu Anh Tuan",
+   "Soujanya Poria",
+   "Lidong Bing"
+  ],
+  "first_author": "Chia",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.09277",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35662,
+  "chars_total": 35662,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can invalid reasoning demonstrations, shown alongside valid ones, improve few-shot chain-of-thought prompting?",
+ "hypothesis": "Providing both valid and invalid reasoning demonstrations lets the model learn which mistakes to avoid and so improves reasoning over conventional CoT.",
+ "contributions": [
+  "Analyse various invalid reasoning types and find that combining positive and negative demonstrations generally boosts chain-of-thought.",
+  "Propose contrastive chain of thought with an automatic method to construct contrastive demonstrations.",
+  "Evaluations on multiple reasoning benchmarks show significant improvements over conventional chain of thought."
+ ],
+ "method": {
+  "summary": "Each few-shot demonstration is extended with a wrong explanation built automatically by extracting object spans (numbers, equations, persons) from the correct rationale with a spaCy entity recognition model and randomly shuffling their positions (incoherent objects). Evaluated on GPT-3.5-Turbo with 4-shot prompts, with and without self-consistency.",
+  "task": "arithmetic reasoning and factual QA via few-shot prompting",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "500 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": "254 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GSM-Hard",
+    "role": "eval",
+    "size": "500 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "500 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ASDIV",
+    "role": "eval",
+    "size": "500 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": "125 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "500 test",
+    "split": "random sample, max 500 test items",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-Turbo (0301)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "spaCy en_core_web_trf",
+    "role": "base",
+    "params": null,
+    "architecture": "entity recognition model used to extract object spans",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "4-shot; demonstrations are (Q, T+, A+, T-, A-); simplified CoT format with 'Question:', 'Explanation:', 'Wrong Explanation:' fields (Fig 1); positive rationales taken from Wei et al. 2022b and Wang et al. 2023",
+   "retrieval": null,
+   "parameters": {
+    "negative_construction": "Incoherent Objects: shuffle positions of spaCy-extracted object spans within the correct rationale",
+    "self_consistency_samples": null
+   },
+   "other": {
+    "api": "OpenAI Chat Completions API"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "not defined in the paper; presumably exact final-answer match",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Standard prompting",
+    "Chain-of-Thought",
+    "Standard-SC",
+    "CoT-SC"
+   ],
+   "protocol": "Single run per cell, no seeds, variance or significance test stated; test sets randomly subsampled to at most 500."
+  },
+  "availability": {
+   "code": "https://github.com/DAMO-NLP-SG/contrastive-cot (stated as 'will be released')",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Contrastive CoT demonstration format (Fig 1 example)",
+    "text": "Question: James writes a 3-page letter to 2 different friends twice a week. How many pages does he write a year?\nExplanation: He writes each friend 3*2=6 pages a week. So he writes 6*2=12 pages every week. That means he writes 12*52=624 pages a year.\nWrong Explanation: He writes each friend 12*52=624 pages a week. So he writes 3*2=6 pages every week. That means he writes 6*2=12 pages a year.",
+    "where": "Fig 1, p.1"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Contrastive CoT beats CoT on GSM8K by 9.8 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.0,
+   "unit": "%",
+   "baseline_value": 69.2,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), GSM8K, no self-consistency",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column GSM8K"
+  },
+  {
+   "claim": "Contrastive CoT beats CoT on Bamboogle by 16.0 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 56.8,
+   "unit": "%",
+   "baseline_value": 40.8,
+   "n": 125,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), Bamboogle",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column Bamboogle"
+  },
+  {
+   "claim": "Contrastive CoT beats CoT on SVAMP by 14.4 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.6,
+   "unit": "%",
+   "baseline_value": 67.2,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), SVAMP",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column SVAMP"
+  },
+  {
+   "claim": "Contrastive CoT beats CoT on ASDIV",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.4,
+   "unit": "%",
+   "baseline_value": 70.8,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), ASDIV",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column ASDIV"
+  },
+  {
+   "claim": "Contrastive CoT beats CoT on GSM-Hard",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 44.2,
+   "unit": "%",
+   "baseline_value": 33.8,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), GSM-Hard",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column GSM-Hard"
+  },
+  {
+   "claim": "Contrastive CoT beats CoT on StrategyQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.2,
+   "unit": "%",
+   "baseline_value": 55.8,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), StrategyQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column StrategyQA"
+  },
+  {
+   "claim": "Contrastive CoT gains only modestly on AQuA without self-consistency",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57.5,
+   "unit": "%",
+   "baseline_value": 53.5,
+   "n": 254,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), AQuA",
+   "note": "Text says 'modest performance improvement of 4.0%'; Table 2 prints +3.9.",
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT, column AQuA"
+  },
+  {
+   "claim": "With self-consistency, contrastive CoT-SC gets 71.7 on AQuA vs 55.9 for CoT-SC",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.7,
+   "unit": "%",
+   "baseline_value": 55.9,
+   "n": 254,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), AQuA, self-consistency (number of samples not stated)",
+   "note": "Text says self-consistency gives 'an additional improvement of 14.2%'; this is 71.7 minus Contrastive CoT 57.5 (consistent). Table 2 prints +15.7 relative to CoT-SC's 55.9.",
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT-SC, column AQuA"
+  },
+  {
+   "claim": "Contrastive CoT-SC reaches 86.2 on GSM8K vs 71.0 for CoT-SC",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 86.2,
+   "unit": "%",
+   "baseline_value": 71.0,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), GSM8K, self-consistency",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT-SC, column GSM8K"
+  },
+  {
+   "claim": "Contrastive CoT-SC reaches 58.4 on Bamboogle vs 40.8 for CoT-SC",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.4,
+   "unit": "%",
+   "baseline_value": 40.8,
+   "n": 125,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), Bamboogle, self-consistency",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Contrastive CoT-SC, column Bamboogle"
+  },
+  {
+   "claim": "Preliminary study: pairing valid CoT with incoherent-objects negatives gives the best average",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy GSM8K+Bamboogle",
+   "value": 66.6,
+   "unit": "%",
+   "baseline_value": 55.0,
+   "n": null,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, manually built invalid rationales, GSM8K and Bamboogle average",
+   "note": "Table 1 GSM8K for incoherent objects is 79.6 but Table 2 automatic contrastive CoT gives 79.0; Bamboogle 53.6 in Table 1 vs 56.8 in Table 2.",
+   "where": "Table 1",
+   "table": "Table 1, row w/ Incoherent Objects, column Avg."
+  },
+  {
+   "claim": "Standard prompting is far below CoT on GSM8K",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 27.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "GPT-3.5-Turbo (0301), 4-shot, simplified CoT prompt format, test sets capped at 500 random samples (Bamboogle 125, AQuA 254), GSM8K, standard prompting",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Standard, column GSM8K"
+  },
+  {
+   "claim": "Authors claim every invalid-rationale category helps over plain CoT, contradicting the earlier finding that invalid demos have minimal effect",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-Turbo, GSM8K and Bamboogle",
+   "note": null,
+   "where": "Sec 2.4",
+   "quote": "we observe significant gains across all invalid rationale categories compared to conventional chain-of-thought"
+  }
+ ],
+ "limits": [
+  "Only GPT-3.5-Turbo (0301) is tested; no other models or sizes.",
+  "No temperature, decoding, number of self-consistency samples, seeds or significance tests are reported, and accuracy is not defined.",
+  "Test sets are subsampled to at most 500 items; Bamboogle has 125 and AQuA 254, so differences are noisy.",
+  "No ablation of the automatic negative construction against other invalid categories at scale; Table 1 uses manual negatives with differing numbers from Table 2.",
+  "No analysis of why contrastive demos help; the claimed reduction in reasoning errors is stated but no number is given.",
+  "Few-shot setting only; zero-shot CoT is excluded (footnote 2).",
+  "Code described as to be released."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Contrastive chain of thought",
+   "definition": "demonstrations that give both the correct and incorrect reasoning steps, E_j = (Q_j, T_j+, A_j+, T_j-, A_j-)",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Bridging objects",
+   "definition": "the symbolic items that the model traverses in order to reach the final solution",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Language templates",
+   "definition": "the textual hints that guide the language model to derive and contextualize the correct bridging objects",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain of thought prompting elicits reasoning in large language models (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "extends",
+   "note": "baseline CoT and source of positive demonstrations",
+   "quote": null
+  },
+  {
+   "work": "Towards understanding chain-of-thought prompting: An empirical study of what matters (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "invalid-CoT taxonomy and demonstrations reused; finding of minimal effect from invalid demos is the motivation",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "combined with contrastive CoT (-SC rows)",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "zero-shot CoT noted, not evaluated",
+   "quote": null
+  },
+  {
+   "work": "Automatic chain of thought prompting (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "related work",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting (Zhou et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "related work",
+   "quote": null
+  },
+  {
+   "work": "PAL: Program-aided language models (Gao et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "GSM-Hard dataset",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "eval data",
+   "quote": null
+  },
+  {
+   "work": "Bamboogle (Press et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "eval data",
+   "quote": null
+  },
+  {
+   "work": "AQuA, SVAMP, ASDIV, StrategyQA",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Ling 2017, Patel 2021, Miao 2020, Geva 2021",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Overview of contrastive chain-of-thought (right), with comparison to common prompting methods.",
+   "page": 3,
+   "why": "Shows standard, CoT and contrastive CoT prompts side by side."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Categorization of invalid chain-of-thought examples, following Wang et al. (2023).",
+   "page": 2,
+   "why": "Shows the five invalid categories with Leah chocolates and Dambar Shah examples."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Venue not stated in the PDF (arXiv v1 stamp only); recorded as preprint.",
+  "Text says contrastive CoT on AQuA improves 4.0% while Table 2 prints +3.9 (57.5 vs 53.5); the 14.2% figure equals 71.7-57.5 and is consistent.",
+  "Table 2 numbers extracted as column-ordered text; mapping to rows inferred from row order and checked against printed deltas."
+ ]
+}

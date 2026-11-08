@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2411.15594
   - https://arxiv.org/abs/2408.02666
   - https://arxiv.org/abs/2601.21112
   - https://arxiv.org/abs/2306.05685
@@ -214,7 +215,9 @@ The master-key row comes from Zhao et al., who tested judges that grade reasonin
 
 A judge can also be trained with no human preference labels at all. [arXiv:2408.02666](https://arxiv.org/abs/2408.02666) (Wang et al., Meta FAIR, 2024-08, preprint) builds a good and a worse answer to each of 20,582 WildChat prompts, samples judgments from the current judge, keeps only those that pick the known-good answer, fine-tunes, and repeats. **Llama-3-70B-Instruct went from 75.4 to 88.3 on RewardBench after 5 iterations** (pairwise, no majority vote; GPT-4-0125 scores 84.3 there), with the gain concentrated in Chat Hard (58.9 to 84.2). Two cautions for reading it. Presenting the same pair in the other order moved RewardBench accuracy by 5.6 points (85.5 against 91.1), so report both orders averaged. And the gain over the seed on MT-Bench agreement with humans is small (77.8 to 79.5 with a 32-sample vote, single training run each, no confidence intervals). It validates against public preference sets only; it does not calibrate against a team's own labels, so [15](15-calibration-against-human-labels.md) still applies.
 
-Training a judge does not remove position bias. J1 fine-tuned judges with reinforcement learning on 22K synthetic pairs ([arXiv:2505.10320](https://arxiv.org/abs/2505.10320) (Whitehouse et al., ICLR 2026; numbers from the arXiv version)). On PPE Correctness (12.7K pairs, greedy decoding), **its 70B pairwise judge still flipped its verdict on 21.9% of pairs when the answer order was swapped**: 72.9% accurate in one order, 61.2% when a pair counts only if both orders agree. The untrained Llama-3.1-8B base flipped on 44.1%. Training on both orders left that at 36.8%, and a reward for agreeing across orders cut it to 28.7%. A pointwise judge cannot flip, but the 70B one tied on 13.7% of pairs. The paper measures no other bias and reports no agreement with human raters, so run both orders on a trained judge as you would on a prompted one.
+Training a judge does not remove position bias. J1 fine-tuned judges with reinforcement learning on 22K synthetic pairs ([arXiv:2505.10320](https://arxiv.org/abs/2505.10320) (Whitehouse et al., ICLR 2026; numbers from the arXiv version)). On PPE Correctness (12.7K pairs, greedy decoding), **its 70B pairwise judge still flipped its verdict on 21.9% of pairs when the answer order was swapped**: 72.9% accurate in one order, 61.2% when a pair counts only if both orders agree. The untrained 8B base flipped on 44.1%. Training on both orders left that at 36.8%, and a reward for agreeing across orders cut it to 28.7%. A pointwise judge cannot flip, but the 70B one tied on 13.7%. It measures no other bias and no human agreement, so run both orders on a trained judge too.
+
+Explanations can also hurt: on LLMEval2 (2,633 position items, temperature 0) GPT-3.5-turbo's position consistency fell from 68.78% to 48.97% ([arXiv:2411.15594](https://arxiv.org/abs/2411.15594) (Gu et al., 2024-11, preprint)).
 
 ---
 

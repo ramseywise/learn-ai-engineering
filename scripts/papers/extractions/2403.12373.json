@@ -1,0 +1,523 @@
+{
+ "schema": 1,
+ "key": "2403.12373",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/hu-2024-rankprompt.pdf",
+ "bib": {
+  "title": "RankPrompt: Step-by-Step Comparisons Make Language Models Better Reasoners",
+  "authors": [
+   "Chi Hu",
+   "Yuan Ge",
+   "Xiangnan Ma",
+   "Hang Cao",
+   "Qiang Li",
+   "Yonghua Yang",
+   "Tong Xiao",
+   "Jingbo Zhu"
+  ],
+  "first_author": "Hu",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2403.12373",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 58339,
+  "chars_total": 58339,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; paper has no appendix"
+ },
+ "type": "empirical",
+ "question": "How can an LLM select the best of several sampled reasoning paths without a trained verifier or plain majority voting, especially when candidate answers disagree?",
+ "hypothesis": "Comparing candidate reasoning paths step by step, with automatically built comparison exemplars, ranks them better than scoring each independently or voting on final answers.",
+ "contributions": [
+  "RankPrompt: step-aware comparison instruction plus automatically generated comparison exemplars for LLM self-ranking",
+  "Gains on 11 arithmetic, commonsense, symbolic and BBH tasks with ChatGPT and GPT-4",
+  "74.33% agreement with human preference on AlpacaEval",
+  "Analysis of exemplar correctness, complexity, candidate number and order robustness"
+ ],
+ "method": {
+  "summary": "Stage 1 samples n few-shot CoT reasoning paths. Stage 2 prompts the same LLM with a step-by-step comparison instruction and one auto-built comparison exemplar to pick the best candidate. Exemplars are comparison chains from Zero Ranking kept only if they reach the correct answer on a labeled question.",
+  "task": "reasoning candidate re-ranking; LLM-as-judge evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "AQUA-RAT, ASDiv, GSM8K, SVAMP, ARC Challenge, CommonsenseQA, StrategyQA, Last Letter Concatenation",
+    "role": "eval",
+    "size": null,
+    "split": "test set; validation set for CommonsenseQA",
+    "source": "public benchmarks",
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-Bench Hard: Causal Judge, Logical Deduction Seven Objects, Formal Fallacies",
+    "role": "eval",
+    "size": null,
+    "split": "test",
+    "source": "Suzgun et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval",
+    "role": "eval",
+    "size": "805 instructions, each with a pair of responses and 4 human preferences",
+    "split": null,
+    "source": "Dubois et al. 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "Labeled examples for comparison exemplars",
+    "role": "dev",
+    "size": "one exemplar per task",
+    "split": null,
+    "source": "labeled data of each task",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo-16k",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16K",
+    "other": {}
+   },
+   {
+    "name": "gpt-4",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature sampling for candidates; CoT baseline greedy",
+   "temperature": "0.7 for candidates; 0 for CoT Prompting baseline; ranking temperature null",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 candidates per question; 3 shuffled-order ranking runs for the order-robustness test; single run otherwise (null seeds)",
+   "prompting": "few-shot CoT prompts of Wei et al. 2022b and Suzgun et al. 2023 for candidates; ranking template (Table 2) with one task-specific comparison exemplar",
+   "retrieval": null,
+   "parameters": {
+    "n_candidates": "5 (also 1,3,5,10,15 in Fig 6; 2-5 in Fig 4)",
+    "n_exemplars": "1 (also 1,2,3 in Fig 4)",
+    "exemplar_selection": "comparison chain from Zero Ranking that reaches the correct answer"
+   },
+   "other": {
+    "api_dates": "experiments run between August 1, 2023 and October 1, 2023"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of correct final answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human agreement",
+     "definition": "agreement rate with the majority of human preferences on AlpacaEval",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "consistency rate",
+     "definition": "ranking unchanged across 3 shuffled-order runs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Oracle",
+     "definition": "upper bound: correct if any candidate is correct",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CoT Prompting (greedy)",
+    "Majority Voting",
+    "Direct Scoring (Zheng et al. 2023, 1-10 scale)",
+    "Zero Ranking (comparison instruction, no exemplar)",
+    "AlpacaFarm",
+    "Alpaca Evaluator",
+    "Inter-Human"
+   ],
+   "protocol": "single run per cell, no significance test or seeds reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "RankPrompt ranking template",
+    "text": "[Comparison Instruction] You are provided with a question and a series of potential responses. Your assignment involves a systematic, step-by-step comparison of the reasoning paths embedded within each response. This entails a thorough evaluation of each step's correctness and logical consistency. After completing this all-encompassing assessment, rank the responses in accordance with the soundness of their respective reasoning paths. Finally, select the best response and present it on a separate line as the optimal solution. [Comparison Example] {Comparison Exemplars} [Question] {Question} [Candidate Answers] {Candidates} [Comparison] Let's compare the answers step by step.",
+    "where": "Table 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RankPrompt beats CoT prompting on AQUA-RAT with gpt-3.5-turbo",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.65,
+   "unit": "%",
+   "baseline_value": 58.51,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row RankPrompt, column AQUA"
+  },
+  {
+   "claim": "RankPrompt average over 8 tasks vs CoT Prompting average",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.1,
+   "unit": "%",
+   "baseline_value": 76.03,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row RankPrompt, column Avg."
+  },
+  {
+   "claim": "Majority voting average over 8 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.91,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Majority Voting, column Avg."
+  },
+  {
+   "claim": "Direct Scoring average over 8 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Direct Scoring, column Avg."
+  },
+  {
+   "claim": "Zero Ranking average over 8 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.44,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Zero Ranking, column Avg."
+  },
+  {
+   "claim": "Oracle upper bound average over 8 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row Oracle, column Avg."
+  },
+  {
+   "claim": "RankPrompt on GSM8K vs majority voting",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.43,
+   "unit": "%",
+   "baseline_value": 81.27,
+   "n": null,
+   "setup": "gpt-3.5-turbo, 8 reasoning tasks, 5 candidates at temp 0.7, one comparison exemplar; CoT baseline greedy temp 0",
+   "note": null,
+   "where": null,
+   "table": "Table 3, row RankPrompt, column GSM8K"
+  },
+  {
+   "claim": "RankPrompt on Logical Deduction with gpt-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.8,
+   "unit": "%",
+   "baseline_value": 57.6,
+   "n": null,
+   "setup": "gpt-4, 5 candidates, 3 BBH tasks",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row RankPrompt, column Logical Deduction"
+  },
+  {
+   "claim": "RankPrompt on Formal Fallacies with gpt-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.4,
+   "unit": "%",
+   "baseline_value": 76.8,
+   "n": null,
+   "setup": "gpt-4, 5 candidates, 3 BBH tasks",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row RankPrompt, column Formal Fallacies"
+  },
+  {
+   "claim": "RankPrompt agreement with human preference on AlpacaEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.33,
+   "unit": "%",
+   "baseline_value": 71.67,
+   "n": null,
+   "setup": "gpt-4, AlpacaEval 805 instructions",
+   "note": "Abstract and intro round to 74%; baseline is Zero Ranking; Inter-Human 65.70",
+   "where": null,
+   "table": "Table 5, row RankPrompt, column Human Agreement"
+  },
+  {
+   "claim": "Direct Scoring agreement on AlpacaEval",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.48,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-4, AlpacaEval",
+   "note": null,
+   "where": null,
+   "table": "Table 5, row Direct Scoring, column Human Agreement"
+  },
+  {
+   "claim": "RankPrompt cost on AlpacaEval vs crowd annotators",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 19.18,
+   "unit": "$",
+   "baseline_value": 241.5,
+   "n": null,
+   "setup": "gpt-4, AlpacaEval",
+   "note": null,
+   "where": null,
+   "table": "Table 5, row RankPrompt, column Price"
+  },
+  {
+   "claim": "AQUA-RAT errors with RankPrompt vs CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72,
+   "unit": "errors",
+   "baseline_value": 105,
+   "n": null,
+   "setup": "gpt-3.5-turbo, AQUA-RAT, manual error categories of Sawada et al. 2023",
+   "note": null,
+   "where": null,
+   "table": "Table 6, row Total Errors, column RankPrompt"
+  },
+  {
+   "claim": "RankPrompt gives consistent rankings across 3 shuffled candidate orders 75% to 85% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency rate",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-4, 3 BBH tasks, 5 candidates shuffled 3 times, more robust than Zero Ranking",
+   "note": "range stated in Sec 5.2, exact bars in Fig 5",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "RankPrompt improvement over CoT on BBH tasks ranges from 5.2% to 9.2% with gpt-4",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "gpt-4, 5 candidates, 3 BBH tasks",
+   "note": null,
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "Only proprietary models (gpt-3.5-turbo, gpt-4) tested; authors concede this",
+  "Comparison exemplars enlarge context and API cost",
+  "Single run per cell, no variance or significance reported",
+  "CoT baseline is one greedy sample while others use 5 sampled candidates at temp 0.7, so compute is not matched",
+  "Exemplar needs labeled data with correct answer (minimal, one per task)",
+  "Ranking-stage temperature, max tokens and exact exemplars not given; no code link in the text",
+  "Gains on ARC are tiny (87.42 vs Zero Ranking 87.57)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Zero Ranking",
+   "definition": "the comparison instruction of Table 2 without comparison exemplars",
+   "where": "Sec 3.2.1"
+  },
+  {
+   "term": "Direct Scoring",
+   "definition": "evaluating each candidate individually on a 1 to 10 scale (Zheng et al., 2023)",
+   "where": "Sec 3.2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-Thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT prompts used for candidates and as baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "majority voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Zheng et al. (LLM-as-a-judge)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Direct Scoring template",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "'Let's think step by step' trigger",
+   "quote": null
+  },
+  {
+   "work": "Complexity-based prompting (Fu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "complex exemplars help",
+   "quote": null
+  },
+  {
+   "work": "STaR (Zelikman et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "keep chains reaching correct answer as exemplars",
+   "quote": null
+  },
+  {
+   "work": "AlpacaFarm / AlpacaEval (Dubois et al.)",
+   "year": 2023,
+   "arxiv": "2305.14387",
+   "relation": "uses-data",
+   "note": "automatic evaluation benchmark",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench Hard (Suzgun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "3 tasks with gpt-4",
+   "quote": null
+  },
+  {
+   "work": "Let's verify step by step (Lightman et al.)",
+   "year": 2023,
+   "arxiv": "2305.20050",
+   "relation": "related",
+   "note": "trained step verifier alternative",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An overview of Direct Scoring (left) and RankPrompt (right)",
+   "page": 2,
+   "why": "shows independent scoring vs one comparison chain"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The ranking template of RankPrompt",
+   "page": 3,
+   "why": "the full prompt"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "RankPrompt vs majority voting by candidate answer consistency on AQuA-RAT",
+   "page": 5,
+   "why": "gap grows when candidates disagree"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not stated in the PDF (arXiv v3 stamp only)",
+  "Fig 5 consistency values only readable from text (75% to 85%)"
+ ]
+}

@@ -1,0 +1,472 @@
+{
+ "schema": 1,
+ "key": "2410.16540",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/cui-2024-theoretical-understanding-chain-thought.pdf",
+ "bib": {
+  "title": "A Theoretical Understanding of Chain-of-Thought: Coherent Reasoning and Error-Aware Demonstration",
+  "authors": [
+   "Yingqian Cui",
+   "Pengfei He",
+   "Xianfeng Tang",
+   "Qi He",
+   "Chen Luo",
+   "Jiliang Tang",
+   "Yue Xing"
+  ],
+  "first_author": "Cui",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.16540",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 70889,
+  "chars_total": 70889,
+  "engine": "pymupdf",
+  "skipped": "Proofs in Appendix A.1-A.7 skimmed, not checked line by line"
+ },
+ "type": "empirical",
+ "question": "Why does few-shot CoT help, and does a transformer that sees earlier reasoning steps (Coherent CoT) behave differently from Stepwise ICL, and can that guide better demonstrations?",
+ "hypothesis": "Because CoT is more sensitive to errors in intermediate reasoning steps than to final-label noise, demonstrations that include incorrect reasoning with explanations should improve intermediate accuracy and CoT performance.",
+ "contributions": [
+  "Theory: Coherent CoT beats Stepwise ICL with better error correction",
+  "Sensitivity analysis: CoT more sensitive to noise in intermediate steps (x, z) than in final answer y",
+  "Error-aware demonstrations with correct and incorrect reasoning paths, validated on 4 LLMs"
+ ],
+ "method": {
+  "summary": "Theory on a one-layer single-head linear attention transformer for a two-layer noisy regression (y=z+eps, z=beta^T x), plus simulations, then a prompting method: few-shot CoT demos augmented with a handcrafted wrong answer and an error explanation, evaluated on BBH and GSM8K.",
+  "task": "Chain-of-thought prompting theory and few-shot reasoning (BBH, GSM8K)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "BBH (Disambiguation QA, Tracking Shuffled Objects 7, Date Understanding, Penguins in a Table)",
+    "role": "eval",
+    "size": "250 examples each",
+    "split": null,
+    "source": "BIG-bench Hard (Srivastava et al. 2022), MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1,319 examples",
+    "split": null,
+    "source": "Cobbe et al. 2021, MIT license",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic noisy regression (simulation)",
+    "role": "train",
+    "size": "batch 256 x 2e5 steps; inference 128,000 examples",
+    "split": null,
+    "source": "Assumption 3.1: x~N(0,I_d), z=beta^T x, y=z+eps, beta uniform on unit sphere",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Single softmax attention layer transformer (simulation)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "one attention layer, no read-in/read-out layers (theory uses linear attention)",
+    "init_from": "from scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1",
+    "hidden": null,
+    "heads": "1",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-Turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4o-mini",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Gemini Pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepSeek 67B",
+    "role": "evaluated",
+    "params": "67B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "inferred: deterministic via temperature 0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one generation per item at temperature 0; no seeds reported",
+   "prompting": "Few-shot CoT 'Let's think step by step'; proposed demos add 'Wrong Answer', 'Error' explanation, then 'Correct Answer' (Appendix C). Number of shots not stated in main text.",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "simulation_training": "learning rate 1e-4, batch size 256, 2e5 steps (Appendix B.1); inference batch 64, 128,000 examples",
+    "compute": "simulation: single A6000 48GB, training about 30 min, inference about 40 s; DeepSeek 67B on four A6000; BBH generation 3-6 h per dataset; GSM8K about 14 h"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "percent of questions answered correctly",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MSE loss",
+     "definition": "E(yhat_q - y_q)^2 on the query (theory/simulation)",
+     "unit": "squared error",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Standard few-shot CoT without incorrect reasoning (w/o IR)",
+    "Incorrect path without explanation (w/o EE)",
+    "Handcrafted IR(H) vs model-generated IR(M)",
+    "Stepwise ICL (theory)"
+   ],
+   "protocol": "Single run per cell, no seeds or significance tests reported; simulation plots 90% prediction interval of mean loss"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Error-aware CoT demonstration format (Date Understanding example)",
+    "text": "Wrong Answer: Since it is their 5-year anniversary today, the date tomorrow would be 01/18/1961.\nError: This answer incorrectly calculates the year.",
+    "where": "Appendix C.4 (Date Understanding example; each demo is Q, Wrong Answer, Error, then Correct Answer: Let's think step by step)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Theory: Coherent CoT has strictly lower optimal loss than Stepwise ICL for d>=2 in a one-layer linear-attention transformer on two-layer noisy regression.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Assumption 3.1/3.2, D to infinity, one single-head linear attention layer",
+   "quote": "Proposition 3.1 indicates that, regardless of the values of d and \u03c3, the optimal expected loss of Coherent CoT is smaller than that of Stepwise ICL.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Theory: optimal Coherent CoT relies less on z than on x; ratio vz/vy is below 1 (equals 1 for Stepwise ICL), giving a form of self-correction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same theoretical setup",
+   "quote": "Meanwhile, when vx, vz and vy are set such that Coherent CoT reduces to Stepwise ICL, the ratio satisfies vz",
+   "table": null,
+   "note": "claim only; ratio is inequality not number",
+   "where": "Prop 3.2"
+  },
+  {
+   "claim": "Theory: noise on y_i of demonstrations adds only o(1/D) extra loss; noise on x_i or z_i adds more (Prop 3.3), so intermediate-step errors matter more than final-label noise.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trained Coherent CoT model, Gaussian perturbation at inference",
+   "quote": "adding noise to y leads to a negligible influence on CoT performance.",
+   "table": null,
+   "note": null,
+   "where": "Thm 3.3, Prop 3.3"
+  },
+  {
+   "claim": "Simulation: Coherent CoT converges to lower error than Stepwise ICL as in-context examples increase (read from Fig 1, no number).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer trained from scratch on Assumption 3.1 data",
+   "quote": "Coherent CoT converges to a lower error than Stepwise ICL.",
+   "table": null,
+   "note": null,
+   "where": "Fig 1"
+  },
+  {
+   "claim": "Gemini Pro on Tracking Shuffled Objects (7): adding incorrect reasoning with explanation raises accuracy from 58.20% to 64.80%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 64.8,
+   "unit": "%",
+   "baseline_value": 58.2,
+   "n": null,
+   "setup": "Gemini Pro, BBH Tracking Shuffled Objects 250 ex, few-shot CoT temp 0",
+   "quote": "in the Tracking Shuffled Objects dataset, Gemini Pro shows a 6.60% improvement (from 58.20% to 64.80%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 1"
+  },
+  {
+   "claim": "DeepSeek 67B on Penguins in a Table: w/ IR 80.14% vs 73.97% w/o IR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.14,
+   "unit": "%",
+   "baseline_value": 73.97,
+   "n": null,
+   "setup": "DeepSeek 67B, BBH Penguins 250 ex, temp 0",
+   "quote": "DeepSeek 67B demonstrates an increase of 6.17% (from 73.97% to 80.14%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 1"
+  },
+  {
+   "claim": "GPT-3.5-Turbo Disambiguation QA 68.00 to 72.00 with IR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.0,
+   "unit": "%",
+   "baseline_value": 68.0,
+   "n": null,
+   "setup": "GPT-3.5-Turbo, BBH Disambiguation QA",
+   "quote": "",
+   "table": "Table 1, row Disambiguation QA w/ IR, column GPT-3.5-Turbo (72.00%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Gains are small or negative on strong settings: GSM8K DeepSeek 67B w/ IR 83.40% vs 83.85% w/o; GPT-4o-mini GSM8K 93.03% vs 92.72%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.4,
+   "unit": "%",
+   "baseline_value": 83.85,
+   "n": null,
+   "setup": "DeepSeek 67B, GSM8K 1,319 ex",
+   "quote": "",
+   "table": "Table 1, row GSM8K w/ IR, column DeepSeek 67B (83.40%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ablation: incorrect path without explanation (w/o EE) on GPT-3.5-Turbo Date Understanding gives 82.0% vs 82.27% with neither.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.2,
+   "unit": "%",
+   "baseline_value": 82.27,
+   "n": null,
+   "setup": "GPT-3.5-Turbo",
+   "quote": "Date Understanding dataset, the performance is even worse than when neither incorrect reasoning paths nor ex-planations are provided (from 82.27% to 82.2%)",
+   "table": null,
+   "note": "Text says 82.2%; Table 2 w/o EE cell for Date understanding prints 82.00%",
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Model-generated incorrect paths IR(M) beat handcrafted IR(H): DeepSeek 67B Penguins 88.36% vs 82.88%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.36,
+   "unit": "%",
+   "baseline_value": 82.88,
+   "n": null,
+   "setup": "DeepSeek 67B, Penguins in a Table, explanations still manual",
+   "quote": "for DeepSeek 67B, the improvement is from 82.88% to 88.36%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4, Table 3"
+  },
+  {
+   "claim": "Different demonstration example questions change the no-IR baseline (Penguins GPT-4o-mini 91.10% in Table 1 vs 99.32% in Table 3).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Penguins in a Table",
+   "quote": "The results for the w/o IR case in Ta-",
+   "table": null,
+   "note": null,
+   "where": "Remark 4.1"
+  }
+ ],
+ "limits": [
+  "Theory uses a one-layer linear-attention transformer, Gaussian inputs and a linear two-step task; transfer to real LLMs is argued by intuition only",
+  "Incorrect reasoning paths and error explanations are written by hand; effort and sensitivity to authoring not studied",
+  "No seeds, variance or significance tests; 250-example BBH sets make 1-2 point gains within noise",
+  "Gains vanish or reverse in some cells (GSM8K DeepSeek, Date Understanding Gemini 0 change)",
+  "Number of shots and exact prompts per dataset only in appendix examples; baseline demo choice changes results (Remark 4.1)",
+  "No code released stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Stepwise ICL",
+   "definition": "CoT as separate ICL steps by different models, each seeing only the previous step's output",
+   "where": "Def 3.1"
+  },
+  {
+   "term": "Coherent CoT",
+   "definition": "CoT where the same transformer takes all earlier reasoning (inputs and intermediate responses) in context for later steps",
+   "where": "Def 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Wei et al., CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Trained transformers learn linear models in-context",
+   "year": 2023,
+   "arxiv": "2306.09927",
+   "relation": "extends",
+   "note": "theoretical framework extended to CoT",
+   "quote": null
+  },
+  {
+   "work": "Dissecting chain-of-thought: compositional in-context learning of MLPs",
+   "year": 2023,
+   "arxiv": "2305.18869",
+   "relation": "extends",
+   "note": "Li et al.; Stepwise ICL setting and simulation code modified",
+   "quote": null
+  },
+  {
+   "work": "Towards revealing the mystery behind chain of thought",
+   "year": 2023,
+   "arxiv": "2305.15408",
+   "relation": "related",
+   "note": "Feng et al.",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought empowers transformers to solve inherently serial problems",
+   "year": 2024,
+   "arxiv": "2402.12875",
+   "relation": "related",
+   "note": "Li et al.",
+   "quote": null
+  },
+  {
+   "work": "Beyond the imitation game (BIG-bench / BBH)",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "uses-data",
+   "note": "BBH tasks",
+   "quote": null
+  },
+  {
+   "work": "Training verifiers to solve math word problems (GSM8K)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "GSM8K",
+   "quote": null
+  },
+  {
+   "work": "Towards understanding chain-of-thought prompting: what matters",
+   "year": 2022,
+   "arxiv": "2212.10001",
+   "relation": "related",
+   "note": "Wang et al., relevance and step order",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of Coherent CoT and Stepwise ICL",
+   "page": null,
+   "why": "Shows loss gap vs number of in-context examples"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "CoT's sensitivity to different steps",
+   "page": null,
+   "why": "Noise on y barely moves loss; noise on x or z does"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Standard CoT prompting vs the proposed method: CoT prompting with correct & incorrect paths.",
+   "page": null,
+   "why": "Shows the demonstration format"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 prints GPT-3.5 Date Understanding w/o EE as 82.00% in Table 2 but text says 82.2%",
+  "Figure captions taken from the text, not figures.py; page numbers not recorded",
+  "Prompt-injection: none found"
+ ]
+}

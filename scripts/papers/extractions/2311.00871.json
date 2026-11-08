@@ -1,0 +1,352 @@
+{
+ "schema": 1,
+ "key": "2311.00871",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/yadlowsky-2023-pretraining-data-mixtures-enable-narrow.pdf",
+ "bib": {
+  "title": "Pretraining Data Mixtures Enable Narrow Model Selection Capabilities in Transformer Models",
+  "authors": [
+   "Steve Yadlowsky",
+   "Lyric Doshi",
+   "Nilesh Tripuraneni"
+  ],
+  "first_author": "Yadlowsky",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2311.00871",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35627,
+  "chars_total": 35627,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How well can transformers pretrained on a mixture of distinct function families identify a task family in-context and learn within it, and do they generalize to functions outside that mixture?",
+ "hypothesis": "In-context learning ability is tied to coverage of the pretraining data mixture rather than to an inductive bias for general extrapolation.",
+ "contributions": [
+  "Pretrain transformers for ICL on mixtures of multiple function classes and characterize the model selection behavior",
+  "Study ICL behavior on functions out-of-distribution from the pretraining function classes",
+  "Strong evidence of model selection among pretrained classes at little extra statistical cost, limited evidence of generalizing beyond pretraining data"
+ ],
+ "method": {
+  "summary": "Decoder-only transformers are trained from scratch on simulated prompts of (x,f(x)) pairs, f drawn from a weighted mixture of function classes (dense linear, sparse linear, two-layer ReLU, sinusoid). They are then evaluated in-context on in-mixture and out-of-distribution functions (convex combinations, extreme-frequency sinusoids).",
+  "task": "in-context learning of function classes (regression), model selection and OOD generalization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Simulated function-class prompts",
+    "role": "pretrain",
+    "size": "inferred: 1M steps x batch 1024 prompts; text says approx. 1 billion examples used in pretraining (sinusoid experiment)",
+    "split": null,
+    "source": "Generated: x~N(0,I_d), d=20 (d=1 for sinusoids); dense beta~N(0,I_d), f=beta^T x/sqrt(d); sparse s non-zero coords N(0,1), f=beta^T x/sqrt(s); ReLU 2-layer d_h=100, W_ij~N(0,2), f=beta^T relu(Wx)/(sqrt(d) d_h); sine f=beta cos(2 pi omega x), omega~Gamma(6,1/6), beta~N(0,1)",
+    "preprocessing": "Variances of f(x) equalised across classes; f(x) zero-padded to d dims; no label noise in reported results"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2-scale decoder (Garg et al. config)",
+    "role": "proposed",
+    "params": "9.5M",
+    "architecture": "decoder-only transformer, cosine positional embeddings, learnable linear in/out projections",
+    "init_from": "random (no pretrained LM, no text)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "256",
+    "heads": "8",
+    "context": null,
+    "other": {
+     "framework": "Jax/Pax"
+    }
+   },
+   {
+    "name": "Tiny / Small (Garg et al. sizes)",
+    "role": "proposed",
+    "params": "0.2M and 1.2M",
+    "architecture": "same family, smaller",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "teacher-forcing squared loss on f(x) positions (Eq. 2.1)",
+   "optimizer": "Adam (beta1=0.9, beta2=0.999, eps=1e-9)",
+   "lr": "1",
+   "lr_schedule": "linear ramp-up then inverse-square-root decay",
+   "warmup": "5,000 steps",
+   "batch_size": "1024 prompts",
+   "steps": "1 million",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "none",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mixture weight": "fixed w per pretraining run",
+    "learning rate note": "'learning rate of 1' as printed, empirically tuned (Pax/Adam scaling likely)",
+    "tokenized attempt": "5M epochs cross-entropy on binned scalars, loss not significantly decreased"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "prompt = (x1,f(x1),...,xn,f(xn),x_{n+1}); n up to 40 in-context points in curves; 16 in Fig 1 and 3",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Mean squared error",
+     "definition": "E[(f~(x_{n+1})-f(x_{n+1}))^2] over prompt and query",
+     "unit": "MSE",
+     "higher_is_better": false
+    },
+    {
+     "name": "Normalized mean squared difference",
+     "definition": "MSD between mixture-model and sparse- or dense-only predictions, normalized by MSD between sparse and dense models",
+     "unit": "ratio",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Models pretrained on a single function class (w=0 or 1)",
+    "Optimal recovery (Fig 6)"
+   ],
+   "protocol": "Mostly figures; no seeds, error bars or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A model pretrained on a dense+sparse linear mixture matches single-class models on in-mixture functions, i.e. near-zero cost of in-context model selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language; Fig 1-3, w in {0,.25,.5,.75,1}",
+   "quote": "We have empirically shown that for task families or function classes well-represented in the pretraining mixture, cost of selecting the appropriate function class to use for in-context learning is nearly zero.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "A model trained only on sparse linear functions does poorly on dense linear prompts and vice versa, though both are linear.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language",
+   "quote": "Even though dense and sparse linear classes are both linear functions, we can see the poor performance of the red curve in Figure 2a",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Mixture-trained model fails on a convex combination (weighted sum of y-values) of linear and cosine functions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language, 1-D, 0.5 linear + 0.5 sine mixture",
+   "quote": "it is unable to fit a function that is a convex combination of the two",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Fig 4c"
+  },
+  {
+   "claim": "Sinusoid frequency below 0.01 or above 5 is extremely rare in pretraining, and predictions degrade there.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1 x 10^-7",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language; sinusoid frequencies Gamma(6,1/6), mean 1",
+   "quote": "the probability of a sampling a frequency outside this range is less than 1 \u00d7 10\u22127",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, Fig 6"
+  },
+  {
+   "claim": "In-context model-selection ability improves with model size, asymmetrically across function classes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "0.2M, 1.2M, 9.5M models, w=.5, Fig 8-9",
+   "quote": "we observe the general trend that the ability to perform model selection increases as models get larger",
+   "table": null,
+   "note": null,
+   "where": "App B"
+  },
+  {
+   "claim": "Pretraining model size and recipe.",
+   "kind": "measured",
+   "source": null,
+   "metric": "params",
+   "value": "9.5M",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language",
+   "quote": "We use a 9.5M parameter decoder model with 12 layers, 8 attention heads,",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Mixture model's predictions at moderate sparsity (nnz about 4) lie between the sparse-only and dense-only models, not equal to either.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic (x, f(x)) in-context regression, d=20, 9.5M-param GPT-2-scale decoder trained from scratch on simulated function classes; not natural language, 16 in-context examples",
+   "quote": "the mixture predictions deviate from both those of the purely dense or purely sparse pretrained transformer",
+   "table": null,
+   "note": null,
+   "where": "Sec 3, Fig 3b"
+  },
+  {
+   "claim": "Authors conclude ICL ability may track pretraining mixture coverage more than inductive bias for generalization.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract-level conclusion",
+   "quote": "the impressive ICL abilities of high-capacity sequence models may be more closely tied to the coverage of their pretraining data mixtures",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Only synthetic function classes with real-valued inputs; no natural-language model tested.",
+  "Authors' tokenized (binned) language-model attempt did not train: loss not significantly decreased after 5M epochs.",
+  "Single small model (9.5M; 0.2M, 1.2M for size), no seeds or error bars reported.",
+  "Mechanism not addressed (footnote 2).",
+  "Fig 1 bar values are only legible as unordered numbers in the text layer, so not recorded as results.",
+  "Notions of task family, mixture and convex combination are unclear for natural language (authors)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "convex combination (of functions)",
+   "definition": "adding the weighted y-values of the functions; distinct from the weighted mixture distribution used in pretraining",
+   "where": "footnote 3, Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "What can transformers learn in-context? A case study of simple function classes (Garg et al.)",
+   "year": 2022,
+   "arxiv": "2208.01066",
+   "relation": "extends",
+   "note": "setup, model config and function classes",
+   "quote": null
+  },
+  {
+   "work": "What learning algorithm is in-context learning? (Akyurek et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "linear-model ICL",
+   "quote": null
+  },
+  {
+   "work": "Transformers as algorithms (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "generalization in ICL",
+   "quote": null
+  },
+  {
+   "work": "Pretraining task diversity and non-Bayesian ICL for regression (Raventos et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "task diversity needed for ICL",
+   "quote": null
+  },
+  {
+   "work": "Transformers as statisticians (Bai et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest work on model selection; linear classes only",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "few-shot ICL",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "ICL learning curves (MSE) on dense (left) and sparse-2 (right) prompts for models pretrained on varying w",
+   "page": 5,
+   "why": "Shows mixture models track single-class optimum while out-of-class model fails"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Predictions of sinusoid-trained models at frequencies 0.01 to 5",
+   "page": 9,
+   "why": "Shows breakdown at rare/OOD frequencies"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure axis text is interleaved in the text layer; Fig 1 values not assignable to bars.",
+  "No embedded instructions found."
+ ]
+}

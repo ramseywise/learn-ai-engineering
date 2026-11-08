@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/2309.11998
   - https://arxiv.org/abs/2306.07899
   - https://arxiv.org/abs/2306.15448
   - https://arxiv.org/abs/2308.11462
@@ -65,6 +66,8 @@ Grow toward the next stage when the current one can't separate two versions you 
 Telemetry is fine for graders that need no gold answer. Where you need one, Berryman & Ziegler suggest leaving telemetry to online evaluation. For existing records, GitHub Copilot is the standard example: no corpus of "what the user types next" existed, so the team took functions from open-source repos, deleted the bodies, and asked for completions. Function bodies run longer than typical suggestions, and edits that depend on the body (new imports) are already in the file, but the supply is nearly infinite (*Prompt Engineering for LLMs*, ch. 10).
 
 Public query logs give real phrasing but still need labels, and the labelling step shapes the set. WebQuestions crawled Google Suggest breadth-first from "Where was Barack Obama born?" and sent 100K questions to crowdworkers at $0.03 each. Workers could answer only with entities or values from the question entity's Freebase page, or mark the question unanswerable. Two workers gave the same answer on 6,642 of the 100K, and the released set has 5,810 questions. The best parser reached 31.4% against a 26.9% baseline, and the authors call the data "much more challenging and noisy" than hand-built semantic-parsing sets ([doi:10.18653/v1/d13-1160](https://doi.org/10.18653/v1/d13-1160) (Berant et al., EMNLP 2013)). The gold answers are whatever the knowledge base already holds.
+
+LMSYS-Chat-1M is the large-scale version of "production logs": one million conversations with 25 models from 210K IP addresses, collected April to August 2023 from the Vicuna demo and Chatbot Arena with no registration. Coding dominates the topics, and the OpenAI moderation API flagged about 5% of conversations (54,427), which the authors treat as a lower bound because the API's recall may be low. As an eval source it has the limits the table above predicts. Its users are mostly LLM hobbyists and researchers, low-quality and duplicate data were left in, and it has no human preference labels. Its Arena-Hard-200 subset was picked by LLM scorers (200 prompts that GPT-3.5-Turbo, Claude-2 and GPT-4 each scored 9 or higher), with no human check beyond reading examples ([arXiv:2309.11998](https://arxiv.org/abs/2309.11998) (Zheng et al., ICLR 2024)).
 
 Crowd-written text may not be written by the crowd. Veselovsky et al. paid 44 Mechanical Turk workers to summarize medical abstracts in June 2023 and trained a classifier on summaries of the same abstracts written by people in 2019 and by ChatGPT. **It flagged 33% to 46% of the 46 summaries as synthetic** (15 at a strict threshold, 21 at the default), and 41 of the 46 involved pasting ([arXiv:2306.07899](https://arxiv.org/abs/2306.07899) (Veselovsky et al., 2023-06, preprint)). No worker was observed using a model, the counts are not corrected for classifier error, and the one task was picked because models do it well. It covers writing, not labelling. If you buy reference answers, log paste events and compare a sample against model output for the same prompt.
 

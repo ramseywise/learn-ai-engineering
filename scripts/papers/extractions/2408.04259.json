@@ -1,0 +1,295 @@
+{
+ "schema": 1,
+ "key": "2408.04259",
+ "pdf": "generative-ai/02-rag-retrieval/sources/zhuang-2024-efficientrag.pdf",
+ "bib": {
+  "title": "EfficientRAG: Efficient Retriever for Multi-Hop Question Answering",
+  "authors": [
+   "Ziyuan Zhuang",
+   "Zhiyang Zhang",
+   "Sitao Cheng",
+   "Fangkai Yang",
+   "Jia Liu",
+   "Shujian Huang",
+   "Qingwei Lin",
+   "Saravan Rajmohan",
+   "Dongmei Zhang",
+   "Qi Zhang"
+  ],
+  "first_author": "Zhuang",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 26 Sep 2024); the PDF names no venue",
+  "arxiv": "2408.04259",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 20400,
+  "chars_total": 20400,
+  "engine": "pymupdf",
+  "skipped": "reference list and prompt appendix tables (Tables 7-22) skimmed"
+ },
+ "type": "empirical",
+ "question": "Can multi-hop retrieval iterate without an LLM call per hop?",
+ "hypothesis": "The relations in multi-hop questions are few, so a small token classifier can pick the useful span from a retrieved chunk and rewrite the next-hop query, replacing the LLM calls of iterative RAG.",
+ "contributions": [
+  "A Labeler and Tagger (marks useful tokens, tags the chunk Continue or Terminate) and a Filter (builds the next query from the question plus labelled tokens), both token classifiers",
+  "A synthetic training set built with Llama-3-70B: decomposition, token labelling, next-hop question, hard negatives",
+  "Retrieval, QA and latency comparison with Iter-RetGen and SelfAsk on three multi-hop datasets"
+ ],
+ "method": {
+  "summary": "Retrieve with Contriever-MSMARCO. The Labeler annotates useful tokens in each chunk and tags it Continue or Terminate; Continue chunks join a candidate pool. The Filter concatenates the question and the labelled tokens and extracts the next-hop query tokens. Loop until all chunks are Terminate or the iteration cap; then one LLM call answers over the pool.",
+  "task": "multi-hop question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HotpotQA, MuSiQue, 2WikiMQA",
+    "role": "both",
+    "size": "synthetic training data: Labeler 357k / 93k / 70k, Filter 73k / 25k / 13k (Table 1)",
+    "split": null,
+    "source": "Yang 2018; Trivedi 2022; Ho 2020",
+    "preprocessing": "Llama-3-70B-Instruct generated decompositions, token labels, next-hop questions; hard negatives retrieved as most similar irrelevant chunk"
+   }
+  ],
+  "models": [
+   {
+    "name": "EfficientRAG Labeler and Filter",
+    "role": "proposed",
+    "params": "304M",
+    "architecture": "DeBERTa-v3-large, 24 layers, linear heads for token labels and chunk tag",
+    "init_from": "DeBERTa-v3-large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "generator",
+    "role": "reader",
+    "params": "8B",
+    "architecture": "Llama-3-8B-Instruct (GPT-3.5-turbo-1106 for Table 5)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "token classification and chunk-tag classification",
+   "optimizer": "AdamW",
+   "lr": "5e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4x A100",
+   "compute": "about 10 GPU-hours separately",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": "Contriever-MSMARCO, top chunks per round",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall@K and chunks retrieved",
+     "definition": "recall of oracle chunks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "EM, F1, Acc",
+     "definition": "Acc judged by GPT-3.5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "LLM calls, iterations, latency, GPU utilisation",
+     "definition": "200 random MuSiQue samples",
+     "unit": "count / s / %",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Direct",
+    "CoT",
+    "Direct-R@10",
+    "Decompose-R",
+    "Iter-RetGen iter2/3",
+    "SelfAsk"
+   ],
+   "protocol": "single runs; baselines run from source code with Llama-3-8B-Instruct"
+  },
+  "availability": {
+   "code": "aka.ms/efficientrag",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On HotpotQA EfficientRAG reaches Recall 81.84 while retrieving 6.41 chunks on average, against Direct-R@30 77.05 at 30 chunks and Iter-RetGen iter3 83.05 at 16.42; on 2WikiMQA 84.08 at 3.69 chunks against SelfAsk 88.90 at 33.68.",
+   "kind": "measured",
+   "metric": "Recall@K",
+   "value": "81.84 at K=6.41",
+   "unit": "%",
+   "baseline_value": "77.05 at K=30",
+   "n": null,
+   "setup": "Contriever-MSMARCO, Table 2",
+   "table": "Table 2",
+   "note": null,
+   "where": "5.1, Table 2"
+  },
+  {
+   "claim": "On MuSiQue EfficientRAG recall is low: 49.51 at 6.09 chunks against Direct-R@10 50.86 and Decompose-R 67.23.",
+   "kind": "measured",
+   "metric": "Recall@K",
+   "value": "49.51",
+   "unit": "%",
+   "baseline_value": "50.86",
+   "n": null,
+   "setup": "Table 2",
+   "table": "Table 2",
+   "note": "authors call the result less satisfactory",
+   "where": "5.1"
+  },
+  {
+   "claim": "End to end with a Llama-3-8B reader, EfficientRAG Acc is 57.86 on HotpotQA (Iter-RetGen iter2 59.29), 20.00 on MuSiQue (SelfAsk 26.97, Iter-RetGen iter2 26.28) and 53.41 on 2WikiMQA (SelfAsk 55.16): second best on two datasets and not the best on any.",
+   "kind": "measured",
+   "metric": "Acc",
+   "value": "57.86 / 20.00 / 53.41",
+   "unit": "%",
+   "baseline_value": "Direct-R@10 44.56 / 17.12 / 32.70",
+   "n": null,
+   "setup": "Llama-3-8B-Instruct reader, Table 3",
+   "table": "Table 3",
+   "note": "the abstract says it surpasses existing RAG methods; Table 3 shows it second best on two datasets and below Iter-RetGen and SelfAsk on MuSiQue",
+   "where": "5.1, Table 3"
+  },
+  {
+   "claim": "On 200 MuSiQue samples EfficientRAG uses 1.00 LLM calls, 2.73 iterations and 3.62 s latency, against Iter-RetGen iter3 3.00 calls and 9.68 s and SelfAsk 7.18 calls and 27.47 s.",
+   "kind": "measured",
+   "metric": "latency",
+   "value": "3.62 s",
+   "unit": "s",
+   "baseline_value": "9.68 s (Iter-RetGen iter3); 27.47 s (SelfAsk)",
+   "n": "200",
+   "setup": "Table 4, GPU utilisation 65.55% vs 66.37% and 65.02%",
+   "table": "Table 4",
+   "note": "authors state a 60%-80% time improvement over other iterative methods",
+   "where": "5.2, Table 4"
+  },
+  {
+   "claim": "With a GPT-3.5-turbo-1106 reader on 2WikiMQA EfficientRAG Acc is 61.88 against Iter-RetGen iter3 60.60.",
+   "kind": "measured",
+   "metric": "Acc",
+   "value": "61.88",
+   "unit": "%",
+   "baseline_value": "60.60",
+   "n": null,
+   "setup": "Table 5",
+   "table": "Table 5",
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "Trained on one dataset and tested on the other, Acc is 53.38 (HotpotQA test, 2WikiMQA-trained) and 56.59 (2WikiMQA test, HotpotQA-trained) against 57.86 and 53.41 in-domain.",
+   "kind": "measured",
+   "metric": "Acc",
+   "value": "53.38; 56.59",
+   "unit": "%",
+   "baseline_value": "57.86; 53.41",
+   "n": null,
+   "setup": "Table 6",
+   "table": "Table 6",
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Empirical study: with oracle chunks the reader beats direct answering, and adding irrelevant chunks (mixed) still lowers accuracy relative to oracle chunks, for GPT-3.5, GPT-4 and Llama-3-8B on 2WikiMQA.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1, read from the plot",
+   "quote": "the presence of irrelevant chunks continues to challenge the LLM generator",
+   "note": null,
+   "where": "2.1"
+  }
+ ],
+ "limits": [
+  "Only Llama-3-8B (and GPT-3.5 on one dataset) as reader; no larger LLM reader tested.",
+  "Open-domain multi-hop datasets only; no in-domain or enterprise corpus.",
+  "Training data comes from a 70B LLM and is dataset-specific; transfer was tested only between HotpotQA and 2WikiMQA.",
+  "Recall on MuSiQue is low and end-to-end accuracy trails Iter-RetGen and SelfAsk there.",
+  "Latency measured on 200 samples from one dataset.",
+  "Single runs, no confidence intervals."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy (Iter-RetGen)",
+   "year": 2023,
+   "arxiv": "2305.15294",
+   "relation": "baseline",
+   "note": "Shao et al.",
+   "quote": null
+  },
+  {
+   "work": "Measuring and Narrowing the Compositionality Gap in Language Models (Self-Ask)",
+   "year": 2023,
+   "arxiv": "2210.03350",
+   "relation": "baseline",
+   "note": "Press et al.",
+   "quote": null
+  },
+  {
+   "work": "Contriever",
+   "year": 2022,
+   "arxiv": "2112.09118",
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "EfficientRAG framework operates within the iterative RAG system",
+   "page": 3,
+   "why": "Labeler, Filter loop on a worked KGOT example"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

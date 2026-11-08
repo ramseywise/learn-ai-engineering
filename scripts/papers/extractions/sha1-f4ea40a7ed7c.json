@@ -1,0 +1,162 @@
+{
+ "schema": 1,
+ "key": "sha1:f4ea40a7ed7c",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/learning-langchain/ch04-langgraph-memory-chatbot.pdf",
+ "bib": {
+  "title": "Chapter 4. Using LangGraph to Add Memory to Your Chatbot (Learning LangChain)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (Learning LangChain)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 27709,
+  "chars_total": 27709,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a stateless LLM chatbot remember prior turns, and how is that state stored, persisted and trimmed with LangGraph?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "LLMs are stateless; history must be put back into each prompt to give the model memory.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement, no experiment.",
+   "quote": "Large language models are stateless, which means that each time the",
+   "table": null,
+   "note": null,
+   "where": "p1"
+  },
+  {
+   "claim": "A trimmer with max_tokens=65, strategy last, include_system=True, allow_partial=False, start_on human, on an 11-message history, keeps the system message and the last 6 messages (output shown, not measured against anything).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "max_tokens",
+   "value": "65",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "trim_messages with ChatOpenAI(model=\"gpt-4o\") as token_counter on the 11-message example list.",
+   "quote": "max_tokens=65,",
+   "table": null,
+   "note": "Output shows system message plus the last six messages (from 'what's 2 + 2').",
+   "where": "Trimming Messages"
+  }
+ ],
+ "limits": [
+  "Short-term, per-thread memory only: one list of messages saved by a checkpointer; no long-term or cross-thread memory, retrieval over memories, or semantic/episodic distinction.",
+  "Summarizing history is promised in the chapter Summary ('trim, filter, and summarize') but no summarization code or section appears in the text.",
+  "No evaluation, benchmark or measurement; the claim that excess prompt information 'can distract the model and lead to hallucination' is asserted without evidence.",
+  "Checkpointer adapter list (in-memory, SQLite, Postgres) is as of the book's writing and may have dated.",
+  "Figures 4-1 to 4-6 are images and not in the cached text; python/JS code samples interleave in extraction order."
+ ],
+ "practices": [
+  "Store chat state as a list of messages, append after each turn, and insert into the prompt (Building a Chatbot Memory System).",
+  "Update memory atomically after each interaction: do not record only the question or only the answer on failure (production challenges list).",
+  "Use durable storage such as a relational database for memories; use Postgres checkpointer for large-scale apps, SQLite for local/testing, in-memory for examples (Adding Memory to StateGraph).",
+  "Identify each conversation by a thread_id (usually a UUID) so multiple users' histories never mix.",
+  "Trim history with trim_messages, strategy 'last', include_system=True and start_on='human' so an AI reply is never kept without its question (Trimming Messages).",
+  "Filter history by type, id or name with filter_messages to drop example or irrelevant messages (Filtering Messages).",
+  "Merge consecutive same-type messages with merge_message_runs for models like Anthropic chat that reject them (Merging Consecutive Messages).",
+  "Keep inspect/update access to state outside the LLM call via get_state and update_state."
+ ],
+ "terms": [
+  {
+   "term": "StateGraph state",
+   "definition": "The data received from outside the application, modified and produced by the application while it's running.",
+   "where": "Introducing LangGraph"
+  },
+  {
+   "term": "Node",
+   "definition": "Each step to be taken. Nodes are simply Python/JS functions, which receive the current state as input and can return an update to that state",
+   "where": "Introducing LangGraph"
+  },
+  {
+   "term": "Edge",
+   "definition": "The connections between nodes; either fixed or conditional.",
+   "where": "Introducing LangGraph"
+  },
+  {
+   "term": "Reducer",
+   "definition": "A function that specifies how to apply updates to the state; add_messages appends rather than overwrites.",
+   "where": "NOTE after StateGraph"
+  },
+  {
+   "term": "Checkpointer",
+   "definition": "A storage adapter for LangGraph that saves state at the end of each step.",
+   "where": "Adding Memory to StateGraph"
+  },
+  {
+   "term": "Thread",
+   "definition": "An identifier for a particular history of interactions; created automatically when first used; any string is valid.",
+   "where": "Adding Memory to StateGraph"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LangGraph",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Open source library by LangChain used for stateful graphs and checkpointed memory.",
+   "quote": null
+  },
+  {
+   "work": "LangChain message helpers (trim_messages, filter_messages, merge_message_runs)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Utilities used to modify chat history.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4-1",
+   "caption": "Memory and retrieval used to generate context-aware answers from an LLM",
+   "page": 1,
+   "why": "Shows history and retrieved context both entering the prompt."
+  },
+  {
+   "figure": "Fig 4-2",
+   "caption": "A simple memory system utilizing chat history in prompts to generate model answers",
+   "page": 2,
+   "why": "Shows the append-and-reinsert loop."
+  },
+  {
+   "figure": "Fig 4-6",
+   "caption": "A simple chatbot",
+   "page": null,
+   "why": "START -> chatbot -> END graph."
+  }
+ ],
+ "code": [
+  {
+   "where": "Adding Memory to StateGraph",
+   "snippet": "graph = builder.compile(checkpointer=MemorySaver())",
+   "verbatim": true
+  },
+  {
+   "where": "Creating a StateGraph",
+   "snippet": "messages: Annotated[list, add_messages]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors not printed in the PDF text; bib left blank.",
+  "Python and JavaScript variants are interleaved and some lines are truncated in extraction; figures are images."
+ ]
+}

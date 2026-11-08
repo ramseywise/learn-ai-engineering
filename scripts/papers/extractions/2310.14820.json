@@ -1,0 +1,289 @@
+{
+ "schema": 1,
+ "key": "2310.14820",
+ "pdf": "generative-ai/02-rag-retrieval/sources/yin-2023-alcuna.pdf",
+ "bib": {
+  "title": "ALCUNA: Large Language Models Meet New Knowledge",
+  "authors": [
+   "Xunjian Yin",
+   "Baizhou Huang",
+   "Xiaojun Wan"
+  ],
+  "first_author": "Yin",
+  "year": 2023,
+  "venue": "preprint (arXiv v1, 23 Oct 2023); venue not printed in the PDF",
+  "arxiv": "2310.14820",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 68298,
+  "chars_total": 68298,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; appendix prompt tables skimmed, filtering and error-analysis appendices read"
+ },
+ "type": "benchmark",
+ "question": "How well do LLMs understand, differentiate and reason with new knowledge that is supplied in the context and is guaranteed not to be in their training data?",
+ "hypothesis": null,
+ "contributions": [
+  "KnowGen: build artificial entities by heredity, variation, extension and dropout over a structured knowledge base",
+  "ALCUNA: 84,351 questions about 3,554 artificial organisms from the Encyclopedia of Life",
+  "Evaluation of ChatGPT, Alpaca-7B, Vicuna-13B and ChatGLM-6B"
+ ],
+ "method": {
+  "summary": "Generate artificial biological entities from EOL taxonomy data, place their properties in the prompt as structured knowledge, and ask template-generated questions that test understanding (KU), differentiation from the parent entity (KD) and multi-hop association with existing knowledge (KA).",
+  "task": "question answering over in-context new knowledge",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ALCUNA",
+    "role": "eval",
+    "size": "84351 questions about 3554 artificial entities",
+    "split": "KU 11316, KD 27186, KA 15353 questions",
+    "source": "Encyclopedia of Life (2404790 entities, 13625612 properties, 669 property types); questions templated by ChatGPT",
+    "preprocessing": "per-model filtering keeps only artificial entities whose parent entities the model recalls perfectly"
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Alpaca",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Vicuna",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGLM",
+    "role": "evaluated",
+    "params": "6B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single pass over the filtered benchmark per setting",
+   "prompting": "zero-shot and few-shot, vanilla and chain-of-thought ('Let's think step by step'); new knowledge given as structured JSON in the prompt",
+   "retrieval": "none; the new entity's properties are given directly in the prompt",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "output matched against the gold answer(s); correct if it matches any of the correct answers",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [],
+   "protocol": "average per ability (KU, KD, KA); 100 sampled one-hop and 100 multi-hop questions human-checked: 98% and 95% correct"
+  },
+  "availability": {
+   "code": "https://github.com/Arvid-pku/ALCUNA",
+   "weights": null,
+   "data": "released"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT reaches 64.37 average accuracy few-shot vanilla but only 41.52 on knowledge association (multi-hop across new and existing knowledge).",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "64.37 avg; 41.52 KA",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Few-Shot-Vanilla, filtered ALCUNA, structured (JSON) in-context knowledge",
+   "table": "Table 1, row Avg. and row KA, Few-Shot-Vanilla, column ChatGPT",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The open models score 35.09 (Alpaca 7B), 42.74 (Vicuna 13B) and 42.56 (ChatGLM 6B) on average few-shot vanilla.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "35.09; 42.74; 42.56",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Few-Shot-Vanilla, filtered ALCUNA",
+   "table": "Table 1, row Avg., Few-Shot-Vanilla",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Knowledge association is the hardest ability for all models.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all four models, all four prompt settings",
+   "quote": "Among all abilities, knowledge association is obviously the most difficult for LLMs",
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Adding the entities on the reasoning chain to the context lifts KA accuracy (ChatGLM 27.47 to 44.43; Vicuna 30.10 to 33.25), while irrelevant entities lower it (ChatGLM 18.56).",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "27.47 to 44.43 (ChatGLM); 30.1 to 33.25 (Vicuna); 18.56 with irrelevant",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KA questions, few-shot vanilla, Alpaca/Vicuna/ChatGLM",
+   "table": "Table 4, rows artificial, w/ chain, w/ irrelevant",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Putting the parent entity's knowledge in the context hurts differentiation: ChatGLM falls from 41.42 to 24.71 and Vicuna from 46.76 to 35.04 on KD questions; irrelevant entities cost less.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "41.42 to 24.71 (ChatGLM); 46.76 to 35.04 (Vicuna); 35.00 / 37.17 with irrelevant",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KD questions, few-shot vanilla",
+   "table": "Table 3, rows artificial, w/ parent, w/ irrelevant",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Structured (JSON) input beats natural-language input for all three open models, e.g. ChatGLM average 42.56 vs 20.54.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "42.56 vs 20.54",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "few-shot vanilla, Alpaca/Vicuna/ChatGLM, Table 5",
+   "table": "Table 5, row Avg., ChatGLM JSON vs NL",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Models are more confused the more an artificial entity's properties overlap its parent's; only ChatGPT is nearly insensitive.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "KD questions binned by property similarity, Figure 3",
+   "quote": "The more similar the new entities are to the existing",
+   "note": "Figure 3 read as a plot, no numbers",
+   "where": "5.2"
+  },
+  {
+   "claim": "Chain-of-thought and few-shot prompting improve the average in most cases but ChatGPT's CoT does not fix KA (37.88 few-shot CoT vs 41.52 vanilla).",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "37.88 vs 41.52",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, KA, few-shot",
+   "table": "Table 1, row KA, ChatGPT, Few-Shot-CoT vs Few-Shot-Vanilla",
+   "note": null,
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Built on biological taxonomy only (EOL); the authors say other domains are possible but untested.",
+  "Only four models, three of them small open models; GPT-4-class models were not evaluated.",
+  "Knowledge is given in the prompt in a structured JSON format; the paper measures in-context use of new knowledge, not retrieval, and does not run a retriever.",
+  "Questions are template-generated and scored by matching; a 100-question human check found 98% (one-hop) and 95% (multi-hop) correct.",
+  "Per-model filtering to entities whose parent was perfectly recalled shrinks the question set differently for each model; comparisons use the intersection."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language models as knowledge bases? (LAMA)",
+   "year": 2019,
+   "arxiv": "1909.01066",
+   "relation": "uses-method",
+   "note": "template questions and recall filtering follow Petroni et al.",
+   "quote": null
+  },
+  {
+   "work": "Large language models can be easily distracted by irrelevant context",
+   "year": 2023,
+   "arxiv": "2302.00093",
+   "relation": "related",
+   "note": "irrelevant context lowers performance, consistent with Shi et al. 2023",
+   "quote": null
+  },
+  {
+   "work": "Encyclopedia of Life",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of existing knowledge",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Demonstration of ALCUNA, including heredity, variation, extension and dropout operations in KnowGen, generated artificial entity named Alcuna and three types of questions related to it.",
+   "page": 2,
+   "why": "shows how an artificial entity is constructed and the three question types"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

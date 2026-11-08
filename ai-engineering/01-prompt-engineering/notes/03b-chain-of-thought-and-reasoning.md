@@ -17,6 +17,18 @@ sources:
   - https://arxiv.org/abs/2112.00114
   - https://arxiv.org/abs/2205.09712
   - https://arxiv.org/abs/2302.13814
+  - https://arxiv.org/abs/2309.13339
+  - https://arxiv.org/abs/2311.09277
+  - https://arxiv.org/abs/2411.00492
+  - https://arxiv.org/abs/2409.03271
+  - https://arxiv.org/abs/2404.03414
+  - https://arxiv.org/abs/2410.16540
+  - https://arxiv.org/abs/2403.12373
+  - https://arxiv.org/abs/2402.03667
+  - https://arxiv.org/abs/2408.08869
+  - https://arxiv.org/abs/2310.06692
+  - https://arxiv.org/abs/2412.06975
+  - https://arxiv.org/abs/2310.07064
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -173,6 +185,29 @@ print(answer)    # Q: "Today is 27 February 2023. I was born exactly 25 years ag
 The idea still pays with modern models. On GSM8K-Hard (GSM8K with larger numbers), having the model write a plan as code and running it in Python beat writing the arithmetic out as CoT (few-shot): 68.0% against 47.8% for Llama 3.1 70B, and 70.4% against 52.2% for GPT-4o Mini. On plain GSM8K, whose numbers are easier, CoT was slightly ahead (96.1% against 94.4% for Llama 3.1 70B) ([arXiv:2409.12183](https://arxiv.org/abs/2409.12183) (Sprague et al., 2024-09)).
 
 `exec` on model output is only acceptable in a sandbox. DAIR's PAL notebook uses LangChain's legacy `OpenAI` completion class and `text-davinci-003`, both retired — swap in any current model. Today this is usually done with a code-execution tool rather than a hand-built prompt.
+
+---
+
+## More CoT variants
+
+Twelve more variants report gains over plain CoT. They fall into three kinds: change the demonstrations, spend extra calls checking or voting, or add scaffolding before the answer. Every row is one run on a test set of 100 to 500 items (20 per run for AutoReason), mostly on GPT-3.5-class or 7B to 8B models, and only six were peer reviewed (the rest are preprints). Treat them as ideas to try against your own eval, with a baseline that gets the same number of calls.
+
+| Variant | Idea | Result and setup | Catch |
+|---|---|---|---|
+| Contrastive CoT ([arXiv:2311.09277](https://arxiv.org/abs/2311.09277), Chia et al., 2023-11) | Show a wrong explanation beside each right one; build it by shuffling the numbers and entities in the right one | GPT-3.5-Turbo, 4-shot: GSM8K 69.2% to 79.0%, Bamboogle 40.8% to 56.8%, AQuA 53.5% to 57.5% | One model; no decoding settings or variance |
+| Error-aware demonstrations ([arXiv:2410.16540](https://arxiv.org/abs/2410.16540), Cui et al., AISTATS 2025) | Demo = wrong path, why it is wrong, then the right path. Theory: a chain whose steps see the earlier ones has lower optimal loss than isolated steps | Gemini Pro, Tracking Shuffled Objects (7): 58.20% to 64.80%; temperature 0, 250 items, one run | The proof covers a one-layer linear-attention toy; wrong paths and explanations are handwritten; some cells flat or lower (GSM8K, DeepSeek 67B: 83.85% to 83.40%) |
+| GeM-CoT ([arXiv:2310.06692](https://arxiv.org/abs/2310.06692), Zou et al., 2023-10) | When the task type is unknown, match each question to a demo pool by embedding; fall back to zero-shot CoT and add confident answers to the pool | Ten datasets, GPT-3.5-Turbo: 82.3% against 82.1% for Auto-CoT, 79.4% for zero-shot CoT. A pilot with mismatched demos fell from 78.0% to 19-27% | Gain over Auto-CoT is 0.2 points; the pool is seeded from the ten datasets |
+| LoT ([arXiv:2309.13339](https://arxiv.org/abs/2309.13339), Zhao et al., LREC-COLING 2024) | After each step, write one review arguing it is true and one arguing it is false; if the false one wins, revise and regenerate the rest | Zero-shot, GPT-3.5-turbo GSM8K: 78.75% to 80.15%. A plain "double check" prompt scored 76.15% | Most gains are 0 to 3.5 points; Vicuna-7b AQuA fell 21.65% to 20.47%; extra calls per step, uncounted |
+| RankPrompt ([arXiv:2403.12373](https://arxiv.org/abs/2403.12373), Hu et al., LREC-COLING 2024) | Sample 5 chains, then one call compares them step by step, with one auto-built comparison exemplar | gpt-3.5-turbo, mean of 8 tasks: 81.10% against 78.91% for majority voting and 76.03% for greedy CoT; AQuA 71.65% against 62.60% for voting and 58.51% for CoT | The CoT baseline is one sample, so only the voting row is matched; needs labeled questions for the exemplar; no gain on ARC |
+| PEDAL ([arXiv:2408.08869](https://arxiv.org/abs/2408.08869), Prabhu, 2024-08) | Three prompts with different exemplars, one greedy answer each, an LLM call picks the final | SVAMP (300 items), Llama-3-8B 4-bit: 74.11% against 70.22% greedy and 72.99% for universal self-consistency; output tokens about 192 against 503 (Qwen2) | With Qwen2-7B universal self-consistency won (80.33% against 77.89%); more input tokens; two small datasets |
+| Multi-expert prompting ([arXiv:2411.00492](https://arxiv.org/abs/2411.00492), Long et al., EMNLP 2024) | Have the model write 3 expert personas, answer as each, then merge them with a 7-step aggregation prompt | TruthfulQA, gpt-3.5-turbo-0613: 89.35% against 80.66% for the best baseline and 70.38% for zero-shot CoT | About 2,346 tokens per answer against 103 for zero-shot CoT; on reasoning multiple-choice sets it only matches CoT |
+| Indirect reasoning, DIR ([arXiv:2402.03667](https://arxiv.org/abs/2402.03667), Zhang et al., COLING 2025) | Prove by contrapositive or contradiction as well as directly, then vote across both kinds of chain | LogiQA (179 questions, 16 chains, GPT-3.5-turbo): 36.3% against 29.1% for self-consistency | The indirect-only gap (ProofWriter, 50.7% against 17.3%) comes from subsets the authors picked; models rarely do it unprompted |
+| Strategic CoT ([arXiv:2409.03271](https://arxiv.org/abs/2409.03271), Wang et al., 2024-09) | One prompt first states the strategy, then solves with it | Zero-shot, Llama3-8B GSM8K: 52.11% to 73.16%; mean +6.92 points over 8 datasets | Llama3-8B ARC fell 80.60% to 78.02%; output about 1.5 times as long; the workflow prompt is handwritten per domain |
+| LM-guided CoT ([arXiv:2404.03414](https://arxiv.org/abs/2404.03414), Lee et al., LREC-COLING 2024) | A distilled 80M FLAN-T5 writes the rationale; a frozen 11B FLAN-T5 answers | 2WikiMultiHopQA exact match 0.506 against 0.40 for CoT, on 2,000 items, half that plain prompting got right and half it got wrong; CoT scored below plain prompting (0.50) | RL refinement added about a tenth of a point; the "large" model is only 11B |
+| AutoReason ([arXiv:2412.06975](https://arxiv.org/abs/2412.06975), Sevinc and Gumus, 2024-12) | GPT-4 writes a reasoning decomposition for each question; GPT-3.5 answers with it | StrategyQA, GPT-3.5-Turbo: 76.6% against 70.3% CoT and 55.0% base; 20 questions per run, 3 runs | A stronger model is supplying the reasoning; GPT-4-Turbo on HotpotQA fell to 71.6% from 73.3% base |
+| Hypotheses-to-Theories ([arXiv:2310.07064](https://arxiv.org/abs/2310.07064), Zhu et al., 2023-10) | Run CoT on training examples, keep the rules that recur and are usually right, prepend the library | GPT-4, base-16/11/9 arithmetic: 57.4% to 78.4%; CLUTRR 50.6% to 64.3%. Random rules cut CLUTRR to 9.9% | Needs a model that retrieves rules well and some training examples; GPT-3.5 gains on arithmetic are marginal (+3.3 with CoT, +2.9 even with GPT-4's rules); borrowed GPT-4 rules helped only with least-to-most prompting (+11.7) and on CLUTRR |
+
+Two results are worth keeping from the table. First, incorrect implicit rules caused 65% of GPT-4's CoT errors on CLUTRR and 81% on base-16 arithmetic (100 test examples each), which is why a checked rule library helps where more sampling would repeat the same wrong rule. Second, the vote-or-compare variants (RankPrompt, PEDAL, multi-expert) replace [self-consistency](#self-consistency)'s majority vote with a model call, and each paper's own table shows a case where plain voting or CoT wins. Our extrapolation: add the extra calls only after a cost-matched baseline, such as the same number of self-consistency samples, loses on your eval.
 
 ---
 

@@ -1,0 +1,277 @@
+{
+ "schema": 1,
+ "key": "sha1:f5643470358d",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/prompt-engineering-for-generative-ai/ch06-autonomous-agents-memory-tools.pdf",
+ "bib": {
+  "title": "Chapter 6. Autonomous Agents with Memory and Tools (Prompt Engineering for Generative AI)",
+  "authors": [],
+  "first_author": "Phoenix",
+  "year": null,
+  "venue": "book chapter (O'Reilly, Prompt Engineering for Generative AI)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78393,
+  "chars_total": 78393,
+  "engine": "pymupdf",
+  "skipped": "Code listings in the cached text are truncated at line width by the PDF extraction; read as far as they go. Page-footer navigation junk at end ignored."
+ },
+ "type": "book-chapter",
+ "question": "How do LLM agents reason with chain-of-thought, call tools, keep memory and get orchestrated, using ReAct, OpenAI functions and LangChain?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "Reported figure: on the game of 24, GPT-4 with chain-of-thought prompting reached a 4% success rate versus 74% for Tree of Thoughts.",
+   "kind": "reported",
+   "source": "Tree of Thoughts (not cited by name in the chapter)",
+   "metric": "success rate on game of 24",
+   "value": "74",
+   "unit": "%",
+   "baseline_value": "4",
+   "n": null,
+   "setup": "Game of 24, GPT-4; CoT prompting versus ToT; no sample size, prompts or settings given in the chapter.",
+   "quote": "managed a 4% success rate. In\ncontrast, the ToT approach skyrocketed this figure to an impressive 74%.",
+   "table": null,
+   "note": "Chapter gives no citation; the numbers are not independently checkable from this source.",
+   "where": "Tree of Thoughts section"
+  },
+  {
+   "claim": "The chapter's default ReAct stopping rule is a 'Final Answer' string or a maximum number of iterations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ReAct description, Fig 6-1",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Reason and Act (ReAct)"
+  },
+  {
+   "claim": "LangChain create_sql_agent defaults to max_iterations 15 and top_k 10 (function signature printed for demonstration).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "max_iterations default",
+   "value": "15",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "create_sql_agent signature as printed in the chapter; library version not stated",
+   "quote": "max_iterations: int | None = 15,",
+   "table": null,
+   "note": "Version-dependent library default.",
+   "where": "Customizing Standard Agents listing"
+  },
+  {
+   "claim": "Token counter example: one trivial ChatOpenAI call used 25 tokens and two identical calls used 50.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "total_tokens",
+   "value": "25",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "get_openai_callback, prompt 'My name is James'; model not named (default ChatOpenAI)",
+   "quote": "# 25",
+   "table": null,
+   "note": "Two calls give 50.",
+   "where": "Token Counting with LangChain listing"
+  }
+ ],
+ "limits": [
+  "No experiments of its own; the one quantitative claim (ToT 4% vs 74%) is quoted without citation, prompts or settings.",
+  "Code targets 2023-24 LangChain APIs (ConversationBufferMemory, LLMMathChain, create_react_agent, hub prompts); the chapter itself notes OpenAI Functions agent type is deprecated in favour of OpenAI Tools, and plan-and-execute is experimental.",
+  "Table 6-2 marks ReAct as not supporting 'ease of implementation' and OpenAI functions as lacking sequential tool execution; these are the author's judgments, not measured.",
+  "ReAct is said to be less stable than function calling and to favour tool use over plain text answers; no evidence given.",
+  "Tesla reward function claim ('miles driven without an intervention') is unsourced.",
+  "Reasoning in the chapter's CoT example is a prompt with 'step-by-step' plus a $20,000 budget; the improvement is shown by one GPT-4 example, not measured, and the two prompts differ in detail as well as in CoT phrasing."
+ ],
+ "practices": [
+  "Add the phrase 'step-by-step' and concrete context (budget, product type) to prompts to elicit chain-of-thought and more specific output (CoT section).",
+  "Write expressive Python function names and tool descriptions so the LLM picks the right tool (Using Tools).",
+  "Add a stop sequence such as 'tool_result:' so the model stops before inventing tool output (ReAct implementation).",
+  "Handle regex parse failures in agent output, for example by asking an LLM to fix the previous response or re-requesting with prior state (ReAct implementation warning).",
+  "Do not give an agent too many tools, since the LLM may become confused about which to use (Using Tools note).",
+  "Divide tasks among tools sensibly and monitor tool usage and quality per tool (Divide Labor and Evaluate Quality).",
+  "Use OpenAI functions for a single definite action (simple search, extraction); use ReAct for multi-step sequential tool use and multi-intent queries (Comparing OpenAI Functions and ReAct).",
+  "Set max_iterations and max_execution_time to cap cost if an agent loops (Customizing Standard Agents).",
+  "Validate tool arguments with an args_schema (pydantic) and put the expected input format and a reply instruction in the tool docstring (OpenAI Functions Agent with Memory).",
+  "Move from in-process memory to database-backed memory for continuity across sessions (Memory note).",
+  "Pick memory type by need: window (last K), summary (long chats, token-saving), summary-buffer (hybrid), token-buffer (token cap) (Other Popular Memory Types).",
+  "Use constructor callbacks for logging across an agent, request callbacks for streaming a single request, verbose only for local debugging (When to Use Which).",
+  "Count tokens, cost and requests with get_openai_callback to guide prompt optimisation (Token Counting)."
+ ],
+ "terms": [
+  {
+   "term": "Chain-of-thought reasoning (CoT)",
+   "definition": "a method of guiding LLMs through a series of steps or logical connections to reach a conclusion or solve a problem",
+   "where": "Chain-of-Thought"
+  },
+  {
+   "term": "Agent",
+   "definition": "acts, perceives, and makes decisions within a specified environment to achieve predefined objectives",
+   "where": "Agents"
+  },
+  {
+   "term": "Agent components",
+   "definition": "inputs, goal or reward function, available actions; for LLM agents also memory, planning/execution strategies and retrieval",
+   "where": "Agents"
+  },
+  {
+   "term": "ReAct",
+   "definition": "an improved version of CoT, allowing an LLM to create observations after taking actions via tools; loops observe, think, decide, act until a Final Answer or max iterations",
+   "where": "Reason and Act"
+  },
+  {
+   "term": "Tool",
+   "definition": "a predefined function that permits the agent to take a specific action",
+   "where": "Using Tools"
+  },
+  {
+   "term": "OpenAI functions",
+   "definition": "fine-tuned LLMs that transform user input into function calls emitting JSON; alternative to ReAct for tool use, with parallel function calling",
+   "where": "Using LLMs as an API"
+  },
+  {
+   "term": "Agent toolkit",
+   "definition": "a LangChain integration that provides multiple tools and chains together (CSV, SQL, Pandas, Python, JSON, Gmail agents)",
+   "where": "Agent Toolkits"
+  },
+  {
+   "term": "Long-term memory",
+   "definition": "the library of an LLM: vector databases, self-reflection, custom retrievers",
+   "where": "Long-Term Memory"
+  },
+  {
+   "term": "Short-term memory",
+   "definition": "a temporary workspace: conversation history and repetition avoidance",
+   "where": "Short-Term Memory"
+  },
+  {
+   "term": "Plan-and-execute agents",
+   "definition": "separate task planning and tool execution into separate modules, each handled by an individual LLM; examples BabyAGI and AutoGPT",
+   "where": "Plan-and-Execute Agents"
+  },
+  {
+   "term": "Tree of Thoughts (ToT)",
+   "definition": "exploration across coherent text chunks termed thoughts, with self-assessment, forward planning and backtracking, beyond linear chain-of-thought",
+   "where": "Tree of Thoughts"
+  },
+  {
+   "term": "Callbacks",
+   "definition": "BaseCallbackHandler hooks (on_llm_start, on_tool_end, on_chain_error ...) to monitor and react to events; scoped to constructor or request",
+   "where": "Callbacks"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Named as the original agent framework; no citation printed",
+   "quote": "The original framework was ReAct"
+  },
+  {
+   "work": "Tree of Thoughts",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of the 4% vs 74% game-of-24 figure; not cited by title or author in the chapter",
+   "quote": null
+  },
+  {
+   "work": "BabyAGI / AutoGPT",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Examples of plan-and-execute agents",
+   "quote": null
+  },
+  {
+   "work": "LangChain",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "All code examples use LangChain agents, memory, callbacks",
+   "quote": null
+  },
+  {
+   "work": "OpenAI function calling (gpt-3.5-turbo-0613, gpt-4-0613)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Described in Table 6-1 and Chapter 4 of the same book",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6-1",
+   "caption": "The ReAct framework",
+   "page": 1,
+   "why": "Shows the observe-think-act loop."
+  },
+  {
+   "figure": "Fig 6-2",
+   "caption": "Function calling flow using OpenAI functions",
+   "page": 1,
+   "why": "Shows user input turned into a weather API call."
+  },
+  {
+   "figure": "Fig 6-3",
+   "caption": "Memory within LangChain",
+   "page": 1,
+   "why": "Shows memory read before and write after each chain run."
+  },
+  {
+   "figure": "Fig 6-4",
+   "caption": "BabyAGI's agent architecture",
+   "page": 1,
+   "why": "Task creation, prioritisation and execution agents around a vector store."
+  },
+  {
+   "figure": "Fig 6-5",
+   "caption": "Tree of Thoughts (ToT)",
+   "page": 1,
+   "why": "Branching reasoning compared with a linear chain."
+  },
+  {
+   "figure": "Table 6-1",
+   "caption": "Comparison of agent types",
+   "page": 1,
+   "why": "LangChain agent types at a glance."
+  },
+  {
+   "figure": "Table 6-2",
+   "caption": "A feature comparison between OpenAI functions and ReAct",
+   "page": 1,
+   "why": "Feature checklist for choosing between the two."
+  }
+ ],
+ "code": [
+  {
+   "where": "Agents section pseudocode",
+   "snippet": "next_action = agent.get_action(...)\nwhile next_action != AgentFinish:\n    observation = run(next_action)\n    next_action = agent.get_action(..., next_action, observatio",
+   "verbatim": true
+  },
+  {
+   "where": "ReAct implementation",
+   "snippet": "action_pattern = re.compile(r\"(?i)action\\s*:\\s*([^\\n]+)\", re.MULTILINE)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors not printed in the PDF text (book is by James Phoenix and Mike Taylor per the chapter's own mention of 'James Phoenix' in a code example only; not stated as author, so left empty).",
+  "Code listings and prompt text are cut at line width in the extracted text.",
+  "Web page footer junk (navigation links) at the end of the PDF."
+ ]
+}

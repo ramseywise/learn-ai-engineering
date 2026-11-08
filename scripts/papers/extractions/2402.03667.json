@@ -1,0 +1,483 @@
+{
+ "schema": 1,
+ "key": "2402.03667",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/zhang-2024-large-language-models-as-indirect.pdf",
+ "bib": {
+  "title": "Large Language Models as an Indirect Reasoner: Contrapositive and Contradiction for Automated Reasoning",
+  "authors": [
+   "Yanfang Zhang",
+   "Yiliu Sun",
+   "Yibing Zhan",
+   "Dapeng Tao",
+   "Dacheng Tao",
+   "Chen Gong"
+  ],
+  "first_author": "Zhang",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2402.03667",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71594,
+  "chars_total": 71594,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can prompting LLMs to reason indirectly (contradiction and contrapositive) alongside direct reasoning improve logical reasoning and mathematical proof?",
+ "hypothesis": "LLMs mostly use direct reasoning; prompting indirect reasoning and voting over both path types enriches reasoning paths and improves accuracy on problems DR cannot solve.",
+ "contributions": [
+  "Introduce the IR strategy (contrapositive and contradiction) into LLM reasoning",
+  "Devise prompt templates that stimulate IR and the DIR method combining DR and IR",
+  "DIR combines with CoT variants, improving four datasets on three LLMs"
+ ],
+ "method": {
+  "summary": "Prompt templates instruct the LLM to negate the conclusion and derive a contradiction, and to use contrapositives of rules (IR). DIR samples equal numbers of DR and IR chains and takes a majority vote, added on top of SC, CR and MulAD with the same total number of sampled chains.",
+  "task": "logical reasoning (ProofWriter, LogiQA) and mathematical proof (ProofNet, ProofMath)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LogiQA",
+    "role": "eval",
+    "size": "179 questions (of 8,678 paragraph-question pairs)",
+    "split": "questions with minimal dependence on external sources",
+    "source": "Liu et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ProofWriter (OWA, 5-hop subset)",
+    "role": "eval",
+    "size": "200 randomly selected questions",
+    "split": "5-hop subset",
+    "source": "Tafjord et al., 2021; sampling after Kazemi et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "ProofNet",
+    "role": "eval",
+    "size": "50 randomly selected questions",
+    "split": null,
+    "source": "Azerbayev et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "ProofMath",
+    "role": "eval",
+    "size": "100 proof problems",
+    "split": null,
+    "source": "new; junior/senior high school textbooks and zuoyebang.com; proofs verified by three experts",
+    "preprocessing": "Table 7 distribution: junior algebra 6+11, geometry 7+8+8; high school algebra 13+19+12, geometry 7+9"
+   },
+   {
+    "name": "ProofWriter_S",
+    "role": "eval",
+    "size": "150 items",
+    "split": "selected subset of ProofWriter to showcase IR",
+    "source": "ProofWriter",
+    "preprocessing": null
+   },
+   {
+    "name": "ProofMath_S",
+    "role": "eval",
+    "size": "35 items",
+    "split": "selected subset of ProofMath",
+    "source": "ProofMath",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3.5-turbo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": "0.7"
+    }
+   },
+   {
+    "name": "Gemini-pro",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": "0.9"
+    }
+   },
+   {
+    "name": "Llama-3-70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "temperature": "0.6"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling M reasoning chains, majority vote over answers (Eq. 5)",
+   "temperature": "0.7 GPT-3.5-turbo, 0.9 Gemini-pro, 0.6 Llama-3-70B; CR intermediate thoughts 0.1, 0.3, 0.3 respectively",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "16 chains for LogiQA and ProofWriter, 4 for ProofNet and ProofMath, equal split DR/IR in DIR; 4 chains for the DR vs IR comparison (Tables 5, 6); same total as baseline",
+   "prompting": "few-shot with worked examples (IR examples show contradiction/contrapositive); zero-shot variant with instructions only (Table 6)",
+   "retrieval": null,
+   "parameters": {
+    "MulAD agents": "3",
+    "MulAD rounds": "2",
+    "aggregation": "majority vote"
+   },
+   "other": {
+    "preliminary experiment": "70 questions from each of 4 datasets prompted with 'Let's think step by step' to count DR vs IR share (Fig 3, values not in text)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AA (accuracy of answer)",
+     "definition": "AN/N, share of examples with correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP (accuracy of reasoning process)",
+     "definition": "PN/N, share with correct reasoning process; judged by humans",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "DP (diversity of reasoning processes)",
+     "definition": "(1/N) sum d_i, d_i = number of correct reasoning methods for example i",
+     "unit": "count per example",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CoT (Wei et al., 2022)",
+    "SC (Wang et al., 2022a)",
+    "CR (Zhang et al., 2023)",
+    "MulAD (Du et al., 2024)"
+   ],
+   "protocol": "Single table values, no seeds or significance tests stated. LogiQA scored by AA; ProofWriter scored by AA (Table 2 caption says accuracy); proofs scored by 5 graduate students (3 CS, 2 math), blind to method, shuffled, majority vote of independent judgments."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "ProofMath described (Appendix B.2); release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "IR zero-shot instruction (contradiction + contrapositive)",
+    "text": "First, take the negation of the conclusion/question and assume the negation is true; Next, use the negation and the premises to deduce its falsity until the result of that assumption is a contradiction. If necessary, consider the logical equivalence of the original rules and their contrapositive.",
+    "where": "Section 3.2"
+   },
+   {
+    "purpose": "IR template for CoT on ProofWriter (system part)",
+    "text": "Suppose you are one of the greatest AI scientists, logicians and mathematicians. Let's think about it step by step. You need to use proof by contradiction to judge whether the following conclusion is True, False or Unknown. First, take the negation of the conclusion and assume the negation to be true or false in turn. Then, use the premises and rules to deduce whether the assumption leads to a contradiction. If a contradiction arises, the assumption is false. If not, the assumption cannot be determined. If necessary, consider the logical equivalence of the original rules and their contrapositive.",
+    "where": "Appendix E, Fig 12 (also Figs 13-19 for CR, LogiQA, ProofNet, ProofMath)"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On LogiQA with GPT-3.5-turbo, SC-DIR beats SC by 7.2 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AA",
+   "value": "36.3",
+   "unit": "%",
+   "baseline_value": "29.1",
+   "n": 179,
+   "setup": "LogiQA 179 questions, GPT-3.5-turbo, 16 chains",
+   "quote": "DIR outperforms SC by 7.2%",
+   "table": "Table 1, row SC-DIR vs SC, GPT-3.5-turbo",
+   "note": null,
+   "where": "Sec 4.3, Table 1"
+  },
+  {
+   "claim": "On ProofWriter, MulAD-DIR with Llama-3-70B reaches 87.5% vs 78.0% for MulAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AA",
+   "value": "87.5",
+   "unit": "%",
+   "baseline_value": "78.0",
+   "n": 200,
+   "setup": "ProofWriter 5-hop, 200 questions, 16 chains",
+   "quote": null,
+   "table": "Table 2, row MulAD-DIR, column Llama-3-70B",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On Gemini-pro ProofWriter, SC-DIR is 57.0% vs SC 46.0%, above 10 points gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AA",
+   "value": "57.0",
+   "unit": "%",
+   "baseline_value": "46.0",
+   "n": 200,
+   "setup": "ProofWriter, Gemini-pro",
+   "quote": null,
+   "table": "Table 2, row SC-DIR, column Gemini-pro",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On ProofWriter_S with GPT-3.5-turbo, IR alone gets 50.7% vs 17.3% for DR, a 33.4 point gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "50.7",
+   "unit": "%",
+   "baseline_value": "17.3",
+   "n": 150,
+   "setup": "ProofWriter_S 150 hand-selected items, SC with 4 chains, few-shot",
+   "quote": "IR showcases enhance-",
+   "table": "Table 5, row ProofWriter_S IR, column GPT-3.5-turbo",
+   "note": "Subset was chosen by authors to showcase IR, so the gap is not representative of the full dataset.",
+   "where": "Sec 4.4, Table 5"
+  },
+  {
+   "claim": "On ProofMath_S with GPT-3.5-turbo, IR gets 82.6% vs 57.1% for DR (25.5 points).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "82.6",
+   "unit": "%",
+   "baseline_value": "57.1",
+   "n": 35,
+   "setup": "ProofMath_S 35 hand-selected items, SC with 4 chains",
+   "quote": null,
+   "table": "Table 5, row ProofMath_S IR, column GPT-3.5-turbo",
+   "note": "82.6% is not a multiple of 1/35 (29/35=82.9%); printed as is.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Zero-shot IR prompts (instructions only) still beat DR: ProofWriter_S GPT-3.5-turbo 49.3% vs 15.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "49.3",
+   "unit": "%",
+   "baseline_value": "15.3",
+   "n": 150,
+   "setup": "ProofWriter_S, zero-shot, 4 chains",
+   "quote": null,
+   "table": "Table 6, row ProofWriter_S IR, column GPT-3.5-turbo",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "On ProofNet, SC-DIR raises process accuracy and diversity over SC with GPT-3.5-turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "82.0",
+   "unit": "%",
+   "baseline_value": "72.0",
+   "n": 50,
+   "setup": "ProofNet 50 questions, 4 chains, human-judged",
+   "quote": null,
+   "table": "Table 3, row SC-DIR, column GPT-3.5-turbo AP",
+   "note": "DP 1.88 vs 1.28",
+   "where": "Table 3"
+  },
+  {
+   "claim": "On ProofMath, CR-DIR raises AP over CR by 15 points with GPT-3.5-turbo (72.0 vs 57.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "72.0",
+   "unit": "%",
+   "baseline_value": "57.0",
+   "n": 100,
+   "setup": "ProofMath 100 problems, CR vs CR-DIR",
+   "quote": null,
+   "table": "Table 4, row CR-DIR, column GPT-3.5-turbo AP",
+   "note": "Text: 10.0% AP enhancement, rising to 15.0% with GPT-3.5-turbo.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Removing either contrapositive or contradiction instructions from IR degrades IR on ProofWriter_S.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 150,
+   "setup": "ProofWriter_S, SC, 4 chains",
+   "quote": null,
+   "table": null,
+   "note": "Values only in Fig 5, not in text.",
+   "where": "Sec 4.4, Fig 5"
+  },
+  {
+   "claim": "Without prompting, LLMs rarely use IR on logical reasoning tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 70,
+   "setup": "70 questions from each of four datasets, 'Let's think step by step'",
+   "quote": null,
+   "table": null,
+   "note": "Proportions only in Fig 3.",
+   "where": "Sec 2, Fig 3"
+  }
+ ],
+ "limits": [
+  "Authors concede gains vary by model: GPT-3.5-turbo performs IR more effectively and stably than Gemini-pro.",
+  "Only contrapositive and contradiction explored; other logical laws left to future work.",
+  "Test sets are small (50 to 200 items), single runs, no significance tests or seeds reported.",
+  "DR vs IR comparison uses authors' hand-selected subsets (ProofWriter_S, ProofMath_S) chosen to showcase IR.",
+  "Proof correctness judged by 5 graduate students; model versions and dates not given; GPT-3.5, Gemini-pro and Llama-3-70B are dated.",
+  "No code release stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Direct Reasoning (DR)",
+   "definition": "constructing logical chains from premises to the final result",
+   "where": "Sec 1"
+  },
+  {
+   "term": "Indirect Reasoning (IR)",
+   "definition": "contrapositive and contradiction, logically equivalent to DR",
+   "where": "Sec 1"
+  },
+  {
+   "term": "DIR",
+   "definition": "Direct-Indirect Reasoning: DR and IR as parallel reasoning paths merged by voting",
+   "where": "Sec 1, 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-Thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT baseline and basis for few-shot templates",
+   "quote": null
+  },
+  {
+   "work": "Self-Consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DIR adds IR chains to the SC vote",
+   "quote": null
+  },
+  {
+   "work": "Cumulative Reasoning (Zhang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CR baseline",
+   "quote": null
+  },
+  {
+   "work": "Improving factuality and reasoning through multiagent debate (Du et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MulAD baseline",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot CoT (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "'Let's think step by step' used in the preliminary experiment",
+   "quote": null
+  },
+  {
+   "work": "ProofWriter (Tafjord et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "LogiQA (Liu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "ProofNet (Azerbayev et al.)",
+   "year": 2023,
+   "arxiv": "2302.12433",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of IR using LLMs for some complex problems regarding mathematic proof and logical reasoning.",
+   "page": 2,
+   "why": "Shows DR failing and IR succeeding on the same item."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Framework of our proposed DIR method which incorporates both DR and IR to enable multipath reasoning.",
+   "page": 4,
+   "why": "Pipeline: DR and IR prompts, K+M chains, majority vote."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "IR uses fewer reasoning steps to reach a conclusion in logical reasoning.",
+   "page": 7,
+   "why": "2-step IR proof vs 5-step DR chain."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5",
+   "snippet": "P(A_s) = (1/M) sum_{i=1..M} I(A_i = A_s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Plain-text extraction scrambled table layouts; table cells read by position.",
+  "No embedded instructions found.",
+  "Venue not stated in the PDF (arXiv v2, 27 Jan 2025); year 2025 from arXiv stamp."
+ ]
+}

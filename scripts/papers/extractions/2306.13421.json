@@ -1,0 +1,293 @@
+{
+ "schema": 1,
+ "key": "2306.13421",
+ "pdf": "generative-ai/02-rag-retrieval/sources/rubin-2023-retrieval-pretrained-transformer.pdf",
+ "bib": {
+  "title": "Retrieval-Pretrained Transformer: Long-range Language Modeling with Self-retrieval",
+  "authors": [
+   "Ohad Rubin",
+   "Jonathan Berant"
+  ],
+  "first_author": "Rubin",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 21 Jul 2024); the PDF names no venue",
+  "arxiv": "2306.13421",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 62509,
+  "chars_total": 62509,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; appendices A-C (implementation, CCA complexity, DPR training) not read in detail"
+ },
+ "type": "empirical",
+ "question": "Can a retriever be trained jointly with the LM from scratch, as a native part of it, and does a semantic training signal beat a lexical one?",
+ "hypothesis": "Computing retrieval queries from the LM's own hidden states and training the retriever to pick chunks that raise the next chunk's probability under a reference LM gives better perplexity than a fixed BM25 retriever or lexical supervision.",
+ "contributions": [
+  "Self-retrieval: retriever inputs come from the lower decoder layers; retrieved chunks are fused by chunked cross-attention (CCA) in the upper layers",
+  "A retriever loss (LambdaRank) whose ranking comes from a reference scoring LM, not lexical overlap",
+  "Neighbor gating and scheduled sampling to make training stable",
+  "Perplexity and retrieval-metric gains on four long-document datasets"
+ ],
+ "method": {
+  "summary": "Split each document into 64-token chunks; for each chunk retrieve K earlier chunks of the same document with a learned bilinear score over pooled lower-decoder states; fuse them with RETRO-style CCA. Supervision: BM25 gives 20 candidates per chunk, a frozen Pythia 1.4B scores log P(next chunk | candidate) / P(next chunk | two preceding chunks), positives are those with score above 0, LambdaRank trains the retriever alongside the LM loss.",
+  "task": "long-range language modelling",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ArXiv, CodeParrot, PG19, Books3",
+    "role": "both",
+    "size": "train tokens in millions: ArXiv 12,000; CodeParrot 5,000; PG19 3,000; Books3 25,000; median document length 16,368 / 29,269 / 82,659 / 113,496 tokens (Table 1)",
+    "split": "train/test",
+    "source": "Azerbayev 2023; Wolf 2023; Rae 2020; Gao 2020",
+    "preprocessing": "CodeParrot files from one repository concatenated"
+   }
+  ],
+  "models": [
+   {
+    "name": "RPT-Sem",
+    "role": "proposed",
+    "params": "242M",
+    "architecture": "12 layers, hidden 1024, 8 heads; upper half uses CCA with 2 neighbours",
+    "init_from": null,
+    "tokenizer": "GPT-NeoX",
+    "vocab": null,
+    "layers": "12",
+    "hidden": "1024",
+    "heads": "8",
+    "context": "2,048-token sliding window, stride 1,024",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "LM loss + alpha_ret * LambdaRank retriever loss",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "2^17 tokens",
+   "steps": "500K",
+   "epochs": null,
+   "tokens": "65B",
+   "seq_len": "16,384",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "scheduled sampling of gold neighbours, annealed 1 to 0 over first 90% of training",
+   "hardware": "TPUv4-64",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": "Faiss index on CPU over lower-decoder keys of all earlier tokens of the document; top-K by dot product",
+   "parameters": {
+    "K": "2 default; 3 and 4 tested"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "test perplexity per dataset",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Precision@2, Recall@10, nDCG@20",
+     "definition": "against positives defined by the scoring LM's target score",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer-XL (our impl.)",
+    "RETRO with BM25 (our impl.)",
+    "RPT-Lex",
+    "Memorizing Transformer",
+    "Block-Recurrent Transformer",
+    "Griffin",
+    "oracle neighbours"
+   ],
+   "protocol": "single runs, no confidence intervals"
+  },
+  "availability": {
+   "code": "https://github.com/OhadRubin/RPT",
+   "weights": null,
+   "data": "Books3 not released (copyright)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RPT-Sem reaches test perplexity 2.77 / 2.17 / 10.96 / 13.91 on ArXiv / CodeParrot / PG19 / Books3, against 3.11 / 2.30 / 11.48 / 15.00 for the Transformer-XL baseline and 2.94 / 2.17 / 11.44 / 14.60 for RETRO with BM25.",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "13.91 on Books3",
+   "unit": "perplexity",
+   "baseline_value": "14.60 (RETRO BM25)",
+   "n": null,
+   "setup": "242M params, 500K steps, 2 neighbours, own implementations",
+   "table": "Table 2",
+   "note": "on CodeParrot RPT-Sem ties RETRO at 2.17",
+   "where": "5.2, Table 2"
+  },
+  {
+   "claim": "A semantic training signal beats a lexical one: RPT-Lex gets 2.92 / 2.23 / 11.59 / 14.32 versus RPT-Sem 2.77 / 2.17 / 10.96 / 13.91; on retrieval, average Precision@2 is 25.2% BM25, 23.2% RPT-Lex, 30.0% RPT-Sem.",
+   "kind": "measured",
+   "metric": "Precision@2 average",
+   "value": "30.0% vs 25.2%",
+   "unit": "%",
+   "baseline_value": "25.2% (BM25)",
+   "n": null,
+   "setup": "four datasets, positives defined by the scoring LM",
+   "table": "Tables 2 and 3",
+   "note": null,
+   "where": "5.2, Table 3"
+  },
+  {
+   "claim": "Joint training matters: swapping the retriever RPT-Sem was trained with for a separately trained DPR-style retriever worsens every dataset (for example Books3 13.91 to 14.66, ArXiv 2.77 to 2.98).",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "14.66 vs 13.91",
+   "unit": "perplexity",
+   "baseline_value": "13.91",
+   "n": null,
+   "setup": "DPR-style retriever trained per dataset with the standard DPR procedure",
+   "table": "Table 4",
+   "note": "the authors read this as retriever and LM coordinating",
+   "where": "5.3, Table 4"
+  },
+  {
+   "claim": "Ablations: removing neighbor gating raises Books3 perplexity from 13.91 to 18.68; no teacher forcing raises PG19 from 10.96 to 13.10.",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "18.68; 13.10",
+   "unit": "perplexity",
+   "baseline_value": "13.91; 10.96",
+   "n": null,
+   "setup": "RPT-Sem ablations",
+   "table": "Table 4",
+   "note": null,
+   "where": "5.3, Table 4"
+  },
+  {
+   "claim": "An oracle that picks the best neighbours per the scoring LM improves RPT-Sem on Books3 from 13.87 to 12.74 and PG19 from 10.92 to 10.26 (3 neighbours baseline column as printed in the text), so retriever quality still limits the model.",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "12.74 on Books3",
+   "unit": "perplexity",
+   "baseline_value": "13.87",
+   "n": null,
+   "setup": "oracle neighbours at test time",
+   "table": "Table 2",
+   "note": "the text compares against the 3-neighbour row",
+   "where": "5.2"
+  },
+  {
+   "claim": "RPT-Sem is slower to train than the Transformer-XL baseline: 1.51x time per update, against 1.35x for RETRO with BM25.",
+   "kind": "measured",
+   "metric": "time per update",
+   "value": "1.51x",
+   "unit": "x",
+   "baseline_value": "1x",
+   "n": null,
+   "setup": "Table 2 relative time per update",
+   "table": "Table 2",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Retrieval helps even when the retrieved chunk is not a gold one, though gold retrievals give larger gains.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6 subgroup analysis",
+   "quote": "we witness improvements even in cases where a gold chunk was not retrieved",
+   "note": null,
+   "where": "5.4"
+  }
+ ],
+ "limits": [
+  "Retrieval is only over earlier chunks of the same document, so the index is the context itself; it does not show retrieval from a web-scale corpus (the authors name scaling and corpus construction as open).",
+  "Models are small (242M parameters, 65B tokens) and compared with the authors' own implementations; single runs, no confidence intervals.",
+  "Perplexity is the main metric; no downstream task or factuality result.",
+  "Supervision only re-ranks the top-20 BM25 candidates, so retrieval quality is capped by BM25 recall (Fig 5).",
+  "Training costs 1.51x per update and a frozen scoring LM is needed.",
+  "Books3 is not released."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Improving language models by retrieving from trillions of tokens (RETRO)",
+   "year": 2022,
+   "arxiv": "2112.04426",
+   "relation": "extends",
+   "note": "chunked cross-attention and chunk-wise retrieval",
+   "quote": null
+  },
+  {
+   "work": "Generalization through Memorization: Nearest Neighbor Language Models",
+   "year": 2020,
+   "arxiv": "1911.00172",
+   "relation": "related",
+   "note": "test-time-only retrieval",
+   "quote": null
+  },
+  {
+   "work": "Training Language Models with Memory Augmentation (TRIME)",
+   "year": 2022,
+   "arxiv": "2205.12674",
+   "relation": "extends",
+   "note": "jointly trained from scratch but lexical supervision and shallow interpolation",
+   "quote": null
+  },
+  {
+   "work": "Atlas",
+   "year": 2022,
+   "arxiv": "2208.03299",
+   "relation": "related",
+   "note": "perplexity distillation; starts from pretrained models",
+   "quote": null
+  },
+  {
+   "work": "Learning To Retrieve Prompts for In-Context Learning",
+   "year": 2022,
+   "arxiv": "2112.08633",
+   "relation": "related",
+   "note": "scoring-LM supervision idea",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Retrieval-Pretrained Transformer (RPT) is a language trained from scratch with a native retrieval ability that can be applied to long texts",
+   "page": 1,
+   "why": "lexical versus semantic retrieval example"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The architecture of the Retrieval-Pretrained Transformer",
+   "page": 3,
+   "why": "lower decoder feeds retriever, upper decoder CCA"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

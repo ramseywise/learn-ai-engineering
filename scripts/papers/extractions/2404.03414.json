@@ -1,0 +1,475 @@
+{
+ "schema": 1,
+ "key": "2404.03414",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/lee-2024-can-small-language-models-help.pdf",
+ "bib": {
+  "title": "Can Small Language Models Help Large Language Models Reason Better?: LM-Guided Chain-of-Thought",
+  "authors": [
+   "Jooyoung Lee",
+   "Fan Yang",
+   "Thanh Tran",
+   "Qian Hu",
+   "Emre Barut",
+   "Kai-Wei Chang",
+   "Chengwei Su"
+  ],
+  "first_author": "Lee",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2404.03414",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35631,
+  "chars_total": 35631,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a small fine-tuned LM generate rationales that make a frozen black-box large LM answer multi-hop QA better than standard or CoT prompting?",
+ "hypothesis": "Splitting CoT into rationale generation (small LM, trained by distillation then RL) and answer prediction (frozen large LM) improves answer accuracy and rationale quality.",
+ "contributions": [
+  "LM-guided CoT framework: small LM generates rationale, frozen large LM predicts answer",
+  "Rationale distillation followed by RL with 8-aspect rationale-quality and task-accuracy rewards",
+  "Experiments on HotpotQA and 2WikiMultiHopQA with FLAN-T5"
+ ],
+ "method": {
+  "summary": "FLAN-T5 small (80M) is instruction-tuned on filtered CoT rationales from a large LM, then refined with PPO using rationale-aspect rewards (classifier-based) plus a task reward from the frozen FLAN-T5 XXL (11B) answer prediction. At test time the small LM rationale is inserted into the large LM prompt.",
+  "task": "multi-hop extractive QA (HotpotQA, 2WikiMultiHopQA)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": "15K random training samples (30K total with 2Wiki); eval 2000 instances",
+    "split": "eval: 1000 instances ML answered correctly + 1000 answered incorrectly under standard prompting",
+    "source": "Yang et al., 2018",
+    "preprocessing": "only supporting paragraphs used as context due to FLAN-T5 input limit"
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "both",
+    "size": "15K random training samples; eval 2000 instances",
+    "split": "same 1000 correct + 1000 incorrect selection",
+    "source": "Ho et al., 2020",
+    "preprocessing": "only supporting paragraphs as context"
+   },
+   {
+    "name": "Distillation set",
+    "role": "train",
+    "size": "30K sampled, 23K after filtering invalid rationales",
+    "split": "90% train, 10% validation",
+    "source": "rationales generated with CoT prompt, greedy decoding",
+    "preprocessing": "filter responses with no rationale before final answer and with inaccurate answers"
+   },
+   {
+    "name": "RL set",
+    "role": "train",
+    "size": "5000 examples FLAN-T5 XXL failed to answer correctly",
+    "split": "90% train, 10% validation",
+    "source": "subset of training data",
+    "preprocessing": null
+   },
+   {
+    "name": "Human rationale annotation",
+    "role": "dev",
+    "size": "100 instances, 3 annotators",
+    "split": "correct n=78, incorrect n=22; classifier 90 train/10 eval",
+    "source": "random from training data",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FLAN-T5 small (M^S)",
+    "role": "proposed",
+    "params": "80M",
+    "architecture": "encoder-decoder",
+    "init_from": "FLAN-T5 small",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FLAN-T5 XXL (M^L)",
+    "role": "base",
+    "params": "11B",
+    "architecture": "encoder-decoder, frozen",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "used as teacher? inferred: the distillation teacher is not named in the text (sentence is cut off in the PDF text); M^L is the likely source"
+    }
+   },
+   {
+    "name": "Open LLaMa 7B",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "footnote: zero-shot much worse than FLAN-T5; no numbers"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: instruction-tuning (supervised) on rationales; Stage 2: PPO with reward R_aspect + R_taskAcc (R_taskAcc=1 if F1>0.5 else 0) and KL penalty to M^S",
+   "optimizer": null,
+   "lr": "3e-3 (distillation); 1.4e-5 (RL)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (distillation); 16 (RL)",
+   "steps": null,
+   "epochs": "5 (distillation); 1 (RL)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL-divergence penalty in RL",
+   "hardware": "8 NVIDIA Tesla V100 GPUs with 16GB (distillation)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "rl_library": "Huggingface TRL",
+    "rl_generation": "top_k 0.0, top_p 1.0, sampling enabled",
+    "reward_classifiers": "two logistic regression classifiers on TF-IDF (logic/coherence/consistency; fluency/naturalness/readability), trained on 90 labeled examples; factuality and relevance by token-level lexical overlap (Ye and Durrett 2022)",
+    "reward_aggregation": "normalization or weighted summation tested, no effect on performance"
+   }
+  },
+  "inference": {
+   "decoding": "greedy for teacher rationale generation; SC baselines sample n=10 paths and take most consistent answer",
+   "temperature": null,
+   "top_p": "1.0 (RL generation only)",
+   "max_tokens": null,
+   "samples": "single run reported; SC n=10",
+   "prompting": "zero-shot; LM-guided prompt appends small-LM rationale r' then 'Hence, the answer is'",
+   "retrieval": null,
+   "parameters": {
+    "ranking_variant": "sample multiple reasoning paths and rank by R_aspect; number of samples not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "prediction exactly matches ground truth",
+     "unit": "fraction 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "average word overlap between prediction and ground truth",
+     "unit": "fraction 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Answer inclusion",
+     "definition": "ground truth answer is mentioned in the prediction",
+     "unit": "fraction 0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "standard prompting",
+    "CoT prompting",
+    "CoT prompting + SC"
+   ],
+   "protocol": "2000 hard-filtered eval instances per dataset; single table, no seeds or significance tests reported; rationale quality validated with 3 annotators (mean Fleiss kappa 0.56)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "HotpotQA and 2WikiMultiHopQA public"
+  },
+  "prompts": [
+   {
+    "purpose": "teacher rationale generation / CoT baseline",
+    "text": "Based on the provided context, answer the following question (Q) by reasoning step-by-step.\nContext: c\nQ: q\nA : Let's think step by step.",
+    "where": "Sec 3.1, Table 3"
+   },
+   {
+    "purpose": "instruction-tuning small LM",
+    "text": "Given a question (Q) and a context, generate a chain of reasoning step by step to answer the question.\nContext: c\nQ: q\nReasoning: r'",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "LM-guided CoT answer prediction",
+    "text": "Based on the provided context, answer the following question (Q) by reasoning step-by-step.\nContext: c\nQ: q\nA : Let's think step by step. r' . Hence, the answer is",
+    "where": "Table 3"
+   },
+   {
+    "purpose": "standard prompting baseline",
+    "text": "Based on the provided context, answer the following question (Q).\nContext: c\nQ: q\nA:",
+    "where": "Table 3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "3e-3 for learning rates, 5 epochs,",
+    "where": "Sec 11.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LM-guided CoT (KD) beats original CoT on 2WikiMultiHopQA by about 10% EM/F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.506,
+   "unit": "fraction",
+   "baseline_value": 0.4,
+   "n": 2000,
+   "setup": "2WikiMultiHopQA hard eval set, FLAN-T5 small rationale + FLAN-T5 XXL answer, vs CoT prompting with XXL",
+   "quote": "Our method with only KD outper-",
+   "table": "Table 2, row LM-guided CoT prompting (KD), column 2Wiki EM; baseline row CoT prompting 0.4",
+   "note": "quote field requires table; table used",
+   "where": "Table 2, Sec 4.2"
+  },
+  {
+   "claim": "LM-guided CoT (KD + SC) gives the best result across settings on HotpotQA F1 (ties standard prompting 0.714).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.714,
+   "unit": "fraction",
+   "baseline_value": 0.714,
+   "n": 2000,
+   "setup": "HotpotQA hard eval set; standard prompting F1 also 0.714",
+   "table": "Table 2, row LM-guided CoT prompting (KD + SC), column HotpotQA F1",
+   "quote": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "LM-guided CoT (KD+SC) 2Wiki EM vs CoT+SC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.524,
+   "unit": "fraction",
+   "baseline_value": 0.471,
+   "n": 2000,
+   "setup": "2WikiMultiHopQA, SC n=10",
+   "table": "Table 2, row LM-guided CoT prompting (KD + SC), column 2Wiki EM; baseline row CoT prompting + SC",
+   "quote": null,
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Original CoT with FLAN-T5 XXL (11B) is worse than standard prompting on 2WikiMultiHopQA EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.4,
+   "unit": "fraction",
+   "baseline_value": 0.5,
+   "n": 2000,
+   "setup": "2WikiMultiHopQA hard eval set, FLAN-T5 XXL",
+   "table": "Table 2, rows CoT prompting and standard prompting, column 2Wiki EM",
+   "quote": null,
+   "note": "text says drop is nearly 10% for EM and F1",
+   "where": "Table 2, Sec 4.2"
+  },
+  {
+   "claim": "RL adds only slight gains over KD alone; R_aspect variant gives 2Wiki EM 0.507 vs KD 0.506, and some RL variants are below KD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 0.507,
+   "unit": "fraction",
+   "baseline_value": 0.506,
+   "n": 2000,
+   "setup": "2WikiMultiHopQA",
+   "table": "Table 2, row LM-guided CoT prompting (KD + Raspect), column 2Wiki EM",
+   "quote": null,
+   "note": "HotpotQA EM 0.503 for KD+Raspect is below KD 0.507",
+   "where": "Table 2, Fig 2"
+  },
+  {
+   "claim": "Ranking by top rationale quality slightly lowers task performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "2Wiki EM",
+   "value": 0.501,
+   "unit": "fraction",
+   "baseline_value": 0.507,
+   "n": 2000,
+   "setup": "KD + Raspect + ranking vs KD + Raspect, 2Wiki",
+   "table": "Table 2, row LM-guided CoT prompting (KD + Raspect + ranking), column 2Wiki EM",
+   "quote": null,
+   "note": null,
+   "where": "Table 2, Sec 4.2"
+  },
+  {
+   "claim": "Logistic regression reward classifier aligns better with humans than FLAN-T5 XXL self-evaluation (coherence/consistency/logicality F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 0.79,
+   "unit": "fraction",
+   "baseline_value": 0.6,
+   "n": 10,
+   "setup": "10 held-out of 100 annotated examples",
+   "table": "Table 5, row Method 2 vs Method 1, column F1 (Coherence & Consistency & Logicality)",
+   "quote": null,
+   "note": "tiny eval set (n=10)",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Inter-annotator agreement on rationale aspects was moderate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa",
+   "value": 0.56,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "3 annotators, 100 instances",
+   "quote": "across all aspect categories was 0.56, indicating",
+   "note": null,
+   "where": "Sec 11.1"
+  }
+ ],
+ "limits": [
+  "Only FLAN-T5 and only multi-hop QA tested; generalisation open (Sec 6).",
+  "Little human annotation due to resource constraints: reward classifiers trained on 100 labels, evaluated on 10.",
+  "Eval sets were hand-filtered to be hard (1000 correct + 1000 incorrect), so absolute numbers are not natural-distribution accuracy.",
+  "No seeds, variance or significance tests for Table 2; RL gains are tenths of a point.",
+  "Selecting top-quality rationales lowered task performance; authors do not explain.",
+  "XXL (11B) base shows CoT hurts, consistent with sub-50B models reasoning poorly; the black-box large LM here is not a >100B model."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting elicits reasoning in large language models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "SC decoding baseline and extension",
+   "quote": null
+  },
+  {
+   "work": "Symbolic chain-of-thought distillation",
+   "year": 2023,
+   "arxiv": "2306.14050",
+   "relation": "related",
+   "note": "rationale distillation",
+   "quote": null
+  },
+  {
+   "work": "Distilling reasoning capabilities into smaller language models",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "rationale distillation (Shridhar et al.)",
+   "quote": null
+  },
+  {
+   "work": "The unreliability of explanations in few-shot prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "lexical-overlap factuality/relevance metrics; hard-eval construction",
+   "quote": null
+  },
+  {
+   "work": "Proximal policy optimization algorithms",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "RL algorithm",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize with human feedback",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "KL penalty",
+   "quote": null
+  },
+  {
+   "work": "ROSCOE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "rationale aspects",
+   "quote": null
+  },
+  {
+   "work": "The Flan Collection",
+   "year": 2023,
+   "arxiv": "2301.13688",
+   "relation": "evaluates",
+   "note": "FLAN-T5 models",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "2WikiMultiHopQA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of our proposed method.",
+   "page": 1,
+   "why": "Shows the two-step pipeline (distill, then RL refine) and the split between small-LM rationale and large-LM answer."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Average answer prediction performance and average rationale quality scores for HotpotQA and 2WikiMultiHopQA.",
+   "page": 3,
+   "why": "Shows RL raising rationale quality with small task gain."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not stated in the PDF (arXiv v1 only); recorded as preprint.",
+  "Teacher model for rationale generation is not named in the extracted text (sentence cut off in Sec 3.1).",
+  "Optimizer, max tokens, temperature, seeds not stated."
+ ]
+}

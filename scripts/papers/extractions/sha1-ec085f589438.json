@@ -1,0 +1,271 @@
+{
+ "schema": 1,
+ "key": "sha1:ec085f589438",
+ "pdf": "ai-engineering/07-inference-engineering/sources/ai-systems-performance-engineering/ch11-inter-kernel-pipelining-synchronization-cuda-stream.pdf",
+ "bib": {
+  "title": "Chapter 11. Inter-Kernel Pipelining, Synchronization, and CUDA Stream-Ordered Memory Allocations (AI Systems Performance Engineering)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (O'Reilly, per ledger title); author and year not printed in the text",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 106679,
+  "chars_total": 106679,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do CUDA streams, events, the stream-ordered allocator, CUDA Graph capture and programmatic dependent launch hide latency between kernels, between host and GPU, and across GPUs?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains overlap of H2D copy, compute and D2H copy with streams, pinned memory and cudaMallocAsync",
+  "Compares legacy default, per-thread default and explicit streams, with best practices",
+  "Shows event-based cross-stream and cross-GPU synchronisation, NCCL/NIXL stream use and CUDA Graph capture of a multi-stream iteration",
+  "Layers inter-kernel streams on the Chapter 10 warp-specialised and thread-block-cluster kernels",
+  "Introduces Programmatic Dependent Launch (PDL)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A stream-ordered allocator is needed because legacy cudaMalloc/cudaFree is described as a blocking device-wide synchronisation (assertion, no measurement).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CUDA streams; LLM per-batch scratch buffers and growing KV cache",
+   "quote": "If you use the legacy cudaMalloc(...) , remember that it’s a blocking, device-wide operation that synchronizes the device before returning.",
+   "table": null,
+   "note": null,
+   "where": "Stream-Ordered Memory Allocator"
+  },
+  {
+   "claim": "The modern GPU limit is stated as 128 concurrently executing kernels per device.",
+   "kind": "reported",
+   "source": "Chapter 5 of the same book",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cited back to Chapter 5 of the same book; no hardware named",
+   "quote": "As discussed in\nChapter 5, the modern GPU limit is 128 concurrently executing kernels per device.",
+   "table": null,
+   "note": null,
+   "where": "Stream-Ordered Memory Allocator"
+  },
+  {
+   "claim": "Worked example: a 16 MB attention scratch buffer allocated with cudaMallocAsync on one stream does not stall the others.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative attention scratch buffer on stream1",
+   "quote": "For\ninstance, consider a stream that needs a scratch buffer of 16 MB for attention",
+   "table": null,
+   "note": null,
+   "where": "Using CUDA Streams ... with LLMs"
+  },
+  {
+   "claim": "Worked example: batch N with 512 tokens per sequence vs batch N+1 with 1,024 tokens needs a larger scratch buffer, so reuse is not enough.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "512 vs 1,024",
+   "unit": "tokens per sequence",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative variable-length batches",
+   "quote": "If\nbatch N has 512 tokens per sequence and batch N+1 has 1,024 tokens",
+   "table": null,
+   "note": null,
+   "where": "Using CUDA Streams ... with LLMs"
+  },
+  {
+   "claim": "Worked example: the two-pipeline warp-specialised kernel with TILE_SIZE 1024 uses 24 KB of shared memory against 227 KB per SM.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "24,576",
+   "unit": "B",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TILE_SIZE=1024 floats, 2 stages x 3 buffers x 4 bytes; 227 KB SMEM figure is a code comment, no GPU named",
+   "quote": "= 6 * 1024 * 4 = 24,576 B (24 KB) << 227 KB SMEM",
+   "table": null,
+   "note": null,
+   "where": "Code listing warp_specialized_two_pipelines"
+  },
+  {
+   "claim": "The authors judge that warp specialization plus clusters rarely repays its engineering cost once HBM is saturated and streams hide transfers (opinion, no data).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM training and inference",
+   "quote": "rarely justifies the\nsteep engineering cost",
+   "table": null,
+   "note": null,
+   "where": "Warp Specialization with Thread Block Clusters and CUDA Streams"
+  },
+  {
+   "claim": "The chapter gives no benchmarks, speedups or timings; all code is illustrative and unrun in the text.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole chapter",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "whole chapter"
+  }
+ ],
+ "limits": [
+  "No measured results: no GPU model, speedup, latency or throughput is reported; every claim is mechanism or advice.",
+  "Code listings are truncated in the extracted text (long lines cut) and the book's own listings are partly incomplete (the secondary_gemm body is 'omitted for brevity').",
+  "Text says PDL lets Kernel B's work overlap Kernel A's epilogue and that the trigger comment 'flushes are complete'; the semantics given are loose (cudaGridDependencySynchronize waits for the primary grid).",
+  "The multi-GPU CUDA Graph listing begins capture on streamA but issues ncclAllReduce on streamB with no event fork, while the prose says cudaStreamCaptureModeGlobal records any participating stream.",
+  "Says 'cudaMalloc' forces a device sync in several places and also pairs it with cudaFree; the claim is asserted, not measured.",
+  "Book author, year and edition are not printed in the PDF text; Figures 11-1 to 11-11 are images and their content is not in the text."
+ ],
+ "practices": [
+  "Create explicit nondefault streams with cudaStreamNonBlocking and never put performance-critical work in legacy stream 0 (Best Practices for Default Stream Usage).",
+  "Enable per-thread default streams (nvcc --default-stream per-thread) when multiple host threads enqueue GPU work (Modern Per-Thread Default Stream).",
+  "Use pinned host memory for cudaMemcpyAsync so copies overlap compute (Using Streams to Overlap Compute with Data Transfers).",
+  "Use cudaMallocAsync/cudaFreeAsync in the stream that uses the buffer, and tune cudaMemPoolAttrReleaseThreshold (Stream-Ordered Memory Allocator).",
+  "Coordinate streams with cudaEventRecord and cudaStreamWaitEvent, not cudaDeviceSynchronize or default-stream sync (Fine-Grained Synchronization with Events and Callbacks).",
+  "Do not call CUDA APIs inside a cudaLaunchHostFunc callback; limit it to CPU-side work (same section).",
+  "Give NCCL/NIXL communication streams higher priority so they are not queued behind big compute kernels (Multi-GPU Compute and Data Transfer Overlap).",
+  "Capture a whole iteration into a CUDA Graph to remove per-launch overhead (Multi-GPU section; detailed in Chapter 12).",
+  "Use two or three streams cycled round-robin; query asyncEngineCount; keep chunks neither too small nor too large (Stream-Ordered Memory Allocator).",
+  "Prefer double-buffered kernels or two-stage pipelines with streams over warp specialization plus clusters for most LLM workloads (Warp Specialization with Thread Block Clusters and CUDA Streams).",
+  "For PDL, trigger Kernel B only after Kernel A has produced and synchronised all data B needs (Programmatic Dependent Launch)."
+ ],
+ "terms": [
+  {
+   "term": "CUDA stream",
+   "definition": "A sequence of operations—kernel launches, memory copies, and memory allocations—that execute in the order they are issued.",
+   "where": "Overlapping Kernel Execution with CUDA Streams"
+  },
+  {
+   "term": "legacy default stream",
+   "definition": "Stream 0; any operation launched into it waits for all previously enqueued work in every other stream, and vice versa, acting as a global barrier.",
+   "where": "Legacy Default Stream"
+  },
+  {
+   "term": "per-thread default stream (PTDS)",
+   "definition": "Each host thread has its own implicit stream 0 that does not wait on other threads' default streams.",
+   "where": "Modern Per-Thread Default Stream"
+  },
+  {
+   "term": "scratch buffer",
+   "definition": "Temporary buffers for attention, layer normalization, softmax, KV cache, or intermediate activations.",
+   "where": "Using CUDA Streams ... with LLMs"
+  },
+  {
+   "term": "Programmatic Dependent Launch (PDL)",
+   "definition": "Lets a kernel trigger another kernel's execution directly on the device using the same CUDA stream, without involving the CPU.",
+   "where": "Programmatic Dependent Launch"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 10 of the same book (intra-kernel pipelining, warp specialization, thread block clusters)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Reuses the warp-specialised and cluster kernels and adds streams",
+   "quote": null
+  },
+  {
+   "work": "Chapter 12 of the same book (CUDA Graphs, dynamic parallelism)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Forward reference for graph details",
+   "quote": null
+  },
+  {
+   "work": "NVIDIA CUDA streams, events, stream-ordered allocator, PDL, NCCL, NIXL",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Documented NVIDIA APIs; no citations printed",
+   "quote": null
+  },
+  {
+   "work": "PyTorch (caching allocator, DataLoader pin_memory, DistributedDataParallel)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Framework behaviour described",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 11-2",
+   "caption": "Timeline of three-way overlap",
+   "page": 1,
+   "why": "Shows H2D, kernel and D2H copies of successive batches overlapping across streams (content is an image, not in the text)"
+  },
+  {
+   "figure": "Fig 11-6",
+   "caption": "Using CUDA events to synchronize in a fine-grained manner",
+   "page": 1,
+   "why": "Event record/wait stalls only the consumer stream"
+  },
+  {
+   "figure": "Fig 11-9",
+   "caption": "Using PDL to launch Kernel B from Kernel A—partially overlapping Kernel B’s execution with Kernel A’s epilogue (in the same CUDA stream)",
+   "page": 1,
+   "why": "Shows the PDL overlap window"
+  },
+  {
+   "figure": "Fig 11-8",
+   "caption": "Chunked all-reduce with four GPUs in a ring",
+   "page": 1,
+   "why": "Shows NCCL chunk pipelining"
+  }
+ ],
+ "code": [
+  {
+   "where": "Multi-GPU section",
+   "snippet": "cudaEventRecord(eventK, computeStream);\ncudaStreamWaitEvent(commStream, eventK, 0);\nncclAllReduce( // this is asynchronous\n    gradBuffer, gradBuffer, numElements,\n    ncclFloat, ncclSum, comm, commStream);\ncudaEventRecord(eventAllReduceDone, commStream);\ncudaStreamWaitEvent(computeStream, eventAllReduceDone, 0);",
+   "verbatim": true
+  },
+  {
+   "where": "Stream-Ordered Memory Allocator",
+   "snippet": "cudaMemPoolSetAttribute(pool, \n  cudaMemPoolAttrReleaseThreshold, &threshold);",
+   "verbatim": true
+  },
+  {
+   "where": "Programmatic Dependent Launch",
+   "snippet": "cudaTriggerProgrammaticLaunchCompletion();  // in kernel_A\ncudaGridDependencySynchronize();            // in kernel_B",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figures are images; text carries only captions.",
+  "Code lines are truncated at about 60 characters in the cached text.",
+  "Page numbers are not available in the cached text; locations are section names.",
+  "No bibliographic author or year in the PDF text."
+ ]
+}

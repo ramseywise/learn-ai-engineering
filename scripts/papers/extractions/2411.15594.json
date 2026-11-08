@@ -1,0 +1,835 @@
+{
+ "schema": 1,
+ "key": "2411.15594",
+ "pdf": "generative-ai/08-eval/sources/gu-2024-survey-llm-as-judge.pdf",
+ "bib": {
+  "title": "A Survey on LLM-as-a-Judge",
+  "authors": [
+   "Jiawei Gu",
+   "Xuhui Jiang",
+   "Zhichao Shi",
+   "Hexiang Tan",
+   "Xuehao Zhai",
+   "Chengjin Xu",
+   "Wei Li",
+   "Yinghan Shen",
+   "Shengjie Ma",
+   "Honghao Liu",
+   "Saizhuo Wang",
+   "Kun Zhang",
+   "Zhouchi Lin",
+   "Bowen Zhang",
+   "Lionel Ni",
+   "Wen Gao",
+   "Yuanzhuo Wang",
+   "Jian Guo"
+  ],
+  "first_author": "Gu",
+  "year": 2025,
+  "venue": "preprint (arXiv v6, 19 Oct 2025; first posted Nov 2024)",
+  "arxiv": "2411.15594",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 184821,
+  "chars_total": 253297,
+  "engine": "pymupdf",
+  "skipped": "Reference list (chars 184821 to end) only skimmed for arXiv ids; everything before it read line by line."
+ },
+ "type": "survey",
+ "question": "How can reliable LLM-as-a-Judge systems be built, improved and evaluated?",
+ "hypothesis": "Stronger reasoning and instruction-following backbones, plus aggregation and prompt strategies, make judges more reliable; the survey also expects reasoning models to be better judges.",
+ "contributions": [
+  "Formal and informal definition of LLM-as-a-Judge, plus a contextualised definition of reliability",
+  "A unified framework mapping the literature to four questions: what it is, how to use it, how to improve it, how to evaluate it",
+  "Comparative analyses and a meta-evaluation experiment on judge models and improvement strategies",
+  "Applications, challenges and a future-work agenda"
+ ],
+ "method": {
+  "summary": "Literature survey organised around the judge pipeline E <- P_LLM(x (+) C): in-context prompt design, model selection, post-processing, evaluation pipeline. Section 4.4 adds the survey's own small meta-evaluation: 6 plus 4 reasoning LLMs as pairwise judges on LLMEval2 (agreement) and EvalBiasBench plus swapped-position pairs (bias), and four improvement strategies applied to GPT-3.5-turbo.",
+  "task": "meta-evaluation of LLM judges (pairwise preference agreement with humans, bias accuracy, position consistency)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LLMEval2",
+    "role": "eval",
+    "size": "2,553 samples (question, pair of responses, human preference label)",
+    "split": "all; with swapped order n=5106 for agreement; human=model1 ~2071, human=model2 ~2070, human=TIE ~962 per Table 3",
+    "source": "Zhang et al. 2023 (Wider and deeper LLM networks are fairer LLM evaluators)",
+    "preprocessing": "Samples that triggered Azure OpenAI content policy dropped, so totals differ per model (Table 3 caption)"
+   },
+   {
+    "name": "EvalBiasBench",
+    "role": "eval",
+    "size": "80 samples across six biases (n=34 length, 28 concreteness, 26 empty reference, 24 content continuation, 24 nested instruction, 24 familiar knowledge per Table 2 header)",
+    "split": "all",
+    "source": "Park et al. 2024 (OffsetBias)",
+    "preprocessing": null
+   },
+   {
+    "name": "Position-bias pairs",
+    "role": "eval",
+    "size": "n=2633 per Table 2 header",
+    "split": "paired samples built by swapping response positions in LLMEval2 and EvalBiasBench samples",
+    "source": "constructed by the survey",
+    "preprocessing": "swap candidate positions in prompt"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4-turbo (gpt-4-turbo-2024-04-09)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-turbo (gpt-3.5-turbo-0125)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "base evaluator for the strategy comparison in Table 4"
+    }
+   },
+   {
+    "name": "Qwen2.5-7B-Instruct",
+    "role": "judge",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Meta-Llama-3-8B-Instruct",
+    "role": "judge",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.3",
+    "role": "judge",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mixtral-8x7B-Instruct-v0.1",
+    "role": "judge",
+    "params": "8x7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gemini-2.0-thinking, o1-mini, o3-mini, deepseek r1",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "reasoning judges, evaluated on Table 2 and Table 3 only; versions and settings not given"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0 (all models)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single pass per prompt; multi-round strategy uses 5 rounds per sample (majority@5, mean@5, best@5); at temperature 0 the 5 rounds differ little unless the API is non-deterministic (survey does not discuss)",
+   "prompting": "Judge prompt text for the experiment is not given",
+   "retrieval": null,
+   "parameters": {
+    "multi_llm_set_1": "GPT-4-turbo, GPT-3.5-turbo, LLaMA3-8B-Instruct",
+    "multi_llm_set_2": "GPT-4-turbo, GPT-3.5-turbo, Qwen2.5-7B-Instruct",
+    "aggregation_over_3_llms": "voting (rule not detailed)",
+    "strategies_tested": "w/ explanation, w/ self-validation, multi rounds (majority@5, mean@5, best-of-5), multi LLMs"
+   },
+   "other": {
+    "hardware": "open-source models on an Ubuntu machine with one 40GB NVIDIA A100; closed models via OpenAI API"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Percentage agreement with human",
+     "definition": "Agreement = sum_i I(S_llm = S_human) / |D|",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (bias)",
+     "definition": "proportion of EvalBiasBench samples where the judge picks the correct (unbiased) response",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Position Consistency",
+     "definition": "share of N samples where the judge picks the same response after swapping response positions: sum I(S_r12 = S_r21) / N (outputs r1, r2 or TIE)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5-turbo base evaluator vs each strategy (Table 4)"
+   ],
+   "protocol": "Single run per cell, temperature 0; no seeds, confidence intervals or significance tests reported."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "Resource site https://awesome-llm-as-a-judge.github.io/ (stated in abstract); code for the meta-evaluation tool (Fig 13) not linked in text"
+  },
+  "prompts": [
+   {
+    "purpose": "Likert-scale scoring example (from Gao et al.)",
+    "text": "Evaluate the quality of summaries written for a news article. Rate each summary on four dimensions: {Dimension_1}, {Dimension_2}, {Dimension_3}, and {Dimension_4}. You should rate on a scale from 1 (worst) to 5 (best). Article: {Article} Summary: {Summary}",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "Pairwise comparison example (from Gao et al.)",
+    "text": "Given a new article, which summary is better? Answer \"Summary 0\" or \"Summary 1\". You do not need to explain the reason. Article: {Article} Summary 0: {Summary_0} Summary 1: {Summary_1}",
+    "where": "Fig 3"
+   },
+   {
+    "purpose": "Yes/No evaluation example",
+    "text": "Is the sentence supported by the article? Answer \"Yes\" or \"No\". Article: {Article} Sentence: {Sentence}",
+    "where": "Fig 4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we set the hyper-parameter temperature to 0 to reduce the impact of randomness in LLMs’ output",
+    "where": "Sec 4.4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Judge models differ little in agreement with human labels on LLMEval2; GPT-4-turbo reaches only 61.54% (percentage agreement).",
+   "kind": "measured",
+   "source": null,
+   "metric": "percentage agreement with human",
+   "value": 61.54,
+   "unit": "%",
+   "baseline_value": 54.72,
+   "n": 5106,
+   "setup": "LLMEval2, 2,553 samples with swapped positions (n=5106), pairwise judging, temperature 0, GPT-4-turbo-2024-04-09; baseline is GPT-3.5-turbo",
+   "quote": null,
+   "table": "Table 2, row GPT-4-turbo, column Alignment with Human",
+   "note": "Survey text says no significant alignment differences between LLMs and clear room for improvement.",
+   "where": "Table 2, Sec 4.4.2"
+  },
+  {
+   "claim": "GPT-4-turbo has the highest position consistency among the six standard LLMs (80.31%); GPT-3.5-turbo 68.78%, LLaMA3-8B 38.85%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Position Consistency",
+   "value": 80.31,
+   "unit": "%",
+   "baseline_value": 68.78,
+   "n": 2633,
+   "setup": "swapped-position pairs from LLMEval2 and EvalBiasBench, temperature 0",
+   "quote": null,
+   "table": "Table 2, row GPT-4-turbo, column Position",
+   "note": "Reasoning judges: gemini-2.0-thinking 76.84, o1-mini 76.73, o3-mini 74.63, deepseek r1 69.17.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Length bias accuracy is poor for all non-GPT-4 judges (GPT-3.5-turbo 20.59%, LLaMA3-8B 20.59%, Mistral-7B 26.47%) while GPT-4-turbo gets 91.18%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "length-bias accuracy on EvalBiasBench",
+   "value": 20.59,
+   "unit": "%",
+   "baseline_value": 91.18,
+   "n": 34,
+   "setup": "EvalBiasBench length-bias subset, n=34; value is GPT-3.5-turbo, baseline is GPT-4-turbo",
+   "quote": null,
+   "table": "Table 2, row GPT-3.5-turbo, column Length",
+   "note": "Survey prose: 'apart from Concreteness Bias and Content Continuation Bias, the performance of LLMs, except GPT-4-turbo, was generally poor, particularly in the Length Bias.'",
+   "where": "Table 2, Sec 4.4.2"
+  },
+  {
+   "claim": "Even GPT-4-turbo degrades on Empty Reference (65.38%) and Nested Instruction (70.83%) biases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Empty Reference bias accuracy",
+   "value": 65.38,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 26,
+   "setup": "EvalBiasBench empty-reference subset, n=26, GPT-4-turbo; nested instruction n=24 gives 70.83",
+   "quote": "Even GPT-4-turbo experienced substantial degradation in Empty Reference Bias and Nested Instruction Bias.",
+   "table": "Table 2, row GPT-4-turbo, columns Empty Reference and Nested Instruction",
+   "note": null,
+   "where": "Sec 4.4.2"
+  },
+  {
+   "claim": "Asking for an explanation with the verdict (w/ explanation) lowers GPT-3.5-turbo position consistency from 68.78% to 48.97% and agreement from 54.72% to 52.47%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Position Consistency",
+   "value": 48.97,
+   "unit": "%",
+   "baseline_value": 68.78,
+   "n": 2633,
+   "setup": "GPT-3.5-turbo-0125 base evaluator, temperature 0, LLMEval2 and EvalBiasBench",
+   "quote": "However, in terms of evaluation performance and bias mitigation, it generally has a negative impact.",
+   "table": "Table 4, row w/ explanation, column Position",
+   "note": "Survey speculates the drop is from deeper biases introduced by self-explanation; the cause is not tested.",
+   "where": "Table 4, Sec 4.4.2"
+  },
+  {
+   "claim": "Self-validation barely changes GPT-3.5-turbo (agreement 54.86% vs 54.72%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "percentage agreement with human",
+   "value": 54.86,
+   "unit": "%",
+   "baseline_value": 54.72,
+   "n": 5106,
+   "setup": "GPT-3.5-turbo base evaluator, LLMEval2",
+   "quote": "Self Validation (w/ self-validation) shows minimal effectiveness, likely due to the LLMs’ overconfidence, which may limit its re-evaluation efforts during self-validation.",
+   "table": "Table 4, row w/ self-validation, column Alignment with Human",
+   "note": null,
+   "where": "Table 4, Sec 4.4.2"
+  },
+  {
+   "claim": "Majority vote over 5 rounds is the multi-round variant that helps (position consistency 70.11% vs 68.78%); mean@5 (69.58) and best-of-5 (58.72) do not help, and best-of-5 lowers agreement to 51.95%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Position Consistency",
+   "value": null,
+   "unit": null,
+   "baseline_value": 68.78,
+   "n": 2633,
+   "setup": "GPT-3.5-turbo, 5 rounds per sample, temperature 0",
+   "quote": null,
+   "table": "Table 4, row majority@5, column Position",
+   "note": "Table 4 majority@5 Position cell is printed '70 11' in the text layer (decimal point lost), so the number is not machine-checkable; read as 70.11. mean@5 69.58, best-of-5 58.72, base 68.78. majority@5 length accuracy 26.47 vs 20.59 base.",
+   "where": "Table 4, Sec 4.4.2"
+  },
+  {
+   "claim": "Multi-LLM voting is sensitive to which models are in the panel: swapping LLaMA3-8B for Qwen2.5-7B lifts position consistency from 32.28% to 70.98% and agreement from 57.66% to 58.19%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Position Consistency",
+   "value": 32.28,
+   "unit": "%",
+   "baseline_value": 70.98,
+   "n": 2633,
+   "setup": "Set 1 = GPT-4-turbo + GPT-3.5-turbo + LLaMA3-8B-Instruct; set 2 = GPT-4-turbo + GPT-3.5-turbo + Qwen2.5-7B-Instruct; value is set 1, baseline is set 2",
+   "quote": null,
+   "table": "Table 4, row multi LLMs (set 1), column Position",
+   "note": "Set 2 position consistency 70.98 is the baseline_value.",
+   "where": "Table 4, Sec 4.4.2"
+  },
+  {
+   "claim": "Reasoning judges do not clearly beat GPT-4-turbo on human alignment; gemini-2.0-thinking is best on the human=model2 label (78.31%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy when human=model2",
+   "value": 78.31,
+   "unit": "%",
+   "baseline_value": 69.47,
+   "n": 2070,
+   "setup": "LLMEval2 by human label, only valid responses counted; baseline is GPT-4-turbo",
+   "quote": null,
+   "table": "Table 3, row gemini-2.0-thinking, column human=model2 accuracy (%)",
+   "note": "Prose (Sec 4.4.2) prints 78.27% for gemini, 69.44% for GPT-4-turbo model2 and 29.67% for GPT-4-turbo TIE, while Table 3 prints 78.31, 69.47 and 29.73. Table is the primary.",
+   "where": "Table 3, Sec 4.4.2"
+  },
+  {
+   "claim": "All judges are weak on human=TIE labels: GPT-4-turbo 29.73%, o3-mini 42.31%, deepseek r1 17.95%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy when human=TIE",
+   "value": 29.73,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 962,
+   "setup": "LLMEval2 tie-labelled samples; GPT-4-turbo",
+   "quote": null,
+   "table": "Table 3, row GPT-4-turbo, column human=TIE accuracy (%)",
+   "note": "Prose says GPT-4-turbo outperforms all other models on ties, but Table 3 shows o3-mini 42.31 higher.",
+   "where": "Table 3, Sec 4.4.2"
+  },
+  {
+   "claim": "Authors' empirical recipe for pairwise judging: use a stronger model, swap response positions, and take the majority vote of several rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conclusion of Sec 4.4 experiments with GPT-3.5-turbo base evaluator",
+   "quote": "one is swapping the positions of the evaluation contents, the other is taking the majority voting results from multiple rounds of evaluation, which can effectively mitigate biases",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.2, Experiment Summary"
+  },
+  {
+   "claim": "GPT-4 tends to favor the first position, ChatGPT the second; in one study Vicuna-13B beat ChatGPT under ChatGPT judging just by being placed second.",
+   "kind": "reported",
+   "source": "Wang et al. 2024, Large Language Models are not Fair Evaluators [155]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pairwise judging on Vicuna benchmark queries; no numbers given in the survey",
+   "quote": "GPT-4 tends to favor the first position, while ChatGPT shows a preference for the second position.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Judge-cost anecdote: LLM judges correlate strongly with humans on social-cognition tasks (r=0.83) for GPT-4 judges.",
+   "kind": "reported",
+   "source": "Zhang et al. [196] (Agent-as-a-Judge), as cited",
+   "metric": "correlation",
+   "value": 0.83,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "role-play multi-agent social interactions; details not given",
+   "quote": "GPT-4-based judges correlate strongly with human ratings (r = 0.83) on higher-order social cognition tasks",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.2"
+  },
+  {
+   "claim": "A LLaMA-2 judge reached Cohen's kappa 0.79 checking internal consistency of clinical notes.",
+   "kind": "reported",
+   "source": "Brake and Schaaf [12]",
+   "metric": "Cohen's kappa",
+   "value": 0.79,
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "clinical notes consistency checking",
+   "quote": "attains human-level agreement (Cohen’s 𝜅=0.79)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.3"
+  },
+  {
+   "claim": "Pairwise comparisons beat score-based judging in positional consistency and in LLM-human alignment.",
+   "kind": "reported",
+   "source": "Liu et al. [95]; Liusie et al. [96]; Zheng et al. [213], as cited",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "no numbers in the survey",
+   "quote": "Numerous studies have demonstrated that pairwise comparative assessments outperform other judging methods in terms of positional consistency [96, 213].",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.3"
+  },
+  {
+   "claim": "A null model giving a constant irrelevant response can reach high win rates on LLM judges; universal attack phrases inflate scores without improving text.",
+   "kind": "reported",
+   "source": "Zheng et al. 2024 (2410.07137) [216]; Raina et al. 2024 (2402.14016) [116]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "no numbers in the survey",
+   "quote": "even a \"null model\" that outputs a constant response irrelevant to input instructions can achieve high win rates for various LLM-as-a-judge methods",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "The survey's own experiment is small: one run per cell, temperature 0, no CIs or significance tests, judge prompts for the experiment not printed, and only LLMEval2 (agreement) and EvalBiasBench (80 samples, 24 to 34 per bias) are used, so bias cells rest on n=24 to 34.",
+  "Sec 4.4.2 prose and Tables 2/3 disagree in a few decimals (78.27 vs 78.31, 69.44 vs 69.47, 29.67 vs 29.73), and prose claims GPT-4-turbo is best on ties while o3-mini scores higher in Table 3.",
+  "Explanation hurts and self-validation is useless only for GPT-3.5-turbo as the base evaluator; the survey does not test other base judges and gives causes as speculation ('speculated to be caused by deeper biases').",
+  "Agreement was measured with percentage agreement on pairwise labels only; no chance-corrected kappa, no pointwise scoring in the experiment, even though prose says pairwise 'yields more reliable results than pointwise'.",
+  "Authors concede current meta-evaluation is insufficient: need a unified benchmark and controlled studies (Sec 4.5), meta-evaluation for large-scale data annotation, and temporal-drift tracking (Sec 6.5).",
+  "Table 1 benchmark sizes and bias counts are copied from other work, not measured.",
+  "The abstract promises a novel benchmark; the paper's own contribution is the Sec 4.4 meta-evaluation tool and experiment, which reuses LLMEval2 and EvalBiasBench."
+ ],
+ "practices": [
+  "Define the evaluation target, how humans evaluate it and gather reliable examples before prompting; then test with cases and retest (Sec 2.5, Fig 8).",
+  "Specify scoring dimensions, prefer relative comparison and add examples in the judge prompt (Sec 2.5).",
+  "Pick a large model with strong reasoning and instruction following, and run a small-scale meta-evaluation of its bias profile before choosing it (Sec 2.5, Sec 4.4.2).",
+  "Force a parseable output format such as \\boxed{XX}, a numeric score, or Yes/No, because rule-based token extraction is brittle (Sec 2.3, Sec 2.5).",
+  "Use few-shot examples, decompose evaluation steps (G-Eval, DHP) and decompose criteria (BSM, HD-Eval) to cut inter-rater inconsistency (Sec 3.1.1).",
+  "Swap the positions of the two responses and average the scores, or mark conflicting verdicts as a tie (PandaLM), to mitigate position bias (Sec 3.1.1).",
+  "Convert absolute scoring into pairwise comparison (PARIS) for more stable results (Sec 3.1.1).",
+  "Constrain output in structured formats (JSON, form filling 'X: Y') (Sec 3.1.2).",
+  "Fine-tune judges on carefully built meta-evaluation data (templates or deep transformation, e.g. OffsetBias with off-topic bad responses) and refine iteratively with feedback (Sec 3.2).",
+  "Aggregate multiple rounds or multiple LLM judges by majority vote; avoid mean and best-of-N for pairwise tasks (Sec 3.3.1, Sec 4.4.2).",
+  "Use logit-based score smoothing when token probabilities are available, else self-verification (Sec 3.3.2).",
+  "Avoid using the same model as evaluator and as the evaluated system, as a stopgap for self-enhancement bias (Sec 4.2.1).",
+  "Anonymise model names to avoid compassion-fade bias (Sec 4.2.2).",
+  "Do not ask for explanation and verdict in the same call without checking; the survey found it can hurt (Sec 4.4.2).",
+  "Report agreement, bias and adversarial robustness as the three meta-evaluation dimensions (Sec 4)."
+ ],
+ "terms": [
+  {
+   "term": "LLM-as-a-Judge (formal)",
+   "definition": "E <- P_LLM(x (+) C): E final evaluation (score, choice, label or sentence), x the input to evaluate, C the context (prompt template and history), (+) the combination operator.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Reliable LLM-as-a-Judge",
+   "definition": "R <- f_R(P_LLM, x, C): an evaluation designed for consistency, robustness and alignment with human judgment, verified by validation, calibration and standardization beyond the basic pipeline.",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Position Bias",
+   "definition": "the tendency of LLM evaluators to favor responses in certain positions within the prompt",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Position Consistency",
+   "definition": "how frequently a judge model selects the same response after changing their positions",
+   "where": "Sec 4.2.2 and Sec 4.4.1"
+  },
+  {
+   "term": "Preference Fairness",
+   "definition": "the extent to which judge models favor a response in certain positions",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Conflict Rate",
+   "definition": "the percent of disagreement after changing the position of two candidate responses",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Length Bias (verbosity bias)",
+   "definition": "the tendency to favor responses of a particular length, such as a preference for more verbose responses",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Self-Enhancement Bias",
+   "definition": "LLM evaluators may prefer responses generated by themselves",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "Concreteness Bias",
+   "definition": "LLM evaluators favor responses with specific details, including citation of authoritative sources, numerical values, and complex terminologies (also authority bias, citation bias)",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Style Bias / Sentiment bias",
+   "definition": "preference for a certain text style, e.g. visually appealing content with emojis, or certain emotional tones",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Compassion-fade bias",
+   "definition": "the effect of the model names, e.g. higher scores for results labeled gpt-4",
+   "where": "Sec 4.2.2"
+  },
+  {
+   "term": "Diversity Bias",
+   "definition": "bias against certain demographic groups (gender, race, sexual orientation)",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "Cultural Bias",
+   "definition": "evaluators might score expressions from unfamiliar cultures poorly",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "Task-agnostic vs judgment-specific biases",
+   "definition": "Task-agnostic biases are inherent to LLMs across applications and depend on foundation-model progress; judgment-specific biases are unique to judging and need targeted optimization.",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "Percentage Agreement",
+   "definition": "proportion of samples on which LLM and human annotators agree",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Adversarial robustness",
+   "definition": "the ability of a model to withstand deliberate attempts to manipulate the scores through carefully crafted inputs",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "Evaluation drift",
+   "definition": "judgments drifting over time due to model updates or contextual changes, a type of temporal unreliability",
+   "where": "Sec 6.5"
+  },
+  {
+   "term": "Four-option pairwise mode",
+   "definition": "judge classifies responses as win/lose, 'both good tie' or 'both bad tie'",
+   "where": "Sec 2.1.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "surveys",
+   "note": "Origin of MTBench (80 queries) and Chatbot Arena (~30k); verbosity and self-enhancement bias; GPT-4 judge",
+   "quote": null
+  },
+  {
+   "work": "Large Language Models are not Fair Evaluators (Wang et al.)",
+   "year": 2024,
+   "arxiv": "2305.17926",
+   "relation": "surveys",
+   "note": "Position bias, Conflict Rate metric, swap-and-average calibration; FairEval",
+   "quote": null
+  },
+  {
+   "work": "Judging the Judges: A Systematic Investigation of Position Bias (Shi et al.)",
+   "year": 2024,
+   "arxiv": "2406.07791",
+   "relation": "surveys",
+   "note": "Position Consistency and Preference Fairness metrics",
+   "quote": null
+  },
+  {
+   "work": "Justice or Prejudice? Quantifying Biases in LLM-as-a-Judge (Ye et al.)",
+   "year": 2024,
+   "arxiv": "2410.02736",
+   "relation": "surveys",
+   "note": "CALM benchmark, 12 bias types",
+   "quote": null
+  },
+  {
+   "work": "OffsetBias (Park et al.)",
+   "year": 2024,
+   "arxiv": "2407.06551",
+   "relation": "uses-data",
+   "note": "EvalBiasBench (6 biases, 80 samples) used in Sec 4.4",
+   "quote": null
+  },
+  {
+   "work": "Wider and deeper LLM networks are fairer LLM evaluators (Zhang et al.)",
+   "year": 2023,
+   "arxiv": "2308.01862",
+   "relation": "uses-data",
+   "note": "LLMEval2 (2,553 samples) used for agreement in Sec 4.4",
+   "quote": null
+  },
+  {
+   "work": "Judging the Judges: Evaluating Alignment and Vulnerabilities in LLMs-as-Judges (Thakur et al.)",
+   "year": 2024,
+   "arxiv": "2406.12624",
+   "relation": "surveys",
+   "note": "Percentage agreement and Cohen's kappa",
+   "quote": null
+  },
+  {
+   "work": "Benchmarking cognitive biases in LLMs as evaluators (Koo et al.)",
+   "year": 2023,
+   "arxiv": "2309.17012",
+   "relation": "surveys",
+   "note": "Compassion-fade, majority-opinion attack, meaningless system-prompt statements",
+   "quote": null
+  },
+  {
+   "work": "Is LLM-as-a-Judge Robust? Universal Adversarial Attacks (Raina et al.)",
+   "year": 2024,
+   "arxiv": "2402.14016",
+   "relation": "surveys",
+   "note": "Universal attack phrases that inflate scores",
+   "quote": null
+  },
+  {
+   "work": "Cheating automatic LLM benchmarks: Null models achieve high win rates (Zheng et al.)",
+   "year": 2024,
+   "arxiv": "2410.07137",
+   "relation": "surveys",
+   "note": "Null model attack",
+   "quote": null
+  },
+  {
+   "work": "PandaLM",
+   "year": 2023,
+   "arxiv": "2306.05087",
+   "relation": "surveys",
+   "note": "Fine-tuned LLaMA-7B judge; labels swap-conflicts as Tie",
+   "quote": null
+  },
+  {
+   "work": "JudgeLM (Zhu et al.)",
+   "year": 2023,
+   "arxiv": "2310.17631",
+   "relation": "surveys",
+   "note": "Fine-tuned Vicuna judge, reference support/drop data",
+   "quote": null
+  },
+  {
+   "work": "Auto-J: Generative judge for evaluating alignment (Li et al.)",
+   "year": 2023,
+   "arxiv": "2310.05470",
+   "relation": "surveys",
+   "note": "Generative evaluator trained on multi-scenario data",
+   "quote": null
+  },
+  {
+   "work": "Prometheus (Kim et al.)",
+   "year": 2023,
+   "arxiv": "2310.08491",
+   "relation": "surveys",
+   "note": "Fine-grained evaluator fine-tuned on GPT-4 feedback dataset",
+   "quote": null
+  },
+  {
+   "work": "Self-Taught Evaluators (Wang et al.)",
+   "year": 2024,
+   "arxiv": "2408.02666",
+   "relation": "surveys",
+   "note": "Synthetic-data iterative judge training without human labels",
+   "quote": null
+  },
+  {
+   "work": "G-Eval (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "CoT evaluation steps, form-filling output, score smoothing",
+   "quote": null
+  },
+  {
+   "work": "JudgeBench (Tan et al.)",
+   "year": 2024,
+   "arxiv": "2410.12784",
+   "relation": "surveys",
+   "note": "Listed in Table 1 as meta-evaluation benchmark",
+   "quote": null
+  },
+  {
+   "work": "MLLM-as-a-Judge (Chen et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Multimodal judge benchmark; pairwise aligns better than scoring and ranking",
+   "quote": null
+  },
+  {
+   "work": "Language-Model-as-an-Examiner (Bai et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Likert scoring and decentralized peer review",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "LLM-as-a-Judge evaluation pipelines.",
+   "page": 4,
+   "why": "Shows input, in-context prompt types (score, yes/no, pairwise, multiple choice), model choice and post-processing in one picture."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The illustrations of method Solving Yes/No questions and Conducting pairwise comparisons in ICL",
+   "page": 6,
+   "why": "Shows the two-, three- and four-option tie modes and the [[A]]/[[B]]/[[C]] verdict format."
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Structure of how to improve and evaluate LLM-as-a-Judge.",
+   "page": 10,
+   "why": "Taxonomy tree of prompt, fine-tuning and aggregation strategies, and of the bias and robustness types."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Benchmark for meta-evaluation of LLM-judge.",
+   "page": 14,
+   "why": "Compares MTBench, Chatbot Arena, FairEval, PandaLM, LLMEval2, EvalBiasBench, CALM, JudgeBench and others by size, format and bias coverage."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The meta-evaluation results for different LLMs. All the values are percentages.",
+   "page": 29,
+   "why": "Per-judge agreement, position consistency and six bias accuracies."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "The results for different strategies based on GPT-3.5-turbo. All the values are percentages.",
+   "page": 30,
+   "why": "Shows which fixes (explanation, self-validation, majority, mean, best, multi-LLM) help or hurt."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2 (page 3)",
+   "snippet": "E <- P_LLM(x (+) C)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 4.1",
+   "snippet": "Agreement = sum_{i in D} I(S_llm = S_human) / ||D||",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4.4.1",
+   "snippet": "Position Consistency = sum_{i=1..N} I(S_i^{r12} = S_i^{r21}) / N",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found in the PDF text.",
+  "Table cells are one number per line in the text layer, so row/column mapping was reconstructed from order (8 columns: Alignment, Position, Length, Concreteness, Empty Reference, Content Continuation, Nested Instruction, Familiar Knowledge). Table 4 majority@5 Position cell appears as '70 11' (decimal lost).",
+  "Survey text and tables differ in a few decimals (see results notes).",
+  "Some prose in Sec 2.4/5 sections (for example the reported r=0.83 for 'Agent-as-a-Judge') is cited secondhand and could not be checked against the cited paper.",
+  "Page numbers in figures are approximate (from the contents list), not verified against the PDF layout."
+ ]
+}

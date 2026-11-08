@@ -1,0 +1,356 @@
+{
+ "schema": 1,
+ "key": "2310.07713",
+ "pdf": "generative-ai/02-rag-retrieval/sources/wang-2023-instructretro.pdf",
+ "bib": {
+  "title": "InstructRetro: Instruction Tuning post Retrieval-Augmented Pretraining",
+  "authors": [
+   "Boxin Wang",
+   "Wei Ping",
+   "Lawrence McAfee",
+   "Peng Xu",
+   "Bo Li",
+   "Mohammad Shoeybi",
+   "Bryan Catanzaro"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "ICML 2024 (PMLR 235; arXiv v3, 29 May 2024)",
+  "arxiv": "2310.07713",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 70921,
+  "chars_total": 70921,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; Appendix Faiss ablation table (Table 6/7) read as prose only"
+ },
+ "type": "empirical",
+ "question": "Does retrieval-augmented pretraining at 48B scale, followed by instruction tuning, give a better zero-shot decoder than the same GPT instruction-tuned and used with RAG?",
+ "hypothesis": "Scaling Retro to 48B and instruction-tuning it mitigates the zero-shot generalization gap; retrieval pretraining improves in-context use of evidence.",
+ "contributions": [
+  "Retro 48B, the largest LLM pretrained with retrieval",
+  "InstructRetro 48B outperforms instruction-tuned GPT with RAG on zero-shot tasks",
+  "The Retro encoder can be ablated: the decoder-only InstructRetro 43B gives comparable results"
+ ],
+ "method": {
+  "summary": "Continue pretraining a 43B GPT (1.1T tokens) for 100B more tokens with Retro chunk-wise cross-attention over a 1.2T-token database, unfreezing the decoder; instruction-tune with the encoder gate off; compare with GPT-fitting + instruction tuning (InstructGPT-RAG 43B) zero-shot.",
+  "task": "zero-shot QA, long-form QA, summarization with retrieved context",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pretraining corpus",
+    "role": "pretrain",
+    "size": "1.2 trillion tokens",
+    "split": "1% held out as validation",
+    "source": "Common Crawl, news, conversational, books, Wikipedia, ROOTS",
+    "preprocessing": null
+   },
+   {
+    "name": "Instruction tuning blend",
+    "role": "train",
+    "size": "128K samples",
+    "split": null,
+    "source": "SODA, ELI5, Self-Instruct, Unnatural Instructions, FLAN/CoT, OpenAssistant, Dolly, private conversations, pretraining samples",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Retro 48B",
+    "role": "proposed",
+    "params": "48B",
+    "architecture": "GPT 43B decoder + 2-layer bidirectional encoder + chunk-wise cross-attention",
+    "init_from": "GPT 43B",
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   },
+   {
+    "name": "GPT 43B",
+    "role": "baseline",
+    "params": "43B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "language modelling; instruction tuning loss on last assistant response only",
+   "optimizer": "Adam, beta1=0.9, beta2=0.95 (pretraining); beta2=0.98 (instruction tuning)",
+   "lr": "9e-6 (43B continued pretraining); 5e-6 (instruction tuning)",
+   "lr_schedule": "cosine",
+   "warmup": "16667 samples",
+   "batch_size": "768 (43B continued pretraining); 128 (instruction tuning)",
+   "steps": "32.5k (43B continued pretraining); 1000 (instruction tuning)",
+   "epochs": null,
+   "tokens": "100B continued pretraining",
+   "seq_len": "4096",
+   "precision": null,
+   "weight_decay": "0.01 (instruction tuning)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "69995 GPU hours Retro 48B vs 53329 GPU hours GPT 43B on 100B tokens",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "overall_extra_cost": "2.58% more GPU hours than GPT 43B on 1.2T tokens"
+   }
+  },
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "256",
+   "samples": null,
+   "prompting": "conversational system/user/assistant format, zero-shot",
+   "retrieval": "DRAGON+ retriever, top-k=5 neighbors concatenated in the prompt for NQ, TriviaQA, doc2dial and long-form QA; provided contexts for other tasks. Pretraining: BERT embeddings, 19B chunks of 64 tokens, top-k=2 neighbors, Faiss",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM / F1 / ROUGE",
+     "definition": "exact match, F1, geometric mean of ROUGE-1/2/L",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "validation perplexity",
+     "definition": "on 1% held-out pretraining corpus",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "InstructGPT-RAG 43B",
+    "Llama 2 RAG 70B",
+    "GPT-3 175B",
+    "Retro 7.5B",
+    "Atlas 11B",
+    "RA-DIT 65B"
+   ],
+   "protocol": "single runs; no significance tests reported"
+  },
+  "availability": {
+   "code": "https://huggingface.co/nvidia/retro-48b-instruct-4k",
+   "weights": "checkpoints released",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Retro 48B reaches lower perplexity than GPT 43B for only 2.58% extra GPU hours.",
+   "kind": "measured",
+   "metric": "extra GPU hours",
+   "value": "2.58%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Retro-fitting a 43B GPT for 100B tokens vs GPT 43B on 1.2T tokens",
+   "quote": "Retro 48B only need 2.58% additional GPU hours than its counterpart GPT trained on 1.2T tokens",
+   "note": null,
+   "where": "3.2"
+  },
+  {
+   "claim": "Retro perplexity beats GPT models with 4x larger parameter sizes, and the gap does not shrink from 8B to 48B.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "held-out 1% of pretraining corpus, 823M to 48B",
+   "quote": "Retro achieves even better perplexity than GPT models with 4× larger parameter sizes.",
+   "note": "read from Figure 2; no table of values",
+   "where": "3.2"
+  },
+  {
+   "claim": "InstructRetro 43B improves on InstructGPT-RAG 43B by 7% on average over eight short-form QA and reading comprehension tasks.",
+   "kind": "measured",
+   "metric": "avg relative improvement",
+   "value": "7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 8,
+   "setup": "zero-shot, 43B decoder-only, same instruction data and prompts",
+   "quote": "the average relative improvement of In-structRetro across all the short-form datasets is around 7%",
+   "note": "hyphenation artefact in PDF text; see Table 1",
+   "where": "5.2"
+  },
+  {
+   "claim": "NQ exact match 38.9 for InstructRetro 43B vs 37.0 for InstructGPT-RAG 43B; TriviaQA 78.3 vs 78.1.",
+   "kind": "measured",
+   "metric": "EM",
+   "value": "38.9 vs 37.0 (NQ); 78.3 vs 78.1 (TriviaQA)",
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot, top-5 DRAGON+ retrieved passages, KILT split",
+   "table": "Table 1, rows InstructGPT-RAG 43B and InstructRetro 43B, columns NQ, TriviaQA",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SQuAD 2.0 F1/EM 75.6/69.3 vs 70.7/64.3 for InstructGPT-RAG 43B; NarrativeQA F1 60.0 vs 53.9.",
+   "kind": "measured",
+   "metric": "F1/EM",
+   "value": "75.6 / 69.3; 60.0",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot, provided contexts",
+   "table": "Table 1, rows InstructRetro 43B, columns SQuAD 2.0, NarrativeQA",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On four long-form QA datasets InstructRetro 43B improves 10% over InstructGPT-RAG 43B.",
+   "kind": "measured",
+   "metric": "avg relative improvement",
+   "value": "10%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 4,
+   "setup": "zero-shot F1; doc2dial, two car-manual sets, IT docs (three proprietary)",
+   "quote": "such improvements further demonstrate the potential of retrieval-",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On three summarization datasets the average improvement is 16%, GovReport ROUGE 17.46 vs 12.59.",
+   "kind": "measured",
+   "metric": "ROUGE",
+   "value": "17.46 vs 12.59",
+   "unit": "ROUGE",
+   "baseline_value": null,
+   "n": 3,
+   "setup": "zero-shot, GovReport, SummScreenFD, QMSum",
+   "table": "Table 3, GovReport column",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Dropping the Retro encoder costs nothing: InstructRetro 43B (decoder only) matches 48B with encoder (NQ 38.9 vs 38.6).",
+   "kind": "measured",
+   "metric": "EM",
+   "value": "38.9 vs 38.6",
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1, avg +7% w/o encoder vs +6% w/ encoder",
+   "table": "Table 1, rows InstructRetro 43B and 48B, column NQ",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Before instruction tuning the retrieval benefit saturates with scale; instruction tuning unlocks it.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ zero-shot EM, 2.25B to 43B, Figure 5",
+   "quote": "We hypothesize that this saturation is mainly due to the poor instruction following",
+   "note": "read from Figure 5; no numbers printed",
+   "where": "5.4"
+  },
+  {
+   "claim": "On MT-Bench the Tulu-v2 tuned InstructRetro 43B averages 6.70 vs 6.44 for InstructGPT 43B, lower on role play and coding.",
+   "kind": "measured",
+   "metric": "MT-Bench avg",
+   "value": "6.70 vs 6.44",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tulu-v2 instruction data",
+   "table": "Table 11, column Avg",
+   "note": null,
+   "where": "Appendix D"
+  }
+ ],
+ "limits": [
+  "Instruction tuning ran with the encoder off because instruction data has no retrieved neighbours; retrieval-augmented instruction tuning is left as future work.",
+  "Retro 48B vs GPT 43B are not parameter-matched (about 10% extra parameters in encoder and cross-attention) and Retro costs about 31-37% more compute on the continued-pretraining tokens.",
+  "Single runs with no significance tests; three long-form datasets are proprietary.",
+  "Gains are smaller on TriviaQA (+0.26%) and negative on TriviaQA for the encoder variant (-0.38%); Retro is lower than GPT on role play and coding in MT-Bench.",
+  "Downstream retrieval uses task-specific corpora and DRAGON+, not the pretraining database, so the pretraining-time retriever (BERT) is never the one evaluated downstream."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Improving language models by retrieving from trillions of tokens (Retro)",
+   "year": 2022,
+   "arxiv": "2112.04426",
+   "relation": "extends",
+   "note": "scales Retro to 48B and unfreezes the decoder at retro-fitting",
+   "quote": null
+  },
+  {
+   "work": "Shall we pretrain autoregressive language models with retrieval? (Retro++)",
+   "year": 2023,
+   "arxiv": "2304.06762",
+   "relation": "extends",
+   "note": "prior 9B retrieval-pretrained model",
+   "quote": null
+  },
+  {
+   "work": "Atlas",
+   "year": 2022,
+   "arxiv": "2208.03299",
+   "relation": "baseline",
+   "note": "11B baseline in Table 1",
+   "quote": null
+  },
+  {
+   "work": "RA-DIT",
+   "year": 2023,
+   "arxiv": "2310.01352",
+   "relation": "baseline",
+   "note": "65B baseline; concurrent, retrieval-augmented instruction tuning",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "baseline",
+   "note": "70B with RAG",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Training pipeline for InstructRetro 48B and InstructRetro 43B.",
+   "page": 3,
+   "why": "pipeline from GPT to Retro-fitting to instruction tuning"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Simplified architecture diagram of InstructRetro.",
+   "page": 6,
+   "why": "gates that bypass the encoder"
+  }
+ ],
+ "code": [],
+ "problems": []
+}

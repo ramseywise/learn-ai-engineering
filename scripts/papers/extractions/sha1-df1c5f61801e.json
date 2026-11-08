@@ -1,0 +1,235 @@
+{
+ "schema": 1,
+ "key": "sha1:df1c5f61801e",
+ "pdf": "ai-engineering/03-harness-engineering/sources/context-engineering-multi-agent-systems/ch05-hardening-context-engine.pdf",
+ "bib": {
+  "title": "Chapter 5: Hardening the Context Engine | Context Engineering for Multi-Agent Systems",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (O'Reilly/Packt web print, 12/26/25)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72048,
+  "chars_total": 72048,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you turn a notebook prototype of a planner-driven multi-agent Context Engine into a modular, logged, dependency-injected pre-production code base?",
+ "hypothesis": null,
+ "contributions": [
+  "Walk-through of the engine in four phases (Initiation, Planning, Execution, Finalization)",
+  "Hardened helpers, agents, registry and engine with dependency injection, logging and try/except",
+  "Split of the notebook into helpers.py, agents.py, registry.py, engine.py plus a control-deck notebook",
+  "Two live runs (standard and two-stage rewrite) with execution trace"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The standard Librarian-Researcher-Writer run completed with Success status in 148.33 seconds.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "Total Duration",
+   "value": 148.33,
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Apollo 11 suspenseful children's scene goal, gpt-5, Pinecone retrieval, single run",
+   "quote": "Total Duration: 148.33 seconds",
+   "table": null,
+   "note": "Single run, no variance reported.",
+   "where": "Running the hardened engine, p19"
+  },
+  {
+   "claim": "The complex two-stage (summary then Hemingway rewrite) run completed in 151.31 seconds.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "Total Duration",
+   "value": 151.31,
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Goal 2: factual Apollo 11 summary then rewrite in Hemingway style; planner chains two Writer agents; single run",
+   "quote": "Total Duration: 151.31 seconds",
+   "table": null,
+   "note": "Trace shows the Researcher noting its sources were unrelated to Apollo; output shown is quick-and-casual bullets, not obviously Hemingway.",
+   "where": "Complex workflow execution, p20"
+  },
+  {
+   "claim": "The Librarian matched blueprint_suspense_narrative with a similarity score of 0.66 in the standard run.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "retrieval score",
+   "value": 0.66,
+   "unit": "score",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "Pinecone ContextLibrary namespace, top_k=1",
+   "quote": "Found blueprint 'blueprint_suspense_narrative' (Score: 0.66)",
+   "table": null,
+   "note": null,
+   "where": "p21"
+  },
+  {
+   "claim": "LLM and embedding helper calls retry with random exponential wait of 1 to 60 s and stop after 6 attempts.",
+   "kind": "claim",
+   "source": null,
+   "metric": "max attempts",
+   "value": 6,
+   "unit": "attempts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tenacity @retry on call_llm_robust and get_embedding",
+   "quote": "@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))",
+   "table": null,
+   "note": null,
+   "where": "p7"
+  },
+  {
+   "claim": "Agents returning raw strings instead of dicts broke the Writer; fixed by wrapping outputs in keyed dicts ('blueprint_json', 'facts') as a data contract.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Librarian and Researcher agents, found during validation runs",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p9-13"
+  },
+  {
+   "claim": "Moving code out of the notebook exposed implicit global-namespace dependencies (NameError in registry.py), fixed by explicit module imports.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "registry.py and engine.py split from the notebook",
+   "quote": "every Python file is an island",
+   "table": null,
+   "note": null,
+   "where": "p15, p23"
+  }
+ ],
+ "limits": [
+  "No tests, evals, quality metrics, cost or token measurements: the only measurements are two wall-clock durations from single runs.",
+  "count_tokens is introduced but not used for budgeting; 'automatically summarizing context' is deferred.",
+  "Errors are logged and re-raised, which halts the plan; there is no recovery or fallback beyond retries, yet the summary calls it 'fault-tolerant'.",
+  "Described as pre-production only; no deployment, monitoring or security hardening.",
+  "Code is abbreviated with elisions (planner, ExecutionTrace, context_engine bodies are not shown).",
+  "Authors and book title are not printed in the text; chapter depends on OpenAI (gpt-5), Pinecone and Colab."
+ ],
+ "practices": [
+  "Replace print() with Python's logging module at INFO/WARNING/ERROR levels so logs are timestamped and machine-readable (p6).",
+  "Inject clients, model names and namespaces as function arguments instead of globals, to enable testing and swapping providers (p6).",
+  "Wrap LLM and embedding calls in retry with random exponential backoff, log the specific API error, then re-raise so the orchestrator can halt (p7-8).",
+  "Give agents a stable output contract (dict with a fixed key) and make consumers accept both dict and raw string (p10-14).",
+  "Keep an ExecutionTrace 'flight recorder' logging plan, each step's agent, inputs, outputs, status and duration (p2-4).",
+  "Measure prompt tokens with tiktoken before sending, as a fuel gauge for cost and context-window failures (p6).",
+  "Centralise install and client setup in one utils module; keep the notebook as a thin control deck with a config dict (p5, p25).",
+  "Keep presentation (execute_and_display) out of the engine library (p19)."
+ ],
+ "terms": [
+  {
+   "term": "Context chaining",
+   "definition": "Replacing placeholders like $$STEP_1_OUTPUT$$ in a step's inputs with the stored output of an earlier step (resolve_dependencies).",
+   "where": "p3"
+  },
+  {
+   "term": "Dependency injection",
+   "definition": "a practice where a function's dependencies are \"injected\" as arguments",
+   "where": "p6"
+  },
+  {
+   "term": "ExecutionTrace",
+   "definition": "The engine's 'flight recorder' logging every action for transparency and debugging.",
+   "where": "p2"
+  },
+  {
+   "term": "Agent Registry",
+   "definition": "Toolkit that describes agents to the Planner (get_capabilities_description) and returns injected handlers to the Executor (get_handler).",
+   "where": "p4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 4 Context Engine prototype (Context_Engine.ipynb)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "This chapter hardens the Chapter 4 prototype",
+   "quote": null
+  },
+  {
+   "work": "Qian et al. LLM-Based Multi-Agent Systems for Software Engineering",
+   "year": 2024,
+   "arxiv": "2404.04834",
+   "relation": "related",
+   "note": "Listed reference",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. Knowledge-Based Multi-Agent Framework for Automated Software Architecture Design",
+   "year": 2025,
+   "arxiv": "2503.20536",
+   "relation": "related",
+   "note": "Listed reference",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. AgentOrchestra",
+   "year": 2025,
+   "arxiv": "2506.12508",
+   "relation": "related",
+   "note": "Listed reference",
+   "quote": null
+  },
+  {
+   "work": "Cito, Kassab, Parnin. Cataloging Dependency Injection Anti-Patterns in Software Systems",
+   "year": 2021,
+   "arxiv": "2109.04256",
+   "relation": "related",
+   "note": "Listed reference on dependency injection",
+   "quote": null
+  },
+  {
+   "work": "Wooldridge, An Introduction to Multiagent Systems",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Further reading",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.1",
+   "caption": "The upgraded Context Engine flowchart",
+   "page": 2,
+   "why": "Colour-coded trace of one task through engine core, registry, agents and helpers (image only, not in text)."
+  }
+ ],
+ "code": [
+  {
+   "where": "p7",
+   "snippet": "@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))\ndef call_llm_robust(system_prompt, user_prompt, client, generation_model, json_mode=False):",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Authors, year and book title page not in the printed text; bib authors empty.",
+  "Figure 5.1 is an image; no caption text beyond the in-text line.",
+  "Config shows generation_model gpt-5, embedding text-embedding-3-small, index genai-mas-mcp-ch3, namespaces ContextLibrary and KnowledgeStore (p25-26); Researcher top_k=3 but run retrieved 2 chunks."
+ ]
+}

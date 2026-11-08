@@ -1,0 +1,109 @@
+{
+ "schema": 1,
+ "key": "sha1:d2f5dd14839d",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/learning-langchain/ch08-patterns-to-make-the-most-of-llms.pdf",
+ "bib": {
+  "title": "Chapter 8. Patterns to Make the Most of LLMs (Learning LangChain)",
+  "authors": ["Mayo Oshin", "Nuno Campos"],
+  "first_author": "Oshin",
+  "year": 2025,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 29197,
+  "chars_total": 29197,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can an LLM application be designed to push out the agency-reliability frontier despite LLM limitations?",
+ "hypothesis": null,
+ "contributions": [
+  "Frames agency vs reliability as a frontier and lists latency, autonomy and variance as competing objectives",
+  "Four techniques: structured output, streaming/intermediate output, human-in-the-loop controls, and double-texting (concurrency) modes"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Agency and reliability trade off along a frontier; chains sit at lower agency and higher reliability, agents at higher agency and lower reliability.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conceptual, Figure 8-1; no data",
+   "quote": "notice how the chain architecture has relatively low agency but higher reliability, whereas the Agent architecture has higher agency at the expense of lower reliability.",
+   "table": null,
+   "note": null,
+   "where": "chars 0-2500, Fig 8-1"
+  },
+  {
+   "claim": "Human-in-the-loop controls can make high-agency architectures reliable.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conceptual; LangGraph with a checkpointer",
+   "quote": "which can often make the difference in making high-agency ar‐",
+   "table": null,
+   "note": "Sentence continues on next line: 'chitectures reliable.'",
+   "where": "Summary"
+  }
+ ],
+ "limits": [
+  "No experiments or measurements; every statement is design guidance.",
+  "Code is LangGraph/LangChain specific (MemorySaver, interrupt_before, update_state, get_state_history); APIs may have changed since 2025.",
+  "Double-texting strategies are described only in prose; the chapter says some are implemented in LangGraph Platform (Chapter 9)."
+ ],
+ "practices": [
+  "Use low temperature for structured output to reduce invalid, schema-nonconforming output (Structured Output).",
+  "Give every schema field a description, since the LLM uses name plus description to decide what goes where (Structured Output).",
+  "Prefer tool calling or JSON mode over prompting alone for format; prompting is a suggestion, not a guarantee (Structured Output).",
+  "Stream node-level updates (stream_mode updates/values/debug) to make multi-step latency tolerable (Intermediate Output).",
+  "Attach a checkpointer so state persists per thread_id; all human-in-the-loop modes depend on it (Human-in-the-Loop).",
+  "Use interrupt_before on tool nodes to implement authorize-before-tool-call (Human-in-the-Loop).",
+  "Resume with None input, restart with new input, edit with update_state, fork by replaying get_state_history (Human-in-the-Loop).",
+  "Use UUIDs as thread IDs; a new thread_id discards state.",
+  "Mix human-in-the-loop controls to suit the application.",
+  "For concurrent input, fork-and-merge is likely best if state is mergeable (e.g. CRDTs) or the user resolves conflicts; otherwise choose among refuse, independent, queue, interrupt (Multitasking LLMs).",
+  "When keeping partial state after an interrupt, clean up dangling tool-call messages or the run may be unable to progress (Interrupt)."
+ ],
+ "terms": [
+  {"term": "agency", "definition": "the LLM's capacity to act autonomously", "where": "intro"},
+  {"term": "reliability", "definition": "the degree to which we can trust its outputs", "where": "intro"},
+  {"term": "interrupt (HITL mode)", "definition": "user manually interrupts streaming output; state saved as of the last complete step; then resume, restart with new input, or do nothing", "where": "Human-in-the-Loop"},
+  {"term": "authorize (HITL mode)", "definition": "user defines ahead of time that the application hands control over every time a particular node is about to be called, usually tool confirmation", "where": "Human-in-the-Loop"},
+  {"term": "double texting modes", "definition": "ways to handle new user input arriving before the previous one has finished processing: refuse, handle independently, queue, interrupt, fork and merge", "where": "Multitasking LLMs"},
+  {"term": "structured output strategies", "definition": "prompting, tool calling, JSON mode", "where": "Structured Output"}
+ ],
+ "lineage": [
+  {"work": "Learning LangChain Chapter 5 (architectures, agency-reliability trade-off)", "year": 2025, "arxiv": null, "relation": "extends", "note": "chapter returns to the trade-off introduced there", "quote": "Chapter 5 touched on the key trade-off we face when building LLM apps"},
+  {"work": "Learning LangChain Chapter 6 (many-tools agent code)", "year": 2025, "arxiv": null, "relation": "uses-method", "note": "reuses its final architecture for streaming and HITL examples", "quote": null},
+  {"work": "LangGraph", "year": null, "arxiv": null, "relation": "uses-method", "note": "checkpointer, stream modes, interrupt_before, state history", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 8-1", "caption": "The agency-reliability trade-off", "page": 1, "why": "frontier curve placing chain vs agent architectures"},
+  {"figure": "Fig 8-2", "caption": "Shifting the frontier, or more agency, for the same reliability", "page": 2, "why": "states the goal of the chapter"},
+  {"figure": "Fig 8-3", "caption": "The interrupt pattern", "page": null, "why": "interrupt control flow"},
+  {"figure": "Fig 8-4", "caption": "The authorize pattern", "page": null, "why": "pause before tool node"}
+ ],
+ "code": [
+  {"where": "Authorize", "snippet": "output = graph.astream(input, config, interrupt_before=['tools'])", "verbatim": true},
+  {"where": "Human-in-the-Loop", "snippet": "graph = builder.compile(checkpointer=MemorySaver())", "verbatim": true},
+  {"where": "Fork", "snippet": "graph.invoke(None, history[2].config)", "verbatim": true}
+ ],
+ "problems": [
+  "The PDF does not print authors or year; names and year come from the calling note (07-autonomy-ladder.md source list), not the PDF.",
+  "Figures not rendered in text; captions taken from the text only.",
+  "The Summary quote is broken across lines by hyphenation."
+ ]
+}

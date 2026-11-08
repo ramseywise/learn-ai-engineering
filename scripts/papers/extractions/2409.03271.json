@@ -1,0 +1,760 @@
+{
+ "schema": 1,
+ "key": "2409.03271",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/wang-2024-strategic-chain-thought.pdf",
+ "bib": {
+  "title": "Strategic Chain-of-Thought: Guiding Accurate Reasoning in LLMs through Strategy Elicitation",
+  "authors": [
+   "Yu Wang",
+   "Shiwan Zhao",
+   "Zhihu Wang",
+   "Heyuan Huang",
+   "Ming Fan",
+   "Yubo Zhang",
+   "Zhixing Wang",
+   "Haijun Wang",
+   "Ting Liu"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2409.03271",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63891,
+  "chars_total": 63891,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can eliciting a problem-solving strategy before the chain of thought, within one prompt, make CoT reasoning paths higher quality and more stable?",
+ "hypothesis": "Different valid strategies carry different error rates, so having the model first pick an efficient strategy (strategic knowledge) yields more reliable CoT paths than unguided CoT.",
+ "contributions": [
+  "A two-stage single-query method that integrates strategic knowledge, guiding the LLM to first develop a problem-solving strategy and then produce the answer.",
+  "A method that uses strategic knowledge to select and match relevant demonstrations for few-shot use.",
+  "Experiments showing effectiveness across multiple reasoning domains."
+ ],
+ "method": {
+  "summary": "SCoT is a single structured prompt (Role, Workflow, Rules, Initialization, Task Input) whose workflow tells the model to list candidate methods, pick the most efficient as strategic knowledge, then solve with it. A few-shot variant builds a corpus of correct zero-shot SCoT answers on the training set and, at inference, generates a strategy in a first query, retrieves matching demonstrations by that strategy, and answers in a second query. Nothing is trained.",
+  "task": "reasoning prompting (math, physical, commonsense, multi-hop, spatial)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MathQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface datafreak/MathQA, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "github google-deepmind/AQuA, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface openai/gsm8k, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU-high-school-math",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface cais/mmlu, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "ARC Challenge",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface allenai/ai2_arc, CC-BY-SA-4.0",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA (SQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface ChilleD/StrategyQA, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "CommonsenseQA (CSQA)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "huggingface tau/commonsense_qa, MIT",
+    "preprocessing": null
+   },
+   {
+    "name": "Tracking Object (three objects)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "BIG-bench tracking_shuffled_objects, Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "MathQA/AQuA/GSM8K/ARC training sets",
+    "role": "train",
+    "size": null,
+    "split": "training set",
+    "source": "used only to build the few-shot demonstration corpus of correct SCoT answers; only these four datasets have large enough gold-labelled training sets",
+    "preprocessing": "zero-shot SCoT answers kept only if they match ground truth"
+   }
+  ],
+  "models": [
+   {
+    "name": "Llama3-8B (Instruct; Table 6 source FlagAlpha Llama3-Chinese-8B-Instruct)",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3-70B",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3.1-8B-Instruct",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama3.1-70B-Instruct",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-7B-chat",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-13B (chat)",
+    "role": "evaluated",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Llama2-70B (chat)",
+    "role": "evaluated",
+    "params": "70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.2",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2-7B-Instruct",
+    "role": "evaluated",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Qwen2-72B-Instruct",
+    "role": "evaluated",
+    "params": "72B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGLM4-9B (glm-4-9b-chat)",
+    "role": "evaluated",
+    "params": "9B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0, top_p 1 for all except Self-Consistency; vLLM as inference framework",
+   "temperature": "0 (Self-Consistency: 0.5)",
+   "top_p": "1 (Self-Consistency: 0.5)",
+   "max_tokens": null,
+   "samples": "3 independent inference runs averaged for all experiments; Self-Consistency run once (cost); number of Self-Consistency paths not stated",
+   "prompting": "zero-shot SCoT template (Role/Workflow/Rules/Initialization/Task Input) with per-domain workflow; ends with 'Answer: Let's think step by step.'; answer format [Answer]option[Answer]; baseline CoT 0-shot uses 'Let's think step by step.' template",
+   "retrieval": "few-shot SCoT: strategy generated by the LLM is used to search the demonstration corpus; retrieval/similarity method and k-selection details not stated (1-shot and 3-shot reported)",
+   "parameters": {
+    "few_shot_stages": "query 1 strategic knowledge generation, demonstration matching, query 2 few-shot inference",
+    "ablation_demos": "1-shot and 3-shot"
+   },
+   "other": {
+    "note": "Table 6 lists Llama3-8B source as a Chinese Llama3 fine-tune, not Meta's checkpoint; paper also says one model is private (ten models, nine public) but lists eleven in Section Models"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "multiple-choice: predicted choice equals gold; GSM8K: exact match of numerical answer; mean of three runs",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "output token length",
+     "definition": "mean output tokens, CoT 0-shot vs SCoT 0-shot (Table 4)",
+     "unit": "tokens",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "CoT 0-shot (Kojima et al. 2022)",
+    "Self-Consistency (Wang et al. 2022)",
+    "Step Back (Zheng et al. 2023), only 5 datasets",
+    "CoT 1-shot noted comparable to CoT 0-shot, not shown",
+    "SCoT 1-shot- (standard CoT template with strategy-matched demos)"
+   ],
+   "protocol": "Accuracy averaged over 3 runs; standard deviations in appendix Tables 8 and 9; no significance test. BoT excluded because its template is unavailable."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "all datasets public (Table 7)"
+  },
+  "prompts": [
+   {
+    "purpose": "zero-shot SCoT, math",
+    "text": "# Role\nA highly skilled mathematician and algorithm expert.\n# Workflow\n1. Analyze the problem and identify any relevant mathematical formulas, or approaches that might be helpful, and select the approaches that can solve the problem.\n2. Choose the most efficient and practical approach. For example, when asked to find the sum of all integers from -25 to 23, consider using the summation formula of arithmetic sequence instead of simply adding the numbers one by one. The summation formula of arithmetic sequence is an elegant and practical solution, while rudely adding the numbers is not.\n3. Solve the problem step by step following the selected approach carefully.\n## Rules\n1. Avoid using brute force methods, as they do not reflect the professionalism.\n2. Indicate your answer with [Answer]option[Answer], such as [Answer]C[Answer]. Please output the answer at the end in strict accordance with the output format.\n## Initialization\nAs <Role>, please follow <Rules> strictly. Your task is to solve the math problem following <Workflow>.I will provide you with a problem and 5 options. Please choose the correct option from the five provided.\nProblem: [Please Put Your Questions Here]\nOptions: [Please Put Your Options Here]\nAnswer: Let's think step by step.",
+    "where": "Figure 10 (text transcribed from PDF with ligature loss repaired)"
+   },
+   {
+    "purpose": "baseline zero-shot CoT",
+    "text": "I will provide you with a math problem and 5 options. Please choose the correct option from the five provided and indicate your answer with [Answer]option[Answer], such as [Answer]C[Answer]. Please output the answer at the end in strict accordance with the output format.\nProblem: [Please Put Your Questions Here]\nOptions: [Please Put Your Options Here]\nAnswer: Let's think step by step.",
+    "where": "Figure 9"
+   },
+   {
+    "purpose": "automatic SCoT template",
+    "text": "You are tasked with solving a reasoning problem by first identifying the most effective strategy before arriving at the final answer. Carefully consider the problem and generate the strategic knowledge that would best guide the problem-solving process.\nProblem: [Please Put Your Problem Here]\nNext, use the generated strategic knowledge to work through the problem step by step, showing all necessary reasoning, and arrive at the final solution.\nOptions: [Please Put Your Options Here]\nAnswer: Let's think step by step.",
+    "where": "Figure 16"
+   },
+   {
+    "purpose": "other domains (multi-hop Fig 11, commonsense Fig 12, physical Fig 13, spatial Fig 14) and one-shot (Fig 15)",
+    "text": "see appendix figures; same Role/Workflow/Rules/Initialization skeleton with domain-specific workflow",
+    "where": "Figures 11-15"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "which is calculated by the average results of three independent inferences on each model",
+    "where": "Baselines"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SCoT 0-shot raises GSM8K accuracy from 52.11 to 73.16 on Llama3-8B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 73.16,
+   "unit": "%",
+   "baseline_value": 52.11,
+   "n": null,
+   "setup": "Llama3-8B, zero-shot, temperature 0, mean of 3 runs; GSM8K",
+   "note": null,
+   "where": "Results across all Datasets",
+   "quote": "accuracy increases from 52.11% to 73.16% after incorporating strategic knowledge"
+  },
+  {
+   "claim": "SCoT gains 24.13 points on Tracking Object with Llama3-8B (44.27 to 68.40).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 24.13,
+   "unit": "points",
+   "baseline_value": 44.27,
+   "n": null,
+   "setup": "Llama3-8B, zero-shot, temperature 0, mean of 3 runs; Tracking Object",
+   "note": "Abstract says 24.13% increase; Table 2 prints +24.13 as a point difference (68.40 - 44.27)",
+   "where": "Results across all Datasets",
+   "quote": "SCoT achieves a 24.13% improvement on the Tracking Object dataset"
+  },
+  {
+   "claim": "Llama3-8B averages +6.92 over CoT 0-shot across all eight datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 6.92,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B, zero-shot, temperature 0, mean of 3 runs",
+   "note": null,
+   "where": "Results across all Datasets",
+   "quote": "the Llama3-8B model shows an average improvement of 6.92% on all datasets"
+  },
+  {
+   "claim": "Mistral-7B averages +3.81 over CoT 0-shot on comparable datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 3.81,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mistral-7B, zero-shot, mean of 3 runs",
+   "note": null,
+   "where": "Results across all Datasets",
+   "quote": "the Mistral-7B model demonstrates an average improvement of 3.81% on comparable datasets"
+  },
+  {
+   "claim": "SCoT 1-shot (strategy plus strategy-matched demo) reaches 76.57 on GSM8K with Llama3-8B and 47.38 with Mistral-7B, the best overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 76.57,
+   "unit": "%",
+   "baseline_value": 52.11,
+   "n": null,
+   "setup": "Llama3-8B GSM8K, 1-shot SCoT",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SCoT 1-shot (Llama3-8B), column GSM8K"
+  },
+  {
+   "claim": "Llama3-8B loses 2.6 points on ARC with SCoT 0-shot (80.60 to 78.02).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.02,
+   "unit": "%",
+   "baseline_value": 80.6,
+   "n": null,
+   "setup": "Llama3-8B ARC, SCoT 0-shot",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SCoT 0-shot (Llama3-8B), column ARC"
+  },
+  {
+   "claim": "Self-Consistency (single run) beats SCoT 0-shot on ARC with Llama3-8B (81.00 vs 78.02); SCoT otherwise beats Self-Consistency and Step Back.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 81.0,
+   "unit": "%",
+   "baseline_value": 78.02,
+   "n": null,
+   "setup": "Llama3-8B ARC, Self-Consistency",
+   "note": "Self-Consistency run only once, paths count not stated",
+   "where": "Table 1",
+   "table": "Table 1, row Self-Con (Llama3-8B), column ARC"
+  },
+  {
+   "claim": "Mistral-7B ARC: SCoT 0-shot 72.20 vs CoT 67.20.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.2,
+   "unit": "%",
+   "baseline_value": 67.2,
+   "n": null,
+   "setup": "Mistral-7B ARC",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SCoT 0-shot (Mistral-7B), column ARC"
+  },
+  {
+   "claim": "Across seven models and three datasets, SCoT improves accuracy by 1.11 to 24.13 points except a slight MMLU drop for Llama3.1-8B (59.63 to 56.42).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 56.42,
+   "unit": "%",
+   "baseline_value": 59.63,
+   "n": null,
+   "setup": "Llama3.1-8B MMLU-math, SCoT 0-shot",
+   "note": null,
+   "where": "Results across all Models",
+   "quote": "other models exhibit accuracy improvements ranging from 1.11% to 24.13% across the three datasets",
+   "table": "Table 2, row SCoT 0-shot, column Llama3.1-8B (MMLU Math)"
+  },
+  {
+   "claim": "Llama3.1-8B Tracking Object: 62.60 to 77.60 (+15.00).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77.6,
+   "unit": "%",
+   "baseline_value": 62.6,
+   "n": null,
+   "setup": "Llama3.1-8B Object",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SCoT 0-shot, column Llama3.1-8B (Object)"
+  },
+  {
+   "claim": "Llama3.1-70B StrategyQA: 64.67 to 82.33.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.33,
+   "unit": "%",
+   "baseline_value": 64.67,
+   "n": null,
+   "setup": "Llama3.1-70B SQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row SCoT 0-shot, column Llama3.1-70B (SQA)"
+  },
+  {
+   "claim": "Ablation on Mistral-7B AQuA: CoT 29.13, +Role (markdown) 32.28, +Workflow (markdown) 31.89, SCoT 0-shot 33.60, 1-shot 35.04, 3-shot 35.43.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 33.6,
+   "unit": "%",
+   "baseline_value": 29.13,
+   "n": null,
+   "setup": "Mistral-7B AQuA, ablation",
+   "note": "Non-markdown variants (*) score 27.95 (Role) and 33.07 (WorkFlow); gains from role/workflow are not monotone on AQuA",
+   "where": "Table 3",
+   "table": "Table 3, row SCoT 0-shot (Ours), column AQuA"
+  },
+  {
+   "claim": "SCoT output length is 1.03 to 1.8 times that of CoT, averaging about 1.5 times.",
+   "kind": "measured",
+   "source": null,
+   "metric": "output length ratio",
+   "value": 1.5,
+   "unit": "x tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama3-8B and Mistral-7B on AQuA, GSM8K, Tracking Object",
+   "note": null,
+   "where": "Efficiency Analysis",
+   "quote": "the length of SCoT varies from 1.03 to 1.8 times that of CoT, averaging around 1.5 times"
+  },
+  {
+   "claim": "Mistral-7B GSM8K output shorter with SCoT (858.507 to 611.848 tokens), attributed to CoT repeating an answer span to the length limit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "output tokens",
+   "value": 611.848,
+   "unit": "tokens",
+   "baseline_value": 858.507,
+   "n": null,
+   "setup": "Mistral-7B GSM8K",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row SCoT 0-shot, column Mistral-7B (GSM8K)"
+  },
+  {
+   "claim": "Auto-generated SCoT prompt (by Qwen2-72B) gets 31.89 on AQuA, between CoT 29.13 and handcrafted SCoT 33.60.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 31.89,
+   "unit": "%",
+   "baseline_value": 29.13,
+   "n": null,
+   "setup": "AQuA, Mistral-7B (inferred from matching CoT 29.13 and SCoT 33.60 in Table 3)",
+   "note": "Table 5 does not name the evaluated model",
+   "where": "Table 5",
+   "table": "Table 5, row Auto SCoT"
+  },
+  {
+   "claim": "Improvement shrinks marginally as model size grows (Llama2 7B/13B/70B on MathQA, MMLU, CSQA); larger models more often produce strategic knowledge unprompted.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Llama2 7B, 13B, 70B; Figure 5",
+   "note": null,
+   "where": "Model Scale",
+   "quote": "performance improvement decreases marginally with model size"
+  }
+ ],
+ "limits": [
+  "Workflow prompts are hand-written per domain; automatic prompt generation was only a preliminary test on AQuA and scored below the handcrafted prompt.",
+  "Gains are uneven: ARC drops 2.6 points on Llama3-8B, Llama3.1-8B drops on MMLU, and Llama3.1-70B Tracking Object is already 100.",
+  "Output is about 1.5x longer than CoT.",
+  "Self-Consistency was run once with its path count unstated; Step Back covers only 5 datasets; BoT not compared.",
+  "Few-shot SCoT needs a large gold-labelled training set, so it was tested on only 4 datasets; the retrieval method for matching is not described.",
+  "Authors say future work will test more complex problems.",
+  "No code release or max token length stated; no significance tests; std only in appendix."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Strategic knowledge",
+   "definition": "a well-defined method or principle that guides reasoning towards a correct and stable solution",
+   "where": "Method"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CoT 0-shot baseline (Kojima et al.)",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Take a step back: Evoking reasoning via abstraction",
+   "year": 2023,
+   "arxiv": "2310.06117",
+   "relation": "baseline",
+   "note": "Step Back baseline",
+   "quote": null
+  },
+  {
+   "work": "Re-TASK",
+   "year": 2024,
+   "arxiv": "2408.06904",
+   "relation": "extends",
+   "note": "strategic knowledge concept inspired by Re-TASK",
+   "quote": null
+  },
+  {
+   "work": "Buffer of Thoughts",
+   "year": 2024,
+   "arxiv": "2406.04271",
+   "relation": "related",
+   "note": "not compared, template unavailable",
+   "quote": null
+  },
+  {
+   "work": "Meta-prompting",
+   "year": 2024,
+   "arxiv": "2401.12954",
+   "relation": "related",
+   "note": "dynamic strategy selection",
+   "quote": null
+  },
+  {
+   "work": "PAL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "program-aided",
+   "quote": null
+  },
+  {
+   "work": "Plan-and-solve prompting",
+   "year": 2023,
+   "arxiv": "2305.04091",
+   "relation": "related",
+   "note": "cited as CoT variant",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought reasoning without prompting",
+   "year": 2024,
+   "arxiv": "2402.10200",
+   "relation": "related",
+   "note": "diverse solution paths",
+   "quote": null
+  },
+  {
+   "work": "Sweller, Cognitive Load During Problem Solving",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivation",
+   "quote": null
+  },
+  {
+   "work": "GSM8K",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MathQA",
+   "year": 2019,
+   "arxiv": "1905.13319",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "AQuA",
+   "year": 2017,
+   "arxiv": "1705.04146",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ARC",
+   "year": 2018,
+   "arxiv": "1803.05457",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "StrategyQA",
+   "year": 2021,
+   "arxiv": "2101.02235",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Llama 3 / Llama 2 / Mistral 7B / Qwen2 / ChatGLM",
+   "year": 2024,
+   "arxiv": "2407.21783",
+   "relation": "evaluates",
+   "note": "models evaluated; also 2307.09288, 2310.06825, 2407.10671, 2406.12793",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of Zero-shot and Few-shot Strategic SCoT.",
+   "page": 4,
+   "why": "Shows the CoT vs SCoT answer for the arithmetic sum and the demo corpus pipeline."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Example of a Workflow in a Math Task Prompt",
+   "page": 4,
+   "why": "The three-step strategy workflow in compact form."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Accuracy (%) using Llama2-8B and Mistral-7B across all datasets.",
+   "page": 6,
+   "why": "Main results; caption says Llama2-8B but rows are Llama3-8B."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 caption says Llama2-8B but the rows are Llama3-8B.",
+  "PDF states no venue; AAAI-style layout but only the arXiv stamp is printed, so venue is preprint.",
+  "Section Models lists eleven models but appendix says ten models, nine public, one private; Table 6 Llama3-8B source is a Chinese-tuned Llama3 fine-tune.",
+  "Table 5 does not name the evaluated model.",
+  "Ligatures (ti, fi) dropped in the cached text of prompts; prompt text in extraction repaired by hand."
+ ]
+}

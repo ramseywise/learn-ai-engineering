@@ -1,0 +1,702 @@
+{
+ "schema": 1,
+ "key": "2410.19385",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/barkley-2024-investigating-role-prompting-external-tools.pdf",
+ "bib": {
+  "title": "Investigating the Role of Prompting and External Tools in Hallucination Rates of Large Language Models",
+  "authors": [
+   "Liam Barkley",
+   "Brink van der Merwe"
+  ],
+  "first_author": "Barkley",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2410.19385",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65744,
+  "chars_total": 65744,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How do black-box prompting strategies and tool-calling agents affect accuracy and hallucination rate of a small open LLM across math, trivia and multiple-choice benchmarks?",
+ "hypothesis": "The best prompting technique depends on the task type, and adding external tools may add complexity that raises hallucinations (implied by the abstract).",
+ "contributions": [
+  "Empirical comparison of CoT, SC, SC-CoT, ToT, MAD, CP, CoVe, KGR, reflection and DDGA prompting at three temperatures on GSM8K, TriviaQA and MMLU",
+  "Comparison of chain and ReAct tool-calling agents against a no-tool control agent",
+  "Top-N accuracy as a signal for whether SC will help"
+ ],
+ "method": {
+  "summary": "Prompting strategies were implemented in Python/LangChain on Llama-3-8B-Instruct Q6_K served by Ollama and run at temperature 0.2, 0.5 and 0.8, three runs each. Tool agents (chain, ReAct) used Llama-3.1-8B with Wikipedia, DuckDuckGo and Riza Python tools at temp 0.5 and were compared with a no-tool control.",
+  "task": "hallucination mitigation via prompting and agents on math word problems, trivia QA, multiple-choice QA",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319 test questions (prompting); first 1000 (agents)",
+    "split": "test",
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "first 1000 questions",
+    "split": "validation",
+    "source": "Joshi et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "1000 questions, approx. 17 per subject, 57 subjects",
+    "split": null,
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Wikidata KG",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "used as KGR retrieval source (Vrandecic and Krotzsch 2014)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Meta-Llama-3-8B-Instruct-Q6_K",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "quantization": "6-bit"
+    }
+   },
+   {
+    "name": "Meta-Llama-3.1-8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "quantization": "none",
+     "used_for": "agents, since the Llama-3 Q6_K model does not support tool use"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.2, 0.5, 0.8 for prompting strategies; 0.5 for agents",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 runs per strategy per benchmark, means reported; SC, SC-CoT, ToT, CP use 5 samples per question",
+   "prompting": "Control prompt asks for answer only; CoT forces parsed reasoning steps with retries up to a tolerance (value not given); see prompts",
+   "retrieval": "DDGA: DuckDuckGoSearchRun snippets of user input added to prompt; KGR: Wikidata entity and property triple added to prompt",
+   "parameters": {
+    "MAD": "2 debating LLMs, stop on agreement or max 10 iterations, LangChain conversation buffer; final answer from first LLM",
+    "ToT": "5 CoT samples then an LLM vote prompt (cost 6)",
+    "reflection": "1 iteration, generator plus reflector",
+    "CoVe-1": "1 verification question, abstain on contradiction",
+    "CoVe-2": "abstain if answer without options does not match initial choice",
+    "CP": "abstain when any of 5 control samples contradict",
+    "agents": "chain (2 queries, bind_tools), ReAct (create_tool_calling_agent + AgentExecutor), ReAct-DDG (DuckDuckGo only, TriviaQA only); tools Wikipedia, DuckDuckGo, Riza Python sandbox"
+   },
+   "other": {
+    "hardware": "Nvidia GeForce RTX 2080 GPU, 8GB VRAM",
+    "software": "Python, LangChain, Ollama"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Hallucinated",
+     "definition": "count of answers graded incorrect; abstentions are not counted (inferred from Graded + counts in Tables 2 and 3)",
+     "unit": "count",
+     "higher_is_better": false
+    },
+    {
+     "name": "Correct",
+     "definition": "count of correct answers",
+     "unit": "count",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "correct over graded answers (abstained questions excluded for CP, CoVe, KGR)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-N accuracy",
+     "definition": "percentage of times the correct answer appeared in N sampled answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Cost",
+     "definition": "average number of prompts per question",
+     "unit": "prompts",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Control: base model, formatted answer only"
+   ],
+   "protocol": "3 runs per strategy per benchmark, means only; no statistical tests because of low power with few runs"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GSM8K control",
+    "text": "Please answer the following grade school math word problem.\nThe question is as follows: {question}",
+    "where": "Appendix B, Fig 8"
+   },
+   {
+    "purpose": "TriviaQA control",
+    "text": "Please answer the following trivia question.\nThe question is as follows: {question}",
+    "where": "Appendix B, Fig 11"
+   },
+   {
+    "purpose": "TriviaQA DDGA",
+    "text": "Please answer the following trivia question.\nThe question is as follows: {question}\nHere is information related to the topic from a google search: {DuckDuckGo search results}",
+    "where": "Appendix B, Fig 12"
+   },
+   {
+    "purpose": "MMLU control",
+    "text": "Answer the following multiple choice question: {question}\nOptions:\n{list of multiple choice options}",
+    "where": "Appendix B, Fig 16"
+   },
+   {
+    "purpose": "Reflection feedback (teacher)",
+    "text": "You are a teacher grading a multiple choice exam. Generate critique and recommendations for the user's submission. Provide detailed recommendations, including the correct answer etc.",
+    "where": "Appendix B, Fig 19b"
+   },
+   {
+    "purpose": "CoVe-1 contradiction check",
+    "text": "Does the answer to the verification question contradict the baseline answer?",
+    "where": "Appendix B, Fig 15c"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.other",
+    "quote": "formatting instructions have been omitted for brevity",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On GSM8K, Self-Consistency at temperature 0.8 gave the best accuracy of all strategies.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 84.89,
+   "unit": "%",
+   "baseline_value": 75.41,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; GSM8K 1319 test questions; SC = majority vote over 5 samples of control prompt; baseline is control at temp 0.8",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature 0.8, row SC, column Accuracy (%)"
+  },
+  {
+   "claim": "GSM8K SC at temp 0.8 had the fewest hallucinated answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucinated answers",
+   "value": 199.33,
+   "unit": "count of 1319",
+   "baseline_value": 324.33,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; GSM8K; baseline control temp 0.8",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature 0.8, row SC, column Hallucinated"
+  },
+  {
+   "claim": "Explicit CoT prompting scored below the plain control prompt on GSM8K at temp 0.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.08,
+   "unit": "%",
+   "baseline_value": 75.41,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; GSM8K; CoT with parsed formatted reasoning steps",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature 0.8, row CoT, column Accuracy (%)"
+  },
+  {
+   "claim": "GSM8K SC-CoT at temp 0.5 reached 83.89% accuracy, near SC (83.80%), versus control 77.08%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.89,
+   "unit": "%",
+   "baseline_value": 77.08,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; GSM8K; 5 samples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature 0.5, row SC-CoT, column Accuracy (%)"
+  },
+  {
+   "claim": "GSM8K ToT gave only minor gains over control at temp 0.2 at cost 6 prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.17,
+   "unit": "%",
+   "baseline_value": 78.14,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; GSM8K; temp 0.2; ToT cost 6.00 prompts",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, Temperature 0.2, row ToT, column Accuracy (%)"
+  },
+  {
+   "claim": "On TriviaQA, Chat Protect (CP) gave the highest accuracy, 82.49% at temp 0.8, by answering only 571 of 1000 questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (over answered questions)",
+   "value": 82.49,
+   "unit": "%",
+   "baseline_value": 60.03,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; first 1000 TriviaQA validation questions; CP samples control 5 times and abstains on contradiction; Graded=571.00",
+   "note": "Accuracy is over graded (answered) questions, not all 1000.",
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.8, row CP, column Acc. (%)"
+  },
+  {
+   "claim": "CP at temp 0.8 cut hallucinated TriviaQA answers from 399.67 (control) to 100.00.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucinated answers",
+   "value": 100.0,
+   "unit": "count",
+   "baseline_value": 399.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA 1000 questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.8, row CP, column Halluc."
+  },
+  {
+   "claim": "CP at temp 0.8 lowered correct TriviaQA answers to 471.00 from 600.33 for control (abstention cost).",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct answers",
+   "value": 471.0,
+   "unit": "count",
+   "baseline_value": 600.33,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.8, row CP, column Correct"
+  },
+  {
+   "claim": "DuckDuckGo Augmentation (search snippets in prompt) raised TriviaQA correct answers above control at temp 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct answers",
+   "value": 676.33,
+   "unit": "count",
+   "baseline_value": 616.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA; DDGA cost 1.00",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.2, row DDGA, column Correct"
+  },
+  {
+   "claim": "CoVe-1 on TriviaQA at temp 0.2 raised accuracy but lost correct answers versus control.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.38,
+   "unit": "%",
+   "baseline_value": 61.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA; Graded=697.67, Correct=484.00 vs control 616.67",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.2, row CoVe-1, column Acc. (%)"
+  },
+  {
+   "claim": "KGR (Wikidata retrofitting) barely changed TriviaQA accuracy at temp 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 62.54,
+   "unit": "%",
+   "baseline_value": 61.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA; Graded=873.00; model often failed to find entities/properties",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.2, row KGR, column Acc. (%)"
+  },
+  {
+   "claim": "SC gave no gain over control on TriviaQA at temp 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.87,
+   "unit": "%",
+   "baseline_value": 61.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; TriviaQA; 5 samples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, Temperature 0.2, row SC, column Acc. (%)"
+  },
+  {
+   "claim": "On MMLU, CoVe-2 at temp 0.2 had the highest accuracy, 76.34%, but answered only 646.67 of about 1000 questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 76.34,
+   "unit": "%",
+   "baseline_value": 66.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; 1000 MMLU questions (~17 per subject, 57 subjects); Graded=646.67",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.2, row CoVe-2, column Acc. (%)"
+  },
+  {
+   "claim": "CoVe-2 at temp 0.2 had the fewest hallucinated MMLU answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hallucinated answers",
+   "value": 153.0,
+   "unit": "count",
+   "baseline_value": 332.0,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.2, row CoVe-2, column Halluc."
+  },
+  {
+   "claim": "MAD got the most correct MMLU answers at temp 0.2 but only marginally above control.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct answers",
+   "value": 670.66,
+   "unit": "count",
+   "baseline_value": 664.0,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU; 2 debating LLMs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.2, row MAD, column Correct"
+  },
+  {
+   "claim": "Reflection did worse than control on MMLU at temp 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 63.98,
+   "unit": "%",
+   "baseline_value": 66.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU; one reflect iteration",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.2, row Reflect, column Acc. (%)"
+  },
+  {
+   "claim": "Reflection had the lowest MMLU accuracy at temp 0.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.27,
+   "unit": "%",
+   "baseline_value": 66.61,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.8, row Reflect, column Acc. (%)"
+  },
+  {
+   "claim": "SC gave no significant gain over control on MMLU at temp 0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 66.47,
+   "unit": "%",
+   "baseline_value": 66.67,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.2, row SC, column Acc. (%)"
+  },
+  {
+   "claim": "CP on MMLU traded coverage for accuracy via temperature: 75.95% at temp 0.8, Graded 766.33.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 75.95,
+   "unit": "%",
+   "baseline_value": 66.61,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3-8B-Instruct-Q6_K via Ollama/LangChain, 3 runs averaged; MMLU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Temperature 0.8, row CP, column Acc. (%)"
+  },
+  {
+   "claim": "Control (no tools) beat the chain tool agent on GSM8K accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (chain)",
+   "value": 63.91,
+   "unit": "%",
+   "baseline_value": 83.47,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3.1-8B unquantized, temperature 0.5, first 1000 GSM8K/TriviaQA/MMLU questions, 3 runs averaged; chain = 2 LLM queries (tool-call list then answer); tools Wikipedia, DuckDuckGo, Riza Python",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, GSM8K, row Chain, column Accuracy (%)"
+  },
+  {
+   "claim": "ReAct agent had lower GSM8K accuracy than control, 60.23% vs 83.47%, with hallucinated answers 397.67 vs 165.33.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (ReAct)",
+   "value": 60.23,
+   "unit": "%",
+   "baseline_value": 83.47,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3.1-8B unquantized, temperature 0.5, first 1000 GSM8K/TriviaQA/MMLU questions, 3 runs averaged; ReAct via create_tool_calling_agent/AgentExecutor",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, GSM8K, row ReAct, column Accuracy (%)"
+  },
+  {
+   "claim": "ReAct agent on TriviaQA: accuracy 60.21% vs control 67.72%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (ReAct)",
+   "value": 60.21,
+   "unit": "%",
+   "baseline_value": 67.72,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3.1-8B unquantized, temperature 0.5, first 1000 GSM8K/TriviaQA/MMLU questions, 3 runs averaged",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, TriviaQA, row ReAct, column Accuracy (%)"
+  },
+  {
+   "claim": "ReAct-DDG (DuckDuckGo only) did not improve TriviaQA over control: 66.59% vs 67.72%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (ReAct-DDG)",
+   "value": 66.59,
+   "unit": "%",
+   "baseline_value": 67.72,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3.1-8B unquantized, temperature 0.5, first 1000 GSM8K/TriviaQA/MMLU questions, 3 runs averaged",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, TriviaQA, row ReAct-DDG, column Accuracy (%)"
+  },
+  {
+   "claim": "On MMLU the ReAct agent scored 61.87% vs control 66.96%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy (ReAct)",
+   "value": 61.87,
+   "unit": "%",
+   "baseline_value": 66.96,
+   "n": "3 runs",
+   "setup": "Meta-Llama-3.1-8B unquantized, temperature 0.5, first 1000 GSM8K/TriviaQA/MMLU questions, 3 runs averaged",
+   "note": "Table 4 caption says 'on the MMLU benchmark' but the table covers GSM8K, TriviaQA and MMLU.",
+   "where": "Table 4",
+   "table": "Table 4, MMLU, row ReAct, column Accuracy (%)"
+  }
+ ],
+ "limits": [
+  "Only 8B models; the authors say results for stronger models such as GPT4 are unknown",
+  "Three runs per setting, no statistical tests",
+  "Agents tested at one temperature (0.5) and on a different model (Llama-3.1-8B) than prompting strategies, so agent and DDGA comparisons are not like for like",
+  "Agents evaluated on first 1000 GSM8K questions only",
+  "Accuracy for abstaining methods (CP, CoVe, KGR) is over answered questions, so it is not comparable with control without the Correct counts",
+  "Appendix prompts omit formatting instructions; CoT retry tolerance not stated; max tokens, top_p not stated",
+  "Hallucination is operationalised as incorrect answer"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Top-N accuracy",
+   "definition": "the percentage of times that the correct answer appeared in N sampled answers",
+   "where": "3.5"
+  },
+  {
+   "term": "Control strategy",
+   "definition": "only required the formatted answer, allowing the base model to decide when to include reasoning steps",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-Thought prompting (Wei et al.)",
+   "year": 2023,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "CoT strategy",
+   "quote": null
+  },
+  {
+   "work": "Self-Consistency (Wang et al.)",
+   "year": 2023,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "SC strategy",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts (Yao et al.)",
+   "year": 2023,
+   "arxiv": "2305.10601",
+   "relation": "baseline",
+   "note": "ToT strategy",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "baseline",
+   "note": "ReAct agent",
+   "quote": null
+  },
+  {
+   "work": "Chat Protect / Self-contradictory Hallucinations (Mundler et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CP strategy",
+   "quote": null
+  },
+  {
+   "work": "Autonomous KG-based Retrofitting (Guan et al.)",
+   "year": 2023,
+   "arxiv": "2311.13314",
+   "relation": "baseline",
+   "note": "KGR",
+   "quote": null
+  },
+  {
+   "work": "Multiagent Debate (Du et al.)",
+   "year": 2023,
+   "arxiv": "2305.14325",
+   "relation": "baseline",
+   "note": "MAD",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Verification (Dhuliawala et al.)",
+   "year": 2023,
+   "arxiv": "2309.11495",
+   "relation": "baseline",
+   "note": "CoVe-1, CoVe-2 variants",
+   "quote": null
+  },
+  {
+   "work": "Survey on Hallucination in LLMs (Huang et al.)",
+   "year": 2023,
+   "arxiv": "2311.05232",
+   "relation": "related",
+   "note": "taxonomy",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "MMLU (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "TriviaQA (Joshi et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Average frequency over the number of correctly sampled responses per question for the SC and SC-CoT strategies over the GSM8K benchmark.",
+   "page": 6,
+   "why": "Shows GSM8K samples vary, so voting helps"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Average frequency over the number of correctly sampled responses per question for the SC approach over the TriviaQA benchmark.",
+   "page": 7,
+   "why": "Samples are all right or all wrong, so SC cannot help"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Flowchart of the ReAct agent answering a TriviaQA question.",
+   "page": 10,
+   "why": "Concrete failure: calls Wikipedia through the Python tool, then claims an online search"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Average number of successful (opaque) and unsuccessful (transparent) tool calls per benchmark for the chain architecture.",
+   "page": 10,
+   "why": "Which tools fail"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 4 caption says MMLU benchmark but covers all three benchmarks",
+  "PDF has no venue; marked preprint (arXiv cs.CL v1, 25 Oct 2024)",
+  "No embedded instructions found"
+ ]
+}

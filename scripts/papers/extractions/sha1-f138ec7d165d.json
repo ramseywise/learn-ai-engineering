@@ -1,0 +1,547 @@
+{
+ "schema": 1,
+ "key": "sha1:f138ec7d165d",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/ch07-evaluating-llms.pdf",
+ "bib": {
+  "title": "Evaluating LLMs (Chapter 7, LLM Engineer's Handbook)",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (Packt, via O'Reilly)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 58934,
+  "chars_total": 58934,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should one evaluate LLMs and RAG systems, from general benchmarks to custom task evaluations with an LLM judge?",
+ "hypothesis": null,
+ "contributions": [
+  "Overview of general-purpose, domain-specific and task-specific LLM evaluations",
+  "Overview of Ragas and ARES for RAG",
+  "Worked LLM-as-a-judge evaluation of TwinLlama-3.1-8B, its DPO variant and Llama-3.1-8B-Instruct"
+ ],
+ "method": {
+  "summary": "Case study: generate answers from three 8B models on the llmtwin test split with vLLM, then score accuracy and style with a GPT-4o-mini judge on 1-3 scales and average.",
+  "task": "open-ended instruction following, LLM-as-a-judge evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "mlabonne/llmtwin test split",
+    "role": "eval",
+    "size": "334 prompts",
+    "split": "test",
+    "source": "Hugging Face Hub, instruction dataset from earlier chapters",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "mlabonne/TwinLlama-3.1-8B",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "SFT model"
+    }
+   },
+   {
+    "name": "mlabonne/TwinLlama-3.1-8B-DPO",
+    "role": "evaluated",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "role": "baseline",
+    "params": "8B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4o-mini",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "vLLM sampling, temperature 0.8, top_p 0.95, min_p 0.05",
+   "temperature": "0.8 (generation and judge)",
+   "top_p": "0.95",
+   "max_tokens": "null (generation max_tokens truncated in code); judge max_tokens=1000",
+   "samples": "1 answer per prompt, 1 run, no seeds stated",
+   "prompting": "Alpaca-style template ('Below is an instruction that describes a task...'), same template for all models; judge prompt with accuracy and style 3-point scales, two example answers, JSON output",
+   "retrieval": null,
+   "parameters": {
+    "max_model_len": "4096",
+    "judge_response_format": "json_object",
+    "evaluate_answers num_threads": "10",
+    "batch_size": "5"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "judge score 1 Poor, 2 Good, 3 Excellent for factual correctness, averaged over prompts",
+     "unit": "score 1-3",
+     "higher_is_better": true
+    },
+    {
+     "name": "style",
+     "definition": "judge score 1-3 for appropriateness for blog/social media (not too formal), averaged",
+     "unit": "score 1-3",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Meta-Llama-3.1-8B-Instruct"
+   ],
+   "protocol": "single LLM judge, best-effort JSON parse, None on parse failure (handling of None in averages not stated); no human validation"
+  },
+  "availability": {
+   "code": "inline listings; models and data on Hugging Face (mlabonne/)",
+   "weights": "mlabonne/TwinLlama-3.1-8B, -DPO",
+   "data": "mlabonne/llmtwin"
+  },
+  "prompts": [
+   {
+    "purpose": "general-purpose judge example",
+    "text": "You are an evaluator who assesses the quality of an answer to an instruction.\nYour goal is to provide a score that represents how well the answer addresses the instruction.\nYou will use a scale of 1 to 4, where each number represents the following:\n1. The answer is not relevant to the instruction.\n2. The answer is relevant but not helpful.\n3. The answer is relevant and helpful but could be more detailed.\n4. The answer is relevant, helpful, and detailed.\nPlease provide your evaluation as follows:\n##Evaluation##\nExplanation: (analyze the relevant, helpfulness, and complexity of the answer)\nTotal rating: (final score as a number between 1 and 4)\nInstruction:\n{instruction}\nAnswer:\n{answer}\n##Evaluation##\nExplanation:",
+    "where": "Table 7.2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Llama-3.1-8B-Instruct scored highest on judged accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "2.62",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8); mean accuracy",
+   "quote": "Llama-3.1-8B-Instruct achieves the highest accuracy score of 2.62",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "TwinLlama-3.1-8B (SFT) mean accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "2.45",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8)",
+   "quote": "TwinLlama-3.1-8B - Accuracy: 2.45",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "TwinLlama-3.1-8B-DPO mean accuracy, about equal to SFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "2.46",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8)",
+   "quote": "TwinLlama-3.1-8B-DPO - Accuracy: 2.46",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "TwinLlama-3.1-8B-DPO has the best judged style.",
+   "kind": "measured",
+   "source": null,
+   "metric": "style",
+   "value": "2.12",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8); mean style",
+   "quote": "TwinLlama-3.1-8B-DPO leads with a score of 2.12",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "TwinLlama-3.1-8B (SFT) style score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "style",
+   "value": "2.04",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8)",
+   "quote": "TwinLlama-3.1-8B (SFT) follows with 2.04",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "Llama-3.1-8B-Instruct has the worst style score (verbose, formal).",
+   "kind": "measured",
+   "source": null,
+   "metric": "style",
+   "value": "1.86",
+   "unit": "score 1-3",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TwinLlama-3.1-8B chapter case study: 334 test prompts from mlabonne/llmtwin, GPT-4o-mini judge, 1-3 scale, one sampled answer per prompt (temp 0.8)",
+   "quote": "Llama-3.1-8B-Instruct trails with 1.86",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "Authors attribute Llama's accuracy edge to larger post-training data (untested).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Speculation, no ablation; Llama-3.1-8B-Instruct vs TwinLlama fine-tuning set",
+   "quote": "This is probably due to its extensive post-training process with over 10 million samples (compared to 13,000 in our case).",
+   "table": null,
+   "note": null,
+   "where": "Analyzing results"
+  },
+  {
+   "claim": "A 10-point MMLU gain from fine-tuning a base model is unlikely and signals contaminated instruction data.",
+   "kind": "claim",
+   "source": null,
+   "metric": "MMLU gain threshold",
+   "value": "10",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Heuristic stated without data; MMLU, base vs fine-tuned",
+   "quote": "improving the MMLU score of a base model by 10 points during the fine-tuning phase is unlikely.",
+   "table": null,
+   "note": null,
+   "where": "General-purpose LLM evaluations"
+  },
+  {
+   "claim": "Text-generation MCQ evaluation is recommended over log-likelihood because low-quality models overperform on probability-based evaluations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MMLU-style multiple choice, lm-evaluation-harness; no data given",
+   "quote": "low-quality models tend to overperform on probability-based evaluations",
+   "table": null,
+   "note": null,
+   "where": "Task-specific LLM evaluations"
+  },
+  {
+   "claim": "Judge LLMs favour assertive or verbose answers, lack domain expertise and are inconsistent; mitigate with multiple judges and other metrics.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM-as-a-judge, general; no measurements",
+   "quote": "judge LLMs can exhibit biases favoring assertive or verbose responses",
+   "table": null,
+   "note": null,
+   "where": "Task-specific LLM evaluations"
+  },
+  {
+   "claim": "Faithfulness in Ragas is the ratio of verifiable claims to total claims.",
+   "kind": "reported",
+   "source": "Es et al. 2023 (RAGAS)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ragas metric definition",
+   "quote": "The faithfulness score is calculated as the ratio of verifiable claims to the total number of claims in the answer.",
+   "table": null,
+   "note": null,
+   "where": "Ragas"
+  },
+  {
+   "claim": "Ragas answer relevancy is the mean cosine similarity between LLM-generated questions from the answer and the original question.",
+   "kind": "reported",
+   "source": "Es et al. 2023 (RAGAS)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ragas metric definition",
+   "quote": "calculates the mean cosine similarity between these generated questions and the original question",
+   "table": null,
+   "note": null,
+   "where": "Ragas"
+  },
+  {
+   "claim": "Human evaluation is biased toward long, confident, well-formatted answers.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chatbot Arena style human voting; no data",
+   "quote": "often biased toward long and confident answers, especially when they’re nicely formatted",
+   "table": null,
+   "note": null,
+   "where": "General-purpose LLM evaluations"
+  }
+ ],
+ "limits": [
+  "Case study has one judge (GPT-4o-mini), one sampled answer per prompt at temperature 0.8, no seeds, no human agreement check, no confidence intervals.",
+  "Accuracy differences between the two TwinLlama models (2.45 vs 2.46) are not tested for significance.",
+  "Judge and data-generation model are both GPT-4o-mini family, risking self-preference; the chapter does not discuss it.",
+  "Leaderboard and benchmark lists are non-exhaustive and date from 2024.",
+  "Summary says the judge scored relevance, coherence and conciseness, but the case study scores accuracy and style (internal inconsistency).",
+  "Judge prompt and code in the PDF are truncated at line ends, so the full text is not recoverable."
+ ],
+ "practices": [
+  "Evaluate general-purpose models with a suite of benchmarks and treat them as signals, not single truth; raise confidence when several agree (General-purpose section).",
+  "Compare base vs fine-tuned scores on the same benchmark and treat a ~10-point MMLU gain as a contamination warning (General-purpose section).",
+  "For domain evaluation, reuse existing leaderboards or suites and prefer human-translated over machine-translated benchmarks for language-specific models (Domain-specific section).",
+  "Design benchmarks to be complex, diverse and practical; run them with lm-evaluation-harness or lighteval (Domain-specific section).",
+  "Use traditional metrics (ROUGE, accuracy, precision, recall, F1) when the task is structured (Task-specific section).",
+  "Prefer text-generation multiple-choice evaluation over log-likelihood for simplicity and discrimination (Task-specific section).",
+  "For open-ended tasks use LLM-as-a-judge with a large model, include ground-truth answers when available, iterate on the prompt using the judge's explanations, and use structured output for parsing (Task-specific section).",
+  "Mitigate judge bias with multiple judges, combined metrics and careful prompts (Task-specific section).",
+  "Evaluate RAG on retrieval accuracy, integration quality, and factuality/relevance; combine Ragas for fast iteration with ARES for deeper checks at key stages (RAG evaluation).",
+  "Manually read model answers to catch wrong chat templates or wrong models before trusting scores (Analyzing results).",
+  "Save intermediate generations and evaluations to the Hub for robustness to failure (Evaluating answers)."
+ ],
+ "terms": [
+  {
+   "term": "Perplexity",
+   "definition": "Exponential of the cross-entropy loss, representing how “surprised” the model is by the data (lower is better)",
+   "where": "General-purpose LLM evaluations"
+  },
+  {
+   "term": "Faithfulness (Ragas)",
+   "definition": "factual consistency of the generated answer against the given context; ratio of verifiable claims to total claims",
+   "where": "Ragas"
+  },
+  {
+   "term": "Answer relevancy (Ragas)",
+   "definition": "mean cosine similarity between LLM-generated questions from the answer and the original question",
+   "where": "Ragas"
+  },
+  {
+   "term": "Context precision (Ragas)",
+   "definition": "whether ground-truth relevant items in the contexts are ranked appropriately, rewarding relevant information near the top",
+   "where": "Ragas"
+  },
+  {
+   "term": "Context recall (Ragas)",
+   "definition": "extent to which retrieved context aligns with the annotated ground-truth answer, by attributing each ground-truth claim to the context",
+   "where": "Ragas"
+  },
+  {
+   "term": "Metrics-driven development (MDD)",
+   "definition": "a product development approach that relies on data to make well-informed decisions, involving the ongoing monitoring of essential metrics over time",
+   "where": "Ragas"
+  },
+  {
+   "term": "ARES",
+   "definition": "automated RAG evaluation: synthetic data generation, fine-tuned classifier training, RAG evaluation; defaults google/flan-t5-xxl generator and microsoft/deberta-v3-large classifier",
+   "where": "ARES"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "related",
+   "note": "listed in references; basis for LLM-as-a-judge",
+   "quote": null
+  },
+  {
+   "work": "Measuring Massive Multitask Language Understanding (Hendrycks et al.)",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "related",
+   "note": "MMLU, used as the example benchmark",
+   "quote": null
+  },
+  {
+   "work": "Instruction-Following Evaluation for Large Language Models (Zhou et al.)",
+   "year": 2023,
+   "arxiv": "2311.07911",
+   "relation": "related",
+   "note": "IFEval",
+   "quote": null
+  },
+  {
+   "work": "Length-Controlled AlpacaEval (Dubois et al.)",
+   "year": 2024,
+   "arxiv": "2404.04475",
+   "relation": "related",
+   "note": "AlpacaEval",
+   "quote": null
+  },
+  {
+   "work": "GAIA (Mialon et al.)",
+   "year": 2023,
+   "arxiv": "2311.12983",
+   "relation": "related",
+   "note": "agentic benchmark",
+   "quote": null
+  },
+  {
+   "work": "The Hallucinations Leaderboard (Hong et al.)",
+   "year": 2024,
+   "arxiv": "2404.05904",
+   "relation": "related",
+   "note": "domain-specific leaderboard",
+   "quote": null
+  },
+  {
+   "work": "RAGAS (Es et al.)",
+   "year": 2023,
+   "arxiv": "2309.15217",
+   "relation": "surveys",
+   "note": "RAG evaluation toolkit described",
+   "quote": null
+  },
+  {
+   "work": "ARES (Saad-Falcon et al.)",
+   "year": 2023,
+   "arxiv": "2311.09476",
+   "relation": "surveys",
+   "note": "RAG evaluation framework described",
+   "quote": null
+  },
+  {
+   "work": "Hugging Face Cookbook: Using LLM-as-a-judge (Roucher)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reference",
+   "quote": null
+  },
+  {
+   "work": "LangChain: Aligning LLM-as-a-Judge with Human Preferences",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "reference",
+   "quote": null
+  },
+  {
+   "work": "TwinLlama-3.1-8B and DPO variant (earlier chapters)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models evaluated; built in prior chapters",
+   "quote": null
+  },
+  {
+   "work": "Llama-3.1-8B-Instruct",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reference model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 7.2",
+   "caption": "Example of general-purpose LLM-as-a-judge prompt for answer evaluation",
+   "page": 8,
+   "why": "1-4 rubric prompt with explanation-then-score structure"
+  },
+  {
+   "figure": "Figure 7.1",
+   "caption": "Overview of the Ragas evaluation framework",
+   "page": 10,
+   "why": "maps the four Ragas metrics to pipeline parts (image only, not in text)"
+  },
+  {
+   "figure": "Figure 7.2",
+   "caption": "Overview of the ARES evaluation framework",
+   "page": 11,
+   "why": "three-stage ARES flow (image only)"
+  },
+  {
+   "figure": "Table 7.5",
+   "caption": "Evaluations of each answer made by GPT-4o-mini, according to style and accuracy",
+   "page": 19,
+   "why": "shows judge explanations behind the scores"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.13 generate_answers",
+   "snippet": "llm = LLM(model=model_id, max_model_len=4096)\nsampling_params = SamplingParams(temperature=0.8, top_p=0.95, min_p=0.05, ma",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Authors not printed in the PDF text (book: Paul Iusztin and Maxime Labonne, but not stated here, so left blank); year not printed (print date 12/20/25 is browser date).",
+  "Code lines are truncated in the PDF at the right margin (max_tokens of generation, prompt text), so those values are unknown.",
+  "Figures 7.1 and 7.2 are images with no text.",
+  "Page footer has O'Reilly boilerplate; no embedded instructions found."
+ ]
+}

@@ -1,0 +1,708 @@
+{
+ "schema": 1,
+ "key": "2411.00492",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/long-2024-multi-expert-prompting-improves-reliability.pdf",
+ "bib": {
+  "title": "Multi-expert Prompting Improves Reliability, Safety and Usefulness of Large Language Models",
+  "authors": [
+   "Do Xuan Long",
+   "Duong Ngoc Yen",
+   "Luu Anh Tuan",
+   "Kenji Kawaguchi",
+   "Min-Yen Kan",
+   "Nancy F. Chen"
+  ],
+  "first_author": "Long",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2411.00492",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 96064,
+  "chars_total": 143608,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed by section map only; appendix G worked-example figure text (Figs 10-22) read in part, not in full."
+ },
+ "type": "empirical",
+ "question": "Does a single-turn prompt that simulates several experts and aggregates their answers beat single-expert and other multi-sample prompting on truthfulness, factuality, safety, informativeness and usefulness?",
+ "hypothesis": "A single expert gives a one-sided view; aggregating several expert answers via the Nominal Group Technique improves reliability and reduces bias.",
+ "contributions": [
+  "Multi-expert Prompting: generate n experts, answer as each, aggregate with seven NGT-derived subtasks in one chain of thought, then select the best among individual and aggregated answers",
+  "State-of-the-art TruthfulQA-Generation truthfulness with ChatGPT",
+  "Human and ablation analysis of each step and of the number of experts"
+ ],
+ "method": {
+  "summary": "Step 1 asks the LLM for n experts with one-sentence descriptions (zero-shot), then answers once per expert. Step 2 feeds the n answers to a single prompt with seven numbered subtasks (agreed facts, conflicts, resolution, isolated facts, collection, combined answer, best-answer selection). Evaluated on four automatic benchmarks, ExpertQA with a ChatGPT judge, and human ratings of the two steps.",
+  "task": "long-form generation (truthfulness, factuality, toxicity, hurtfulness, informativeness, usefulness)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "TruthfulQA-Generation",
+    "role": "eval",
+    "size": "all questions of the generation subset (count not stated)",
+    "split": null,
+    "source": "Lin et al., 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "FactualityPrompt",
+    "role": "eval",
+    "size": "250 factual + 250 nonfactual prompts sampled from 8000 + 8000",
+    "split": "random sample",
+    "source": "Lee et al., 2022",
+    "preprocessing": "prompt used directly as the text to complete"
+   },
+   {
+    "name": "BOLD",
+    "role": "eval",
+    "size": "776 records each from American_actors (1587) and American_actresses (776)",
+    "split": "first prompt per record only",
+    "source": "Dhamala et al., 2021",
+    "preprocessing": "toxic if roberta_toxicity_classifier probability >= 0.5"
+   },
+   {
+    "name": "HONEST (en_queer_unqueer)",
+    "role": "eval",
+    "size": "705 records",
+    "split": null,
+    "source": "Nozza et al., 2021",
+    "preprocessing": "'[M]' deleted from masked_template"
+   },
+   {
+    "name": "ExpertQA (open-ended)",
+    "role": "eval",
+    "size": "528 questions in 32 topics",
+    "split": null,
+    "source": "Malaviya et al., 2023",
+    "preprocessing": null
+   },
+   {
+    "name": "OpenBookQA, ARC-Challenge, 8 MMLU college tasks",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Mihaylov 2018; Clark 2018; Hendrycks 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT (gpt-3.5-turbo-0613)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 (context window set for all steps)",
+    "other": {}
+   },
+   {
+    "name": "Mistral-7B-Instruct-v0.2",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1024 (context window set for all steps)",
+    "other": {}
+   },
+   {
+    "name": "ChatGPT (fine-tuned)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "True% on TruthfulQA; fine-tuning details not given in text read"
+    }
+   },
+   {
+    "name": "s-nlp/roberta_toxicity_classifier",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "BOLD toxicity"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Sampling (Holtzman et al., 2019)",
+   "temperature": "ChatGPT 0.0 for all baselines and intermediate steps; Mistral 0.1. B7/B8 variable temps: ChatGPT {0.0,0.4,0.8}, Mistral {0.1,0.4,0.8}",
+   "top_p": null,
+   "max_tokens": "inferred: 1024 from 'context window size is set to 1024 for all the steps'",
+   "samples": "Single run per item; no seeds reported. n=3 experts by default.",
+   "prompting": "Zero-shot; expert generation prompt asks for a dict of 3 roles with short descriptions; casting prompt 'From now on, you are an excellent {role} described as {roles_description}'; aggregation prompt with 7 steps and 'Final answer' placeholder",
+   "retrieval": null,
+   "parameters": {
+    "n_experts": "3 (best in Table 4; also tried 1, 2, 5, 10)",
+    "expert_description": "one sentence",
+    "aggregation_weights": "equal across experts",
+    "subtasks": "7 (S1-S7)"
+   },
+   "other": {
+    "self_refine_baseline": "2 revision iterations so LLM calls equal the 3-expert case",
+    "mistral_length_control": "Fig 6 re-runs baselines asking for 170 tokens"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "TruthfulQA True %",
+     "definition": "share judged true by a fine-tuned ChatGPT judge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "FactualityPrompt hallucinated NE error",
+     "definition": "Hallucinated named-entity error, factual/non-factual prompts",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "BOLD toxicity",
+     "definition": "fraction with toxic probability >= 0.5",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "HONEST HurtLex",
+     "definition": "queer/nonqueer HurtLex score via HuggingFace Evaluate",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Informativeness / Usefulness win rate",
+     "definition": "ChatGPT Win/Draw/Lose against baseline on ExpertQA",
+     "unit": "% win",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human M1/M2",
+     "definition": "Expert Generation Satisfaction and Aggregation Satisfaction, 1-3 scale",
+     "unit": "1-3",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "MCQ accuracy on reasoning tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-shot",
+    "Zero-shot-CoT",
+    "Self-refine",
+    "Universal Self-consistency",
+    "Multi-agent Debate",
+    "ExpertPrompting",
+    "Fixed Temp. + Our Agg.",
+    "Var Temp. + Our Agg.",
+    "ExpertPrompting + Our Agg.",
+    "Naive Agg.",
+    "Enhanced Naive Agg.",
+    "Zero-shot-CoT-SC (reasoning only)"
+   ],
+   "protocol": "t-test, p<0.01 marked with dagger in Table 1; 100 samples per dataset rated by three undergraduates (Krippendorff alpha 0.73 average); ChatGPT judge validated against one annotator at 93% agreement."
+  },
+  "availability": {
+   "code": "footnote says codes and data 'will be made publicly available'; no link in text",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "expert generation",
+    "text": "You are provided an information. Give me a list of 3 best roles that could complete the information the most thoroughly. Question: {question}\nOnly give me the answer as a dictionary of roles in the Python programming format with a short description for each role. Strictly follow the answer format below:\nAnswer: {\"[role 1]\": \"[description 1]\", \"[role 2]\": \"[description 2]\", \"[role 3]\": \"[description 3]\"}",
+    "where": "Appx C.3"
+   },
+   {
+    "purpose": "expert casting",
+    "text": "From now on, you are an excellent {role} described as {roles_description}.\nAnswer the following question while staying in strict accordance with the nature of the provided identity: {question}.",
+    "where": "Appx C.4"
+   },
+   {
+    "purpose": "aggregation (7 subtasks, 3 experts)",
+    "text": "Given the following question: {question}, you have obtained three answers from three experts with different expertise:\n###\nexpert_1_answer\n###\nexpert_2_answer\n###\nexpert_3_answer\n###\nYour task is to aggregate the experts' answers above, follwing the subtasks below.\nStep 1: Which are the facts that more than half of the answers have?\nFacts that more than half of the answers have (Agreed Facts):...\nStep 2: Which are the facts of the answers above that conflict?\nConflicted facts among the answers (Conficted Facts):...\nStep 3: Now you need to resolve the conflicted facts from Step 2. The facts that more people agree are likely to be true.\nResolved facts from Step 2:...\nStep 4: Which are the facts that are not from Step 2 and 1, and only one of the answers have?\nFacts that are excluded from Step 2 and 1 and only one of the answers have:...\nStep 5: Combine facts from Step 1, 3, 4, to obtain the facts that will appear in the final solution.\nFacts from Step 1, 3, 4:...\nStep 6: Generate a final answer consisting of facts in Step 5, in a newline.\nCombined answer:...\nStep 7: Given the answer 1, answer 2, answer 3, and combined answer, which answer among them do you think is more factually correct and useful?\nBest answer choice: Answer 1/Answer 2/Answer 3/Combined answer\nExplanation: [Explanation to your choice of the best answer]\nFinal answer: [Only output the full chosen answer content. Output the exact answer, do not modify or trim the answer.]",
+    "where": "Appx C.5"
+   },
+   {
+    "purpose": "Zero-shot-CoT baseline",
+    "text": "Question: {question}\nLet's think step by step.\nOutput in the following format:\nExplanation:\nFinal answer:",
+    "where": "Appx B.1"
+   },
+   {
+    "purpose": "ChatGPT judge, informativeness",
+    "text": "You are given a question and two responses. Your task is to evaluate which answer is better, or there is a draw , in terms of informativeness.\nThe informativeness is defined as the extent of details, in-depth insights, multiple perspectives, and supporting evidence that an answer has.\nQuestion: {question}\nAnswer 1: {response1}\nAnswer 2: {response2}\nFulfill your task by filling in the template below:\nEvaluation: Answer 1 is better/Answer 2 is better/There is a draw.\nExplanation: ...",
+    "where": "Appx D.0.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we use a consistent temperature setting of 0.0 for all baselines and intermediate steps",
+    "where": "Appx B.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Multi-expert Prompting reaches 89.35 True% on TruthfulQA-Generation with ChatGPT, versus 80.66 for the best baseline, ExpertPrompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 89.35,
+   "unit": "% True",
+   "baseline_value": 80.66,
+   "n": null,
+   "setup": "TruthfulQA-Generation, gpt-3.5-turbo-0613, n=3 experts, temperature 0.0, fine-tuned ChatGPT judge",
+   "note": "Table 4 prints the ExpertPrompting TruthfulQA as 80.67 and BOLD as 0.109 versus 0.129 in Table 1.",
+   "where": "Table 1",
+   "table": "Table 1, row ChatGPT Multi-expert Prompting, column TruthfulQA"
+  },
+  {
+   "claim": "Improvement over the best baseline on truthfulness is 5.27% for Mistral and 8.69% for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA gain over best baseline",
+   "value": 8.69,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TruthfulQA-Generation, Mistral-7B-Instruct-v0.2 (best baseline B3) and ChatGPT (best baseline B6)",
+   "note": "Absolute vs relative not stated; 89.35-80.66 = 8.69 points, so absolute.",
+   "where": "Sec 4.1",
+   "quote": "outperforming the best baselines (B3 for Mistral and B6 for ChatGPT) by 5.27% and 8.69%"
+  },
+  {
+   "claim": "Mistral-7B truthfulness with Multi-expert Prompting is 87.15 versus 81.88 for Self-refine.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 87.15,
+   "unit": "% True",
+   "baseline_value": 81.88,
+   "n": null,
+   "setup": "TruthfulQA-Generation, Mistral-7B-Instruct-v0.2, temperature 0.1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Mistral Multi-expert Prompting, column TruthfulQA"
+  },
+  {
+   "claim": "Zero-shot-CoT scores 70.38 on TruthfulQA with ChatGPT, 18.97 points below Multi-expert Prompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 70.38,
+   "unit": "% True",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TruthfulQA-Generation, ChatGPT",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ChatGPT Zero-shot-CoT, column TruthfulQA"
+  },
+  {
+   "claim": "Skipping S1 drops ChatGPT TruthfulQA to 85.43; the other ablations land between 86.90 and 88.46.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 85.43,
+   "unit": "% True",
+   "baseline_value": 89.35,
+   "n": null,
+   "setup": "Ablation, ChatGPT, n=3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Skip S1, column TruthfulQA"
+  },
+  {
+   "claim": "A naive aggregation prompt ('Please combine responses into a final one') gives 82.37 on TruthfulQA, 6.98 below the seven-subtask aggregation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 82.37,
+   "unit": "% True",
+   "baseline_value": 89.35,
+   "n": null,
+   "setup": "ChatGPT, n=3 experts, then select best",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Naive Agg., column TruthfulQA"
+  },
+  {
+   "claim": "Three experts is best for ChatGPT TruthfulQA; one expert gives 80.05 and ten give 84.82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 89.35,
+   "unit": "% True",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, varying n",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 3 (Ours), column TruthfulQA"
+  },
+  {
+   "claim": "Using ten experts gives 84.82 on TruthfulQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 84.82,
+   "unit": "% True",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, n=10",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 10, column TruthfulQA"
+  },
+  {
+   "claim": "ChatGPT picks the aggregated answer over an individual expert on 95.44% of TruthfulQA samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share selecting aggregated",
+   "value": 95.44,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "n=3 experts, ChatGPT",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row ChatGPT, column TruthfulQA"
+  },
+  {
+   "claim": "ChatGPT judge finds Multi-expert Prompting more informative in 75% of comparisons on average and more useful in 76.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "informativeness win rate",
+   "value": 75,
+   "unit": "% win",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ExpertQA, 528 open-ended questions in 32 topics, ChatGPT as judge of Win/Draw/Lose against each baseline",
+   "note": "Win rate for usefulness 76.5 recorded in quote.",
+   "where": "Sec 4.2, Fig 3",
+   "quote": "generates significantly more informative (75% win on average) and useful (76.5%) responses"
+  },
+  {
+   "claim": "ChatGPT judge agrees with a human annotator 93% of the time on the comparison with ExpertPrompting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "judge-human agreement",
+   "value": 93,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ExpertQA informativeness and usefulness, averaged over two metrics",
+   "note": "Number of items in the check is not stated.",
+   "where": "Sec 4.2",
+   "quote": "a high agreement rate of 93% between the annotator and ChatGPT on average over two metrics"
+  },
+  {
+   "claim": "Multi-expert Prompting costs about 22.7 times the tokens of Zero-shot-CoT on TruthfulQA (2345.78 vs 103.31 average tokens).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average consumed tokens",
+   "value": 2345.78,
+   "unit": "avg tokens",
+   "baseline_value": 103.31,
+   "n": null,
+   "setup": "ChatGPT, TruthfulQA, Table 11",
+   "note": "The ratio 22.7 is derived. Text says 'a double number of tokens on TruthfulQA', which compares with Self-align/ExpertPrompting, not CoT; the table layout is garbled in extraction.",
+   "where": "Table 11",
+   "table": "Table 11, row TruthfulQA Ave. consumed #tokens, column Multi-expert Prompting"
+  },
+  {
+   "claim": "Total ChatGPT cost for Multi-expert Prompting on TruthfulQA is 3.8399 US$ against 0.1634 for Zero-shot-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total cost",
+   "value": 3.8399,
+   "unit": "US$",
+   "baseline_value": 0.1634,
+   "n": null,
+   "setup": "ChatGPT API cost as of 1 Feb 2024",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row TruthfulQA Total US$, column Multi-expert Prompting"
+  },
+  {
+   "claim": "On reasoning MCQs, Multi-expert Prompting is comparable to Zero-shot-CoT but below it on most tasks; it beats it only on college_physics with ChatGPT (45.54 vs 37.62).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 45.54,
+   "unit": "% accuracy",
+   "baseline_value": 37.62,
+   "n": null,
+   "setup": "MMLU college_physics, accuracy, ChatGPT",
+   "note": "Column header order in extracted Table 10 is partly garbled; column mapping inferred from the 10 headers (OpenBookQA, ARC, college CS, college maths, college medicine, college physics, computer security, formal logic, econometrics, electrical engineering).",
+   "where": "App A.4, Table 10",
+   "table": "Table 10, row ChatGPT Multi-expert Prompting, column college physics"
+  },
+  {
+   "claim": "ExpertPrompting alone falls well below zero-shot on ARC-Challenge with ChatGPT (34.56 vs 68.51).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 34.56,
+   "unit": "% accuracy",
+   "baseline_value": 68.51,
+   "n": null,
+   "setup": "ARC-Challenge accuracy, ChatGPT",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row ChatGPT ExpertPrompting, column ARC"
+  },
+  {
+   "claim": "Multi-expert Prompting on OpenBookQA with ChatGPT scores 71.80 versus 79.20 for Zero-shot-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.8,
+   "unit": "% accuracy",
+   "baseline_value": 79.2,
+   "n": null,
+   "setup": "OpenBookQA accuracy, ChatGPT",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row ChatGPT Multi-expert Prompting, column OpenBookQA"
+  },
+  {
+   "claim": "Telling Zero-shot-CoT to be more truthful lifts ChatGPT TruthfulQA from 70.38 to 77.60, still below 89.35.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 77.6,
+   "unit": "% True",
+   "baseline_value": 70.38,
+   "n": null,
+   "setup": "ChatGPT, instruction added to CoT prompt",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ChatGPT Zero-shot-CoT + More Truthful, column TruthfulQA"
+  },
+  {
+   "claim": "One-sentence expert descriptions perform the same as paragraph-long ones (ChatGPT TruthfulQA 80.60 vs 80.67).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TruthfulQA True %",
+   "value": 80.6,
+   "unit": "% True",
+   "baseline_value": 80.67,
+   "n": null,
+   "setup": "One randomly chosen expert, ChatGPT",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ChatGPT One-sentence expert (Ours), column TruthfulQA"
+  },
+  {
+   "claim": "ChatGPT produces a less helpful expert in 27% of three-expert sets and two less helpful in 11%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expert generation failure",
+   "value": 27,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 sampled outputs per dataset, three annotators",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "we observe a 27% incidence where one expert proves less helpful"
+  }
+ ],
+ "limits": [
+  "Aggregation suited to long-form answers; for short-form answers the authors suggest CoT thoughts alongside the answer (Limitations).",
+  "Needs strong instruction-following for role-play and the seven subtasks; final selection relies on a placeholder format.",
+  "All experts weighted equally; weighted aggregation left open. Hallucinated expert identities possible.",
+  "ChatGPT generates a less helpful expert in 27% of cases and two in 11%; both models struggle with S4 (isolated viewpoints).",
+  "Prompt cost is higher: TruthfulQA average tokens 2345.78 vs 103.31 for Zero-shot-CoT.",
+  "On reasoning MCQs it is only comparable to Zero-shot-CoT and below it on most tasks (Table 10).",
+  "Only gpt-3.5-turbo-0613 and Mistral-7B-Instruct-v0.2 tested; single run, no seeds; FactualityPrompt subsampled to 250+250.",
+  "Informativeness and usefulness rely on ChatGPT as judge, validated on a small human check."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Nominal Group Technique (NGT)",
+   "definition": "A structured decision-making process that aids teams in identifying problems and generating solutions: idea generation, round-robin recording, discussion, voting.",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ExpertPrompting (Xu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Single-expert prompting that the paper extends and compares against",
+   "quote": null
+  },
+  {
+   "work": "Nominal Group Technique (Ven and Delbecq)",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Source of the seven-subtask aggregation",
+   "quote": null
+  },
+  {
+   "work": "Zero-shot-CoT (Kojima et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Single-chain zero-shot reasoning, also used as the aggregation style",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Single chain of thought",
+   "quote": null
+  },
+  {
+   "work": "Self-refine (Madaan et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "iterative feedback and refine",
+   "quote": null
+  },
+  {
+   "work": "Universal Self-consistency (Chen et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "select most consistent among samples",
+   "quote": null
+  },
+  {
+   "work": "Multi-agent Debate (Liang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "two agents debate with a judge",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "used as Zero-shot-CoT-SC on reasoning tasks",
+   "quote": null
+  },
+  {
+   "work": "TruthfulQA (Lin et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "truthfulness benchmark",
+   "quote": null
+  },
+  {
+   "work": "ExpertQA (Malaviya et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "open-ended questions",
+   "quote": null
+  },
+  {
+   "work": "FactualityPrompt (Lee et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "factuality benchmark",
+   "quote": null
+  },
+  {
+   "work": "BOLD (Dhamala et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "toxicity benchmark",
+   "quote": null
+  },
+  {
+   "work": "HONEST (Nozza et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "hurtfulness benchmark",
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2023b (SOTA 87.97 on TruthfulQA)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Prior state of the art quoted as 87.97%",
+   "quote": null
+  },
+  {
+   "work": "AutoGen, AutoAgents, MetaGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLM multi-agent systems the paper contrasts with",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of Multi-expert Prompting: (1) Experts & responses generation (3.1) and (2) Aggregating expert responses (3.2).",
+   "page": 3,
+   "why": "Shows the two steps and seven subtasks on one example."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "A TruthfulQA example where Multi-expert Prompting provides the correct answer, while the majority of experts answer incorrectly.",
+   "page": 7,
+   "why": "Shows the isolated-viewpoint route overriding a wrong majority."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Multi-expert Prompting when different subtasks are omitted using ChatGPT.",
+   "page": 6,
+   "why": "Per-step ablation in one table."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Tables in the cached text come out one cell per line; Table 10 column headers are scrambled across lines, so the column mapping is inferred.",
+  "No embedded instructions found.",
+  "Abstract/ack mentions ACL RR reviewers but the PDF states no venue; recorded as preprint."
+ ]
+}

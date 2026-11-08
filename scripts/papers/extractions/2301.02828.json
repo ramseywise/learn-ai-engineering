@@ -1,0 +1,292 @@
+{
+ "schema": 1,
+ "key": "2301.02828",
+ "pdf": "generative-ai/02-rag-retrieval/sources/xu-2023-why-do-nearest-neighbor-language.pdf",
+ "bib": {
+  "title": "Why do Nearest Neighbor Language Models Work?",
+  "authors": [
+   "Frank F. Xu",
+   "Uri Alon",
+   "Graham Neubig"
+  ],
+  "first_author": "Xu",
+  "year": 2023,
+  "venue": "preprint (arXiv v2, 17 Jan 2023; PDF says 'Preprint. Under review.')",
+  "arxiv": "2301.02828",
+  "doi": null
+ },
+ "read": {
+  "by": "main-session (source-reader unavailable: concurrent subagent limit)",
+  "at": "2026-11-08",
+  "chars_read": 74562,
+  "chars_total": 74562,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed; appendices read except the full tables of Appendices B/C"
+ },
+ "type": "empirical",
+ "question": "Why does kNN-LM improve perplexity over its base LM even when its datastore is the base LM's own training set?",
+ "hypothesis": "The gain comes from identifiable design differences between kNN-LM and a parametric LM (input representation, datastore capacity, approximate search, temperature), not from extra data.",
+ "contributions": [
+  "A generalised softmax formulation (Eq. 5) that exposes kNN-LM's design choices",
+  "Three main reasons kNN-LM works: a different input representation, approximate kNN search, softmax temperature",
+  "Several hypotheses ruled out, and a trainable-embedding alternative that recovers 55% of the gain without retrieval"
+ ],
+ "method": {
+  "summary": "Re-implement kNN-LM on a 268M-parameter Transformer LM over WikiText-103 with BPE (33K vocab), generalise it as an interpolation of two softmaxes, and ablate one design choice at a time.",
+  "task": "language modelling (WikiText-103)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": "nearly 150M BPE tokens in the training data; datastore 150M+ entries, about 300GB (fp16 293GB)",
+    "split": "train/dev/test; lambda tuned on dev",
+    "source": "Merity et al. 2016",
+    "preprocessing": "BPE vocabulary of 33K trained on the corpus"
+   }
+  ],
+  "models": [
+   {
+    "name": "base LM",
+    "role": "base",
+    "params": "268M",
+    "architecture": "Transformer LM, modified from Baevski and Auli 2018",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "33K",
+    "layers": null,
+    "hidden": "1024",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy; trainable embedding matrices Wds trained with other parameters fixed",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "fp16 datastore",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "softmax temperature on the kNN distribution swept 0 to 3 at 0.1 steps",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": "k=1024 nearest neighbours, FAISS approximate search vs exact; lambda tuned on dev and fixed at inference",
+   "parameters": {
+    "lambda": "0.271 (FAISS mask, FAISS score, att, L2)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "base LM, interpolated, kNN-only and oracle (best lambda per token)",
+     "unit": "perplexity",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "base LM 21.750"
+   ],
+   "protocol": "single runs, no confidence intervals"
+  },
+  "availability": {
+   "code": "https://github.com/frankxu2004/knnlm-why",
+   "weights": null,
+   "data": "WikiText-103"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "The kNN-LM baseline lowers test perplexity of the 268M base LM from 21.750 to 19.174 (att, L2) and 19.095 (att, IP).",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "21.750 to 19.174",
+   "unit": "perplexity",
+   "baseline_value": "21.750",
+   "n": null,
+   "setup": "WikiText-103, k=1024, datastore of all 150M training tokens",
+   "table": "Table 1, rows Base LM and kNN-LM-L2 att",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The input representation matters: querying with the feed-forward output instead of the attention output leaves the kNN-LM at 20.734 (L2) and 21.101 (IP).",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "20.734; 21.101",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same datastore, ffn as hds",
+   "table": "Table 1, rows kNN-LM-L2 ffn and kNN-LM-IP ffn",
+   "note": "ffn+IP is the parametric model's own representation and similarity and is the worst variant",
+   "where": "Table 1"
+  },
+  {
+   "claim": "A separate trainable V x D output matrix on the attention output, interpolated with the base LM, recovers about 55% of kNN-LM's gain with no retrieval.",
+   "kind": "measured",
+   "metric": "share of gain",
+   "value": "55%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Learned Wds with att, interpolated perplexity 20.353 vs 19.095 for kNN-LM",
+   "quote": "we can recover about 55% of the performance gain achieved by",
+   "note": "abstract-level restatement: 6.5% relative perplexity improvement",
+   "where": "4.1, Table 2"
+  },
+  {
+   "claim": "Approximate search beats exact search: FAISS mask and score give 19.174 vs 19.735 for the exact mask and exact score.",
+   "kind": "measured",
+   "metric": "perplexity",
+   "value": "19.174 vs 19.735",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WikiText-103, full datastore, att, L2",
+   "table": "Table 3, rows FAISS mask FAISS score and real mask real score",
+   "note": "about 2.6% relative improvement per the introduction",
+   "where": "Table 3"
+  },
+  {
+   "claim": "The authors suggest approximate search acts as a regularizer against overfitting to a datastore built from the training set.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "hypothesis supported by token-level analysis (longer, higher-context-entropy words benefit more from approximate neighbours)",
+   "quote": "We hypothesize that this is related to regularization for preventing overﬁtting",
+   "note": null,
+   "where": "5.2, Appendix D"
+  },
+  {
+   "claim": "Tuning the kNN softmax temperature matters: t=1 is only coincidentally near optimal in the original settings, and the gap between default and optimal can reach 3.7% relative perplexity.",
+   "kind": "measured",
+   "metric": "relative perplexity gap",
+   "value": "3.7%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "temperature swept 0 to 3, 5% subsampled and full datastore",
+   "quote": "the relative perplexity gap between the default and optimal temperature can be as high as 3.7%",
+   "note": null,
+   "where": "1, 5.2"
+  },
+  {
+   "claim": "A bigger datastore keeps helping almost linearly; even a 5% datastore (about 15GB) beats the base LM.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "datastore randomly subsampled, Figure 2",
+   "quote": "Even with just 5% of the datastore size",
+   "note": "read from Figure 2",
+   "where": "4.2"
+  },
+  {
+   "claim": "Simply giving each word type more trained embeddings (over-parameterising the softmax) is only about half as effective as kNN-LM and does not improve consistently with n.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "n embeddings per word type, Figure 3",
+   "quote": "although only about half as effective as kNN-LM",
+   "note": null,
+   "where": "4.2"
+  },
+  {
+   "claim": "Ruled out: ensembling with another model, sparsification, memorisation, soft labels, stolen probabilities, optimising the interpolated loss.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 6 and Appendix E",
+   "quote": "Probably Wrong Hypotheses for Why kNN-LMs Work",
+   "note": null,
+   "where": "6"
+  }
+ ],
+ "limits": [
+  "One model family (268M Transformer), one dataset (WikiText-103), with a BPE vocabulary of 33K that gives a worse base perplexity than Khandelwal et al.'s 260K-vocabulary model; the authors argue relative gains are similar.",
+  "The datastore is the model's own training set; the paper explains why kNN-LM helps there, not how retrieval from fresh or external text helps.",
+  "The regularisation account of approximate search is a hypothesis; the authors present token-level correlations, not a causal test.",
+  "No confidence intervals or seeds are reported; perplexity only.",
+  "The 55% replacement still sits below kNN-LM and depends on combining two different layer views."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Generalization through Memorization: Nearest Neighbor Language Models",
+   "year": 2020,
+   "arxiv": "1911.00172",
+   "relation": "extends",
+   "note": "the kNN-LM being analysed",
+   "quote": null
+  },
+  {
+   "work": "Efficient Nearest Neighbor Language Models",
+   "year": 2021,
+   "arxiv": "2109.04212",
+   "relation": "related",
+   "note": "He et al.: PCA and clustering of datastore vectors",
+   "quote": null
+  },
+  {
+   "work": "Breaking the softmax bottleneck",
+   "year": 2017,
+   "arxiv": "1711.03953",
+   "relation": "related",
+   "note": "mixture of softmax tested as a capacity fix",
+   "quote": null
+  },
+  {
+   "work": "WikiText-103",
+   "year": 2016,
+   "arxiv": "1609.07843",
+   "relation": "uses-data",
+   "note": "evaluation corpus",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of the generalized formulation of kNN-LM in Equation 5.",
+   "page": 2,
+   "why": "shows kNN-LM as a second, very large softmax over datastore entries beside the parametric softmax"
+  }
+ ],
+ "code": [],
+ "problems": []
+}
