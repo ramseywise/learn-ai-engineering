@@ -5,7 +5,7 @@ sources:
   - ../practice/courses/wesleyan_inferential_statistics.py
   - ../practice/courses/umich_statistical_analysis.py
   - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 1 to 6 and 9 to 12; figures not printed in the chapters are cited as reported by Reinhart)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 1-4 and 9, testing, optimality, optional stopping, log-rank)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 1-4 and 9, testing, optimality, optional stopping, log-rank; ch. 13-15 and 20-21, BIC, large-scale testing, selection effects)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 3, Statistical Experiments and Significance Testing)
   - https://doi.org/10.1080/00031305.2016.1154108 (ASA statement on p-values, The American Statistician, 2016)
   - https://doi.org/10.1111/j.2517-6161.1995.tb02031.x (Benjamini and Hochberg, JRSS B, 1995)
@@ -83,6 +83,8 @@ print("under H0, share of p in bins:", np.histogram(pv, bins=[0, .05, .25, .5, .
 ```text
 under H0, share of p in bins: [0.05057 0.19972 0.24795 0.25152 0.25024]
 ```
+
+Why resampling tests spread only after 1980 is a computing story. Efron and Hastie's map of fifteen postwar methods marks the permutation-style and bootstrap tools as computer-intensive, while Kaplan-Meier estimates "can be done by hand (and were)" and the Cox partial likelihood is "a quintessential Fisherian device" (*Computer Age*, ch. 14).
 
 ### What a p-value is not
 
@@ -294,7 +296,13 @@ The vast search effect is the same arithmetic in disguise. Give 20,000 people te
 | Holm | family-wise error rate | step-down Bonferroni; uniformly more powerful | always prefer over plain Bonferroni |
 | Benjamini-Hochberg | false discovery rate (share of rejections that are false) | sort p, reject p₍ᵢ₎ ≤ (i/m)·α | many tests (metrics dashboards, genes, feature screens) |
 
-The Benjamini-Hochberg procedure comes from their [1995 paper](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x) (*JRSS B*). Efron and Hastie build the empirical-Bayes view of it in *Computer Age Statistical Inference*, ch. 15. Here are the methods on 100 tests, ten of which have a real effect:
+The Benjamini-Hochberg procedure comes from their [1995 paper](https://doi.org/10.1111/j.2517-6161.1995.tb02031.x) (*JRSS B*). Efron and Hastie build the empirical-Bayes view of it in *Computer Age Statistical Inference*, ch. 15, and their prostate study shows how far apart the rules sit. Of 6,033 genes (52 patients, 50 controls), Bonferroni at a one-sided 0.05 leaves only four. On the 50 largest z-values, Holm at α = 0.1 rejects 7 (z ≥ 4.14) and Benjamini-Hochberg at q = 0.1 rejects 28 (z ≥ 3.33) (*Computer Age*, ch. 15).
+
+![Ordered p-values of the 50 largest prostate z-values against the FDR line, which admits 28 genes, and Holm's line, which admits 7](../../sources/images/computer-age-statistical-inference-fig15-3.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 15.3. Prostate data, right tail, α = q = 0.1.*
+
+Benjamini-Hochberg controls the false discovery rate at π₀·q (π₀ is the share of true nulls), which is at most q, if the null p-values are independent. Rejecting by the rule is the same as rejecting when the estimated tail-area false-discovery rate of the case is at most π₀·q, and that rate reads as the posterior probability that the case is null. The 50th-largest gene (z = 2.99) has a q-value of 0.168. The *local* version, fdr, is the same probability at the gene's own z rather than for everything beyond it, so it runs higher, and the working cutoffs are Fdr ≤ 0.1 but fdr ≤ 0.2; the latter flags 27 right-tail and 25 left-tail genes, and with π₀ ≥ 0.9 it is a Bayes factor of at least 36 against the null. All of this leans on the null being right. In a study of 2,749 New York police officers' stop records, a theoretical N(0, 1) null gives 216 officers with fdr ≤ 0.2, and a null fitted to the central z-values, N(0.10, 1.40²), gives four (*Computer Age*, ch. 15). The estimated null proportion also depends on the fitting method: for the prostate genes, local-fdr software gives π₀ = 0.984 and the prior-fitting (g-modelling) approach 0.946 (*Computer Age*, ch. 21). Here are the methods on 100 tests, ten of which have a real effect:
 
 ```python
 from statsmodels.stats.multitest import multipletests
@@ -360,7 +368,7 @@ share of significant results with the wrong sign 0.009
 
 The test has 17% power, and the estimates that reach significance average 2.5 times the truth, with almost 1% of them pointing the wrong way. Anyone who ships on that result and forecasts the effect from it will be disappointed later. It is why a replication or holdback often shows a smaller effect than the launch analysis, without anything having gone wrong except selection.
 
-The same selection effect appears in genomics. Of 6,033 gene-effect estimates, the largest is 5.29 (52 patients against 50 controls), and taking it at face value overestimates it: an empirical-Bayes prior fitted to all 6,033 gives 4.11 (*Computer Age*, ch. 3). Bayesian answers are immune to selection only if the prior is genuine, and an uninformative one gives no protection.
+The same selection effect appears in genomics. Of 6,033 gene-effect estimates, the largest is 5.29 (52 patients against 50 controls), and taking it at face value overestimates it: an empirical-Bayes prior fitted to all 6,033 gives 4.11 (*Computer Age*, ch. 3). Tweedie's formula, which corrects a z-value by the slope of the log of the fitted marginal density, shrinks the same gene to 4.03, and at z = 3.5 gives an expected effect of 1.96, with a local fdr of 0.15 (*Computer Age*, ch. 20). Bayesian answers are immune to selection only if the prior is genuine, and an uninformative one gives no protection.
 
 Reinhart (ch. 2, all as reported) puts field numbers on the cause: the median neuroscience study has about 20% power, fewer than 3% of *Science* and *Nature* articles compute power before starting, and more than four-fifths of negative randomised trials in major medical journals (1975 to 1990) could not have detected a 25% difference. Halving heart-attack death risk from 20% to 10% at 80% power needs 400 patients, 200 per arm; 50 would feel adequate and is far too few. At the extreme, for a true 0.3% shift in a birth sex ratio, the rare significant results overstate it at least twentyfold and 40% of them point the wrong way, against 0.9% in the 17%-power run above, because power falls toward α and the sign becomes close to a coin flip. Power can also be found by simulation: generate many datasets with the expected effect and count the share that come out significant.
 

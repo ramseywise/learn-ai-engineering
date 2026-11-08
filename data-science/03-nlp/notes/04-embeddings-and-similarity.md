@@ -375,6 +375,15 @@ on unit vectors, -L2 gives the same order as dot: True
 
 The raw dot product is unbounded and grows with vector length, so it favours long vectors. On GloVe the effect is modest, because norms vary little: its neighbours have slightly longer vectors and "queen" drops out of the top six. In count-based vectors the long ones are frequent, uninformative words, and it is much worse. Cosine divides the length out. **Normalise before cosine or dot product.** With L2-normalised vectors, cosine similarity is the dot product and Euclidean distance is a monotone function of it, so all three rank neighbours identically, as the last line confirms. Vector databases rely on this.
 
+### What the first edition adds (*Text Analytics with Python*, 1st ed., ch. 6)
+
+The first edition covers Hamming, Manhattan, Euclidean, Levenshtein, cosine, Hellinger-Bhattacharya and BM25, but not Jaccard, so that row comes from the second-edition notebook. Four points sharpen the table (*Text Analytics with Python*, 1st ed., ch. 6).
+
+- **What counts as a metric.** A distance must be non-negative, zero only for identical items, symmetric and satisfy the triangle inequality. KL divergence fails symmetry. Hamming, Manhattan and Euclidean raise an error on strings of different length ("Believe" is 7 characters, "Elephant" is 8), and Levenshtein does not. Levenshtein is bounded below by the length difference and above by the longer length.
+- **Cosine ignores order.** On the book's 9-document toy corpus, "The fox is definitely smarter than the dog" scores 1.0 against "The dog is smarter than the fox". "Definitely" is dropped and the order is lost.
+- **Rankers disagree.** Hellinger-Bhattacharya on TF-IDF gave 0.96 for the second animal document and a different second hit from cosine and BM25 for the Java query, yet the author calls the results quite similar. BM25 with k1=1.5 and b=0.75 scores the top animal document 7.334, in the usual ranges the note gives. No relevance judgements are used, so nothing says which ranker is better.
+- **Clustering 100 IMDb synopses.** TF-IDF with `min_df=0.24` and `max_df=0.85` gives 307 features. K-means with k=5 gives sizes 29, 5, 21, 15 and 30. Affinity propagation with defaults finds 17 clusters of 2 to 12 films, which fits the many-small-clusters behaviour in [topic models](03-topic-models-and-summarization.md). The chapter scores no clustering and warns that centroid keywords may not show a cluster's theme, so run a topic model per cluster.
+
 ## A content-based recommender (Sarkar ch. 7b)
 
 Recommend TMDB films similar to one you liked, from descriptions alone.

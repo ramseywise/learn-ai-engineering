@@ -12,6 +12,7 @@ sources:
   - https://arxiv.org/abs/1603.02754
   - https://arxiv.org/abs/2207.08815
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
+  - Bruce, Bruce and Gedeck, Practical Statistics for Data Scientists, 2nd ed. (O'Reilly, 2020), ch. 6
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -233,6 +234,8 @@ On this table the whole search moves AUC by under 0.003, about the size of the s
 | 6 | L1 and L2 on leaf weights | 0 to 10 on a log scale | Usually the smallest effect |
 
 ISLP's textbook version of the recipe agrees on its shape: a small shrinkage such as 0.01 or 0.001, rounds chosen by cross-validation, and shallow trees, where depth 1 (stumps) gives an additive model with no interactions and often works well; on its 15-class gene-expression data (349 patients, 500 genes) depth 1 slightly beat depth 2, and both beat a random forest, but with a standard error near 0.02 the gaps are not significant (*ISLP*, ch. 8).
+
+Untuned XGBoost overfits visibly. On the loan-default table (46,272 rows, balanced between paid off and default), 250 rounds with defaults reach 14.6% training error but 0.3715 error on 10,000 held-out rows. (The book's prose says 36.2% for the test error; the printed output is 0.3715, so the prose is the slip.) Refitting with `lambda=1000`, `eta=0.1` and `subsample=0.63` gives 33.2% training and 0.3483 test error, so the gap nearly closes and the test error improves by about 2.3 points. Because `eta` and `subsample` changed in the same run, the gain is not attributable to the L2 penalty alone, and it is one split with no repeat (*PSDS*, ch. 6).
 
 Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don't report the score it finds as the final one: reserve a test set, or use [nested CV](04-model-evaluation.md#nested-cross-validation).
 

@@ -2,7 +2,7 @@
 origin: synthesis
 sources:
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 2, Data and Sampling Distributions)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 1-2, 4-5, 10-11)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 1-2, 4-5, 10-11, 20)
   - https://doi.org/10.1214/aos/1176344552 (Efron, Bootstrap Methods, Annals of Statistics, 1979; not held)
   - https://doi.org/10.1007/s10618-008-0114-1 (sample-size rule of thumb)
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 8, Estimation)
@@ -339,6 +339,16 @@ row bootstrap SE 0.0272, cluster bootstrap SE 0.0474, true SE 0.0490
 **Dependent rows.** Resampling rows breaks the structure. Here the row bootstrap reports a standard error of 0.027, when the truth is 0.049; resampling whole users gives 0.047. Resample at the unit that was independent. That is usually the user, and for time series you need a block bootstrap, as in [the time-series pillar](../../../data-science/05-time-series-and-recommenders/README.md).
 
 **Tiny samples and heavy tails.** The resamples can only contain what the sample has. If no whale happened to be sampled, none will appear in the resamples, and the interval has no way of knowing it is missing.
+
+### Estimating after you selected
+
+Everything above treats the model as fixed in advance. If the data chose the model, the interval has to include that choice. Efron and Hastie's cholesterol example has 164 pairs of compliance and cholesterol decrease, and Cp picks the polynomial degree. They bootstrap the whole recipe, selection included: at compliance −2 the 4,000 resamples give a standard error of 5.98 for the adaptive fit against 3.97 for a cubic fixed in advance. Averaged over the compliance range the ratio is 1.43, so a ±1.96 interval from the fixed-model formula is about 43% too short. Cp chose the straight line in 19% of the resamples, and those resamples drag the estimate down by about 10 units, which is why the adaptive histogram has a heavy left shoulder. Averaging the fit over bootstrap resamples (bagging) smooths the jumps and cuts the standard error by about 12% (*Computer Age*, ch. 20).
+
+![Histograms of bootstrap estimates for the adaptive and fixed-degree fits; the adaptive one is wider with a left shoulder](../../sources/images/computer-age-statistical-inference-fig20-4.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 20.4. 4,000 nonparametric bootstrap replications at adjusted compliance c = −2; standard errors 5.98 (adaptive) and 3.97 (fixed degree 3).*
+
+When the question is about many coefficients picked after looking, the formula route is Scheffé's: on the diabetes data (n = 442, 10 predictors) the 95% simultaneous intervals for all linear combinations are 2.19 times wider than the single-coefficient t intervals, a multiplier of 4.30 against 1.97 (*Computer Age*, ch. 20).
 
 ## Power and sample size, the estimation view
 

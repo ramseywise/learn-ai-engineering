@@ -4,6 +4,8 @@ sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 2-4, 6, 9, 10
+  - Bruce, Bruce and Gedeck, Practical Statistics for Data Scientists, 2nd ed. (O'Reilly, 2020), ch. 6
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 8
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://www.coursera.org/specializations/machine-learning-introduction
   - ../practice/ng-machine-learning/ex1/ex1.ipynb
@@ -77,6 +79,8 @@ for k in range(1, 11):
 ```
 
 The single-neighbour model gets every training point right and is the worst on test. That is overfitting made visible.
+
+KNN also yields a score, not just a vote: the fraction of the $k$ neighbours in the positive class. In PSDS's loan example, 14 of the 20 nearest loans to a new one defaulted, so the label is default and the propensity is $14/20 = 0.7$. That fraction is what lets you move the cutoff below 0.5 when the positive class is rare (*PSDS*, ch. 6).
 
 ISLP puts numbers on the same U-shape with a known answer. On its simulated two-class data (100 points per class), the best any classifier can do is the Bayes error, 0.1304 on the test set; KNN with $K=10$ gets 0.1363, while $K=1$ and $K=100$ get 0.1695 and 0.1925 (low bias and high variance at one end, the reverse at the other). Over 200 training and 5,000 test points the test error is U-shaped in $1/K$ with its minimum near $K=10$ and the training error is 0 at $K=1$ (*ISLP*, ch. 2; the chapter prints the Bayes error as 0.133 in one place and 0.1304 in another). Against OLS, KNN pays for dimension: with 50 training points and a strongly non-linear truth it wins at one or two predictors and loses from four, and adding noise predictors up to $p=20$ multiplies its test MSE more than ten-fold (*ISLP*, ch. 3, Figs. 3.19 and 3.20, simulated data).
 
@@ -268,6 +272,13 @@ A tree grown until every leaf is pure memorises the training set. M&G's breast-c
 - **No scaling needed.** Each split looks at one feature at a time.
 - **Trees can't extrapolate.** On the RAM-price time series (M&G ch. 2), a tree predicts the last known price forever after the training range, while a linear model on log-price continues the trend.
 
+Efron and Hastie's spam tree shows what a grown tree looks like on real data (4,601 emails, 40% spam, 57 word and character frequencies that the book standardises, so some split values are negative). Seven leaves, each labelled with its ham/spam counts, and the first split is on the proportion of `$` characters:
+
+![Regression tree on the spam data: seven leaves with ham/spam counts such as 2462/275 and 70/990, splits on char$, remove, char!, capruntot, free and hp](../../sources/images/casi-fig8-7.png)
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 8.7*
+
+The leaf counts add up to the full 2,788 ham and 1,813 spam, so the error rates can be recomputed: 134 ham fall in spam-labelled leaves (4.8%) and 314 spam in ham-labelled leaves (17.3%). The caption prints 5.2% and 17.4%, so the ham rate does not match its own leaves (the text also calls this tree "Figure 8.6" when it means 8.7). Both rates are apparent, on the training emails, and the authors note trees are unstable and easy to over-interpret (*Computer Age*, ch. 8).
+
 A single tree is rarely the best model. Its value is as the building block of [06 — ensembles](06-ensembles.md), where random forests and gradient boosting fix its variance.
 
 ---
@@ -354,7 +365,7 @@ print(round(mlp.score(StandardScaler().fit(X_train).transform(X_test), y_test), 
 | `activation` | `relu` (default) or `tanh` |
 | `random_state` | Different seeds give visibly different boundaries on small data |
 
-The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). ISLP's own tabular comparison agrees on the point that matters: on Hitters (263 players, 176 train and 87 test, one split) a 64-unit network with 1,345 parameters has test MAE 257.4, against 254.7 for linear regression and 252.3 for the lasso, and its authors say they spent a fair bit of time tuning the network to get there and advise Occam's razor. Their own lab run with a different network flips the order (229.5 against 259.7 and 257.2), so a few points either way on one 87-row test set is noise (*ISLP*, ch. 10). Where the network clearly wins is MNIST: 1.8% error against 7.2% for multinomial logistic regression. [neural network basics](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) builds them from scratch.
+The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). ISLP's own tabular comparison agrees on the point that matters: on Hitters (263 players, 176 train and 87 test, one split) a 64-unit network with 1,345 parameters has test MAE 257.4, against 254.7 for linear regression and 252.3 for the lasso, and its authors say they spent a fair bit of time tuning the network to get there and advise Occam's razor. Their own lab run with a different network flips the order (229.5 against 259.7 and 257.2), so a few points either way on one 87-row test set is noise (*ISLP*, ch. 10). Where the network clearly wins is MNIST: the text reports 1.8% error for a dropout network against 7.2% for multinomial logistic regression, and the book's own lab run of a similar network gets 3.2% (accuracy 0.9681) against 0.9241 for the logistic baseline, so the gap is real but its size depends on the run. [neural network basics](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) builds them from scratch.
 
 ---
 

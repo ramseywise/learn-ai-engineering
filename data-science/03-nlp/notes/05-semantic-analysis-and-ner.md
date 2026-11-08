@@ -164,6 +164,8 @@ The same text can go through Stanford's CRF-based tagger (`nltk.tag.StanfordNERT
 | Hugging Face token classification | Fine-tuned BERT-style | Any | `pipeline("ner")` ([transformers pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines)) |
 | LLM extraction | Prompted | Any, defined in the prompt | Flexible schema; check precision |
 
+Sarkar's first-edition chapter 7 compares Stanford's 3-class CRF with NLTK's `ne_chunk` on one Bayern Munich paragraph judged by eye with no gold labels. The CRF gives 9 entities with no misclassifications, while `ne_chunk` gives 14 rows with errors such as Bayern as a person and "Overall" as a place. The author notes that this does not make Stanford better in general (*Text Analytics with Python*, 1st ed., ch. 7). The same chapter reports WordNet at over 155,000 words and 117,000 synsets, `tree.n.01` with 180 direct hyponyms, and path similarity of 0.33 for lion and tiger against 0.07 to 0.13 for tree and any animal. The entity-level F1 in the next sections is the stronger evidence.
+
 ### Chunking: the feature ladder (*NLP with Python*, ch. 7)
 
 NER is chunking with entity types, and the NLTK book's noun-phrase chunker shows how each addition pays on the CoNLL-2000 Wall Street Journal split (270k words; scores on its test set, NP chunks only, one run each; IOB accuracy counts tokens, F counts exact chunk matches) (*NLP with Python*, ch. 7):

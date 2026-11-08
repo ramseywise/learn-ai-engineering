@@ -369,6 +369,19 @@ Both open with the defining sentence, and at eight sentences they share five. Sa
 | TextRank (embeddings) | Same with semantic similarity | Paraphrases count | Needs vectors; averaged word vectors are crude |
 | LLM | Generates | Fluent, abstractive | Can hallucinate; evaluation is hard |
 
+## What the first edition adds
+
+Sarkar's first-edition chapter 5 works on toy inputs of 8, 9 and 13 sentences with no ROUGE, coherence or human rating, so read its numbers as demonstrations (*Text Analytics with Python*, 1st ed., ch. 5). Four points sharpen this note.
+
+- **Keyphrase scores tie on rarity.** With one TF-IDF document per sentence, phrases that occur in a single sentence tie at 0.707, so "pillar-like legs" outranks a repeated topic word such as "elephants". Its grammar adds an optional determiner (`<DT>?`) to the one above.
+- **Raw collocation counts and PMI fail in opposite ways.** On *Alice in Wonderland* "said alice" occurs 123 times and speech tags dominate, while unfiltered PMI returns one-off pairs. The book never adds a minimum-count filter, and the note's does.
+- **Topic models and the input they take.** On an 8-document toy corpus LSI, LDA and NMF all recover the animals versus programming split with two topics. On Skyrim reviews with five topics, scikit-learn's LDA fitted on TF-IDF gave junk topics, while LSI, gensim LDA and NMF gave readable ones. The book does not comment, but it is a worked case of this note's rule that LDA takes counts. Its claim that NMF "works the best even with small corpora" rests on the toy example only.
+- **Summaries agree only partly.** LSA on a 9-sentence text picks sentences 1, 5 and 8 (top score 5.24), and TextRank picks 0, 3 and 8 with scores between 0.106 and 0.119, which is how flat PageRank scores are on a dense similarity graph. On the 13-sentence Skyrim description both methods keep 3 sentences and share 2 of them. The book's own helpers have bugs (`lsa_text_summarizer` reads a global `sentences`, and `textrank_text_summarizer` ignores its arguments), so use the note's versions.
+
+![PageRank scores on a small network: a link from an important page counts for more than extra links](../../sources/images/sarkar-text-analytics-fig5-4.png)
+
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 5-4*
+
 ## Notebooks
 
 | Notebook | Covers | Runs |

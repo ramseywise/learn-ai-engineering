@@ -1,0 +1,258 @@
+{
+ "schema": 1,
+ "key": "sha1:06f6a1d2e340",
+ "pdf": "generative-ai/05-RL/sources/bandit-algorithms/ch18-contextual-bandits.pdf",
+ "bib": {
+  "title": "Contextual Bandits (Chapter 18, Bandit Algorithms)",
+  "authors": [
+   "Tor Lattimore",
+   "Csaba Szepesvári"
+  ],
+  "first_author": "Lattimore",
+  "year": 2020,
+  "venue": "Bandit Algorithms, Cambridge University Press (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 28764,
+  "chars_total": 28764,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should regret be defined and minimised in k-armed bandits when a context is observed each round, so the learner competes with context-dependent policies?",
+ "hypothesis": null,
+ "contributions": [
+  "Contextual regret as best context-dependent policy in hindsight (Eq 18.1, 18.5)",
+  "Bandits-with-expert-advice framework generalising contextual bandits",
+  "Exp4 algorithm and regret bound sqrt(2nk log M)",
+  "Data-dependent bound via expert agreement E*_n (Theorem 18.3)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Exp4 with gamma=0 and eta=sqrt(2 log(M)/(nk)) has expected regret at most sqrt(2nk log M) against the best of M oblivious experts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected regret R_n (Eq 18.6)",
+   "value": "sqrt(2nk log M)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "k-armed adversarial bandit, rewards in [0,1], M oblivious experts, known horizon n, gamma=0",
+   "quote": "Theorem 18.1. Let γ = 0 and η =",
+   "table": null,
+   "note": "Quote is the theorem's first line; the bound itself is split across lines in the text. Book proof, so kind measured is used for the book's own derivation.",
+   "where": "Theorem 18.1, Eq. 18.7"
+  },
+  {
+   "claim": "Per-context Exp3 gives regret at most 2 sqrt(nk|C| log k) when all contexts are equally frequent, and the bound is vacuous for n <= 4k|C| log(k).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "4k|C| log(k)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite context set C, one anytime Exp3 per context, adversarial rewards in [0,1]^k",
+   "quote": "the second bound is completely",
+   "table": null,
+   "note": null,
+   "where": "18.1 after Eq 18.4"
+  },
+  {
+   "claim": "Applying Exp4 to all functions C->[k] (M = k^|C|) recovers the sqrt(2nk|C| log k) bound; for any finite policy class Phi the regret is at most sqrt(2nk log|Phi|), with C possibly infinite.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Experts E_mi = I{phi(c_t)=i}",
+   "quote": "if C is arbitrary (possibly inﬁnite) and Φ is a ﬁnite set",
+   "table": null,
+   "note": null,
+   "where": "18.4 after proof of Thm 18.1"
+  },
+  {
+   "claim": "With time-varying learning rate eta_t = sqrt(log(M)/E*_t), Exp4 has data-dependent regret at most C sqrt(E*_n log M), where E*_n <= n min(k,M) measures expert disagreement; the algorithm is anytime.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as Thm 18.1; E*_t = sum_s sum_i max_m E_mi; C a universal constant; proof left as Exercise 18.4",
+   "quote": "Theorem 18.3. Assume the same conditions as in Theorem 18.1, except let",
+   "table": null,
+   "note": null,
+   "where": "Theorem 18.3, Eq 18.14"
+  },
+  {
+   "claim": "In the stochastic (iid context/reward) contextual bandit with an ERM optimisation oracle, explore-then-commit gets O(n^{2/3}) regret; Agarwal et al. 2014 achieve about the sqrt(nk log|Phi|) rate in polynomial time.",
+   "kind": "reported",
+   "source": "Agarwal et al. 2014; Langford and Zhang 2008 (epoch-greedy)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iid context/reward pairs, finite policy class Phi, argmax oracle; Exercise 18.8 gives O(n^2/3 (k log|Phi|)^1/3)",
+   "quote": "which has O(n2/3) regret (Exercise 18.8)",
+   "table": null,
+   "note": null,
+   "where": "Note 5"
+  }
+ ],
+ "limits": [
+  "Chapter focuses on the k-armed adversarial model; stochastic contextual bandits only in Notes 5 and Exercises 18.8-18.9.",
+  "No linear contextual bandit or LinUCB treatment in this chapter (linear/stochastic linear bandits come in later chapters).",
+  "Exp4 uses O(M) memory and O(M+k) time per round, impractical for large M or k.",
+  "Experts assumed oblivious; non-oblivious case only via weaker regret R'_n (Exercise 18.6).",
+  "High-probability bounds and lower bounds not developed (Note 8); no experiments."
+ ],
+ "practices": [
+  "Choose the competitor class Phi to trade meaningfulness of regret against learning cost; larger class means larger regret (Notes 1).",
+  "With finite contexts and enough data, run one anytime Exp3 per context; ignore context when n is small (18.1).",
+  "With large structured context sets, define a policy/expert class (partitions, similarity functions, or supervised-learned predictors) and run Exp4 over it (18.2).",
+  "Use Exp4 as a building block by defining your own experts (Note 2).",
+  "For stochastic contexts, reduce to cost-sensitive ERM using an optimisation oracle (Note 5)."
+ ],
+ "terms": [
+  {
+   "term": "contextual regret",
+   "definition": "Regret against the best context-dependent policy in hindsight, R_n = E[sum_c max_i sum_{t:c_t=c}(x_ti - X_t)] (Eq 18.1)",
+   "where": "18.1"
+  },
+  {
+   "term": "bandits with expert advice",
+   "definition": "k-armed adversarial bandit where M experts announce distributions over actions each round; regret against the best expert (Eq 18.6); contextual bandits arise when experts are static C->[k] maps",
+   "where": "18.2.1, Note 3"
+  },
+  {
+   "term": "Exp4",
+   "definition": "Exponential weighting for exploration and exploitation with experts: keep distribution Q_t over experts, play P_t = Q_t E(t), update Q by exponential weighting of propagated reward estimates",
+   "where": "18.3, Algorithm 11"
+  },
+  {
+   "term": "Exp4-IX",
+   "definition": "Exp4 with gamma>0 (implicit exploration), left to Exercise 18.3 for high-probability bounds",
+   "where": "18.4"
+  },
+  {
+   "term": "E*_n",
+   "definition": "Sum over rounds and actions of the max over experts of their probability on that action; effective-number-of-experts measure, E*_n <= n min(k,M)",
+   "where": "18.4, Eq 18.13"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Auer et al. 2002b (Exp4)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Exp4 introduced there; Theorem 18.1 matches their theorem 7.1 with a slightly smaller constant",
+   "quote": null
+  },
+  {
+   "work": "McMahan and Streeter 2009",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Agreement among experts matters; Theorem 18.3 inspired by it",
+   "quote": null
+  },
+  {
+   "work": "Agarwal et al. 2014",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Efficient stochastic contextual bandit via ERM oracle",
+   "quote": null
+  },
+  {
+   "work": "Neu 2015a",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "High-probability bounds for Exp4-IX",
+   "quote": null
+  },
+  {
+   "work": "Beygelzimer et al. 2011",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "High-probability via Exp3.P; VC-dimension application",
+   "quote": null
+  },
+  {
+   "work": "Langford and Zhang 2008",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Epoch-greedy algorithm",
+   "quote": null
+  },
+  {
+   "work": "Dudik et al. 2011",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Early reduction to cost-sensitive ERM",
+   "quote": null
+  },
+  {
+   "work": "Tewari and Murphy 2017",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "History of contextual bandits",
+   "quote": null
+  },
+  {
+   "work": "Kakade et al. 2008",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bandit multiclass classification mistake bounds",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 18.1",
+   "caption": "Interaction protocol for k-armed contextual bandits.",
+   "page": 2,
+   "why": "Shows adversary fixes rewards and contexts, learner sees c_t before acting."
+  },
+  {
+   "figure": "Figure 18.2",
+   "caption": "Prediction with expert advice. The experts, upon seeing a foot give expert advice on what socks should fit it best.",
+   "page": 4,
+   "why": "Cartoon intuition for experts; decorative."
+  },
+  {
+   "figure": "Figure 18.3",
+   "caption": "Interaction protocol for bandits with expert advice.",
+   "page": 5,
+   "why": "Learner sees expert matrix E(t) in [0,1]^{M x k} instead of the context."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 11 (Exp4)",
+   "snippet": "Q_1=(1/M,...,1/M); P_t = Q_t E(t); Xhat_ti = 1 - I{A_t=i}/(P_ti+gamma) (1 - X_t); Xtilde_t = E(t) Xhat_t; Q_{t+1,i} ∝ exp(eta Xtilde_ti) Q_ti",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Math rendering in the text cache is fragmented, so some result quotes are only the start of a formula-bearing sentence.",
+  "Chapter has no LinUCB or linear contextual bandit content, contrary to the mapped note bullets."
+ ]
+}

@@ -7,6 +7,7 @@ sources:
   - https://arxiv.org/abs/1503.01603 (Pearl and Bareinboim, External Validity, §§1-4.1)
   - https://www.statsmodels.org/stable/index.html
   - https://scikit-learn.org/stable/modules/cross_validation.html
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 12, cross-validation and Cp; ch. 13, BIC and Bayes factors)
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -292,6 +293,18 @@ CV         0.0       0.70   0.18      0.08       0.04
 You might expect more data to improve every rule. It did not. BIC starts high and rises from 95% to 98%. The others stay where they were: AIC near 78%, cross-validation near 70%, adjusted R² at 39%. The reason is in their penalties. An unneeded term improves fit by a chance amount whose distribution does not depend on n, and AIC's penalty of 2 per term also does not, so AIC keeps adding a surplus term at a fixed rate. BIC's penalty of `log n` grows, so it stops. Adjusted R² has the lightest penalty, which is why it is the worst here.
 
 This is less alarming than it looks. AIC and cross-validation aim to predict well rather than to name the true form, and the surplus terms cost little: 0.510 against 0.496 of held-out RMSE in the table above. And real life rarely puts the true form among the candidates, which is the case BIC's guarantee depends on.
+
+The penalties also disagree with the p-value as n grows. For one extra covariate, Efron and Hastie's table of the BIC Bayes factor holds a z of 3.29 (p = 0.001) fixed and lets n grow: at n = 10,000 the Bayes factor is only 2.24, "barely worthwhile" on Jeffreys' scale, while Fisher's scale calls p = 0.001 overwhelming evidence. The same chapter puts numbers on the penalty size for one extra parameter: with AIC the larger model wins a null comparison with probability 0.157, with BIC at n = 10,000 only 0.0024, and a penalty of 1.92 per parameter (the cn in the paper's notation) would reproduce the 5% test (*Computer Age*, ch. 13).
+
+### What cross-validation estimates, and where it breaks
+
+Cross-validation corrects the optimism of the apparent error, and the correction can be large. Efron and Hastie's supernova example has N = 39 stars and 10 predictors, with a lasso whose penalty is chosen by Cp. Its apparent mean squared error is 0.72 and its cross-validated error 1.17, 62% higher, so R² falls from 0.816 to 0.701 (13 random groups of 3). Two cautions follow from their simulations. First, cross-validation estimates the average error of the *recipe*, not of the rule you ended up with: over 500 bootstrap datasets from those 39 pairs the mean cross-validated error is 1.07 against a true error of 1.02 (apparent 0.57), yet across datasets the two are negatively correlated (about −0.175, sign confirmed on the figure), so a lucky split does not mean a lucky fit (*Computer Age*, ch. 12). Second, random splits assume that future rows look like past ones. In a simulated study of 360 subjects and 100 genes where each gene's signal is a transient episode of about 30 days, a random forest scores 15% error both in cross-validation and on a random held-out 60 days, and 27% when the same 60 held-out days come after the training days.
+
+![Random Forest prediction error against number of trees, for a random split (top) and a later-days split (bottom)](../../sources/images/computer-age-statistical-inference-fig12-6.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 12.6. Blue is test error, black is cross-validated training error; simulated study of 360 subjects, training on 300 days.*
+
+When a believable parametric model exists, the Cp-style covariance penalty is preferable to cross-validation (*Computer Age*, ch. 12). Where the data are ordered in time, split by time, as in [forecasting](../../06-applied-analyses/notes/01-forecasting.md).
 
 ---
 

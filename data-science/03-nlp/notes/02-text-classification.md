@@ -206,6 +206,25 @@ tuned TF-IDF,      macro-F1 0.423
 
 Word2vec trained on this small corpus reaches 0.35, below TF-IDF's 0.42, as in Sarkar. About 2,900 short documents is not enough to train good vectors, and pretrained ones would do better. The sentence encoders in [LLM embeddings as features](07-llm-embeddings-as-features.md) are the fair comparison, and that chapter measures it.
 
+## The first edition's 20 Newsgroups run
+
+Sarkar's first-edition chapter 4 runs one case study, 20 Newsgroups, about 18,000 posts in 20 classes with headers, footers and quotes removed, split with `test_size=0.33` and `random_state=42` (*Text Analytics with Python*, 1st ed., ch. 4). The models use default hyperparameters, there is a single run, and the scores are weighted averages. The chapter says tuning is out of scope, so its 77% is untuned.
+
+| Model and features | Accuracy |
+|---|---|
+| Hinge-loss SGD (a linear SVM) on TF-IDF | 0.77 |
+| Multinomial Naive Bayes on TF-IDF | 0.72 |
+| Multinomial Naive Bayes on counts | 0.67 |
+| SVM on counts | 0.61 |
+| SVM on averaged word2vec (size 500) | 0.55 |
+| SVM on TF-IDF-weighted averaged word2vec | 0.53 |
+
+Naive Bayes gains five points from TF-IDF and the SVM gains sixteen, and weighting the averaged word vectors by TF-IDF does not help. The confusions are between neighbouring topics: atheism with Christianity, politics with guns, and miscellaneous religion with Christianity. The book says tree ensembles are "very prone to overfitting" on text, and it does not run an experiment to show it (*Text Analytics with Python*, 1st ed., ch. 4). Its Figure 4-2 is the shape to copy: normalisation and feature extraction are shared by the training and prediction paths.
+
+![Blueprint of a text classification system with shared normalisation and feature extraction](../../sources/images/sarkar-text-analytics-fig4-2.png)
+
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 4-2*
+
 ## Held-out discipline, from the NLTK book
 
 Bird, Klein and Loper teach classification with small NLTK experiments whose numbers still make the points that matter (*NLP with Python*, ch. 5 and 6). The setups are single runs on small corpora, so read them as demonstrations, not benchmarks.

@@ -13,6 +13,9 @@ sources:
   - https://doi.org/10.1186/s12864-019-6413-7
   - https://doi.org/10.1109/ICPR.2010.764
   - https://doi.org/10.1145/1102351.1102430
+  - Bruce, Bruce and Gedeck, Practical Statistics for Data Scientists, 2nd ed. (O'Reilly, 2020), ch. 5
+  - VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 5
+  - Wilson, Machine Learning Engineering in Action (Manning, 2022), ch. 6
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -59,6 +62,8 @@ What it doesn't do: return a model. `cross_val_score` evaluates a *procedure*; r
 
 **How many folds, and what CV is good for.** ISLP's advice is $k=5$ or 10, because leave-one-out has the least bias but averages $n$ highly correlated fits and so has high variance, while a single validation split is both noisy and trained on less data (*ISLP*, ch. 5). The noise is concrete: on the Auto data (392 cars, `mpg` on polynomials of `horsepower`, one 196/196 split) the linear, quadratic and cubic validation MSEs are 23.62, 18.76 and 18.80 at one seed and 20.76, 16.95 and 16.97 at another, so the level moves by about three MSE units with the split while the ranking holds. Leave-one-out and 10-fold agree closely there (degree 1 to 5: 24.23, 19.25, 19.34, 19.42, 19.03 against 24.21, 19.19, 19.28, 19.48, 19.14), and for least squares leave-one-out is free, since $\mathrm{CV}_{(n)} = \frac1n\sum_i\big((y_i-\hat y_i)/(1-h_i)\big)^2$ needs one fit and the leverages $h_i$ (*ISLP*, ch. 5, lab).
 
+The same ladder on one small table shows why each rung exists. A 1-nearest-neighbour classifier on iris (150 flowers) scores 1.0 on the rows it was fitted on, since it stores them; 0.907 on a 50/50 holdout; 0.96 and 0.907 when the two halves swap roles; 0.967, 0.967, 0.933, 0.933 and 1.0 over five folds (mean 0.96); and 0.96 under leave-one-out (150 fits). The book prints the last mean as an "error rate", but it is accuracy (*PDSH*, ch. 5). Every honest rung sits near 0.91 to 0.96 and the resubstitution score is the outlier.
+
 ![Training, test and 10-fold CV error for logistic regression with polynomial terms (left) and KNN (right) on simulated two-class data](../../sources/images/islp-fig5-8.png)
 *Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 5.8*
 
@@ -73,7 +78,7 @@ The figure shows what to trust CV for. The training error (blue) keeps falling w
 | `LeaveOneOut` | Very small data | $n$ fits; high-variance estimate |
 | `ShuffleSplit`, `StratifiedShuffleSplit` | Control train/test sizes and repeats independently; subsample large data | |
 | `GroupKFold` | Several rows per subject (patient, user, speaker) | The same group is never in train and test; otherwise you measure memorisation of the person |
-| `TimeSeriesSplit` | Temporal data | Always train on the past, test on the future |
+| `TimeSeriesSplit` | Temporal data | Always train on the past, test on the future. For a single holdout, cut at a date: train on rows up to it and test on rows after, then assert the two sizes add up to the source's (*MLEiA*, ch. 6) |
 | `RepeatedStratifiedKFold` | Small data; want a tighter estimate | |
 
 **The groups rule generalises:** the split must mirror how the model meets new data in production. New users → split by user. Next month → split by time.
@@ -201,6 +206,8 @@ Only the last is clearly useful.
 
 Always compare against a dummy. If accuracy barely beats it, accuracy is the wrong metric.
 
+The same collapse appears inside a fitted model. In PSDS's loan data 5.0% of loans default, and a logistic regression trained on all of them flags only 0.39% as defaults (log-odds above 0), under a twelfth of the expected number. Giving each defaulted loan weight $1/p$ (about 20, with $p$ the default rate) and paid-off loans weight 1 lifts the flagged share to 43%. The two fits differ in more than the weights (the first used a training split, the second all loans), so read the jump as an order of magnitude, not a controlled effect (*PSDS*, ch. 5).
+
 [Imbalance, errors and drift](10-imbalance-errors-and-drift.md#imbalance-what-each-remedy-does) tests what class weights, resampling and threshold moving each do when the positive class is rare.
 
 ### Confusion matrix, precision, recall, F1
@@ -271,6 +278,13 @@ This table comes back with new labels. In a [RAG pipeline](../../../generative-a
 
 `predict` thresholds `decision_function` at 0 or `predict_proba` at 0.5 ([02](02-supervised-learning.md#uncertainty-estimates)). Moving the threshold trades precision for recall without retraining.
 
+ISLP shows the cost of leaving it at 0.5 on its simulated `Default` data (10,000 customers, 333 defaulters, LDA on balance and student status, training data). Overall error is 2.75% against 3.33% for always answering "no default", yet 252 of the 333 defaulters (75.7%) are missed. Dropping the threshold to 0.2 cuts the missed share to 41.4% and raises overall error to 3.73%, because 235 non-defaulters are now flagged (*ISLP*, ch. 4).
+
+![Error rate against the posterior-probability threshold on the Default data: overall error (black) is nearly flat while the share of defaulters missed (blue, dashed) climbs steadily with the threshold](../../sources/images/islp-fig4-7.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 4.7*
+
+The curve is the reason overall error is a poor guide here: it barely moves while the miss rate on the rare class swings from near 0 to over 0.7. Pick the threshold from the costs of the two errors, not from the lowest total (*ISLP*, ch. 4, training-set errors).
+
 ```python
 from sklearn.metrics import precision_score, recall_score
 
@@ -323,7 +337,15 @@ print("AUC svc", round(roc_auc_score(y_test, svc.decision_function(X_test)), 3),
 AUC svc 1.0 rf 0.995
 ```
 
-ROC plots TPR against FPR over all thresholds. **AUC** is the probability that a random positive gets a higher score than a random negative: 0.5 is chance, 1.0 is perfect ranking. A random predictor always scores 0.5 regardless of class balance, which makes AUC a better model-selection metric than accuracy on imbalanced data.
+ROC plots TPR against FPR over all thresholds. It is also a sort and two cumulative sums (PSDS does this in R; tie-free scores give the same curve as `roc_curve`):
+
+```python
+idx = np.argsort(-score)                        # most likely positive first
+tpr = np.cumsum(y[idx]) / y.sum()               # recall after taking the top k
+fpr = np.cumsum(1 - y[idx]) / (1 - y).sum()     # 1 - specificity after the top k
+```
+
+Lift reads the same ranking against a budget. If the top decile holds 0.3% responders where picking blindly gives 0.1%, the lift there is 3 (the book's illustration). That is the natural chart when you can only audit, mail or call the top slice (*PSDS*, ch. 5). **AUC** is the probability that a random positive gets a higher score than a random negative: 0.5 is chance, 1.0 is perfect ranking. A random predictor always scores 0.5 regardless of class balance, which makes AUC a better model-selection metric than accuracy on imbalanced data.
 
 On M&G's digits "is it a 9?" example (*Introduction to ML with Python*, ch. 5; 47 nines in 450 test images), SVMs with `gamma` 1, 0.05 and 0.01 all have accuracy 0.90 (the dummy rate), but AUC 0.50, 0.90 and 1.00 (the book's prose says 0.5 for the middle one, but its printed output is 0.90). The model with `gamma=0.01` ranks perfectly; only the default threshold is wrong.
 
@@ -439,7 +461,7 @@ On the ten-class digits task with logistic regression (450 test images) the book
 | `weighted` | By class support | Default in `classification_report` |
 | `micro` | Every sample equally (= accuracy for single-label) | Each sample matters equally |
 
-**Regression.** $R^2$ (default `score`) is fine for model comparison. For reporting, use a unit the business understands: MAE (robust to outliers), RMSE (penalises big misses), MAPE (relative error; undefined at zero).
+**Regression.** $R^2$ (default `score`) is fine for model comparison. For reporting, use a unit the business understands: MAE (robust to outliers), RMSE (penalises big misses), MAPE (relative error; undefined at zero). MAPE is not in scikit-learn's core scorers in the book's edition, so MLEiA writes it as `np.mean(np.abs((y_true - y_pred) / y_true)) * 100`, and returns every agreed metric from one function (MAE, MAPE, MSE, RMSE, explained variance, $R^2$) so that nobody has to choose a metric before the experiments run (*MLEiA*, ch. 6).
 
 ---
 
@@ -471,7 +493,7 @@ Error metrics are negated (`neg_mean_absolute_error`) because scikit-learn alway
 
 ## Learning curves and bias-variance diagnosis
 
-Ng's ex5 makes the diagnosis from [01](01-statistical-foundations.md#bias-variance-and-model-complexity) operational. Fit regularised linear regression on the water-level/dam-outflow data with an increasing number of training examples; plot training error and cross-validation error against $m$.
+Ng's ex5 makes the diagnosis from [01](01-statistical-foundations.md#bias-variance-and-model-complexity) operational. Fit regularised linear regression on the water-level/dam-outflow data with an increasing number of training examples; plot training error and cross-validation error against $m$. The best complexity also moves with the data: on PDSH's noisy polynomial data the validation curve peaks at degree 3 with 40 points, and at about degree 6 with 200, where even degree 20 is not seriously overfit (*PDSH*, ch. 5).
 
 ```python
 # Ng ex5, vectorised: regularised linear regression cost and learning curve

@@ -8,7 +8,7 @@ sources:
   - https://doi.org/10.1145/3097983.3097992 (Johari, Koomen, Pekelis and Walsh, Peeking at A/B Tests, KDD 2017; not held)
   - https://doi.org/10.1145/3292500.3330722 (Fabijan et al., Diagnosing Sample Ratio Mismatch, KDD 2019; not held)
   - https://doi.org/10.1145/1835804.1835810 (Tang et al., Overlapping Experiment Infrastructure, KDD 2010; not held)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 3, optional stopping)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 3, optional stopping; ch. 15 and 20, false discovery rates and selection bias)
   - https://experimentguide.com/ (Kohavi, Tang and Xu, Trustworthy Online Controlled Experiments, Cambridge, 2020; not held)
   - https://doi.org/10.1093/biomet/64.2.191
   - https://doi.org/10.1145/2783258.2788583
@@ -470,6 +470,8 @@ share of shipped with true effect 0    37%
 ```
 
 Selection on significance inflates each winner, as Dmitriev and colleagues note under underpowered metrics. In this simulation, the measured total is double the true total, and over a third of shipped changes do nothing. So when finance adds up every team's reported lift, the sum exceeds the actual growth. Mature platforms handle this with a long-running holdout, shrinkage (the [Bayesian pillar](../../04-bayesian-analysis/notes/03-priors-and-bandits.md) explains how a prior does this), FDR control and a second certification run. In Dmitriev and colleagues' Bing example, an OEC with p = 0.029 did not reproduce on a rerun at double the traffic.
+
+Two of those remedies have numbers behind them in Efron and Hastie. FDR control at q = 0.1 admitted 28 of 6,033 genes where Holm's family-wise rule admitted 7 ([the testing chapter](../../02-probability-and-statistics/notes/05-hypothesis-testing.md#multiple-comparisons)), the gap that matters when forty metrics or two hundred experiments are screened for a second look. It assumes the theoretical null is right. When the middle of the z histogram is wider than N(0, 1), the theoretical null flags far too many cases, as in their police-stop example (216 officers against 4 under a null fitted to the central z-values) (*Computer Age*, ch. 15). Shrinkage by Tweedie's formula, which moves each z-value toward the crowd by the slope of the fitted marginal density, removes the winner's curse in their simulation of 100 datasets of 1,000 cases: the top-20 differences, shifted about one unit right of zero uncorrected, centre on zero after correction (*Computer Age*, ch. 20).
 
 ## The same machinery for LLM features
 

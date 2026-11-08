@@ -170,6 +170,24 @@ print([chunk.text for chunk in parsed.noun_chunks])
 
 These features power the rule-based extraction in [semantic analysis and NER](05-semantic-analysis-and-ner.md) and the keyphrase chunking in [topic models](03-topic-models-and-summarization.md).
 
+Sarkar's first-edition chapters add the vocabulary and some numbers. A dependency tree is built from words only, with directed head-to-dependent arcs and no word order. A constituency tree adds phrase nodes and keeps the order, so it has more nodes (*Text Analytics with Python*, 1st ed., ch. 1). The two figures below show the same sentence both ways.
+
+![Dependency graph for the fox and dog sentence](../../sources/images/sarkar-text-analytics-fig1-9.png)
+
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 1-9*
+
+![Constituency tree for the same sentence](../../sources/images/sarkar-text-analytics-fig1-15.png)
+
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 1-15*
+
+Chapter 3 measures taggers on NLTK's treebank sample, with the first 3,500 sentences for training and the rest for testing, one run each (*Text Analytics with Python*, 1st ed., ch. 3). Tagging everything as a noun scores 0.145 and a regex tagger 0.240. A unigram tagger scores 0.861 but leaves unseen words untagged. A bigram tagger alone scores 0.135 and a trigram tagger 0.081, because the training n-grams rarely recur in the test set. Chained as trigram, bigram, unigram and a regex tagger, they reach 0.910, and the classifier-based tagger (Naive Bayes) reaches 0.931. The lesson is the backoff: sparse contexts help only when a simpler model catches the misses. For chunking on the same sample, a hand-written regex grammar gets 54.5% IOB accuracy and a bigram chunker over POS tags 99.6%. The same chunker on CoNLL-2000 (7,500 sentences for training) gets 66.8% with an F-score of 57.3 (*Text Analytics with Python*, 1st ed., ch. 3). The book explains the drop by the larger corpus. A harder and more varied test set is more likely, and the chapter does not test it. Compare with the CoNLL-2000 ladder in [semantic analysis and NER](05-semantic-analysis-and-ner.md), where richer features reach 95.9% accuracy.
+
+![Shallow parse of the sample sentence](../../sources/images/sarkar-text-analytics-fig3-2.png)
+
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 3-2*
+
+The refresher chapter shows the Python 2 trap behind the accent step above: `re.findall(r"\w+", "Hèllo")` splits the word into `H` and `llo` until the `re.UNICODE` flag is set (*Text Analytics with Python*, 1st ed., ch. 2). In Python 3, `str` patterns are Unicode-aware by default, so the trap only bites on old code.
+
 Why parsers return one tree and not all of them: a sentence with prepositional-phrase attachment ambiguity ("I shot an elephant in my pajamas") has two analyses, and the count of analyses grows with the Catalan numbers, 1, 2, 5, 14, 42 and on to 208,012 for a sentence of 23 words, the average length in the Wall Street Journal treebank, and more than $10^{12}$ at 50 words. Enumerating them is hopeless, so practical parsers either store shared sub-analyses (chart parsing, a dynamic programme) or score candidates with a weighted grammar; in a probabilistic grammar a parse's score is the product of its rule probabilities, with each left-hand side's rules summing to 1 (*NLP with Python*, ch. 8). A dependency analysis, which draws one labelled arc from each word to its head, expresses the same choice as a single attachment decision, and is what spaCy's `dep_` returns (*NLP with Python*, ch. 8). Feature-based grammars attach attribute-value structures such as number and person to categories and unify them while parsing, so that agreement is enforced by the grammar (*NLP with Python*, ch. 9). Nothing in this pillar's pipelines uses hand-written feature grammars; a trained parser takes agreement from its treebank.
 
 ![A projective dependency parse of "I shot an elephant in my pajamas"](../../sources/images/nlp-with-python-fig8-8.png)

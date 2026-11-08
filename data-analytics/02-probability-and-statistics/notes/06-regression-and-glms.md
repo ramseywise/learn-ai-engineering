@@ -3,7 +3,7 @@ origin: synthesis
 sources:
   - James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (ch. 3, Linear Regression; ch. 4, Classification, §4.3 and §4.6)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 4, Regression and Prediction; ch. 5, Classification)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 5, exponential families; ch. 7, ridge; ch. 8, GLMs and Regression Trees)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 5, exponential families; ch. 7, ridge; ch. 8, GLMs and Regression Trees; ch. 16-18, lasso, boosting and neural networks as GLM relatives)
   - https://doi.org/10.1214/08-aoas191 (separation)
   - https://www.statsmodels.org/stable/index.html
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
@@ -553,6 +553,8 @@ in-sample R2 0.55, fresh-data R2 -0.50
 ```
 
 An in-sample R² of 0.55 on pure noise, and worse than predicting the mean on fresh data. Reinhart's rules: evaluate on separate data or by cross-validation, prefer the lasso or no selection to stepwise, remember that a non-significant variable is not a zero effect, and note that a coefficient is not an intervention (nobody gains a pound 'holding everything else fixed'). The other trap in observational regressions is Simpson's paradox, with real numbers in [correlation and causation](../../03-experimentation-and-causality/notes/04-correlation-and-causation.md#simpsons-paradox).
+
+Efron and Hastie give the advice to prefer the lasso to stepwise a measured form on the spam data (4,601 emails; 3,065 for training, 1,536 for test). With 3,061 candidate predictors including pairwise interactions, the lasso logistic regression reaches a test error of 0.057, stepwise logistic 0.064, and the lasso on main effects only 0.071. Stepwise fitting stalled at 134 variables on convergence problems, where the lasso's active set grew to 682 (*Computer Age*, ch. 16). On main effects alone, stepwise logistic matches the lasso with about half as many terms, so stepwise is not hopeless as a screen; its weakness is that nothing makes the greedy path optimal and that it charges more degrees of freedom than it appears to for searching. The same chapter's HIV example, where the lasso picks 7 of 30 mutation sites, shows the inference problem: naive intervals make three sites significant, and selection-adjusted ones leave one (*Computer Age*, ch. 16). Two further links to the models in this chapter. A neural network without its hidden nonlinearity is a GLM, and dropout on a linear model is a generalised ridge that equals ridge when the variables are standardised (*Computer Age*, ch. 18). Boosting and random forests are the usual benchmark for a GLM: if a forest does much better than your parametric model, "you probably have some work to do, by including some important interactions and the like" (*Computer Age*, ch. 17). On the spam data one pruned tree gets 9.3% test error against the lasso's 7.1%, so the benchmark is a tree ensemble and not a single tree.
 
 ---
 

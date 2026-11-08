@@ -8,6 +8,7 @@ sources:
   - https://doi.org/10.1023/a:1010933404324
   - https://doi.org/10.1214/aos/1013203451
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
+  - Bruce, Bruce and Gedeck, Practical Statistics for Data Scientists, 2nd ed. (O'Reilly, 2020), ch. 6
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -91,6 +92,8 @@ The forest is ahead of a single tree with no tuning, and the out-of-bag score, w
 *Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 8.8*
 
 Reading the plot, a single tree has test error of about 0.255, bagging about 0.245 and a forest with $m=\sqrt{p}$ (4 of 13 predictors) about 0.222, while the OOB errors are about 0.17 to 0.19. Two lessons: the error stops improving by roughly 100 trees and more trees do not overfit, and a small test set (about 90 patients, judging by the 0.011 steps in the error curve) makes either estimate a coarse one (*ISLP*, ch. 8, Fig. 8.8, one split).
+
+The same out-of-bag estimate drives R's `randomForest` printout. With 500 trees on the loan-default data, a forest on two predictors (a 3,000-row sample) reports OOB error 38.53%, and a forest on all columns (46,272 rows, balanced classes) reports 34.38%, with class errors of 0.348 for paid off and 0.339 for default. The two runs differ in rows and predictors, so the 4-point gap is not one variable's effect (*PSDS*, ch. 6).
 
 | Parameter | Effect | Default advice |
 |---|---|---|
@@ -200,7 +203,7 @@ boosting  non-zero 30 of 30   top 3 share 0.75
 
 A single tree picks one of each correlated group, ignoring the rest. Forest feature subsets force it to try the others, so credit spreads. Three caveats follow, and [model interpretability](08-model-interpretability.md) shows each on real output:
 
-- **Impurity importance favours high-cardinality features** and is computed on training data, so it rewards what the model overfit.
+- **Impurity importance favours high-cardinality features** and is computed on training data, so it rewards what the model overfit. R's `randomForest` offers both on the same fit: permutation importance (`type=1`) is scored on the out-of-bag rows, so it is effectively cross-validated, while the Gini measure (`type=2`) comes from the training splits. On the book's loan-default forest the two panels of its Fig. 6-8 rank the variables differently (*PSDS*, ch. 6).
 - **Correlated features share or steal credit.** A low importance doesn't mean a feature is useless.
 - **Importance says how much, never which direction.** Use permutation importance, partial dependence and SHAP instead.
 
