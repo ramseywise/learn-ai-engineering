@@ -25,6 +25,7 @@ sources:
   - https://arxiv.org/abs/2206.14858
   - https://arxiv.org/abs/2310.10631
   - https://arxiv.org/abs/2409.12186
+  - https://arxiv.org/abs/2104.08773
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -82,6 +83,7 @@ The evidence for the rule:
 - **A weak teacher can still help a strong student.** Burns et al.'s weak-to-strong setup fine-tunes a strong model on labels from a weaker one. The performance gap recovered is PGR = max{0, (P_w2s − P_weak)/(P_ceiling − P_weak)}, and the book reports it near 0.8 on 22 NLP classification tasks, with GPT-2-level supervision on a GPT-4-level model. It is reported from that paper and it covers classification, not open-ended generation, and the authors say it needs more investigation (*Foundations of LLMs*, ch. 4, 4.2.5).
 - **New facts make it hallucinate.** In a controlled study on PaLM 2-S closed-book QA, examples the model didn't already know were fit far more slowly than known ones. **As they were fit, test accuracy fell linearly**, so the model got worse at using what it knew. Early stopping, or relabelling unknown answers "I don't know", avoided most of the damage ([arXiv:2405.05904](https://arxiv.org/abs/2405.05904) (Gekhman et al., EMNLP 2024)).
 - **Not much semantics is needed either.** The instruction-tuning survey ([arXiv:2308.10792](https://arxiv.org/abs/2308.10792) (Zhang et al., 2023-08, preprint)) collects the critique. In Kung and Peng (2023), models tuned on task definitions stripped of meaning, or on examples with *wrong* input–output pairs, scored close to models tuned on the real ones.
+- **Instructions help on tasks never seen.** Natural Instructions collected 61 tasks from 9 datasets, each with a definition, positive and negative examples. A fine-tuned BART-base (140M) given the full instruction scored ROUGE-L 32 on held-out tasks against 13 with none, and 8 points above un-fine-tuned GPT-3 (davinci-instruct, 24). The task definition plus the positive examples alone gave the best score (33, under the same random split). When a whole category (question generation) was held out, GPT-3 led (33 against 17) ([arXiv:2104.08773](https://arxiv.org/abs/2104.08773) (Mishra et al., ACL 2022)). Only BART-base was tuned, so the model comparison mixes size with method.
 
 In a multi-turn dialogue you do not need one pass per turn. Mask the user turns and grade every assistant turn in a single forward pass, since one causal pass already conditions each turn on all earlier ones (*Foundations of LLMs*, ch. 4, 4.2.1, Eq. 4.5–4.7). The book's remedies for forgetting are a smaller learning rate, early stopping, regularisation toward the pretrained weights and diverse data.
 

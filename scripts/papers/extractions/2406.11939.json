@@ -1,0 +1,717 @@
+{
+ "schema": 1,
+ "key": "2406.11939",
+ "pdf": "generative-ai/08-eval/sources/li-2024-crowdsourced-data-high-quality-benchmarks.pdf",
+ "bib": {
+  "title": "From Crowdsourced Data to High-Quality Benchmarks: Arena-Hard and BenchBuilder Pipeline",
+  "authors": [
+   "Tianle Li",
+   "Wei-Lin Chiang",
+   "Evan Frick",
+   "Lisa Dunlap",
+   "Tianhao Wu",
+   "Banghua Zhu",
+   "Joseph E. González",
+   "Ion Stoica"
+  ],
+  "first_author": "Li",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 14 Oct 2024; ICML 2025 per caller, not printed in text)",
+  "arxiv": "2406.11939",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 76286,
+  "chars_total": 76286,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can an LLM pipeline curate challenging open-ended prompts from crowdsourced data into a benchmark that separates models with confidence and agrees with human preference rankings, cheaply and automatically?",
+ "hypothesis": "Prompts scoring high on seven quality criteria and sampled evenly across topic clusters yield a benchmark with higher separability and human-alignment than random or hand-written prompt sets.",
+ "contributions": [
+  "BenchBuilder: automated pipeline curating high-quality benchmarks from crowdsourced data",
+  "Metrics for separability and human alignment (Separability with Confidence, Agreement with Confidence, Pair Rank Brier Score); Arena-Hard-Auto shows higher separation and alignment than existing benchmarks",
+  "Open-source BenchBuilder pipeline and Arena-Hard-Auto"
+ ],
+ "method": {
+  "summary": "Embed 200K Chatbot Arena prompts, cluster into 4,000 topics, score each prompt 0-7 on seven criteria with GPT-4-Turbo, keep prompts >=6 in clusters with mean >=5, sample 2 prompts from each of 250 clusters to get 500 prompts. Models are judged pairwise against GPT-4-0314 by GPT-4-Turbo with own-answer chain of thought, two position-swapped games, Bradley-Terry scores and bootstrap CIs.",
+  "task": "benchmark curation and LLM-as-a-judge pairwise evaluation of chat models",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Chatbot Arena prompts",
+    "role": "eval",
+    "size": "200,000 prompts initial pool; 4,000 clusters; >500 high-quality clusters; 500 final prompts (75K Chatbot Arena queries used for random baselines and Table 11)",
+    "split": null,
+    "source": "Chatbot Arena (Chiang et al. 2024)",
+    "preprocessing": "Remove duplicates, multi-turn, non-English; remove PII and offensive content"
+   },
+   {
+    "name": "WildChat-1M",
+    "role": "eval",
+    "size": "150,000 queries; 185 high-quality clusters with 4,500+ prompts; Wild-Hard-Auto = 250 prompts (2 from each of top 125 clusters)",
+    "split": null,
+    "source": "Zhao et al. 2024",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4-Turbo (gpt-4-1106-preview)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "prompt-quality annotator"
+    }
+   },
+   {
+    "name": "GPT-4-0314",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "pairwise comparison baseline, win rate 50.0 in Table 13"
+    }
+   },
+   {
+    "name": "Claude-3-Opus, Gemini-1.5-Pro (gemini-1.5-pro-0514), Llama-3-70B-Instruct",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "alternative judges in Table 4; Llama-3-70B also alt annotator"
+    }
+   },
+   {
+    "name": "Top-20 Chatbot Arena models (2024/04/13) and 50+ leaderboard models",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "list": "footnote 4 and Table 13"
+    }
+   },
+   {
+    "name": "text-embedding-3-small (OpenAI)",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "prompt embeddings, then UMAP and HDBSCAN (BERTopic)"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "2 games per query (positions swapped) = 1000 judgments per model; 100 bootstrap rounds for 95% CI",
+   "prompting": "Judge generates its own answer first (chain of thought) then verdict on 5-point Likert [[A>>B]] to [[B>>A]]; quality annotator explains each of 7 criteria then lists satisfied criteria",
+   "retrieval": null,
+   "parameters": {
+    "prompt_filter": "prompt score >= 6, cluster mean >= 5",
+    "clusters_sampled": "250 random clusters x 2 prompts",
+    "style_features": "answer token length, markdown header, bold, list density; normalised (A-B)/(A+B)",
+    "scoring": "Bradley-Terry vs baseline; style-controlled variant adds style coefficients"
+   },
+   "other": {
+    "inferred: judge decoding settings": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Separability with Confidence",
+     "definition": "Percentage of model pairs with non-overlapping bootstrap confidence intervals of benchmark scores",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Agreement with Confidence Interval",
+     "definition": "Per model pair: +1 if both benchmarks confidently separate and agree, -1 if disagree, 0 if either cannot separate; averaged over pairs",
+     "unit": "% (reported as percent of [-1,1] scale)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pair Rank Brier Score",
+     "definition": "Mean over model pairs of (bootstrap-predicted P(model i < model j) - ground-truth outcome)^2, normal approximation of bootstrap distribution",
+     "unit": "Brier",
+     "higher_is_better": false
+    },
+    {
+     "name": "Spearman and Kendall Tau",
+     "definition": "Rank correlation of benchmark ranking with Chatbot Arena ranking",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MT-Bench",
+    "AlpacaEval 2.0 LC",
+    "Chatbot Arena",
+    "random 500-prompt Chatbot Arena samples",
+    "Wild-Random-250"
+   ],
+   "protocol": "Reference = Chatbot Arena English ranking (2024/04/13) or its English Hard Prompts / style-controlled version; top-20 models also on AlpacaEval; 95% CI via 100 bootstrap rounds; no human raters in the loop; MT-Bench and AlpacaEval results from their recommended setups / repository"
+  },
+  "availability": {
+   "code": "https://github.com/lmarena/arena-hard-auto",
+   "weights": null,
+   "data": "Arena-Hard-Auto released (500 prompts)"
+  },
+  "prompts": [
+   {
+    "purpose": "BenchBuilder prompt-quality annotator (7 criteria)",
+    "text": "Your task is to evaluate how well the following input prompts can assess the capabilities of advanced AI assistants. For the input prompt, please analyze it based on the following 7 criteria. For each criteria, make sure to explain before determine whether the input satisfy it. 1. Specificity ... 7. Real-World Application ... you must list the criteria numbers that the prompt satisfies in the format of a Python array. For example, \"Criteria Satisfied: [1, 2, 4, 6, 7]\".",
+    "where": "Appendix C (abridged)"
+   },
+   {
+    "purpose": "Pairwise LLM judge (Arena-Hard-Auto)",
+    "text": "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user prompt displayed below. ... Begin your evaluation by generating your own answer to the prompt. You must provide your answers before judging any answers. ... [[A>>B]] [[A>B]] [[A=B]] [[B>A]] [[B>>A]]",
+    "where": "Appendix C (abridged)"
+   },
+   {
+    "purpose": "Style-gaming system prompts",
+    "text": "detailed: \"You are a helpful assistant who thoroughly explains things with as much detail as possible.\"; chatty: \"You are a helpful assistant who is chatty.\"; md: \"You are a helpful assistant who uses as much markdown as possible.\"; no-md: \"You are a helpful assistant who never uses markdown.\"",
+    "where": "Table 6 caption"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "eval.protocol",
+    "quote": "we obtain 95% confidence intervals of model performances via applying 100 rounds of bootstrapping",
+    "where": "Sec 6.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Arena-Hard-Auto has 3x higher separation than MT-Bench and 98.6% correlation with human preference rankings at $20 (abstract headline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement with Chatbot Arena",
+   "value": 98.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Abstract; headline 98.6% is the style-controlled agreement vs Chatbot Arena English Hard Prompts (Table 3), not the Table 1 Spearman",
+   "note": "Abstract calls it 'correlation'; Table 3 shows it is Confidence Agreement (and Spearman) with style control against the Hard Prompts (English) leaderboard. Without style control Table 1 gives Spearman 93.2%.",
+   "where": "Abstract",
+   "quote": "achieves 98.6% correlation with human preference rankings, all at a cost of $20"
+  },
+  {
+   "claim": "Arena-Hard-Auto separability vs MT-Bench and AlpacaEval 2.0 LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Separability with Confidence",
+   "value": 87.4,
+   "unit": "%",
+   "baseline_value": "22.6 (MT-Bench)",
+   "n": null,
+   "setup": "Top-20 Chatbot Arena models (2024/04/13) also on AlpacaEval leaderboard; reference = Chatbot Arena English ranking; GPT-4-Turbo judge; baseline gpt-4-0314; 95% CI from 100 bootstrap rounds",
+   "note": "Table 1: MT-Bench 22.6%, AlpacaEval 2.0 LC 83.2%, Chatbot Arena 85.8%",
+   "where": "Sec 6.2, Table 1",
+   "quote": "Arena-Hard-Auto shows the highest separability (87.4%) against widely adopted LLM benchmarks"
+  },
+  {
+   "claim": "Arena-Hard-Auto confidence agreement with Chatbot Arena (English) in Table 1; MT-Bench 26.6, AlpacaEval LC 82.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 90.9,
+   "unit": "%",
+   "baseline_value": "26.6 (MT-Bench)",
+   "n": null,
+   "setup": "Top-20 Chatbot Arena models (2024/04/13) also on AlpacaEval leaderboard; reference = Chatbot Arena English ranking; GPT-4-Turbo judge; baseline gpt-4-0314; 95% CI from 100 bootstrap rounds",
+   "note": "Text of Sec 6.2 prints 90.8% for the same quantity; Table 1 prints 90.9%.",
+   "where": "Table 1",
+   "table": "Table 1, row Confidence Agreement, column Arena-Hard-Auto (MT-Bench 26.6%, AlpacaEval 2.0 LC 82.5%)"
+  },
+  {
+   "claim": "MT-Bench has high Spearman (89.9%) but low confidence agreement, showing Spearman hides ranking variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman",
+   "value": 89.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top-20 Chatbot Arena models (2024/04/13) also on AlpacaEval leaderboard; reference = Chatbot Arena English ranking; GPT-4-Turbo judge; baseline gpt-4-0314; 95% CI from 100 bootstrap rounds",
+   "note": "Text says confidence agreement 22.6%, but Table 1 prints 22.6% as MT-Bench Separability and 26.6% as MT-Bench Confidence Agreement. Table 3 prints 30.3% / 22.6% / 90.7% for MT-Bench with a different reference.",
+   "where": "Sec 6.2",
+   "quote": "we observe a significant gap between MT-bench’s Spearman Correlation (89.9%) and confidence agreement (22.6%) to Chatbot Arena"
+  },
+  {
+   "claim": "Brier score of Arena-Hard-Auto (lower is better) vs MT-Bench and AlpacaEval LC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pair Rank Brier Score",
+   "value": 0.069,
+   "unit": "Brier",
+   "baseline_value": "0.09 (MT-Bench)",
+   "n": null,
+   "setup": "Top-20 Chatbot Arena models (2024/04/13) also on AlpacaEval leaderboard; reference = Chatbot Arena English ranking; GPT-4-Turbo judge; baseline gpt-4-0314; 95% CI from 100 bootstrap rounds",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Brier Score, column Arena-Hard-Auto (MT-Bench 0.09, AlpacaEval 2.0 LC 0.11)"
+  },
+  {
+   "claim": "Against the Chatbot Arena English Hard Prompts leaderboard with style control on both sides, Arena-Hard-Auto reaches 98.6% confidence agreement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 98.6,
+   "unit": "%",
+   "baseline_value": "94.4 (no style control)",
+   "n": null,
+   "setup": "Style-controlled GPT-4-Turbo judge vs style-controlled Chatbot Arena battles (English Hard Prompts), top-20 models",
+   "note": null,
+   "where": "Sec 6.5, Table 3",
+   "quote": "style controlled Arena-Hard-Auto achieves 98.6% agreement and correlation to style controlled human preference ranking",
+   "table": "Table 3, row Confidence Agreement, column Arena-Hard-Auto (Style Control) (98.6%; Arena-Hard-Auto 94.4%, AlpacaEval LC 83.8%, MT-Bench 30.3%)"
+  },
+  {
+   "claim": "Style-controlled Arena-Hard-Auto separability is 86.8% versus 87.4% without control.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Separability",
+   "value": 86.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 setup",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Separability, column Arena-Hard-Auto (Style Control)"
+  },
+  {
+   "claim": "Against Chatbot Arena Hard Prompts (English), unmodified Arena-Hard-Auto gets 98.6% confidence agreement and Brier 0.055.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 98.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arena-Hard-Auto, gpt-4-1106-preview judge, vs Chatbot Arena Category Hard Prompt (English), top-20 models",
+   "note": "Sec 6.3 says 98.6% Confidence Agreement and 96.7% Spearman; Table 3 prints Spearman 94.9% for unmodified Arena-Hard-Auto with its own reference.",
+   "where": "Sec 6.3, Table 9",
+   "table": "Table 9, row Confiderence Agreement (Spearman 96.7%, Kendall 87.4%, Brier 0.055)"
+  },
+  {
+   "claim": "Judge choice matters: GPT-4-Turbo confidence agreement 90.9% vs Claude-3-Opus 66.7%, Gemini-1.5-Pro 84.8%, Llama-3-70B 65.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 66.7,
+   "unit": "%",
+   "baseline_value": "90.9 (GPT-4-Turbo)",
+   "n": null,
+   "setup": "Arena-Hard-Auto ranking vs Chatbot Arena English (2024/04/13), judge swapped",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Confiderence Agreement, column Claude3-Opus (GPT4-T 90.9, Gemini1.5-Pro 84.8, Llama3-70B 65.6, Ensemble 91.5)"
+  },
+  {
+   "claim": "Ensemble of GPT-4-Turbo and Gemini-1.5-Pro as judges raises separability to 89.5% and Spearman to 96.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Separability",
+   "value": 89.5,
+   "unit": "%",
+   "baseline_value": "87.4 (GPT-4-Turbo alone)",
+   "n": null,
+   "setup": "Ensemble-as-Judges (GPT-4-Turbo + Gemini-1.5-Pro), same setup as Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Separability, column Ensemble-as-Judges (Spearman 96.5, Brier 0.065)"
+  },
+  {
+   "claim": "Self-bias check: GPT-4-Turbo judge ranks OpenAI models 0.6 places above human ranking and Claude models 0.8 below; ensemble gives -0.4 and +0.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rank shift",
+   "value": 0.6,
+   "unit": "ranks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ranking shift vs Chatbot Arena Hard Prompts leaderboard; 5 GPT and 4 Claude models",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row column average, OpenAI GPT Series, column GPT-4-turbo (0.6; Claude -0.8; Ensemble -0.4 and 0.4)"
+  },
+  {
+   "claim": "BenchBuilder on WildChat: Wild-Hard-Auto beats a 250-prompt random WildChat sample on confidence agreement (88.6% vs 36.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 88.6,
+   "unit": "%",
+   "baseline_value": "36.4",
+   "n": null,
+   "setup": "GPT-4-Turbo judge; 150,000 WildChat queries; 125 clusters x 2 prompts = 250 prompts",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Confidence Agreement, column Wild-Hard-Auto (Wild-Random-250 36.4%; separability 86.7% vs 75.6%; Spearman 91.5% vs 45.5%)"
+  },
+  {
+   "claim": "Arena-Hard-Auto beats two random 500-prompt Chatbot Arena samples: confidence agreement 84.2% vs 57.5% and 66.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 84.2,
+   "unit": "%",
+   "baseline_value": "57.5 and 66.1",
+   "n": null,
+   "setup": "Random samples of 500 prompts from 75K Chatbot Arena queries; top-20 models; each prompt judged once with baseline answer first",
+   "note": "Values differ from Table 1 (90.9/87.4/93.2) because Table 7 judges each prompt once, not twice with swapped positions.",
+   "where": "Table 7",
+   "table": "Table 7, row Confiderence Agreement (separability 80.5 vs 74.7 and 76.3; Spearman 94.7 vs 64.7 and 72.5; Brier 0.069 vs 0.215 and 0.162)"
+  },
+  {
+   "claim": "Llama-3-70B-Instruct as the prompt annotator gives similar gains: Llama-Hard-Auto confidence agreement 86.0% vs random 55.8% and 58.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Agreement with Confidence",
+   "value": 86.0,
+   "unit": "%",
+   "baseline_value": "55.8 and 58.1",
+   "n": null,
+   "setup": "10 of the 20 models; BenchBuilder with Llama-3-70B-Instruct as quality annotator",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Confidence Agreement, column Llama-Hard-Auto (Arena-Hard-Auto-500 88.4%)"
+  },
+  {
+   "claim": "Quality score tracks separability: win-rate between model pairs becomes more separable as the BenchBuilder quality score rises.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 queries per quality score 0-7, bootstrapped win-rate and CI on score intervals of 2; GPT-4-0613 vs Llama-2-70b-chat, Claude-3-Sonnet vs Haiku, Mistral-Large vs Mixtral; GPT-4-Turbo judge",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "We observe a similar trend of win-rate between model pairs becomes increasingly separable as the quality score increases."
+  },
+  {
+   "claim": "GPT-4-Turbo as prompt-quality annotator agrees 85.6% with a majority-vote ground truth of GPT-4o, Claude-3-Opus and Gemini-1.5-Pro.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotator agreement",
+   "value": 85.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200 sampled queries",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "GPT-4-Turbo achieves 85.6% agreement with these labels"
+  },
+  {
+   "claim": "Running BenchBuilder over 200,000 Chatbot Arena queries costs about $500 with GPT-4-Turbo and about $45 with Llama-3-70B-Instruct.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 500,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "250 tokens per prompt x 200,000 queries x $10 per 1M tokens (GPT-4-1106-Preview); Llama: $0.9 per 1M tokens (TogetherAI, 2024-10-01)",
+   "note": "Llama-3-70B-Instruct figure: 'only cost around $45'",
+   "where": "Sec 4.3",
+   "quote": "is approximately $500"
+  },
+  {
+   "claim": "Evaluating one model on Arena-Hard-Auto costs $20 (500 prompts, 1000 judgments).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Two-game setup per query with GPT-4-Turbo judge; MT-Bench $10, AlpacaEval 2.0 LC $10",
+   "note": null,
+   "where": "Sec 5, Table 1",
+   "quote": "This results in 1000 judgments per model evaluation.",
+   "table": "Table 1, row Eval cost per model, column Arena-Hard-Auto ($20)"
+  },
+  {
+   "claim": "Pipeline funnel: 200,000 prompts, 4,000 topic clusters, prompts with score <6 and clusters with mean <5 dropped, over 500 clusters kept, 2 prompts from each of 250 random clusters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 500,
+   "unit": "prompts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chatbot Arena pool; dedup, single-turn, English filter first",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "Prompts with score less than 6 and topic clusters with mean score less than 5 are discarded"
+  },
+  {
+   "claim": "Share of 75K Chatbot Arena queries meeting each quality level (GPT-3.5-Turbo annotator): 17.9% score 6+, 0.2% score 7.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "75K Chatbot Arena queries labeled by GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row % of queries, column 6+ (1+ 95.4, 2+ 83.5, 3+ 61.9, 4+ 48.7, 5+ 33.8, 7+ 0.2)"
+  },
+  {
+   "claim": "Per-quality prevalence: Real-world 87.9%, Domain-knowledge 63.4%, Specificity 57.3%, Creativity 26.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 87.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "75K Chatbot Arena queries labeled by GPT-3.5-Turbo",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row Qualities % of queries, column Real-world (Specificity 57.3, Domain-knowledge 63.4, Complexity 35.0, Problem-solving 34.9, Creativity 26.1, Tech. Accuracy 39.0)"
+  },
+  {
+   "claim": "Style gaming: telling Llama-3.1-70B-Instruct to be detailed raises its score 44.5 to 53.5 without style control, but with style control it falls 41.7 to 39.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 53.5,
+   "unit": "score",
+   "baseline_value": "44.5",
+   "n": null,
+   "setup": "Arena-Hard-Auto, GPT-4-Turbo judge, system-prompt variants (detail, md, chatty, no-md)",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Llama-3.1-70B-Instruct-detail, column Score (No Modification)"
+  },
+  {
+   "claim": "Style control cuts correlation between model score and average token length (Pearson 0.364 to 0.193; Spearman 0.125 to -0.025).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.193,
+   "unit": "Pearson",
+   "baseline_value": "0.364",
+   "n": null,
+   "setup": "GPT-4-Turbo judge, no modification vs style-controlled",
+   "note": null,
+   "where": "Table 12",
+   "table": "Table 12 left, row Style Control, column Pearson"
+  },
+  {
+   "claim": "Top of the Arena-Hard-Auto leaderboard: Claude-3-5-Sonnet-20240620 79.3 win rate vs GPT-4-0314 baseline, CI (-2.1, 2.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 79.3,
+   "unit": "win rate %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Baseline GPT-4-0314 = 50.0; GPT-4-Turbo judge; 500 prompts",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Claude-3-5-Sonnet-20240620, column Win Rate"
+  },
+  {
+   "claim": "GPQA cost over $120,000 to curate 500 multiple-choice questions, motivating automated curation.",
+   "kind": "reported",
+   "source": "Rein, 2024",
+   "metric": null,
+   "value": 120000,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Cited from Rein 2024",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "GPQA, for instance, cost over $120,000 to curate its 500 multiple-choice questions"
+  }
+ ],
+ "limits": [
+  "Seven qualities may skew toward technical domains.",
+  "No multi-turn or non-English evaluation.",
+  "Single-judge self-bias exists (GPT-4-Turbo ranks GPT models slightly above human ranking, Claude below); ensemble is only a first step.",
+  "Agreement is measured on 20 models against one Chatbot Arena snapshot (2024/04/13); small number of model pairs.",
+  "Judge decoding parameters not stated.",
+  "Models and judges (gpt-4-1106-preview) are dated; cost figures use 2024 pricing."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Separability with Confidence",
+   "definition": "percentage of model pairs that have non-overlapping confidence intervals of their benchmark scores",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Ensemble-as-Judges",
+   "definition": "aggregates judgments from multiple models (GPT-4-Turbo and Gemini-1.5-Pro)",
+   "where": "Sec 6.6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chatbot Arena (Chiang et al.)",
+   "year": 2024,
+   "arxiv": "2403.04132",
+   "relation": "uses-data",
+   "note": "prompt source and human-preference reference",
+   "quote": null
+  },
+  {
+   "work": "Judging LLM-as-a-judge with MT-bench and Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": "2306.05685",
+   "relation": "extends",
+   "note": "LLM-as-judge framework; MT-Bench baseline",
+   "quote": null
+  },
+  {
+   "work": "Length-controlled AlpacaEval (Dubois et al.)",
+   "year": 2024,
+   "arxiv": "2404.04475",
+   "relation": "baseline",
+   "note": "baseline benchmark and inspiration for style control",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval (Li et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Spearman-based alignment metric critiqued",
+   "quote": null
+  },
+  {
+   "work": "WildChat (Zhao et al.)",
+   "year": 2024,
+   "arxiv": "2405.01470",
+   "relation": "uses-data",
+   "note": "second source for Wild-Hard-Auto",
+   "quote": null
+  },
+  {
+   "work": "GPQA (Rein et al.)",
+   "year": 2023,
+   "arxiv": "2311.12022",
+   "relation": "related",
+   "note": "expensive manual curation motivating example",
+   "quote": null
+  },
+  {
+   "work": "Style control in Chatbot Arena (Li et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "style-controlled Bradley-Terry",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "BenchBuilder Pipeline",
+   "page": 4,
+   "why": "Shows cluster, score, filter, sample flow"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Win-rate of three model pairs over quality score (50 queries per score, bootstrapped CI)",
+   "page": 6,
+   "why": "Evidence that the quality score tracks separability"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Arena-Hard-Auto (green) vs MT-Bench (grey) scores with confidence intervals",
+   "page": 6,
+   "why": "Visualises tighter CIs and separability"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Separability, agreement, Spearman, Kendall, Brier, cost across benchmarks",
+   "page": 7,
+   "why": "Core comparison table"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Arena-Hard-Auto statistics with four judges plus ensemble",
+   "page": 7,
+   "why": "Judge-choice effect"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "No modification vs style control for verbosity/markdown system prompts",
+   "page": 9,
+   "why": "Shows style gaming neutralised"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix A.1 eq 3",
+   "snippet": "1/N * sum_{i,j} ( P^(f*(pi_i) < f*(pi_j)) - O_{pi_i < pi_j} )^2",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix A.2 eq 5",
+   "snippet": "beta^, gamma^ = argmin (1/n) sum BCELoss(sigmoid(X_i^T beta + Z_i^T gamma), Y_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text has no embedded instructions.",
+  "Internal inconsistencies noted per result: 90.8 vs 90.9; MT-Bench 22.6 labelled confidence agreement in text but separability in Table 1; Spearman 96.7 vs 98.6 in Sec 6.3 vs Table 3; abstract calls 98.6% 'correlation'.",
+  "Table cells flatten column-wise in the text extraction; read by order of columns in captions.",
+  "ICML 2025 venue not in text; cache is arXiv v2."
+ ]
+}

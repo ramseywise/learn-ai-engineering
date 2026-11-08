@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2501.09223
   - https://aclanthology.org/P02-1040/
   - https://aclanthology.org/W04-1013/
+  - https://arxiv.org/abs/2202.12837
+  - https://arxiv.org/abs/2107.13586
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -68,7 +70,7 @@ Say exactly what shape the output takes: a numbered list of five, JSON with thes
 | One-shot | Fixes format quickly, but the model may copy the example's content too |
 | Few-shot (3–5) | Reliable format and style. Beyond that, reliability keeps rising and variety falls |
 
-The authors' advice: try direction first, then add examples. Examples are powerful and easy to over-fit to. Vary them so the model learns the pattern, not one instance.
+The authors' advice: try direction first, then add examples. Examples are powerful and easy to over-fit to. Vary them so the model learns the pattern, not one instance. Min et al. ran 12 model variants on 26 classification and multiple-choice datasets with 16 demonstrations and found that swapping the gold labels for random ones cost only 0–5% absolute. What mattered was the label space, the distribution of the input text and the format: out-of-distribution inputs cost 3–16% for most models, and demonstrations with no labels, or labels only, scored close to or worse than none. Generation tasks were not tested ([arXiv:2202.12837](https://arxiv.org/abs/2202.12837) (Min et al., EMNLP 2022)). The survey of prompting methods notes how much the choice of examples can matter, swinging from near the state of the art to near chance, and that majority-label and recency biases can be reduced by calibrating on a content-free input such as "N/A". Both are reported from earlier work. The survey runs no experiments of its own and stops in mid-2021 ([arXiv:2107.13586](https://arxiv.org/abs/2107.13586) (Liu et al., ACM Computing Surveys 2023)).
 
 ### 4. Evaluate quality
 

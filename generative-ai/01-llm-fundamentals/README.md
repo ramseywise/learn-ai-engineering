@@ -40,7 +40,8 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 
 | # | Chapter | Covers |
 |---|---|---|
-| 06 | [Pretraining: data and objectives](notes/06-pretraining-data-and-objectives.md) | The training pipeline, loop and loss checks, overfitting, curation and data |
+| 06 | [Pretraining: data and objectives](notes/06-pretraining-data-and-objectives.md) | The training pipeline, loop and loss checks, overfitting, entropy and perplexity |
+| 06b | [Pretraining data: what goes in](notes/06b-pretraining-data.md) | Common Crawl and filtering, language and code mix, synthetic data, data limits |
 | 15 | [The pretraining run: batch, cost and scale](notes/15-pretraining-runs-cost-and-scale.md) | Batch size and newer optimizers, cost and carbon, Chinchilla in practice, pricing a run |
 | 07 | [SFT and instruction tuning](notes/07-sft-and-instruction-tuning.md) | Classification and instruction fine-tuning, chat templates, continued pretraining |
 | 08 | [Preference optimisation: an overview](notes/08-preference-optimisation-overview.md) | Reward models and PPO, DPO, distillation |
@@ -123,7 +124,7 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 01-llm-fundamentals/
 ├── README.md
 ├── references.md           every source, mapped to chapters
-├── notes/                  01–15 plus 01b and 03b, read in order
+├── notes/                  01–15 plus 01b, 03b and 06b, read in order
 ├── slides/                 deck.yaml and the built deck
 ├── practice/
 │   └── 01-typescript-sdk/  four Anthropic SDK examples
