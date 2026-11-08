@@ -1,0 +1,394 @@
+{
+ "schema": 1,
+ "key": "2308.10144",
+ "pdf": "generative-ai/03-agentic-foundations/sources/zhao-2024-expel.pdf",
+ "bib": {
+  "title": "ExpeL: LLM Agents Are Experiential Learners",
+  "authors": [
+   "Andrew Zhao",
+   "Daniel Huang",
+   "Quentin Xu",
+   "Matthieu Lin",
+   "Yong-Jin Liu",
+   "Gao Huang"
+  ],
+  "first_author": "Zhao",
+  "year": 2024,
+  "venue": "AAAI-24 (Thirty-Eighth AAAI Conference on Artificial Intelligence)",
+  "arxiv": "2308.10144",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52428,
+  "chars_total": 52428,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM agent learn from its own experience across tasks, without parameter updates, and improve on unseen tasks?",
+ "hypothesis": "Natural-language insights extracted from past experiences plus retrieved successful trajectories improve a ReAct agent; insights from a source task transfer to a target task.",
+ "contributions": [
+  "ExpeL, an LLM agent that learns from experience without gradient updates",
+  "Evaluation on diverse tasks showing improvement on top of existing planning methods",
+  "A transfer-learning setting showing forward transfer from source to target tasks"
+ ],
+ "method": {
+  "summary": "Stage 1 gathers trajectories on training tasks with ReAct plus Reflexion retries. Stage 2 has gpt-4-0613 distil a list of insights from fail/success pairs and chunks of L successes via ADD/EDIT/UPVOTE/DOWNVOTE. At test time the task prompt gets all insights plus top-k similar successful trajectories as few-shot, single attempt.",
+  "task": "text-based agent tasks (HotpotQA, ALFWorld, WebShop, FEVER)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "HotpotQA",
+    "role": "both",
+    "size": null,
+    "split": "four-fold validation",
+    "source": "Yang et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "ALFWorld",
+    "role": "both",
+    "size": null,
+    "split": "four-fold validation",
+    "source": "Shridhar et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "WebShop",
+    "role": "both",
+    "size": null,
+    "split": "four-fold validation",
+    "source": "Yao et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "FEVER",
+    "role": "eval",
+    "size": null,
+    "split": "four-fold validation; transfer target",
+    "source": "Thorne et al. 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo-0613",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "acting LLM during evaluation (all agents)"
+    }
+   },
+   {
+    "name": "gpt-4-0613",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "insight extraction (default) and insight transfer adaptation"
+    }
+   },
+   {
+    "name": "all-mpnet-base-v2",
+    "role": "retriever",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single attempt per evaluation task; four-fold validation, mean and standard error over folds",
+   "prompting": "ReAct prompt with fixed few-shot examples replaced by top-k retrieved successes, plus concatenated insight list in task specification",
+   "retrieval": "Faiss vectorstore, kNN, all-mpnet-base-v2 embeddings, maximum inner-product task similarity, top-k successful trajectories",
+   "parameters": {
+    "Z (max retries in gathering)": null,
+    "H (max steps)": null,
+    "L (successes per insight-extraction chunk)": null,
+    "k (few-shot count)": null,
+    "initial insight importance count": "2; removed at 0; UPVOTE/EDIT +1, DOWNVOTE -1"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate",
+     "definition": "exact match for HotpotQA and FEVER; completing the task in time for ALFWorld; purchasing the item matching all attributes for WebShop",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mean reward score",
+     "definition": "WebShop reward r in [0,1]",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Act",
+    "ReAct",
+    "Reflexion (R1-R3)",
+    "Imitation learning (numbers from ReAct paper)",
+    "ExpeL retrieve-only",
+    "ExpeL insights-only"
+   ],
+   "protocol": "four-fold validation, mean and standard error over folds"
+  },
+  "availability": {
+   "code": "https://github.com/LeapLabTHU/ExpeL",
+   "weights": null,
+   "data": "prompts and demos at https://andrewzh112.github.io/#expel"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ExpeL (gpt-3.5-turbo actor) beats ReAct on ALFWorld success rate in the ablation table",
+   "kind": "measured",
+   "metric": "ALFWorld success rate",
+   "value": "59.0",
+   "unit": "%",
+   "baseline_value": "40.0 (ReAct)",
+   "setup": "ALFWorld, gpt-3.5-turbo-0613 actor, gpt-4-0613 insights, four-fold validation, mean +- s.e.",
+   "table": "Table 3 lower, row ExpeL (ours) 59.0 ± 0.3; row ReAct 40.0 ± 0.3",
+   "note": "Fig 5 values not in text; prose says ExpeL 59% vs Reflexion 54% at R3, while Table 2 gives ReAct+Reflexion R3 54.4%",
+   "where": "Table 3"
+  },
+  {
+   "claim": "ExpeL beats ReAct on HotpotQA success rate",
+   "kind": "measured",
+   "metric": "HotpotQA SR",
+   "value": "39.0",
+   "unit": "%",
+   "baseline_value": "28.0 (ReAct)",
+   "setup": "HotpotQA, gpt-3.5-turbo-0613 actor, gpt-4-0613 insights, four-fold validation",
+   "table": "Table 3 upper, row ExpeL (ours) 39.0 ± 1.7; row ReAct 28.0 ± 1.4",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Insights transferred from HotpotQA to FEVER lift success rate over ReAct",
+   "kind": "measured",
+   "metric": "FEVER SR",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": "63 (ReAct)",
+   "setup": "HotpotQA source, FEVER target, insights adapted by gpt-4-0613 with target few-shot demos, gpt-3.5-turbo actor",
+   "table": "Table 1, row ExpeL Transfer, 70 ± 0.7; ReAct 63 ± 0.4; Act 58 ± 0.0; w/o Task Demos 65 ± 1.7",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Combining ExpeL with Reflexion retries on ALFWorld reaches 64.2% at round 3",
+   "kind": "measured",
+   "metric": "ALFWorld SR after Reflexion rounds",
+   "value": "64.2",
+   "unit": "%",
+   "baseline_value": "54.4 (ReAct+Reflexion R3)",
+   "setup": "ALFWorld, R1-R3 resumed from failed R0 checkpoints",
+   "table": "Table 2, row ExpeL+Reflexion, column R3 64.2%; R0 59.0%; ReAct+Reflexion R0 40.3% R3 54.4%; retrieve-only R0 54.5% R3 60.4%",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Insights-only vs retrieve-only on HotpotQA, ALFWorld show opposite strengths",
+   "kind": "measured",
+   "metric": "SR insights-only/retrieve-only",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "HotpotQA 36%/31%, ALFWorld 50%/55%, WebShop 37%/38% SR and 0.675/0.67 score; read from Fig 5 prose",
+   "quote": "(36%/31% and 50%/55%",
+   "note": "Figure 5 bar values not in text",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Single-pass ExpeL matches or exceeds Reflexion at R3 without retries (as printed)",
+   "kind": "measured",
+   "metric": "SR",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "setup": "HotpotQA 40% at R3 vs 39%; ALFWorld '54% at R3 vs. 59%'",
+   "quote": "ExpeL matches Reflexion’s performance (40%",
+   "note": "Text order is ambiguous: 40% is Reflexion R3 and 39% ExpeL on HotpotQA",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Retrieval ranking by task similarity beats reasoning similarity and random sampling on ALFWorld",
+   "kind": "measured",
+   "metric": "ALFWorld SR",
+   "value": "42.5",
+   "unit": "%",
+   "baseline_value": "59.0 (task similarity, ExpeL)",
+   "setup": "random sampled successful trajectories; reasoning similarity 48.5 ± 2.1",
+   "table": "Table 3 lower, row Random sampled, 42.5 ± 0.8",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "LLM-generated insights beat hand-crafted; adding reflections hurts; gpt-3.5 insight extractor is worse than gpt-4",
+   "kind": "measured",
+   "metric": "HotpotQA SR",
+   "value": "32.0",
+   "unit": "%",
+   "baseline_value": "39.0 (ExpeL)",
+   "setup": "Hand-crafted 32.0 ± 1.1; insights with reflections 29.0 ± 0.4; gpt-3.5-turbo insights 32.0 ± 0.4",
+   "table": "Table 3 upper, row gpt-3.5-turbo insights, 32.0 ± 0.4",
+   "note": null,
+   "where": "Table 3"
+  }
+ ],
+ "limits": [
+  "Text observations only; images not handled",
+  "Only closed-source API LLMs (gpt-3.5-turbo, gpt-4) tested",
+  "All insights fit in context; lifelong use would need retrieval over insights",
+  "Prompting lacks theoretical underpinnings unlike RL",
+  "Z, H, L, k, training set sizes and number of tasks are not stated in the text; no appendix in this PDF; Fig 5 values only in figure",
+  "Behavioral analysis (Sec 5.3) is manual inspection of trajectories, anecdotal",
+  "Transfer tested on one pair only (HotpotQA to FEVER)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "experience recall",
+   "definition": "retrieve successful trajectories from the experience pool by task similarity as few-shot examples",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base planning algorithm and baseline",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "used for experience gathering; baseline",
+   "quote": null
+  },
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "ALFWorld",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "WebShop",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "FEVER",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "transfer target",
+   "quote": null
+  },
+  {
+   "work": "Faiss (Johnson et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vectorstore",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. 2022 What Makes Good In-Context Examples for GPT-3?",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "similar in-context examples motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "ExpeL Agent Overview. Left: three stages (collection, extraction, application). Right: (A) experience gathering via Reflexion, (B) insight extraction with ADD, UPVOTE, DOWNVOTE, EDIT.",
+   "page": 2,
+   "why": "pipeline in one view"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Insight Extraction Prompt Template.",
+   "page": 4,
+   "why": "shows the operator prompt"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Task Inference Prompt Template.",
+   "page": 5,
+   "why": "where insights and retrieved examples enter the prompt"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Main Results. Average task success rates across HotpotQA, ALFWorld, WebShop; ReAct and Act baselines; ExpeL retrieve-only and insights-only.",
+   "page": 6,
+   "why": "headline comparison"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Effects of Experience on Performance.",
+   "page": 8,
+   "why": "experience diversity ablation"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No appendix in the PDF; hyperparameters (Z, H, L, k, dataset sizes) absent",
+  "Fig 5 and Fig 6 values are graphical only",
+  "Sec 5.2 prose '54% at R3 vs. 59%' and 'ExpeL matches Reflexion's performance (40% at R3 vs. 39%)' have ambiguous ordering",
+  "No embedded instructions found"
+ ]
+}

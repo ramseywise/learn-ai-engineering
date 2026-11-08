@@ -1,0 +1,143 @@
+{
+ "schema": 1,
+ "key": "2305.19118",
+ "pdf": "generative-ai/03-agentic-foundations/sources/liang-2024-encouraging-divergent-thinking-large-language.pdf",
+ "bib": {
+  "title": "Encouraging Divergent Thinking in Large Language Models through Multi-Agent Debate",
+  "authors": ["Tian Liang","Zhiwei He","Wenxiang Jiao","Xing Wang","Yan Wang","Rui Wang","Yujiu Yang","Shuming Shi","Zhaopeng Tu"],
+  "first_author": "Liang",
+  "year": 2024,
+  "venue": "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 17889-17904",
+  "arxiv": "2305.19118",
+  "doi": null
+ },
+ "read": {"by":"source-reader","at":"2026-11-08","chars_read":56976,"chars_total":56976,"engine":"pymupdf","skipped":"Reference list skimmed only."},
+ "type": "empirical",
+ "question": "Can a debate between LLM agents, managed by a judge, avoid the Degeneration-of-Thought problem of self-reflection and improve answers on tasks that need deep contemplation?",
+ "hypothesis": "Because MAD lets other agents correct distorted thinking, offset rigidity and supply external feedback, it should be less susceptible to DoT than self-reflection and yield more accurate answers.",
+ "contributions": [
+  "We propose and define the Degeneration-of-Thought (DoT) problem in self-reflection, and address it by proposing the Multi-Agent Debate (MAD) framework to explore divergent chain-of-thoughts.",
+  "Demonstrate MAD on two challenging tasks; GPT-3.5-Turbo with MAD can surpass GPT-4 on Common MT.",
+  "Adaptive break and a modest level of tit for tat are required for gains; the LLM judge prefers the side with the same LLM as backbone."
+ ],
+ "method": {
+  "summary": "Two debater agents (affirmative, negative) argue in turn from the shared debate history under a meta prompt that asks for tit for tat; a judge LLM either ends the debate (discriminative mode) or extracts the final answer after the iteration limit (extractive mode). Compared with Self-Reflect, Rerank, MAPS, CoT and Self-Consistency on GPT-3.5-Turbo and Vicuna.",
+  "task": "Commonsense machine translation (zh to en) and counter-intuitive arithmetic reasoning; extra checks on GSM, AddSub and three BBH tasks",
+  "trains": false,
+  "datasets": [
+   {"name":"Common MT","role":"eval","size":"200 lexical, 450 contextless syntactic, 350 contextual syntactic examples","split":"test set","source":"He et al., 2020","preprocessing":null},
+   {"name":"Counter-Intuitive AR (CIAR)","role":"eval","size":"200 questions","split":null,"source":"Built by the authors from elicitation questions (Kong et al., 2022), web data (geeksforgeeks puzzles) and manual derivatives","preprocessing":"Dataset explanations not used in experiments"},
+   {"name":"GSM, AddSub, BBH Penguin/Date/Colored Objects","role":"eval","size":null,"split":null,"source":"Cobbe et al. 2021; Hosseini et al. 2014; Big-Bench / Suzgun et al. 2023","preprocessing":null}
+  ],
+  "models": [
+   {"name":"GPT-3.5-Turbo-0301","role":"proposed","params":null,"architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{"use":"debaters and judge backbone"}},
+   {"name":"GPT-4-0314","role":"baseline","params":null,"architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{"use":"baseline, also debater/judge in Table 6"}},
+   {"name":"vicuna-7b-v1.5-16k","role":"proposed","params":"7B","architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":"16k (from model name)","other":{}},
+   {"name":"vicuna-13b-v1.5-16k","role":"proposed","params":"13B","architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":"16k (from model name)","other":{}},
+   {"name":"wmt21-comet-qe-da","role":"judge","params":null,"architecture":null,"init_from":null,"tokenizer":null,"vocab":null,"layers":null,"hidden":null,"heads":null,"context":null,"other":{"use":"quality estimator for the Rerank baseline"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Rerank: 4 samples per item; Self-Consistency sample count not stated; MAD single run, number of runs/seeds not stated",
+   "prompting": "Zero-shot instructions, unified prompt asking for explanation and answer; question placed in <debate topic> of the meta prompt. CoT baseline appends 'Let's think step by step'.",
+   "retrieval": null,
+   "parameters": {
+    "debaters": "2 (default); 3 and 4 tested",
+    "max_debate_iterations": "3 (stated: 'setting the maximum debate iteration to 3')",
+    "stopping": "Judge adaptive break (discriminative mode); extractive mode forced at fixed iteration for Fig 5",
+    "tit_for_tat_level": "0 to 3; level 2 default",
+    "disagreement_for_level_3": "0.988"
+   },
+   "other": {"agent_order":"debaters speak one by one in fixed order based on history H", "fig1_setup":"agents forced to 5 rounds; disagreement labelled manually"}
+  },
+  "eval": {
+   "metrics": [
+    {"name":"ACC","definition":"accuracy of predictions on Counter-Intuitive AR","unit":"%","higher_is_better":true},
+    {"name":"COMET","definition":"automatic translation metric (Unbabel/wmt22-comet-da)","unit":"score","higher_is_better":true},
+    {"name":"BLEURT","definition":"BLEURT-20","unit":"score","higher_is_better":true},
+    {"name":"HUMAN","definition":"direct assessment by three professional translators, scale 1 to 5, shuffled and anonymised, Krippendorff's Alpha 0.76","unit":"1-5","higher_is_better":true},
+    {"name":"Bias","definition":"human labels each sentence 1 (not conforming to commonsense) or 0; ambiguity error rate over test set","unit":"%","higher_is_better":false},
+    {"name":"Diversity","definition":"100 - Self_BLEU(Cand1, Cand2), initial vs current translation","unit":"score","higher_is_better":true},
+    {"name":"Extra generated tokens","definition":"generated tokens relative to CoT on Counter-Intuitive AR","unit":"x CoT","higher_is_better":false}
+   ],
+   "baselines": ["GPT-4","GPT-3.5-Turbo","Self-Reflect (Shinn et al.)","Rerank (He et al. 2024)","MAPS (He et al. 2024)","CoT (Kojima et al.)","Self-Consistency (Wang et al.)"],
+   "protocol": "Single reported number per cell; no seeds, variance or significance tests stated. Human evaluation by 3 translators."
+  },
+  "availability": {"code":"https://github.com/Skytliang/Multi-Agents-Debate","weights":null,"data":"Counter-Intuitive AR described; release not explicitly stated"},
+  "prompts": [
+   {"purpose":"Meta prompt","text":"You are a debater. Hello and welcome to the debate competition. It's not necessary to fully agree with each other's perspectives, as our objective is to find the correct answer. The debate topic is stated as follows: <debate topic>.","where":"Section 2"},
+   {"purpose":"Affirmative debater","text":"You are affirmative side. Please express your viewpoints.","where":"Section 2"},
+   {"purpose":"Negative debater","text":"You are negative side. You disagree with the affirmative side's points. Provide your reasons and answer.","where":"Section 2"},
+   {"purpose":"Judge","text":"You are a moderator. There will be two debaters involved in a debate competition. They will present their answers and discuss their perspectives on the <debate topic>. At the end of each round, you will evaluate both sides' answers and decide which one is correct.","where":"Section 2"},
+   {"purpose":"Translation debate topic","text":"What is the correct English translation of the following Chinese text","where":"Section 3.2"},
+   {"purpose":"Debate level 0","text":"Both sides must reach a full consensus on every point of the debate. Every statement must be agreed upon by both sides.","where":"Table 11"},
+   {"purpose":"Debate level 1","text":"Most of the debate should be characterized by disagreements, but there may still be a small amount of consensus on less significant points.","where":"Table 11"},
+   {"purpose":"Debate level 3","text":"Both sides must disagree with each other on every point of the debate. There should be no consensus whatsoever.","where":"Table 11"}
+  ],
+  "evidence": [
+   {"field":"inference.parameters.max_debate_iterations","quote":"setting the maximum debate iteration to 3","where":"Section 4.3"}
+  ]
+ },
+ "results": [
+  {"claim":"On Counter-Intuitive AR, MAD on GPT-3.5-Turbo reaches 37.0% accuracy, above CoT, Self-Consistency and Self-Reflect but below GPT-4.","kind":"measured","source":null,"metric":"ACC","value":"37.0","unit":"%","baseline_value":"26.0","n":200,"setup":"Counter-Intuitive AR, 200 questions, GPT-3.5-Turbo-0301, zero-shot, temperature 0; baseline is plain GPT-3.5-Turbo","table":"Table 3, row + MAD, column ACC (%)","note":null,"where":"Table 3"},
+  {"claim":"Other GPT-3.5-Turbo methods on Counter-Intuitive AR: CoT 28.0, Self-Consistency 29.5, Self-Reflect 27.5; GPT-4 51.0.","kind":"measured","source":null,"metric":"ACC","value":"29.5","unit":"%","baseline_value":"26.0","n":200,"setup":"Counter-Intuitive AR, Self-Consistency row; sample count not stated","table":"Table 3, row + Self-Consistency, column ACC (%)","note":"CoT 28.0, Self-Reflect 27.5, GPT-4 51.0","where":"Table 3"},
+  {"claim":"GPT-4 scores 51.0% on Counter-Intuitive AR, well above GPT-3.5-Turbo with MAD.","kind":"measured","source":null,"metric":"ACC","value":"51.0","unit":"%","baseline_value":null,"n":200,"setup":"Counter-Intuitive AR, GPT-4-0314, single model","table":"Table 3, row GPT-4, column ACC (%)","note":null,"where":"Table 3"},
+  {"claim":"On Common MT lexical ambiguity, GPT-3.5-Turbo + MAD gets human score 3.78 vs GPT-4 3.41 and plain Turbo 3.14.","kind":"measured","source":null,"metric":"HUMAN (Lexical)","value":"3.78","unit":"1-5","baseline_value":"3.14","n":200,"setup":"Common MT lexical subset, 200 examples, 3 human translators; GPT-4 is 3.41","table":"Table 1, row + MAD (Turbo), column Lexical HUMAN","note":"Gap to GPT-4 is on lexical; on contextless 3.67 vs 3.63 and contextual 3.67 vs 3.65 the gap is small","where":"Table 1"},
+  {"claim":"Contextless syntactic ambiguity: MAD on Turbo scores human 3.67 vs GPT-4 3.63.","kind":"measured","source":null,"metric":"HUMAN (Contextless)","value":"3.67","unit":"1-5","baseline_value":"3.63","n":450,"setup":"Common MT contextless subset, 450 examples; baseline is GPT-4","table":"Table 1, row + MAD, column Contextless HUMAN","note":null,"where":"Table 1"},
+  {"claim":"Self-Reflect barely moves Turbo human score on lexical (3.43 vs 3.14) but MAD gets 3.78.","kind":"measured","source":null,"metric":"HUMAN (Lexical)","value":"3.43","unit":"1-5","baseline_value":"3.14","n":200,"setup":"Common MT lexical, GPT-3.5-Turbo + Self-Reflect; MAPS also 3.43","table":"Table 1, row + Self-Reflect, column Lexical HUMAN","note":null,"where":"Table 1"},
+  {"claim":"MAD improves Vicuna-7b on lexical human score from 2.55 to 2.67 and Vicuna-13b from 2.81 to 2.96, small gains.","kind":"measured","source":null,"metric":"HUMAN (Lexical)","value":"2.96","unit":"1-5","baseline_value":"2.81","n":200,"setup":"Common MT lexical, Vicuna-13b-v1.5-16k; Vicuna-7b goes 2.55 to 2.67","table":"Table 1, row Vicuna-13b + MAD, column Lexical HUMAN","note":null,"where":"Table 1"},
+  {"claim":"MAD cuts translation bias from 29.0 to 24.8 and raises diversity from 19.3 to 49.7 compared with Self-Reflect.","kind":"measured","source":null,"metric":"Diversity","value":"49.7","unit":"100 - Self-BLEU","baseline_value":"19.3","n":null,"setup":"Common MT, GPT-3.5-Turbo; Self-Reflect vs MAD; Bias is human-labelled error rate","table":"Table 4, row MAD, column Diversity","note":"Bias 29.0 (Self-Reflect) vs 24.8 (MAD)","where":"Table 4"},
+  {"claim":"MAD costs 2.46 times the CoT generated tokens on Counter-Intuitive AR, versus 1.83 for Self-Reflect.","kind":"measured","source":null,"metric":"Generated tokens relative to CoT","value":"2.46","unit":"x","baseline_value":"1.0","n":200,"setup":"Counter-Intuitive AR, GPT-3.5-Turbo","table":"Table 12, row MAD, column Cost (# Generated Tokens)","note":"Text says MAD incurs 'an additional 0.63 times' over self-reflection (2.46 minus 1.83)","where":"Table 12, Appendix E"},
+  {"claim":"Adding debaters hurts: COMET falls from 84.4 with 2 debaters to 83.1 with 3 and 82.9 with 4; human 3.69 to 3.58 to 3.49.","kind":"measured","source":null,"metric":"COMET","value":"82.9","unit":"COMET","baseline_value":"84.4","n":null,"setup":"Common MT, GPT-3.5-Turbo debaters, 4 debaters vs default 2","table":"Table 7, row 4, column COMET","note":"3 debaters 83.1 COMET, 3.58 human; 4 debaters 3.49 human","where":"Table 7"},
+  {"claim":"With the same LLM for all roles, the judge favours the negative side (Turbo: 87 affirmative vs 104 negative, 9 ties).","kind":"measured","source":null,"metric":"Judge winner counts","value":"104","unit":"debates","baseline_value":"87","n":200,"setup":"Common MT, Turbo as judge and both debaters","table":"Table 6, row 1, column Neg winner","note":"GPT-4 for all: 67 aff, 124 neg, 9 ties","where":"Table 6"},
+  {"claim":"With mixed LLMs the judge prefers the side with its own backbone (GPT-4 judge, row 4: 120 vs 77, 3 ties).","kind":"measured","source":null,"metric":"Judge winner counts","value":"120","unit":"debates","baseline_value":"77","n":200,"setup":"Common MT; row 4 is a GPT-4 vs Turbo debater pair; the table rows 3 and 4 give the judge/debater assignment ambiguously in the extracted text","table":"Table 6, row 4, column Aff winner","note":"Row 3: 52 aff, 136 neg, 12 ties. Which debater is which LLM is not recoverable from the cached text","where":"Table 6"},
+  {"claim":"Strong debaters with a weak judge beat the reverse: Turbo debaters with Turbo judge get COMET 84.4 and human 3.69; with Vicuna-13b judge 83.2 and 3.47.","kind":"measured","source":null,"metric":"COMET","value":"84.4","unit":"COMET","baseline_value":"83.2","n":null,"setup":"Common MT, GPT-3.5-Turbo debaters; judge Turbo vs Vicuna-13b","table":"Table 5, row GPT-3.5-Turbo as Debaters / GPT-3.5-Turbo judge, column COMET","note":"Vicuna-13b debaters: 79.9 (Vicuna judge) and 80.4 (Turbo judge)","where":"Table 5"},
+  {"claim":"On math and symbolic tasks MAD beats CoT and Self-Reflect, e.g. GSM 73.8 vs 70.2 CoT and AddSub 92.1 vs 87.3.","kind":"measured","source":null,"metric":"Accuracy GSM","value":"73.8","unit":"%","baseline_value":"70.2","n":null,"setup":"GSM, GPT-3.5-Turbo assumed (model not stated for Appendix C); CoT baseline","table":"Table 10, row MAD, column GSM","note":"AddSub 92.1 vs 87.3; Penguin 63.7 vs 58.9; Date 65.2 vs 56.4; Colored Objects 58.8 vs 57.2. Model not named in Appendix C","where":"Table 10"},
+  {"claim":"Forcing the debate to run more rounds hurts: the highest COMET appears at the first iteration and is below the adaptive break result.","kind":"measured","source":null,"metric":"qualitative","value":null,"unit":null,"baseline_value":null,"n":null,"setup":"Common MT COMET vs forced iteration 0 to 5, MAD vs Self-Reflection (read from Fig 5, no numbers in text)","quote":null,"table":null,"note":"Text: highest COMET score appears at the first iteration and is also lower than the result of the adaptive break","where":"Section 4.3, Fig 5"},
+  {"claim":"Demanding total disagreement (level 3, disagreement 0.988) does not give the best performance; a modest tit for tat is best.","kind":"measured","source":null,"metric":"Avg. disagreement at level 3","value":"0.988","unit":"fraction","baseline_value":null,"n":null,"setup":"Common MT lexical subset, prompt levels 0 to 3 in Table 11; ambiguity resolution values per level in Fig 3 are not cleanly recoverable from text","quote":"\"must disagree with each other on every point \" (with a disagreement of 0.988)","table":null,"note":null,"where":"Section 4.3, Fig 3"},
+  {"claim":"Self-reflection shows low disagreement between iterations, i.e. the LLM sticks to the CoT answer (DoT).","kind":"measured","source":null,"metric":"qualitative","value":null,"unit":null,"baseline_value":null,"n":null,"setup":"5 forced rounds, manual disagreement labels, Fig 1","quote":null,"table":null,"note":"Quote: The low disagreement of self-reflection suggests that the LLM sticks to the incorrect answers predicted by CoT","where":"Section 1, Fig 1"}
+ ],
+ "limits": [
+  "Authors concede the method requires more time cost because agents interact over multiple rounds.",
+  "More than two debaters degraded results because LLMs forget other views and the judge struggles to extract from long text.",
+  "LLM judge may prefer outputs generated by itself; authors recommend same LLM for all roles or distinct LLMs for judge and debaters.",
+  "GPT-4 still beats MAD on Counter-Intuitive AR (51.0 vs 37.0).",
+  "No variance, seeds or significance tests; Self-Consistency sample count and model for Appendix C not stated.",
+  "Models are GPT-3.5-Turbo-0301, GPT-4-0314 and Vicuna v1.5 (dated); only two main tasks, one self-built 200-question set.",
+  "Compute-matched comparison with majority voting is not made: MAD uses 2.46x CoT tokens while Self-Consistency token cost is not reported."
+ ],
+ "practices": [],
+ "terms": [
+  {"term":"Degeneration-of-Thought (DoT)","definition":"Once the LLM-based agent has established confidence in its answers, it is unable to generate novel thoughts later through self-reflection even if the initial stance is incorrect.","where":"Section 1"},
+  {"term":"Adaptive break","definition":"The judge ends the debate early when it believes the correct solution has been obtained (discriminative mode).","where":"Section 2, 4.3"},
+  {"term":"Tit for tat","definition":"Debaters are told to argue against each other, creating an atmosphere of debate.","where":"Section 2"}
+ ],
+ "lineage": [
+  {"work":"Self-Refine","year":2024,"arxiv":null,"relation":"related","note":"Madaan et al., self-reflection family","quote":null},
+  {"work":"Reflexion","year":2024,"arxiv":null,"relation":"baseline","note":"Shinn et al., Self-Reflect baseline","quote":null},
+  {"work":"Improving factuality and reasoning through multiagent debate","year":2023,"arxiv":null,"relation":"related","note":"Du et al. 2023, concurrent; MAD differs by judge with adaptive break, DoT focus, identical backbone","quote":null},
+  {"work":"Xiong et al.","year":2023,"arxiv":null,"relation":"related","note":"concurrent multi-agent debate","quote":null},
+  {"work":"MAPS / Rerank","year":2024,"arxiv":null,"relation":"baseline","note":"He et al. 2024","quote":null},
+  {"work":"Self-Consistency","year":2022,"arxiv":null,"relation":"baseline","note":"Wang et al.","quote":null},
+  {"work":"Zero-shot CoT","year":2022,"arxiv":null,"relation":"baseline","note":"Kojima et al.","quote":null},
+  {"work":"Common MT","year":2020,"arxiv":null,"relation":"uses-data","note":"He et al. 2020","quote":null},
+  {"work":"GSM8K","year":2021,"arxiv":"2110.14168","relation":"uses-data","note":"Cobbe et al.","quote":null}
+ ],
+ "figures": [
+  {"figure":"Fig 1","caption":"Disagreement between two adjacent iterations with respect to the iteration of debate/self-reflection.","page":1,"why":"Shows DoT: self-reflection disagreement stays near zero while debate keeps disagreeing."},
+  {"figure":"Fig 2","caption":"Framework of Multi-Agent Debate. Here we designate the devil as the affirmative side while the angel as the negative side. We want the angel to correct the devil's mistakes.","page":3,"why":"One picture of debaters, judge and the self-reflection failure on the circle-revolutions question."},
+  {"figure":"Fig 3","caption":"Translation performance with respect to the debate level on Lexical.","page":7,"why":"Tit-for-tat intensity vs ambiguity resolution; full disagreement is not best."},
+  {"figure":"Fig 4","caption":"Distribution of iteration rounds and a human score of each iteration subset.","page":7,"why":"Most items finish in one round; harder items need more."},
+  {"figure":"Fig 5","caption":"Performance with respect to the iteration of debate or self-reflection.","page":8,"why":"Forced extra rounds lower COMET; adaptive break is best."}
+ ],
+ "code": [],
+ "problems": [
+  "Table 6 row-to-model mapping (which debater is Turbo vs GPT-4 in rows 3 and 4) is garbled in the cached text.",
+  "Fig 3 and Fig 5 values are only in figures, not in text.",
+  "No embedded instructions found in the PDF."
+ ]
+}

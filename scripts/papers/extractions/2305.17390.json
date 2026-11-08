@@ -1,0 +1,499 @@
+{
+ "schema": 1,
+ "key": "2305.17390",
+ "pdf": "generative-ai/03-agentic-foundations/sources/lin-2023-swiftsage.pdf",
+ "bib": {
+  "title": "SWIFTSAGE: A Generative Agent with Fast and Slow Thinking for Complex Interactive Tasks",
+  "authors": [
+   "Bill Yuchen Lin",
+   "Yicheng Fu",
+   "Karina Yang",
+   "Faeze Brahman",
+   "Shiyu Huang",
+   "Chandra Bhagavatula",
+   "Prithviraj Ammanabrolu",
+   "Yejin Choi",
+   "Xiang Ren"
+  ],
+  "first_author": "Lin",
+  "year": 2023,
+  "venue": "NeurIPS 2023 (37th Conference on Neural Information Processing Systems)",
+  "arxiv": "2305.17390",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66289,
+  "chars_total": 66289,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; figures not viewed (captions from text)"
+ },
+ "type": "empirical",
+ "question": "Can an agent that combines a small fine-tuned LM (fast) with prompted LLM planning (slow) solve complex interactive tasks more effectively and cheaply than per-step LLM prompting agents?",
+ "hypothesis": "Integrating behavior cloning (System 1) and LLM planning-and-grounding (System 2) via a switching heuristic gives better performance and efficiency than either alone or than SayCan/ReAct/Reflexion.",
+ "contributions": [
+  "SWIFTSAGE dual-process agent framework (SWIFT + SAGE modules)",
+  "Heuristic to switch between modules with an action buffer",
+  "State-of-the-art on 30 ScienceWorld task types with fewer tokens per action"
+ ],
+ "method": {
+  "summary": "SWIFT is a flan-t5-large (770m) fine-tuned by behavior cloning on oracle ScienceWorld trajectories and acts by default. When stuck, invalid, critical or an exception appears, SAGE prompts GPT-4 once for plan answers (Q1-Q5) and once to ground the next subgoal into an action buffer of several actions; control returns to SWIFT when the buffer empties.",
+  "task": "interactive text-environment action planning (ScienceWorld)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ScienceWorld (down-sampled)",
+    "role": "both",
+    "size": "62,083 action-prediction data points (62k); 2,157 train / 259 dev / 270 test variations",
+    "split": "train 2,157 / dev 259 / test 270 variations; test uses only first 10 variations for tasks with more",
+    "source": "ScienceWorld benchmark (Wang et al. 2022), oracle agent trajectories",
+    "preprocessing": "down-sampled tasks 9-x, 10-x and 3-3 and uninformative actions such as 'close door to kitchen'"
+   }
+  ],
+  "models": [
+   {
+    "name": "SWIFT (flan-t5-large)",
+    "role": "proposed",
+    "params": "770m",
+    "architecture": "encoder-decoder (T5)",
+    "init_from": "flan-t5-large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "history_window": "K=10 recent actions with observations and rewards",
+     "input_format": "Task; Time; Score; Action history; Current room; Inventory; Visited rooms"
+    }
+   },
+   {
+    "name": "SAGE LLM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT-4 (main); gpt-3.5-turbo in Table 3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TDT (Text Decision Transformer)",
+    "role": "baseline",
+    "params": "11b",
+    "architecture": "seq2seq behavior cloning",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SayCan, ReAct, Reflexion (adapted)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GPT-4 prompting",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "seq2seq next-action prediction (behavior cloning)",
+   "optimizer": null,
+   "lr": "1e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": "500 steps, selected based on dev loss",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "balanced data via down-sampling",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one round per task variation (Reflexion up to four rounds); number of runs/seeds not stated",
+   "prompting": "SAGE: one planning prompt answering Q1-Q5, then a grounding prompt with formal action templates, recent 10 steps and plan answers; in-context demos of full trajectories of one or two training variations per task type for baselines",
+   "retrieval": null,
+   "parameters": {
+    "switch_stuck": "K=5 consecutive zero-reward steps",
+    "switch_other": "invalid action, critical decision (focus on), unexpected observation",
+    "buffer_halt": "two consecutive invalid or exception actions revert to SWIFT",
+    "history_window": "10 steps",
+    "actions_per_buffer": "about 5"
+   },
+   "other": {
+    "saycan_ranking": "SentenceBERT over valid actions vs top 5 generations",
+    "react_reflexion": "best single generation, valid action with minimal edit distance"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ScienceWorld score",
+     "definition": "cumulative score 0-100 averaged over test variations; negative-score runs use last non-negative score",
+     "unit": "points (0-100)",
+     "higher_is_better": true
+    },
+    {
+     "name": "tokens per action (tpa)",
+     "definition": "average LLM tokens per environment action",
+     "unit": "tokens",
+     "higher_is_better": false
+    },
+    {
+     "name": "scores per action (spa)",
+     "definition": "score gained per action",
+     "unit": "points/action",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DRRN",
+    "KG-A2C",
+    "CALM",
+    "TDT",
+    "SayCan",
+    "ReAct",
+    "Reflexion"
+   ],
+   "protocol": "270 test variations; no seeds or significance tests stated; Reflexion gets up to 4 rounds vs 1 for others"
+  },
+  "availability": {
+   "code": "https://swiftsage.github.io",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "SAGE planning Q1-Q5",
+    "text": "▶Q1(locate objects): “To complete the task, which objects do I need to collect? Please list them and their possible locations one by one.”\n▶Q2(track objects): “Are there any objects that have not been collected yet?”\n▶Q3(plan subgoals): “To complete the task most efficiently, what are the important subgoals to achieve? Please list the subgoals one by one.”\n▶Q4(track progress): “Considering these subgoals, what have I already completed? And which subgoal should I focus on right now?”\n▶Q5(handle exceptions): “Have I made any mistakes that might prevent me from efficiently completing the next subgoal? If any , how should I fix them?”",
+    "where": "Sec 3.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SwiftSage reaches the highest overall ScienceWorld score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score",
+   "value": 84.68,
+   "unit": "points",
+   "baseline_value": "Reflexion 45.34; ReAct 36.43; SayCan 33.82",
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": null,
+   "table": "Table 1, row Overall, column SwiftSage",
+   "note": "Intro prints rounded 84.7, 33.8, 36.4, 45.3",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Abstract/intro headline: SwiftSage average vs baselines.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score",
+   "value": 84.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": "achieving a state-of-the-art average score of 84.7",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "SWIFT-only (770m) agent scores 49.22 overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score",
+   "value": 49.22,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, SWIFT module only, no SAGE",
+   "quote": "achieves an overall performance of 49.22",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "With gpt-3.5-turbo, SwiftSage keeps 62.22 overall while ReAct drops to 19.76.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score",
+   "value": 62.22,
+   "unit": "points",
+   "baseline_value": "ReAct 19.76",
+   "n": null,
+   "setup": "ScienceWorld, gpt-3.5-turbo as LLM",
+   "quote": "SWIFTSAGE maintains a respectable performance of 62.22",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  },
+  {
+   "claim": "ReAct drops from 36.43 to 19.76 when GPT-4 is replaced by GPT-3.5-turbo.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall score",
+   "value": 19.76,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, gpt-3.5-turbo",
+   "quote": "ReAct’s score drops from 36.43 to 19.76",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  },
+  {
+   "claim": "SwiftSage uses 757.07 tokens per action vs 1,855.84 SayCan, 1,971.03 ReAct, 2,983.46 Reflexion.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens per action",
+   "value": 757.07,
+   "unit": "tokens",
+   "baseline_value": "SayCan 1855.84",
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": "SWIFTSAGE, on the other hand, only uses 757.07 tpa",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 4"
+  },
+  {
+   "claim": "Reflexion uses the most tokens per action.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens per action",
+   "value": 2983.46,
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": "REFLEXION necessitates 2,983.46 tpa",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "SwiftSage overall scores per action is 2.73 vs 0.65 SayCan, 0.79 ReAct, 0.13 Reflexion.",
+   "kind": "measured",
+   "source": null,
+   "metric": "scores per action",
+   "value": 2.73,
+   "unit": "points/action",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": null,
+   "table": "Table 4, row Overall, column SwiftSage (spa)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Short-task score 92.22, medium 77.79, long 83.0 for SwiftSage.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score by length group",
+   "value": 92.22,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld, 30 task types, 270 test variations (first 10 per task), GPT-4 as the SAGE/baseline LLM, one round (Reflexion up to four)",
+   "quote": null,
+   "table": "Table 1, row Short, column SwiftSage",
+   "note": "Medium 77.79, Long 83.0",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Including Q1-Q3 answers in grounding gives about 2 points on short tasks (small-scale ablation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 2,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "small-scale ablation, short tasks",
+   "quote": "yielding a gain of about 2 points for short tasks on average",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3 / App B.2"
+  },
+  {
+   "claim": "SWIFT outperforms 11-billion TDT despite 15x smaller.",
+   "kind": "measured",
+   "source": null,
+   "metric": "size ratio",
+   "value": 15,
+   "unit": "x smaller",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SWIFT 770m vs TDT 11b",
+   "quote": "despite being 15x smaller in size",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "SwiftSage does not win every task: on 6-1 (M) it scores 49.40 vs Reflexion 70.35 and ReAct 51.04.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task score",
+   "value": 49.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ScienceWorld task 6-1, GPT-4",
+   "quote": null,
+   "table": "Table 1, row 6-1 (M), column SwiftSage",
+   "note": "column order in text cache: DRRN, KGA2C, CALM, TDT, SayCan, ReAct, Reflexion, SwiftSage; row values listed 15.77,17.0,3.0,15.10,47.81,51.04,70.35,49.40",
+   "where": "Table 1"
+  }
+ ],
+ "limits": [
+  "Evaluated only on ScienceWorld, a textual simulator with a limited action set (authors concede).",
+  "No safeguards against hazardous real-world actions.",
+  "SAGE depends on closed LLMs (GPT-4); scalability and cost concern; open-source LLMs have shorter input limits.",
+  "Switching is a hand-written heuristic; authors say a learned switch is future work.",
+  "Reflexion given up to four rounds vs one for others, so comparison is not fair (authors say so).",
+  "Baselines require human subgoal annotations (ReAct/Reflexion); SwiftSage does not.",
+  "No seeds, variance or significance tests; ablations are small-scale and not tabulated.",
+  "SWIFT trained on oracle (shortest correct) trajectories, so it cannot learn to fix mistakes and repeats actions on exceptions."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "action buffer",
+   "definition": "list of actions generated by the LLM in the grounding stage, B = { Â_t, Â_t+1, ... }, executed sequentially until empty",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dual process theory / Thinking, Fast and Slow (Kahneman)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "motivation for fast SWIFT and slow SAGE",
+   "quote": null
+  },
+  {
+   "work": "ScienceWorld (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark, oracle agent, TDT baseline",
+   "quote": null
+  },
+  {
+   "work": "SayCan (Ahn et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LLM plus value-function rerank",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "baseline",
+   "note": "think actions with human subgoal annotations",
+   "quote": null
+  },
+  {
+   "work": "Reflexion (Shinn et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "multi-round self-reflection",
+   "quote": null
+  },
+  {
+   "work": "Decision Transformer (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "basis of TDT",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (flan-t5)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "uses-method",
+   "note": "base model for SWIFT",
+   "quote": null
+  },
+  {
+   "work": "DRRN, CALM, KG-A2C",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "RL / imitation baselines from ScienceWorld paper",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparing methods of prompting LLMs to build agents for interactive tasks.",
+   "page": 2,
+   "why": "Shows SayCan/ReAct/Reflexion call the LLM every timestep while SwiftSage calls it only when needed."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An example of how SWIFTSAGE works with fast and slow thinking...",
+   "page": 5,
+   "why": "Shows the broken-stove switch from SWIFT to SAGE plan/ground and action buffer."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Visualizing trajectories of SWIFTSAGE, REACT and ORACLE.",
+   "page": 9,
+   "why": "Score-vs-time curves per task showing efficiency."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The SwiftSage framework explained with pseudocode.",
+   "page": 15,
+   "why": "Control loop in one view (image only; pseudocode not in text)."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and Table 3 text is flattened; row values were mapped by column order. Fig 4 pseudocode is an image and not in the text cache.",
+  "Section 3 header and 'A Dataset Statistics' heading partly merged in the cache. No embedded instructions found."
+ ]
+}

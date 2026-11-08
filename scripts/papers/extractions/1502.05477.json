@@ -1,0 +1,483 @@
+{
+ "schema": 1,
+ "key": "1502.05477",
+ "pdf": "generative-ai/05-RL/sources/schulman-2015-trust-region-policy-optimization.pdf",
+ "bib": {
+  "title": "Trust Region Policy Optimization",
+  "authors": [
+   "John Schulman",
+   "Sergey Levine",
+   "Philipp Moritz",
+   "Michael Jordan",
+   "Pieter Abbeel"
+  ],
+  "first_author": "Schulman",
+  "year": 2015,
+  "venue": "Proceedings of the 31st International Conference on Machine Learning (ICML), Lille, France, 2015. JMLR: W&CP volume 37",
+  "arxiv": "1502.05477",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 59521,
+  "chars_total": 59521,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; proofs in appendices A and B read but not re-derived."
+ },
+ "type": "empirical",
+ "question": "How can a policy be updated with a guaranteed monotonic improvement in expected return, and can a practical approximation of that update train large nonlinear policies reliably?",
+ "hypothesis": "Constraining the KL divergence between old and new policy gives a more robust step size than a fixed penalty coefficient and lets neural-network policies improve consistently with little tuning.",
+ "contributions": [
+  "Prove that minimizing a surrogate objective with a KL (total variation) penalty guarantees policy improvement for general stochastic policies (Theorem 1, Eq. 9)",
+  "Approximate it by a hard average-KL trust-region constraint (Eq. 12), solved with conjugate gradient plus line search",
+  "Two sampling schemes: single path (model-free) and vine (needs state resets)",
+  "Show the same method learns swimming, hopping, walking gaits and Atari from pixels"
+ ],
+ "method": {
+  "summary": "Surrogate objective L (Eq. 3) maximised under an average-KL constraint delta between old and new policy. Objective and constraint are estimated by Monte Carlo (single path or vine), the step direction comes from conjugate gradient on the Fisher matrix, and a backtracking line search enforces the constraint and objective improvement.",
+  "task": "policy optimisation for reinforcement learning (MuJoCo locomotion, Atari)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MuJoCo swimmer, hopper, walker, cart-pole",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "MuJoCo simulator (Todorov et al., 2012)",
+    "preprocessing": null
+   },
+   {
+    "name": "Atari (ALE): Beam Rider, Breakout, Enduro, Pong, Q*bert, Seaquest, Space Invaders",
+    "role": "both",
+    "size": "7 games",
+    "split": null,
+    "source": "Arcade Learning Environment (Bellemare et al., 2013)",
+    "preprocessing": "following the protocol in Mnih et al (2013)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Locomotion policy (Gaussian MLP)",
+    "role": "proposed",
+    "params": "364 (swimmer), 4806 (hopper), 8206 (walker)",
+    "architecture": "fully connected net to Gaussian mean, state-independent diagonal covariance via log std vector",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "30 units (swimmer), 50 (hopper, walker)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "state_dim": "10 / 12 / 20 (Table 2)",
+     "control_dim": "2 / 3 / 6"
+    }
+   },
+   {
+    "name": "Atari policy (CNN)",
+    "role": "proposed",
+    "params": "33,500",
+    "architecture": "two conv layers, 16 channels, stride 2, one fully connected layer of 20 units, softmax over factored discrete actions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 conv + 1 FC",
+    "hidden": "20 units",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise surrogate L_thetaold(theta) subject to mean KL(thetaold, theta) <= delta (Eq. 12/14)",
+   "optimizer": "conjugate gradient (k=10 iterations) for direction A^-1 g, then backtracking line search with max step beta = sqrt(2 delta / s^T A s)",
+   "lr": "none; step size is the KL bound delta = 0.01",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "per iteration: locomotion 50K (swimmer) or 1M (hopper, walker) sim steps; Atari vine 400K, single path 100K sim steps",
+   "steps": "200 policy iterations (locomotion), 500 (Atari)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "single path: 1000 steps per path; vine rollout length 50 (swimmer), 100 (hopper, walker)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL trust region; Fisher-vector products computed on 10% subsample of data",
+   "hardware": "16-core computer (Atari)",
+   "compute": null,
+   "wall_clock": "Atari about 30 hrs for 500 iterations; vine 2/14/40 min and single path 5/35/100 (units as printed, 'computation time') for swimmer/hopper/walker",
+   "seeds": "locomotion curves averaged over five runs; Atari run once per task",
+   "other": {
+    "discount": "0.99",
+    "vine_rollouts_per_state": "4 (locomotion), about 4 (Atari)",
+    "vine_Q_values_per_batch": "500 / 2500 / 2500",
+    "vine_num_rollouts_for_sampling": "16",
+    "vine_len_rollouts_for_sampling": "1000",
+    "SP_num_paths": "50 / 1000 / 10000",
+    "vine_sampling_dist_q": "policy for continuous, uniform for Atari",
+    "natural_gradient_baseline": "stepsize swept in factors of three, best by final performance",
+    "reward_function_not_restated": "swimmer r = vx - 1e-5 ||u||^2; hopper same plus +1 non-terminal bonus"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "locomotion: five runs averaged; Atari: one run per game",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "delta": "0.01",
+    "gamma": "0.99",
+    "cg_iterations": "10",
+    "fisher_subsample": "10% of data"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "learning curves of total reward / cost",
+     "definition": "total reward (or cost) per policy iteration averaged over five runs",
+     "unit": "reward",
+     "higher_is_better": true
+    },
+    {
+     "name": "Atari game score",
+     "definition": "score per game from a single run",
+     "unit": "game points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "CEM",
+    "CMA",
+    "natural gradient (fixed penalty)",
+    "empirical FIM",
+    "max KL (cart-pole only)",
+    "RWR",
+    "Deep Q Learning (Mnih et al., 2013)",
+    "UCC-I (Guo et al., 2014)",
+    "Human",
+    "Random"
+   ],
+   "protocol": "Locomotion: five random initialisations per algorithm. Atari: one run each, no error statistics ('time constraints')."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "project website with videos: http://sites.google.com/site/trpopaper/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.seeds",
+    "quote": "we could not obtain error statistics due to time constraints",
+    "where": "Table 1 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Policy improvement bound: expected return of the new policy is at least the surrogate minus a penalty proportional to max KL.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 1 and Eq. 9; epsilon = max |A|, C = 4 eps gamma/(1-gamma)^2, using D_TV^2 <= D_KL",
+   "quote": null,
+   "table": null,
+   "note": "Equation text in extraction: eta(pi~) >= L_pi(pi~) - C D_KL^max(pi, pi~)",
+   "where": "Sec 3, Eq. 8-9"
+  },
+  {
+   "claim": "Single path and vine TRPO solved all locomotion problems and gave the best solutions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "cart-pole, swimmer, hopper, walker; five runs; vs CEM, CMA, natural gradient, empirical FIM, RWR",
+   "quote": "Single path and vine TRPO solved all of the problems, yielding the best solutions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.1, Fig 4"
+  },
+  {
+   "claim": "Natural gradient with a fixed penalty could not produce forward hopping or walking gaits, supporting the fixed-KL constraint.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "hopper and walker, stepsize swept in factors of three",
+   "quote": "Natural gradient performed well on the two easier problems, but was unable to generate hopping and walking gaits that made forward progress.",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.1"
+  },
+  {
+   "claim": "The average-KL constraint behaves similarly to the theoretically justified max-KL constraint (max KL learned somewhat more slowly).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "cart-pole only (max KL intractable elsewhere)",
+   "quote": "the average KL divergence constraint has a similar ef-",
+   "table": null,
+   "note": "Quote is truncated across a line break; max KL tractable only on cart-pole.",
+   "where": "Sec 8.1"
+  },
+  {
+   "claim": "Atari Pong score of single path TRPO.",
+   "kind": "measured",
+   "source": null,
+   "metric": "game score",
+   "value": 20.9,
+   "unit": "points",
+   "baseline_value": 20.0,
+   "n": 1,
+   "setup": "Pong, single run, 500 iterations, 33,500-parameter CNN; baseline is Deep Q Learning (Mnih et al., 2013)",
+   "quote": null,
+   "table": "Table 1, row TRPO - single path, column Pong",
+   "note": "Vine also 20.9; UCC-I 21",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Vine TRPO scored 7732.5 on Q*bert versus 1973.5 for single path and 1952 for DQN, but UCC-I scored 20025.",
+   "kind": "measured",
+   "source": null,
+   "metric": "game score",
+   "value": 7732.5,
+   "unit": "points",
+   "baseline_value": 1952,
+   "n": 1,
+   "setup": "Q*bert, single run, vine, 500 iterations",
+   "quote": null,
+   "table": "Table 1, row TRPO - vine, column Q*bert",
+   "note": "Compared to DQN 1952; UCC-I 20025 higher",
+   "where": "Table 1"
+  },
+  {
+   "claim": "TRPO only outperformed prior methods on some Atari games but consistently achieved reasonable scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 1,
+   "setup": "seven Atari games vs DQN and UCC-I",
+   "quote": "While our method only outperformed the prior",
+   "table": null,
+   "note": "Quote continues across line break; human beats TRPO on all but Pong",
+   "where": "Sec 8.2"
+  },
+  {
+   "claim": "500 Atari iterations took about 30 hours on a 16-core computer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 30,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Atari, 500 iterations, 16-core machine",
+   "quote": "The 500 iterations of our algorithm took about 30",
+   "table": null,
+   "note": null,
+   "where": "Sec 8.2"
+  },
+  {
+   "claim": "Conjugate gradient with k=10 iterations is effective and subsampling the Fisher-vector product to 10% of the data makes its cost about that of one gradient.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CG iterations",
+   "value": 10,
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix C.1; naive implementation would spend over 90% of effort on Fisher-vector products",
+   "quote": "We found k = 10 to be quite effective, and using higher k did not result in faster policy improvement.",
+   "table": null,
+   "note": null,
+   "where": "App C.1"
+  },
+  {
+   "claim": "Without the line search the algorithm occasionally takes large steps causing catastrophic degradation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix C; no ablation numbers given",
+   "quote": "Without this line search, the algorithm occasionally computes large steps that cause a catastrophic degradation of performance.",
+   "table": null,
+   "note": null,
+   "where": "App C"
+  }
+ ],
+ "limits": [
+  "Monotonic improvement is proven only for the penalised form with the theory's large C; the practical algorithm uses a hard average-KL constraint and ignores advantage estimation error, so the guarantee does not hold in practice (authors say 'tends to give monotonic improvement').",
+  "Atari runs were single runs with no error statistics (Table 1 caption).",
+  "TRPO beats prior methods only on some Atari games; human performance exceeds it on most.",
+  "Vine needs resettable simulators and far more simulator calls.",
+  "Max-KL variant only tested on cart-pole.",
+  "Uses Monte Carlo Q-values, no learned value function/GAE; sample complexity high (1M sim steps per iteration for hopper, walker).",
+  "No code release stated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "vine",
+   "definition": "sampling scheme that builds a rollout set of states along trunk trajectories and performs several actions and short rollouts from each, using common random numbers",
+   "where": "Sec 5.2"
+  },
+  {
+   "term": "single path",
+   "definition": "sampling scheme that simulates the policy and uses the discounted sum of future rewards along each trajectory as the Q estimate",
+   "where": "Sec 5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kakade & Langford, Approximately optimal approximate reinforcement learning (conservative policy iteration)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Theorem 1 extends their mixture-policy bound to general stochastic policies via total variation and KL",
+   "quote": null
+  },
+  {
+   "work": "Kakade, A natural policy gradient",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "TRPO's linear-L, quadratic-KL special case; differs by enforcing constraint each update",
+   "quote": null
+  },
+  {
+   "work": "Peters et al., Relative entropy policy search (REPS)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "constrains state-action marginals; TRPO constrains conditionals",
+   "quote": null
+  },
+  {
+   "work": "Peters & Schaal, Natural actor-critic",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar policy updates",
+   "quote": null
+  },
+  {
+   "work": "Levine & Abbeel, guided policy search under unknown dynamics",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "KL constraint serves model validity",
+   "quote": null
+  },
+  {
+   "work": "Pirotta et al., Safe policy iteration",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "also generalises Kakade & Langford",
+   "quote": null
+  },
+  {
+   "work": "Mnih et al., Playing Atari with deep reinforcement learning",
+   "year": 2013,
+   "arxiv": "1312.5602",
+   "relation": "baseline",
+   "note": "DQN scores in Table 1; also preprocessing protocol",
+   "quote": null
+  },
+  {
+   "work": "Guo et al., Deep learning for real-time Atari game play using offline MCTS planning (UCC-I)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Atari baseline",
+   "quote": null
+  },
+  {
+   "work": "CEM (Szita & Lorincz) and CMA (Hansen & Ostermeier)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "gradient-free baselines",
+   "quote": null
+  },
+  {
+   "work": "MuJoCo (Todorov et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "locomotion simulator",
+   "quote": null
+  },
+  {
+   "work": "Arcade Learning Environment (Bellemare et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Atari games",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: illustration of single path procedure. Right: illustration of vine procedure.",
+   "page": 4,
+   "why": "Shows trunk and branch rollouts with common random numbers versus plain trajectories."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Learning curves for locomotion tasks, averaged across five runs of each algorithm with random initializations.",
+   "page": 6,
+   "why": "Compares TRPO to natural gradient, CEM, CMA, RWR on four tasks."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Performance comparison for vision-based RL algorithms on the Atari domain.",
+   "page": 7,
+   "why": "Atari scores vs DQN, UCC-I, human, random."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 12",
+   "snippet": "maximize_theta L_thetaold(theta) subject to mean_s~rho_thetaold D_KL(theta_old, theta) <= delta",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix C",
+   "snippet": "beta = sqrt(2 delta / s^T A s), search direction s ~ A^-1 g by conjugate gradient; line search shrinks beta exponentially",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Walker state dimension is 18 in Sec 8.1 but 20 in Table 2.",
+  "Fig 1 and Fig 4 text is mixed with axis labels in the cache; page numbers for figures are estimates.",
+  "No embedded instructions found."
+ ]
+}

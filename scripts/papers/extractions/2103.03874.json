@@ -1,0 +1,449 @@
+{
+ "schema": 1,
+ "key": "2103.03874",
+ "pdf": "generative-ai/05-RL/sources/hendrycks-2021-measuring-mathematical-problem-solving-math.pdf",
+ "bib": {
+  "title": "Measuring Mathematical Problem Solving With the MATH Dataset",
+  "authors": [
+   "Dan Hendrycks",
+   "Collin Burns",
+   "Saurav Kadavath",
+   "Akul Arora",
+   "Steven Basart",
+   "Eric Tang",
+   "Dawn Song",
+   "Jacob Steinhardt"
+  ],
+  "first_author": "Hendrycks",
+  "year": 2021,
+  "venue": "NeurIPS 2021 Track on Datasets and Benchmarks",
+  "arxiv": "2103.03874",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 84746,
+  "chars_total": 84746,
+  "engine": "pymupdf",
+  "skipped": "Appendix figure axis residue and Khan Academy module lists (figures 9-15) are chart text only."
+ },
+ "type": "benchmark",
+ "question": "How well can machine learning models solve competition-level mathematics problems that need problem-solving heuristics rather than plug-and-chug calculation?",
+ "hypothesis": "Scaling Transformers alone will not solve MATH; new algorithmic advances are needed.",
+ "contributions": [
+  "MATH: 12,500 competition problems with step-by-step solutions and boxed answers",
+  "AMPS: a 23GB auxiliary mathematics pretraining corpus (Khan Academy + Mathematica)",
+  "Baselines with GPT-2 and GPT-3 showing low accuracy and slow scaling"
+ ],
+ "method": {
+  "summary": "Builds MATH (7,500 train / 5,000 test problems from AMC/AIME-style contests, levels 1-5, 7 subjects, exact-match on \\boxed{} answers) and AMPS pretraining corpus. GPT-2 models (0.1B-1.5B) are pretrained on AMPS then fine-tuned on MATH; GPT-3 is fine-tuned or few-shot via API.",
+  "task": "competition mathematics answer generation, scored by exact match",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MATH",
+    "role": "both",
+    "size": "12,500 problems",
+    "split": "7,500 train, 5,000 test",
+    "source": "AoPS contest archives (AMC 10, AMC 12, AIME and more); LaTeX + Asymptote",
+    "preprocessing": "Final answers in \\boxed{} with normalisation rules (simplified fractions, ignore spaces and units, equivalent fraction encodings)"
+   },
+   {
+    "name": "AMPS Khan Academy",
+    "role": "pretrain",
+    "size": "over 100,000 problems, 693 exercise types",
+    "split": null,
+    "source": "Khan Academy exercises (khan-exercises code)",
+    "preprocessing": "upsampled x5 in pretraining"
+   },
+   {
+    "name": "AMPS Mathematica",
+    "role": "pretrain",
+    "size": "around 5 million problems from 100 scripts (about 50,000 each); 37 scripts include step-by-step solutions",
+    "split": null,
+    "source": "authors' Mathematica scripts",
+    "preprocessing": "downsampled x2 in pretraining; AMPS total 23GB"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 (0.1B, 0.3B, 0.7B, 1.5B)",
+    "role": "proposed",
+    "params": "0.1B-1.5B",
+    "architecture": "decoder-only transformer",
+    "init_from": "inferred: pretrained GPT-2 (natural-language), then AMPS pretraining",
+    "tokenizer": "digit-at-a-time number tokenisation (Henighan et al., 2020)",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3 Curie (13B) and Davinci (175B)",
+    "role": "baseline",
+    "params": "13B, 175B",
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "no AMPS pretraining (API limits); 13B fine-tuned via API, both few-shot"
+    }
+   },
+   {
+    "name": "BART-Large",
+    "role": "baseline",
+    "params": "0.4B",
+    "architecture": "bidirectional encoder, unidirectional decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard autoregressive language modelling; fine-tuning on equal mix of '<P> Final Answer: <Answer>' and '<P> Full Solution: <Step-by-Step Solution>' sequences",
+   "optimizer": "AdamW",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "1 epoch AMPS pretraining; fine-tuning epochs not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 A100 GPUs",
+   "compute": "each run requires less than a day",
+   "wall_clock": "less than a day per model",
+   "seeds": null,
+   "other": {
+    "T5": "two-week broad hyperparameter sweep, not competitive (tokenizer removes LaTeX symbols)",
+    "fine_tune_batch_and_wd": "same as pretraining"
+   }
+  },
+  "inference": {
+   "decoding": "GPT-2: HuggingFace default generation parameters plus beam search; beam 20 for final answer only, beam 10 for full solutions",
+   "temperature": "0 (GPT-3 few-shot)",
+   "top_p": null,
+   "max_tokens": "20 tokens for final answer (GPT-3 few-shot)",
+   "samples": "single run, no seeds reported",
+   "prompting": "GPT-2 prompted with '<P> Final Answer:'; GPT-3 few-shot prepends 8 problems with correct answers (no solutions)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "exact match of normalised \\boxed{} answer against ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUROC of confidence",
+     "definition": "confidence = mean token probability of generated answer; probability a correct answer has higher confidence than an incorrect one",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3 13B/175B few-shot",
+    "GPT-3 13B fine-tuned",
+    "BART-Large",
+    "human participants (20-problem sample)"
+   ],
+   "protocol": "Test set of 5,000; humans: 20 random test problems, 1 hour, by hand, 6 university students (4 are authors). Single run, no significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "MATH and AMPS released (Khan exercises code at github.com/Khan/khan-exercises)"
+  },
+  "prompts": [
+   {
+    "purpose": "default GPT-2 evaluation",
+    "text": "Final Answer:",
+    "where": "Sec 4.1"
+   },
+   {
+    "purpose": "scratch-space evaluation",
+    "text": "Full Solution:",
+    "where": "Sec 4.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best average MATH accuracy is low: GPT-2 1.5B with AMPS pretraining reaches 6.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 1.5B, AMPS pretrain + MATH fine-tune, 5,000 test problems, beam search, final answer only",
+   "quote": "6.9% accuracy, a 28% \nrelative",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Table 2"
+  },
+  {
+   "claim": "Models trained with AMPS: a 0.1B GPT-2 matches a 13B GPT-3 fine-tuned without AMPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5.4,
+   "unit": "%",
+   "baseline_value": 5.2,
+   "n": null,
+   "setup": "GPT-2 0.1B + AMPS vs GPT-3 13B fine-tuned only (5.2%)",
+   "quote": "attains 5.4%. Consequently AMPS increases accuracy about as",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Scaling is slow: 15x parameters gives 28% relative improvement; log-linear extrapolation needs about 10^35 parameters for 40%.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 0.1B to 1.5B",
+   "quote": "to achieve 40% accuracy on MATH, which is impractical",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Generating own step-by-step solutions lowered GPT-2 1.5B accuracy to 5.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5.3,
+   "unit": "%",
+   "baseline_value": 6.9,
+   "n": null,
+   "setup": "GPT-2 1.5B prompted with '<P> Full Solution:' vs final-answer-only 6.9%",
+   "quote": "dropping ac-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Fine-tuning on final answers only drops GPT-2 1.5B by 0.6 points to 6.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.3,
+   "unit": "%",
+   "baseline_value": 6.9,
+   "n": null,
+   "setup": "GPT-2 1.5B, fine-tune without solutions",
+   "quote": "decreases by 0.6% to 6.3%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Given 99% of the ground truth solution, GPT-2 0.7B reaches only about 40%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 0.7B, partial solution hint in fine-tuning and eval",
+   "quote": "approximately 40% when given 99% of the solution",
+   "table": null,
+   "note": "read from text",
+   "where": "Sec 4.3 Fig 5"
+  },
+  {
+   "claim": "Confidence is a weak error detector: AUROC 68.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 1.5B, confidence = mean token probability",
+   "quote": "the AUROC is quite low at",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Human reference: CS PhD-level non-math-lover about 40%, IMO gold medallist 90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 random test problems, 1 hour, no calculator, 6 students",
+   "quote": "got 8/20 = 40% correct",
+   "table": null,
+   "note": "IMO medallist 18/20",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "GPT-3 few-shot 13B scores 3.0% and 175B 5.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8-shot, temperature 0, up to 20 tokens, no AMPS",
+   "quote": "3.0%",
+   "table": null,
+   "note": "GPT-3 175B* 5.2",
+   "where": "Table 2"
+  },
+  {
+   "claim": "GPT-2 0.3B pretrained on AMPS plus Math StackExchange scores 6.0%, below AMPS alone 6.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.0,
+   "unit": "%",
+   "baseline_value": 6.2,
+   "n": null,
+   "setup": "GPT-2 0.3B",
+   "quote": "had 6.0% accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "BART-Large 0.4B gets 4.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMPS pretrain then MATH fine-tune",
+   "quote": "it obtains 4.9% on",
+   "table": null,
+   "note": null,
+   "where": "App A.5"
+  }
+ ],
+ "limits": [
+  "Models are 2021-era GPT-2/GPT-3; accuracy figures (3-7%) are long dated by later reasoning models (the target note cites MATH-500 at 97.3% for R1).",
+  "Single runs, no seeds, no significance tests; GPT-3 not AMPS-pretrained so comparisons confound pretraining.",
+  "Human study is 6 participants on 20 problems, 4 of them authors.",
+  "Fine-tuning learning rate, schedule, and epochs not stated.",
+  "Exact match on boxed answer; answers must follow strict formatting rules.",
+  "Authors concede scratch-space solutions hurt, hypothesised snowballing errors."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MATH",
+   "definition": "Mathematics Aptitude Test of Heuristics dataset, 12,500 problems (7,500 train and 5,000 test)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "AMPS",
+   "definition": "Auxiliary Mathematics Problems and Solutions pretraining corpus",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Henighan et al. 2020, Scaling laws for autoregressive generative modeling",
+   "year": 2020,
+   "arxiv": "2010.14701",
+   "relation": "uses-method",
+   "note": "digit tokenisation and scaling argument",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "Curie and Davinci",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "main models",
+   "quote": null
+  },
+  {
+   "work": "DeepMind Mathematics (Saxton et al.)",
+   "year": 2019,
+   "arxiv": "1904.01557",
+   "relation": "related",
+   "note": "plug-and-chug contrast",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks et al. 2021 MMLU",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "only a few hundred math questions",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2020,
+   "arxiv": "1910.13461",
+   "relation": "evaluates",
+   "note": "appendix",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Previous work is based on formal theorem provers or straightforward plug-and-chug problems. Our dataset, MATH, has competition mathematics problems with step-by-step solutions written in LATEX and natural language.",
+   "page": 2,
+   "why": "shows what a MATH problem and boxed answer look like"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "MATH accuracies across subjects.",
+   "page": 5,
+   "why": "slow scaling across model sizes"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Cached text contains NUL bytes and ligature characters; Read tool flagged binary-like content.",
+  "No instructions embedded in the PDF."
+ ]
+}

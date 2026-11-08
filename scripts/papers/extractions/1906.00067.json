@@ -1,0 +1,317 @@
+{
+ "schema": 1,
+ "key": "1906.00067",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/marino-2019-ok-vqa.pdf",
+ "bib": {
+  "title": "OK-VQA: A Visual Question Answering Benchmark Requiring External Knowledge",
+  "authors": ["Kenneth Marino", "Mohammad Rastegari", "Ali Farhadi", "Roozbeh Mottaghi"],
+  "first_author": "Marino",
+  "year": 2019,
+  "venue": "preprint (arXiv v2, 4 Sep 2019; CVPR 2019 paper)",
+  "arxiv": "1906.00067",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57908,
+  "chars_total": 57908,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a VQA benchmark be built whose questions cannot be answered from the image alone and need outside knowledge, and how do existing VQA models do on it?",
+ "hypothesis": "State-of-the-art VQA models designed for image-question association will degrade sharply when answers need external knowledge, and retrieved unstructured knowledge will help.",
+ "contributions": [
+  "(a) we introduce the OK-VQA dataset, which includes only questions that require external resources to answer",
+  "(b) we benchmark some state-of-the-art VQA models on our new dataset and show the performance of these models degrades drastically",
+  "(c) we propose a set of baselines that exploit unstructured knowledge"
+ ],
+ "method": {
+  "summary": "MTurk workers wrote knowledge-requiring questions about COCO images; 5 other workers answered each; questions were manually filtered and answer-balanced, giving 14,055 questions. Benchmarked MLP, Q-only, MUTAN, BAN, a Wikipedia-retrieval model (ArticleNet) and MUTAN/BAN augmented with ArticleNet via a memory network, plus oracles and ablations.",
+  "task": "knowledge-based open-ended visual question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OK-VQA",
+    "role": "both",
+    "size": "14,055 questions on 14,031 images; 9,009 train, 5,046 test",
+    "split": "COCO original 80k-40k train and val splits used as train and test",
+    "source": "random COCO images; questions and answers from Amazon MTurk; 5 answer annotations per question",
+    "preprocessing": "Manual filter from 86,700 collected questions to 34,921; then removed questions if an answer was the most common answer more than 5 times (uniform answer distribution); removed questions with no inter-annotator agreement. Answers Porter-stemmed for scoring."
+   },
+   {
+    "name": "Wikipedia (snapshot via Chen et al. 2017 retrieval model)",
+    "role": "pretrain",
+    "size": "about 100 articles retrieved per question; title plus T=5 sentences each",
+    "split": null,
+    "source": "Wikipedia search API top article per query",
+    "preprocessing": "queries = every single query word and every two-word combination of non-stop question words and top ImageNet, Places2 and COCO detector classes; sentences ranked by unique query words, then total query words, then article order"
+   }
+  ],
+  "models": [
+   {"name": "MUTAN (attention version)", "role": "baseline", "params": null, "architecture": "multimodal Tucker fusion; ResNet-152 fc7 features; parameters of the single best model of Ben-younes et al.", "init_from": null, "tokenizer": null, "vocab": "top 2000 train answers", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BAN (single model)", "role": "baseline", "params": null, "architecture": "bilinear attention network, Faster R-CNN features trained on COCO train", "init_from": null, "tokenizer": null, "vocab": "top 2000 train answers", "layers": null, "hidden": "512", "heads": null, "context": null, "other": {"glimpses_gamma": "2"}},
+   {"name": "MLP", "role": "baseline", "params": null, "architecture": "3 hidden layers, ReLU, hidden size 2048, concatenates image and question features after skip-thought GRU and one FC layer each; ResNet-152 fc7", "init_from": null, "tokenizer": null, "vocab": null, "layers": "3 hidden", "hidden": "2048", "heads": null, "context": null, "other": {}},
+   {"name": "Q-Only", "role": "baseline", "params": null, "architecture": "same as MLP, question features only", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ArticleNet (AN)", "role": "proposed", "params": null, "architecture": "GRUs over question, title, sentences with ResNet-152 image features; predicts answer in word, sentence, title, article", "init_from": "pre-trained skip-thought question encoder", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"T_sentences_per_article": "5"}},
+   {"name": "MUTAN+AN and BAN+AN", "role": "proposed", "params": null, "architecture": "top N_art=20 ArticleNet sentence hidden states fed to an end-to-end memory network (2 hops, hidden 300); output concatenated into MUTAN after attention fusion / into BAN before final classifier", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "300 (memory network)", "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "VQA answer classification over top-2000 answers (not stated explicitly; inferred from answer vocabulary); ArticleNet: predict whether and where ground-truth answer appears in article, sentence, word (sigmoid outputs)",
+   "optimizer": "ADAM",
+   "lr": "1e-4 (ArticleNet and VQA models)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64 (ArticleNet); 128 (MUTAN, MLP, Q-Only; BAN not stated)",
+   "steps": "10,000 iterations (ArticleNet)",
+   "epochs": "500 (MUTAN, MLP, Q-Only); 200 (BAN)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "batch normalization on FC layers of ArticleNet; balanced positive/negative articles",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": "classification over answer vocabulary; ArticleNet picks top word by a_wi * a_sent",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model reported; seeds not stated",
+   "prompting": null,
+   "retrieval": "Wikipedia search API, top article per query, about 100 articles per question, 5 sentences each; top 20 predicted sentences used by VQA models",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "VQA score (OK-VQA)", "definition": "common VQA metric of Antol et al. 2015, but each of the 5 answer annotations is used twice (10 in the original); answers Porter-stemmed", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Q-Only", "MLP", "MUTAN", "BAN", "ArticleNet alone", "MUTAN/AN oracle", "BAN/AN oracle"],
+   "protocol": "single reported number per model on the 5,046-question test set; per-category breakdown by 10 MTurk-assigned knowledge categories plus Other; no significance test, no seeds"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://okvqa.allenai.org"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics", "quote": "but use each of our answer annotations twice, since we have 5 answer annotations", "where": "Section 5, Benchmark results"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "MUTAN scores 26.41 and BAN 25.17 on the full OK-VQA test set, far below the best 2018 VQA v2 open-ended result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 26.41,
+   "unit": "%",
+   "baseline_value": 72.41,
+   "n": 5046,
+   "setup": "OK-VQA test, MUTAN with ResNet-152 features; baseline 72.41 is the 2018 VQA competition best real open-ended result on VQA v2, reported in text",
+   "quote": null,
+   "table": "Table 2, row MUTAN, column OK-VQA (26.41); BAN 25.17",
+   "note": "72.41 is quoted from the VQA 2018 competition, not measured here",
+   "where": "Table 2, p6; Section 5"
+  },
+  {
+   "claim": "Adding ArticleNet knowledge improves MUTAN to 27.84 (+1.43) but BAN only changes from 25.17 to 25.61.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 27.84,
+   "unit": "%",
+   "baseline_value": 26.41,
+   "n": 5046,
+   "setup": "OK-VQA test, MUTAN+AN with Wikipedia retrieval, N_art=20 sentences in a 2-hop memory network",
+   "quote": null,
+   "table": "Table 2, row MUTAN + AN, column OK-VQA (27.84); BAN + AN 25.61",
+   "note": null,
+   "where": "Table 2, p6"
+  },
+  {
+   "claim": "ArticleNet alone scores only 5.28 on OK-VQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 5.28,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 5046,
+   "setup": "OK-VQA test, ArticleNet raw, can only answer from retrieved articles, not trained on VQA directly",
+   "quote": null,
+   "table": "Table 2, row ArticleNet (AN), column OK-VQA",
+   "note": null,
+   "where": "Table 2, p6"
+  },
+  {
+   "claim": "Oracle picking the better of MUTAN and ArticleNet per question reaches 28.47, showing retrieved knowledge is complementary.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 28.47,
+   "unit": "%",
+   "baseline_value": 26.41,
+   "n": 5046,
+   "setup": "OK-VQA test, MUTAN/AN oracle takes best answer vs ground truth from raw ArticleNet or MUTAN; optimistic upper bound",
+   "quote": null,
+   "table": "Table 2, row MUTAN/AN oracle, column OK-VQA (28.47); BAN/AN oracle 27.59",
+   "note": null,
+   "where": "Table 2, p6"
+  },
+  {
+   "claim": "Question-only baseline scores 14.93, so images matter and the answer-bias filtering worked.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 14.93,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 5046,
+   "setup": "OK-VQA test, Q-Only (MLP architecture, question features only); MLP with image gets 20.67",
+   "quote": null,
+   "table": "Table 2, row Q-Only, column OK-VQA (14.93); MLP 20.67",
+   "note": null,
+   "where": "Table 2, p6"
+  },
+  {
+   "claim": "Better visual features give only marginal gains: MUTAN with ResNet18, ResNet50, ResNet152 scores 23.64, 24.74, 26.41.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": 26.41,
+   "unit": "%",
+   "baseline_value": 23.64,
+   "n": 5046,
+   "setup": "OK-VQA test, MUTAN, visual feature backbone varied; Q-Only 14.93",
+   "quote": null,
+   "table": "Table 3, rows ResNet152 (26.41), ResNet50 (24.74), ResNet18 (23.64)",
+   "note": null,
+   "where": "Table 3, p7"
+  },
+  {
+   "claim": "More than 78% of questions in VQA v1 can be answered by someone aged 10 or younger, so standard VQA needs little knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share answerable by age <=10",
+   "value": 78,
+   "unit": "% (more than)",
+   "baseline_value": null,
+   "n": 10000,
+   "setup": "MTurk age annotations on 10,000 VQA v1 questions (from Antol et al.); a rough proxy for knowledge needed",
+   "quote": "The analysis shows that more than 78% of the questions can be answered by people who are 10 years old or younger.",
+   "table": null,
+   "note": null,
+   "where": "Section 3, p3"
+  },
+  {
+   "claim": "Filtering cut collected questions from 86,700 to 34,921 by manual knowledge filter, then to 14,055 after answer balancing and agreement filtering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "questions kept",
+   "value": 14055,
+   "unit": "questions",
+   "baseline_value": 86700,
+   "n": null,
+   "setup": "OK-VQA construction; 9,009 train and 5,046 test",
+   "quote": "Performing this filtering brought us down to 9,009",
+   "table": null,
+   "note": "quote text spans a line with a ligature; see Section 3. Dataset size 14,055 also in Table 1.",
+   "where": "Section 3, p4; Table 1"
+  },
+  {
+   "claim": "Plants and Animals (17%), Vehicles (16%) and Cooking and Food (15%) are the largest knowledge categories; Science and Technology is 2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "category share",
+   "value": 17,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 14055,
+   "setup": "five MTurk workers labelled each question; plurality category, else Other (12%)",
+   "quote": null,
+   "table": "Figure 3 (text of figure), category Plants and Animals 17%",
+   "note": "values read from Fig 3 labels",
+   "where": "Fig 3, p5"
+  },
+  {
+   "claim": "ArticleNet helps most in brands, science and cooking categories; major portion of data needs knowledge outside Wikipedia.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2 category breakdown; authors' interpretation, not tested",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 5, p7"
+  },
+  {
+   "claim": "Training-set size ablation for MUTAN (5% to 100% of train) is plotted; authors use it to separate dataset size from question difficulty.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OKVQA score vs % training questions",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MUTAN on random train subsets, evaluated on original test set; numbers only in Fig 7 (not in text)",
+   "quote": null,
+   "table": null,
+   "note": "no values in text",
+   "where": "Fig 7, p8"
+  }
+ ],
+ "limits": [
+  "Small: 14,055 questions (5,046 test); authors say they trade size for knowledge and difficulty.",
+  "Answer-balancing (drop questions with an answer as most common more than 5 times) deliberately shapes the distribution and makes the set harder by design.",
+  "Authors concede the major portion of the dataset needs knowledge outside Wikipedia, such as commonsense or visual knowledge, so Wikipedia retrieval cannot cover it.",
+  "Oracles are optimistic upper bounds.",
+  "Single run per model; no seeds, variance or significance tests; BAN batch size, hardware and compute not given.",
+  "Only 2019 models (MUTAN, BAN, ResNet features) tested; scores of 25-28 are dated for modern pretrained VLMs; metric uses 5 annotators doubled, so not comparable to VQA v2 scores in the strict sense.",
+  "Whether each question truly needs outside knowledge rests on manual filtering and MTurk workers; no measured rate of leftover image-answerable questions."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "knowledge-based VQA", "definition": "VQA where the image content is not sufficient to answer the question, so methods must rely on external knowledge resources", "where": "Abstract"},
+  {"term": "relative frequency", "definition": "frequency within a knowledge category divided by overall frequency, used to find category-specific words", "where": "Fig 4"}
+ ],
+ "lineage": [
+  {"work": "VQA: Visual Question Answering (Antol et al.)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "VQA evaluation metric adopted, and MTurk 'fool a smart robot' prompt", "quote": null},
+  {"work": "Making the V in VQA Matter (Goyal et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "VQA v2; answer-bias motivation", "quote": null},
+  {"work": "MUTAN (Ben-younes et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "evaluated and augmented with ArticleNet", "quote": null},
+  {"work": "Bilinear Attention Networks (Kim et al.)", "year": 2018, "arxiv": "1805.07932", "relation": "baseline", "note": "evaluated and augmented with ArticleNet", "quote": null},
+  {"work": "FVQA (Wang et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "most similar dataset; uses a fixed knowledge-base triplets, whereas OK-VQA needs open unstructured knowledge", "quote": null},
+  {"work": "KB-VQA (Wang et al.)", "year": 2017, "arxiv": null, "relation": "related", "note": "smaller knowledge-based VQA dataset (2,402 questions)", "quote": null},
+  {"work": "Microsoft COCO (Lin et al.)", "year": 2014, "arxiv": null, "relation": "uses-data", "note": "image source", "quote": null},
+  {"work": "Reading Wikipedia to Answer Open-Domain Questions (Chen et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "Wikipedia snapshot/retrieval model", "quote": null},
+  {"work": "End-to-end memory networks (Sukhbaatar et al.)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "fuses retrieved sentences into VQA models", "quote": null},
+  {"work": "Skip-thought vectors (Kiros et al.)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "question encoder", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "We propose a novel dataset for visual question answering, where the questions require external knowledge resources to be answered. In this example, the visual content of the image is not sufficient to answer the question.", "page": 1, "why": "Shows in one picture what 'needs outside knowledge' means (teddy bear to Teddy Roosevelt)."},
+  {"figure": "Table 1", "caption": "Comparison of various visual QA datasets.", "page": 4, "why": "Sizes and goals of DAQUAR, VQA v2, FVQA, KB-VQA vs OK-VQA."},
+  {"figure": "Table 2", "caption": "Benchmark results on OK-VQA. We show the results for the full OK-VQA dataset and for each knowledge category", "page": 6, "why": "Main result: all models 5-28%, category breakdown, oracles."},
+  {"figure": "Fig 3", "caption": "Breakdown of questions in terms of knowledge categories.", "page": 5, "why": "Category mix of the benchmark."},
+  {"figure": "Fig 6", "caption": "Qualitative results. We show the result of MUTAN+AN compared to the MUTAN baseline answer and the ground truth answer.", "page": 8, "why": "Shows retrieved sentences fixing answers (orange, cow, chromosomes)."},
+  {"figure": "Fig 7", "caption": "Results on OK-VQA using different sizes of the training set.", "page": 8, "why": "Scale ablation curve."}
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 2 and Fig 3 numbers come from cell-by-cell text extraction; table row/column mapping inferred from caption order.",
+  "Table 2 cell values 'BAN + AN 25.61' etc. recorded via table references only.",
+  "Fig 7 has no numeric values in text."
+ ]
+}

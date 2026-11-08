@@ -1,0 +1,483 @@
+{
+ "schema": 1,
+ "key": "2305.10250",
+ "pdf": "generative-ai/03-agentic-foundations/sources/zhong-2024-memorybank.pdf",
+ "bib": {
+  "title": "MemoryBank: Enhancing Large Language Models with Long-Term Memory",
+  "authors": [
+   "Wanjun Zhong",
+   "Lianghong Guo",
+   "Qiqi Gao",
+   "He Ye",
+   "Yanlin Wang"
+  ],
+  "first_author": "Zhong",
+  "year": 2024,
+  "venue": "AAAI-24 (Thirty-Eighth AAAI Conference on Artificial Intelligence)",
+  "arxiv": "2305.10250",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45020,
+  "chars_total": 45020,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can LLMs be given a long-term memory that stores, retrieves, updates (with forgetting) and builds a user portrait, for sustained companionship use?",
+ "hypothesis": "A memory store with dense retrieval, hierarchical summaries and Ebbinghaus-style decay lets LLMs recall past interactions and adapt to user personality.",
+ "contributions": [
+  "Introduce MemoryBank, a human-like long-term memory mechanism to store, recall, update memory and draw user portrait.",
+  "Demonstrate it via SiliconFriend, an AI companion tuned with psychological dialogs.",
+  "Show generalizability: open and closed-source LLMs, English and Chinese, with and without forgetting mechanism."
+ ],
+ "method": {
+  "summary": "MemoryBank stores timestamped dialogs, LLM-written daily and global event summaries and personality summaries; retrieves with a DPR-style dual-tower encoder over FAISS; updates memory with R=e^(-t/S). SiliconFriend wraps ChatGPT, ChatGLM and BELLE (the last two LoRA-tuned on 38k psychological dialogs) and is evaluated on simulated 10-day dialogs with 194 probing questions.",
+  "task": "long-term memory for dialogue agents (AI companion)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Psychological dialogues",
+    "role": "train",
+    "size": "38k dialogues",
+    "split": null,
+    "source": "parsed from online psychological QA websites, e.g. xinli001.com; licence not stated",
+    "preprocessing": null
+   },
+   {
+    "name": "Simulated memory storage",
+    "role": "eval",
+    "size": "10 days, 15 virtual users, 450 topics, at least two topics per day",
+    "split": "English and Chinese storages",
+    "source": "ChatGPT generates user meta-information and plays users given topics and personalities",
+    "preprocessing": null
+   },
+   {
+    "name": "Probing questions",
+    "role": "eval",
+    "size": "194 questions (97 English, 97 Chinese)",
+    "split": null,
+    "source": "manually written",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT",
+    "role": "base",
+    "params": null,
+    "architecture": "closed-source conversation model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "version": null
+    }
+   },
+   {
+    "name": "ChatGLM",
+    "role": "base",
+    "params": "6.2 billion",
+    "architecture": "GLM framework, bilingual",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining": "approximately one trillion tokens of Chinese and English text"
+    }
+   },
+   {
+    "name": "BELLE",
+    "role": "base",
+    "params": "7B",
+    "architecture": "LLaMA-based",
+    "init_from": "7B LLaMA, continuously fine-tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MiniLM",
+    "role": "retriever",
+    "params": null,
+    "architecture": "English embedding model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Text2vec",
+    "role": "retriever",
+    "params": null,
+    "architecture": "Chinese embedding model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "inferred: supervised dialogue tuning with LoRA (y = Wx + BAx), open-source models only",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "an A100 GPU",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lora_rank": "128",
+    "lora_alpha": null,
+    "target_modules": null
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Retrieved relevant memory, global user portrait and global event summary organised into the conversation prompt; meta prompt shown in Fig 1",
+   "retrieval": "dual-tower dense retrieval like DPR; memory pieces (each dialog turn and event summary) pre-encoded and indexed with FAISS via LangChain; top-k and similarity threshold not stated",
+   "parameters": {
+    "forgetting": "R = e^(-t/S); S discrete, init 1 on first mention; on recall S += 1 and t reset to 0",
+    "forgetting_threshold": null,
+    "top_k": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Memory Retrieval Accuracy",
+     "definition": "whether related memory is retrieved (no=0, yes=1)",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Response Correctness",
+     "definition": "response contains correct answer (wrong=0, partial=0.5, correct=1)",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Contextual Coherence",
+     "definition": "response coherent with dialogue context and retrieved memory (not=0, partially=0.5, coherent=1)",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Model Ranking Score",
+     "definition": "s = 1/r, r=1,2,3 rank among the three variants for the same question",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Base ChatGLM (qualitative comparison only)",
+    "No no-memory baseline or memory-method baseline in quantitative study"
+   ],
+   "protocol": "Human annotators score retrieved memories and responses; number of annotators, agreement, and seeds not stated; no significance test."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "daily/global event summary",
+    "text": "Summarize the events and key information in the content [dialog/events]",
+    "where": "Hierarchical Event Summary"
+   },
+   {
+    "purpose": "daily personality",
+    "text": "Based on the following dialogue, please summarize the user's personality traits and emotions.[dialog]",
+    "where": "Dynamic Personality Understanding"
+   },
+   {
+    "purpose": "global personality",
+    "text": "The following are the user's exhibited personality traits and emotions throughout multiple days. Please provide a highly concise and general summary of the user's personality[daily Personalities]",
+    "where": "Dynamic Personality Understanding"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SiliconFriend-ChatGPT scores highest on response correctness in English.",
+   "kind": "measured",
+   "metric": "Correctness",
+   "value": 0.716,
+   "unit": "score 0-1",
+   "baseline_value": 0.479,
+   "n": 97,
+   "setup": "97 English probing questions over 10-day, 15-virtual-user simulated memory; human annotators; baseline is best open-source variant (BELLE)",
+   "table": "Table 2, English, row SiliconFriendChatGPT, column Cor.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "SiliconFriend-ChatGPT scores highest on contextual coherence in English.",
+   "kind": "measured",
+   "metric": "Coherence",
+   "value": 0.912,
+   "unit": "score 0-1",
+   "baseline_value": 0.68,
+   "n": 97,
+   "setup": "English test set; baseline is ChatGLM variant",
+   "table": "Table 2, English, row SiliconFriendChatGPT, column Coh.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "SiliconFriend-ChatGPT has the best ranking score in English.",
+   "kind": "measured",
+   "metric": "Model Ranking Score",
+   "value": 0.818,
+   "unit": "score s=1/r",
+   "baseline_value": 0.517,
+   "n": 97,
+   "setup": "English test set; ranking of three variants; baseline is BELLE variant",
+   "table": "Table 2, English, row SiliconFriendChatGPT, column Rank",
+   "where": "Table 2"
+  },
+  {
+   "claim": "SiliconFriend-ChatGPT has the lowest retrieval accuracy of the three variants in English.",
+   "kind": "measured",
+   "metric": "Retrieval accuracy",
+   "value": 0.763,
+   "unit": "fraction 0-1",
+   "baseline_value": 0.814,
+   "n": 97,
+   "setup": "English test set; baseline is BELLE variant; retrieval is binary yes/no",
+   "table": "Table 2, English, row SiliconFriendChatGPT, column RA.",
+   "where": "Table 2",
+   "note": "Paper does not comment on ChatGPT having lowest retrieval accuracy; the open-source variants differ in embedding model (MiniLM/Text2vec) and the ChatGPT embedding is not stated."
+  },
+  {
+   "claim": "SiliconFriend-BELLE has the highest retrieval accuracy in Chinese.",
+   "kind": "measured",
+   "metric": "Retrieval accuracy",
+   "value": 0.856,
+   "unit": "fraction 0-1",
+   "baseline_value": 0.711,
+   "n": 97,
+   "setup": "Chinese test set; baseline is ChatGPT variant",
+   "table": "Table 2, Chinese, row SiliconFriendBELLE, column RA.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "In Chinese, BELLE variant beats ChatGPT variant on correctness.",
+   "kind": "measured",
+   "metric": "Correctness",
+   "value": 0.603,
+   "unit": "score 0-1",
+   "baseline_value": 0.655,
+   "n": 97,
+   "setup": "Chinese test set; value is BELLE; ChatGPT is higher (0.655), so BELLE does not win correctness in Chinese",
+   "table": "Table 2, Chinese, row SiliconFriendBELLE, column Cor.",
+   "where": "Table 2",
+   "note": "ChatGPT 0.655 is higher than BELLE 0.603 on Chinese correctness; the paper's text says BELLE 'excels in Chinese' but ChatGPT leads on correctness, coherence and rank in Chinese."
+  },
+  {
+   "claim": "Memory strength S starts at 1 on first mention and increases by 1 with t reset to 0 on each recall.",
+   "kind": "claim",
+   "setup": "Ebbinghaus-inspired updater R = e^(-t/S); authors call it exploratory and highly simplified",
+   "quote": "We increase S by 1 and reset t to 0, hence forget it with a lower probability.",
+   "where": "Memory Updating Mechanism"
+  },
+  {
+   "claim": "Psychological tuning data size and LoRA settings for open-source variants.",
+   "kind": "measured",
+   "metric": "LoRA rank",
+   "value": 128,
+   "unit": "rank r",
+   "setup": "38k psychological dialogues, 3 epochs, one A100",
+   "quote": "We set LoRA rank r as 128 and train the model for 3 epochs with an A100 GPU.",
+   "where": "Parameter-efficient Tuning"
+  },
+  {
+   "claim": "Evaluation memory: 450 topics, 15 virtual users, 10 days, 194 probing questions (97 En, 97 Zh).",
+   "kind": "measured",
+   "setup": "ChatGPT role-plays users to generate dialogs; questions manually written",
+   "quote": "we manually write 194 probing questions (97 in English and 97 in Chinese)",
+   "value": 194,
+   "unit": "questions",
+   "where": "Quantitative Analysis"
+  },
+  {
+   "claim": "The empathy and memory-recall comparisons against ChatGLM are shown only as single qualitative examples (Figs 2-4), with no quantitative empathy metric.",
+   "kind": "claim",
+   "setup": "Real-user conversations from an online platform; number of users/dialogs not stated",
+   "quote": "we compared the responses shown by SiliconFriend with that of the baseline LLMs in real-world conversations.",
+   "where": "Psychological Companionship"
+  }
+ ],
+ "limits": [
+  "Forgetting mechanism is described as 'exploratory and highly simplified'; its effect is never ablated or measured (no with/without forgetting result despite the contribution claim).",
+  "Quantitative evaluation is on ChatGPT-simulated users over only 10 days, 97 questions per language; no real-user quantitative data and no baseline without memory or with another memory method.",
+  "Human annotators: number and agreement not reported; no significance tests or seeds.",
+  "Empathy gains from psychological tuning are shown only through anecdotal examples (Figs 2-4).",
+  "Retrieval hyperparameters (top-k), LoRA lr/batch size, decoding settings and ChatGPT version are not stated; no code link in the text.",
+  "ChatGPT variant has lowest retrieval accuracy; Chinese results favour BELLE on retrieval but ChatGPT on other metrics."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Hierarchical Event Summary",
+   "definition": "concise daily event summary further synthesized into a global summary",
+   "where": "Memory Storage"
+  },
+  {
+   "term": "Memory strength S",
+   "definition": "discrete value initialised to 1 on first mention; +1 and t reset on recall",
+   "where": "Memory Updating Mechanism"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Ebbinghaus Forgetting Curve (Ebbinghaus 1964)",
+   "year": 1964,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "basis of the memory updating rule",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "uses-method",
+   "note": "dual-tower retrieval",
+   "quote": null
+  },
+  {
+   "work": "FAISS (Johnson, Douze, Jegou)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "vector index",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "tuning open-source models",
+   "quote": null
+  },
+  {
+   "work": "Beyond Goldfish Memory (Xu, Szlam, Weston)",
+   "year": 2021,
+   "arxiv": "2107.07567",
+   "relation": "related",
+   "note": "multi-session chat dataset; few rounds only",
+   "quote": null
+  },
+  {
+   "work": "Long Time No See (Xu et al.)",
+   "year": 2022,
+   "arxiv": "2203.05797",
+   "relation": "related",
+   "note": "long-term persona memory dialogue",
+   "quote": null
+  },
+  {
+   "work": "Neural Turing Machines",
+   "year": 2014,
+   "arxiv": "1410.5401",
+   "relation": "related",
+   "note": "memory-augmented networks",
+   "quote": null
+  },
+  {
+   "work": "ChatGLM / GLM-130B",
+   "year": 2022,
+   "arxiv": "2210.02414",
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "BELLE",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model and user simulator",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of MemoryBank.",
+   "page": 2,
+   "why": "shows storage, retrieval, updating and prompt assembly in one diagram"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Example responses from SiliconFriendChatGPT to users with different personalities.",
+   "page": 5,
+   "why": "shows user portrait effect on responses"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Results of quantitative analysis.",
+   "page": 6,
+   "why": "only quantitative results"
+  }
+ ],
+ "code": [
+  {
+   "where": "Memory Updating Mechanism",
+   "snippet": "R = e^(-t/S)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF key is sha1:ddb4ac2c264c (stray duplicate row); extraction written under 2305.10250.",
+  "Table 2 flattened by the text extractor; column order inferred as RA., Cor., Coh., Rank per caption.",
+  "No embedded instructions found."
+ ]
+}

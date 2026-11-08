@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "1902.09506",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/hudson-2019-gqa.pdf",
+ "bib": {
+  "title": "GQA: A New Dataset for Real-World Visual Reasoning and Compositional Question Answering",
+  "authors": [
+   "Drew A. Hudson",
+   "Christopher D. Manning"
+  ],
+  "first_author": "Hudson",
+  "year": 2019,
+  "venue": "preprint (arXiv v3; CVPR 2019)",
+  "arxiv": "1902.09506",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69842,
+  "chars_total": 69842,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a balanced, program-annotated VQA benchmark over real images measure compositional visual reasoning better than accuracy on biased VQA sets?",
+ "hypothesis": "Existing VQA benchmarks are dominated by answer priors; a scene-graph-generated, answer-balanced dataset with consistency/grounding metrics will expose a large gap to humans.",
+ "contributions": [
+  "the GQA dataset as a resource for studying visual reasoning",
+  "a method for generating many semantically varied questions marrying scene graphs with computational linguistic methods",
+  "new metrics (consistency, validity, plausibility, distribution, grounding) and a performance analysis of existing models"
+ ],
+ "method": {
+  "summary": "Questions are generated from cleaned Visual Genome scene graphs using 524 patterns and functional programs, balanced by tunable answer-distribution smoothing, then baselines, BottomUp and MAC are trained and evaluated with accuracy plus five new metrics.",
+  "task": "compositional visual question answering",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GQA",
+    "role": "both",
+    "size": "22,669,678 questions over 113,018 images generated; 1.7M after balancing",
+    "split": "70% train, 10% val, 10% test, 10% challenge; all questions of an image in one split",
+    "source": "Visual Genome scene graphs (images from COCO and Flickr) plus 5k hidden crowdsourced scene graphs for test; vocabulary 3097 words, 1878 answers; ontology 1740 objects, 620 attributes, 330 relations, 60 categories",
+    "preprocessing": "graph vocab cleaned into 2690-class ontology, edges pruned, positional info added; 524 patterns (250 manual + 274 from VQA1.0), 117 question groups"
+   },
+   {
+    "name": "VQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "VQA 1.0/2.0 used for transfer test and comparison",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Global Prior / Local Prior",
+    "role": "baseline",
+    "params": null,
+    "architecture": "most common answer per global / local question group",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CNN (deaf), LSTM (blind), CNN+LSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ImageNet-pretrained spatial CNN features; LSTM over GloVe-300 question embeddings; sigmoid classifier",
+    "init_from": "CNN pretrained on ImageNet",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BottomUp (Anderson et al.)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "bottom-up attention over Faster R-CNN object features; own re-implementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MAC (Hudson & Manning)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "recurrent compositional attention network, 4 cells, official code",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sigmoid classifier over answer vocabulary",
+   "optimizer": "Adam",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "15 epochs, about an hour each",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": "about 1 hour per epoch (hardware unstated)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "input": "GloVe 300-d; spatial ImageNet features for CNN models, Faster R-CNN object features for BottomUp and MAC",
+    "shared": "all models use the same LSTM, CNN and classifier components"
+   }
+  },
+  "inference": {
+   "decoding": "classification over 1878 answers",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model (seeds not stated)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "exact match to ground-truth answer, overall and per structural/semantic type",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Consistency",
+     "definition": "for each correctly answered q, accuracy over its entailed questions E_q, averaged",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Validity",
+     "definition": "answer is within the question scope (a colour for a colour question)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Plausibility",
+     "definition": "answer occurs at least once in relation with the question subject across the dataset",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Distribution",
+     "definition": "Chi-Square statistic between true and predicted answer distribution",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Grounding",
+     "definition": "attention probability mass on the annotated region, attention models only",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Global Prior",
+    "Local Prior",
+    "CNN",
+    "LSTM",
+    "CNN+LSTM",
+    "BottomUp",
+    "MAC",
+    "Humans (AMT)"
+   ],
+   "protocol": "Test set. Humans: Amazon Mechanical Turk, 4000 random questions, majority of 5 answers."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "visualreasoning.net"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "trained all models using Adam",
+    "where": "Supp 9"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MAC, the best model tested, reaches 54.06% accuracy on GQA test, far below humans at 89.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 54.06,
+   "unit": "%",
+   "baseline_value": 89.3,
+   "n": null,
+   "setup": "GQA test set, standard split, models trained on GQA balanced training set; human = AMT majority of 5 answers on 4000 random questions",
+   "note": "Abstract rounds to 54.1% (strong VQA models) and 89.3% humans; Table 1 prints 54.06 and 89.3",
+   "where": "Table 1",
+   "table": "Table 1, row Accuracy, column MAC"
+  },
+  {
+   "claim": "A blind LSTM (question only) gets 41.07% accuracy, so language priors alone go a long way even after balancing.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.07,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GQA test set, standard split, models trained on GQA balanced training set; LSTM with no image",
+   "note": "Abstract says 42.1%; Table 1 prints 41.07",
+   "where": "Table 1",
+   "table": "Table 1, row Accuracy, column LSTM"
+  },
+  {
+   "claim": "Human consistency is 98.4% while MAC is 81.59% and BottomUp 78.71%; best models contradict themselves on about 1 in 5 entailed questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": 81.59,
+   "unit": "%",
+   "baseline_value": 98.4,
+   "n": null,
+   "setup": "GQA test set, standard split, models trained on GQA balanced training set; consistency = accuracy on questions entailed by each correctly answered question, averaged",
+   "note": null,
+   "where": "Sec 4.4, Table 1",
+   "quote": "even the best models are inconsistent in about 1 out of 5 questions",
+   "table": "Table 1, row Consistency, column MAC"
+  },
+  {
+   "claim": "MAC trained on GQA reaches 52.1% on VQA before fine-tuning and 60.5% after, versus 68.3% for MAC trained and tested on VQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 60.5,
+   "unit": "%",
+   "baseline_value": 68.3,
+   "n": null,
+   "setup": "Transfer GQA->VQA, MAC, after fine-tuning",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "A MAC model trained on GQA achieves 52.1% on VQA before"
+  },
+  {
+   "claim": "MAC trained on VQA gets only 39.8% on GQA before fine-tuning and 46.5% after.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transfer VQA->GQA, MAC",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "gets 39.8% on GQA before"
+  },
+  {
+   "claim": "Grounding score is 82.24% for MAC and 78.47% for BottomUp; swapping object features for spatial features drops it to 43%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "grounding",
+   "value": 82.24,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GQA test set, standard split, models trained on GQA balanced training set; attention probability on the annotated region, attention models only",
+   "note": "43% for spatial features is stated in Sec 4.4 text",
+   "where": "Sec 4.4, Table 1",
+   "quote": "which lead to",
+   "table": "Table 1, row Grounding, column MAC"
+  },
+  {
+   "claim": "Models give an invalid or implausible answer at least 5-15% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validity/plausibility",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MAC validity 96.16, plausibility 84.48; LSTM validity 96.39, plausibility 87.30 (Table 1)",
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Balancing raises answer-distribution entropy by 72%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "entropy increase",
+   "value": 72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Smoothing of answer distribution within question groups, global then local",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "the entropy of the answer distribution is increased by 72%"
+  },
+  {
+   "claim": "Balanced GQA has 1.7M questions downsampled from 22M generated; splits are 70/10/10/10 train/val/test/challenge, grouped by image.",
+   "kind": "measured",
+   "source": null,
+   "metric": "size",
+   "value": 1.7,
+   "unit": "M questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Full dataset 22,669,678 questions over 113,018 images",
+   "note": null,
+   "where": "Sec 3.4, Supp 8",
+   "quote": "split the dataset into 70% train, 10% valida"
+  },
+  {
+   "claim": "Only 22.69% of open (query) questions are answered by the LSTM, and the question-group priors score 17-47% overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 22.69,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GQA test set, standard split, models trained on GQA balanced training set",
+   "note": null,
+   "where": "Table 1, Sec 4.2",
+   "table": "Table 1, row Open, column LSTM"
+  },
+  {
+   "claim": "MAC with text questions: 53.8% accuracy, 81.59% consistency; with functional programs as input 59.7% and 85.85%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.7,
+   "unit": "%",
+   "baseline_value": 53.8,
+   "n": null,
+   "setup": "MAC, input = programs",
+   "note": "Table 1 prints MAC accuracy 54.06 (test); 53.8 is from a Supp diagnosis run (split not stated)",
+   "where": "Supp 10",
+   "quote": "MAC achieves 53.8% accuracy and 81.59% consistency on the textual questions and 59.7% and 85.85%"
+  },
+  {
+   "claim": "GQA covers 88.8% of VQA questions and 70.6% of VQA answers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage",
+   "value": 88.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GQA vocabulary 3097 words, 1878 answers",
+   "note": "text: 'covers 88.8% and 70.6% of VQA questions and answers respectively'",
+   "where": "Sec 4.1",
+   "quote": "it covers"
+  },
+  {
+   "claim": "52% of GQA questions are compositional versus 3% for VQA 2.0; mean question length 7.9 vs 6.2 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "compositional share",
+   "value": 52,
+   "unit": "%",
+   "baseline_value": 3,
+   "n": null,
+   "setup": "Head-to-head with VQA 2.0",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Compositional questions, column GQA"
+  },
+  {
+   "claim": "Per-model BottomUp re-implementation scores 67% on VQA, matching the original report.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 67,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sanity check of own BottomUp re-implementation on VQA",
+   "note": null,
+   "where": "Supp 9",
+   "quote": "achieving 67%, which matches the original scores reported by Anderson et al."
+  }
+ ],
+ "limits": [
+  "Questions are templated and 'not natural', only factual and answerable from the image; no why/intention, OCR or external-knowledge questions.",
+  "Plausibility metric may be imprecise for infrequent objects due to data scarcity (footnote 6).",
+  "Grounding only defined for attention models.",
+  "No seeds, learning rate or batch size reported; baselines are 2017-2018 models (pre-transformer).",
+  "Abstract numbers (42.1, 54.1) differ from Table 1 (41.07, 54.06).",
+  "Authors concede training-set size had not saturated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Consistency",
+   "definition": "accuracy on questions entailed by a correctly answered question, averaged",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "Validity",
+   "definition": "whether a given answer is in the question scope",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "Plausibility",
+   "definition": "whether the answer is reasonable given the question",
+   "where": "Sec 4.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Visual Genome (Krishna et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "scene graphs supply content",
+   "quote": null
+  },
+  {
+   "work": "CLEVR (Johnson et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "compositional questions, but synthetic images",
+   "quote": null
+  },
+  {
+   "work": "VQA 1.0 / VQA 2.0 (Antol; Goyal et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "argues they are prior-biased; patterns reused from VQA1.0",
+   "quote": null
+  },
+  {
+   "work": "MAC (Hudson & Manning)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "best model",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up attention (Anderson et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "2017 VQA challenge winner",
+   "quote": null
+  },
+  {
+   "work": "Agrawal et al. VQA-CP",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adversarial split criticised",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the GQA construction process.",
+   "page": 3,
+   "why": "pipeline: scene graph -> pattern -> question + program"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Visualization of the balancing process.",
+   "page": 6,
+   "why": "before/after answer distributions"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results for baselines and state-of-the-art models on the GQA dataset.",
+   "page": 7,
+   "why": "all metrics, all models, humans"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Examples of entailment relations between different question types.",
+   "page": 5,
+   "why": "how consistency is defined"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 extracted column-wise; column order read as Global Prior, Local Prior, CNN, LSTM, CNN+LSTM, BottomUp, MAC, Humans.",
+  "Lineage years from memory of citation, not printed in the text read (reference list skimmed)."
+ ]
+}

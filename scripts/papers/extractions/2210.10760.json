@@ -1,0 +1,513 @@
+{
+ "schema": 1,
+ "key": "2210.10760",
+ "pdf": "generative-ai/05-RL/sources/gao-2022-scaling-laws-reward-model-overoptimization.pdf",
+ "bib": {
+  "title": "Scaling Laws for Reward Model Overoptimization",
+  "authors": [
+   "Leo Gao",
+   "John Schulman",
+   "Jacob Hilton"
+  ],
+  "first_author": "Gao",
+  "year": 2022,
+  "venue": "preprint",
+  "arxiv": "2210.10760",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54386,
+  "chars_total": 54386,
+  "engine": "pymupdf",
+  "skipped": "Appendix A proof text only skimmed; figures 10-26 are image-only so only captions read"
+ },
+ "type": "empirical",
+ "question": "How does the true (gold) reward change as a policy is optimized against an imperfect proxy reward model, and how does this scale with RM size, RM data, policy size, optimizer and KL penalty?",
+ "hypothesis": "Optimizing a proxy reward model too far hurts the true objective (Goodhart's law), following a predictable functional form in sqrt(KL).",
+ "contributions": [
+  "Empirically validated functional forms for gold RM score vs d=sqrt(KL) for best-of-n and RL",
+  "Smooth (approx. logarithmic) scaling of the coefficients with proxy RM parameters",
+  "Findings on RM data size, policy size, RL vs BoN and KL penalty",
+  "Discussion of implications for RLHF, iterated RLHF and the Goodhart taxonomy"
+ ],
+ "method": {
+  "summary": "A synthetic setup in which a fixed 6B gold RM labels comparisons used to train smaller proxy RMs; policies (GPT-3 series, SFT on InstructGPT demonstrations) are optimized against the proxy by PPO or best-of-n, and the gold score is tracked against KL from the initial policy. Functional forms are fitted to the curves.",
+  "task": "reward model overoptimization measurement (RLHF, InstructGPT environment)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "InstructGPT prompts and demonstrations (SFT)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Ouyang et al. 2022 InstructGPT environment",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic comparisons labelled by gold RM",
+    "role": "both",
+    "size": "100,000 comparisons (RM data sweeps use up to 90,000 for training)",
+    "split": "10% held out as test set for validation loss",
+    "source": "pairs of policy rollouts to the same prompt, higher gold score always marked preferred",
+    "preprocessing": "RMs recentred so initial policy mean reward is 0; gold scores unit-variance normalised; proxy RMs recalibrated by rescaling logits on soft-label validation set"
+   }
+  ],
+  "models": [
+   {
+    "name": "Gold RM",
+    "role": "reward",
+    "params": "6B",
+    "architecture": "GPT-3 architecture with scalar head (the 6B RM of Ouyang et al. 2022)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Proxy RMs",
+    "role": "reward",
+    "params": "3M to 3B (12M and 1.2B and 3B used in particular sweeps)",
+    "architecture": "GPT-3 architecture with scalar head",
+    "init_from": "pretrained GPT-3 series",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "excluded": "two RMs smaller than 3M reached near-chance accuracy and were off-trend, excluded"
+    }
+   },
+   {
+    "name": "Policies",
+    "role": "base",
+    "params": "1.2B (main), 6B (policy-size sweep)",
+    "architecture": "GPT-3 series",
+    "init_from": "pretrained GPT-3, SFT 2 epochs on InstructGPT demonstrations",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "RM: pairwise preference loss on synthetic comparisons (inferred from 'validation loss'/'cross-entropy'); policy: PPO against proxy RM, or best-of-n selection (no training)",
+   "optimizer": "Adam (RM and RL)",
+   "lr": "RM Adam learning rate multiplier 1.67e-2; RL Adam learning rate multiplier 4e-3",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "RM 64; RL 256",
+   "steps": null,
+   "epochs": "SFT 2 epochs; RM 1 epoch (4 epochs tested in a control)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "KL penalty 0 for all RL experiments except section 3.6",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "not stated; 'most points ... already averaged over multiple seeds'",
+   "other": {
+    "ppo_clip": 0.2,
+    "timesteps_per_rollout": 256,
+    "minibatches_per_epoch": 128,
+    "gae_lambda": 0.95,
+    "note": "mostly PPO defaults"
+   }
+  },
+  "inference": {
+   "decoding": "BoN: sample n, pick highest proxy RM score",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "n up to 1,000 for fitting, up to 60,000 for validation; unbiased estimator of Nakano et al. 2021 App. I for intermediate n",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "KL_bon": "log n - (n-1)/n",
+    "d": "sqrt(KL)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Gold RM score",
+     "definition": "score of the 6B gold RM on policy outputs, recentred to initial policy mean 0",
+     "unit": "gold RM score",
+     "higher_is_better": true
+    },
+    {
+     "name": "KL",
+     "definition": "D_KL(pi || pi_init); analytic for BoN, measured for RL",
+     "unit": "nats",
+     "higher_is_better": false
+    },
+    {
+     "name": "Proxy-gold gap",
+     "definition": "proxy RM score minus gold RM score",
+     "unit": "RM score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "best-of-n vs PPO against each other"
+   ],
+   "protocol": "Fit R_bon(d)=d(alpha-beta d) and R_RL(d)=d(alpha-beta log d) to gold curves; advance prediction for BoN to n=60,000; extrapolation tests from low KL (Fig 26)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "RM Adam learning rate multiplier",
+    "where": "Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BoN gold reward follows R(d)=d(alpha-beta d) with d=sqrt(KL).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "InstructGPT environment, GPT-3 policy 1.2B, proxy RMs 3M-3B, gold RM 6B",
+   "quote": "Rbon (d) = d (αbon −βbond)",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "RL gold reward follows R(d)=d(alpha-beta log d).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above, PPO, KL penalty 0",
+   "quote": "RRL (d) = d (αRL −βRL log d)",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "BoN functional form validated by an advance prediction out to n=60,000 (KL about 10 nats) having fitted data only to n=1,000 (about 6 nats).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max n in advance-prediction test",
+   "value": "60,000",
+   "unit": "n",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoN, policy 1.2B",
+   "quote": "we performed a BoN experiment with up to n = 60, 000 (KL ≈10 nats), after",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "alpha_RL can be held constant across RM sizes, leaving a clean scaling curve for beta_RL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Policy 1.2B, RM data 90,000",
+   "quote": "we ﬁnd that we can hold αRL constant across all RM sizes",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "RM data below about 2,000 comparisons gives almost no improvement over near-chance loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RM data threshold",
+   "value": "2,000",
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM 3M-3B, BoN and RL",
+   "quote": "for amounts of data less than around 2,000 comparisons",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Unique data matters more than SGD steps: 4 epochs of the same data gives no gold-score change, but 1 epoch of 4x data is substantially better.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM data 2000-8000",
+   "quote": "running 4 epochs instead of 1 yields no",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3 fn 7"
+  },
+  {
+   "claim": "Larger policies gain less from optimization but overoptimize about as much; gold score peaks at almost the same KL for 1.2B and 6B policies.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RM 12M (also 3B), policies 1.2B and 6B",
+   "quote": "we ﬁnd that both gold scores peak at almost the same KL",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "RL is far less KL-efficient than BoN: BoN KL grows about log(n), RL KL grows approximately quadratically with step without KL penalty.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoN vs PPO, 1.2B policy",
+   "quote": "KL increases approximately quadratically with step in",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "A KL penalty does not move the KL-gold frontier; its effect is akin to early stopping (result may be hyperparameter sensitive).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL, policy 1.2B, RM 1.2B",
+   "quote": "does not affect the KLRL-gold reward frontier",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.6"
+  },
+  {
+   "claim": "Peak BoN gold score predicted in closed form as alpha_bon/(2 beta_bon).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BoN fits",
+   "quote": "Max BoN gold scores (αbon/2βbon) predicted with the BoN closed form",
+   "table": null,
+   "note": null,
+   "where": "Fig 12"
+  },
+  {
+   "claim": "Iterated RLHF with k iterations raises final gold score by beta_RL * d * log k under additive-d and constant-coefficient assumptions.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "theoretical, from fitted RL form",
+   "quote": "βRLd log (k)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Authors attribute the nonmonotonic gold score and the beta term mainly to extremal Goodhart; alpha term reflects regressional Goodhart.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "interpretation, not tested directly",
+   "quote": "We expect extremal Goodharting to be primarily responsible for the nonmonotonicity",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2"
+  },
+  {
+   "claim": "Answer-length exploitation by optimized policies is a real issue seen in other InstructGPT-setting experiments.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "footnote observation, no data",
+   "quote": "Optimized policies producing very long answers even when a short answer would be preferred is a real issue",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2 fn 10"
+  }
+ ],
+ "limits": [
+  "Synthetic gold RM stands in for humans; transfer to real human labels untested and RMs may be correlated",
+  "Does not capture mismatch between human labels and true human intent (Sec 4.5)",
+  "Single InstructGPT environment; only two policy sizes; mostly default PPO hyperparameters; KL-penalty result may be hyperparameter sensitive",
+  "Proxy scores poorly fit; RL form has infinite slope at origin",
+  "Adversarial Goodhart not captured; trends may break for more capable models",
+  "Number of RL steps, seeds, compute and hardware not stated; no code release stated",
+  "Data-threshold result contradicts some internal findings (fn 8)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "overoptimization",
+   "definition": "Optimizing too much against such a model eventually hinders the true objective",
+   "where": "Sec 1"
+  },
+  {
+   "term": "gold RM",
+   "definition": "fixed 'gold-standard' reward model playing the role of humans",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "InstructGPT (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "uses-method",
+   "note": "environment, SFT data and 6B gold RM",
+   "quote": null
+  },
+  {
+   "work": "Bai et al. Training a helpful and harmless assistant",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "extends",
+   "note": "sqrt(KL) linear proxy trend; online RLHF",
+   "quote": null
+  },
+  {
+   "work": "Nakano et al. WebGPT",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "unbiased BoN estimator",
+   "quote": null
+  },
+  {
+   "work": "Stiennon et al. summarization",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "analytic BoN KL",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al. PPO",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "RL optimizer",
+   "quote": null
+  },
+  {
+   "work": "Manheim and Garrabrant Goodhart taxonomy",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "framework for Sec 4.2",
+   "quote": null
+  },
+  {
+   "work": "Korbak et al. RL with KL penalties is better viewed as Bayesian inference",
+   "year": 2022,
+   "arxiv": "2205.11275",
+   "relation": "related",
+   "note": "hypothesis on policy size",
+   "quote": null
+  },
+  {
+   "work": "Zhuang and Hadfield-Menell",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "toy overoptimization curves",
+   "quote": null
+  },
+  {
+   "work": "Brown et al. GPT-3",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "initial checkpoints",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "RM parameter size scaling experiments using the InstructGPT environment",
+   "page": 3,
+   "why": "Shows gold reward rising then falling with fitted curves"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Proxy vs gold RM score for both BoN and RL",
+   "page": 8,
+   "why": "Shows BoN and RL aligned when plotted against proxy score"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "RL experiments with various KL penalties",
+   "page": 8,
+   "why": "KL penalty equals early stopping"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 1",
+   "snippet": "Rbon (d) = d (αbon −βbond); RRL (d) = d (αRL −βRL log d)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 2",
+   "snippet": "KLbon = log n − (n−1)/n",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures 10-26 are images; values not read",
+  "No embedded instructions found"
+ ]
+}

@@ -1,0 +1,533 @@
+{
+ "schema": 1,
+ "key": "2108.00573",
+ "pdf": "generative-ai/05-RL/sources/trivedi-2022-musique.pdf",
+ "bib": {
+  "title": "MuSiQue: Multihop Questions via Single-hop Question Composition",
+  "authors": [
+   "Harsh Trivedi",
+   "Niranjan Balasubramanian",
+   "Tushar Khot",
+   "Ashish Sabharwal"
+  ],
+  "first_author": "Trivedi",
+  "year": 2022,
+  "venue": "TACL (arXiv v3, 5 May 2022)",
+  "arxiv": "2108.00573",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63722,
+  "chars_total": 63722,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a multihop QA dataset be built so that, by construction, it requires connected multihop reasoning and cannot be solved by shortcuts?",
+ "hypothesis": "Composing carefully filtered single-hop questions bottom-up yields a harder, less cheatable multihop dataset than crowdsourced or rule-composed ones.",
+ "contributions": [
+  "A bottom-up dataset construction pipeline composing connected single-hop questions (MuSiQue condition, Eqn 2).",
+  "MuSiQue-Ans (~25K 2-4 hop questions) and MuSiQue-Full (~50K, adds unanswerable contrast questions), with empirical analysis against HotpotQA and 2WikiMultihopQA."
+ ],
+ "method": {
+  "summary": "Single-hop questions from five Wikipedia-based datasets are filtered, paired through bridge entities, disconnection-filtered with Longformer models, composed into 2-4 hop DAGs, split to minimise train-test leakage, given 20-paragraph contexts with positive distractors, and phrased by MTurk workers. Models (Longformer, RoBERTa, BART, T5 variants) are trained on 20K-instance sets and compared with human scores.",
+  "task": "multihop reading comprehension QA (answer + supporting paragraph identification, plus answerability in Full)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MuSiQue-Ans",
+    "role": "both",
+    "size": "24,814 questions (train 19,938; dev 2,417; test 2,459); by hops, train 14376/4387/1175 for 2/3/4-hop",
+    "split": "train/dev/test with minimal overlap of single-hop questions, answers, paragraphs",
+    "source": "SQuAD, Natural Questions, MLQA (en-en), T-REx, Zero Shot RE",
+    "preprocessing": "remove questions no one of five QA models answers with F1>0; drop contexts <20 or >300 words; 20 paragraphs per question"
+   },
+   {
+    "name": "MuSiQue-Full",
+    "role": "both",
+    "size": "twice MuSiQue-Ans per cell (~50K)",
+    "split": "same as Ans",
+    "source": "adds one unanswerable twin per question",
+    "preprocessing": "one sampled single-hop answer removed from all context paragraphs"
+   },
+   {
+    "name": "HotpotQA distractor (HQ-20k)",
+    "role": "both",
+    "size": "20K sampled from 90K train",
+    "split": "validation for eval",
+    "source": "Yang et al. 2018",
+    "preprocessing": "10 paragraphs; sentence supervision unused"
+   },
+   {
+    "name": "2WikiMultihopQA (2W-20k)",
+    "role": "both",
+    "size": "20K sampled from 167K train",
+    "split": "validation for eval",
+    "source": "Ho et al. 2020",
+    "preprocessing": "10 paragraphs; entity-relation supervision unused"
+   }
+  ],
+  "models": [
+   {
+    "name": "End2End (EE)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Longformer-Large",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "full context fits",
+    "other": {
+     "full HotpotQA answer F1": "78.4",
+     "full 2Wiki answer F1": "87.7"
+    }
+   },
+   {
+    "name": "Select+Answer (SA)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "RoBERTa-large selector + Longformer-Large answerer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "K": "chosen from {3,5,7}"
+    }
+   },
+   {
+    "name": "Step Execution EX(EE)/EX(SA)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BART-large decomposer + single-hop executor (EE or SA)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RNN baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "re-implementation of Yang et al. 2018 model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "full HotpotQA val An": "64.0 vs 58.3 reported"
+    }
+   },
+   {
+    "name": "Artifact models (Q-only, C-only, 1-Para)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BART-large (Q-only); Longformer-Large EE with empty Q (C-only); SA with K=1 (1-Para)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SA with T5-large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "T5-large answerer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "inputs": "7 selected paragraphs, ~1100 wordpieces"
+    }
+   }
+  ],
+  "training": {
+   "objective": "selector cross-entropy relevance classification; span answer/support prediction per Beltagy et al. 2020; binary answerability via CLS",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "disconnection filter: two Longformer-Large seeds per 5-fold split; eval seeds not stated",
+   "other": {
+    "train set size": "20K instances for all datasets",
+    "note": "no optimizer or hyperparameter table in the paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; not stated",
+   "prompting": "none (fine-tuned models)",
+   "retrieval": "BM25 via Elasticsearch for distractors at construction; models read the given 20 paragraphs",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "An (answer F1)",
+     "definition": "token-overlap F1 per Yang et al. 2018",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Sp (support F1)",
+     "definition": "paragraph-level support F1",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "An+Sf / Sp+Sf",
+     "definition": "for answerable/unanswerable pairs, 0 if sufficiency is mispredicted on either, else the An (Sp) score of the answerable instance; averaged over pairs",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "DiRe score",
+     "definition": "extent a dataset can be cheated by disconnected reasoning (Trivedi et al. 2020), computed with SA",
+     "unit": "F1",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "HotpotQA",
+    "2WikiMultihopQA",
+    "RNN",
+    "Q-only",
+    "C-only",
+    "1-Para"
+   ],
+   "protocol": "validation for HQ/2W and ablations, test for Table 5; human scores from 125 sampled questions per dataset with 3 MTurk annotations, 7 of 15 workers qualified"
+  },
+  "availability": {
+   "code": "https://github.com/stonybrooknlp/musique",
+   "weights": null,
+   "data": "https://github.com/stonybrooknlp/musique"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MuSiQue-Ans answer F1 of the End2End Longformer-Large model is 42.3 against 72.9 on HotpotQA-20k and 2WikiMultihopQA-20k, with 20K training instances each",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 (EE)",
+   "value": "42.3",
+   "unit": "F1",
+   "baseline_value": "72.9",
+   "n": null,
+   "setup": "Longformer-Large EE, equal 20K train sets, validation sets, Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row EE, column MuSiQue-Ans An"
+  },
+  {
+   "claim": "Human answer F1 on MuSiQue-Ans is 78.0 (upper bound 88.6), so the best model (SA, 47.3) leaves a ~27 point gap versus 10 on HotpotQA and 5 on 2Wiki",
+   "kind": "measured",
+   "source": null,
+   "metric": "human score answer F1",
+   "value": "78.0",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "125 questions from dev and test, 3 MTurk annotations each; most frequent answer; Table 3 and Table 4",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Answer F1, column Score"
+  },
+  {
+   "claim": "Best models score 47.3 answer F1 (SA) on MuSiQue-Ans validation, against 74.9 (HQ) and 79.5 (2W)",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 (SA)",
+   "value": "47.3",
+   "unit": "F1",
+   "baseline_value": "79.5",
+   "n": null,
+   "setup": "Select+Answer: RoBERTa-large selector, Longformer-Large answerer, validation set",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row SA, column MuSiQue-Ans An"
+  },
+  {
+   "claim": "Step-execution EX(SA) answer F1 falls with hops: 57.9, 47.9, 28.1 on 2, 3, 4-hop; EE stays about 42%",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 by hops (EX(SA))",
+   "value": "57.9 / 47.9 / 28.1",
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MuSiQue-Ans, EX(SA) model, 2/3/4-hop",
+   "note": null,
+   "where": "8.1",
+   "quote": "Our best model, EX(SA), scores 57.9, 47.9, and\n28.1 answer F1 on 2, 3, and 4-hop questions"
+  },
+  {
+   "claim": "A 1-Para (single-paragraph) model gets 32.0 answer F1 on MuSiQue-Ans against 64.8 on HotpotQA and 60.1 on 2Wiki",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 (1-Para)",
+   "value": "32.0",
+   "unit": "F1",
+   "baseline_value": "64.8",
+   "n": null,
+   "setup": "1-Para model, K=1 selector, validation sets",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 1-Para, column MuSiQue-Ans An"
+  },
+  {
+   "claim": "DiRe (disconnected reasoning) answer score is 37.8 on MuSiQue-Ans against 68.8 on HotpotQA and 63.4 on 2Wiki",
+   "kind": "measured",
+   "source": null,
+   "metric": "DiRe answer score",
+   "value": "37.8",
+   "unit": "F1",
+   "baseline_value": "68.8",
+   "n": null,
+   "setup": "DiRe score computed with SA model",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row DiRe Score, column MuSiQue-Ans"
+  },
+  {
+   "claim": "On MuSiQue-Full test, the SA model gets 34.8 An+Sf and 42.1 Sp+Sf; EE gets 24.0 / 25.6; artifact models score near zero",
+   "kind": "measured",
+   "source": null,
+   "metric": "An+Sf (SA)",
+   "value": "34.8",
+   "unit": "F1",
+   "baseline_value": "52.3",
+   "n": null,
+   "setup": "MuSiQue-Full test, paired-instance metric",
+   "note": "baseline_value is SA An on MuSiQue-Ans (test)",
+   "where": "Table 5",
+   "table": "Table 5, row SA, column MuSiQue-Full An+Sf"
+  },
+  {
+   "claim": "Same-size random splits (no leakage control) raise EE answer F1 from 42.3 to 87.3, and 1-Para reaches 85.1",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 EE without leakage reduction",
+   "value": "87.3",
+   "unit": "F1",
+   "baseline_value": "42.3",
+   "n": null,
+   "setup": "Ablation RL, random partition, same train size and dev hop distribution",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row \\ RL, column EE An"
+  },
+  {
+   "claim": "Removing the Disconnection Filter raises EE answer F1 from 42.3 to 60.6 and 1-Para from 32.0 to 59.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 EE without DF",
+   "value": "60.6",
+   "unit": "F1",
+   "baseline_value": "42.3",
+   "n": null,
+   "setup": "Ablation DF, BART-large composed questions, same train size",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row \\ DF, column EE An"
+  },
+  {
+   "claim": "Using Wikipedia distractors (10 paragraphs) instead of positive distractors (20) lets EE reach 57.2 answer F1 and C-only 77.7 support F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer F1 EE, 10 FW",
+   "value": "57.2",
+   "unit": "F1",
+   "baseline_value": "42.3",
+   "n": null,
+   "setup": "Distractor ablation, MuSiQue-Ans",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 10 FW, column EE An"
+  },
+  {
+   "claim": "Ground-truth decompositions improve EX(SA) by 9.4 answer F1 and 7.3 support F1 on MuSiQue-Ans",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain from gold decomposition",
+   "value": "9.4",
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EX(SA), MuSiQue-Ans",
+   "note": null,
+   "where": "8.3",
+   "quote": "(An, Sp) improve by (9.4, 7.3) pts"
+  },
+  {
+   "claim": "T5-large SA gives only a modest gain over Longformer SA: (6.1, 0.7) on MuSiQue-Ans",
+   "kind": "measured",
+   "source": null,
+   "metric": "T5 SA gain",
+   "value": "6.1",
+   "unit": "F1 points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SA with T5-large, 7 selected paragraphs, ~1100 wordpieces",
+   "note": null,
+   "where": "8.3",
+   "quote": "T5 SA showed a modest improvement\nof (6.1, 0.7)"
+  },
+  {
+   "claim": "Human check of MuSiQue-Full answerability matched gold on 45 of 50 instances",
+   "kind": "measured",
+   "source": null,
+   "metric": "answerability agreement",
+   "value": "90",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 random MuSiQue-Full instances, one author",
+   "note": null,
+   "where": "6",
+   "quote": "45 out of the 50 instances\n(90%)"
+  },
+  {
+   "claim": "Disconnection filtering retained 26.5% of tail questions originally and would retain 79.0% on the final dev set",
+   "kind": "measured",
+   "source": null,
+   "metric": "tail retained",
+   "value": "79.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Re-filter of validation set with models trained on final data",
+   "note": null,
+   "where": "6",
+   "quote": "we\nwould have retained 79.0% of the tail ques-\ntions"
+  }
+ ],
+ "limits": [
+  "Evaluation covers only fine-tuned Longformer/BART/T5-era models; no LLM prompting results (dated for current RL/RAG use).",
+  "Reading-comprehension setting with 20 given paragraphs; open-domain extension is left to future work.",
+  "Disconnection filter enforced only on head questions' first condition and tail via filter; filter uses transformer models, which could bias difficulty (RNN baseline checks this).",
+  "Training hyperparameters, optimizer, hardware and seeds are not reported.",
+  "Human performance estimated from 125 questions per dataset."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MuSiQue condition",
+   "definition": "no sub-question answerable without its predecessor's answer (masked) and none answerable without context, Eqn (2)",
+   "where": "Section 4.3"
+  },
+  {
+   "term": "Disconnected reasoning",
+   "definition": "a model arrives at the correct answer without using all supporting facts",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "HotpotQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "closest comparison dataset",
+   "quote": null
+  },
+  {
+   "work": "2WikiMultihopQA",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "rule-composed comparison dataset",
+   "quote": null
+  },
+  {
+   "work": "Trivedi et al. Is multihop QA in DiRe condition?",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "disconnected reasoning, DiRe score, sufficiency pairs",
+   "quote": null
+  },
+  {
+   "work": "Longformer",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "uses-method",
+   "note": "main model",
+   "quote": null
+  },
+  {
+   "work": "SQuAD / Natural Questions / MLQA / T-REx / Zero Shot RE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "single-hop sources",
+   "quote": null
+  },
+  {
+   "work": "Groeneveld et al. Quark pipeline",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inspired Select+Answer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Generating connected multihop questions by composing carefully chosen pairs of single-hop questions.",
+   "page": 1,
+   "why": "Shows a disconnected HotpotQA question versus a connected one."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Compared to the other datasets considered, MuSiQue-Ans has a much larger human-model gap and is much less cheatable.",
+   "page": 7,
+   "why": "Central comparison with HotpotQA and 2Wiki."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Dataset symbol (musical note) rendered blank in text; Table 6 caption step numbers (DF step 5, RL step 3) disagree with the body (DF step 3, RL step 5)."
+ ]
+}

@@ -1,0 +1,342 @@
+{
+ "schema": 1,
+ "key": "2208.04024",
+ "pdf": "generative-ai/03-agentic-foundations/sources/park-2022-social-simulacra.pdf",
+ "bib": {
+  "title": "Social Simulacra: Creating Populated Prototypes for Social Computing Systems",
+  "authors": [
+   "Joon Sung Park",
+   "Lindsay Popowski",
+   "Carrie J. Cai",
+   "Meredith Ringel Morris",
+   "Percy Liang",
+   "Michael S. Bernstein"
+  ],
+  "first_author": "Park",
+  "year": 2022,
+  "venue": "UIST '22",
+  "arxiv": "2208.04024",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 109432,
+  "chars_total": 109432,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
+ },
+ "type": "system",
+ "question": "Can an LLM populate a draft social-computing design (goal, rules, personas) with realistic simulated behaviour so a designer can anticipate and fix problems before launch?",
+ "hypothesis": "LLMs' training data already contains diverse pro- and anti-social online behaviour, so prompt chains can generate plausible populated communities that help designers iterate.",
+ "contributions": [
+  "Social simulacra, a prototyping technique that generates populated social behaviour from a design description",
+  "Prompt-chain techniques for GPT-3 generating thousands of distinct members and their interactions",
+  "SimReddit tool with Generate, WhatIf and Multiverse",
+  "A technical evaluation on 50 unseen subreddits and a study with 16 designers"
+ ],
+ "method": {
+  "summary": "SimReddit expands ~10 designer seed personas into 1,000 with a few-shot GPT-3 prompt, then generates top-level posts and replies by prompting base davinci with persona, rules and HTML span templates, stopping at the closing tag. WhatIf swaps the replier persona or injects a moderator comment; Multiverse resamples at temperature 0.8.",
+  "task": "generating simulated social media community interactions for design prototyping",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "50 post-GPT-3 subreddits",
+    "role": "eval",
+    "size": "50 subreddits, 100 real/synthetic pair comparisons",
+    "split": null,
+    "source": "top five largest subreddits per creation date from 2020-06-11 via frontpagemetrics.com, English only",
+    "preprocessing": "real threads: >=200 posts behind latest, text-only, >=3 responses, truncated to first 5"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 davinci (base, released 2020-06-11)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GPT-3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inferred: input limited to roughly 8,000 characters",
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "API sampling; generation stopped at </span> closing tag",
+   "temperature": "0.7 default; 0.8 for Multiverse",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Multiverse: repeated regeneration (number not stated); designer study showed 3 WhatIf generations per prompt",
+   "prompting": "Zero-shot template prompts with persona description, rules as 'not X' phrases, HTML span tags (class headline_reddit / comment max_200_words, title with rules); few-shot for persona expansion; thread history in prompt, truncated from first post",
+   "retrieval": null,
+   "parameters": {
+    "seed personas": "10 by default",
+    "generated personas": "1,000 by default",
+    "reply probability p": "drawn from N(.65, stdev); stdev not stated",
+    "max replies": "stop after more than 8 replies",
+    "new persona rate": "50% new persona, else one already in conversation (not the latest speaker)"
+   },
+   "other": {
+    "engine": "default settings except Multiverse temperature"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "error rate",
+     "definition": "fraction of real-vs-synthetic pairs where participant picked the synthetic one as real; 50% is chance",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Crowdworker conversations (10 Prolific workers per subreddit in a Google Doc)",
+    "SimReddit without community description",
+    "SimReddit without personas"
+   ],
+   "protocol": "Between-subjects, 50 participants per condition (200 total, power analysis alpha 0.05 power 80%), 100 comparisons, one-way ANOVA with Tukey HSD; designer study with 16 designers, think-aloud and inductive coding"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "post generation",
+    "text": "Layla Li is a college student studying to be a social worker. She shares comments that are not encouraging suicide, not anti-therapy, not trolling, not incivility, not self-marketing. Layla posted the following headline to an online forum for sharing your psychotherapy stories and questions: <span class=\"headline_reddit\" title=\"comment that is about psychotherapy, and NOT encouraging suicide, NOT anti-therapy\">",
+    "where": "4.2.2"
+   },
+   {
+    "purpose": "WhatIf troll replier",
+    "text": "[Troll] shares trolling comments. ... [Troll]: <span class=\"comment max_200_words\" title=\"comment that is trolling\">\"",
+    "where": "4.2.4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Participants misidentified the SimReddit conversation as real in 41% of pairs, close to the 50% chance level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 41,
+   "unit": "%",
+   "baseline_value": 50,
+   "n": 50,
+   "setup": "50 unseen subreddits, 50 participants in the SimReddit condition, GPT-3 davinci, real vs generated pairs",
+   "quote": "their error rate was 41% (std=10%) on average",
+   "table": null,
+   "note": null,
+   "where": "5.5, p.7"
+  },
+  {
+   "claim": "Crowdworker baseline had a lower error rate than SimReddit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 32,
+   "unit": "%",
+   "baseline_value": 41,
+   "n": 50,
+   "setup": "same task, crowdworker-written conversations vs real",
+   "quote": "where the error rate was only 32% (std=13%)",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Removing the community description dropped the error rate to 21%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 21,
+   "unit": "%",
+   "baseline_value": 41,
+   "n": 50,
+   "setup": "SimReddit without community goal and rules in prompt",
+   "quote": "our participants’ error rate was 21% (std=15%)",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Removing personas lowered the error rate (text says 33%, Table 1 says 34%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 33,
+   "unit": "%",
+   "baseline_value": 41,
+   "n": 50,
+   "setup": "SimReddit with users numbered, no persona descriptions",
+   "quote": "our participants’ error rate was 33% (std=10%)",
+   "table": null,
+   "note": "Table 1 prints M=34%; text prints 33%.",
+   "where": "5.5"
+  },
+  {
+   "claim": "Omnibus ANOVA across the four conditions is significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F",
+   "value": 22.49,
+   "unit": "F",
+   "baseline_value": null,
+   "n": null,
+   "setup": "one-way ANOVA on error rate, 200 participants",
+   "quote": "F(3,196)=22.49",
+   "table": "Table 1, header, F(3,196)=22.49",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "All 16 designers found unexpected insights in initial generations and all but one revised their design.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 15,
+   "unit": "of 16",
+   "baseline_value": null,
+   "n": 16,
+   "setup": "designer study, 90-120 min per participant",
+   "quote": null,
+   "table": "Section 6.4.3 (15 of 16 revised; n=15 for failure-case revisions)",
+   "note": null,
+   "where": "6.4.3"
+  },
+  {
+   "claim": "14 of 16 designers said the generations were realistic, yet 15 noticed unlikely aspects.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 14,
+   "unit": "of 16",
+   "baseline_value": null,
+   "n": 16,
+   "setup": "designer study",
+   "quote": null,
+   "table": "Section 6.4.5, n=14",
+   "note": null,
+   "where": "6.4.5"
+  },
+  {
+   "claim": "13 of 16 designers found it daunting to envision design success and failure before the study.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 13,
+   "unit": "of 16",
+   "baseline_value": null,
+   "n": 16,
+   "setup": "designer study screener and interview",
+   "quote": null,
+   "table": "Section 6.4.1, n=13",
+   "note": null,
+   "where": "6.4.1"
+  }
+ ],
+ "limits": [
+  "Does not predict outcomes; authors say single-point prediction is impossible (7.2.1).",
+  "False negatives: even with Multiverse, outputs are not exhaustive; implied truth effect risk (7.1.1).",
+  "Text-only, English-only, Reddit-only; GPT-3 prompt limit about 8,000 characters forces truncation of earlier conversation (7.2.3).",
+  "Technical eval checks only real-vs-fake plausibility on first-5-response threads, not fidelity of group dynamics; the designer study has no outcome measure of community quality after launch.",
+  "Models may reproduce biases in who participates; risks of astroturfing and harassment tooling (7.3).",
+  "Base davinci lacks knowledge after mid-2020 (e.g. COVID-19); covidlonghaulers example failed.",
+  "Prompt chains are single-turn persona prompting; no agent memory, planning or tools; no multi-agent interaction loop beyond sampled turn-taking."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "social simulacra",
+   "definition": "a prototyping technique that generates a breadth of realistic social interactions that may emerge when a social computing system is populated",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "underlying model",
+   "quote": null
+  },
+  {
+   "work": "Wu et al. prompt chains (AI Chains / PromptChainer)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "prompt chains [80, 81]; exact authors not verified from text read",
+   "quote": null
+  },
+  {
+   "work": "Grevet and Gilbert, Piggyback prototyping",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior social computing prototyping",
+   "quote": null
+  },
+  {
+   "work": "Grudin, Groupware and social dynamics",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "critical mass problem",
+   "quote": null
+  },
+  {
+   "work": "Fiesler et al., Reddit rules",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "basis for rule types",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A) The generated content page of SimReddit styled after that of a subreddit...",
+   "page": 4,
+   "why": "shows the Generate output interface"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "WhatIf can surface how a conversation might have developed if someone else (e.g., a troll) had responded or intervened (e.g., a moderator).",
+   "page": 5,
+   "why": "shows persona-swap branching"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "An illustration of conversations generated through Multiverse...",
+   "page": 6,
+   "why": "shows branching of alternate paths"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "SimReddit significantly outperformed the crowdworker baseline and all ablations",
+   "page": 8,
+   "why": "ablation numbers"
+  }
+ ],
+ "code": [
+  {
+   "where": "4.2.3",
+   "snippet": "r∈N(.65,stdev) ... generate an additional reply with a coin flip with probability p; stop after more than 8 replies; new persona at rate 50%",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 prints SimReddit w/o personas M=34%, text says 33%.",
+  "Reference list duplicates entries [30]/[31]; ACM DOI placeholder.",
+  "Prompt-chain citations [80,81] not resolved from text read; lineage entry for them is unverified."
+ ]
+}

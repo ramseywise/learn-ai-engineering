@@ -1,0 +1,525 @@
+{
+ "schema": 1,
+ "key": "2212.04088",
+ "pdf": "generative-ai/03-agentic-foundations/sources/song-2023-llm-planner.pdf",
+ "bib": {
+  "title": "LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large Language Models",
+  "authors": [
+   "Chan Hee Song",
+   "Jiaman Wu",
+   "Clayton Washington",
+   "Brian M. Sadler",
+   "Wei-Lun Chao",
+   "Yu Su"
+  ],
+  "first_author": "Song",
+  "year": 2023,
+  "venue": "ICCV 2023 (arXiv v3 submitted version, 30 Mar 2023)",
+  "arxiv": "2212.04088",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65622,
+  "chars_total": 65622,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can an LLM with few in-context examples act as a high-level planner for embodied instruction following, grounded by re-planning on observed objects?",
+ "hypothesis": "LLM planning with kNN example retrieval, logit biases and grounded re-planning can match fully trained hierarchical planners with under 0.5% of paired data.",
+ "contributions": [
+  "LLM-Planner: few-shot high-level planning with GPT-3",
+  "Grounded re-planning that injects observed objects into the prompt when the agent is stuck",
+  "Evaluation on ALFRED against full-data and few-shot baselines incl. SayCan"
+ ],
+ "method": {
+  "summary": "GPT-3 (text-davinci-003) generates a high-level plan (sequence of (action, object) subgoals) from a prompt with 9 kNN-retrieved examples; logit bias constrains output tokens; when a subgoal fails or after n steps, the LLM is re-prompted with completed subgoals and detected objects to continue the plan. Plugged into HLSM's perception and low-level planner on ALFRED.",
+  "task": "embodied instruction following (ALFRED, high-level planning)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ALFRED",
+    "role": "both",
+    "size": "4,703 tasks, 7 task types, 207 environments, 115 object types; 21,023 training examples",
+    "split": "100 stratified-random training examples used as prompt pool; eval on valid seen/unseen and test seen/unseen",
+    "source": "Shridhar et al. 2020",
+    "preprocessing": "objects with detector label confidence >80% only"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 text-davinci-003",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LLM via public API",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-base-uncased (frozen kNN retriever)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "BERT-base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HLSM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "semantic voxel map + high-level + low-level planner",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "also supplies perception, depth, navigation and low-level planner for LLM-Planner"
+    }
+   },
+   {
+    "name": "FILM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "semantic map + template planner with five BERT classifiers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SayCan (ALFRED port)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LLM ranker over skills with oracle value function",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "GPT-3 API, logit bias",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "task intro + allowed actions, 9 kNN-retrieved (instruction, plan) examples, then test task with completed plan, visible objects, ending 'Next plan:'; prompt chosen by leave-one-out CV on the 100 examples (true few-shot)",
+   "retrieval": "frozen BERT-base-uncased, Euclidean distance between instruction embeddings, K=9 from 100 examples",
+   "parameters": {
+    "logit_bias": "0.1 on all allowable output tokens; also on observed objects at re-planning",
+    "replan_trigger": "subgoal fails or after n time steps (n not stated)",
+    "object_confidence": ">80%",
+    "gpt3_calls_per_task": "7 avg (SayCan 22)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SR",
+     "definition": "percentage of tasks fully completed",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GC",
+     "definition": "percentage of completed goal-conditions",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "HLP ACC",
+     "definition": "exact match of predicted high-level plan to ground truth; dynamic setting reported as range",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "HLSM",
+    "FILM",
+    "SayCan",
+    "HiTUT",
+    "E.T.",
+    "M-TRACK",
+    "LEBP",
+    "(SL)3 (comparison discussed only)"
+   ],
+   "protocol": "Single run reported; no seeds or significance tests stated. True few-shot: prompt design and model selection by LOOCV on the 100 examples."
+  },
+  "availability": {
+   "code": "https://dki-lab.github.io/LLM-Planner/ (website only; code not confirmed in text)",
+   "weights": null,
+   "data": "ALFRED public"
+  },
+  "prompts": [
+   {
+    "purpose": "static/re-planning high-level plan prompt",
+    "text": "Create a high-level plan for completing a household task using the allowed actions and visible objects.\nAllowed actions: OpenObject, CloseObject, PickupObject, PutObject, ToggleObjectOn, ToggleObjectOff, SliceObject, Navigation\nTask description: [goal instruction]\nCompleted plan: [subgoals]\nVisible objects are [objects]\nNext plan:",
+    "where": "Fig 2, p4 (reconstructed from figure text; in-context examples omitted)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "We set the temperature to 0 and apply a logit",
+    "where": "Sec 5.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LLM-Planner + HLSM with 100 examples reaches valid-unseen SR 15.36 with step-by-step instructions, near full-data HLSM (18.28).",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 15.36,
+   "unit": "%",
+   "baseline_value": 18.28,
+   "n": null,
+   "setup": "ALFRED valid unseen, GPT-3 text-davinci-003, 100 paired examples (<0.5% of 21,023), 9 retrieved in-context examples, dynamic grounded re-planning",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row LLM-Planner + HLSM (step-by-step), column Valid Unseen SR"
+  },
+  {
+   "claim": "Retrained with the same 100 examples, HLSM completes almost nothing on valid unseen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 0.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFRED valid unseen, HLSM high-level planner retrained on 100 examples, step-by-step concatenated",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row HLSM (few-shot), column Valid Unseen SR"
+  },
+  {
+   "claim": "Retrained FILM on 100 examples gets 0.00 SR on valid unseen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 0.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFRED valid unseen, five BERT classifiers retrained on 100 examples",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row FILM (few-shot), column Valid Unseen SR"
+  },
+  {
+   "claim": "SayCan (with oracle object knowledge) gets 9.88 SR on valid unseen, well below LLM-Planner.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 9.88,
+   "unit": "%",
+   "baseline_value": 15.36,
+   "n": null,
+   "setup": "ALFRED valid unseen, GPT-3 ranker, oracle value function from ground-truth objects, same kNN retriever, step-by-step; not run on test",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SayCan, column Valid Unseen SR"
+  },
+  {
+   "claim": "LLM-Planner calls GPT-3 7 times per task on average versus 22 for SayCan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-3 calls per task",
+   "value": 7,
+   "unit": "calls",
+   "baseline_value": 22,
+   "n": null,
+   "setup": "ALFRED, SayCan given oracle environment knowledge to shrink skill list",
+   "note": "Quote anchors the sentence; text reads 'avg. 7 times per task and SayCan calls it 22 times'.",
+   "where": "Sec 5.4, App A.3",
+   "quote": "LLM-Planner calls GPT-3 avg."
+  },
+  {
+   "claim": "Grounded re-planning improves goal-instruction-only SR by 1.83 on test unseen over static planning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR gain",
+   "value": 1.83,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFRED test unseen, goal instruction only, LLM-Planner + HLSM, 13.41 vs static 11.58",
+   "note": null,
+   "where": "Sec 5.4",
+   "quote": "it improves 1.83% SR"
+  },
+  {
+   "claim": "Ablating the kNN retriever drops LOOCV HLP accuracy from 40.59 to 17.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LOOCV HLP accuracy",
+   "value": 17.48,
+   "unit": "%",
+   "baseline_value": 40.59,
+   "n": null,
+   "setup": "LOOCV on the 100 training examples, static planner",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row - kNN Retriever"
+  },
+  {
+   "claim": "Ablating logit biases drops LOOCV HLP accuracy from 40.59 to 38.10; removing both gives 13.43.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LOOCV HLP accuracy",
+   "value": 38.1,
+   "unit": "%",
+   "baseline_value": 40.59,
+   "n": null,
+   "setup": "LOOCV on the 100 training examples",
+   "note": "Both removed: 13.43",
+   "where": "Table 2",
+   "table": "Table 2, row - Logit Biases"
+  },
+  {
+   "claim": "HLP accuracy has diminishing returns at around 250 training examples; 9 in-context examples chosen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training examples at plateau",
+   "value": 250,
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LOOCV, varying training set and in-context example count",
+   "note": "Read from prose; Fig 3 not extracted.",
+   "where": "Sec 5.6",
+   "quote": "diminishing return around 250 training examples"
+  },
+  {
+   "claim": "LLM-Planner with 50 training examples gets 10.06 SR while HLSM gets 0.00; HLSM catches up only at full data (18.28 vs 17.80).",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 10.06,
+   "unit": "%",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "ALFRED valid unseen SR, training sizes 50 to 21k",
+   "note": "Table 5 LLM-Planner 100: 15.36; full 17.80; HLSM full 18.28.",
+   "where": "Table 5, App D.3",
+   "table": "Table 5, row LLM-Planner, column 50"
+  },
+  {
+   "claim": "Static LLM-Planner HLP accuracy is roughly flat across task types, e.g. Stack & Place 38 vs Place Two 39 on valid unseen.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HLP accuracy",
+   "value": 38,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Valid unseen, static planner",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Stack & Place, column Valid Unseen"
+  },
+  {
+   "claim": "Heat & Place has 36% HLP accuracy but only 1.8% SR because HLSM's detector often misses the microwave.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 1.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFRED valid unseen, LLM-Planner + HLSM",
+   "note": null,
+   "where": "App D.2",
+   "quote": "we could only get 1.8% success rate"
+  },
+  {
+   "claim": "Dynamic planning HLP accuracy reported as a range (lower bound = full generated plan, upper bound = plan executed up to task end): 46.59 - 68.31 on valid unseen with step-by-step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HLP ACC",
+   "value": null,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFRED valid unseen, step-by-step",
+   "note": null,
+   "where": "Table 1, Sec 5.2",
+   "table": "Table 1, row LLM-Planner + HLSM (step-by-step), column Valid Unseen HLP ACC"
+  }
+ ],
+ "limits": [
+  "Success depends on HLSM's low-level planner and object detector, which cap performance (Heat & Place 36% HLP, 1.8% SR).",
+  "Authors say 'there is still a large room for further improvement' and suggest Codex, better prompts, better grounding.",
+  "SayCan baseline given oracle object knowledge and oracle value function; not evaluated on test split.",
+  "Only GPT-3 text-davinci-003 (since deprecated) tested; single run, no variance reported.",
+  "Grounding is only an object list; re-planning interval n not stated.",
+  "Few-shot HLSM/FILM baselines use default hyperparameters; (SL)3 could not be compared."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "HLP",
+   "definition": "high-level plan: a sequence of subgoals, each (high-level action, object)",
+   "where": "Sec 3"
+  },
+  {
+   "term": "true few-shot",
+   "definition": "prompt design and model selection by cross-validation on the same small training set, no separate validation set",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SayCan (Ahn et al.)",
+   "year": 2022,
+   "arxiv": "2204.01691",
+   "relation": "baseline",
+   "note": "ranking-based LLM planner, reimplemented on ALFRED",
+   "quote": null
+  },
+  {
+   "work": "HLSM (Blukis et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "perception and low-level planner reused; high-level planner replaced",
+   "quote": null
+  },
+  {
+   "work": "FILM (Min et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "high-level planner replaced and retrained",
+   "quote": null
+  },
+  {
+   "work": "ALFRED (Shridhar et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "True few-shot learning (Perez et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "Language Models as Zero-Shot Planners (Huang et al.)",
+   "year": 2022,
+   "arxiv": "2201.07207",
+   "relation": "related",
+   "note": "static LLM plans with admissible actions",
+   "quote": null
+  },
+  {
+   "work": "ProgPrompt (Singh et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "static LLM plan generation",
+   "quote": null
+  },
+  {
+   "work": "Inner Monologue (Huang et al.)",
+   "year": 2022,
+   "arxiv": "2207.05608",
+   "relation": "related",
+   "note": "feedback-based LLM planning",
+   "quote": null
+  },
+  {
+   "work": "(SL)3 (Sharma et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fine-tuned T5-small on 10% of ALFRED",
+   "quote": null
+  },
+  {
+   "work": "GPT-3 (Brown et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LLM used",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "An illustration of LLM-Planner for high-level planning.",
+   "page": 1,
+   "why": "shows re-planning from potato to fridge to garbage can"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of LLM-Planner with prompt design and grounded re-planning.",
+   "page": 4,
+   "why": "full prompt layout and pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "LOOCV HLP accuracy for varying number of in-context examples and training examples.",
+   "page": 7,
+   "why": "data scaling and k sensitivity"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Case studies for LLM-Planner.",
+   "page": 7,
+   "why": "object localization and disambiguation"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Main results on the ALFRED dataset.",
+   "page": 8,
+   "why": "few-shot vs full-data comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p5",
+   "snippet": "if current subgoal s fails or after n time steps then S <- LLM-Planner(I, O, G); k <- 0; s <- S[k] else if current subgoal s is completed then k <- k+1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 flattened by extraction; columns reconstructed from order. HLSM HLP ACC printed as '31.24 \u2013 70.17' on valid unseen, same lower value as its GC.",
+  "Figure 3 and Fig 5 data not in text."
+ ]
+}

@@ -1,0 +1,126 @@
+{
+ "schema": 1,
+ "key": "2308.07201",
+ "pdf": "generative-ai/03-agentic-foundations/sources/chan-2023-chateval.pdf",
+ "bib": {
+  "title": "ChatEval: Towards Better LLM-based Evaluators through Multi-Agent Debate",
+  "authors": ["Chi-Min Chan", "Weize Chen", "Yusheng Su", "Jianxuan Yu", "Zhiyuan Liu", "Jie Fu", "Wei Xue", "Shanghang Zhang"],
+  "first_author": "Chan",
+  "year": 2023,
+  "venue": "preprint (arXiv v1; ICLR 2024 per ledger, not printed in this PDF)",
+  "arxiv": "2308.07201",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53577,
+  "chars_total": 53577,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does a team of LLM referees that debate each other judge text quality closer to human annotators than a single LLM referee?",
+ "hypothesis": "Multiple LLM agents with distinct personas discussing together align better with human judgments than a single agent, as multiple human annotators do.",
+ "contributions": [
+  "A multi-agent framework called ChatEval that aligns better with human preferences than single-agent approaches.",
+  "Several communication strategies and a demonstration that diverse role prompts are necessary in multi-agent debate.",
+  "A released composable, scalable library."
+ ],
+ "method": {
+  "summary": "Each LLM is a debater agent sharing one prompt template, with a role-description slot filled by a distinct persona. Agents read the others' replies as chat history over a fixed number of turns; the final verdict is a majority vote (pairwise) or mean score (direct scoring), with no forced consensus. Evaluated against human annotation on FairEval and Topical-Chat using GPT-4 and ChatGPT.",
+  "task": "LLM-as-a-judge text evaluation (open-ended QA pairwise comparison; dialogue response scoring)",
+  "trains": false,
+  "datasets": [
+   {"name": "FairEval (80 open-ended questions from Vicuna, Chiang et al. 2023; Vicuna-13B vs ChatGPT replies)", "role": "eval", "size": "80 questions", "split": "all", "source": "Chiang et al. 2023; human labels from Wu et al. 2023 (3 annotators, majority vote)", "preprocessing": null},
+   {"name": "Topical-Chat", "role": "eval", "size": "60 dialogue contexts, each response from 6 systems", "split": "all", "source": "Gopalakrishnan et al. 2019; human annotations from Mehri & Eskenazi 2020", "preprocessing": "first four dimensions used (naturalness, coherence, engagingness, groundedness), following Zhong et al. 2022"}
+  ],
+  "models": [
+   {"name": "GPT-4", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ChatGPT (GPT-3.5-turbo)", "role": "judge", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"group": "homogeneous: all agents in a group are the same model, either all GPT-4 or all ChatGPT"}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "null: one run per configuration stated; no seeds, repeats or confidence intervals",
+   "prompting": "Zero-shot template (Table 6): question, two answers, instruction to score each assistant 1 to 10 on helpfulness, relevance, accuracy, level of detail, discussion history, role description, 'make your talk short and clear'. Single-agent uses same template minus chat history and role slots.",
+   "retrieval": null,
+   "parameters": {
+    "default_agents": "2",
+    "default_discussion_turns": "2",
+    "default_communication_strategy": "one-by-one",
+    "position_calibration": "applied in both single-agent and multi-agent settings (details not given)",
+    "answer_extraction": "majority vote for pairwise comparison; average score for direct scoring",
+    "analysis_setup": "FairEval + ChatGPT; communication-strategy study uses 3 agents, 2 turns, diverse roles"
+   },
+   "other": {"roles": "General Public, Critic, News Author, Psychologist, Scientist (Appendix A)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Accuracy (Acc.)", "definition": "proportion of instances where the method's judgment matches the human label", "unit": "%", "higher_is_better": true},
+    {"name": "Kappa (Kap.)", "definition": "chance-corrected agreement between model and human annotators (McHugh 2012)", "unit": "coefficient", "higher_is_better": true},
+    {"name": "Spearman rho / Kendall-Tau tau", "definition": "turn-level correlation with human judgments on four aspects, per Zhong et al. 2022", "unit": "correlation", "higher_is_better": true}
+   ],
+   "baselines": ["Single-Agent (same model, same template)", "FairEval MEC+BPC (Wang et al. 2023b)", "G-EVAL-3.5 and G-EVAL-4 (Liu et al. 2023b)", "ROUGE-L", "BLEU-4", "BERTScore", "Human annotators 1 to 3"],
+   "protocol": "Single run per configuration, no significance test or variance reported. FairEval and G-EVAL baseline numbers are taken from their papers."
+  },
+  "availability": {"code": "https://github.com/chanchimin/ChatEval (built on OpenBMB/AgentVerse)", "weights": null, "data": "FairEval and Topical-Chat annotations are from prior work"},
+  "prompts": [
+   {"purpose": "Same-role ablation", "text": "You are now an Annotator, one of the referees in the text evaluation task.", "where": "Sec 4.1"},
+   {"purpose": "FairEval template", "text": "[Question] {source text} [The Start of Assistant 1's Answer] {compared text one} [The End of Assistant 1's Answer] [The Start of Assistant 2's Answer] {compared text two} [The End of Assistant 2's Answer] [System] We would like to request your feedback on the performance of two AI assistants in response to the user question displayed above. Please consider the helpfulness, relevance, accuracy, and level of detail of their responses. Each assistant receives an overall score on a scale of 1 to 10, where a higher score indicates better overall performance. There are a few other referees assigned the same task, it's your responsibility to discuss with them and think critically before you make your final judgment. Here is your discussion history: {chat history} {role description} Now it's your time to talk, please make your talk short and clear, {agent name} !", "where": "Appendix A, Table 6"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Multi-agent debate raises FairEval accuracy over a single agent for ChatGPT (2 agents, 2 turns, one-by-one).", "kind": "measured", "source": null, "metric": "Accuracy", "value": "60.0", "unit": "%", "baseline_value": "53.8", "n": 80, "setup": "FairEval, ChatGPT, Multi-Agent vs Single-Agent, defaults", "table": "Table 1, rows ChatGPT Single-Agent 53.8 and ChatGPT Multi-Agent 60.0, column Acc.", "note": "text: 'improves the accuracy by 6.2% for ChatGPT and 2.5% for GPT-4' (percentage points)", "where": "Table 1, Sec 3.4"},
+  {"claim": "Multi-agent debate raises FairEval accuracy for GPT-4 by a smaller margin.", "kind": "measured", "source": null, "metric": "Accuracy", "value": "63.8", "unit": "%", "baseline_value": "61.3", "n": 80, "setup": "FairEval, GPT-4, Multi-Agent vs Single-Agent, 2 agents, 2 turns", "table": "Table 1, rows GPT-4 Single-Agent 61.3 and GPT-4 Multi-Agent 63.8, column Acc.", "note": null, "where": "Table 1"},
+  {"claim": "Gain from debate is larger for the weaker judge (6.2 points ChatGPT vs 2.5 GPT-4).", "kind": "measured", "source": null, "metric": "accuracy gain", "value": "6.2", "unit": "points", "baseline_value": "2.5", "n": 80, "setup": "FairEval; 6.2 is ChatGPT gain, baseline_value is GPT-4 gain", "quote": "the multi-agent-based method improves the accuracy by 6.2% for ChatGPT and 2.5% for GPT-4", "note": null, "where": "Sec 3.4"},
+  {"claim": "Same role prompt for both agents gives no gain over a single agent; diverse roles give the gain.", "kind": "measured", "source": null, "metric": "Accuracy", "value": "53.8", "unit": "%", "baseline_value": "60", "n": 80, "setup": "FairEval, ChatGPT, 2 agents, 2 turns; same-role Acc 53.8 (Kap 0.25) vs diverse-role 60 (Kap 0.33) vs single agent 53.8 (Kap 0.27)", "table": "Table 3, row Multi-Agent (Same Role Prompt), column Acc.", "note": null, "where": "Table 3, Sec 4.1"},
+  {"claim": "One-by-one communication beats simultaneous-talk, with or without summarizer; all still beat single agent.", "kind": "measured", "source": null, "metric": "Accuracy", "value": "60", "unit": "%", "baseline_value": "55", "n": 80, "setup": "FairEval, ChatGPT, 3 agents, 2 turns, diverse roles; one-by-one 60 (Kap 0.33), simultaneous-talk 55 (0.28), with summarizer 55 (0.27)", "table": "Table 4, row One-by-One, column Acc.", "note": "Table 4 one-by-one (60, 0.33) equals the 2-agent Table 3 result though 3 agents are claimed", "where": "Table 4, Sec 4.2"},
+  {"claim": "Accuracy peaks at 3 to 4 roles then drops at 5, while kappa keeps rising from 3 to 4.", "kind": "measured", "source": null, "metric": "Accuracy", "value": "62.5", "unit": "%", "baseline_value": null, "n": 80, "setup": "FairEval, ChatGPT, one-by-one, 2 turns, varying role count 1 to 5 (values for other counts only in Fig 3a, not in text)", "quote": "This pattern reaches an apex with an Acc. of 62.5% at role numbers 3 and 4", "note": null, "where": "Sec 4.3, Fig 3a"},
+  {"claim": "More discussion turns give no significant gain and can degrade performance.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 80, "setup": "FairEval, ChatGPT, one-by-one, 2 roles, turns 1 to 5", "quote": "no significant upward trend is detected with respect to the increase in discussion turns", "note": "authors attribute it to growing context length; not tested", "where": "Sec 4.3, Fig 3b"},
+  {"claim": "On Topical-Chat, GPT-4 multi-agent beats single-agent and G-EVAL-4 on average correlation.", "kind": "measured", "source": null, "metric": "average Spearman rho", "value": "0.684", "unit": "correlation", "baseline_value": "0.658", "n": 60, "setup": "Topical-Chat, GPT-4 MA vs SA, average over 4 aspects; G-EVAL-4 avg rho 0.588", "table": "Table 2, row GPT-4(MA), column Average rho", "note": "text: ChatEval improves avg Spearman and Kendall-Tau by 0.096 (16.3%) and 0.057 (10.0%) over G-EVAL-4", "where": "Table 2, Sec 3.5"},
+  {"claim": "On Topical-Chat, ChatGPT multi-agent is only slightly above single-agent on average rho and below it on Kendall tau.", "kind": "measured", "source": null, "metric": "average Spearman rho", "value": "0.552", "unit": "correlation", "baseline_value": "0.544", "n": 60, "setup": "Topical-Chat, ChatGPT MA vs SA; MA is worse on naturalness (0.441 vs 0.474) and coherence (0.500 vs 0.527); avg tau MA 0.510 vs SA 0.503; G-EVAL-3.5 avg rho 0.585 exceeds both", "table": "Table 2, row ChatGPT(MA), column Average rho", "note": "text says ChatEval amplifies performance for both ChatGPT and GPT-4; per-aspect numbers show mixed results for ChatGPT", "where": "Table 2"},
+  {"claim": "Human annotators agree only moderately with the majority label.", "kind": "reported", "source": "Wu et al. 2023 annotations", "metric": "average human accuracy", "value": "71.7", "unit": "%", "baseline_value": null, "n": 80, "setup": "FairEval, 3 annotators vs majority vote", "quote": "the average human annotations accuracy which is 71.7%", "note": null, "where": "Sec 3.4"}
+ ],
+ "limits": [
+  "Single run per cell, temperature 0, no seeds, variance or significance tests; FairEval has only 80 questions so one question is 1.25 points of accuracy.",
+  "Homogeneous groups only (all GPT-4 or all ChatGPT); heterogeneous groups left for future work.",
+  "Gains are small against strong baselines: GPT-4 +2.5 points on FairEval; ChatGPT multi-agent is mixed on Topical-Chat and below G-EVAL-3.5.",
+  "Cost and token overhead of debate is not reported, nor compared against sampling the single agent several times and voting.",
+  "Same-role ablation confounds persona diversity with prompt wording; only one same-role prompt was tried.",
+  "Explanation for no gain from extra turns (context length) is conjecture.",
+  "Debate is used for evaluation, not generation or reasoning; transfer to those is not tested.",
+  "Qualitative analysis is a single example."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Communication strategy", "definition": "different approaches to maintaining and manipulating the agents' chat history (one-by-one, simultaneous-talk, simultaneous-talk-with-summarizer)", "where": "Sec 2"}
+ ],
+ "lineage": [
+  {"work": "Improving factuality and reasoning in language models through multiagent debate (Du et al.)", "year": 2023, "arxiv": "2305.14325", "relation": "extends", "note": "debate framework; ChatEval does not force consensus", "quote": null},
+  {"work": "Encouraging divergent thinking in LLMs through multi-agent debate (Liang et al.)", "year": 2023, "arxiv": "2305.19118", "relation": "related", "note": "Degeneration-of-Thought; more rounds stagnate or degrade", "quote": null},
+  {"work": "Large language models are diverse role-players for summarization evaluation (Wu et al.)", "year": 2023, "arxiv": "2303.15078", "relation": "uses-method", "note": "role descriptions and FairEval human labels", "quote": null},
+  {"work": "Large language models are not fair evaluators (FairEval, Wang et al.)", "year": 2023, "arxiv": "2305.17926", "relation": "baseline", "note": "MEC+BPC; benchmark and metric", "quote": null},
+  {"work": "G-Eval (Liu et al.)", "year": 2023, "arxiv": "2303.16634", "relation": "baseline", "note": "Topical-Chat baseline", "quote": null},
+  {"work": "PRD: Peer rank and discussion (Li et al.)", "year": 2023, "arxiv": "2307.02762", "relation": "related", "note": "concurrent, uses different models as agents", "quote": null},
+  {"work": "AgentVerse (OpenBMB)", "year": null, "arxiv": null, "relation": "uses-method", "note": "code built on top of it", "quote": null},
+  {"work": "Judging LLM-as-a-judge with MT-Bench (Zheng et al.)", "year": 2023, "arxiv": "2306.05685", "relation": "related", "note": "names the LLM-as-a-judge paradigm", "quote": null},
+  {"work": "Topical-Chat (Gopalakrishnan et al.)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "dialogue benchmark", "quote": null},
+  {"work": "CAMEL (Li et al.)", "year": 2023, "arxiv": "2303.17760", "relation": "related", "note": "role-playing agents", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "When several referees participate in the evaluation process, they can discuss with each other and finally give a judgment that is better aligned with human annotators.", "page": 3, "why": "single-agent vs multi-agent judging in one picture"},
+  {"figure": "Fig 2", "caption": "The overall schematic diagram of our proposed three different kinds of communication strategy.", "page": 4, "why": "information flow for one-by-one, simultaneous, summarizer"},
+  {"figure": "Fig 3", "caption": "(a) Performance with Increased Different Roles on FairEval Dataset. (b) Performance with Increased Discussion Turns on FairEval Dataset.", "page": 11, "why": "shows agent count helps up to 3-4 and turns do not help"}
+ ],
+ "code": [],
+ "problems": [
+  "Table 4 one-by-one row (3 agents) is identical to the 2-agent default result in Tables 1 and 3; unclear whether configurations differ.",
+  "Fig 3 values are only in plot form; only the 62.5% apex is stated in text.",
+  "PDF is arXiv v1; the ICLR 2024 venue is not printed. No embedded instructions found."
+ ]
+}

@@ -1,0 +1,562 @@
+{
+ "schema": 1,
+ "key": "2305.14325",
+ "pdf": "generative-ai/03-agentic-foundations/sources/du-2023-improving-factuality-reasoning-language-models.pdf",
+ "bib": {
+  "title": "Improving Factuality and Reasoning in Language Models through Multiagent Debate",
+  "authors": [
+   "Yilun Du",
+   "Shuang Li",
+   "Antonio Torralba",
+   "Joshua B. Tenenbaum",
+   "Igor Mordatch"
+  ],
+  "first_author": "Du",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2305.14325",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 97089,
+  "chars_total": 97089,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can several LLM instances that propose answers then critique each other over rounds produce more accurate reasoning and fewer hallucinations than a single instance?",
+ "hypothesis": "Multiagent debate (multiple agents, multiple rounds) improves reasoning and factuality over single-agent prompting, reflection and majority voting.",
+ "contributions": [
+  "A multiagent debate procedure improving factual correctness and reasoning accuracy using only black-box access",
+  "A new benchmark of factual correctness: biographies of computer scientists",
+  "Evaluation over number of agents, rounds of debate and prompts across six tasks"
+ ],
+ "method": {
+  "summary": "N copies of gpt-3.5-turbo each answer a question independently; each then receives the other agents' answers concatenated into a consensus prompt and updates its answer, repeated for R rounds. Compared to single agent, self-reflection and majority voting under identical starting prompts.",
+  "task": "reasoning (arithmetic, GSM8K, chess move) and factuality (biographies, MMLU, chess validity)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Arithmetic",
+    "role": "eval",
+    "size": "100 generated tasks",
+    "split": null,
+    "source": "six random integers 0-30, expression a+b*c+d-e*f",
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "100 problems",
+    "split": null,
+    "source": "Cobbe et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Chess move prediction",
+    "role": "eval",
+    "size": "300 selected games",
+    "split": null,
+    "source": "pgnmentor.com Adams.zip; first 14 moves in PGN",
+    "preprocessing": "predict white's move at turn 14"
+   },
+   {
+    "name": "Biographies (new)",
+    "role": "eval",
+    "size": "524 computer scientists",
+    "split": null,
+    "source": "ground-truth bullets extracted from Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "100 selected questions",
+    "split": null,
+    "source": "Hendrycks et al. 2020; randomly across subject areas",
+    "preprocessing": null
+   },
+   {
+    "name": "BIG-Bench Chess-State Tracking (synthetic_short)",
+    "role": "eval",
+    "size": "100 tasks",
+    "split": null,
+    "source": "Srivastava et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "gpt-3.5-turbo-0301 (chatGPT)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Bard",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "20 GSM8K problems, mixed debate with chatGPT"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "main tables: 3 agents, 2 rounds; no number of runs or seeds stated",
+   "prompting": "zero-shot; same starting and debate prompt template across tasks (Fig 15); zero-shot chain of thought combined",
+   "retrieval": null,
+   "parameters": {
+    "agents": "3 (main); 1-5 in Fig 10a",
+    "rounds": "2 (main); 1-4 in Fig 10b",
+    "summarization": "used for more than 3 agents, by chatGPT",
+    "debate prompt short vs long": "Fig 3"
+   },
+   "other": {
+    "chess scoring": "relative Stockfish pawn score, search depth 20"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "final answer correct (arithmetic, GSM8K boxed answer, MMLU letter)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Chess delta PS",
+     "definition": "relative Stockfish pawn score after the suggested move",
+     "unit": "pawn score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Biography accuracy",
+     "definition": "percent of ground-truth bullets that chatGPT judges consistent (yes/no) with generated biography; 'uncertain' ignored",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Chess move validity",
+     "definition": "answer is among valid moves",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Single Agent",
+    "Single Agent (Reflection)",
+    "Multi-Agent (Majority) (not for factuality tasks)"
+   ],
+   "protocol": "± values in Tables 1 and 2 are printed but the paper does not say what they are (std error?) ; ChatGPT used as judge for biographies; no cost or token counts reported"
+  },
+  "availability": {
+   "code": "project website https://composable-models.github.io/llm_debate/",
+   "weights": null,
+   "data": "biographies benchmark introduced; release not stated in text"
+  },
+  "prompts": [
+   {
+    "purpose": "GSM8K starting",
+    "text": "Can you solve the following math problem? <Problem> Explain your reasoning. Your final answer should be a single numerical number, in the form \\boxed{answer}, at the end of your response.",
+    "where": "Fig 15, p14"
+   },
+   {
+    "purpose": "GSM8K debate",
+    "text": "These are the solutions to the problem from other agents: <other agent responses> Using the solutions from other agents as additional information, can you provide your answer to the math problem? The original math problem is <Problem>. Your final answer should be a single numerical number, in the form \\boxed{answer}, at the end of your response.",
+    "where": "Fig 15, p14"
+   },
+   {
+    "purpose": "Biography debate",
+    "text": "Here are some bullet point biographies of <person> given by other agents: <other agent response> Closely examine your biography and the biography of other agents and provide an updated bullet point biography.",
+    "where": "Fig 15, p14"
+   },
+   {
+    "purpose": "Short debate prompt",
+    "text": "These are the solutions to the problem from other agents: [other answers] Based off the opinion of other agents, can you give an updated response . . .",
+    "where": "Fig 3, p4"
+   },
+   {
+    "purpose": "Long debate prompt",
+    "text": "These are the solutions to the problem from other agents: [other answers] Using the opinion of other agents as additional advice, can you give an updated response . . .",
+    "where": "Fig 3, p4"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models",
+    "quote": "We run all experiments using the gpt-3.5-turbo-0301 model.",
+    "where": "A.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Debate raises arithmetic accuracy from 67.0 to 81.8 over a single agent.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arithmetic accuracy",
+   "value": "81.8",
+   "unit": "%",
+   "baseline_value": "67.0",
+   "n": "100 tasks",
+   "setup": "gpt-3.5-turbo-0301, zero-shot, 3 agents, 2 debate rounds, same starting prompt as baselines; 100 generated six-number expressions",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Multi-Agent (Debate), column Arithmetic (%)"
+  },
+  {
+   "claim": "Debate raises GSM8K accuracy from 77.0 to 85.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "85.0",
+   "unit": "%",
+   "baseline_value": "77.0",
+   "n": "100 problems",
+   "setup": "gpt-3.5-turbo-0301, zero-shot, 3 agents, 2 debate rounds, same starting prompt as baselines; 100 GSM8K problems",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Multi-Agent (Debate), column Grade School Math (%)"
+  },
+  {
+   "claim": "Debate raises chess move quality (relative Stockfish pawn score) from 91.4 to 122.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Chess delta pawn score",
+   "value": "122.9",
+   "unit": "delta PS",
+   "baseline_value": "91.4",
+   "n": "300 games",
+   "setup": "gpt-3.5-turbo-0301, zero-shot, 3 agents, 2 debate rounds, same starting prompt as baselines; 300 games, white move 14, Stockfish depth 20",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Multi-Agent (Debate), column Chess (∆PS)"
+  },
+  {
+   "claim": "Majority voting over 3 agents gives a smaller gain than debate on GSM8K (81.0 vs 85.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "81.0",
+   "unit": "%",
+   "baseline_value": "77.0",
+   "n": null,
+   "setup": "gpt-3.5-turbo-0301, zero-shot, 3 agents, 2 debate rounds, same starting prompt as baselines; majority baseline, same agent count",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Multi-Agent (Majority), column Grade School Math (%)"
+  },
+  {
+   "claim": "Majority voting gives only 69.0 on arithmetic vs 81.8 for debate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Arithmetic accuracy",
+   "value": "69.0",
+   "unit": "%",
+   "baseline_value": "67.0",
+   "n": null,
+   "setup": "gpt-3.5-turbo-0301, zero-shot, 3 agents, 2 debate rounds, same starting prompt as baselines; majority baseline",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Multi-Agent (Majority), column Arithmetic (%)"
+  },
+  {
+   "claim": "Self-reflection with a single agent lowers GSM8K accuracy (75.0 vs 77.0 single agent) though it helps arithmetic (72.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K accuracy",
+   "value": "75.0",
+   "unit": "%",
+   "baseline_value": "77.0",
+   "n": null,
+   "setup": "gpt-3.5-turbo-0301, single agent reflection, 100 problems",
+   "note": null,
+   "where": "Table 1, p6",
+   "table": "Table 1, row Single Agent (Reflection), column Grade School Math (%)"
+  },
+  {
+   "claim": "Debate raises biography factual accuracy from 66.0 to 73.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Biography fact agreement",
+   "value": "73.8",
+   "unit": "%",
+   "baseline_value": "66.0",
+   "n": "524 people",
+   "setup": "gpt-3.5-turbo-0301, 3 agents, 2 rounds; 524 computer scientists; ChatGPT judge yes/no vs Wikipedia bullet",
+   "note": null,
+   "where": "Table 2, p7",
+   "table": "Table 2, row Multi-Agent (Debate), column Biographies"
+  },
+  {
+   "claim": "Debate raises MMLU accuracy from 63.9 to 71.1 while reflection lowers it to 57.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": "71.1",
+   "unit": "%",
+   "baseline_value": "63.9",
+   "n": "100 questions",
+   "setup": "gpt-3.5-turbo-0301, 3 agents, 2 rounds; 100 random MMLU questions",
+   "note": "Reflection row is 57.7, below single agent 63.9",
+   "where": "Table 2, p7",
+   "table": "Table 2, row Multi-Agent (Debate), column MMLU"
+  },
+  {
+   "claim": "Debate raises chess move validity from 29.3 to 45.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Chess move validity",
+   "value": "45.2",
+   "unit": "%",
+   "baseline_value": "29.3",
+   "n": "100 tasks",
+   "setup": "gpt-3.5-turbo-0301, 3 agents, 2 rounds; BIG-Bench synthetic_short; 100 tasks",
+   "note": null,
+   "where": "Table 2, p7",
+   "table": "Table 2, row Multi-Agent (Debate), column Chess Move Validity"
+  },
+  {
+   "claim": "Mixed ChatGPT and Bard debate solves 17 of 20 GSM8K problems vs 14 (ChatGPT) and 11 (Bard) alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GSM8K problems solved",
+   "value": "17",
+   "unit": "of 20",
+   "baseline_value": "14",
+   "n": null,
+   "setup": "ChatGPT + Bard debating, 20 GSM8K problems",
+   "note": "Full sentence: Bard 11, chatGPT 14, joint debate 17 (p9). Tiny sample (20).",
+   "where": "Sec 3.3, p9",
+   "quote": "with Bard solving 11 problems, chatGPT"
+  },
+  {
+   "claim": "Different persona initialization prompts raise MMLU debate accuracy from 71.1 to 74.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU accuracy",
+   "value": "74.2",
+   "unit": "%",
+   "baseline_value": "71.1",
+   "n": null,
+   "setup": "persona prompts (professor, doctor, mathematician) per agent, MMLU",
+   "note": null,
+   "where": "Sec 3.3, p8",
+   "quote": "improved performance on MMLU from 71.1 to 74.2 with different agents"
+  },
+  {
+   "claim": "Arithmetic performance rises monotonically with number of agents (fixed 2 rounds); beyond 3 agents responses are summarised by ChatGPT, which improves over concatenation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic; Fig 10a and Fig 13 (values only in figures)",
+   "note": null,
+   "where": "Sec 3.3, p7-8"
+  },
+  {
+   "claim": "Arithmetic performance rises with debate rounds but rounds above four match four rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Arithmetic, 3 agents; Fig 10b",
+   "note": null,
+   "where": "Sec 3.3, p7"
+  },
+  {
+   "claim": "Longer 'stubborn' prompts give slower convergence but better final answers than short prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 12, Fig 14 (read from figure)",
+   "note": null,
+   "where": "Sec 2.2, 3.3"
+  },
+  {
+   "claim": "Debate cost scales with agents times rounds, and later rounds are dominated by recent context; converged answers can still be wrong.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "authors' stated limitation",
+   "note": null,
+   "where": "Sec 5, p10"
+  }
+ ],
+ "limits": [
+  "More expensive: multiple generations per round, times agents and rounds; no cost or token numbers given",
+  "Long debates: models focus on the most recent generations and struggle with long debate input",
+  "Converged answers are not necessarily correct; models confidently affirm wrong consensus",
+  "Small eval sets (100 items for most tasks); mixed-model test only 20 problems; error bars unexplained",
+  "Only gpt-3.5-turbo-0301 in main results; majority baseline omitted for factuality tasks; biography metric uses ChatGPT as judge and cannot catch facts outside ground truth",
+  "Agents are 'agreeable' (instruction tuning); no ablation holding total compute fixed against more majority samples beyond 3 agents",
+  "The PDF is arXiv v1 marked 'Preprint. Under review'; the caller's ICML 2024 venue is not in this text"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Society of Mind",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Minsky; inspiration",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "baseline",
+   "note": "majority voting baseline",
+   "quote": null
+  },
+  {
+   "work": "Reflexion",
+   "year": 2023,
+   "arxiv": "2303.11366",
+   "relation": "baseline",
+   "note": "self-reflection baseline",
+   "quote": null
+  },
+  {
+   "work": "Self-Refine",
+   "year": 2023,
+   "arxiv": "2303.17651",
+   "relation": "baseline",
+   "note": "self-reflection baseline",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "uses-method",
+   "note": "zero-shot CoT combined with debate",
+   "quote": null
+  },
+  {
+   "work": "AI safety via debate",
+   "year": 2018,
+   "arxiv": "1805.00899",
+   "relation": "related",
+   "note": "Irving et al.; human-judged debate",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Training verifiers)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "MMLU",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BIG-bench",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "uses-data",
+   "note": "chess state tracking",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know",
+   "year": 2022,
+   "arxiv": "2207.05221",
+   "relation": "related",
+   "note": "confidence elicitation contrast",
+   "quote": null
+  },
+  {
+   "work": "Composing ensembles of pre-trained models via iterative consensus",
+   "year": 2022,
+   "arxiv": "2210.11522",
+   "relation": "related",
+   "note": "Li et al.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Multiagent Debate Improves Reasoning and Factual Accuracy.",
+   "page": 2,
+   "why": "bar chart single vs debate over six benchmarks"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of Debate.",
+   "page": 3,
+   "why": "three-round example showing agents converging on 595"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "(a) Performance with Increased Agents. (b) Performance with Increased Rounds.",
+   "page": 8,
+   "why": "the agents and rounds scaling curves, core to when more agents pay"
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Performance vs Debate Length.",
+   "page": 8,
+   "why": "short vs long prompt effect"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Effect of Summarization.",
+   "page": 8,
+   "why": "concat vs summarize as agents grow"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 10, 12, 13, 14 carry data only in plots; text gives no numbers for them",
+  "Text cache has no embedded instructions; PDF is v1 preprint, venue ICML 2024 not printed",
+  "Fig 11 is placed after Fig 12/13 in page order"
+ ]
+}

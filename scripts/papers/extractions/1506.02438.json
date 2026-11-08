@@ -1,0 +1,283 @@
+{
+ "schema": 1,
+ "key": "1506.02438",
+ "pdf": "generative-ai/05-RL/sources/schulman-2015-high-dimensional-continuous-control-using.pdf",
+ "bib": {
+  "title": "High-Dimensional Continuous Control Using Generalized Advantage Estimation",
+  "authors": ["John Schulman", "Philipp Moritz", "Sergey Levine", "Michael I. Jordan", "Pieter Abbeel"],
+  "first_author": "Schulman",
+  "year": 2016,
+  "venue": "ICLR 2016 (arXiv v6, 2018)",
+  "arxiv": "1506.02438",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43324,
+  "chars_total": 43324,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can policy gradient estimates be made lower-variance and more sample-efficient, with tolerable bias, so neural-network policies learn high-dimensional continuous control?",
+ "hypothesis": "An exponentially weighted average of k-step advantage estimates (GAE) with intermediate lambda gives a better bias-variance tradeoff than either one-step TD residuals or full Monte Carlo returns.",
+ "contributions": [
+  "Justification and intuition for generalized advantage estimation (GAE), a variance reduction scheme for policy gradients; the formula was proposed earlier but the analysis is new and applies to batch trust-region algorithms.",
+  "A trust region method for optimizing the value function, found robust and efficient for neural network value functions.",
+  "Combining the two gives an algorithm that learns neural network policies for challenging control tasks, extending the state of the art in high-dimensional continuous control."
+ ],
+ "method": {
+  "summary": "GAE(gamma, lambda) computes advantages as the (gamma*lambda)-discounted sum of TD residuals from a learned value function. Policy is updated with TRPO and the value function is fit by Monte Carlo regression under a trust region (conjugate gradient). Evaluated on cart-pole and MuJoCo 3D biped, quadruped and stand-up tasks, varying gamma and lambda.",
+  "task": "continuous control reinforcement learning (policy gradient)",
+  "trains": true,
+  "datasets": [
+   {"name": "Cart-pole balancing", "role": "eval", "size": "20 trajectories per batch, max 1000 timesteps", "split": null, "source": "physical parameters from Barto et al. (1983)", "preprocessing": null},
+   {"name": "3D biped locomotion (MuJoCo)", "role": "both", "size": "50000 timesteps per batch", "split": null, "source": "MuJoCo; 33 state dims, 10 actuated DOF", "preprocessing": "episode terminated at 2000 timesteps or if centre of mass below 0.8 m; timestep 0.01 s"},
+   {"name": "3D quadruped locomotion (MuJoCo)", "role": "both", "size": "200000 timesteps per batch", "split": null, "source": "MuJoCo; 29 state dims, 8 actuated DOF", "preprocessing": "terminated if centre of mass below 0.2 m; 2000 timestep cap"},
+   {"name": "Biped getting up (MuJoCo)", "role": "both", "size": "200000 timesteps per batch", "split": null, "source": "MuJoCo; biped starts lying on its back", "preprocessing": "2000 timestep cap"}
+  ],
+  "models": [
+   {"name": "Policy network (3D tasks)", "role": "proposed", "params": "inferred: over 10^4 (paper says each of policy and value net has over 10^4 parameters)", "architecture": "feedforward, tanh hidden units, linear output layer", "init_from": null, "tokenizer": null, "vocab": null, "layers": "3 hidden layers", "hidden": "100, 50, 25 tanh units", "heads": null, "context": null, "other": {}},
+   {"name": "Value network (3D tasks)", "role": "proposed", "params": null, "architecture": "same as policy but one scalar output", "init_from": null, "tokenizer": null, "vocab": null, "layers": "3 hidden layers", "hidden": "100, 50, 25 tanh units", "heads": null, "context": null, "other": {}},
+   {"name": "Cart-pole policy and value", "role": "proposed", "params": null, "architecture": "linear policy; value net with one 20-unit hidden layer", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": "20", "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Policy: TRPO, minimize L(theta) = (1/N) sum pi_theta/pi_old * A_hat subject to mean KL(pi_old, pi_theta) <= epsilon. Value: minimize sum ||V_phi(s_n) - V_hat_n||^2 subject to (1/N) sum ||V_phi - V_phi_old||^2 / (2 sigma^2) <= epsilon, V_hat = discounted return.",
+   "optimizer": "TRPO natural-gradient step; value function trust region solved approximately with conjugate gradient",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "cart-pole 20 trajectories; biped 50000 timesteps; quadruped and stand-up 200000 timesteps",
+   "steps": "biped 1000 iterations (learning curves 500 shown); quadruped 1000 iterations in plot; cart-pole 50 iterations in plot",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "trust region on value function to avoid overfitting latest batch",
+   "hardware": "biped: 16-core machine; quadruped and stand-up: 32-core machine",
+   "compute": null,
+   "wall_clock": "about 2 hours per trial (biped, 16 cores); about 4 hours per trial (quadruped / stand-up, 32 cores)",
+   "seeds": "cart-pole 21; biped 9; quadruped and stand-up 5 per condition",
+   "other": {
+    "epsilon_policy": null,
+    "epsilon_value": null,
+    "update_order": "policy update uses V_phi_i (before value update) for advantages; updating value first adds bias"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "simulate current policy until N timesteps per iteration",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "gamma_best_cartpole": "[0.96, 0.99]",
+    "lambda_best_cartpole": "[0.92, 0.99]",
+    "gamma_best_biped": "[0.99, 0.995]",
+    "lambda_best_biped": "[0.96, 0.99]",
+    "quadruped_stand_gamma": "0.995 quadruped, 0.99 stand-up (from Fig 3/4 legends)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "cost", "definition": "negative reward, minimized", "unit": "cost (task reward units)", "higher_is_better": false}
+   ],
+   "baselines": ["No VF: time-dependent baseline averaging return at each timestep over the batch", "lambda = 0 (one-step TD residual)", "lambda = 1 (Monte Carlo return minus V)"],
+   "protocol": "learning curves averaged over random seeds; gamma and lambda swept on cart-pole and biped, limited sweep on quadruped and stand-up; no significance test"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "videos at https://sites.google.com/site/gaepapersupp"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.other.rewards", "quote": "vfwd −10−5∥u∥2 −10−5∥fimpact∥2 + 0.2", "where": "Section 6.2.2 reward table (biped); quadruped: vfwd - 1e-6||u||^2 - 1e-3||f_impact||^2 + 0.05; stand-up: -(h_head - 1.5)^2 - 1e-5||u||^2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "GAE is the (gamma*lambda)-discounted sum of TD residuals delta_t = r_t + gamma V(s_{t+1}) - V(s_t); lambda=0 gives the one-step TD residual, lambda=1 gives empirical return minus V(s_t).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Definition, Eq. 16-18, undiscounted problem with gamma as a variance-reduction parameter",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 3, Eq. 16-18"
+  },
+  {
+   "claim": "Best cart-pole results come at intermediate gamma and lambda.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best parameter range",
+   "value": "gamma in [0.96, 0.99], lambda in [0.92, 0.99]",
+   "unit": null,
+   "baseline_value": null,
+   "n": 21,
+   "setup": "Cart-pole, linear policy, 20-unit value net, TRPO, 21 seeds",
+   "quote": "indicate that the best results are obtained at intermediate values of the parameters: γ ∈[0.96, 0.99] and λ ∈[0.92, 0.99].",
+   "table": null,
+   "note": "Fig 2 caption gives the fastest-improvement lambda range as [0.92, 0.98] at gamma = 0.99.",
+   "where": "Section 6.3.1"
+  },
+  {
+   "claim": "Best 3D biped results come at intermediate gamma and lambda.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best parameter range",
+   "value": "gamma in [0.99, 0.995], lambda in [0.96, 0.99]",
+   "unit": null,
+   "baseline_value": null,
+   "n": 9,
+   "setup": "3D biped, 3-layer 100/50/25 tanh nets, TRPO, 50000 timesteps per batch, 9 seeds",
+   "quote": "The best performance is again obtained using intermediate values of γ ∈[0.99, 0.995], λ ∈",
+   "table": null,
+   "note": "The lambda range [0.96, 0.99] is split onto the next line in the text.",
+   "where": "Section 6.3.2"
+  },
+  {
+   "claim": "Simulated experience for the 3D biped to learn to walk equals about 5.8 days of real time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "real-time equivalent",
+   "value": "5.8",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "0.01 s/timestep x 50000 timesteps/batch x 1000 batches",
+   "quote": "seconds/day = 5.8 days.",
+   "table": null,
+   "note": "The abstract says the amount of simulated experience for 3D bipeds corresponds to 1-2 weeks of real time; text computes 5.8 days for biped locomotion.",
+   "where": "Section 6.3.2"
+  },
+  {
+   "claim": "Recommended lambda range in the discussion.",
+   "kind": "claim",
+   "source": null,
+   "metric": "lambda",
+   "value": "[0.9, 0.99]",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated robotic locomotion",
+   "quote": "choosing an appropriate intermediate value of λ in the range [0.9, 0.99] usually results in the best performance.",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "Best lambda is much lower than best gamma, because lambda adds bias only when V is inaccurate, while gamma < 1 always biases the gradient.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Explanation of empirical finding; not tested separately",
+   "quote": "Empirically, we ﬁnd that the best value of λ is much lower than the best value of γ, likely because λ introduces far less bias than γ for a reasonably accurate value function.",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "The one-step return (lambda = 0) gave excessive bias and poor performance.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Locomotion tasks; no number given",
+   "quote": "While we found empirically that the one-step return (λ = 0) leads to excessive bias and poor performance",
+   "table": null,
+   "note": null,
+   "where": "Section 7"
+  },
+  {
+   "claim": "On quadruped, lambda = 0.96 with a value function was best; on stand-up the value function always helped and lambda 0.96 and 1 were roughly equal.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": 5,
+   "setup": "gamma fixed at 0.995 (quadruped legend) / 0.99 (stand-up legend); lambda in {0, 0.96} stated, plots also show lambda=1 and no value fn",
+   "quote": "For 3D standing, the value function always helped, but the results are roughly the same for λ = 0.96 and λ = 1.",
+   "table": null,
+   "note": "Text says lambda varied over {0, 0.96}; Fig 3/4 legends show 0.96, 1 and no value fn.",
+   "where": "Section 6.3.3"
+  },
+  {
+   "claim": "Reward shaping with Phi = V gives the GAE: the (gamma*lambda)-discounted sum of shaped rewards equals the GAE; shaping leaves A^{pi,gamma} unchanged.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq. 20-25 derivation",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  }
+ ],
+ "limits": [
+  "Authors call the analysis of advantage estimation 'intuitive but informal'.",
+  "Quadruped and stand-up got only a limited gamma/lambda comparison because of compute cost.",
+  "Relationship between value function error and policy gradient error is left open; adaptive choice of gamma and lambda is future work.",
+  "Shared policy/value architecture left open; no convergence guarantees.",
+  "No comparison against deterministic-policy-gradient approaches (Lillicrap 2015; Heess 2015), which use lower-dimensional problems.",
+  "TRPO and value-function trust-region epsilon values, and learning rates, are not reported; no code release stated.",
+  "Seeds vary by task (21, 9, 5); no confidence intervals or significance tests described."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "gamma-just estimator", "definition": "An advantage estimator that does not introduce bias when used in place of A^{pi,gamma} in the discounted policy gradient (Definition 1).", "where": "Section 2"},
+  {"term": "generalized advantage estimator GAE(gamma, lambda)", "definition": "Exponentially-weighted average of k-step advantage estimators, equal to sum_l (gamma*lambda)^l delta^V_{t+l}.", "where": "Section 3, Eq. 16"},
+  {"term": "response function", "definition": "chi(l; s_t, a_t) = E[r_{t+l} | s_t, a_t] - E[r_{t+l} | s_t]; A^{pi,gamma}(s,a) = sum_l gamma^l chi(l; s, a).", "where": "Section 4, Eq. 26"}
+ ],
+ "lineage": [
+  {"work": "Trust Region Policy Optimization", "year": 2015, "arxiv": "1502.05477", "relation": "uses-method", "note": "Policy update used with GAE; TRPO comparisons not repeated.", "quote": null},
+  {"work": "Kimura & Kobayashi, analysis of actor/critic algorithms using eligibility traces", "year": 1998, "arxiv": null, "relation": "extends", "note": "Proposed the same formula in online actor-critic; this paper gives a more general analysis.", "quote": null},
+  {"work": "Wawrzynski, Real-time RL by sequential actor-critics and experience replay", "year": 2009, "arxiv": null, "relation": "extends", "note": "Also proposed the formula earlier.", "quote": null},
+  {"work": "Ng, Harada, Russell, reward shaping", "year": 1999, "arxiv": null, "relation": "uses-method", "note": "GAE interpreted as reward shaping with Phi = V.", "quote": null},
+  {"work": "Sutton & Barto, Introduction to reinforcement learning (TD(lambda))", "year": 1998, "arxiv": null, "relation": "uses-method", "note": "Construction analogous to TD(lambda), but for advantage rather than value.", "quote": null},
+  {"work": "Williams, REINFORCE", "year": 1992, "arxiv": null, "relation": "related", "note": "Unbiased policy gradient estimate.", "quote": null},
+  {"work": "Konda & Tsitsiklis, On actor-critic algorithms", "year": 2003, "arxiv": null, "relation": "related", "note": "Actor-critic with Q-function and compatible features.", "quote": null},
+  {"work": "Greensmith, Bartlett, Baxter, variance reduction for gradient estimates", "year": 2004, "arxiv": null, "relation": "related", "note": "Rigorous variance analysis of baselines.", "quote": null},
+  {"work": "Lillicrap et al., Continuous control with deep RL (DDPG)", "year": 2015, "arxiv": "1509.02971", "relation": "related", "note": "Concurrent work using Q-function and action gradients.", "quote": null},
+  {"work": "Heess et al., stochastic value gradients", "year": 2015, "arxiv": "1510.09142", "relation": "related", "note": "Concurrent work, lower-dimensional problems.", "quote": null},
+  {"work": "Kakade, A natural policy gradient", "year": 2001, "arxiv": null, "relation": "related", "note": "TRPO step equals natural policy gradient direction.", "quote": null},
+  {"work": "MuJoCo", "year": 2012, "arxiv": null, "relation": "uses-data", "note": "Todorov, Erez, Tassa physics simulator.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Left: learning curves for cart-pole task, using generalized advantage estimation with varying values of λ at γ = 0.99. Right: performance after 20 iterations of policy optimization, as γ and λ are varied.", "page": 10, "why": "Shows intermediate lambda and gamma beating both extremes."},
+  {"figure": "Fig 3", "caption": "Left: Learning curves for 3D bipedal locomotion, averaged across nine runs of the algorithm. Right: learning curves for 3D quadrupedal locomotion, averaged across five runs.", "page": 10, "why": "Gamma/lambda sweep and no-value-function baseline on the hard tasks."}
+ ],
+ "code": [
+  {"where": "Section 3, Eq. 16", "snippet": "A_hat_t^{GAE(gamma,lambda)} = sum_{l=0}^inf (gamma*lambda)^l * delta^V_{t+l}, delta^V_t = r_t + gamma*V(s_{t+1}) - V(s_t)", "verbatim": false},
+  {"where": "Section 6.1 algorithm", "snippet": "for i = 0,1,2,...: simulate pi_theta_i for N timesteps; compute delta_t with V_phi_i; compute A_hat_t = sum (gamma*lambda)^l delta_{t+l}; theta_{i+1} by TRPO (Eq. 31); phi_{i+1} by Eq. 30", "verbatim": false}
+ ],
+ "problems": [
+  "Equations and figure axes are garbled in text extraction; the formulas above were read from the surrounding prose and equation tokens.",
+  "Several line-split quotes were avoided; the biped lambda range quote ends mid-expression at a line break.",
+  "No embedded instructions found."
+ ]
+}

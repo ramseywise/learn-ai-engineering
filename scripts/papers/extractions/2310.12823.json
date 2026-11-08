@@ -1,0 +1,547 @@
+{
+ "schema": 1,
+ "key": "2310.12823",
+ "pdf": "generative-ai/03-agentic-foundations/sources/zeng-2024-agenttuning.pdf",
+ "bib": {
+  "title": "AgentTuning: Enabling Generalized Agent Abilities for LLMs",
+  "authors": [
+   "Aohan Zeng",
+   "Mingdao Liu",
+   "Rui Lu",
+   "Bowen Wang",
+   "Xiao Liu",
+   "Yuxiao Dong",
+   "Jie Tang"
+  ],
+  "first_author": "Zeng",
+  "year": 2024,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2024, pages 3053-3077",
+  "arxiv": "2310.12823",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 97620,
+  "chars_total": 97620,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can open LLMs be given generalized agent abilities, transferring to unseen agent tasks, without losing general capabilities?",
+ "hypothesis": "Mixing agent trajectories with general instructions in SFT lifts agent ability and generalisation while preserving general ability; general data is needed for generalisation.",
+ "contributions": [
+  "AgentInstruct: 1,866 verified GPT-4 interaction trajectories with CoT rationales over 6 agent tasks",
+  "Hybrid instruction-tuning strategy mixing agent and general data (AgentTuning)",
+  "AgentLM-7B/13B/70B fine-tuned from Llama 2 chat, open-sourced; AgentLM-70B matches GPT-3.5-turbo on held-out agent tasks"
+ ],
+ "method": {
+  "summary": "GPT-4 (and partly GPT-3.5) interacts with 6 AgentBench-style environments; trajectories are filtered by final reward and kept with ReAct-style thoughts. Llama-2-chat models are then SFT'd on a mix of 20% AgentInstruct and 80% ShareGPT, loss on model outputs only.",
+  "task": "supervised fine-tuning of LLMs on agent interaction trajectories mixed with general chat data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "AgentInstruct",
+    "role": "train",
+    "size": "1,866 filtered trajectories from 35,341 instructions (avg 5.24 turns)",
+    "split": "Train split for ALFWorld, WebShop, Mind2Web, KG; Self-Instruct for OS; Task Derivation (BIRD) + Self-Instruct for DB",
+    "source": "Generated with gpt-4-0613 (Mind2Web partly gpt-3.5-turbo-0613); released",
+    "preprocessing": "Keep r=1 trajectories (Mind2Web r>=2/3); ReAct thoughts, GPT-4 fills thoughts for task-derived data; invalid formats mapped to nearest action by BLEU; 3 identical outputs in a row = failure; 1-shot example in interaction prompt"
+   },
+   {
+    "name": "ShareGPT (English subset)",
+    "role": "train",
+    "size": "57,096 GPT-3.5 conversations and 3,670 GPT-4 conversations",
+    "split": "sampling ratio GPT-4:GPT-3.5 of 1:4 (0.2/0.8)",
+    "source": "anon8231489123/ShareGPT_Vicuna_unfiltered",
+    "preprocessing": "English only; multi-turn chatbot format following Vicuna"
+   },
+   {
+    "name": "Held-in eval: ALFWorld, WebShop, Mind2Web, KG, OS, DB",
+    "role": "eval",
+    "size": "50, 200, 1,173, 150, 144, 300 instances (Table 5)",
+    "split": "AgentBench test",
+    "source": "AgentBench (Liu et al., 2023)",
+    "preprocessing": null
+   },
+   {
+    "name": "Held-out eval: SciWorld, MiniWoB++, HotpotQA, WebArena, ReWOO, Digital Card Game",
+    "role": "eval",
+    "size": "270, 460, 300, 812, 350, 200 instances (Table 5)",
+    "split": null,
+    "source": "various",
+    "preprocessing": null
+   },
+   {
+    "name": "General eval: MMLU (5-shot), GSM8K (8-shot), HumanEval, MT-Bench",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "AgentLM-7B/13B/70B",
+    "role": "proposed",
+    "params": "7B / 13B / 70B",
+    "architecture": "Llama 2 decoder-only",
+    "init_from": "Llama-2-{7,13,70}b-chat",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "32 / 40 / 80",
+    "hidden": "4,096 / 5,120 / 8,192",
+    "heads": "32 / 40 / 64",
+    "context": null,
+    "other": {
+     "ffn_hidden": "11,008 / 13,824 / 28,672"
+    }
+   },
+   {
+    "name": "Llama-2-{7,13,70}b-chat",
+    "role": "baseline",
+    "params": "7B/13B/70B",
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo-0613",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0613",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "baseline"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SFT; J(theta)=eta*E_agent[log pi]+(1-eta)*E_general[log pi], loss on model outputs only; eta=0.2",
+   "optimizer": "Adam (beta1 0.9, beta2 0.95, eps 1e-8)",
+   "lr": "5e-5 (7B, 13B); 1e-5 (70B)",
+   "lr_schedule": "cosine decay; decay ratio 0.9",
+   "warmup": "warmup ratio 0.02",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "hidden dropout 0.05; attention dropout 0",
+   "regularisation": "gradient clipping 1.0",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "eta_selection": "grid 0 to 1 step 0.1 on 7B (Sec 2.2.2) and 7B/13B (App C.2); 0.2 chosen from 13B peak, used for all sizes; selection on held-in+general only",
+    "gpt4_ratio_selection": "grid 0.0-0.5 on 7B, 0.2 best (Table 7)"
+   }
+  },
+  "inference": {
+   "decoding": "greedy typically; nucleus sampling p=0.9 for WebArena",
+   "temperature": null,
+   "top_p": "0.9 (WebArena only)",
+   "max_tokens": null,
+   "samples": "single run per item; no seeds reported",
+   "prompting": "task prompts in App H; dialogue histories truncated at model length limits; 1-shot for most agent tasks (Table 5)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Overall score",
+     "definition": "per-task scores normalised across evaluated models to average 1, then weighted average within category (weights Table 5)",
+     "unit": "normalised score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Task metrics",
+     "definition": "SR for ALFWorld/OS/DB/MiniWoB++/WebArena/ReWOO/Card game; Reward for WebShop/SciWorld/HotpotQA; Step SR Mind2Web; F1 KG",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Llama-2-chat 7B/13B/70B",
+    "gpt-3.5-turbo-0613",
+    "gpt-4-0613"
+   ],
+   "protocol": "Single run, no significance test. Contamination check by 10-gram token overlap (Appendix F)."
+  },
+  "availability": {
+   "code": "https://anonymous.4open.science/r/AgentTuning (anonymised link in PDF)",
+   "weights": "AgentLM-7B, 13B, 70B stated open-sourced",
+   "data": "AgentInstruct stated open-sourced"
+  },
+  "prompts": [
+   {
+    "purpose": "ALFWorld initial evaluation prompt (first line only; the rest of App G and H prompts are in the PDF, pp. 3068-3077)",
+    "text": "Interact with a household to solve a task.",
+    "where": "pp. 3068-3077"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Peak Learning Rate",
+    "where": "Table 10: 5e-5, 5e-5, 1e-5 for 7B, 13B, 70B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "AgentLM-70B improves held-out overall score by 176% over Llama-2-70b-chat",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": "+176%",
+   "unit": "% overall held-out gain, 70B",
+   "baseline_value": 0.51,
+   "n": null,
+   "setup": "Held-out overall, 70B; 0.51... see table",
+   "quote": null,
+   "table": "Table 3, row Overall (held-out), column AgentLM 70B (+176%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Held-out overall score of AgentLM-70B vs GPT-3.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": 1.4,
+   "unit": "normalised score",
+   "baseline_value": 1.49,
+   "n": null,
+   "setup": "6 held-out tasks, greedy decoding; GPT-3.5 overall 1.49",
+   "quote": null,
+   "table": "Table 3, row Overall (held-out), column AgentLM 70B",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Held-in overall score of AgentLM-70B",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": 2.55,
+   "unit": "normalised score",
+   "baseline_value": 0.27,
+   "n": null,
+   "setup": "6 held-in tasks; GPT-4 2.75, GPT-3.5 1.59, Llama-2-70b-chat 0.27",
+   "quote": null,
+   "table": "Table 3, row Overall (held-in), column AgentLM 70B",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "General-task overall of AgentLM-70B is roughly unchanged vs Llama-2-70B-chat",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": "+1%",
+   "unit": "% overall general",
+   "baseline_value": 0.95,
+   "n": null,
+   "setup": "MMLU, HumanEval, GSM8K, MT-Bench; AgentLM-70B 0.96 vs Llama 2 70B chat 0.95",
+   "quote": null,
+   "table": "Table 3, row Overall (general), column AgentLM 70B (+1%)",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Held-in: Llama 2 chat scores near zero on ALFWorld (70B: 6.0) and AgentLM-70B scores 86.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR",
+   "value": 86.0,
+   "unit": "% SR",
+   "baseline_value": 6.0,
+   "n": null,
+   "setup": "ALFWorld 50 instances, 1-shot",
+   "quote": null,
+   "table": "Table 3, row ALFWorld, column AgentLM 70B",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Filtering plus CoT beats unfiltered/no-CoT training on held-in and held-out",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": 1.96,
+   "unit": "overall held-in",
+   "baseline_value": 1.34,
+   "n": null,
+   "setup": "7B, filter+CoT; unfiltered+CoT 1.34/0.47, filtered no CoT 1.38/0.56; filtered+CoT held-out 0.65",
+   "quote": null,
+   "table": "Table 2, row Filtered/Yes, column Held-in",
+   "note": "Held-out for filtered+CoT is 0.65 in Table 2 but AgentLM-7B held-out in Table 3/4 is 0.67",
+   "where": null
+  },
+  {
+   "claim": "Agent-only training collapses held-out generalisation at 7B",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": 0.09,
+   "unit": "overall held-out",
+   "baseline_value": 0.67,
+   "n": null,
+   "setup": "AgentLM-7B agent-only vs mixed 0.67 and general-only 0.64",
+   "quote": null,
+   "table": "Table 4, row AgentLM-7B - agent only, column Held-out",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Agent-only 70B still generalises somewhat but lags mixed training on held-out",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall",
+   "value": 0.87,
+   "unit": "overall held-out",
+   "baseline_value": 1.4,
+   "n": null,
+   "setup": "AgentLM-70B agent-only; mixed 1.40; general-only 0.98",
+   "quote": null,
+   "table": "Table 4, row AgentLM-70B - agent only, column Held-out",
+   "note": null,
+   "where": null
+  },
+  {
+   "claim": "Mixed training at 7B/13B gives almost the same held-out gain as general-only; significant gain only at 70B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4: 7B 0.67 vs 0.64; 13B 0.78 vs 0.81; 70B 1.40 vs 0.98",
+   "quote": null,
+   "table": null,
+   "note": "claim without single number; authors suggest agent generalisation may require a certain model size",
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "AgentInstruct size",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1866,
+   "unit": "trajectories",
+   "baseline_value": null,
+   "n": null,
+   "setup": "from 35,341 instructions across 6 tasks",
+   "quote": "AgentInstruct covers 1,866 verified interaction trajectories",
+   "table": null,
+   "note": null,
+   "where": "p.3054"
+  },
+  {
+   "claim": "Mixture ratio eta=0.2 chosen; model insensitive except at extremes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.2,
+   "unit": "eta",
+   "baseline_value": null,
+   "n": null,
+   "setup": "grid 0-1 step 0.1 on 7B and 13B; held-out tasks not used for selection",
+   "quote": "we select the best η in 13B model, i.e. 0.2 , as the final η for all models.",
+   "table": null,
+   "note": null,
+   "where": "App C.2"
+  },
+  {
+   "claim": "Task ablation: fine-tuning on a single task mainly boosts that task; Mind2Web (single-round) gives little cross-task benefit",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "7B, Fig 3b",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Error analysis: AgentTuning reduces basic errors (invalid action, repetition, refusal)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ALFWorld, WebShop, KG; rule-based classification, Fig 3a",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  }
+ ],
+ "limits": [
+  "Only 6 held-in and 6 held-out tasks; held-out tasks overlap in style with held-in (web, household), so generalisation is to nearby tasks.",
+  "Trajectories come from GPT-3.5/GPT-4, so AgentLM is bounded by them (authors' 'Dependence on External Demonstration').",
+  "Fails very hard held-out tasks such as Minecraft, like GPT-3.5.",
+  "Single run, no seeds or significance tests; compute, hardware, epochs, seq length, precision not stated.",
+  "eta chosen from 13B and applied to all sizes; scores normalised across the evaluated models so Overall depends on the model set.",
+  "Not an RL method: pure SFT on filtered successful trajectories (rejection-sampling style); no learning from failed trajectories.",
+  "Contamination: authors report no dirty examples for most tasks; ALFWorld has 6 dirty and WebShop 1, with WebShop token contamination rate 47.18% (Table 11), argued benign.",
+  "Models are Llama 2 / GPT-3.5/4 (2023) and have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AgentInstruct",
+   "definition": "lightweight instruction-tuning dataset of 1,866 verified interaction trajectories with CoT rationale per step",
+   "where": "p.3054"
+  },
+  {
+   "term": "Task Derivation",
+   "definition": "building agent trajectories from existing related datasets, enriched with GPT-4 thoughts",
+   "where": "Sec 2.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AgentBench",
+   "year": 2023,
+   "arxiv": "2308.03688",
+   "relation": "uses-data",
+   "note": "six held-in tasks, metrics and the open-vs-API gap",
+   "quote": null
+  },
+  {
+   "work": "ReAct",
+   "year": 2023,
+   "arxiv": "2210.03629",
+   "relation": "uses-method",
+   "note": "thought-then-action format for trajectories",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct",
+   "year": 2023,
+   "arxiv": "2212.10560",
+   "relation": "uses-method",
+   "note": "OS and DB instruction construction",
+   "quote": null
+  },
+  {
+   "work": "Llama 2",
+   "year": 2023,
+   "arxiv": "2307.09288",
+   "relation": "evaluates",
+   "note": "base for AgentLM",
+   "quote": null
+  },
+  {
+   "work": "Vicuna / ShareGPT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "general instruction data and chat format",
+   "quote": null
+  },
+  {
+   "work": "FireAct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Chen et al. 2023, task-specific agent fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "BIRD",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "DB task derivation",
+   "quote": null
+  },
+  {
+   "work": "FLAN",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multi-task instruction tuning",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An overview of AgentInstruct and AgentTuning.",
+   "page": 2,
+   "why": "pipeline: instruction generation, GPT-4 trajectory interaction, reward filter, mix with general data"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "(a) The performance of AgentLM... (b) Open LLMs significantly underperform API-based LLMs.",
+   "page": 1,
+   "why": "headline gain of AgentLM vs Llama 2 vs GPT-3.5"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Error and contribution analysis of AgentTuning.",
+   "page": 6,
+   "why": "error types and cross-task transfer heatmap"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison case study on ALFWorld and Knowledge Graph between Llama-2-70b-chat and AgentLM-70B.",
+   "page": 7,
+   "why": "concrete repetition and refusal failures fixed"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p.3056",
+   "snippet": "J(θ) = η · E(x,y)∼Dagent [log πθ(y | x)] + (1 −η) · E(x,y)∼Dgeneral [log πθ(y | x)]",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 3 is flattened in the text; cells read by column order (API GPT-3.5, GPT-4, Llama 7B/13B/70B, AgentLM 7B/13B/70B).",
+  "Table 2 held-out for filtered+CoT is 0.65 vs 0.67 for AgentLM-7B in Table 3.",
+  "Table 11 lists 6 dirty ALFWorld examples (of 50) and 1 for WebShop; the authors argue these are benign task-phrasing overlaps."
+ ]
+}

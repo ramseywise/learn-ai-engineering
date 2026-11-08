@@ -1,0 +1,516 @@
+{
+ "schema": 1,
+ "key": "2002.04326",
+ "pdf": "ai-engineering/01-prompt-engineering/sources/yu-2020-reclor.pdf",
+ "bib": {
+  "title": "ReClor: A Reading Comprehension Dataset Requiring Logical Reasoning",
+  "authors": [
+   "Weihao Yu",
+   "Zihang Jiang",
+   "Yanfei Dong",
+   "Jiashi Feng"
+  ],
+  "first_author": "Yu",
+  "year": 2020,
+  "venue": "ICLR 2020",
+  "arxiv": "2002.04326",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 82253,
+  "chars_total": 82253,
+  "engine": "pymupdf",
+  "skipped": "Appendix C example tables 17-26 and Appendix E figure axes skimmed only (example questions, plot labels)"
+ },
+ "type": "benchmark",
+ "question": "Can a reading-comprehension dataset of exam logical-reasoning questions, split into biased (EASY) and non-biased (HARD) test items, show whether pre-trained models really reason?",
+ "hypothesis": "Models exploit answer-option biases to score well without reasoning, so a debiased HARD split will expose weak logical reasoning.",
+ "contributions": [
+  "ReClor, a RC dataset requiring logical reasoning, with EASY/HARD test split from option-only baselines",
+  "Evaluation of state-of-the-art models showing good EASY, near-chance HARD performance"
+ ],
+ "method": {
+  "summary": "6,138 GMAT/LSAT logical-reasoning questions with 4 options. Option-only baselines (5 models x 4 seeds) define EASY test items; the rest are HARD. Ten baseline models are fine-tuned on ReClor (optionally after RACE) and compared with 10 graduate students.",
+  "task": "multiple-choice reading comprehension (logical reasoning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ReClor",
+    "role": "both",
+    "size": "6,138 questions",
+    "split": "4,638 train / 500 val / 1,000 test; EASY 440 of test (rest is HARD)",
+    "source": "GMAT and LSAT exams and practice exams (91.22% actual exams); five options reduced to four by deleting one random wrong option and shuffling; non-commercial research only",
+    "preprocessing": "shuffle option order, randomly delete one wrong option"
+   },
+   {
+    "name": "RACE",
+    "role": "pretrain",
+    "size": "27,933 contexts, 97,687 questions (Table 2)",
+    "split": null,
+    "source": "Lai et al. 2017",
+    "preprocessing": "fine-tuned first, then ReClor"
+   }
+  ],
+  "models": [
+   {
+    "name": "fastText",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "bag of n-grams",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Bi-LSTM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "2-layer bi-LSTM, GloVe 300d",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 (smallest)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT base/large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "XLNet base/large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa base/large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer",
+    "init_from": "public pre-trained checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "multiple-choice scoring: final hidden vector of aggregate token to fully connected layer(s), score per option",
+   "optimizer": "Adam",
+   "lr": "GPT/GPT-2 6.25e-5; BERT 2e-5; XLNet 2e-5; RoBERTa 1e-5 (Table 9); Bi-LSTM 0.1",
+   "lr_schedule": "Linear decay (transformers); Bi-LSTM decay 0.5 every 10 epochs",
+   "warmup": "0.1 proportion",
+   "batch_size": "24 (transformers); 64 (Bi-LSTM)",
+   "steps": null,
+   "epochs": "10 (transformers); 100 (Bi-LSTM)",
+   "tokens": null,
+   "seq_len": "256",
+   "precision": null,
+   "weight_decay": "0.01 (GPT, GPT-2, XLNet, RoBERTa); 0.0 (BERT)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "4 seeds per model for the option-only EASY/HARD identification; seed count for Table 7 not stated",
+   "other": {
+    "adam_epsilon": "1e-8 GPT/GPT-2; 1e-6 others",
+    "adam_betas": "(0.9, 0.98) RoBERTa; (0.9, 0.999) others",
+    "fastText": "default hyperparameters",
+    "grad_clip": "Not (no clipping)"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over four option scores",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "Input: Context <sep> Question||Option per option (Table 8)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "percent of test questions answered correctly; reported overall, EASY, HARD",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "chance 25%",
+    "fastText",
+    "Bi-LSTM",
+    "graduate students (10, 100 questions)"
+   ],
+   "protocol": "Humans: 100 random test questions split into ten tests, one per student, averaged. Ceiling set at 100%. No significance tests."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "http://whyu.me/reclor/ and EvalAI leaderboard; non-commercial"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We use a batch size of 24 and ﬁne-tune for 10 epochs.",
+    "where": "App B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned pre-trained models score about 75% on the EASY (biased) set but only about 30% on the HARD set.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "30",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ReClor test (1,000; EASY 440 / HARD 560), BERT/XLNet/RoBERTa/GPT/GPT-2 fine-tuned on ReClor only, input (C,Q,A)",
+   "note": "HARD ~30% from 'perform poorly on HARD set with only around 30% accuracy' in same paragraph",
+   "where": "Sec 4.4, p9",
+   "quote": "these models only perform well on EASY set with around 75% accuracy, showing these models have an outstanding ability to capture the biases of the dataset, but they perform poorly on HARD set with only around 30% accuracy"
+  },
+  {
+   "claim": "RoBERTa-large fine-tuned on RACE then ReClor reaches 65.1% test accuracy, above graduate students (63.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "65.1",
+   "unit": "% accuracy",
+   "baseline_value": "63.0",
+   "n": null,
+   "setup": "ReClor test, RoBERTa-large, RACE then ReClor, input (C,Q,A)",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row RoBERTaLARGE (C,Q,A) with RACE check, column Test"
+  },
+  {
+   "claim": "The same model scores 54.3% on HARD after RACE fine-tuning (40.0% without), against 57.1% for graduate students.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54.3",
+   "unit": "% accuracy",
+   "baseline_value": "40.0",
+   "n": null,
+   "setup": "ReClor HARD test, RoBERTa-large",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row RoBERTaLARGE (C,Q,A) with RACE check, column Test-H"
+  },
+  {
+   "claim": "Graduate students (10 students, 100 sampled test questions) score 63.0 overall, 57.1 on EASY and 67.2 on HARD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "63.0",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random test samples split into ten tests, one per student, averaged",
+   "note": "Authors say EASY/HARD gap may be due to few students",
+   "where": null,
+   "table": "Table 7, row Graduate Students, column Test"
+  },
+  {
+   "claim": "XLNet-large without RACE: 56.0 test, 75.7 EASY, 40.5 HARD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "40.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ReClor HARD test, XLNet-large, (C,Q,A), no RACE",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row XLNetLARGE (C,Q,A), column Test-H"
+  },
+  {
+   "claim": "Option-only input (A) is already well above chance: RoBERTa-large 43.2 test, 69.5 on EASY but 22.5 on HARD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "43.2",
+   "unit": "% accuracy",
+   "baseline_value": "25.0",
+   "n": null,
+   "setup": "ReClor test, answer options only, RoBERTa-large",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row RoBERTaLARGE (A), column Test"
+  },
+  {
+   "claim": "Adding the question to the options gives little gain; adding context gives a large gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 7 input ablation (A) vs (Q,A) vs (C,Q,A)",
+   "note": null,
+   "where": "Sec 4.4, p9",
+   "quote": "Further adding context causes signiﬁcant boost, showing the high informativeness of the context."
+  },
+  {
+   "claim": "EASY set is the union of data points four-seed-consistently solved by option-only models: 440 of 1,000 test items.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "440",
+   "unit": "data points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five base models (GPT, GPT-2, BERT-base, XLNet-base, RoBERTa-base), 4 seeds each, options only",
+   "note": null,
+   "where": "Sec 4.2, p8",
+   "quote": "Finally, we get 440 data points from the testing set CTEST"
+  },
+  {
+   "claim": "Chance of passing four seeds by guessing is 0.39%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.39",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4 seeds, 25% chance each",
+   "note": null,
+   "where": "Sec 4.2, p7",
+   "quote": "4,638, 500 and 1,000 data points respectively"
+  },
+  {
+   "claim": "ReClor has 6,138 questions split 4,638 train / 500 val / 1,000 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6,138",
+   "unit": "questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dataset size",
+   "note": "quote broken by hyphenation: actual text 'val-\\nidation'",
+   "where": "Sec 3.2, p4",
+   "quote": "They are divided into training set, val-idation set and testing set with 4,638, 500 and 1,000 data points respectively."
+  },
+  {
+   "claim": "Right options are slightly longer than wrong ones (23.06 vs 21.82 average length).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "23.06",
+   "unit": "tokens (inferred)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ReClor training set option lengths",
+   "note": null,
+   "where": "Sec 3.3, p5",
+   "quote": "The average length for wrong options is around 21.82 whereas that for right options is generally longer with an average length of 23.06."
+  },
+  {
+   "claim": "BERT-large fine-tuned on RACE first: 54.5 test vs 49.8 without.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "54.5",
+   "unit": "% accuracy",
+   "baseline_value": "49.8",
+   "n": null,
+   "setup": "ReClor test, BERT-large, (C,Q,A)",
+   "note": null,
+   "where": null,
+   "table": "Table 7, row BERTLARGE (C,Q,A) with RACE check, column Test"
+  },
+  {
+   "claim": "Models do worse on STRENGTHEN, WEAKEN and ROLE in HARD, better on CONCLUSION/MAIN POINT and MATCH STRUCTURES.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT/XLNet/RoBERTa-large, per question type, HARD set",
+   "note": null,
+   "where": "Sec 4.4, p9",
+   "quote": "On HARD set, the three models perform poorly on certain types such as STRENGTHEN, WEAKEN and ROLE which require extensive logical reasoning."
+  }
+ ],
+ "limits": [
+  "Human EASY/HARD gap (57.1 vs 67.2) attributed by authors to few students; only 100 questions, 10 students",
+  "EASY/HARD defined by 2019-era option-only models; split is model-dependent",
+  "No LLM prompting/few-shot results; predates GPT-3-scale evaluation",
+  "No variance across seeds reported for Table 7",
+  "Dataset has 4 options after deleting one wrong option"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "EASY set",
+   "definition": "data points answered correctly by an option-only model across all four random seeds, united over models",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "HARD set",
+   "definition": "C_TEST minus C_EASY",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RACE",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "intermediate fine-tuning set",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "XLNet",
+   "year": 2019,
+   "arxiv": "1906.08237",
+   "relation": "evaluates",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "Poliak et al. hypothesis-only baselines",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "token-label correlation and option-only bias analysis",
+   "quote": null
+  },
+  {
+   "work": "Jin et al. MMM",
+   "year": 2019,
+   "arxiv": "1910.00458",
+   "relation": "uses-method",
+   "note": "RACE then target-set fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Gururangan et al. annotation artifacts",
+   "year": 2018,
+   "arxiv": "1803.02324",
+   "relation": "related",
+   "note": "length bias",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Performance comparison of state-of-the-art models and humans (graduate students) on EASY and HARD set of ReClor testing set.",
+   "page": 2,
+   "why": "One bar chart shows the EASY-HARD gap for models vs flat humans"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Performance of models on EASY (left) and HARD (right) testing sets and that of models. XLNetLARGE +Fine-Tune means the model is first fine-tuned on RACE before training on ReClor.",
+   "page": 10,
+   "why": "Per-question-type accuracy"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "An example in the ReClor dataset",
+   "page": 3,
+   "why": "Sample item"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Accuracy (%) of models and human performance",
+   "page": 9,
+   "why": "Main results incl. EASY/HARD"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 1 bar values not in text; no embedded instructions found"
+ ]
+}

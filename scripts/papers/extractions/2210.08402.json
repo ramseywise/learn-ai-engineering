@@ -1,0 +1,719 @@
+{
+ "schema": 1,
+ "key": "2210.08402",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/schuhmann-2022-laion-5b.pdf",
+ "bib": {
+  "title": "LAION-5B: An open large-scale dataset for training next generation image-text models",
+  "authors": [
+   "Christoph Schuhmann",
+   "Romain Beaumont",
+   "Richard Vencu",
+   "Cade Gordon",
+   "Ross Wightman",
+   "Mehdi Cherti",
+   "Theo Coombes",
+   "Aarush Katta",
+   "Clayton Mullis",
+   "Mitchell Wortsman",
+   "Patrick Schramowski",
+   "Srivatsa Kundurthy",
+   "Katherine Crowson",
+   "Ludwig Schmidt",
+   "Robert Kaczmarczyk",
+   "Jenia Jitsev"
+  ],
+  "first_author": "Schuhmann",
+  "year": 2022,
+  "venue": "preprint (arXiv:2210.08402v1; datasheet mentions NeurIPS ethics review)",
+  "arxiv": "2210.08402",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 125546,
+  "chars_total": 125546,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can an openly released dataset of billions of CLIP-filtered web image-text pairs support training of CLIP-class and text-to-image models, and what are its safety and ethics limits?",
+ "hypothesis": "A public dataset of roughly CLIP-WIT scale or larger lets open models match OpenAI CLIP, and larger data scale improves zero-shot transfer given enough compute.",
+ "contributions": [
+  "LAION-5B: 5.85B CLIP-filtered image-text pairs (2.32B English, 2.26B multilingual, 1.27B unknown language)",
+  "Open pipeline code, kNN indices, web UI, NSFW/watermark/Q16 tags",
+  "Open reproduction of CLIP ViT-B/32, B/16, B/16+, L/14 on LAION-400M and B/32, L/14 on LAION-2B-en",
+  "Fine-tuning of GLIDE (LAIONIDE) and use for Stable Diffusion"
+ ],
+ "method": {
+  "summary": "Image-text pairs are extracted from Common Crawl alt-text, language-detected, downloaded, and kept if CLIP ViT-B/32 cosine similarity exceeds 0.28 (English) or 0.26 (other). Safety tags (NSFW, watermark, Q16) are attached rather than removed. CLIP models are retrained with OpenCLIP on LAION-400M and LAION-2B-en to validate, and GLIDE is fine-tuned on LAION.",
+  "task": "dataset construction and validation (contrastive image-text pretraining, text-to-image fine-tuning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION-5B",
+    "role": "pretrain",
+    "size": "5.85B pairs (2.32B English, 2.26B multilingual, 1.27B undetected language)",
+    "split": "no recommended splits",
+    "source": "Common Crawl alt-text, URLs only; metadata CC-BY-4.0, no ownership of image/text copyright",
+    "preprocessing": "CLD3 language detection; removed <5 characters text, <5 KB image, malicious/large/redundant images; CLIP ViT-B/32 (multilingual CLIP for non-English) similarity >=0.28 English, >=0.26 other; removed ~90% of ~50B images; data filtered Sep 2021 to Jan 2022"
+   },
+   {
+    "name": "LAION-400M",
+    "role": "pretrain",
+    "size": "400M pairs",
+    "split": null,
+    "source": "subset of LAION-5B, released earlier",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION-2B-en",
+    "role": "pretrain",
+    "size": "2.32B pairs",
+    "split": null,
+    "source": "English subset of LAION-5B",
+    "preprocessing": null
+   },
+   {
+    "name": "LAION-Aesthetic / LAION-High-Resolution",
+    "role": "pretrain",
+    "size": "120M / 170M",
+    "split": null,
+    "source": "subsets of LAION-5B",
+    "preprocessing": "aesthetic by linear estimator on CLIP"
+   },
+   {
+    "name": "NSFW classifier training set",
+    "role": "train",
+    "size": "682K images (drawing 39026, hentai 28134, neutral 369507, porn 207969, sexy 37914)",
+    "split": "test: 1000 images per category, manually checked",
+    "source": "retrieved from LAION-400M by CLIP proximity to keywords, plus Wikiart and Danbooru",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "OpenCLIP ViT-B/32",
+    "role": "proposed",
+    "params": "151 M (image 768 / text 512 width)",
+    "architecture": "CLIP ViT, 12/12 layers, 224x224",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 / 12",
+    "hidden": "768 / 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embed_dim": 512
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-B/16",
+    "role": "proposed",
+    "params": "150 M",
+    "architecture": "CLIP ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 / 12",
+    "hidden": "768 / 512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "res": "224x224"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-B/16+",
+    "role": "proposed",
+    "params": "208 M",
+    "architecture": "CLIP ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12 / 12",
+    "hidden": "896 / 640",
+    "heads": null,
+    "context": null,
+    "other": {
+     "res": "240x240"
+    }
+   },
+   {
+    "name": "OpenCLIP ViT-L/14",
+    "role": "proposed",
+    "params": "428 M",
+    "architecture": "CLIP ViT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24 / 12",
+    "hidden": "1024 / 768",
+    "heads": null,
+    "context": null,
+    "other": {
+     "res": "224x224"
+    }
+   },
+   {
+    "name": "OpenAI CLIP (WIT)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "CLIP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LAIONIDE (GLIDE fine-tune)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "GLIDE 64px base, unmodified OpenAI upsampler to 256",
+    "init_from": "OpenAI GLIDE filtered 64px checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Stable Diffusion",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "latent diffusion",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training_subsets": "237k steps 256x256 LAION-2B-en; 194k steps 512x512 laion-high-resolution; 515k steps 512x512 laion-improved-aesthetics; 390k steps same with 10% text-conditioning drop"
+    }
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE (CLIP contrastive) for CLIP; GLIDE diffusion fine-tune with captions replaced by unconditional token 20% of time",
+   "optimizer": "AdamW, beta1=0.9, beta2=0.98",
+   "lr": "B/32 400M 5e-4; B/32 2B 5.5e-4; B/16 5e-4; B/16+ 7e-4; L/14 6e-4",
+   "lr_schedule": "linear warmup then cosine decay",
+   "warmup": "2K steps (B/32 400M, B/16); 10K (B/32 2B); 5K (B/16+, L/14)",
+   "batch_size": "global 32768 (B/32 400M), 46592 (B/32 2B), 33792 (B/16), 35840 (B/16+), 38400 (L/14)",
+   "steps": null,
+   "epochs": "32 (400M models), 16 (B/32 2B)",
+   "tokens": "samples seen 3B, 13B, 34B in scaling runs",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.2",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128 to 400 NVIDIA A100 on JUWELS Booster (B/32 400M 128, B/32 2B 112, B/16 176, B/16+ 224, L/14 400); LAIONIDE-v1 on RTX 2070 Super batch 1, v2 on 8xA100",
+   "compute": null,
+   "wall_clock": "hours: B/32 400M 36, B/32 2B 210, B/16 61, B/16+ 61, L/14 88",
+   "seeds": null,
+   "other": {
+    "LAIONIDE-v2": "~25M shuffled pairs from LAION-2B, filtered NSFW/LIKELY, non-en, aspect ratio >1.3 or <0.8, smallest side <256, slur substring list",
+    "LAIONIDE-v3": "~1M pairs mixing MS-COCO, Visual Genome, Open Images localized annotations, LAION-5B to reduce watermarks"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "zero-shot classification: class embedding is mean over prompt templates from prior works, argmax cosine similarity",
+   "retrieval": null,
+   "parameters": {
+    "nsfw_filter_threshold": null
+   },
+   "other": {
+    "sampler": "pseudo linear multi-step diffusion sampling (Liu et al.) for LAIONIDE"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "zero-shot top-1",
+     "definition": "class chosen by largest cosine similarity",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VTAB+",
+     "definition": "average top-1 over 35 tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "retrieval R@k",
+     "definition": "Flickr30K 1K and MSCOCO 5K test",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "OpenAI CLIP WIT models",
+    "OpenAI GLIDE filtered"
+   ],
+   "protocol": "single runs, no seeds or intervals reported; GLIDE comparison is qualitative (web demo)"
+  },
+  "availability": {
+   "code": "github LAION-AI/LAION-5B-WatermarkDetection, CLIP-based-NSFW-Detector, rom1504/img2dataset, clip-retrieval, open_clip",
+   "weights": "OpenCLIP checkpoints and laionide",
+   "data": "metadata on Hugging Face (URLs and alt-text, CC-BY-4.0); images not redistributed"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Pairs kept after CLIP filtering",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5.85B",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAION-5B from Common Crawl, ViT-B/32 filter",
+   "quote": "we present LAION-5B - a dataset consisting of 5.85 billion CLIP-ﬁltered image-text pairs, of which 2.32B contain English language.",
+   "table": null,
+   "note": null,
+   "where": "p1 Abstract"
+  },
+  {
+   "claim": "Similarity thresholds for inclusion",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.28 English / 0.26 other",
+   "unit": "cosine",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CLIP ViT-B/32 (multilingual CLIP for others)",
+   "quote": "We removed all English image-text pairs with cosine similarity below 0.28, and all other pairs with similarity below 0.26.",
+   "table": null,
+   "note": null,
+   "where": "p6 Sec 3.1"
+  },
+  {
+   "claim": "Filtering removed about 90% of the original images",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90%",
+   "unit": "% removed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "of ~50B images",
+   "quote": "This step removed\naround 90% of the original 50 billion images, leaving just short of 6 billion examples.",
+   "table": null,
+   "note": null,
+   "where": "p6 Sec 3.1"
+  },
+  {
+   "claim": "Share of images tagged NSFW",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAION-5B NSFW detector tag",
+   "quote": "3% of images were detected as NSFW, which can be ﬁltered out by a user with the NSFW tag.",
+   "table": null,
+   "note": null,
+   "where": "p7 Sec 4"
+  },
+  {
+   "claim": "Authors recommend research-only use; no deployed systems",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAION-5B in current form",
+   "quote": "we strongly recommend that LAION-5B should only be used for academic\nresearch purposes in its current form.",
+   "table": null,
+   "note": null,
+   "where": "p3 Sec 1"
+  },
+  {
+   "claim": "Dataset is not owned: LAION owns metadata only",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "datasheet Q49",
+   "quote": "We do not own the copyright of the images or text.",
+   "table": null,
+   "note": null,
+   "where": "p30 A.6 Q49"
+  },
+  {
+   "claim": "Pairs are links: content can vanish, and removal is by request or at host",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "datasheet Q14, Q32",
+   "quote": "we are unable to oﬀer\nany guarantees of the existence of these samples.",
+   "table": null,
+   "note": null,
+   "where": "p24 A.2 Q14"
+  },
+  {
+   "claim": "Dataset known to contain explicit, racist, abusive content, kept for safety research",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "datasheet Q16",
+   "quote": "it is known to have instances of sexually\nexplicit, racist, abusive or other discomforting or disturbing content.",
+   "table": null,
+   "note": null,
+   "where": "p24 A.2 Q16"
+  },
+  {
+   "claim": "Individuals may be identifiable and were not notified or asked for consent",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "datasheet Q19, Q30, Q31",
+   "quote": "those depicted in the\nphotograph might not have given their consent to its upload.",
+   "table": null,
+   "note": null,
+   "where": "p27 A.3 Q31"
+  },
+  {
+   "claim": "Safety tags are imperfect and must not be treated as production-ready filter",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.2",
+   "quote": "we advocate using these tags responsibly, not\nrelying on them to create a truly safe, “production-ready” subset",
+   "table": null,
+   "note": null,
+   "where": "p6 Sec 3.2"
+  },
+  {
+   "claim": "NSFW classifier recall on true NSFW (EfficientNetV2-B02, own 5-class test)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "96,45%",
+   "unit": "% (printed with comma)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1000 manually checked test images per class",
+   "quote": "Our EﬃcientNet-V2-B02 image classiﬁer predicted 96,45% of the true NSFW correctly as NSFW",
+   "table": null,
+   "note": "Paper prints 96,45% with a comma",
+   "where": "p33 C.5"
+  },
+  {
+   "claim": "NSFW classifier false-positive rate on SFW",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7,96%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same test set",
+   "quote": "discards 7,96% of the SFW images incorrectly as NSFW",
+   "table": null,
+   "note": "Printed with a comma",
+   "where": "p33 C.5"
+  },
+  {
+   "claim": "Filtering with a small CLIP inherits CLIP biases; cosine similarity can rank malignant captions above benign",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "App G.2, citing Birhane et al.",
+   "quote": "By using cosine similarity as a ground for\nﬁltering, the dataset might exacerbate those biases already contained by CLIP.",
+   "table": null,
+   "note": null,
+   "where": "p48 G.2"
+  },
+  {
+   "claim": "CLIP ViT-L/14 on LAION-2B-en zero-shot ImageNet-1k top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "75.2",
+   "unit": "%",
+   "baseline_value": "75.6 (CLIP WIT)",
+   "n": null,
+   "setup": "Table 2, OpenCLIP trained on LAION-2B-en",
+   "quote": null,
+   "table": "Table 2, row L/14 LAION-2B-en, column INet",
+   "note": null,
+   "where": "p11"
+  },
+  {
+   "claim": "L/14 on LAION-400M zero-shot ImageNet-1k top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "72.8",
+   "unit": "%",
+   "baseline_value": "75.6 (CLIP WIT)",
+   "n": null,
+   "setup": "Table 2, row L/14 LAION-400M, column INet",
+   "quote": null,
+   "table": "Table 2, row L/14 LAION-400M, column INet",
+   "note": null,
+   "where": "p11"
+  },
+  {
+   "claim": "Same compute (34B samples seen), L/14 on LAION-2B-en beats LAION-400M on ImageNet-1k",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75.4 vs 73.9",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot, ViT-L/14",
+   "quote": "training ViT-L/14 on LAION-2B-en (75.4%) outperforms\nLAION-400M (73.9%) on ImageNet-1k zero-shot classiﬁcation.",
+   "table": null,
+   "note": null,
+   "where": "p9 Sec 5.2.1"
+  },
+  {
+   "claim": "Zero-shot accuracy improves along a log-log line with total compute (model, data, compute scale)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 4, 6 models on LAION-400M and 2B-en",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p10 Fig 4"
+  },
+  {
+   "claim": "MSCOCO text retrieval R@1 for L/14 LAION-400M vs CLIP WIT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59.3 vs 58.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MSCOCO 5K, zero-shot",
+   "quote": "on\nMSCOCO text retrieval we obtain 59.3% vs 58.4% for CLIP WIT",
+   "table": null,
+   "note": null,
+   "where": "p41 E.3"
+  },
+  {
+   "claim": "Large LAION loss on ImageNet-A vs CLIP WIT for L/14",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "24.3",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "INet-A, L/14 LAION-400M 46.5 vs WIT 70.8",
+   "quote": null,
+   "table": "Table 7, row INet-A, column L/14 LAION-400M",
+   "note": "authors give no explanation",
+   "where": "p39, p43"
+  },
+  {
+   "claim": "Stable Diffusion trained on LAION-2B-en 237k steps at 256x256",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "237,000",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "first stage",
+   "quote": "237,000 steps at 256x256 on LAION-2B-en",
+   "table": null,
+   "note": null,
+   "where": "p46 F.2"
+  },
+  {
+   "claim": "LAION is not a finished data product; no overlap analysis with test sets done",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 6",
+   "quote": "measuring the degree of overlap between LAION-5B and popular computer vision benchmarks is an\nimportant question for future work",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6"
+  }
+ ],
+ "limits": [
+  "Authors: not a finished data product; academic use only; no deployed systems without bias investigation.",
+  "Filtering used CLIP ViT-B/32 only; larger CLIP not tried; authors hypothesise ViT-L/14 filtering would be cleaner (untested).",
+  "Test set overlap with Common Crawl not measured; de-duplication deferred.",
+  "Alt-text is often SEO spam or keyword lists (Birhane et al.).",
+  "Safety/watermark classifiers are imperfect; no recall figure is given for watermark or Q16.",
+  "GLIDE fine-tune is judged qualitatively via a web demo, no FID or human study; Stable Diffusion training listed but not evaluated here.",
+  "Single runs, no seeds or error bars.",
+  "Dataset is URLs: link rot; copyright of images and text not owned; consent absent (datasheet Q31). The paper was written before later findings about illegal content in the dataset, which it does not discuss (reader note, not in the paper).",
+  "Training precision, total compute and LAION-80M details not given."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "CLIP (Radford et al.)",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "replicates",
+   "note": "reproduced at 400M scale and used as the filter",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "training software",
+   "quote": null
+  },
+  {
+   "work": "GLIDE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "fine-tuned as LAIONIDE",
+   "quote": null
+  },
+  {
+   "work": "Latent Diffusion / Stable Diffusion (Rombach et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "trained on LAION subsets",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M (Schuhmann et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "predecessor",
+   "quote": null
+  },
+  {
+   "work": "Birhane, Prabhu, Kahembwe: Multimodal datasets: misogyny, pornography, and malignant stereotypes",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "audit of LAION-400M that motivated tagging",
+   "quote": null
+  },
+  {
+   "work": "Q16 (Schramowski et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "inappropriate content documentation",
+   "quote": null
+  },
+  {
+   "work": "Common Crawl",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source",
+   "quote": null
+  },
+  {
+   "work": "ALIGN, BASIC, CC3M, CC12M, YFCC100M, RedCaps",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dataset size comparison in Table 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of the acquisition pipeline: Files are downloaded, tracked, and undergo distributed inference to determine inclusion. Those above the specified CLIP threshold are saved.",
+   "page": 5,
+   "why": "Shows the five-stage pipeline and where CLIP filtering sits"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The relationship between total compute (GMACS) and zero-shot top-1 classification accuracy (%) of models trained on LAION (400M, 2B-en).",
+   "page": 10,
+   "why": "Log-log scaling in model, data, compute"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Word cloud based on [68] documenting the potentially inappropriate image content of the LAION-5B subset which contains text in English language.",
+   "page": 33,
+   "why": "Shows what the Q16 tagger finds: porn, weapons, violence, racism"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Comparison between CLIP models trained on LAION (400M, 2B) and the original CLIP models trained on OpenAI WIT.",
+   "page": 11,
+   "why": "Core validation numbers"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Comparison of GLIDE and LAIONIDE-v3 Generations.",
+   "page": 45,
+   "why": "Only generative evidence: humans reappear after fine-tune"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text uses ligature characters (fi) and curly quotes; quotes copied as printed.",
+  "No embedded instructions found."
+ ]
+}

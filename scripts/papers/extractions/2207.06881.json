@@ -1,0 +1,557 @@
+{
+ "schema": 1,
+ "key": "2207.06881",
+ "pdf": "generative-ai/03-agentic-foundations/sources/bulatov-2022-recurrent-memory-transformer.pdf",
+ "bib": {
+  "title": "Recurrent Memory Transformer",
+  "authors": [
+   "Aydar Bulatov",
+   "Yuri Kuratov",
+   "Mikhail S. Burtsev"
+  ],
+  "first_author": "Bulatov",
+  "year": 2022,
+  "venue": "NeurIPS 2022 (36th Conference on Neural Information Processing Systems)",
+  "arxiv": "2207.06881",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56288,
+  "chars_total": 56288,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only."
+ },
+ "type": "empirical",
+ "question": "Can a Transformer get long-term memory and segment-level recurrence just by adding memory tokens to input and output, with no architecture change?",
+ "hypothesis": "Dedicated memory tokens with recurrence store global information more compactly than Transformer-XL's mixed hidden-state cache, so smaller memory suffices on long-sequence tasks.",
+ "contributions": [
+  "Augment Transformer with token-based memory storage and segment-level recurrence.",
+  "Evaluate vs Transformer and Transformer-XL on copy, reverse, associative retrieval, quadratic equations and language modeling; RMT beats Tr-XL on sequence tasks and matches it on LM with less memory.",
+  "Tr-XL cache can be combined with RMT for better LM performance.",
+  "Analysis of learned memory read/write attention patterns."
+ ],
+ "method": {
+  "summary": "m real-valued [mem] tokens are put at the start (read) and end (write) of each segment; write-token outputs become the next segment's read tokens, trained with BPTT across segments. Built on the Transformer-XL code base; also added to pretrained BERT/RoBERTa/DeBERTa/T5 for classification.",
+  "task": "long-sequence processing: algorithmic tasks, language modeling, long text classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Copy / Reverse (synthetic)",
+    "role": "both",
+    "size": "train 100000, valid 5000, test 10000 (for copy 24, reverse 24, assoc. retrieval); sequence sizes 24, 40, 120, 240, 360",
+    "split": "fixed random pre-generated",
+    "source": "uniform token sampling",
+    "preprocessing": "character-level tokenization; loss only on target segments"
+   },
+   {
+    "name": "Associative retrieval",
+    "role": "both",
+    "size": "train 100000, valid 5000, test 10000",
+    "split": "fixed",
+    "source": "generator code from Ba et al. 2016",
+    "preprocessing": "4 key-value pairs, one key queried"
+   },
+   {
+    "name": "Quadratic equations (synthetic)",
+    "role": "both",
+    "size": "100000 train, 10000 valid, 20000 test; 180 tokens/sample",
+    "split": "fixed",
+    "source": "generated; roots uniformly sampled from -100 to 100, coefficients scaled by 1..10, 20 percent no real roots",
+    "preprocessing": "char-level, each step padded to 30 tokens"
+   },
+   {
+    "name": "WikiText-103",
+    "role": "both",
+    "size": "103M words; vocab 267735",
+    "split": "standard",
+    "source": "Merity et al. 2017",
+    "preprocessing": "context 150 tokens, or segment 50 for long-recurrence runs"
+   },
+   {
+    "name": "enwik8",
+    "role": "both",
+    "size": "10^8 first bytes of Wikipedia XML; vocab 204 characters",
+    "split": "standard",
+    "source": "Mahoney 2006",
+    "preprocessing": "context 512 chars, or segment 128"
+   },
+   {
+    "name": "Hyperpartisan news",
+    "role": "both",
+    "size": null,
+    "split": "train/valid/test as in Beltagy et al. 2020",
+    "source": "Kiesel et al. 2019 (SemEval-2019 task 4)",
+    "preprocessing": "500 input tokens per segment; up to 4 segments (about 2000 tokens)"
+   }
+  ],
+  "models": [
+   {
+    "name": "RMT (WikiText-103)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer-XL code base, decoder-only, memory tokens",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": "267735 words",
+    "layers": 16,
+    "hidden": 410,
+    "heads": 10,
+    "context": "150 or 50 tokens per segment",
+    "other": {
+     "ff": 2100,
+     "memory sizes": "1,5,10,25,50",
+     "BPTT unroll": "0 to 4 previous segments"
+    }
+   },
+   {
+    "name": "RMT (enwik8)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": "204 characters",
+    "layers": 12,
+    "hidden": 512,
+    "heads": 8,
+    "context": "512 or 128 chars",
+    "other": {
+     "ff": 2048
+    }
+   },
+   {
+    "name": "RMT (copy, reverse)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only",
+    "init_from": "scratch",
+    "tokenizer": "character",
+    "vocab": null,
+    "layers": 4,
+    "hidden": null,
+    "heads": 4,
+    "context": null,
+    "other": {
+     "assoc retrieval": "6 layers, 4 heads",
+     "quadratic": "6 layers, 6 heads, segments 180 and 30"
+    }
+   },
+   {
+    "name": "RMT + BERT-base / RoBERTa-base / DeBERTa-v3-base / T5-base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "pretrained HF model + 10 memory tokens + recurrence",
+    "init_from": "pretrained checkpoints, fine-tuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 per segment, 1-4 segments",
+    "other": {
+     "memory size": 10
+    }
+   },
+   {
+    "name": "Transformer-XL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "segment recurrence with stop-gradient cache of m states per layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baseline Transformer (Tr-XL memory 0) and Memory Transformer (MemTr)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "decoder-only; MemTr has memory tokens without recurrence",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "language modeling / target-sequence cross entropy (loss only on target segments for algorithmic tasks); classification fine-tune for Hyperpartisan; auxiliary memory loss for Tr-XL+RMT",
+   "optimizer": "Adam (LM runs)",
+   "lr": "0.00025 (LM, linear schedule); 1e-4 constant with reduce-on-plateau factor 0.5 (copy, reverse, quadratic)",
+   "lr_schedule": "linear (LM)",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "200,000 WikiText-103 (some runs 2x); 400,000 enwik8",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "150 or 50 (WikiText-103); 512 or 128 (enwik8)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "auxiliary loss on memory tokens, multiplier 0.01, for Tr-XL+RMT (a fixed special token predicted from memory)",
+   "hardware": "1080 Ti (seq 24 tasks), V100 x1-3 (longer copy/reverse), 2x A100 80GB (LM)",
+   "compute": null,
+   "wall_clock": "LM: 10 to 30 hours; seq-24 tasks 1 hour to 2-3 days; longer copy/reverse 1 hour to 3-4 days; quadratic 1-2 days",
+   "seeds": null,
+   "other": {
+    "BPTT unroll": "0 to 4 segments; instability and out-of-memory for larger memory with deeper unroll",
+    "LM hyperparameters": "as Transformer-XL paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "std reported on key experiments; number of seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "perplexity",
+     "definition": "WikiText-103 test",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "bits per character",
+     "definition": "enwik8 test",
+     "unit": "BPC",
+     "higher_is_better": false
+    },
+    {
+     "name": "per-character accuracy",
+     "definition": "copy/reverse/assoc retrieval test",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "answer accuracy",
+     "definition": "1.0 if full answer predicted",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "Hyperpartisan news",
+     "unit": "F1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Transformer baseline (no memory)",
+    "Transformer-XL",
+    "Memory Transformer",
+    "Longformer",
+    "Big Bird",
+    "Ernie-Doc",
+    "Ernie-Sparse",
+    "Graph-RoBERTa"
+   ],
+   "protocol": "mean ± std over runs (count not stated)"
+  },
+  "availability": {
+   "code": "https://github.com/booydar/LM-RMT",
+   "weights": null,
+   "data": "synthetic generators in code; WikiText-103, enwik8 public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Adam optimizer Kingma and\nBa (2015) with linear schedule learning rate starting from 0.00025 for 200,000 steps for WikiText-103\nand 400,000 steps for enwik8",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RMT with 10 memory vectors (BPTT-3) nearly matches Tr-XL with 25 cached states per layer on WikiText-103 and sits close to Tr-XL memory 75, at segment length 150.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "25.04",
+   "unit": "ppl",
+   "baseline_value": "25.57",
+   "n": null,
+   "setup": "WikiText-103, 16-layer, segment 150, RMT BPTT-3 memory 10; Tr-XL mem 25 = 25.57, mem 75 = 24.68, baseline 29.95",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row RMT BPTT-3 (memory 10, segment 150), column PPL±STD"
+  },
+  {
+   "claim": "RMT with 1 memory vector at segment length 50 is about as good as Tr-XL with memory 10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "28.71",
+   "unit": "ppl",
+   "baseline_value": "28.98",
+   "n": null,
+   "setup": "WikiText-103, segment 50, RMT BPTT-1 memory 1; Tr-XL memory 10 = 28.98",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row RMT BPTT-1 (memory 1, segment 50), column PPL±STD"
+  },
+  {
+   "claim": "Combining Tr-XL cache (150) with 10 RMT memory tokens gives the best WikiText-103 result, slightly under the Tr-XL paper's 24.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "23.99",
+   "unit": "ppl",
+   "baseline_value": "24.0",
+   "n": null,
+   "setup": "WikiText-103, segment 150, Tr-XL+RMT 150+10, 2x steps (400k) per Table 5; auxiliary memory loss weight 0.01",
+   "note": "Table 2 row has no '2X steps' tag; Table 5 shows 24,25 / 24,30 for non-2x variants and 23,99 for BPTT-3 2X STEPS. Table 5 uses decimal commas for these rows.",
+   "where": "Table 2, Table 5",
+   "table": "Table 2, row TR-XL + RMT (150+10), column PPL±STD"
+  },
+  {
+   "claim": "Transformer-XL with 40 cached states per layer matches RMT with memory size 5 on enwik8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "bits per character",
+   "value": "1.241",
+   "unit": "BPC",
+   "baseline_value": "1.230",
+   "n": null,
+   "setup": "enwik8, 12-layer, segment 128; RMT BPTT-1 mem 5 = 1.241; Tr-XL mem 40 = 1.230",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row RMT BPTT-1 (memory 5, segment 128), column BPC±STD"
+  },
+  {
+   "claim": "Deeper BPTT unrolling improves RMT: memory 10, segment 50, perplexity falls from BPTT-0 to BPTT-4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": "26.25",
+   "unit": "ppl",
+   "baseline_value": "30.69",
+   "n": null,
+   "setup": "WikiText-103, segment 50, memory 10, RMT BPTT-4; BPTT-0 = 30.69",
+   "note": null,
+   "where": "Table 5, Fig 5",
+   "table": "Table 5, row RMT BPTT-4 (memory 10, segment 50), column PPL±STD"
+  },
+  {
+   "claim": "On quadratic equations (180 tokens, 6 segments, memory 30) RMT solves the task and Tr-XL does not.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.99",
+   "unit": "accuracy (1.0 if full answer correct)",
+   "baseline_value": "0.93",
+   "n": null,
+   "setup": "Algorithmic, 6 segments; RMT 0.99±0.002, Tr-XL 0.93±0.02, unsegmented baseline 0.99±0.01",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row RMT, column ACC±STD"
+  },
+  {
+   "claim": "RMT on RoBERTa-base reaches the best Hyperpartisan F1 in Table 3, above Longformer and Big Bird with 4096 inputs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "98.11",
+   "unit": "F1",
+   "baseline_value": "94.80",
+   "n": null,
+   "setup": "Hyperpartisan news, RoBERTa-base augmented with 10 memory tokens, 512 per segment, 4 segments; Longformer 94.80, Big Bird 92.20, Ernie-Doc-large 96.60",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RMT ROBERTA-BASE [512], column 4 segments"
+  },
+  {
+   "claim": "Copy task: RMT solves it perfectly up to 9 segments at fixed length 360 while Tr-XL falls to the no-memory baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Copy, source+target 360 tokens, memory = segment length; read from Fig 4a",
+   "note": null,
+   "where": "Sec 5, Fig 3-4",
+   "quote": "With the number of segments up to 6 mean accuracy of Transformer-XL drops by up to 0.2 points, and with 9 segments plunges\nclose to the baseline without memory."
+  },
+  {
+   "claim": "RMT compresses a 12-token copy over 6 segments into 6 memory tokens; Tr-XL with memory 6 on reverse (4 segments) gets 0.8 against RMT 1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reverse, 4 segments, memory 6",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "giving average\naccuracy of 0.8 on the target task. Despite having the same memory size, RMT manages to compress\nthe whole segment in memory tokens (Appendix B Figure 9(a)) and achieve mean accuracy 1."
+  },
+  {
+   "claim": "Authors state RMT matches Tr-XL quality with up to 10 times smaller memory.",
+   "kind": "claim",
+   "source": null,
+   "metric": "memory size ratio",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Language modeling, WikiText-103 and enwik8; note Tr-XL memory is per layer (10 x 16 vectors) while RMT is memory_size vectors",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "shows quality metrics similar to Transformer-XL but for up to 10 times smaller memory size"
+  }
+ ],
+ "limits": [
+  "Authors concede training instabilities and GPU RAM/OOM issues for larger memory with deeper BPTT unroll (Sec 5, checklist 1b).",
+  "Memory sizes are not like-for-like: Tr-XL memory is states of every layer, RMT memory is vectors at the input only.",
+  "Experiments are small (16-layer, 410-hidden LM; synthetic tasks); batch size, warmup, dropout, seeds not stated.",
+  "Associative retrieval at 5 segments: RMT slightly drops and Tr-XL rises above.",
+  "Information must fit a fixed memory over more steps: harder as segments shrink.",
+  "RMT matches but does not beat Tr-XL on language modeling at equal training; best result needs the combination."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "read memory / write memory",
+   "definition": "The starting group of memory tokens lets sequence tokens attend to previous-segment memory; the ending group attends to all current tokens and holds the updated memory passed on.",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Transformer-XL",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "code base and main baseline",
+   "quote": null
+  },
+  {
+   "work": "Memory Transformer (Burtsev et al.)",
+   "year": 2020,
+   "arxiv": "2006.11527",
+   "relation": "extends",
+   "note": "memory tokens",
+   "quote": null
+  },
+  {
+   "work": "Staircase attention (Ju et al.)",
+   "year": 2021,
+   "arxiv": "2106.04279",
+   "relation": "related",
+   "note": "depth recurrence idea",
+   "quote": null
+  },
+  {
+   "work": "Compressive Transformer",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "second memory layer",
+   "quote": null
+  },
+  {
+   "work": "Memformer",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "dedicated memory module",
+   "quote": null
+  },
+  {
+   "work": "WikiText-103",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Merity et al.",
+   "quote": null
+  },
+  {
+   "work": "enwik8",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Mahoney",
+   "quote": null
+  },
+  {
+   "work": "Hyperpartisan news (SemEval-2019 task 4)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Kiesel et al.",
+   "quote": null
+  },
+  {
+   "work": "Longformer",
+   "year": 2020,
+   "arxiv": "2004.05150",
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  },
+  {
+   "work": "Big Bird",
+   "year": 2020,
+   "arxiv": "2007.14062",
+   "relation": "baseline",
+   "note": "Table 3",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Comparison of Recurrent Memory Transformer (RMT) and Transformer-XL architectures.",
+   "page": 4,
+   "why": "Read/write memory tokens and gradient flow through segments versus the Tr-XL cache."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Recurrent Memory Transformer.",
+   "page": 1,
+   "why": "Simplest one-picture view of memory passing."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "RMT scales better with a number of segments and sequence size.",
+   "page": 7,
+   "why": "Shows Tr-XL falling to baseline as segments grow while RMT holds."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Selected attention map patterns of memory models.",
+   "page": 9,
+   "why": "Shows the write/read/rewrite patterns."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "H~0_tau = [H_mem_tau ∘ H0_tau ∘ H_mem_tau];  H_mem_{tau+1} := H_write_tau",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 5 prints some perplexities with decimal commas (24,47)."
+ ]
+}

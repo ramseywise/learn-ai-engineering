@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.acl-long.147",
+ "pdf": "generative-ai/03-agentic-foundations/sources/wang-2023-plan-solve-prompting.pdf",
+ "bib": {
+  "title": "Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning by Large Language Models",
+  "authors": [
+   "Lei Wang",
+   "Wanyu Xu",
+   "Yihuai Lan",
+   "Zhiqiang Hu",
+   "Yunshi Lan",
+   "Roy Ka-Wei Lee",
+   "Ee-Peng Lim"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL 2023), Volume 1: Long Papers, pages 2609-2634",
+  "arxiv": "2305.04091",
+  "doi": "10.18653/v1/2023.acl-long.147"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72884,
+  "chars_total": 72884,
+  "engine": "pymupdf",
+  "skipped": "Appendix example output tables 17-26 skimmed (only the first few read), they are sample generations."
+ },
+ "type": "empirical",
+ "question": "Can a zero-shot prompt that asks the LLM to plan first and then execute fix the missing-step and calculation errors of Zero-shot-CoT?",
+ "hypothesis": "Asking for a plan plus detailed instructions (extract variables, calculate intermediate results) yields better reasoning than 'Let's think step by step'; omitting relevant variables makes missing steps more likely.",
+ "contributions": [
+  "Identify three Zero-shot-CoT error types: calculation, missing step, semantic misunderstanding",
+  "Propose PS and PS+ zero-shot prompting",
+  "Evaluate on ten datasets across arithmetic, commonsense and symbolic reasoning with GPT-3"
+ ],
+ "method": {
+  "summary": "Two-step zero-shot prompting on GPT-3 text-davinci-003: step 1 appends a plan-then-solve trigger sentence to 'Q: [X]. A:' to generate reasoning; step 2 appends an answer-extraction prompt to get the final answer. PS+ adds instructions to extract variables and calculate intermediate results.",
+  "task": "zero-shot multi-step reasoning via prompting (arithmetic, commonsense, symbolic)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MultiArith",
+    "role": "eval",
+    "size": "600",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "AddSub",
+    "role": "eval",
+    "size": "395",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "GSM8K",
+    "role": "eval",
+    "size": "1319",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "AQuA",
+    "role": "eval",
+    "size": "254",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SingleEq",
+    "role": "eval",
+    "size": "508",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SVAMP",
+    "role": "eval",
+    "size": "1000",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CSQA",
+    "role": "eval",
+    "size": "1221",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "2290",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Last Letters",
+    "role": "eval",
+    "size": "500",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Coin Flip",
+    "role": "eval",
+    "size": "500",
+    "split": "test set as used by baselines (inferred: Table 1 counts)",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 text-davinci-003",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 5 row 2 PoT uses code-davinci-002"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (argmax), 1 output chain",
+   "temperature": "0 (0.7 for self-consistency)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 greedy run per item; SC uses N=10 samples with majority vote",
+   "prompting": "Zero-shot; Q: [X]. A: [trigger]; second call appends answer-extraction prompt such as 'Therefore, the answer (arabic numerals) is'. Few-shot baselines use 8 demos (MultiArith, GSM8K, AddSub, SingleEq, SVAMP), 4 (AQuA, Last Letters), 7 (CSQA), 6 (StrategyQA).",
+   "retrieval": null,
+   "parameters": {
+    "self_consistency_N": 10,
+    "self_consistency_temperature": 0.7
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of items with correct final answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Zero-shot-CoT (Kojima 2022)",
+    "Zero-shot-PoT (Chen 2022)",
+    "Manual-CoT (Wei 2022b)",
+    "Auto-CoT (Zhang 2022)"
+   ],
+   "protocol": "Single run, no seeds or significance tests reported; error analysis on 100 randomly sampled GSM8K problems by manual labelling."
+  },
+  "availability": {
+   "code": "https://github.com/AGI-Edgerunners/Plan-and-Solve-Prompting",
+   "weights": null,
+   "data": "public benchmarks"
+  },
+  "prompts": [
+   {
+    "purpose": "PS trigger",
+    "text": "Let's first understand the problem and devise a plan to solve the problem. Then, let's carry out the plan and solve the problem step by step.",
+    "where": "Sec 1, Table 5 row 5"
+   },
+   {
+    "purpose": "PS+ trigger (math)",
+    "text": "Let's first understand the problem, extract relevant variables and their corresponding numerals, and make a plan. Then, let's carry out the plan, calculate intermediate variables (pay attention to correct numerical calculation and commonsense), solve the problem step by step, and show the answer.",
+    "where": "Table 5 row 6"
+   },
+   {
+    "purpose": "Answer extraction",
+    "text": "Therefore, the answer (arabic numerals) is",
+    "where": "Sec 2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Zero-shot PS+ averages 76.7% on six math datasets, vs 70.4% Zero-shot-CoT and 73.5% PoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "76.7",
+   "unit": "%",
+   "baseline_value": "70.4",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, six math datasets",
+   "note": null,
+   "where": "4.1, Table 2",
+   "quote": "PS+ prompting yields an average accuracy (76.7%) slightly lower than Manual-CoT (77.6%) but higher than Auto-CoT (75.9%)"
+  },
+  {
+   "claim": "PS+ matches 8-shot Manual-CoT closely on average (77.6%) without demonstrations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "77.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual-CoT 8-shot (4 for AQuA), same model, six math datasets",
+   "note": null,
+   "where": "4.1, Table 2",
+   "quote": "slightly lower than Manual-CoT (77.6%)"
+  },
+  {
+   "claim": "PS (plan only) averages 72.9%, 2.5 points above Zero-shot-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": "72.9",
+   "unit": "%",
+   "baseline_value": "70.4",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy",
+   "note": "Text says 2.5% higher average",
+   "where": "Table 2",
+   "table": "Table 2, row PS (ours), column Average"
+  },
+  {
+   "claim": "PS+ on GSM8K 59.3 vs CoT 56.4 (+2.9), the smallest gain of the six math sets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "59.3",
+   "unit": "%",
+   "baseline_value": "56.4",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, GSM8K 1319 problems",
+   "note": null,
+   "where": "4.1",
+   "quote": "PS+ prompting improves the accuracy over Zero-shot CoT by at least 5% for all datasets except GSM8K which sees a 2.9% improvement."
+  },
+  {
+   "claim": "PS+ on SVAMP 75.7 vs CoT 69.9; few-shot Manual-CoT 80.3 is higher.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.7",
+   "unit": "%",
+   "baseline_value": "69.9",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, SVAMP",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PS+ (ours), column SVAMP"
+  },
+  {
+   "claim": "PS+ on MultiArith 91.8 vs CoT 83.8; PoT 92.2, Manual-CoT 93.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "91.8",
+   "unit": "%",
+   "baseline_value": "83.8",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, MultiArith",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row PS+ (ours), column MultiArith"
+  },
+  {
+   "claim": "PS+ beats Zero-shot-CoT on CommonsenseQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "71.9",
+   "unit": "%",
+   "baseline_value": "65.2",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, CSQA 1221 q; Few-shot manual CoT 78.3",
+   "note": null,
+   "where": "4.1",
+   "quote": "it consistently outperforms Zero-shot-CoT on CommonsenseQA (71.9% vs. 65.2%) and StrategyQA (65.4% vs. 63.8%) datasets."
+  },
+  {
+   "claim": "PS+ beats Zero-shot-CoT on StrategyQA; below Manual-CoT 71.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "65.4",
+   "unit": "%",
+   "baseline_value": "63.8",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, StrategyQA 2290 q",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Zero-shot-PS+ (ours), column StrategyQA"
+  },
+  {
+   "claim": "PS+ on Last Letters (75.2) exceeds Manual-CoT (70.6) and Zero-shot-CoT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.2",
+   "unit": "%",
+   "baseline_value": "64.8",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, Last Letters 500 q",
+   "note": "Zero-shot-CoT is 65.2% in text but 64.8 in Table 4",
+   "where": "4.1, Table 4",
+   "quote": "On Last Letters, our Zero-shot PS+ prompting (75.2%) outperforms Manual-CoT (70.6%) and Zero-shot-CoT (65.2%)."
+  },
+  {
+   "claim": "PS+ on Coin Flip 99.6 vs CoT 96.8, Manual-CoT 100.0; needed a task-specific trigger.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "99.6",
+   "unit": "%",
+   "baseline_value": "96.8",
+   "n": null,
+   "setup": "text-davinci-003 (GPT-3 175B), temperature 0 greedy, zero-shot, accuracy, Coin Flip 500 q",
+   "note": "Table 16 shows generic plan triggers got 70.6-72.6; the 99.6 trigger adds a coin-state subquestion",
+   "where": "4.1, Table 16",
+   "quote": "Zero-shot PS+ prompting (99.6%) is slightly worse than Manual-CoT (100.0%)"
+  },
+  {
+   "claim": "With self-consistency (T=0.7, N=10) PS+ reaches 73.7% on GSM8K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.7",
+   "unit": "%",
+   "baseline_value": "70.7",
+   "n": null,
+   "setup": "text-davinci-003, PS+ with SC, GSM8K",
+   "note": "Zero-shot-CoT with SC is 70.7 GSM8K, 81.7 SVAMP; PS+ SC SVAMP 84.4. Text gives w/o SC GSM8K 58.7 vs Table 2 59.3 (different run: T=0.7 vs greedy not stated)",
+   "where": "4.2, Fig 4",
+   "quote": "PS+ prompting with SC (73.7% and 84.4%) substantially outperforms that without SC (58.7% and"
+  },
+  {
+   "claim": "Error analysis of 100 sampled GSM8K problems: PS+ gets 39 wrong vs 46 for CoT and 43 for PS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wrong answers",
+   "value": "39",
+   "unit": "count",
+   "baseline_value": "46",
+   "n": null,
+   "setup": "100 random GSM8K problems, text-davinci-003",
+   "note": null,
+   "where": "4.2",
+   "quote": "Zero-Shot-CoT generated incorrect final answers for 46 of the problems, 43 for Zero-shot-PS, and 39 for Zero-shot-PS+."
+  },
+  {
+   "claim": "PS+ cuts missing-step errors to 7% (CoT 12%) and calculation errors to 5% (CoT 7%); semantic errors stay at 27%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": "7",
+   "unit": "%",
+   "baseline_value": "12",
+   "n": null,
+   "setup": "Same 100 GSM8K problems",
+   "note": "Calculation 5% vs 7%, semantic 27% vs 27%",
+   "where": "Table 6",
+   "table": "Table 6, row Zero-shot-PS+, column Missing"
+  },
+  {
+   "claim": "90 of 100 sampled PS predictions contain a plan.",
+   "kind": "measured",
+   "source": null,
+   "metric": "plan present",
+   "value": "90",
+   "unit": "of 100",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random PS predictions",
+   "note": null,
+   "where": "4.2",
+   "quote": "Our analysis reveals that 90 of the 100 predictions indeed incorporated a plan."
+  },
+  {
+   "claim": "Variable extraction alone (trigger 3) is worse than Zero-shot-CoT on GSM8K (50.5 vs 56.4), so the plan instruction matters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "50.5",
+   "unit": "%",
+   "baseline_value": "56.4",
+   "n": null,
+   "setup": "text-davinci-003, GSM8K",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 3, column GSM8K"
+  }
+ ],
+ "limits": [
+  "Authors: effort is needed to design prompts and GPT-3 is sensitive to prompt wording.",
+  "Authors: semantic misunderstanding errors remain (27% of CoT errors, 27% with PS+).",
+  "Only text-davinci-003 in the main paper; trigger sentences are tuned per dataset (Tables 7-16), so PS+ numbers include prompt selection on the test sets.",
+  "Single greedy run, no variance or significance tests.",
+  "Plan quality and plan refinement are not evaluated; 'planning' here is in-text decomposition, not tool use or agentic search.",
+  "The error analysis (n=100, 46/43/39 wrong) is small and manually labelled."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Few-shot Manual-CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "Large language models are zero-shot reasoners (Kojima et al.)",
+   "year": 2022,
+   "arxiv": "2205.11916",
+   "relation": "extends",
+   "note": "Zero-shot-CoT trigger and two-step extraction",
+   "quote": null
+  },
+  {
+   "work": "Program of thoughts prompting (Chen et al.)",
+   "year": 2022,
+   "arxiv": "2211.12588",
+   "relation": "baseline",
+   "note": "Zero-shot PoT",
+   "quote": null
+  },
+  {
+   "work": "Automatic chain of thought prompting (Zhang et al.)",
+   "year": 2022,
+   "arxiv": "2210.03493",
+   "relation": "baseline",
+   "note": "Auto-CoT; also GPT-3 setup",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "SC with N=10",
+   "quote": null
+  },
+  {
+   "work": "Least-to-most prompting (Zhou et al.)",
+   "year": 2022,
+   "arxiv": "2205.10625",
+   "relation": "related",
+   "note": "problem decomposition",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al.)",
+   "year": 2022,
+   "arxiv": "2210.03629",
+   "relation": "related",
+   "note": "cited under planning",
+   "quote": null
+  },
+  {
+   "work": "GSM8K (Cobbe et al.)",
+   "year": 2021,
+   "arxiv": "2110.14168",
+   "relation": "uses-data",
+   "note": "plus SVAMP, AQuA, MultiArith, AddSub, SingleEq, CSQA, StrategyQA, Last Letters, Coin Flip",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Error analysis of 46 GSM8K problems with incorrect answers returned by Zero-shot-CoT using GPT-3 LLM.",
+   "page": 2609,
+   "why": "Motivates the three error types"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Example inputs and outputs of GPT-3 with (a) Zero-shot-CoT prompting, (b) Plan-and-Solve (PS) prompting, and (c) answer extraction prompting.",
+   "page": 2611,
+   "why": "Shows the two-step flow side by side with CoT"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Example inputs and outputs of GPT-3 with (a) Plan-and-Solve (PS) Prompting and (b) PS+ prompting.",
+   "page": 2612,
+   "why": "Shows what the extra PS+ instructions add (Variables, Plan, Answer)"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Performance comparison of trigger sentences on GSM8K and SVAMP",
+   "page": 2615,
+   "why": "Ablation of trigger wording"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Intro says error analysis used 100 test examples but Fig 1 caption says 46 incorrect GSM8K problems (the 46 are the wrong ones among 100).",
+  "Zero-shot-CoT Last Letters printed 65.2 in text but 64.8 in Table 4.",
+  "Datasets split not stated beyond Table 1 counts.",
+  "No embedded instructions found."
+ ]
+}

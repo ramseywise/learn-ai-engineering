@@ -1,0 +1,564 @@
+{
+ "schema": 1,
+ "key": "2307.13854",
+ "pdf": "generative-ai/03-agentic-foundations/sources/zhou-2023-autonomous-tester-agent-benchmark.pdf",
+ "bib": {
+  "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents",
+  "authors": [
+   "Shuyan Zhou",
+   "Frank F. Xu",
+   "Hao Zhu",
+   "Xuhui Zhou",
+   "Robert Lo",
+   "Abishek Sridhar",
+   "Xianyi Cheng",
+   "Tianyue Ou",
+   "Yonatan Bisk",
+   "Daniel Fried",
+   "Uri Alon",
+   "Graham Neubig"
+  ],
+  "first_author": "Zhou",
+  "year": 2023,
+  "venue": "ICLR 2024",
+  "arxiv": "2307.13854",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78136,
+  "chars_total": 78136,
+  "engine": "pymupdf",
+  "skipped": "References (lines 764-1000) skimmed only for lineage"
+ },
+ "type": "benchmark",
+ "question": "How well can LLM-based agents complete realistic, long-horizon web tasks in a reproducible, self-hosted environment with functional-correctness evaluation?",
+ "hypothesis": "Limited LLM performance stems from a lack of capabilities such as active exploration and failure recovery.",
+ "contributions": [
+  "WebArena: a standalone, self-hostable environment of four functional websites (e-commerce, forum, GitLab, CMS) plus map, calculator, scratchpad, Wikipedia and manuals",
+  "A benchmark of 812 long-horizon tasks with programmatic functional-correctness validators",
+  "Baseline LLM agents (GPT-4, GPT-3.5, text-bison-001) with and without CoT, and error analysis"
+ ],
+ "method": {
+  "summary": "Docker-hosted websites built from open-source software with sampled real-world data; 812 natural-language intents (241 templates) scored by answer matching or programmatic state checks. Baselines are few-shot (2 examples) LLM agents that read an accessibility tree and emit one action at a time, with or without CoT, and with or without an unachievable-task hint.",
+  "task": "web navigation / agent task completion from high-level natural-language intents",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WebArena benchmark",
+    "role": "eval",
+    "size": "812 tasks from 241 templates (avg 3.3 per template)",
+    "split": "all 812 test",
+    "source": "authors' annotation; reference answers by authors and one external annotator, each annotated twice, third annotator on disagreement",
+    "preprocessing": null
+   },
+   {
+    "name": "WebArena websites",
+    "role": "eval",
+    "size": "E-commerce ~90k products, 300+ categories; Reddit 95 subreddits, 127390 posts, 661781 users; GitLab 300 repos, 1000+ accounts; map confined to northeast US; Wikipedia (Kiwix) cutoff May 2023",
+    "split": null,
+    "source": "Magento, Postmill, GitLab, OpenStreetMap, Kiwix; data sampled from real counterparts and the Webshop dump",
+    "preprocessing": "Docker images reset to deterministic initial state"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5-turbo-16k-0613",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16k",
+    "other": {}
+   },
+   {
+    "name": "text-bison-001",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-4-0613 (fuzzy_match grader)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1.0 (0.0 for the GPT-3.5 replication in Table 5)",
+   "top_p": "0.9",
+   "max_tokens": null,
+   "samples": "inferred: one run per task and configuration; no seeds or repeats reported",
+   "prompting": "System message with environment, actions and rules, plus 2 in-context examples; direct agent emits action only, CoT agent reasons ('Let's think step-by-step') then emits action after 'In summary, the next action I will perform is'; observation is accessibility tree with element IDs, URL, open tabs, previous action; UA hint = 'If you believe the task is impossible to complete, provide the answer as \"N/A\" in the bracket.'",
+   "retrieval": null,
+   "parameters": {
+    "max_state_transitions": "30",
+    "early_stop": "same action repeated more than 3 times on the same observation, or 3 consecutive invalid actions",
+    "text_bison_retries": "up to 10 retries until a valid action",
+    "observation_mode": "accessibility tree with element IDs"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "SR (end-to-end task success rate)",
+     "definition": "fraction of 812 tasks with reward 1; info-seeking via exact_match, must_include or fuzzy_match (gpt-4-0613); other tasks via programmatic state checks (locator plus keyword match)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SR_AC",
+     "definition": "success rate on achievable tasks",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SR_UA",
+     "definition": "success rate on unachievable tasks (agent must answer N/A)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5 direct",
+    "GPT-3.5 CoT",
+    "text-bison-001 CoT",
+    "human (5 CS grad students, 170 tasks)"
+   ],
+   "protocol": "Single run at temperature 1.0; fuzzy_match checked by hand on 40 examples (39 agree); no confidence intervals or repeated seeds."
+  },
+  "availability": {
+   "code": "https://webarena.dev/",
+   "weights": null,
+   "data": "https://webarena.dev/ (Docker images, tasks, trajectories)"
+  },
+  "prompts": [
+   {
+    "purpose": "fuzzy_match grader",
+    "text": "Help a teacher to grade the answer of a student given a question. Keep in mind that the student may use different phrasing or wording to answer the question. The goal is to evaluate whether the answer is semantically equivalent to the reference answer. question: {{intent}} reference answer: {{reference answer}} all the string 'N/A' that you see is a special sequence that means 'not achievable' student answer: {{prediction}} Conclude the judgement by correct/incorrect/partially correct.",
+    "where": "Appendix A.7"
+   },
+   {
+    "purpose": "agent system message and examples",
+    "text": "See Fig 7 (reasoning agent), Fig 8 (CoT examples), Fig 9 (direct agent), Fig 10 (direct examples) in the appendix; not copied in full.",
+    "where": "Appendix A.9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "with a temperature of 1.0 and a top-p parameter of 0.9",
+    "where": "Appendix A.6"
+   },
+   {
+    "field": "results Table 2 row order",
+    "quote": "",
+    "where": "Table 2 text extraction lists rows without column alignment; values mapped by the prose (11.70 GPT-4 CoT+UA; 14.41 GPT-4 CoT no UA; 8.75 GPT-3.5 CoT+UA)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best GPT-4 agent (CoT, no UA hint) reaches 14.41% end-to-end success versus 78.24% for humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "14.41",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-4-0613, CoT, UA hint removed",
+   "note": null,
+   "where": "Abstract; Table 2",
+   "quote": "our best GPT-4-based agent only achieves an end-to-end task success rate of 14.41%, significantly lower than the human performance of 78.24%"
+  },
+  {
+   "claim": "GPT-4 with CoT and the unachievable (UA) hint scores 11.70%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "11.70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-4, CoT, UA hint",
+   "note": null,
+   "where": "Sec 5, Table 2",
+   "quote": "GPT-4 (OpenAI, 2023) with CoT prompting achieves a modest end-to-end task success rate of 11.70%"
+  },
+  {
+   "claim": "Human success rate on a sample of one task from each of 170 templates is 78.24%, lower on information-seeking tasks (74.68%) than others (81.32%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "78.24",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 CS graduate students, one task from each of 170 templates, avg time 110s",
+   "note": null,
+   "where": "Sec 3.2 Human Performance",
+   "quote": "the human annotators complete 78.24% of the tasks, with lower performance on information-seeking tasks",
+   "table": "Table 2 / inline table, Success Rate_all 78.24%; info 74.68%; others 81.32%"
+  },
+  {
+   "claim": "About 50% of human failures are misinterpreting the intent, incomplete answers or incomplete executions; the rest are off-target executions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "50",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "human trajectories on the 170-task sample",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "we found that 50% of the failures are due to misinterpreting the intent"
+  },
+  {
+   "claim": "CoT reasoning improves GPT-3.5 by 2.34 points (6.41 to 8.75) with UA hint.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR gain from CoT",
+   "value": "2.34",
+   "unit": "points",
+   "baseline_value": "6.41",
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-3.5-turbo-16k-0613, UA hint on",
+   "note": null,
+   "where": "Sec 5, Table 2",
+   "quote": "The explicit reasoning procedure is somewhat helpful, it brings 2.34% improvement over the version without it."
+  },
+  {
+   "claim": "GPT-3.5 with CoT and UA hint scores 8.75%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "8.75",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-3.5, CoT, UA hint",
+   "note": null,
+   "where": "Sec 5, Table 2",
+   "quote": "GPT-3.5 (OpenAI, 2022) with CoT prompting is only able to successfully perform 8.75% of the tasks."
+  },
+  {
+   "claim": "text-bison-001 with CoT and UA hint scores 5.05%, below GPT-3.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "5.05",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; text-bison-001, CoT, UA hint; up to ten retries for a valid action",
+   "note": null,
+   "where": "Sec 5, Table 2",
+   "quote": "TEXT-BISON-001 (Anil et al., 2023) underperforms GPT-3.5, with a success rate of 5.05%"
+  },
+  {
+   "claim": "The UA hint makes GPT-4 wrongly declare 54.9% of feasible tasks impossible (early stopping).",
+   "kind": "measured",
+   "source": null,
+   "metric": "feasible tasks wrongly judged unachievable",
+   "value": "54.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-4 CoT with UA hint",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "GPT-4 erroneously identifies 54.9% of feasible tasks as impossible."
+  },
+  {
+   "claim": "Without the UA hint GPT-4 still recognises 44.44% of unachievable tasks (SR_UA), against 77.78% with the hint.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR_UA",
+   "value": "44.44",
+   "unit": "%",
+   "baseline_value": "77.78",
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-4 CoT, no UA hint; 77.78 with hint",
+   "note": null,
+   "where": "Sec 5.1, Table 2",
+   "quote": "GPT-4 retains the capacity to recognize 44.44% of such tasks"
+  },
+  {
+   "claim": "Without the UA hint, GPT-4 success on achievable tasks (SR_AC) is 13.02% vs 8.63% with it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SR_AC",
+   "value": "13.02",
+   "unit": "%",
+   "baseline_value": "8.63",
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-4 CoT",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GPT-4 CoT no UA hint, column SR_AC"
+  },
+  {
+   "claim": "GPT-3.5 without CoT and without UA hint scores 5.10%; with CoT and no hint 6.16%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "5.10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WebArena, 812 tasks, accessibility-tree observation, 2-shot prompt, temperature 1.0, top-p 0.9, max 30 state transitions, single run; GPT-3.5, direct, no UA hint",
+   "note": "CoT no hint: 6.16",
+   "where": "Table 2",
+   "table": "Table 2, row GPT-3.5 (no CoT, no UA hint), column SR"
+  },
+  {
+   "claim": "Of 61 templates with at least one success, GPT-4 reaches 100% on only four and GPT-3.5 on none; models often solve only one variation of a template.",
+   "kind": "measured",
+   "source": null,
+   "metric": "templates with 100% success",
+   "value": "4",
+   "unit": "templates",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT models, no UA hint, per-template success histogram",
+   "note": null,
+   "where": "Sec 5.1, Table 3 (histogram)",
+   "quote": "Of the 61 templates, GPT-4 manages to achieve a 100% task success rate on only four templates"
+  },
+  {
+   "claim": "GPT-3.5-turbo-16k-0613 at temperature 0.0 (CoT, no UA hint) scores 6.28%, close to temperature 1.0 results.",
+   "kind": "measured",
+   "source": null,
+   "metric": "task success rate",
+   "value": "6.28",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5-turbo-16k-0613, temperature 0.0, CoT on, UA hint off",
+   "note": null,
+   "where": "Appendix A.6, Table 5",
+   "table": "Table 5, row GPT-3.5 CoT, column SR"
+  },
+  {
+   "claim": "fuzzy_match (gpt-4-0613 judge) agreed with human judgment on 39 of 40 manually checked examples, and was 100% accurate on 900 date and 900 duration format-equivalence tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "judge agreement",
+   "value": "39",
+   "unit": "of 40",
+   "baseline_value": null,
+   "n": null,
+   "setup": "82 of the answers need GPT-4 judging; 49 (60%) are dates or durations",
+   "note": null,
+   "where": "Appendix A.8, Table 6",
+   "quote": "we manually checked 40 examples and found that 39 of them are identical to our human judgment"
+  },
+  {
+   "claim": "The benchmark has 241 templates and 812 instantiated intents, 3.3 instances per template on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "benchmark size",
+   "value": "812",
+   "unit": "tasks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Intents: CMS 22.4%, Map 13.4%, E-commerce 23.0%, Reddit 13.1%, GitLab 22.2%, cross-site 5.9%",
+   "note": null,
+   "where": "Sec 3.1, Fig 6",
+   "quote": "we curated 241 templates and 812 instantiated intents"
+  },
+  {
+   "claim": "Authors hypothesise that missing active exploration and failure recovery limit current LLMs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated explanation; not tested by an intervention",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "We hypothesize that the limited performance of current LLMs stems from a lack of crucial capabilities such as active exploration and failure recovery"
+  },
+  {
+   "claim": "GPT-4 agent latches onto the first related information (observation bias) and ignores already-entered input, repeating the same type action until the step limit.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative examples from error analysis, GPT-4 agent; no frequencies given",
+   "note": null,
+   "where": "Appendix A.10, Fig 11",
+   "quote": "the agent disregards this detail and continuously issues the command type [2430] [DMV area] until it reaches the maximum step limit"
+  }
+ ],
+ "limits": [
+  "Single run per configuration at temperature 1.0 with no variance; GPT-3.5 temperature 0.0 replication given for only one configuration (6.28).",
+  "Failure explanations (no exploration, poor failure recovery, dialogue fine-tuning) are hypotheses; error analysis is qualitative with no failure-category frequencies.",
+  "Only three LLMs, text-only accessibility-tree observations, 2-shot prompting, no memory or planning-search agents; authors note such methods as future testbed.",
+  "Human baseline from 5 CS graduate students on 170 sampled tasks; authors concede domain knowledge differences.",
+  "Models dated: GPT-4-0613 era; 14.41% since superseded by later agents (not covered in this paper).",
+  "Map covers northeast US only; GPT-4-judged fuzzy_match tested on 40 manual examples."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "UA hint",
+   "definition": "instruction asking the agent to stop and answer N/A if it believes the task is impossible",
+   "where": "Sec 4"
+  },
+  {
+   "term": "fuzzy_match",
+   "definition": "gpt-4-0613 judges whether the prediction is semantically equivalent to the reference answer",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chain-of-thought prompting (Wei et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CoT baseline",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al. 2022b)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reasoning-before-acting baseline",
+   "quote": null
+  },
+  {
+   "work": "WebShop (Yao et al. 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "product data dump for the shopping site; compared in Table 4",
+   "quote": null
+  },
+  {
+   "work": "Mind2Web (Deng et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "static-state benchmark WebArena contrasts with",
+   "quote": null
+  },
+  {
+   "work": "MiniWoB++ (Liu et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "synthetic web benchmark",
+   "quote": null
+  },
+  {
+   "work": "Reflexion (Shinn et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as self-correction / failure recovery work",
+   "quote": null
+  },
+  {
+   "work": "Tree of Thoughts (Yao et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as search and backtracking planning",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 (OpenAI 2023), GPT-3.5, text-bison-001 (Anil et al. 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "agent backbones",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "WebArena is a standalone, self-hostable web environment for building autonomous agents.",
+   "page": 2,
+   "why": "Overview of environment, tools, knowledge and validators"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A high-level task that can be fully executed in WebArena. Success requires sophisticated, long-term planning and reasoning.",
+   "page": 3,
+   "why": "Multi-site plan example (Wikipedia, map, GitLab)"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "The end-to-end task success rate (SR %) on WebArena with different prompting strategies.",
+   "page": 8,
+   "why": "Main results incl. CoT and UA hint ablation"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Two examples where the GPT-4 agent failed, along with their screenshot and the accessibility tree of the relevant sections.",
+   "page": 22,
+   "why": "Concrete failure modes: no exploration and repeated action loops"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "The system message of the reasoning agent.",
+   "page": 18,
+   "why": "Full agent prompt"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Ledger title 'Autonomous Tester Agent Benchmark' is wrong; true title is WebArena: A Realistic Web Environment for Building Autonomous Agents.",
+  "Table 2 and Table 3 flattened by extraction; Table 2 column alignment inferred from prose; Table 3 is a histogram figure (no numbers)."
+ ]
+}

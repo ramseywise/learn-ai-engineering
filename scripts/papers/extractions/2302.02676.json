@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "2302.02676",
+ "pdf": "generative-ai/03-agentic-foundations/sources/liu-2023-chain-hindsight-aligns-language-models.pdf",
+ "bib": {
+  "title": "Chain of Hindsight aligns Language Models with Feedback",
+  "authors": [
+   "Hao Liu",
+   "Carmelo Sferrazza",
+   "Pieter Abbeel"
+  ],
+  "first_author": "Liu",
+  "year": 2023,
+  "venue": "preprint (arXiv v8, 18 Oct 2023; ICLR 2024 per caller)",
+  "arxiv": "2302.02676",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 68278,
+  "chars_total": 68278,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a language model learn from all human feedback, positive and negative, by plain fine-tuning on feedback-conditioned sequences, without RL?",
+ "hypothesis": "Conditioning language models on a sequence of generations paired with feedback and training them accordingly lets them learn to identify and correct errors and negative attributes.",
+ "contributions": [
+  "CoH, a framework that uses all available feedback data without RLHF, with the same training objective as pretraining",
+  "Extensive experiments against baselines including RLHF"
+ ],
+ "method": {
+  "summary": "Model outputs ranked by humans are turned into a text sequence with templated feedback ('Bad: ... Good: ...') and the decoder-only model is fine-tuned with the ordinary next-token loss, loss masked on feedback tokens. At inference the prompt carries positive feedback ('Good').",
+  "task": "learning from human preference feedback (summarization, dialogue)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebGPT comparisons",
+    "role": "train",
+    "size": "19,578 comparisons",
+    "split": null,
+    "source": "Nakano et al. 2021, HF openai/webgpt_comparisons",
+    "preprocessing": null
+   },
+   {
+    "name": "Anthropic HH (helpful and harmless)",
+    "role": "both",
+    "size": null,
+    "split": "validation split for evaluation",
+    "source": "Ganguli 2022 / Bai 2022, HF Anthropic/hh-rlhf",
+    "preprocessing": "for evaluation, pseudo dialogues: each model response in a previous dialogue is replaced by model output"
+   },
+   {
+    "name": "Summarization from feedback",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Stiennon 2020, HF openai/summarize_from_feedback",
+    "preprocessing": null
+   },
+   {
+    "name": "TL;DR (filtered)",
+    "role": "eval",
+    "size": "123,169 posts",
+    "split": "validation set",
+    "source": "Voelske 2017, filtered by Stiennon 2020 (about 3 million posts originally)",
+    "preprocessing": null
+   },
+   {
+    "name": "The Pile",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Gao 2020",
+    "preprocessing": "used for pretraining-likelihood regularisation term"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-J 6B",
+    "role": "base",
+    "params": "6B",
+    "architecture": "causal decoder-only transformer",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OPT",
+    "role": "base",
+    "params": null,
+    "architecture": "decoder-only",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "named as a base model; sizes used and where it is used are not stated; Fig 5 varies model size"
+    }
+   },
+   {
+    "name": "CoH-tuned model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same as base",
+    "init_from": "GPT-J / OPT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Koala (ShareGPT SFT)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "causal LM cross-entropy on CoH sequences, loss only on non-feedback tokens, averaged over timesteps of the last model output; plus lambda-weighted pretraining log-likelihood regulariser",
+   "optimizer": "Adam, beta1 0.9, beta2 0.95, epsilon 1.0e-8",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512 (human feedback data), 2048 (pretraining data)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "none (replaced by random past-token masking)",
+   "regularisation": "random masking of 0% to 5% of past tokens; pretraining likelihood term on the Pile, lambda 1.5",
+   "hardware": "inferred: TPUs (acknowledges Google TPU Research Cloud)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "feedback_datasets_mix": "three datasets combined, sampled proportionally to size",
+    "feedback_templates": "random template per sample from Table 6 (about 30 variants)",
+    "same_regularisation_for_baselines": "applied to CoH and all baselines",
+    "lambda": "1.5"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; few-shot Table 7 averaged over 5 random seeds",
+   "prompting": "positive feedback token ('Good' / simple positive tokens) appended to prompt",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Human pairwise win rate",
+     "definition": "labelers choose better of CoH vs baseline output or tie; summarization on accuracy, coherence, coverage; dialogue on helpful, harmless",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "on TL;DR summarization (Fig 3, values only in figure)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Preferred-dialogue classification accuracy",
+     "definition": "classify which of an HH pair is preferred (Fig 4)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Few-shot accuracy",
+     "definition": "Language Model Evaluation Harness, zero/one/few-shot, avg of 5 seeds",
+     "unit": "accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Base pretrained model",
+    "SFT",
+    "SFT-U (unlikelihood)",
+    "C-SFT (conditional SFT)",
+    "RLHF (PPO)",
+    "Koala (SFT on ShareGPT)"
+   ],
+   "protocol": "75 labelers hired from a third-party platform, pairwise with tie option; delta = CoH minus baseline win rate; PPO and reward learning hyperparameters tuned; no significance test, no inter-annotator agreement stated"
+  },
+  "availability": {
+   "code": "https://github.com/lhao499/chain-of-hindsight",
+   "weights": null,
+   "data": "public HF datasets listed"
+  },
+  "prompts": [
+   {
+    "purpose": "example CoH sequence",
+    "text": "How can you explain neural networks to a 6-year-old? Bad: {a subpar answer} Good: {an excellent answer}",
+    "where": "Sec 1"
+   },
+   {
+    "purpose": "feedback templates (training)",
+    "text": "a good summary is: {positive} a bad summary is: {negative}; you are a helpful assistant: {positive} you are an unhelpful assistant: {negative}; a bad answer is: {negative} a good answer is: {positive}",
+    "where": "Appendix B Table 6"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.regularisation",
+    "quote": "we randomly mask between 0% and 5% of past tokens during training",
+    "where": "Sec 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CoH wins on average human preference against RLHF on summarization.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 45.3,
+   "unit": "% win (CoH)",
+   "baseline_value": 30.8,
+   "n": null,
+   "setup": "TL;DR summarization (Stiennon filtered, validation), GPT-J 6B, pairwise human eval by 75 labelers, win rate %; RLHF 30.8, tie 24.0",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block RLHF, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins on average human preference against RLHF on dialogue.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 36.9,
+   "unit": "% win (CoH)",
+   "baseline_value": 23.4,
+   "n": null,
+   "setup": "Anthropic HH validation, GPT-J 6B, pairwise human eval by 75 labelers, win rate %; RLHF 23.4, tie 39.8",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, block RLHF, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins against SFT on summarization on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 44.0,
+   "unit": "% win (CoH)",
+   "baseline_value": 28.2,
+   "n": null,
+   "setup": "TL;DR summarization (Stiennon filtered, validation), GPT-J 6B, pairwise human eval by 75 labelers, win rate %; SFT 28.2",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block SFT, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins against the pretrained base model on summarization on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 57.5,
+   "unit": "% win (CoH)",
+   "baseline_value": 19.9,
+   "n": null,
+   "setup": "TL;DR summarization (Stiennon filtered, validation), GPT-J 6B, pairwise human eval by 75 labelers, win rate %; Base 19.9",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block Base, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins against SFT with unlikelihood on summarization on average (unlikelihood hurts).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 61.7,
+   "unit": "% win (CoH)",
+   "baseline_value": 21.4,
+   "n": null,
+   "setup": "TL;DR summarization (Stiennon filtered, validation), GPT-J 6B, pairwise human eval by 75 labelers, win rate %; SFT-U 21.4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block SFT-U, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins against conditional SFT on summarization on average (smallest margin).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 42.3,
+   "unit": "% win (CoH)",
+   "baseline_value": 29.6,
+   "n": null,
+   "setup": "TL;DR summarization (Stiennon filtered, validation), GPT-J 6B, pairwise human eval by 75 labelers, win rate %; C-SFT 29.6",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, block C-SFT, row Average, column CoH"
+  },
+  {
+   "claim": "CoH wins against SFT on dialogue on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39.4,
+   "unit": "% win (CoH)",
+   "baseline_value": 19.1,
+   "n": null,
+   "setup": "Anthropic HH validation, GPT-J 6B, pairwise human eval by 75 labelers, win rate %; SFT 19.1, tie 41.5",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, block SFT, row Average, column CoH"
+  },
+  {
+   "claim": "Natural language feedback ablation: CoH w/o LF vs RLHF on summarization.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 42.4,
+   "unit": "% win (CoH w/o LF)",
+   "baseline_value": 32.1,
+   "n": null,
+   "setup": "TL;DR, GPT-J, 75 labelers; RLHF 32.1, tie 26.5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RLHF vs CoH w/o LF, column CoH w/o LF"
+  },
+  {
+   "claim": "Full CoH beats CoH w/o LF head-to-head, but most outputs tie.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 15.1,
+   "unit": "% win (CoH)",
+   "baseline_value": 10.6,
+   "n": null,
+   "setup": "TL;DR, GPT-J; CoH w/o LF 10.6, tie 74.3",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row CoH w/o LF vs CoH, column CoH"
+  },
+  {
+   "claim": "Average few-shot accuracy across 22 harness tasks, CoH vs SFT vs GPT-J: CoH shows no alignment tax (zero-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 40.95,
+   "unit": "avg accuracy",
+   "baseline_value": 40.54,
+   "n": null,
+   "setup": "Language Model Evaluation Harness, GPT-J, zero-shot, 5 seeds; GPT-J 40.60, SFT 40.54",
+   "note": "SFT lower than GPT-J in zero-shot; gaps are under 1 point and no variance given",
+   "where": "Table 7",
+   "table": "Table 7, row Average, zero-shot column CoH"
+  },
+  {
+   "claim": "Few-shot average accuracy, CoH vs SFT vs GPT-J.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39.98,
+   "unit": "avg accuracy",
+   "baseline_value": 39.59,
+   "n": null,
+   "setup": "Language Model Evaluation Harness, GPT-J, few-shot; GPT-J 39.38, SFT 39.59",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Average, few-shot column CoH"
+  },
+  {
+   "claim": "For small models CoH is slightly below SFT; as size grows it surpasses SFT and RLHF.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "summarization, Fig 5, sizes read only from figure",
+   "note": null,
+   "where": "Sec 4, Fig 5",
+   "quote": "for smaller model sizes, CoH exhibits a marginal decre-"
+  },
+  {
+   "claim": "CoH is on par with Koala (SFT on ShareGPT); CoH+Koala beats Koala.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 6, human pairwise, open-source preference data vs ShareGPT holdout questions",
+   "note": null,
+   "where": "Sec 4, Fig 6",
+   "quote": "Results presented in Figure 6 reveal that our"
+  }
+ ],
+ "limits": [
+  "Authors: CoH sequences get long, raising training compute.",
+  "Authors: relies on costly hired human labelers; automated metrics judged less reliable.",
+  "Feedback is templated from ratings, not open-ended human language; inference uses only a positive token.",
+  "Core numbers (ROUGE, HH accuracy, scaling, Koala comparison) appear only in figures, no tables or variance; no significance tests or seeds for human eval.",
+  "Learning rate, steps/epochs, sequence length, decoding settings, hardware and compute are not stated; OPT use unclear.",
+  "Dialogue eval uses pseudo dialogues built from existing human conversations, not live chat.",
+  "Offline preference data only; online preference learning is future work.",
+  "Baselines are 6B-scale GPT-J with PPO RLHF, now dated against DPO-style methods."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Chain of Hindsight",
+   "definition": "conditions on a sequence of hindsight feedback",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Training language models to follow instructions with human feedback (Ouyang et al.)",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "baseline",
+   "note": "RLHF/SFT recipe compared against",
+   "quote": null
+  },
+  {
+   "work": "Learning to summarize with human feedback (Stiennon et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "summarization data and eval instructions",
+   "quote": null
+  },
+  {
+   "work": "Training a helpful and harmless assistant (Bai et al.)",
+   "year": 2022,
+   "arxiv": "2204.05862",
+   "relation": "uses-data",
+   "note": "HH dataset and eval instructions",
+   "quote": null
+  },
+  {
+   "work": "WebGPT (Nakano et al.)",
+   "year": 2021,
+   "arxiv": "2112.09332",
+   "relation": "uses-data",
+   "note": "comparisons",
+   "quote": null
+  },
+  {
+   "work": "Hindsight experience replay (Andrychowicz et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "hindsight idea from goal-conditioned RL",
+   "quote": null
+  },
+  {
+   "work": "Decision Transformer (Chen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conditional SFT analogue",
+   "quote": null
+  },
+  {
+   "work": "The wisdom of hindsight makes language models better instruction followers (HIR)",
+   "year": 2023,
+   "arxiv": "2302.05206",
+   "relation": "related",
+   "note": "special case of CoH with chain length one",
+   "quote": null
+  },
+  {
+   "work": "Pretraining language models with human preferences (Korbak et al.)",
+   "year": 2023,
+   "arxiv": "2302.08582",
+   "relation": "related",
+   "note": "concurrent; chain length one in pretraining",
+   "quote": null
+  },
+  {
+   "work": "FCM forgetful causal masking (Liu et al.)",
+   "year": 2022,
+   "arxiv": "2210.13432",
+   "relation": "uses-method",
+   "note": "random past token masking, no dropout",
+   "quote": null
+  },
+  {
+   "work": "Koala (Geng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ShareGPT SFT comparison",
+   "quote": null
+  },
+  {
+   "work": "GPT-J 6B (Wang and Komatsuzaki)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base model",
+   "quote": null
+  },
+  {
+   "work": "PPO (Schulman et al.)",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "baseline",
+   "note": "RLHF optimiser",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Chain of Hindsight turns human preferences into rich and detailed feedback in the form of comparisons.",
+   "page": 3,
+   "why": "shows how a ranked pair becomes a Bad/Good training sequence"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Human evaluation pairwise comparison between CoH and various approaches on summarization and dialogue.",
+   "page": 2,
+   "why": "headline win rates"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Model scaling trend: CoH vs RLHF and SFT on summarization.",
+   "page": 8,
+   "why": "CoH below SFT at small size, above at large"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Controllable generation: RLHF cannot follow instructions to generate improved summary.",
+   "page": 18,
+   "why": "iterative self-revision via instructions"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2",
+   "snippet": "log p(x) = log prod_i 1_O(x)(x_i) p(x_i | x_<i), indicator = 0 on hindsight-feedback tokens",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Tables 1-3 and 7 flattened by extraction; cell values read by order. Figures 3-6 numbers not in text."
+ ]
+}

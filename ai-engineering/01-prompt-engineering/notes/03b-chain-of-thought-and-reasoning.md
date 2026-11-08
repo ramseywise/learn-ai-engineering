@@ -30,6 +30,10 @@ sources:
   - https://arxiv.org/abs/2310.06692
   - https://arxiv.org/abs/2412.06975
   - https://arxiv.org/abs/2310.07064
+  - https://arxiv.org/abs/2210.00720
+  - https://arxiv.org/abs/2210.01240
+  - https://arxiv.org/abs/2212.10001
+  - https://arxiv.org/abs/2002.05867
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -88,6 +92,20 @@ With PaLM 540B and 8 exemplars, GSM8K math rose from **17.9% to 56.9%**, past th
 
 ![Zero-shot CoT](../sources/images/kojima-zero-shot-reasoners-fig1.png)
 *Image Source: Kojima et al. (2022)*
+
+**What in the demonstrations does the work, and where the chain breaks.** Four studies, all on 2020-2022 models, pull on the same question.
+- **Longer exemplars beat shorter ones.** Fu et al. pick the 8 training chains with the most reasoning steps instead of hand-written ones. With code-davinci-002 and greedy decoding, GSM8K went from 61.0% to 66.6% and MathQA from 29.3% to 47.3%; with text-davinci-002 GSM8K went from 48.1% to 55.4%, an average gain of 5.3 points over three math sets for GPT-3 and 6.2 for Codex. Sampling 50 chains and voting over the top-K longest ones took Codex to 82.9% on GSM8K against 74.6% for voting over all chains of handwritten CoT. The gain vanished on 6.7B and 11B models, was -0.4 on Date Understanding with GPT-3 and +0.8 on StrategyQA with Codex, and retrieval beat it on MathQA (69.5% against 42.5%) because dev questions nearly repeat training ones. Single runs, no variance reported ([arXiv:2210.00720](https://arxiv.org/abs/2210.00720) (Fu et al., ICLR 2023)).
+- **Demonstrations mostly teach the form, not the logic.** Wang et al. hand-wrote exemplars whose reasoning is invalid. With text-davinci-002 (greedy, 800 GSM8K test items) answer accuracy was 15.4% with standard prompting, 48.5% with CoT and 39.5% with invalid reasoning; the intermediate-object F1 was 43.9 against 48.3. On Bamboogle (125 items) answer F1 was 39.4 against 45.2. Corrupting the *relevance* of the steps to the question, or their *order*, hurt much more than invalid logic. The gap shrinks as the model brings more prior knowledge (Flan-PaLM was unaffected), and two tasks, single runs ([arXiv:2212.10001](https://arxiv.org/abs/2212.10001) (Wang et al., ACL 2023)).
+- **Each step is usually valid; the failure is picking which one.** Saparov & He's PrOntoQA generates deduction problems from random ontologies (modus ponens only, up to 5 hops, a distractor sentence added) and parses every CoT sentence. With text-davinci-002 (8-shot, greedy, 400 examples per setting) 93.2% of steps in the 5-hop fictional setting were strictly valid and 5.9% invalid (the paper's three shares sum to 101.5%), yet proofs fell to chance at 5 hops top-down. In wrong proofs the first deviation is usually a valid step down the wrong branch. Self-consistency (40 samples) gave 0.56 valid-proof accuracy against 0.545, and in-context depth-first-search traces 0.55 (100 examples each), so neither fixed planning. Only text-davinci-002 beat chance, and only short, linear, synthetic proofs were tested ([arXiv:2210.01240](https://arxiv.org/abs/2210.01240) (Saparov & He, ICLR 2023)).
+- **Fine-tuned models learn the same thing from rule text.** Clark et al. fine-tuned RoBERTa-large on synthetic facts and rules in English. It scored 99% on held-out theories, a model trained to depth 3 reached 97.6% on depth 5, but one trained to depth 2 got 71.1% on depth 3. Zero-shot on crowd-paraphrased rules the best model scored 66.6%, and 98.8% once trained on them. Deleting the one sentence a proof needs flipped the answer only 81% of the time, where a prover flips 100%. Small templated theories, trained models, not prompting, and the authors leave open whether it reasons or emulates the input-output behaviour ([arXiv:2002.05867](https://arxiv.org/abs/2002.05867) (Clark et al., IJCAI 2020)).
+
+Practical reading: choose demonstrations that are long and on-topic, check intermediate steps and not only the answer, and expect a planning step (or search) to help more than extra samples when several moves are valid.
+
+![Complexity-based prompting: a CoT workflow, a 9-step complex chain, and voting over the longest sampled chains](../sources/images/fu-complexity-based-prompting-fig1.png)
+*Image Source: Fu et al., [Complexity-Based Prompting for Multi-Step Reasoning](https://arxiv.org/abs/2210.00720) (2022), Fig. 1*
+
+![CoT with valid and invalid reasoning demonstrations, and the resulting accuracy bars](../sources/images/wang-understanding-cot-fig1.png)
+*Image Source: Wang et al., [Towards Understanding Chain-of-Thought Prompting: An Empirical Study of What Matters](https://arxiv.org/abs/2212.10001) (2022), Fig. 1*
 
 **Plan-and-solve**: front-load a plan — *"Let's first understand the problem and devise a plan to solve the problem. Then, let's carry out the plan and solve the problem step by step."* Helps where zero-shot CoT skips steps. It uses no tools — it's closer to zero-shot CoT than to ReAct — but the two combine naturally: plan first, then run the think-act-observe loop.
 

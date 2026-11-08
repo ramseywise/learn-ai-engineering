@@ -1,0 +1,607 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2023.emnlp-main.183",
+ "pdf": "generative-ai/05-RL/sources/ding-2023-enhancing-chat-language-models-scaling.pdf",
+ "bib": {
+  "title": "Enhancing Chat Language Models by Scaling High-quality Instructional Conversations",
+  "authors": [
+   "Ning Ding",
+   "Yulin Chen",
+   "Bokai Xu",
+   "Yujia Qin",
+   "Shengding Hu",
+   "Zhiyuan Liu",
+   "Maosong Sun",
+   "Bowen Zhou"
+  ],
+  "first_author": "Ding",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 3029-3051",
+  "arxiv": "2305.14233",
+  "doi": "10.18653/v1/2023.emnlp-main.183"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66000,
+  "chars_total": 80967,
+  "engine": "pymupdf",
+  "skipped": "Last ~15k chars are UltraLM generation examples (Appendix D); skimmed for keywords only."
+ },
+ "type": "empirical",
+ "question": "Does scaling the diversity and quality of synthetic multi-turn instructional conversations, generated without human queries, yield a better open-source chat model?",
+ "hypothesis": "Higher quality and more diverse instruction data is the most straightforward route to better chat models.",
+ "contributions": [
+  "UltraChat: 1.5M multi-turn instructional dialogues built from a three-sector schema with user simulation, no human queries",
+  "UltraLM: LLaMA-13B fine-tuned on UltraChat, outperforming open-source baselines including WizardLM and Vicuna",
+  "Statistical and human analysis of the dataset"
+ ],
+ "method": {
+  "summary": "Three sectors of opening lines (world questions, creation/writing, assistance on C4 materials) are generated with ChatGPT Turbo; two ChatGPT APIs play user and assistant for 3-7 rounds, followed by filtering. LLaMA-13B is fine-tuned on the result with loss on responses only.",
+  "task": "synthetic multi-turn instruction data generation and supervised chat fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "UltraChat",
+    "role": "train",
+    "size": "1,468,352 dialogues; avg 3.8 turns (Table 4)",
+    "split": null,
+    "source": "Generated with ChatGPT Turbo APIs; sector 1 openings from 30 meta-topics (30-50 subtopics each, 10 questions per subtopic, 10 more per question) plus 10,000 most frequent Wikidata entities (5 meta, 10 specific, 20 extended questions each); ~500,000 questions sampled as opening lines. Sector 2: 20 text-material types, ~80% of instructions refined to detailed. Sector 3: 100,000 C4 pieces matched by URL keywords, 5 instructions each = 500,000 openings, 7 concatenation templates.",
+    "preprocessing": "Filtering step after generation; excessively polite statements removed; user model given personality prompts to avoid role confounding; sector 2 reminds user of main goal."
+   },
+   {
+    "name": "ARC-Challenge",
+    "role": "eval",
+    "size": "1172 test examples",
+    "split": "challenge test",
+    "source": "Clark et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "HellaSwag",
+    "role": "eval",
+    "size": "10042",
+    "split": "validation",
+    "source": "Zellers et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU",
+    "role": "eval",
+    "size": "14042",
+    "split": null,
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "TruthfulQA",
+    "role": "eval",
+    "size": "817",
+    "split": "validation, multiple-choice",
+    "source": "Lin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Curated evaluation set",
+    "role": "eval",
+    "size": "831",
+    "split": null,
+    "source": "Vicuna benchmark plus 300 GPT-4 generated questions across commonsense, world knowledge, physics, biology, math, reasoning, writing",
+    "preprocessing": null
+   },
+   {
+    "name": "AlpacaEval",
+    "role": "eval",
+    "size": "805 instructions",
+    "split": null,
+    "source": "Li et al. 2023b",
+    "preprocessing": null
+   },
+   {
+    "name": "Evol-Instruct test set",
+    "role": "eval",
+    "size": "218",
+    "split": "test",
+    "source": "Xu et al. 2023a",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "UltraLM-13B",
+    "role": "proposed",
+    "params": "13B",
+    "architecture": "LLaMA decoder-only",
+    "init_from": "LLaMA-13B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens (dialogues split into sequences of at most 2048 tokens)",
+    "other": {}
+   },
+   {
+    "name": "ChatGPT Turbo",
+    "role": "teacher",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "plays both user and assistant in data generation; exact snapshot not stated"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baselines: Alpaca-7B, Vicuna-13B, Koala-13B, Baize-13B, WizardLM-13B, Dolly-12B, OpenAssistant-12B, MPT-7B, LLaMA-13B, LLaMA-65B, ChatGPT",
+    "role": "baseline",
+    "params": "7B-65B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "latest versions before June 23, 2023"
+    }
+   }
+  ],
+  "training": {
+   "objective": "standard cross-entropy, loss only on model responses",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512 (total)",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2048 tokens max",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128 A100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "full fine-tuning (limitations contrast with parameter-efficient methods)": "inferred: limitations note energy-intensive training versus PEFT"
+   }
+  },
+  "inference": {
+   "decoding": "temperature sampling with early stopping",
+   "temperature": "0.5",
+   "top_p": "0.95",
+   "max_tokens": "2000 (max new token)",
+   "samples": null,
+   "prompting": "System prompt used for response generation in automatic evaluation (Fig 7); without it in Table 9 ablation",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Benchmark accuracy",
+     "definition": "log-likelihood over answer candidates, length-normalised (acc norm) per lm-evaluation-harness; TruthfulQA mc1 and mc2",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 independent score",
+     "definition": "GPT-4 scores one answer 1-10",
+     "unit": "points 1-10",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT-4 pairwise win/tie/lose",
+     "definition": "GPT-4 compares two answers, order randomised",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AlpacaEval win rate",
+     "definition": "win rate vs Text-Davinci-003, GPT-4 judge",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human 3H plus coherence and consistency",
+     "definition": "per-round scores 0, 0.5, 1 averaged over two annotators",
+     "unit": "score 0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Alpaca-7B",
+    "Vicuna-13B",
+    "Koala-13B",
+    "Baize-13B",
+    "WizardLM-13B",
+    "Dolly-12B",
+    "OpenAssistant-12B",
+    "MPT-7B",
+    "LLaMA-13B",
+    "ChatGPT"
+   ],
+   "protocol": "Single run reported, no seeds or significance tests stated; GPT-4 as judge; 500-dialogue human assessment with 2 annotators, kappa 0.358."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-4 pairwise comparison",
+    "text": "You are a helpful, harmless and precise assistant for checking the quality of the answer. ... Please rate the quality, helpfulness, level of details, and harmless of their responses. Each assistant receives an overall score on a scale of 1 to 10, where a higher score indicates better overall performance. Please first output a single line containing only two values indicating the scores for Assistant 1 and 2, respectively. ... Please avoid same scores unless they exactly in the same level.",
+    "where": "Figure 5 (abridged with ellipsis)"
+   },
+   {
+    "purpose": "GPT-4 independent scoring",
+    "text": "Please output \"Score: [an integer number between 1 and 10]\"",
+    "where": "Figure 6 (final instruction only)"
+   },
+   {
+    "purpose": "UltraLM system prompt",
+    "text": "You are now a helpful assistant, your answer should focus on the question, give reasonable, self-consistent, high-quality solutions to make users satisfied. Please try to make the answer more informative, detailed, and polite.",
+    "where": "Figure 7"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The model is trained with 128 A100 GPUs and the total batch size is 512.",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "UltraChat holds 1.5M multi-turn dialogues, the largest average dialogue length of the compared instruction datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "#Dialogue",
+   "value": "1,468,352",
+   "unit": "dialogues",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 4 statistics vs Self-Instruct, Alpaca, SODA, GPT-4-LLM, BELLE, Baize, GPT4ALL",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row UltraChat, column #Dialogue"
+  },
+  {
+   "claim": "UltraChat averages 1467.4 tokens per dialogue vs 231.8 for SODA, the next multi-turn set by turns.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg dialog length",
+   "value": "1467.4",
+   "unit": "tokens per dialogue",
+   "baseline_value": "231.8",
+   "n": null,
+   "setup": "Table 4; SODA is the comparison named in text",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "the average number of tokens per dialogue in SODA is 231.8, whereas UltraChat boasts a remarkable 1467.4 tokens"
+  },
+  {
+   "claim": "UltraChat lexical diversity (MTLD) is 0.702 in Table 4, below SODA 0.797, though the text says it outperforms previous datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Lexical diversity",
+   "value": "0.702",
+   "unit": "lexical diversity (table column)",
+   "baseline_value": "0.797",
+   "n": null,
+   "setup": "Table 4, MTLD via LexicalRichness, 10000 samples per dataset",
+   "note": "Text says UltraChat outperforms previous datasets in lexical diversity; the column marks higher-is-better but SODA 0.797 and BELLE 0.771 exceed 0.702. Column arrow or text may be reversed; unresolved.",
+   "where": "Table 4",
+   "table": "Table 4, row UltraChat, column Lexical Diversity"
+  },
+  {
+   "claim": "Human assessment of 500 dialogues scores UltraChat 0.960 helpful overall, with sector 3 lowest at 0.893.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Helpful",
+   "value": "0.960",
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 dialogues (300 sector 1, 100 each sectors 2, 3), 2 annotators each, 0/0.5/1 scale",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Overall, column Helpful"
+  },
+  {
+   "claim": "Overall honesty score in human assessment.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Honest",
+   "value": "0.992",
+   "unit": "score 0-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 500-dialogue sample",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Overall, column Honest"
+  },
+  {
+   "claim": "Inter-annotator agreement on the human assessment is low.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Cohen's kappa",
+   "value": "0.358",
+   "unit": "Cohen's kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14560 valid annotations, two annotators per dialogue",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "the Cohen’s kappa coefficient is 0.358"
+  },
+  {
+   "claim": "UltraLM-13B scores 9.00 average (GPT-4 independent score, 1-10) on the curated eval set, above WizardLM 8.95 and Vicuna 8.78.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPT-4 score",
+   "value": "9.00",
+   "unit": "score 1-10",
+   "baseline_value": "8.95",
+   "n": null,
+   "setup": "Curated set: Vicuna benchmark + 300 GPT-4 generated questions (831 total); GPT-4 scores each answer independently",
+   "note": "Table 1 prints 9.00 ± 1.33; WizardLM 8.95 ± 1.44. ChatGPT scores 9.31 in Table 7.",
+   "where": "Table 1, Table 7",
+   "table": "Table 1, row UltraLM (ours); Table 7, row UltraLM-13B, column Overall"
+  },
+  {
+   "claim": "UltraLM-13B wins up to 98% against open-source baselines in GPT-4 pairwise comparison and 9% more than Vicuna.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "98%",
+   "unit": "win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Curated eval set, GPT-4 pairwise, random order; win rate vs Dolly-12B 98.4, vs Vicuna-13B 39.1 win / 30.2 tie / 30.7 lose",
+   "note": null,
+   "where": "Sec 5.3, Fig 2",
+   "quote": "exhibiting an impressive winning rate of up to 98%"
+  },
+  {
+   "claim": "UltraLM-13B wins 76.09% against Text-Davinci-003 on AlpacaEval, ranking 4th below ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate vs Text-Davinci-003",
+   "value": "76.09",
+   "unit": "% win rate",
+   "baseline_value": "50.00",
+   "n": null,
+   "setup": "AlpacaEval, 805 instructions, GPT-4 judge, official implementation",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row UltraLM-13B, column Win Rate (%)"
+  },
+  {
+   "claim": "UltraLM-13B has the best overall average on four benchmarks, 60.95 vs WizardLM-13B 60.19 and base LLaMA-13B 55.98.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overall average",
+   "value": "60.95",
+   "unit": "average of ARC acc norm, HellaSwag acc norm, MMLU weighted acc, TruthfulQA mc2 (per Table 6 caption: second column of each)",
+   "baseline_value": "55.98",
+   "n": null,
+   "setup": "ARC-Challenge, HellaSwag, MMLU, TruthfulQA via lm-evaluation-harness",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row UltraLM-13B, column Overall Average"
+  },
+  {
+   "claim": "UltraLM is weaker than WizardLM-13B and Vicuna on MMLU weighted accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU acc",
+   "value": "50.45",
+   "unit": "% acc",
+   "baseline_value": "51.69",
+   "n": null,
+   "setup": "MMLU, lm-evaluation-harness",
+   "note": "WizardLM-13B 51.69, Vicuna-13B 50.15, LLaMA-13B 46.05.",
+   "where": "Table 6",
+   "table": "Table 6, row UltraLM-13B, column MMLU Weighted"
+  },
+  {
+   "claim": "Against WizardLM-13B on Evol-Instruct test set, UltraLM averages 102.8% of WizardLM score (WizardLM = 100%), but only 79.3% on math (lowest category).",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative score",
+   "value": "102.8%",
+   "unit": "% relative score",
+   "baseline_value": "100%",
+   "n": null,
+   "setup": "Evol-Instruct test set (218 examples), GPT-4 pairwise scoring",
+   "note": null,
+   "where": "Fig 3",
+   "quote": "Average: 102.8%"
+  },
+  {
+   "claim": "A 'helpful and detailed' system prompt makes UltraLM win 49.1% vs 18.9% loss against itself without it.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "49.1",
+   "unit": "% win",
+   "baseline_value": "18.9 lose",
+   "n": null,
+   "setup": "Curated set, UltraLM with vs without system prompt, GPT-4 judge",
+   "note": "System prompt gain is informativeness, not correctness: the no-prompt model answered only one deterministic question wrongly.",
+   "where": "Table 9",
+   "table": "Table 9, row Overall, column Win (%)"
+  },
+  {
+   "claim": "Directly prompting ChatGPT for multi-turn dialogues is less informative than iterated user-AI simulation.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative comparison on the coffee opening line",
+   "note": null,
+   "where": "Sec 3, Table 12"
+  }
+ ],
+ "limits": [
+  "Evaluation relies heavily on GPT-4 judging, which the authors say may be biased; more diverse evaluation needed.",
+  "Learning rate, epochs, optimizer and other training hyperparameters are not stated.",
+  "No ablation of the data-construction components (sectors, user simulation) against model quality.",
+  "English only; no explicit method for generating reasoning data; no math problems generated, UltraLM weak on math.",
+  "Weak on MMLU (professional knowledge) and HellaSwag shows little gain.",
+  "Human annotation agreement is low (kappa 0.358) and annotators could skip hard-to-verify dialogues.",
+  "Generated by ChatGPT, so inherits its hallucination and bias; training is energy intensive.",
+  "Benchmark comparisons use baselines as of before June 23, 2023 and have since dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "role confounding",
+   "definition": "when the user model is given only the dialogue history, it tends to assume the role of an AI assistant, deteriorating coherence",
+   "where": "Sec 3.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Base model fine-tuned (Touvron et al., 2023)",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct / Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Distillation from LLMs for instruction data (Wang et al. 2022; Taori et al. 2023)",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ShareGPT-trained chat model, previous open-source SOTA",
+   "quote": null
+  },
+  {
+   "work": "WizardLM / Evol-Instruct",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Evolved instructions; Evol-Instruct test set used",
+   "quote": null
+  },
+  {
+   "work": "Baize",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Self-chat dataset with user simulation",
+   "quote": null
+  },
+  {
+   "work": "SODA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Million-scale dialogues, compared in Table 4",
+   "quote": null
+  },
+  {
+   "work": "CAMEL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Multi-agent role-play for simulated conversations",
+   "quote": null
+  },
+  {
+   "work": "AlpacaEval",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Leaderboard used",
+   "quote": null
+  },
+  {
+   "work": "lm-evaluation-harness",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Gao et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "C4 and Wikidata",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Sources for sectors 3 and 1",
+   "quote": null
+  },
+  {
+   "work": "ARC, HellaSwag, MMLU, TruthfulQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Construction process of UltraChat. The three sectors of data are derived from different meta-information.",
+   "page": 3031,
+   "why": "Shows the pipeline from meta-topics to 3-7 round user/AI generation."
+  },
+  {
+   "figure": "Table 12",
+   "caption": "A comparison of two dialogues with the same opening line (direct vs iterated user-AI simulation).",
+   "page": 3045,
+   "why": "Shows the richer content from simulated user turns."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Text states UltraChat has the highest lexical diversity, but the table shows SODA 0.797 > UltraChat 0.702.",
+  "Table 4 flattened text: the avg dialogue length (1467.4 tokens) and avg utterance length (74.3) are confirmed by the text; 309.3 is the column between and is not interpreted."
+ ]
+}
