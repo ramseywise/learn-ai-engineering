@@ -1,0 +1,348 @@
+{
+ "schema": 1,
+ "key": "sha1:12b1c099d7b4",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch09-agent-level-patterns.pdf",
+ "bib": {
+  "title": "Agent-Level Patterns (Chapter 9, Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": [
+   "Arsanjani",
+   "Bustos"
+  ],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48865,
+  "chars_total": 48865,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which patterns define the internal architecture of a single autonomous agent, and in what order should an enterprise adopt them?",
+ "hypothesis": "Agents should be built incrementally, layering memory, RAG, structured reasoning and multimodal input on a single-agent tool-using baseline.",
+ "contributions": [
+  "Agent Maturity Model mapping agent components (Act/tools, Memory, Reason/plan, Sense) to five patterns",
+  "Pattern write-ups (Context, Problem, Solution, Consequences, Implementation guidance) with a loan-agent example and mock Python for each",
+  "Three-phase enterprise rollout (Table 9.2)",
+  "Metric per pattern (Table 9.3)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Single-agent example: threshold the agent applies to approve a loan.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit score threshold",
+   "value": "680",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented loan-agent illustration with mocked tools and simulated LLM; not a measurement",
+   "quote": "To decide whether a loan application should be approved or denied based on a credit score threshold of 680",
+   "table": null,
+   "note": null,
+   "where": "p.313"
+  },
+  {
+   "claim": "Single-agent example: mocked get_credit_score returns 720, so the loan is approved.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit score",
+   "value": "720",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented loan-agent illustration with mocked tools and simulated LLM; not a measurement",
+   "quote": "The tool executes and returns a value of 720.",
+   "table": null,
+   "note": null,
+   "where": "p.313"
+  },
+  {
+   "claim": "RAG example: invented Policy #23B sets 740 minimum score for loans over $500,000, so a 720 score on a $750,000 loan is denied.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit score threshold",
+   "value": "740",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented loan-agent illustration with mocked tools and simulated LLM; not a measurement",
+   "quote": "Policy #23B: Loans over $500,000 require a credit score of 740 and a manual review.",
+   "table": null,
+   "note": null,
+   "where": "p.321"
+  },
+  {
+   "claim": "RAG example loan amount that triggers the high-value policy.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "loan amount",
+   "value": "750000",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented loan-agent illustration with mocked tools and simulated LLM; not a measurement",
+   "quote": "The agent receives an application for a loan of $750,000.",
+   "table": null,
+   "note": null,
+   "where": "p.321"
+  },
+  {
+   "claim": "Multimodal example: OCR mock returns a $600,000 loan amount.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "loan amount",
+   "value": "600000",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented loan-agent illustration with mocked tools and simulated LLM; not a measurement",
+   "quote": "Applicant: John Doe, Loan Amount:",
+   "table": null,
+   "note": null,
+   "where": "p.332"
+  },
+  {
+   "claim": "A self-correction loop needs at least two separate LLM calls instead of one (stated cost of the pattern, no measurement).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "LLM calls per decision",
+   "value": "2",
+   "unit": "calls",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General assertion by the authors; no experiment",
+   "quote": "A self-correction loop, for example, requires at least two separate LLM calls instead of one.",
+   "table": null,
+   "note": null,
+   "where": "p.330"
+  }
+ ],
+ "limits": [
+  "No experiments, benchmarks or measured results; every number is an invented illustration (loan thresholds 680/740, scores 720, amounts $500,000/$600,000/$750,000).",
+  "All code simulates the LLM with if/else and mock tools; ReAct-style tool selection, RAG retrieval and critique are not implemented with a real model.",
+  "Claims such as RAG 'drastically reduces hallucinations' and 'lost in the middle' research are asserted without citation or numbers.",
+  "The rollout phases (Table 9.2) and metrics (Table 9.3) are examples; no targets or thresholds are given.",
+  "Fractal Chain-of-Thought and 'Context Aperture' are described briefly with no reference or evidence."
+ ],
+ "practices": [
+  "Adopt capabilities progressively along the Maturity Model: Single Agent Baseline, then memory, RAG, structured reasoning, multimodal input (Table 9.1, strategic guide).",
+  "Start with a single tool-using agent (function calling, ReAct or FCoT) before multi-agent designs; it is simplest to debug but scales poorly as tools and domain grow (Single Agent Baseline).",
+  "For short-term memory start with a sliding window of the last N turns or summarisation; do not feed the whole history into the context window (Memory, guidance and Note).",
+  "For long-term memory use RAG over a vector database and store only high-value data (user profiles, key decisions, finalized facts) to avoid noise (Memory guidance).",
+  "Invest in the document pipeline (cleaning, chunking), tailor embedding model and vector DB to the domain, and consider agentic RAG with query reformulation and iterative retrieval for complex queries (RAG guidance).",
+  "Compose reasoning patterns: persistent instruction anchoring in all complex prompts, CoT for the first pass, and a critique/auditor second prompt for high-stakes decisions (Structured Reasoning guidance).",
+  "Start multimodal work with a pipeline of specialised tools (e.g. OCR then LLM) for control and observability; use a native multimodal model for simpler orchestration and holistic understanding (Multimodal guidance).",
+  "Roll out in three phases: Phase 1 baseline plus memory on a high-volume low-risk task, Phase 2 RAG, Phase 3 structured reasoning plus multimodal for high-stakes workflows (Table 9.2).",
+  "Measure each pattern: task completion/tool-call success rate; session coherence and repeated-question reduction; hallucination rate against a golden dataset; self-correction trigger rate and preliminary vs final error rate; extraction accuracy on visual tasks (Table 9.3)."
+ ],
+ "terms": [
+  {
+   "term": "Single Agent Baseline",
+   "definition": "the simplest form of an agentic system, where a single agent is tasked with handling a complete workflow by accessing a variety of tools",
+   "where": "p.312"
+  },
+  {
+   "term": "Agent-Specific Context and Memory",
+   "definition": "equip each agent with its own memory or state management system, split into short-term (context window, summarisation, sliding window) and long-term (vector DB or key-value store)",
+   "where": "p.317"
+  },
+  {
+   "term": "contextual drift",
+   "definition": "poorly managed memory leading the agent to recall outdated or irrelevant information",
+   "where": "p.320"
+  },
+  {
+   "term": "RAG drift",
+   "definition": "the indexed knowledge itself becomes stale or outdated, leading to a decay in performance over time",
+   "where": "p.324"
+  },
+  {
+   "term": "RAG pipeline",
+   "definition": "Indexing, Retrieval, Augmentation, Generation",
+   "where": "p.321"
+  },
+  {
+   "term": "agentic RAG",
+   "definition": "specialized agents that perform query reformulation or iterative retrieval to improve results",
+   "where": "p.321"
+  },
+  {
+   "term": "Persistent Instruction Anchoring",
+   "definition": "key instructions or goals embedded in the prompt using distinct tags (e.g. #OBJECTIVE:) and repeated at the beginning and end of the context to counteract lost in the middle",
+   "where": "p.326"
+  },
+  {
+   "term": "Instruction Fidelity Auditing (Self-Correction)",
+   "definition": "the agent generates a preliminary response, then runs a critique step evaluating its output against the original instructions and context",
+   "where": "p.326"
+  },
+  {
+   "term": "Fractal Chain-of-Thought (FCoT)",
+   "definition": "zoom through increasingly detailed Context Aperture levels (macro, meso, micro), applying dual maximising and minimising objective functions, self-reflecting and correcting at each loop",
+   "where": "p.326"
+  },
+  {
+   "term": "Agent anatomy",
+   "definition": "Sense, Reason, Plan, Act, Recall (Memory) as the building blocks of an agent's operational loop",
+   "where": "p.310"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ReAct (Reason-Act)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "named as reasoning framework for the single agent; no citation given",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought prompting and variants (graph of thought, tree of thought)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "named without citation",
+   "quote": null
+  },
+  {
+   "work": "Fractal Chain of Thought (FCoT)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "authors' own earlier framing; no citation",
+   "quote": null
+  },
+  {
+   "work": "Lost in the middle research",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "invoked as 'Research shows' without citation",
+   "quote": null
+  },
+  {
+   "work": "Model Context Protocol (MCP)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "standard for agent access to tools and resources",
+   "quote": null
+  },
+  {
+   "work": "Agent-to-Agent (A2A) protocol",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cross-organisation agent communication",
+   "quote": null
+  },
+  {
+   "work": "Google Gemini family",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "example of a native multimodal model",
+   "quote": null
+  },
+  {
+   "work": "Chapters 1, 4, 6 of the same book",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "agent anatomy (Ch 1, 4); instruction anchoring and fidelity auditing (Ch 6)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9.1",
+   "caption": "The agent anatomy",
+   "page": 2,
+   "why": "Sense/Reason/Plan/Act/Memory components the patterns attach to"
+  },
+  {
+   "figure": "Fig 9.2",
+   "caption": "The Single Agent Baseline pattern",
+   "page": 5,
+   "why": "the tool-using loop in one picture"
+  },
+  {
+   "figure": "Fig 9.3",
+   "caption": "Single Agent loan agent workflow",
+   "page": 6,
+   "why": "step trace of a tool call to decision"
+  },
+  {
+   "figure": "Fig 9.4",
+   "caption": "Agent-specific memory",
+   "page": 10,
+   "why": "short vs long-term memory around the agent"
+  },
+  {
+   "figure": "Fig 9.5",
+   "caption": "Context-aware retrieval (RAG) agent",
+   "page": 14,
+   "why": "retrieve, augment, generate flow"
+  },
+  {
+   "figure": "Fig 9.6",
+   "caption": "A self-correction loop, where an agent generates a preliminary output and then critiques it against its goals, leading to a more reliable final result",
+   "page": 19,
+   "why": "generate-critique-revise loop"
+  },
+  {
+   "figure": "Fig 9.7 / 9.8",
+   "caption": "Multimodal processing via multimodal pipeline / Native multimodal LLM multimodal processing",
+   "page": 24,
+   "why": "pipeline versus native model side by side"
+  },
+  {
+   "figure": "Table 9.1",
+   "caption": "Components and patterns for adopting agent-level patterns",
+   "page": 3,
+   "why": "component to pattern map"
+  },
+  {
+   "figure": "Table 9.2",
+   "caption": "Example rollout sequence for agent capabilities",
+   "page": null,
+   "why": "three-phase adoption order"
+  },
+  {
+   "figure": "Table 9.3",
+   "caption": "Sample metrics for evaluating agent-level patterns",
+   "page": null,
+   "why": "one metric and instrumentation per pattern"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.314-315, SingleLoanAgent",
+   "snippet": "self.tools = {\"get_credit_score\": get_credit_score}\n...\ncredit_score = self.tools[\"get_credit_score\"](applicant_id)\n...\nresponse = \"Approved\" if credit_score >= 680 else \"Denied\"",
+   "verbatim": true
+  },
+  {
+   "where": "p.318-319, ConversationalLoanAgent._update_memory",
+   "snippet": "self.memory_summary = (\n    \"The conversation is about a loan application. \"\n    f\"The last topic was: {last_exchange}\"\n)",
+   "verbatim": true
+  },
+  {
+   "where": "p.329, SelfCorrectingAgent critique_prompt",
+   "snippet": "OBJECTIVE: You are an auditor. Verify if the preliminary decision\ncorrectly follows all rules in the context.\nCONTEXT: {context}\nPRELIMINARY DECISION: {preliminary_decision}\nDoes the decision correctly apply the policy?\nIs there anything missed?",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Code in the text cache has lost indentation; all LLM and tool calls are mocked so the snippets are illustrations only.",
+  "Table 9.2/9.3 page numbers not captured by caption tool.",
+  "Section 'Sensing with RAG' calls RAG a Sense-side pattern while Table 9.1 puts it under Memory.",
+  "No embedded instructions found."
+ ]
+}

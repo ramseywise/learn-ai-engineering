@@ -1,0 +1,311 @@
+{
+ "schema": 1,
+ "key": "sha1:ba18e59968c6",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch10-standards-coding-creating-maintainable-ml-code.pdf",
+ "bib": {
+  "title": "Standards of coding and creating maintainable ML code (Chapter 10, Machine Learning Engineering in Action)",
+  "authors": [
+   "Ben Wilson"
+  ],
+  "first_author": "Wilson",
+  "year": 2022,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 85228,
+  "chars_total": 85228,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which common coding mistakes make ML code bases unstable and hard to maintain, and how are they fixed?",
+ "hypothesis": null,
+ "contributions": [
+  "Table of common code smells in ML code",
+  "Five 'deadly' practices with fixes: poor naming/structure/architecture, tuple unpacking, blind try/catch, global mutable objects, excessively nested logic"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The if/elif/else approach to merging N model probability scores into one score needs about 821,570 lines for 8 models (5 buckets each).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "lines of code",
+   "value": "821570",
+   "unit": "lines",
+   "baseline_value": null,
+   "n": 8,
+   "setup": "Listing 10.22: how_many_terrible_lines(levels) = (5**levels)*2 + math.factorial(levels), called with 8 models",
+   "quote": "how_many_terrible_lines(8)\n> 821570",
+   "table": null,
+   "note": "The text then says the dictionary approach would need 32,768 conditions for tuple-8 keys; 5**8 is 390,625, so that figure looks inconsistent with 5 buckets per model.",
+   "where": "p296, Listing 10.22"
+  },
+  {
+   "claim": "Replacing nested conditionals with per-model bucket scoring summed over elements handles 8 models in a few lines.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 10.23: 100 synthetic tuples of 8 uniform(0,1) scores, seed 42; each bucketed into 0-4 by 0.2 thresholds and summed (first row scores 15)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p297, Listing 10.23"
+  },
+  {
+   "claim": "A blind try/except with pass returns an empty list with no error when the base is a string.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "len(output)",
+   "value": "0",
+   "unit": "elements",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 10.11: divide_list_unsafe('oops', numbers), numbers = shuffled 0..99",
+   "quote": "len(broken)    \n> 0",
+   "table": null,
+   "note": null,
+   "where": "p284, Listing 10.11"
+  },
+  {
+   "claim": "Catching only ZeroDivisionError drops the zero element and returns 99 of 100 results; the final version substitutes 0.0 and returns 100, raising a custom CalculationError if lengths differ.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "len(output)",
+   "value": "99",
+   "unit": "elements",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "Listings 10.12 and 10.13, numbers = shuffled 0..99, base 100",
+   "quote": "len(safer) \n> 99",
+   "table": null,
+   "note": "Listing 10.13 returns 100 (len(placeholder) > 100).",
+   "where": "p285-287"
+  },
+  {
+   "claim": "A mutable default argument makes a second call return the first call's elements too, silently giving two identically configured feature sets.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listings 10.15-10.17: features_to_add_to_vector(features, feature_collection=[]) called with ['a','b','c'] then ['d','e','f']; second call returns ['a','b','c','d','e','f'] and trial_1 changes too",
+   "quote": "Both of these\nmodels would have input vectors of all six columns.",
+   "table": null,
+   "note": null,
+   "where": "p289-290"
+  },
+  {
+   "claim": "Reassigning a built-in name (tuple) breaks later calls with TypeError 'list' object is not callable.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 10.1: RMSE of range(100) vs range(0,500,5) = 229.20732972573106; same value via sklearn mean_squared_error(squared=False) in Listing 10.4",
+   "quote": "> 229.20732972573106",
+   "table": null,
+   "note": null,
+   "where": "p273-276"
+  },
+  {
+   "claim": "The author says proper exception handling costs about 30 extra minutes and gets to the source of a failure in minutes rather than days.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's experience, no data",
+   "quote": "you’ll be grateful to have spent an extra 30\nminutes writing proper handling code when it gets you to the source of the issue in\nminutes rather than days.",
+   "table": null,
+   "note": null,
+   "where": "p285"
+  }
+ ],
+ "limits": [
+  "No data or measurement: all evidence is the author's experience and small synthetic Python examples.",
+  "Author concedes the topics are not exhaustive.",
+  "Code uses sklearn mean_squared_error(squared=False), later deprecated in scikit-learn in favour of root_mean_squared_error (dated; this is a note from the reader, not stated in the text).",
+  "Text says dictionary approach needs 32,768 conditions for 8 models, inconsistent with 5 buckets (5**8 = 390,625).",
+  "The 'Python hash table limit of 226' is an extraction loss of a superscript (likely 2^26 = 67,108,864)."
+ ],
+ "practices": [
+  "Avoid wildcard imports, too many parameters, copied boilerplate for train/test/inference feature code, untuned default hyperparameters outside prototyping, variable reuse, magic literals (use named constants), explanatory in-line comments, SQL without CTEs, and constant recasting (Table 10.1, p270-271).",
+  "Name variables descriptively and never reuse reserved/built-in names such as tuple or return-like names (10.2.1, p273-274).",
+  "Do not write dense one-liners; use descriptive intermediate variables and use library functions (sklearn mean_squared_error) rather than reimplementing (10.2.2, p274-276).",
+  "Pass hardcoded values in via configuration rather than inside functions (Listing 10.4 callout, p275).",
+  "Put large, isolated or many-class-touching new functionality in a new module rather than shoehorning it into an existing class; remove replaced code instead of commenting it out (10.2.3, p276-278).",
+  "Return named tuples (Scala case class analogue) instead of positional or nested tuples so return structure can change without editing callers (10.3.2, p280-282).",
+  "Catch specific exceptions, never blind except/pass; log with time, exception type, values and function name, and re-raise when the input is invalid (10.4, p283-288).",
+  "Add post-condition checks, such as input length equals output length, raising a custom exception (Listing 10.13, p287).",
+  "Log to a central, parseable place such as a logging service or MLflow instead of print (p285-286). 'When in doubt, log it out.' (p288).",
+  "Avoid mutable default arguments; default to None and create a new object (10.5.2, p290-291).",
+  "Use encapsulation so a function depends only on its arguments and exposes only its return value, which makes it testable (p291).",
+  "Replace deep if/elif/else trees and giant lookup dictionaries with computed mappings that scale to more inputs (10.6, p292-297).",
+  "If you find yourself copying and pasting large blocks of logic, stop and rethink the design (p296)."
+ ],
+ "terms": [
+  {
+   "term": "code smell",
+   "definition": "Indicators within the code (a term famously coined by Martin Fowler) of potentially crippling problems elsewhere, affecting production stability or debuggability.",
+   "where": "p270"
+  },
+  {
+   "term": "spaghetti code",
+   "definition": "Control flow in the code organized as well as noodles in a bowl of spaghetti.",
+   "where": "p273"
+  },
+  {
+   "term": "big ball of mud",
+   "definition": "A morass of individual bowls of spaghetti with duplicated code, global references, dead code, and no seeming architectural design for maintainability.",
+   "where": "p273"
+  },
+  {
+   "term": "shotgun surgery (copied boilerplate)",
+   "definition": "Changes need to be identically matched in all places, e.g. feature-engineering code for training, test and inference defined in three places.",
+   "where": "p271, Table 10.1"
+  },
+  {
+   "term": "exception eating",
+   "definition": "A misguided intention to 'just make it work' by the inappropriate use of a try/catch block.",
+   "where": "p282"
+  },
+  {
+   "term": "Heisenbug",
+   "definition": "A bug that seemingly disappears when you try to investigate it.",
+   "where": "p288"
+  },
+  {
+   "term": "Mandelbug",
+   "definition": "A bug so complex and nondeterministic that it seems as complex as a fractal.",
+   "where": "p288"
+  },
+  {
+   "term": "encapsulation",
+   "definition": "Restricting end-user access to internal functionality, and enforcing execution of logic on a bundle of the data passed in and the logic in the method.",
+   "where": "p291"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Martin Fowler (code smells)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Term 'code smell' credited to Fowler; no citation printed",
+   "quote": "a term\nfamously coined by Martin Fowler"
+  },
+  {
+   "work": "Companion repo BenWilson2/ML-Engineering (Jupyter notebooks, CH09_1.ipynb)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Holds full runnable examples",
+   "quote": null
+  },
+  {
+   "work": "Machine Learning Engineering in Action ch. 9 (preceding chapter)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter builds on basic refactoring from ch. 9",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn mean_squared_error",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Recommended instead of hand-rolled RMSE",
+   "quote": null
+  },
+  {
+   "work": "Hyperopt",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Used as example feature added in Fig 10.2",
+   "quote": null
+  },
+  {
+   "work": "MLflow",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Named as destination for logged errors",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 10.1",
+   "caption": "Common 'nontoxic' code smells in ML code bases",
+   "page": "270-271",
+   "why": "Twelve-row checklist: smell, example, why it stinks"
+  },
+  {
+   "figure": "Figure 10.1",
+   "caption": "The five most common issues in ML code and their relationships to project outcomes",
+   "page": "272",
+   "why": "Severity ladder from annoying (syntax, naming) to production-failing (nesting, globals, blind try/catch)"
+  },
+  {
+   "figure": "Figure 10.2",
+   "caption": "A well-thought-out repository design and code architecture can slowly become a tangled and confusing mess.",
+   "page": "277",
+   "why": "Shows three feature changes (vector fields, new model family, Hyperopt) being shoehorned into existing modules"
+  },
+  {
+   "figure": "Figure 10.3",
+   "caption": "Comparing mutability in Python and JVM-based languages",
+   "page": "289",
+   "why": "Explains why mutation bugs are less visible to Java/Scala developers"
+  }
+ ],
+ "code": [
+  {
+   "where": "p282, Listing 10.8",
+   "snippet": "Analysis = namedtuple('Analysis', ['basic_stats', 'variation', 'quantiles'])",
+   "verbatim": true
+  },
+  {
+   "where": "p284, Listing 10.10 (what not to do)",
+   "snippet": "try:\n    output.append(base / i)\nexcept:\n    pass",
+   "verbatim": true
+  },
+  {
+   "where": "p285, Listing 10.12",
+   "snippet": "except ZeroDivisionError as e:\n    print(\"Couldn't divide {} by {} due to {}\".format(base, i, e))",
+   "verbatim": true
+  },
+  {
+   "where": "p290, Listing 10.18",
+   "snippet": "def features_to_add_to_vector_updated(features, feature_collection=None):\n    collection = feature_collection if feature_collection else list()\n    [collection.append(x) for x in features]\n    return collection",
+   "verbatim": true
+  },
+  {
+   "where": "p297, Listing 10.23",
+   "snippet": "def score_larger(scores):\n    return sum(updated_adjudication(x) for x in scores)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Superscripts lost in extraction: 'count of 226' is likely 2^26.",
+  "Table 10.1 rows are split across lines, but readable.",
+  "No embedded instructions found."
+ ]
+}

@@ -372,6 +372,22 @@ min  1.0         6.5
 max  6.0        95.0
 ```
 
+When no business rule gives the bounds, a robust data-driven rule is the one VanderPlas applies to the CDC births data: estimate the spread from the interquartile range, `sig = 0.74 * (q3 - q1)` (the factor makes it a standard-deviation estimate for normal data), and keep values within 5 `sig` of the median, so that a few absurd counts cannot inflate the cutoff the way they inflate a standard deviation (*Python Data Science Handbook*, ch. 3). Count what it drops, as above.
+
+```python
+rng = np.random.default_rng(0)
+births = pd.Series(rng.normal(4800, 300, 1000))
+births.iloc[:5] = [99999, 0, 20000, 1, 15000]
+q1, med, q3 = births.quantile([0.25, 0.5, 0.75])
+sig = 0.74 * (q3 - q1)
+clean = births[(births > med - 5 * sig) & (births < med + 5 * sig)]
+print(len(births), len(clean))
+```
+
+```text
+1000 995
+```
+
 ## Bucketing a number
 
 Sometimes a clean numeric column needs turning into categories, such as order sizes for a report. `pd.cut` splits by the values you give it, and `pd.qcut` splits by quantiles so that each bucket holds about the same number of rows. Bins are closed on the right by default, so `(0, 20]` includes 20 but not 0. McKinney's contrast: `qcut` into quartiles on 1,000 normal draws gives exactly 250 rows per bin, which `cut` with equal-width edges would not (*Python for Data Analysis*, ch. 7).

@@ -222,4 +222,4 @@ The lead-time lesson is not injected after one sighting, and becomes active once
 
 ## Next
 
-→ [04 — multi-agent design patterns](04-multi-agent-design-patterns.md): reflection, tool use, planning and collaboration built from conversations between agents.
+→ [03c — designing a memory agent](03c-designing-a-memory-agent.md), then [04 — multi-agent design patterns](04-multi-agent-design-patterns.md): reflection, tool use, planning and collaboration built from conversations between agents.

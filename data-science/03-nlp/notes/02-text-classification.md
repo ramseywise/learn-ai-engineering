@@ -6,6 +6,8 @@ sources:
   - ../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb
   - https://www.kaggle.com/code/abhishek/approaching-almost-any-nlp-problem-on-kaggle
   - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
+  - Bird, Klein and Loper, Natural Language Processing with Python (O'Reilly, 2009)
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -84,7 +86,7 @@ always guess the majority: 0.315
 
 Macro-F1 of 0.42 and accuracy of 0.53 sound poor until you set them against the task. Guessing the majority class gets 0.315, and a film's first listed genre is partly arbitrary, so no model could get close to 1 here. The grid chose unigrams and a weak penalty (`C=100`). On these short descriptions, with about 2,900 training documents, bigrams added sparsity rather than signal, and that is the result of a measurement, not a law. The value lies in a number you got in 8 seconds.
 
-M&G's IMDb progression shows what each step is worth on an easier binary task:
+M&G's IMDb progression (25,000 train and 25,000 test reviews, five-fold CV, `C` grid searched) shows what each step is worth on an easier binary task (*Intro to ML with Python*, ch. 7):
 
 | Setup | CV accuracy |
 |---|---|
@@ -93,7 +95,7 @@ M&G's IMDb progression shows what each step is worth on an easier binary task:
 | + `stop_words="english"` | 0.88 (slightly lower) |
 | `TfidfVectorizer` | 0.89 |
 | + `ngram_range=(1, 3)`, tuned `C` | 0.91 |
-| spaCy lemmatisation, small training sample | Small gain; matters more with less data |
+| spaCy lemmatisation, 1% of training data | 0.721 to 0.731, with 27,271 to 21,596 features |
 
 ### Reading the model
 
@@ -203,6 +205,44 @@ tuned TF-IDF,      macro-F1 0.423
 ```
 
 Word2vec trained on this small corpus reaches 0.35, below TF-IDF's 0.42, as in Sarkar. About 2,900 short documents is not enough to train good vectors, and pretrained ones would do better. The sentence encoders in [LLM embeddings as features](07-llm-embeddings-as-features.md) are the fair comparison, and that chapter measures it.
+
+## Held-out discipline, from the NLTK book
+
+Bird, Klein and Loper teach classification with small NLTK experiments whose numbers still make the points that matter (*NLP with Python*, ch. 5 and 6). The setups are single runs on small corpora, so read them as demonstrations, not benchmarks.
+
+| Point | Number and setup |
+|---|---|
+| Scoring on training data flatters | A unigram tagger scores 0.935 on the Brown news text it was trained on and 0.812 on a held-out 10% (4,160 training sentences), ch. 5 |
+| Sparse context needs a fallback | A bigram tagger alone gets 0.103 on that split, because one unseen word yields no tag and every later tag in the sentence is lost. Chained bigram, unigram, then "everything is a noun" it gets 0.845, ch. 5 |
+| A trivial baseline sets the floor | Tagging every token as a noun scores 0.131 and eight regex suffix rules 0.203 (same text, no split), ch. 5 |
+| More features can overfit a small set | Gender from names, 500 test names: last letter alone 0.758, a kitchen-sink set of first and last letters plus per-letter counts 0.748, ch. 6 |
+| Tune on a dev-test split, not the test set | Names split into train, dev-test (1,000) and test (500): two-letter suffixes lift dev-test from 0.765 to 0.782. The book calls that "almost three" points; it is 1.7. The final test score is never printed, ch. 6 |
+| Accuracy needs a baseline | Always answering the majority sense is 95% right when it occurs 19 times in 20, but unremarkable; with a 40% top sense, 95% is strong, ch. 6 |
+| Test-set size | Its rule of thumb: 100 test instances suffice for a few balanced labels, otherwise the rarest label should appear at least 50 times, and prefer genre-disjoint test sets (train on news, test on fiction), ch. 6 |
+
+The chapter's other scores come without the baseline they need: sentence-boundary detection on punctuation marks reaches 0.974 with Naive Bayes and no majority-class figure, 15-way dialogue-act classification on 10,000 NPS Chat posts 0.66, and textual entailment from word overlap "just over 58%" on a binary task. It also explains why Naive Bayes can mislead: it multiplies P(f | label) for every feature, so two correlated features (ends in "a", ends in a vowel) are counted twice, which is the case for fitting weights jointly, as logistic regression does. Its recommendation to prefer conjugate gradient or BFGS over GIS and IIS for maximum entropy models is the one part that is long settled: today you call scikit-learn. This snippet reproduces the tagger ladder with current NLTK (the numbers land within 0.001 of the book's; accuracy is `tagger.accuracy(test)`, no longer `evaluate`):
+
+```python
+import nltk
+from nltk.corpus import brown
+from nltk.tag import BigramTagger, DefaultTagger, UnigramTagger
+
+nltk.download("brown", quiet=True)
+sents = brown.tagged_sents(categories="news")
+cut = int(len(sents) * 0.9)
+train, test = sents[:cut], sents[cut:]
+unigram = UnigramTagger(train, backoff=DefaultTagger("NN"))
+chain = BigramTagger(train, backoff=unigram)
+print(f"unigram train {unigram.accuracy(train):.3f}  test {unigram.accuracy(test):.3f}")
+print(f"bigram alone {BigramTagger(train).accuracy(test):.3f}  backoff chain {chain.accuracy(test):.3f}")
+```
+
+```text
+unigram train 0.935  test 0.836
+bigram alone 0.102  backoff chain 0.845
+```
+
+The unigram test figure is 0.836 rather than the book's 0.812 because here it backs off to the noun default instead of returning `None` for unseen words.
 
 ## Metrics for text classification
 

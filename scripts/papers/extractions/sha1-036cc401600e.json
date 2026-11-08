@@ -1,0 +1,348 @@
+{
+ "schema": 1,
+ "key": "sha1:036cc401600e",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch14-writing-production-code.pdf",
+ "bib": {
+  "title": "Machine Learning Engineering in Action, chapter 14: Writing production code",
+  "authors": [
+   "Ben Wilson"
+  ],
+  "first_author": "Wilson",
+  "year": 2022,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 93469,
+  "chars_total": 93469,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What data, monitoring, simplicity and code-architecture practices keep a production ML project alive, seen from an architect's view?",
+ "hypothesis": null,
+ "contributions": [
+  "Three data principles (have the data, check provenance, align on a source of truth) plus fix-at-source",
+  "Feature monitoring via stored training statistics (Listing 14.1)",
+  "Monitoring across the whole model life cycle",
+  "Simplicity ladder from heuristics to custom algorithms",
+  "Generic ML project code wireframe",
+  "Cargo-cult evaluation flow for new tech"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Feature-monitoring example: post-shift mean falls below the training minimum, so the check fires.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "post_mean",
+   "value": 31.813333333333333,
+   "unit": "sales units (unstated)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 14.1: training stats (mean 209.72, min 121.9, max 456.2, stddev 70.24) vs data where the feature is imputed to 0; mean < training min flags it.",
+   "quote": "'post_mean': 31.813333333333333,",
+   "table": null,
+   "note": null,
+   "where": "p.415, Listing 14.1"
+  },
+  {
+   "claim": "Training-time minimum of the feature, the threshold the post-shift mean is compared against.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "prior_min",
+   "value": 121.9,
+   "unit": "sales units (unstated)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 14.1 prior_stats on original plus boundary data.",
+   "quote": "'prior_min': 121.9,",
+   "table": null,
+   "note": null,
+   "where": "p.415, Listing 14.1"
+  },
+  {
+   "claim": "Stddev check is a 0.5x to 2x band around training stddev.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Listing 14.1 broad variance check: prior_stddev*0.5 <= post_stddev <= 2*prior_stddev; here post stddev 71.95 vs 70.24 passes.",
+   "quote": "prior_stats['prior_stddev'] * 0.5",
+   "table": null,
+   "note": null,
+   "where": "p.415, Listing 14.1"
+  },
+  {
+   "claim": "A 15-minute ETL dump (assumed 5-second) left aggregates stale, so every user got the same 'show all ads' prediction and the site was broken for a full day.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "ETL window",
+   "value": 15,
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Content-paywall pop-up model; trained on 5-second activity chunks; Redis-to-lake ETL was periodic dump.",
+   "quote": "periodic dump on a 15-minute triggered",
+   "table": null,
+   "note": null,
+   "where": "p.402, Fig 14.1"
+  },
+  {
+   "claim": "Training data was 5-second chunks of session activity, assumed to be loaded on a 5-second trigger in production.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "assumed trigger",
+   "value": 5,
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same paywall example.",
+   "quote": "5-second chunks of activity",
+   "table": null,
+   "note": null,
+   "where": "p.402"
+  },
+  {
+   "claim": "Data catalog entry: Orders table updates hourly with daily reconcile; Site Activity is real time with daily reconcile and no insertion-order guarantee; Members is overwritten every 10 minutes (SCD type 1).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 14.1 e-commerce example, three lakehouse tables (3,895,223 / 976,322,519 / 73,356,331,100,377 rows).",
+   "quote": "1 hour + daily reconcile",
+   "table": null,
+   "note": null,
+   "where": "p.406, Table 14.1, Fig 14.3-14.4"
+  },
+  {
+   "claim": "A recency-window imputation over the last seven days drove a missing key sales feature to zero and demand predictions toward zero, after a deprecated column stopped being fed.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "imputation window",
+   "value": 7,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dog-food demand forecasting example; ETL moved sales to a new, lower-scale column.",
+   "quote": "the last seven days of data",
+   "table": null,
+   "note": null,
+   "where": "p.413, Fig 14.8"
+  },
+  {
+   "claim": "Author says the feature-drift-to-zero failure has happened to him six times.",
+   "kind": "claim",
+   "source": null,
+   "metric": "occurrences",
+   "value": 6,
+   "unit": "times",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author experience.",
+   "quote": "of six times in my career",
+   "table": null,
+   "note": null,
+   "where": "p.416"
+  },
+  {
+   "claim": "Without monitoring, a team of 14 supporting 14 projects would face two to three investigations a week, each at least one person-day plus another day to retrain and evaluate.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative team (10 DS, 4 ML engineers, 14 projects, 30 features).",
+   "quote": "two to three investigations a week",
+   "table": null,
+   "note": null,
+   "where": "p.421"
+  },
+  {
+   "claim": "Red-shirt example: a Mask R-CNN/YOLOv3 approach reaches 94% accuracy where a hue/saturation check of a pixel swatch took one week with Pillow and reaches 100%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "accuracy of complex approach",
+   "value": 94,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fictional image task, Fig 14.12; no real data.",
+   "quote": "94% accurate",
+   "table": null,
+   "note": null,
+   "where": "p.422, Fig 14.12"
+  }
+ ],
+ "limits": [
+  "Anecdotal and fictional scenarios; no experiments or measured data.",
+  "Numbers in Listing 14.1 come from an unprinted toy series (ORIGINAL_DATA, BOUNDARY_DATA not shown).",
+  "Thresholds are ad hoc; author says he does not tune them or use statistical process control.",
+  "Tooling references (MLflow tracking, SHAP/LIME, open-source monitoring packages) date from 2022.",
+  "Explicitly offers no tool recommendations (section opens by saying tools are fluff)."
+ ],
+ "practices": [
+  "Before any code, confirm you can get the data needed to answer the problem with an if/else baseline (p.401 tip).",
+  "Ask data engineering four questions during EDA: fewest tables, fix priority, access from both training and serving layers, and whether serving queries meet the SLA (p.403).",
+  "Record each source's ingestion mechanism, update frequency, SCD type and ownership in a data catalog (p.405-406, Table 14.1).",
+  "Check compliance (GDPR, PII, HIPAA), schema change rate, human vs automated source, validation checks and source durability (p.407).",
+  "Trust nothing and verify everything about a dataset before modelling (p.408).",
+  "Keep one copy of each department's definitions, pick the right SCD type, standardise names, archive unused data and inventory it with ER diagrams or a catalog (p.408-409).",
+  "Do not embed data cleansing in ML code; fix issues at the source with examples reported to data engineering (p.410-412, Fig 14.7).",
+  "Store training-time feature statistics (mean, median, std, min, max) in a table versioned as SCD type 2 per training run, and run a daily job comparing recent serving values (p.414-415).",
+  "Alert via pager or email, not print, and read stats from a table or service such as MLflow tracking (p.416).",
+  "Monitor every life-cycle stage: source features, generated features, model metrics per run, prediction distributions, attribution, runtime or response SLA, and feature usefulness via periodic recursive feature elimination (p.418-421, Fig 14.10).",
+  "Define the problem with two questions: what should the solution do (prediction type) and what will you do with it (decision) (p.423).",
+  "Try heuristics, then linear models or trees, then tree ensembles with SHAP/LIME, and only then deep or custom algorithms, communicating risk at each step (p.425, Fig 14.13).",
+  "Create a stubbed project wireframe right after the prototype: ingestion, feature engineering, training and tuning, logging, model registration, inference, tests, decision logic (p.428-429, Fig 14.15).",
+  "Mark ingestion, feature engineering, training, logging, testing and decision logic hard requirements; model registration and inference optional depending on serving (p.429, Fig 14.15).",
+  "Evaluate new technology: does it solve my problem, can I reproduce it, does it work on my data, do I need it now (p.436, Fig 14.18).",
+  "Do not copy big-tech tooling without the same data, infrastructure, staff, use case and budget (p.434)."
+ ],
+ "terms": [
+  {
+   "term": "cargo cult ML",
+   "definition": "inexperienced teams latching on to every technology, algorithm, framework and platform from big tech, using complex systems designed for complex problems with no regard to applicability to their own",
+   "where": "p.433"
+  },
+  {
+   "term": "SCD type 1",
+   "definition": "Overwrite old data; history is dropped",
+   "where": "p.406, Fig 14.4"
+  },
+  {
+   "term": "SCD type 2",
+   "definition": "Append new versioned rows",
+   "where": "p.406, p.415"
+  },
+  {
+   "term": "single source of truth",
+   "definition": "a single copy of each department's definitions that supports its needs, with no _V2 or _V37 copies",
+   "where": "p.408"
+  },
+  {
+   "term": "wireframe",
+   "definition": "a loose and mutable code template of stubbed modules that encapsulates concerns, removable if never populated",
+   "where": "p.426-428"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Steve McConnell, cargo cult software engineering",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "term borrowed for cargo cult ML",
+   "quote": null
+  },
+  {
+   "work": "Richard Feynman, cargo cult science",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of the term as applied to scientific rigor",
+   "quote": null
+  },
+  {
+   "work": "Book chapter 12 (drift monitoring)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "this chapter widens feature drift to whole life cycle",
+   "quote": null
+  },
+  {
+   "work": "MLflow tracking server",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "suggested store for feature statistics",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 14.1",
+   "caption": "Failing to understand the data SLAs makes for a terrible model in this case.",
+   "page": 402,
+   "why": "Shows 15-minute aggregation lag vs near real-time assumption"
+  },
+  {
+   "figure": "Fig 14.4",
+   "caption": "The additional information gained from chatting with the DE team about where the data comes from, how it gets there, and critical details about what can and can't be done with it",
+   "page": 406,
+   "why": "SCD type and refresh annotations per table; the join hazards"
+  },
+  {
+   "figure": "Table 14.1",
+   "caption": "Data catalog entries for our sample user-tracking data",
+   "page": 406,
+   "why": "Template for a data-SLA catalog entry"
+  },
+  {
+   "figure": "Fig 14.7",
+   "caption": "The better way forward for fixing data-quality issues: not embedding data repair tasks in ML code",
+   "page": 412,
+   "why": "Fix-at-source workflow"
+  },
+  {
+   "figure": "Fig 14.8",
+   "caption": "A change in the ETL of a key feature becomes a very sad week for the DS team.",
+   "page": 414,
+   "why": "Silent column swap plus NaN fill with 0"
+  },
+  {
+   "figure": "Fig 14.10",
+   "caption": "The parts of ML projects that need monitoring",
+   "page": 419,
+   "why": "Life-cycle monitoring map"
+  },
+  {
+   "figure": "Fig 14.11",
+   "caption": "Significant feature drift and effects on different types of models",
+   "page": 420,
+   "why": "Linear unbounded, DL nonsense, tree bounded behavior under drift"
+  },
+  {
+   "figure": "Fig 14.13",
+   "caption": "Author's thought process when evaluating ML approaches to problems",
+   "page": 425,
+   "why": "Simplicity decision ladder"
+  },
+  {
+   "figure": "Fig 14.15",
+   "caption": "A generic ML project code wireframe to keep code logically organized, easier to develop within, and easier to maintain",
+   "page": 429,
+   "why": "Module layout with hard-requirement vs optional labels"
+  },
+  {
+   "figure": "Fig 14.18",
+   "caption": "My process for evaluating newly announced ML technology",
+   "page": 436,
+   "why": "Anti-cargo-cult flow chart"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.415, Listing 14.1",
+   "snippet": "prior_stats['prior_stddev'] = np.std(prior_to_shift)\n...\nif post_stats['post_mean'] <= prior_stats['prior_min']:\n    print(bad_things + \" Mean is lower than training min!\")\nif ~(prior_stats['prior_stddev'] * 0.5 <= post_stats['post_stddev'] <= 2. * prior_stats['prior_stddev']):\n    print(bad_things + \" stddev is way out of bounds!\")",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction is clean; figure text interleaves with body so figure details were read from garbled order.",
+  "No embedded instructions found.",
+  "Page numbers are book pages (399-438)."
+ ]
+}

@@ -48,6 +48,8 @@ The Ng DL convention stores examples as **columns**: $X$ is $(n_x, m)$, $W^{[l]}
 
 Why a non-linear $g$ at all: a stack of linear layers multiplies out to one linear layer, so depth buys nothing without it.
 
+Parameters are counted per layer as inputs times outputs plus one bias per output. Buduma's MNIST network (784 inputs, two hidden layers of 30, a 10-way softmax) has $784\cdot30+30 + 30\cdot30+30 + 30\cdot10+10 = 24{,}790$ parameters, which the book rounds to "nearly 25,000" (*Fundamentals of Deep Learning*, ch. 2). It prefers tanh to sigmoid because tanh is zero-centred, and calls ReLU the "restricted linear unit" where the name is *rectified* (ch. 1). The backward recursion of the section below is its ch. 2 derivation, written for a sigmoid network with squared error: $\partial E/\partial y_i = \sum_j w_{ij}\,y_j(1-y_j)\,\partial E/\partial y_j$.
+
 **Logistic regression with a neural-network mindset** (course 1, week 2) is the one-layer case: flatten 64×64×3 cat images into 12,288-vectors, `sigmoid(w.T @ X + b)`, [cross-entropy](../../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) cost, gradient descent. Your notebook reaches about 70% test accuracy, and the point is the structure rather than the score.
 
 ## Backpropagation
@@ -340,6 +342,8 @@ Most Ng DL notebooks were written for TF 1.x and standalone Keras 2.x. Phase 1 (
 | `keras.layers.X` (standalone) | `tf.keras.layers.X` (or Keras 3 `keras.layers.X` with a backend) |
 
 The text notebooks' TF status (Sarkar Ch10a fixed; the condensed NLP course was TF2-native) is in [neural text models](06-neural-text-models.md).
+
+Buduma's ch. 3 is a TF 1.x text on the same ground. Its logistic regression (784 to a 10-way softmax, SGD at 0.01, batch 100) reaches 91.9% on MNIST, an 8.1% error, which it puts as errors on about 29% of 4-digit amounts ($1-0.919^4$, our arithmetic). Its 784-256-256-10 ReLU network, initialised with standard deviation $\sqrt{2/n_{in}}$ (He et al.), reaches 98.2% after 300 epochs, a 78% cut in error, one run with no seeds (*Fundamentals of Deep Learning*, ch. 3). Dated: `tf.Session`, `tf.placeholder`, `tf.initialize_all_variables`, `tf.mul`, `tf.scalar_summary`, `tf.train.Saver` and positional `softmax_cross_entropy_with_logits(output, y)` are gone or renamed, and the printed code has bugs, so port the ideas and not the listings.
 
 ## Is deep learning a different kind of model?
 

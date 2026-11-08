@@ -182,6 +182,8 @@ def pdf_text(pdf, engine):
             text = "\n".join(p.extract_text() or "" for p in pypdf.PdfReader(pdf).pages)
     except ImportError:
         return None
+    # PDF text layers can hold lone surrogates (e.g. "\ud835" from math alphanumerics) that UTF-8 refuses.
+    text = text.encode("utf-8", "replace").decode("utf-8")
     TEXTCACHE.mkdir(exist_ok=True)
     cache.write_text(text)
     return text

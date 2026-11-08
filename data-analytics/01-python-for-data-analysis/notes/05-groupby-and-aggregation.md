@@ -397,6 +397,8 @@ Name: revenue, dtype: float64
 
 ## Pivot tables and crosstabs
 
+The book's standard demonstration is the Titanic data, where `pivot_table` of `survived` by sex and class shows what a single average hides: overall survival was 38%, but 74.2% for women against 18.9% for men, and 96.8% for first-class women against 13.5% for third-class men (*Python Data Science Handbook*, ch. 3; descriptive rates, no test).
+
 A spreadsheet pivot table is a groupby by two keys laid out as a grid. `pivot_table` does it directly, and it copes with the duplicate combinations that made `pivot` fail in chapter 4 by aggregating them. Its default `aggfunc` is the mean, which is rarely what you want for revenue, so state it. `margins=True` adds totals.
 
 ```python

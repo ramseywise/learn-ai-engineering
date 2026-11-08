@@ -6,6 +6,7 @@ sources:
   - https://www.pywhy.org/dowhy/
   - https://mixtape.scunning.com/
   - https://doi.org/10.1126/science.187.4175.398 (Bickel, Hammel and O'Connell, Science, 1975; not held)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 8, Model Abuse)
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
   - "https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)"
@@ -273,7 +274,16 @@ severe        0.3      0.500
 
 Treatment is better for mild patients and for severe patients, and worse overall, because treatment went mostly to severe cases. Arithmetic can't say which table to trust; only the causal story can. Severity affects both who was treated and who recovered, so it is a confounder and you stratify. If the subgroup had been something the treatment changed, the pooled table would be the right one. That was the deeplink case in [the metrics chapter](02-metrics-and-kpi-design.md).
 
-The classic real case is graduate admissions at Berkeley in 1973. Women were admitted less often overall, but when [Bickel, Hammel and O'Connell (Science, 1975)](https://doi.org/10.1126/science.187.4175.398) looked department by department they found little sign of bias against women, because women had applied more often to departments that were harder to get into.
+The classic real case is graduate admissions at Berkeley in 1973. Women were admitted less often overall, but when [Bickel, Hammel and O'Connell (Science, 1975)](https://doi.org/10.1126/science.187.4175.398) looked department by department they found little sign of bias against women, because women had applied more often to departments that were harder to get into. Reinhart's account of the same case gives the margins: of 12,763 applications, 44% of men and 35% of women were accepted, yet of 101 departments only 4 showed a significant bias against women and 6 against men (*Statistics Done Wrong*, ch. 8; as he reports it, and he adds that the often-told lawsuit never happened).
+
+His second case has the numbers in one table. In a 1986 non-randomised review of kidney-stone surgery, percutaneous nephrolithotomy had the better overall success rate, 83% against 78% for open surgery, and the worse rate in both size groups:
+
+| Success rate | Stone under 2 cm | Stone 2 cm or larger | Overall |
+|---|---|---|---|
+| Open surgery | 93% | 73% | 78% |
+| Percutaneous nephrolithotomy | 87% | 69% | 83% |
+
+Surgeons gave the new procedure to the easy small stones and kept open surgery for the hard ones, so stone size is the confounder and the stratified rows are the fair comparison (*Statistics Done Wrong*, ch. 8, Table 8-1). A meningitis record review has the same shape: penicillin looked helpful overall (448 children) and harmful among those who saw a GP first, because the sickest went straight to hospital. The remedy is randomisation; observational evidence that omega-3 prevents heart attacks was not borne out by a five-year placebo-controlled trial (ch. 8, as reported).
 
 It also appears in A/B tests, when allocation shifts during a test and days differ. Suppose a ramp ran A heavy on a strong day and B heavy on a weak one:
 

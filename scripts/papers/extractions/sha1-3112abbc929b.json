@@ -1,0 +1,934 @@
+{
+ "schema": 1,
+ "key": "sha1:3112abbc929b",
+ "pdf": "data-analytics/sources/python-data-science-handbook/ch05-machine-learning.pdf",
+ "bib": {
+  "title": "Python Data Science Handbook, Chapter 5: Machine Learning",
+  "authors": [
+   "Jake VanderPlas"
+  ],
+  "first_author": "VanderPlas",
+  "year": null,
+  "venue": "O'Reilly (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 286404,
+  "chars_total": 286404,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do data scientists use scikit-learn to build, validate, tune and interpret supervised and unsupervised models in practice?",
+ "hypothesis": null,
+ "contributions": [
+  "Vocabulary of supervised/unsupervised learning, classification, regression, clustering, dimensionality reduction",
+  "The scikit-learn Estimator API and data layout",
+  "Validation, learning curves, bias-variance and grid search",
+  "Hands-on treatments of naive Bayes, linear regression, SVM, random forests, PCA, manifold learning, k-means, GMM, KDE and a HOG face-detection pipeline"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Gaussian naive Bayes reaches about 97% accuracy on held-out Iris data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.9736842105263158,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris 150x4 via seaborn; train_test_split(random_state=1) default 75/25, so 38 test rows (inferred); GaussianNB, no hyperparameters.",
+   "quote": "Out[17]: 0.97368421052631582",
+   "table": null,
+   "note": null,
+   "where": "Introducing Scikit-Learn, In[17]"
+  },
+  {
+   "claim": "Gaussian naive Bayes on the 8x8 digits scores 0.833 while the text calls it 'about 80%'.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.8333333333333334,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "sklearn load_digits, 1797x64; train_test_split(random_state=0), default 75/25 (450 test, inferred); GaussianNB.",
+   "quote": "Out[30]: 0.83333333333333337",
+   "table": null,
+   "note": "Prose says 'about 80% accuracy' and 'our 80% classification rate' for the 0.8333 output; cross_val_score later gives 0.8186.",
+   "where": "Introducing Scikit-Learn, In[30]"
+  },
+  {
+   "claim": "Scoring a 1-nearest-neighbour model on its own training data gives a perfect 1.0, showing why training-set validation is meaningless.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 1.0,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris 150 rows, KNeighborsClassifier(n_neighbors=1), fit and scored on all data.",
+   "quote": "We see an accuracy score of 1.0, which indicates that 100% of points were correctly",
+   "table": null,
+   "note": null,
+   "where": "Hyperparameters and Model Validation, In[4]"
+  },
+  {
+   "claim": "A 50/50 holdout split gives the same 1-NN model about 0.907 accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.9066666666666666,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris, KNN k=1, train_test_split(random_state=0, train_size=0.5).",
+   "quote": "Out[5]: 0.90666666666666662",
+   "table": null,
+   "note": null,
+   "where": "Hyperparameters and Model Validation, In[5]"
+  },
+  {
+   "claim": "Two-fold cross-validation on the same split gives 0.960 and 0.907.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.96,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris, KNN k=1, halves swapped as train/validation.",
+   "quote": "Out[6]: (0.95999999999999996, 0.90666666666666662)",
+   "table": null,
+   "note": null,
+   "where": "Hyperparameters and Model Validation, In[6]"
+  },
+  {
+   "claim": "Leave-one-out cross-validation of 1-NN on Iris averages 0.96 accuracy over 150 trials.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean LOO accuracy",
+   "value": 0.96,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris, KNN k=1, cross_val_score with cv=LeaveOneOut(len(X)).",
+   "quote": "Out[9]: 0.95999999999999996",
+   "table": null,
+   "note": "Text says the mean 'gives an estimate of the error rate'; the mean of 0/1 correctness is accuracy, not error.",
+   "where": "Hyperparameters and Model Validation, In[9]"
+  },
+  {
+   "claim": "Five-fold cross-validation of 1-NN on Iris gives five per-fold accuracies between 0.933 and 1.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy per fold",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Iris, KNN k=1, cross_val_score(cv=5).",
+   "quote": null,
+   "table": "In[7] output array: 0.96666667 0.96666667 0.93333333 0.93333333 1.",
+   "note": null,
+   "where": "Hyperparameters and Model Validation, In[7]"
+  },
+  {
+   "claim": "Cross-validated validation curve picks a degree-3 polynomial as the bias/variance optimum for 40 noisy points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "median R2 over 7 folds",
+   "value": 3,
+   "unit": "polynomial degree",
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_data(40): X=rand**2, y=10-1/(X+0.1)+N(0,1), rseed=1; PolynomialFeatures+LinearRegression, degrees 0-20, validation_curve cv=7, median score (R2).",
+   "quote": "and variance is found for a third-order polynomial; we can compute and display this",
+   "table": null,
+   "note": null,
+   "where": "Validation curves, In[13]-In[14]"
+  },
+  {
+   "claim": "With five times the data (200 points) the validation-curve peak moves to about degree 6 and degree 20 does not seriously overfit.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "polynomial degree",
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_data(200), same pipeline and cv=7.",
+   "quote": "the peak here is probably around a degree of 6, but even a degree-20 model is not seriously overfitting the data",
+   "table": null,
+   "note": "Read by eye from Fig 5-31; the book hedges with 'probably'.",
+   "where": "Learning Curves, In[16]"
+  },
+  {
+   "claim": "GridSearchCV over degree, fit_intercept and normalize picks degree 4 with fit_intercept=False and normalize=True on the 40-point set.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "polynomial degree",
+   "baseline_value": null,
+   "n": null,
+   "setup": "param_grid: degree 0-20, fit_intercept {True,False}, normalize {True,False}; cv=7.",
+   "quote": "'polynomialfeatures__degree': 4}",
+   "table": null,
+   "note": "Differs from the degree-3 optimum read off the validation curve for the same data, because the grid also varies intercept and normalisation; the book does not comment.",
+   "where": "Grid Search, In[20]"
+  },
+  {
+   "claim": "Linear regression on 50 noisy points recovers slope 1.98 against a true slope of 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.9776566,
+   "unit": "slope",
+   "baseline_value": null,
+   "n": null,
+   "setup": "x=10*rand(50), y=2x-1+N(0,1), RandomState(42); LinearRegression(fit_intercept=True).",
+   "quote": "Out[10]: array([ 1.9776566])",
+   "table": null,
+   "note": "Intercept printed -0.90331072553111635 against true -1. The later section (RandomState(1), intercept -5) prints 2.02720881036 and -4.99857708555.",
+   "where": "Estimator API, In[10]"
+  },
+  {
+   "claim": "A linear model on weather and calendar features says each extra daylight hour adds about 129 +/- 9 Fremont Bridge riders per day.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 129,
+   "unit": "riders per hour of daylight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Daily Fremont Bridge counts joined to NOAA station USW00024233; 13 columns (7 weekday flags, holiday, daylight_hrs, PRCP, dry day, Temp (C), annual); LinearRegression(fit_intercept=False); errors are std of 1000 bootstrap refits.",
+   "quote": "additional hour of daylight, 129 ± 9 more people choose to ride; a temperature",
+   "table": null,
+   "note": "Other coefficients: dry day 546+/-33, PRCP -665+/-62 per inch, Temp 65+/-4 per degC, holiday -1187+/-164, Sat -1104+/-79, Sun -1135+/-82.",
+   "where": "Predicting Bicycle Traffic, In[26]"
+  },
+  {
+   "claim": "After controlling for weather and weekday, the trend is only 28 +/- 18 new daily riders per year.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 28,
+   "unit": "riders/day per year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same bike model; 'annual' column is years since the first row.",
+   "quote": "for, we see a modest increase of 28 ± 18 new daily riders each year.",
+   "table": null,
+   "note": "Fit date range starts 2012-10-03; the number of rows is not printed.",
+   "where": "Predicting Bicycle Traffic"
+  },
+  {
+   "claim": "Linear regression visibly misses summer peaks in bicycle traffic, which the author attributes to missing features or nonlinear effects.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same bike model, Fig 5-52, in-sample fit only; no held-out error is reported.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Predicting Bicycle Traffic, Fig 5-52"
+  },
+  {
+   "claim": "Tuned RBF SVM on PCA(150) eigen-features reaches 0.85 average precision, recall and F1 on 337 held-out faces.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification_report avg/total",
+   "value": 0.85,
+   "unit": "f1 (weighted avg)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LFW fetch_lfw_people(min_faces_per_person=60): 1348 images 62x47, 8 people; RandomizedPCA(150, whiten=True, random_state=42) -> SVC(rbf, class_weight='balanced'); train_test_split(random_state=42); GridSearchCV C {1,5,10,50} x gamma {0.0001,0.0005,0.001,0.005}.",
+   "quote": null,
+   "table": "In[25] classification report, row avg / total, columns precision/recall/f1-score = 0.85, support 337",
+   "note": null,
+   "where": "SVM Face Recognition, In[25]"
+  },
+  {
+   "claim": "Best SVM hyperparameters from the face grid are C=10 and gamma=0.001, in the middle of the grid.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "C",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same face grid search.",
+   "quote": "{'svc__gamma': 0.001, 'svc__C': 10}",
+   "table": null,
+   "note": null,
+   "where": "SVM Face Recognition, In[22]"
+  },
+  {
+   "claim": "The 16-point face grid search took 26 s wall time (47.8 s CPU).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 26,
+   "unit": "s wall",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same grid, default cv; hardware not stated.",
+   "quote": "Wall time: 26 s",
+   "table": null,
+   "note": "Number of CV folds is not stated; training-set size is not printed (1348*0.75=1011 inferred).",
+   "where": "SVM Face Recognition, In[22]"
+  },
+  {
+   "claim": "An untuned 1000-tree random forest classifies the 450 held-out digits at 0.98 precision, recall and F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification_report avg/total",
+   "value": 0.98,
+   "unit": "f1 (weighted avg)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "load_digits, train_test_split(random_state=0), RandomForestClassifier(n_estimators=1000).",
+   "quote": null,
+   "table": "In[15] classification report, row avg / total, 0.98 0.98 0.98, support 450",
+   "note": "Code calls metrics.classification_report(ypred, ytest), i.e. arguments reversed (y_true should come first), so precision and recall columns are swapped; the averages are unaffected in this table.",
+   "where": "Random Forests, In[15]"
+  },
+  {
+   "claim": "On the 64-pixel digits, the first 10 principal components hold about 75% of the variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75,
+   "unit": "% variance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PCA().fit(digits.data), cumulative explained_variance_ratio_, read from Fig 5-87.",
+   "quote": "components contain approximately 75% of the variance, while you need around 50",
+   "table": null,
+   "note": "Read from Fig 5-87.",
+   "where": "PCA, Choosing the number of components"
+  },
+  {
+   "claim": "About 20 components retain 90% of the digits variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20,
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same PCA on digits.",
+   "quote": "need about 20 components to retain",
+   "table": null,
+   "note": "Read from Fig 5-87.",
+   "where": "PCA, Choosing the number of components"
+  },
+  {
+   "claim": "PCA(0.50) on digits with Gaussian noise sigma=4 keeps 12 components.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12,
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "noisy = np.random.normal(digits.data, 4) with seed 42; PCA(0.50) then inverse_transform to denoise.",
+   "quote": "Here 50% of the variance amounts to 12 principal components. Now we compute",
+   "table": null,
+   "note": "No denoising metric is given, only a visual comparison (Fig 5-90).",
+   "where": "PCA as Noise Filtering, In[15]"
+  },
+  {
+   "claim": "The first 150 principal components of LFW faces account for just over 90% of variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 150,
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fetch_lfw_people(min_faces_per_person=60), 1348x2914, RandomizedPCA(150).",
+   "quote": "We see that these 150 components account for just over 90% of the variance. That",
+   "table": null,
+   "note": null,
+   "where": "PCA Eigenfaces, Fig 5-92"
+  },
+  {
+   "claim": "For the larger LFW set (min 30 faces per person, 2370 images of 2914 pixels) nearly 100 PCA components are needed for 90% of variance.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 100,
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RandomizedPCA(100) on 2370x2914.",
+   "quote": "We see that for this data, nearly 100 components are required to preserve 90% of the",
+   "table": null,
+   "note": "Read from Fig 5-105.",
+   "where": "Manifold Learning, Isomap on Faces, In[18]"
+  },
+  {
+   "claim": "Plain k-means with 10 clusters on digits recovers the right grouping for 0.794 of points without labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.7935447968836951,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "load_digits 1797x64, KMeans(n_clusters=10, random_state=0), cluster ids mapped to the modal true label (uses labels to relabel).",
+   "quote": "Out[15]: 0.79354479688369506",
+   "table": null,
+   "note": "Accuracy depends on mapping each cluster to its majority true label, so it is label-informed.",
+   "where": "k-Means, In[15]"
+  },
+  {
+   "claim": "Running t-SNE (2 components, init='pca', random_state=0) before k-means lifts digit-cluster accuracy to 0.934.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy_score",
+   "value": 0.933561491374513,
+   "unit": "accuracy",
+   "baseline_value": 0.7935447968836951,
+   "n": null,
+   "setup": "Same digits and mapping as above; KMeans(10, random_state=0) on the 2-D t-SNE projection.",
+   "quote": "Out[17]: 0.93356149137451305",
+   "table": null,
+   "note": null,
+   "where": "k-Means, In[17]"
+  },
+  {
+   "claim": "Reducing digits with PCA(0.99, whiten=True) gives 41 dimensions, and AIC picks about 110 full-covariance GMM components.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 110,
+   "unit": "components",
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 1797x64; GMM n_components 50-200 step 10, covariance_type='full', random_state=0; converged_ True.",
+   "quote": "It appears that around 110 components minimizes the AIC; we will use this model.",
+   "table": null,
+   "note": "Read from Fig 5-138.",
+   "where": "GMM, Generating New Data, In[21]"
+  },
+  {
+   "claim": "On the make_moons data, AIC favours about 8-12 GMM components and BIC a simpler model, so 16 was probably too many.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_moons(200, noise=.05, random_state=0), GMM full covariance, n_components 1-20.",
+   "quote": "around 8–12 components would have been a",
+   "table": null,
+   "note": "Read from Fig 5-136; GMM(16) was the author's choice for the density-estimate figure.",
+   "where": "GMM, How many components?"
+  },
+  {
+   "claim": "Leave-one-out CV picks KDE bandwidth 1.12 on a 20-point bimodal sample.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.1233240329780276,
+   "unit": "bandwidth",
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_data(20) mixture: N(0,1) for 30% and N(5,1) for the rest; GridSearchCV bandwidth 10**linspace(-1,1,100), kernel gaussian, cv=LeaveOneOut(len(x)).",
+   "quote": "Out[12]: {'bandwidth': 1.1233240329780276}",
+   "table": null,
+   "note": "Note: In[2] calls make_data(1000) but In[5] re-samples x with N=20; the grid fit uses x as last defined (20 points).",
+   "where": "KDE, In[12]"
+  },
+  {
+   "claim": "A KDE-based Bayesian generative classifier gets 0.967 cross-validated accuracy on digits, against 0.819 for Gaussian naive Bayes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best_score_",
+   "value": 0.966611018364,
+   "unit": "accuracy",
+   "baseline_value": 0.8186003803550138,
+   "n": null,
+   "setup": "load_digits; KDEClassifier gaussian kernel, GridSearchCV over bandwidth 10**linspace(0,2,100), default cv; best bandwidth 7.05.",
+   "quote": "accuracy = 0.966611018364",
+   "table": null,
+   "note": "Baseline printed Out[19]: 0.81860038035501381, described in prose as 'around 80%'. The best score is the grid-search maximum over 100 bandwidths, so it is optimistically biased.",
+   "where": "KDE, Not-So-Naive Bayes, In[18]-In[19]"
+  },
+  {
+   "claim": "Face detector training set has 13,233 positive and 30,000 negative 62x47 patches, giving 43,233 samples of 1,215 HOG features.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 43233,
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fetch_lfw_people() full set; negatives from 10 skimage images x 3 scales (0.5, 1.0, 2.0) x 1000 patches.",
+   "quote": "Out[8]: (43233, 1215)",
+   "table": null,
+   "note": null,
+   "where": "Face Detection, In[3]-In[8]"
+  },
+  {
+   "claim": "Gaussian naive Bayes baseline on the HOG features scores 0.875-0.941 over three CV folds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy per fold",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "cross_val_score(GaussianNB(), X_train, y_train), default folds; scored on training data used for CV, no separate test set.",
+   "quote": null,
+   "table": "In[9] output array: 0.9408785 0.8752342 0.93976823",
+   "note": null,
+   "where": "Face Detection, In[9]"
+  },
+  {
+   "claim": "LinearSVC with C=4.0 reaches 0.987 cross-validated accuracy on the HOG patches.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best_score_",
+   "value": 0.9866768440774408,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GridSearchCV(LinearSVC(), {'C':[1.0,2.0,4.0,8.0]}); default cv; best C=4.0, refit on all 43,233 samples.",
+   "quote": "Out[10]: 0.98667684407744083",
+   "table": null,
+   "note": null,
+   "where": "Face Detection, In[10]-In[11]"
+  },
+  {
+   "claim": "The sliding-window detector flags 33 of 1,911 patches on a 160x140 crop of the astronaut image.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 33.0,
+   "unit": "patches",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Window 62x47, step 2 px, scale 1.0, test_image rescaled 0.5 then cropped [:160, 40:180].",
+   "quote": "Out[15]: 33.0",
+   "table": null,
+   "note": "Prose says 'we have found 30 detections' while the output is 33.0.",
+   "where": "Face Detection, In[15]"
+  },
+  {
+   "claim": "k-means colour compression: a 427x640 RGB image (273,280 pixels) is recoloured with 16 clusters using MiniBatchKMeans.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 273280,
+   "unit": "pixels",
+   "baseline_value": null,
+   "n": null,
+   "setup": "china.jpg scaled 0-1, MiniBatchKMeans(16); the book claims a compression factor of around 1 million.",
+   "quote": "Out[20]: (273280, 3)",
+   "table": null,
+   "note": "The 1-million compression factor is a prose claim with no calculation.",
+   "where": "k-Means, Colour compression, In[20]"
+  },
+  {
+   "claim": "The author recommends trying naive Bayes first as a fast baseline, and turning to SVMs only after simpler, faster methods fail.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General practitioner advice.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "When to Use Naive Bayes; SVM Summary"
+  },
+  {
+   "claim": "SVM training cost scales as O(N^3) at worst and O(N^2) for efficient implementations.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated without citation.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "SVM Summary"
+  },
+  {
+   "claim": "Manifold learning is rarely used beyond qualitative visualisation; LLE for toy data, Isomap for real data, t-SNE for clustered data.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's experience, listed with six caveats versus PCA.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Manifold Learning, Some Thoughts"
+  }
+ ],
+ "limits": [
+  "Chapter is explicitly not a comprehensive ML introduction or scikit-learn manual (p.331).",
+  "Most accuracies are single runs on small built-in datasets (Iris 150, digits 1797, LFW 1348) with one random split; no seeds varied, no confidence intervals.",
+  "Hyperparameter-search best scores (KDE classifier 0.967, LinearSVC 0.987) are the maximum over the search, not held-out estimates.",
+  "Face detector is a prototype: weak negatives cause false positives, one scale, no non-max suppression; author says HOG is no longer state of the art and points to deep learning.",
+  "Code uses 2016-era APIs that no longer run unmodified (reader knowledge, not in the source): sklearn.cross_validation, learning_curve and grid_search modules (now model_selection), GMM (now GaussianMixture, with covariances_), Imputer (SimpleImputer), RandomizedPCA (PCA(svd_solver='randomized')), LinearRegression(normalize=...), fetch_mldata (fetch_openml), grid_scores_ (cv_results_), get_feature_names (get_feature_names_out), samples_generator import path, KFold/LeaveOneOut signatures; plus pandas resample(how=), pd.datetime, matplotlib normed=True and plot(hold=), seaborn size=, cmap 'spectral', skimage hog(visualise=), Basemap.",
+  "Printed prose and outputs disagree in places: digits GNB 0.833 called 'about 80%'; face detector prints 33.0 detections, text says 30; Fig 5-17 caption says k-means but the code is GMM."
+ ],
+ "practices": [
+  "Never validate on the data the model was fit on; a 1-NN gets 1.0 that way (Model validation the wrong way).",
+  "Use a holdout set, or k-fold/leave-one-out cross-validation when data are scarce (Model validation via cross-validation).",
+  "Diagnose with validation curves (score vs complexity) and learning curves (score vs training size); once train and validation curves converge, more data will not help, only a different model (Learning Curves).",
+  "Underperforming estimator: try more or less flexible model, more samples, or more features; the answer is often counterintuitive (Selecting the Best Model).",
+  "Tune several hyperparameters with GridSearchCV; if the optimum falls on the grid edge, expand the grid (Grid Search; SVM face example).",
+  "Do not encode categories as integers; use one-hot (DictVectorizer, OneHotEncoder) with sparse output when cardinality is high (Categorical Features).",
+  "Weight word counts with TF-IDF for text classifiers (Text Features).",
+  "Chain imputation, feature transforms and the estimator in a make_pipeline so the steps apply together (Feature Pipelines).",
+  "Start classification with Gaussian or multinomial naive Bayes as a fast baseline (When to Use Naive Bayes).",
+  "Regularise basis-function regressions with Ridge (L2) or Lasso (L1, sparse); choose alpha by cross-validation (Regularization).",
+  "Bootstrap resampling gives coefficient uncertainty when using a linear model interpretively; scikit-learn itself offers no parameter inference, use StatsModels (Estimator API; bike example).",
+  "Tune SVM C by cross-validation; use PCA before SVM for high-dimensional pixels (SVM, Face Recognition).",
+  "Average many randomised trees (bagging / random forest) to cure single-tree overfitting (Random Forests).",
+  "Start high-dimensional exploration with PCA before manifold methods; pick component count from the cumulative explained-variance ratio (PCA Summary; Manifold Learning).",
+  "Run k-means with several initialisations (n_init defaults to 10) because EM finds only local optima (k-Means caveats).",
+  "Treat GMM primarily as a density estimator and pick component count by AIC/BIC or cross-validated likelihood (GMM, How many components).",
+  "Choose KDE bandwidth by cross-validated log-likelihood (leave-one-out for small samples) (KDE).",
+  "Subclass BaseEstimator and a Mixin for custom estimators; __init__ only assigns named args, fit returns self, learned attributes end in underscore (KDEClassifier anatomy).",
+  "Use hard negative mining and multi-scale windows to improve a sliding-window detector (Face Detection, Caveats)."
+ ],
+ "terms": [
+  {
+   "term": "supervised learning",
+   "definition": "modeling the relationship between measured features of data and some label associated with the data",
+   "where": "p.332"
+  },
+  {
+   "term": "unsupervised learning",
+   "definition": "modeling the features of a dataset without reference to any label",
+   "where": "p.332"
+  },
+  {
+   "term": "features matrix",
+   "definition": "two-dimensional array of shape [n_samples, n_features], conventionally X",
+   "where": "p.344"
+  },
+  {
+   "term": "target array",
+   "definition": "usually one-dimensional label array of length n_samples, conventionally y",
+   "where": "p.344"
+  },
+  {
+   "term": "hyperparameters",
+   "definition": "parameters that must be set before the model is fit to data",
+   "where": "p.349"
+  },
+  {
+   "term": "holdout set",
+   "definition": "a subset of the data held back from training and used to check model performance",
+   "where": "p.360"
+  },
+  {
+   "term": "leave-one-out cross-validation",
+   "definition": "cross-validation where the number of folds equals the number of data points",
+   "where": "p.362"
+  },
+  {
+   "term": "underfit / high bias",
+   "definition": "model does not have enough flexibility to account for the features in the data",
+   "where": "p.364"
+  },
+  {
+   "term": "overfit / high variance",
+   "definition": "model accounts for random errors as well as the underlying distribution",
+   "where": "p.364"
+  },
+  {
+   "term": "validation curve",
+   "definition": "training and validation score as a function of model complexity",
+   "where": "p.365"
+  },
+  {
+   "term": "learning curve",
+   "definition": "a plot of the training/validation score with respect to the size of the training set",
+   "where": "p.371"
+  },
+  {
+   "term": "one-hot encoding",
+   "definition": "extra columns indicating presence or absence of a category with a value of 1 or 0",
+   "where": "p.376"
+  },
+  {
+   "term": "TF-IDF",
+   "definition": "weights the word counts by a measure of how often they appear in the documents",
+   "where": "p.378"
+  },
+  {
+   "term": "basis function regression",
+   "definition": "improving a linear model by transforming the inputs, e.g. polynomial or Gaussian features",
+   "where": "p.378, p.392"
+  },
+  {
+   "term": "imputation",
+   "definition": "replacing missing values with an appropriate fill value",
+   "where": "p.381"
+  },
+  {
+   "term": "ridge regression (L2)",
+   "definition": "penalising the sum of squares of the model coefficients, P = alpha*sum(theta_n^2)",
+   "where": "p.398"
+  },
+  {
+   "term": "lasso (L1)",
+   "definition": "penalising the sum of absolute values of the coefficients; favours sparse models",
+   "where": "p.399"
+  },
+  {
+   "term": "support vectors",
+   "definition": "training points that just touch the margin; the only points that affect the SVM fit",
+   "where": "p.409"
+  },
+  {
+   "term": "kernel trick",
+   "definition": "fit on kernel-transformed data done implicitly without building the full N-dimensional projection",
+   "where": "p.413"
+  },
+  {
+   "term": "bagging",
+   "definition": "ensemble of parallel overfit estimators whose results are averaged",
+   "where": "p.426"
+  },
+  {
+   "term": "random forest",
+   "definition": "an ensemble of randomized decision trees",
+   "where": "p.426"
+  },
+  {
+   "term": "principal component analysis",
+   "definition": "fast, flexible unsupervised dimensionality reduction that finds principal axes of the data",
+   "where": "p.433"
+  },
+  {
+   "term": "manifold learning",
+   "definition": "unsupervised estimators that describe datasets as low-dimensional manifolds embedded in high-dimensional spaces",
+   "where": "p.446"
+  },
+  {
+   "term": "expectation-maximization",
+   "definition": "iterate: E-step assign points to nearest centre (or compute membership weights), M-step update centres",
+   "where": "p.465"
+  },
+  {
+   "term": "Gaussian mixture model",
+   "definition": "finds a mixture of multidimensional Gaussian probability distributions that best model any input dataset",
+   "where": "p.480"
+  },
+  {
+   "term": "kernel density estimation",
+   "definition": "a mixture consisting of one Gaussian component per point, an essentially nonparametric density estimator",
+   "where": "p.491"
+  },
+  {
+   "term": "hard negative mining",
+   "definition": "add false-positive patches from unseen images as explicit negatives and retrain",
+   "where": "p.513"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Scikit-Learn API paper",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Source of the five API design principles (consistency, inspection, limited hierarchy, composition, sensible defaults); cited without author or year in the chapter.",
+   "quote": null
+  },
+  {
+   "work": "Fisher, Iris dataset",
+   "year": 1936,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Iris data used throughout.",
+   "quote": null
+  },
+  {
+   "work": "Labeled Faces in the Wild (via sklearn)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Face recognition, eigenfaces, Isomap, HOG detector.",
+   "quote": null
+  },
+  {
+   "work": "20 Newsgroups corpus (via sklearn)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Multinomial NB text classification on 4 categories.",
+   "quote": null
+  },
+  {
+   "work": "MNIST via mldata.org",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "70000x784, Isomap on 1/30 subset.",
+   "quote": null
+  },
+  {
+   "work": "Fremont Bridge counts and NOAA station USW00024233",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Bicycle regression example.",
+   "quote": null
+  },
+  {
+   "work": "Mueller and Guido, Introduction to Machine Learning with Python",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended fuller treatment.",
+   "quote": null
+  },
+  {
+   "work": "Raschka, Python Machine Learning",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended for scaling.",
+   "quote": null
+  },
+  {
+   "work": "Bishop, Pattern Recognition and Machine Learning",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Classic technical text recommended.",
+   "quote": null
+  },
+  {
+   "work": "Murphy, Machine Learning: A Probabilistic Perspective",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Graduate-level text recommended.",
+   "quote": null
+  },
+  {
+   "work": "Andrew Ng, Machine Learning (Coursera)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended course.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5-13",
+   "caption": "Scikit-Learn’s data layout",
+   "page": 346,
+   "why": "Shows [n_samples, n_features] and target array at a glance."
+  },
+  {
+   "figure": "Fig 5-26",
+   "caption": "A schematic of the relationship between model complexity, training score, and validation score",
+   "page": 366,
+   "why": "The bias-variance picture used to read every validation curve."
+  },
+  {
+   "figure": "Fig 5-32",
+   "caption": "Schematic showing the typical interpretation of learning curves",
+   "page": 372,
+   "why": "Shows when more data helps and when only a different model will."
+  },
+  {
+   "figure": "Fig 5-102",
+   "caption": "Representation of linkages between points within MDS and LLE",
+   "page": 454,
+   "why": "Explains why local-neighbour methods unroll nonlinear manifolds that MDS cannot."
+  },
+  {
+   "figure": "Fig 5-112",
+   "caption": "Visualization of the E–M algorithm for k-means",
+   "page": 465,
+   "why": "Three-iteration walk through assign/update."
+  },
+  {
+   "figure": "Fig 5-131",
+   "caption": "Visualization of GMM covariance types",
+   "page": 484,
+   "why": "spherical vs diag vs full in one panel."
+  },
+  {
+   "figure": "Fig 5-136",
+   "caption": "Visualization of AIC and BIC for choosing the number of GMM components",
+   "page": 487,
+   "why": "Shows BIC prefers a simpler model than AIC."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.367, In[10]",
+   "snippet": "def PolynomialRegression(degree=2, **kwargs):\n    return make_pipeline(PolynomialFeatures(degree),\n                         LinearRegression(**kwargs))",
+   "verbatim": true
+  },
+  {
+   "where": "p.368, In[13]",
+   "snippet": "train_score, val_score = validation_curve(PolynomialRegression(), X, y,\n                                          'polynomialfeatures__degree',\n                                          degree, cv=7)",
+   "verbatim": true
+  },
+  {
+   "where": "p.374, In[18]",
+   "snippet": "param_grid = {'polynomialfeatures__degree': np.arange(21),\n              'linearregression__fit_intercept': [True, False],\n              'linearregression__normalize': [True, False]}\ngrid = GridSearchCV(PolynomialRegression(), param_grid, cv=7)",
+   "verbatim": true
+  },
+  {
+   "where": "p.395, In[9]",
+   "snippet": "class GaussianFeatures(BaseEstimator, TransformerMixin):\n    \"\"\"Uniformly spaced Gaussian features for one-dimensional input\"\"\"\n    def __init__(self, N, width_factor=2.0):\n        self.N = N\n        self.width_factor = width_factor\n    @staticmethod\n    def _gauss_basis(x, y, width, axis=None):\n        arg = (x - y) / width\n        return np.exp(-0.5 * np.sum(arg ** 2, axis))\n    def fit(self, X, y=None):\n        self.centers_ = np.linspace(X.min(), X.max(), self.N)\n        self.width_ = self.width_factor * (self.centers_[1] - self.centers_[0])\n        return self\n    def transform(self, X):\n        return self._gauss_basis(X[:, :, np.newaxis], self.centers_,\n                                 self.width_, axis=1)",
+   "verbatim": false
+  },
+  {
+   "where": "p.417, In[20]-In[22]",
+   "snippet": "pca = RandomizedPCA(n_components=150, whiten=True, random_state=42)\nsvc = SVC(kernel='rbf', class_weight='balanced')\nmodel = make_pipeline(pca, svc)\nparam_grid = {'svc__C': [1, 5, 10, 50],\n              'svc__gamma': [0.0001, 0.0005, 0.001, 0.005]}\ngrid = GridSearchCV(model, param_grid)",
+   "verbatim": true
+  },
+  {
+   "where": "p.466, In[5]",
+   "snippet": "def find_clusters(X, n_clusters, rseed=2):\n    rng = np.random.RandomState(rseed)\n    i = rng.permutation(X.shape[0])[:n_clusters]\n    centers = X[i]\n    while True:\n        labels = pairwise_distances_argmin(X, centers)\n        new_centers = np.array([X[labels == i].mean(0)\n                                for i in range(n_clusters)])\n        if np.all(centers == new_centers):\n            break\n        centers = new_centers\n    return centers, labels",
+   "verbatim": false
+  },
+  {
+   "where": "p.502, In[16]",
+   "snippet": "class KDEClassifier(BaseEstimator, ClassifierMixin):\n    def __init__(self, bandwidth=1.0, kernel='gaussian'):\n        self.bandwidth = bandwidth\n        self.kernel = kernel\n    def fit(self, X, y):\n        self.classes_ = np.sort(np.unique(y))\n        training_sets = [X[y == yi] for yi in self.classes_]\n        self.models_ = [KernelDensity(bandwidth=self.bandwidth,\n                                      kernel=self.kernel).fit(Xi)\n                        for Xi in training_sets]\n        self.logpriors_ = [np.log(Xi.shape[0] / X.shape[0])\n                           for Xi in training_sets]\n        return self\n    def predict_proba(self, X):\n        logprobs = np.array([model.score_samples(X)\n                             for model in self.models_]).T\n        result = np.exp(logprobs + self.logpriors_)\n        return result / result.sum(1, keepdims=True)\n    def predict(self, X):\n        return self.classes_[np.argmax(self.predict_proba(X), 1)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction is clean; math formulas (Bayes theorem, ridge/lasso penalties) are fragmented across lines.",
+  "Publication year and author name are not printed in the chapter text; author and year come from the caller and the repo URL (github.com/jakevdp/PythonDataScienceHandbook).",
+  "Figure images were not inspected; values read off figures are labelled in notes.",
+  "No embedded instructions found in the text."
+ ]
+}

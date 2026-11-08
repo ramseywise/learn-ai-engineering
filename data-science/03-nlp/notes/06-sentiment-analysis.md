@@ -3,6 +3,8 @@ origin: synthesis
 sources:
   - ../practice/text-analytics-with-python/Ch09 - Sentiment Analysis/
   - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
+  - Bird, Klein and Loper, Natural Language Processing with Python (O'Reilly, 2009)
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - ../practice/intro-to-nlp/tensorFlow/neural-network/ (CNN and RNN/LSTM sentiment)
   - ../practice/intro-to-nlp/word-cloud/world-cloud-pet-finder.ipynb
   - https://github.com/cjhutto/vaderSentiment
@@ -65,6 +67,8 @@ I sort of liked this Columbo movie its atmosphere, which was real thriller like 
 ```
 
 **Normalisation warning for sentiment:** default stop-word lists contain *not*, *no*, *nor* and *very*. Removing them turns "not good" into "good". Sarkar's normaliser keeps negations out of the stop-word list, and you should check yours.
+
+The stop-word list is only the first place negation is lost. A bag of words drops order altogether, so "it's bad, not good at all" and "it's good, not bad at all" get exactly the same vector though their meanings are inverted (*Intro to ML with Python*, ch. 7). Adding bigrams and trigrams is the cheap partial fix: on IMDb (25,000 reviews each way, TF-IDF, logistic regression, five-fold CV) the range `(1, 3)` lifts CV accuracy from 0.89 to 0.91, and the model then learns bigrams such as "not worth" as negative cues. It still cannot tell what "not" scopes over, which is what the LSTM row in section 3 is for. The NLTK book's first classifier is the same idea in miniature: Naive Bayes on 2,000 binary "contains word" features reaches 0.81 on 100 held-out movie reviews, with "outstanding" (11.1 to 1 for positive) and "seagal" (7.7 to 1 for negative) the most informative features (*NLP with Python*, ch. 6). A 100-review test set puts the standard error near four points (my arithmetic: sqrt(0.81 x 0.19 / 100) is about 0.039), so do not compare that 0.81 with the IMDb numbers above.
 
 ## 1. Unsupervised lexicons (ch. 9a)
 

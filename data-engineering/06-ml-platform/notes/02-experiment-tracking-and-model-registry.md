@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2011.09926
   - https://arxiv.org/abs/2301.11316
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2"
+  - "Wilson, Machine Learning Engineering in Action (Manning, 2022), ch. 5-8"
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -70,6 +71,18 @@ The tracker's vocabulary is small, and the distinction between its parts is the 
 | Artifact | `log_artifact` | Any file: the pickled vectoriser, plots |
 | Model | `mlflow.sklearn.log_model(model, name="model")` | A model in MLflow format, with a `pyfunc` loader and an environment spec |
 | Everything, automatically | `mlflow.sklearn.autolog()` / `mlflow.xgboost.autolog()` | Params, metrics, model, with no manual calls |
+
+Four rules from Wilson's experimentation chapters (experience-based advice from one author's projects, not measured results) say what to put in those calls. First, record every agreed metric on every run, so an old run can be judged again without rerunning it (*ML Engineering in Action*, ch. 5). Second, return metrics as a dictionary and log them rather than printing them, because a printed number leaves no history (*ML Engineering in Action*, ch. 6, 8). Third, when tuning runs in parallel, wrap the whole search in one parent run so each trial logs as a child; where there is no parent-child grouping, such as one model per group, custom run names and tags are the only way to search the runs later (*ML Engineering in Action*, ch. 7, 8). Fourth, lay the evaluation out once before the team splits: a chronological split with an assertion that no rows were dropped, and one function that returns all the errors.
+
+```python
+def calculate_errors(y_true, y_pred):
+    """Every metric on every run; the caller logs the dict (after Wilson, ch. 6)."""
+    e = np.asarray(y_true) - np.asarray(y_pred)
+    return {"mae": np.abs(e).mean(), "mse": (e**2).mean(), "rmse": np.sqrt((e**2).mean()),
+            "mape": 100 * np.mean(np.abs(e / np.asarray(y_true)))}
+```
+
+Tuning is where the run count explodes, which is why the logging has to be automatic. Wilson's example grid over 11 Holt-Winters hyperparameters has 2 x 2 x 4 x 2 x 4 x 4 x 4 x 2 x 2 x 2 x 2 = 32,768 combinations, about 1.9 days at 5 seconds a model (a worked example in *ML Engineering in Action*, ch. 7). He prefers Hyperopt's TPE search to a grid, and reports four airports at 400 serial iterations taking 3 hours 34 minutes on a single-core VM, and SparkTrials (600 iterations, parallelism 8, four-node cluster) taking tuning from just over 3.5 hours to just under 30 minutes (his own example, with no loss values printed to show the quality matched). Both tools have since been joined by Optuna, which he names as a successor.
 
 ```python
 train, valid = month_of_rides(1), month_of_rides(2)

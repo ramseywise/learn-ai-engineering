@@ -184,4 +184,4 @@ If the competence lives in those files, they are what has to survive a change of
 
 ## Next
 
-→ [02 — tool use and the ReAct loop](02-tool-use-and-react.md): the mechanics of a tool call, from raw function calling to MCP.
+→ [01c — model as agent and how agents learn](01c-model-as-agent-and-how-agents-learn.md), then [02 — tool use and the ReAct loop](02-tool-use-and-react.md): the mechanics of a tool call, from raw function calling to MCP.

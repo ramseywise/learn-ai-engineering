@@ -13,6 +13,7 @@ sources:
   - https://arxiv.org/abs/2302.13971
   - https://arxiv.org/abs/2305.14314
   - https://arxiv.org/abs/2402.00838
+  - "Snowflake Special Edition, Generative AI and LLMs For Dummies (Wiley, 2024), ch. 2, 3, 5"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -231,6 +232,8 @@ llama-server -m models/7B/ggml-model.gguf -c 2048     # listens on 127.0.0.1:993
 ## When does local beat the API?
 
 Usually for a reason other than price. The strongest cases are data that may not leave your network, a need to fine-tune weights or inspect internals, a requirement to work offline, and pinning a model forever. For price, do the arithmetic with your own volume. API prices below are Anthropic's list prices for two Claude models as of October 2026. The server cost is an **assumption** to replace with your own quote.
+
+The usual non-price trade-off is control against operations. Hosted models need no infrastructure of your own, while self-hosted open models keep data inside your environment and put the compute and upkeep on you (*GenAI and LLMs for Dummies*, ch. 3). The same primer adds that open models carry risks from training data that is often not public, from unpatched tooling around them (orchestration frameworks, vector databases) and from uneven community quality (ch. 5). It lists BERT with "open-source LLMs" alongside Llama 2 and Falcon; BERT is an encoder-only model, not a generative LLM ([chapter 03](03-scale-and-the-model-zoo.md)).
 
 ```python
 PRICES = {"Haiku 5.5": (0.10, 0.50), "Sonnet 5.5": (2.00, 10.00)}   # $ per 1M input, output tokens

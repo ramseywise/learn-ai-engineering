@@ -51,6 +51,8 @@ flowchart LR
 
 A filter slides over the image and takes a dot product at each position. That gives two properties an MLP lacks: **sharing**, since the same weights apply everywhere, and **sparse connections**, since each output sees only a small patch. With input size $n$, filter $f$, padding $p$ and stride $s$, the output size is $\lfloor (n + 2p - f)/s \rfloor + 1$. Here is the Step by Step notebook's core, on a real digit:
 
+Parameter count follows from the shapes: a layer with $k$ filters of extent $e$ over $d_{in}$ input channels has $k\,d_{in}e^2 + k$ parameters, and a pooling layer has none. A full-colour 200 by 200 image gives each fully connected neuron 120,000 weights, against 784 for MNIST, which is the book's case for sharing (*Fundamentals of Deep Learning*, ch. 5).
+
 ```python
 import numpy as np, torch, torch.nn as nn, torch.nn.functional as F
 from sklearn.datasets import load_digits
@@ -97,6 +99,8 @@ matches nn.functional.conv2d: True
 ```
 
 The filter responds where brightness changes from left to right, so the 1's two sides show up with opposite signs. In a CNN those filter values are weights, learned by the same `backward()`.
+
+Buduma's ch. 5 compares the same two designs in TF 1.x: a CNN with two 5 by 5 convolutions (32, then 64 filters), two poolings, a 1024-unit layer and dropout 0.5 reaches 99.4% on MNIST, against 98.2% for its feed-forward network (one run, "several epochs"). On CIFAR-10, with random 24 by 24 crops, adding batch norm (with a 10× learning rate and no dropout) lifts accuracy from 92.3% to 96.7% and cuts the minibatches needed to pass 90% from over 80,000 to just over 14,000, read from the training curves (*Fundamentals of Deep Learning*, ch. 5). Single runs, with epochs and base rate unstated. Its 96.7% as "state of the art" has long been passed.
 
 ## A CNN on the digits
 
@@ -349,6 +353,8 @@ Here the contrastive pretraining loses at every label count, which is worth seei
 ## Style transfer: optimising the input
 
 **Neural Style Transfer** turns training around ([arXiv:1508.06576](https://arxiv.org/abs/1508.06576) (Gatys, Ecker and Bethge, 2015, preprint)). The network's weights stay frozen and gradient descent changes the pixels. Content is matched by activations at one layer, and style by the **Gram matrix**: correlations between channels, which record which features occur together and throw away where. A miniature, using the digit CNN's first layer in place of VGG-19:
+
+Buduma's ch. 5 version, for comparison, takes content at VGG relu4_2 and style as Gram matrices $G=FF^\top$ at relu1_1 to relu5_1, with no quantitative result (*Fundamentals of Deep Learning*, ch. 5).
 
 ```python
 torch.manual_seed(0)

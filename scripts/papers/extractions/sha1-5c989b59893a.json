@@ -1,0 +1,311 @@
+{
+ "schema": 1,
+ "key": "sha1:5c989b59893a",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch16-production-infrastructure.pdf",
+ "bib": {
+  "title": "Machine Learning Engineering in Action, chapter 16: Production infrastructure",
+  "authors": [
+   "Ben Wilson"
+  ],
+  "first_author": "Wilson",
+  "year": 2022,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 88308,
+  "chars_total": 88308,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should a team manage model artifacts, features and prediction serving so that production ML is reproducible, consistent and no more complex or costly than its SLA, volume and recency needs require?",
+ "hypothesis": null,
+ "contributions": [
+  "Passive retraining with an MLflow model registry for provenance and rollback",
+  "Feature stores for training/serving consistency, reuse and cross-team access (Databricks example)",
+  "A serving-architecture decision framework from SLA, cost, recency and volume: batch, microservice, microbatch streaming, elastic REST, edge"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In a hotel-deal recommender, precalculated batch predictions reached fewer than 5% of sessions, so the A/B test showed no booking-rate difference from control.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "session share using predictions",
+   "value": 5,
+   "unit": "% of sessions (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative scenario (hotel price optimizer, NoSQL-backed REST API serving precalculated lists), not a measured study",
+   "quote": "fewer than 5% of sessions utilized the predictions, forcing the remaining 95% of page displays to show the fallback logic",
+   "table": null,
+   "note": null,
+   "where": "p.492, 16.3"
+  },
+  {
+   "claim": "Example active-retraining trigger: retrain when the 48-hour windowed forecast accuracy drops below 70%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical next-hour weather prediction with hour-lagged ground truth",
+   "quote": "windowed aggregation of accu-",
+   "table": null,
+   "note": null,
+   "where": "p.481"
+  },
+  {
+   "claim": "Batch serving suits freshness of hours to weeks; real-time REST is needed when predictions are used immediately (Fig 16.10 thresholds: high >100K/hour, moderate 1K-100K/hour, low 1-100/hour).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative guidance chart, no measurements",
+   "quote": "(1K–100K per",
+   "table": null,
+   "note": null,
+   "where": "p.495, Fig 16.10"
+  },
+  {
+   "claim": "A lightweight Flask model deployment can support up to a few dozen requests per second, and is inappropriate for low-latency, high-volume or customer-facing use.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Internal ad hoc microservice, author's experience",
+   "quote": "Capable of supporting up to a few dozen requests per second",
+   "table": null,
+   "note": null,
+   "where": "p.499"
+  },
+  {
+   "claim": "Microbatch streaming suits very high volume with moderate SLA of 0.5-5 s, or high SLA (hours/days) with burst ingestion.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Spark Structured Streaming architecture, Fig 16.15",
+   "quote": "Extremely high-volume prediction",
+   "table": null,
+   "note": null,
+   "where": "p.503, Fig 16.15"
+  },
+  {
+   "claim": "Illustrative gated vs ungated delivery: ungated weekly volumes of 27.6, 11.8, 198.3, 8 and 832.9 GB gave delivery times from 6:01 a.m. to 4:32 p.m. (worst week 7 hr 18 min of prediction), while gating egress at 9:00 a.m. gives consistent delivery.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 832.9,
+   "unit": "GB (worst week)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 16.14 illustration of B2B bulk delivery",
+   "quote": "Week 5: 832.9 GB",
+   "table": null,
+   "note": null,
+   "where": "p.501, Fig 16.14"
+  },
+  {
+   "claim": "Low-volume REST services are tens to thousands of requests per minute and need only simple deployment and monitoring.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Low-volume real-time serving",
+   "quote": "(tens to thousands of requests per minute)",
+   "table": null,
+   "note": null,
+   "where": "p.504"
+  }
+ ],
+ "limits": [
+  "Opinion and experience of one practitioner; no measured experiments, all numbers are illustrations.",
+  "Code is Databricks/Spark/MLflow-specific; the book itself warns feature store APIs may change significantly. MLflow stage-based registry (Production/Archived stages) has since been superseded by aliases in newer MLflow (not stated in chapter).",
+  "Active retraining is only described, no reference architecture given.",
+  "Traffic tiers and latency figures (5 ms, 200 ms, 0.5-5 s SLA) are heuristics without sources."
+ ],
+ "practices": [
+  "Use a model registry for scheduled (passive) retraining: log each retraining run, promote only if it beats production on the same holdout, archive the old version (16.1.1, p.475).",
+  "Keep a registry status table (model_name, production_version, updated, training_time) in Delta for historical provenance (16.1.2, p.476-478).",
+  "Prefer passive retraining over active unless passive stops working; active needs monitoring, ground-truth merging and thresholds and is expensive (p.481).",
+  "Use a feature store so feature logic is defined once, shared by training and serving, and accessible to other teams (16.2, p.483-485).",
+  "Register the model through the feature store API so feature engineering is bundled with the model artifact and batch scoring needs only score_batch (Listing 16.8-16.9, p.488-489).",
+  "Evaluate feature stores on: sync to online serving, accessibility, batch and streaming ingestion, access control, JIT data merge, lineage (16.2.3, p.489).",
+  "Choose the least complex, cheapest serving architecture that meets SLA, volume and recency (p.471, 497).",
+  "Involve engineering consumers early: data engineers for batch, software engineers for real-time (p.493).",
+  "Give internal use cases the same engineering rigor as customer-facing ones (p.500).",
+  "For bulk external delivery, gate egress to a fixed time and decouple feature generation via feature store ETL (p.501).",
+  "Before external bulk delivery: compare predicted class counts or distributions with training data, check outliers, apply SME heuristic bounds, validate incoming features against training encoding (p.502).",
+  "Do not run real-time serving for everything; do not use Flask microservice for customer-facing or low-latency work (p.497-499).",
+  "Use elastic load balancing with containers (Gunicorn in front of Flask) for burst and high volume; expect DevOps involvement and high cost (p.504-507).",
+  "Use edge deployment only when features are stationary (e.g. imaging); it lacks monitoring, slows updates and limits model size (p.507-508)."
+ ],
+ "terms": [
+  {
+   "term": "passive retraining",
+   "definition": "scheduled by CRON, a best hope strategy that attempts to find an improved model fit by incorporating new training data in the effort to counteract drift",
+   "where": "p.481"
+  },
+  {
+   "term": "active retraining",
+   "definition": "monitors the state of predictions and features to determine algorithmically when it makes sense to trigger a retraining",
+   "where": "p.481"
+  },
+  {
+   "term": "recency",
+   "definition": "the delay between when feature data is generated and when a prediction can be acted upon",
+   "where": "p.494"
+  },
+  {
+   "term": "model registry",
+   "definition": "service recording model artifacts, versions and production/archived state, enabling provenance and rollback",
+   "where": "p.474-475"
+  },
+  {
+   "term": "feature store",
+   "definition": "centralized, registered feature tables with consistency, reusability and testability benefits",
+   "where": "p.482"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MLflow Model Registry",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "registry API used for passive retraining",
+   "quote": null
+  },
+  {
+   "work": "Databricks Feature Store",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "example feature store implementation",
+   "quote": null
+  },
+  {
+   "work": "SHAP",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "explainability for historical model investigation",
+   "quote": null
+  },
+  {
+   "work": "Adult income dataset (UCI)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "salary_features example (inferred from income >50K, capital_gain columns)",
+   "quote": null
+  },
+  {
+   "work": "CatBoost",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "example model in Listing 16.8",
+   "quote": null
+  },
+  {
+   "work": "Seldon, Kubernetes, Flask, Gunicorn, Spark Structured Streaming",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "serving tools named",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 16.2",
+   "caption": "Logical diagram of a passive retraining system",
+   "page": "p.474",
+   "why": "Retrain, compare to prod on holdout, promote or keep"
+  },
+  {
+   "figure": "Fig 16.3",
+   "caption": "Passive retraining schedule with a historic issue found far in the future",
+   "page": "p.474",
+   "why": "With vs without registry: hour vs painful reconstruction"
+  },
+  {
+   "figure": "Fig 16.7",
+   "caption": "Comparison of using a feature store versus not using one for ML development",
+   "page": "p.484",
+   "why": "Shows training/serving feature code duplication versus single definition"
+  },
+  {
+   "figure": "Fig 16.8 vs 16.9",
+   "caption": "Initial serving architecture design; A more cost-effective architecture for this use case",
+   "page": "p.491-492",
+   "why": "Batch precompute to NoSQL versus online model service"
+  },
+  {
+   "figure": "Fig 16.10",
+   "caption": "Architectural implications to meet SLA and prediction volume needs",
+   "page": "p.495",
+   "why": "Decision grid of freshness x volume to architecture and cost"
+  },
+  {
+   "figure": "Fig 16.11",
+   "caption": "The effects of data recency and common usage patterns on serving architectures",
+   "page": "p.496",
+   "why": "Recency-driven alternatives"
+  },
+  {
+   "figure": "Fig 16.14",
+   "caption": "Comparison of ungated versus gated batch serving",
+   "page": "p.501",
+   "why": "Delivery-time consistency"
+  },
+  {
+   "figure": "Fig 16.16/16.17",
+   "caption": "Cloud-native REST API model serving architecture; Automated infrastructure and services for large-scale REST API model serving",
+   "page": "p.505-506",
+   "why": "Elastic serving and A/B routing by Kubernetes"
+  }
+ ],
+ "code": [
+  {
+   "where": "Listing 16.3, p.479-480",
+   "snippet": "mlflow.register_model(self._generate_artifact_path(best_id), self.experiment_title) ... transition_model_version_stage(..., stage=\"Production\") ... transition_model_version_stage(..., version=current_prod_version, stage=\"Archived\")",
+   "verbatim": false
+  },
+  {
+   "where": "Listing 16.9, p.489",
+   "snippet": "fs.score_batch(f\"runs:/{run_id}/{MODEL_TYPE}\", spark.table(FEATURE_TABLE))",
+   "verbatim": true
+  },
+  {
+   "where": "Listing 16.8, p.488",
+   "snippet": "CatBoostClassifier(iterations=10000, learning_rate=0.00001, custom_loss=[cb_metrics.AUC()]); train_test_split(test_size=0.15, random_state=42, stratify=y)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction interleaves figure labels with prose; figure contents reconstructed from label order only.",
+  "Listing 16.6 has curly quotes in spark.table(“prod_db.salary_raw”) and undefined table_counts, as printed.",
+  "No embedded instructions found."
+ ]
+}

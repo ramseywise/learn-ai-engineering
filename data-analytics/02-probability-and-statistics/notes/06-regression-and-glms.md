@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
   - https://arxiv.org/abs/0901.4011
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 9, Correlation)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 7, Continuity Errors; ch. 8, Model Abuse)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -502,6 +503,50 @@ NegBin  coef 0.079, SE 0.0444
 ```
 
 With dispersion 8.3, the Poisson SE (0.0155) understates the uncertainty by more than a factor of 3 against the robust SE (0.0509), and a test using it would call this effect highly significant when the robust test does not. Two fixes are close to each other: keep Poisson but use robust SEs, which is valid for the mean model, or fit a negative binomial, which models the extra variance directly. Check dispersion each time you fit a Poisson.
+
+## Choosing variables without fooling yourself
+
+Two habits turn regression into a false-positive machine. The first is splitting a continuous predictor into high and low. Reinhart reports that picking the cutoff with the smallest p-value raises the false-positive rate by up to a factor of 10, and that dichotomising costs about as much power as discarding a third of the data (*Statistics Done Wrong*, ch. 7, as reported; early-1990s breast-cancer studies that used 'optimal' cutoffs, none of which survived multiplicity correction). The bigger harm is confounding. Here `x2` is correlated with a true cause `x1` and has no effect of its own:
+
+```python
+rng = np.random.default_rng(21)
+hits_split = hits_cont = 0
+for _ in range(1000):
+    x1 = rng.normal(size=200)
+    x2 = x1 + rng.normal(scale=0.6, size=200)
+    y = x1 + rng.normal(size=200)
+    d = pd.DataFrame({"y": y, "x1": x1, "x2": x2})
+    d["h1"], d["h2"] = (d.x1 > d.x1.median()).astype(int), (d.x2 > d.x2.median()).astype(int)
+    hits_split += smf.ols("y ~ h1 + h2", d).fit().pvalues["h2"] < .05
+    hits_cont += smf.ols("y ~ x1 + x2", d).fit().pvalues["x2"] < .05
+print(f"flagged at p<.05: median split {hits_split / 1000:.2f}, continuous {hits_cont / 1000:.2f}")
+```
+
+```text
+flagged at p<.05: median split 0.75, continuous 0.04
+```
+
+Splitting at the median leaves the high half of `x1` mixed into both halves of `x2`, so `x2` soaks up the residual signal; the continuous model controls `x1` properly and holds the nominal 5%. The second habit is automatic variable selection. Reinhart's watermelon example: a cited study with 43 melons and 1,600 acoustic predictors claimed 99.9% of ripeness variance, and his own stepwise regression on pure noise reproduced 99.9% (ch. 8). The mechanism is visible with a few lines: keep the five of 1,600 noise predictors most correlated with `y` in 43 rows.
+
+```python
+n, k = 43, 1600
+X, y = rng.normal(size=(n, k)), rng.normal(size=n)
+Xt, yt = rng.normal(size=(n, k)), rng.normal(size=n)
+top = np.argsort(-np.abs([np.corrcoef(X[:, j], y)[0, 1] for j in range(k)]))[:5]
+beta = np.linalg.lstsq(np.c_[np.ones(n), X[:, top]], y, rcond=None)[0]
+def r2(A, b):
+    p = np.c_[np.ones(len(b)), A[:, top]] @ beta
+    return 1 - ((b - p) ** 2).sum() / ((b - b.mean()) ** 2).sum()
+print(f"in-sample R2 {r2(X, y):.2f}, fresh-data R2 {r2(Xt, yt):.2f}")
+```
+
+```text
+in-sample R2 0.55, fresh-data R2 -0.50
+```
+
+An in-sample R² of 0.55 on pure noise, and worse than predicting the mean on fresh data. Reinhart's rules: evaluate on separate data or by cross-validation, prefer the lasso or no selection to stepwise, remember that a non-significant variable is not a zero effect, and note that a coefficient is not an intervention (nobody gains a pound 'holding everything else fixed'). The other trap in observational regressions is Simpson's paradox, with real numbers in [correlation and causation](../../03-experimentation-and-causality/notes/04-correlation-and-causation.md#simpsons-paradox).
+
+---
 
 ## Prediction vs explanation
 

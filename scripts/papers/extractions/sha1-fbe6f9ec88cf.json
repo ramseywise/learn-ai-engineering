@@ -1,0 +1,952 @@
+{
+ "schema": 1,
+ "key": "sha1:fbe6f9ec88cf",
+ "pdf": "generative-ai/05-RL/sources/murphy-rl/ch03-policy-based-rl.pdf",
+ "bib": {
+  "title": "Reinforcement Learning: A Comprehensive Overview, Chapter 3: Policy-based RL",
+  "authors": [
+   "Kevin Murphy"
+  ],
+  "first_author": "Murphy",
+  "year": 2024,
+  "venue": "preprint",
+  "arxiv": "2412.05265",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 77288,
+  "chars_total": 77288,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a policy be optimised directly, via policy gradients, actor-critic, trust-region/policy-improvement, off-policy, gradient-free and RL-as-inference methods?",
+ "hypothesis": null,
+ "contributions": [
+  "Unified derivation from likelihood-ratio gradient through baselines, GAE, natural gradient, TRPO/PPO/V-MPO, off-policy V-trace, DPG/DDPG/TD3/WPO, to MPO/AWR/SAC via control as inference."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The policy gradient theorem rewrites the trajectory-level score-function gradient as an expectation over discounted state visitation and the Q function.",
+   "kind": "reported",
+   "source": "Sutton et al. 1999 [Sut+99]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discounted infinite-horizon MDP, gamma<1; Eq 3.24-3.25, grad J = 1/(1-gamma) E_{p_gamma(s) pi(a|s)}[Q grad log pi]; derivation cited to Kakade-Langford 2002",
+   "note": null,
+   "where": "Sec 3.1.4, printed p.54",
+   "quote": "This is known as the policy gradient theorem [Sut+99]."
+  },
+  {
+   "claim": "Any baseline b(s) with E[grad b(s)]=0 leaves the policy gradient unbiased; b=V(s) is the common choice and turns Q into the advantage.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.26-3.28; V(s) valid if the policy used in it is a frozen copy independent of theta",
+   "note": null,
+   "where": "Sec 3.1.5, printed p.54",
+   "quote": "Any function that satisfies E [∇θb(s)] = 0 is a valid baseline."
+  },
+  {
+   "claim": "Reward-to-go: dropping rewards that precede action k removes zero-mean terms and cuts variance without bias.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.7-3.17 expand the product of score and return and cancel terms where reward at k cannot depend on future actions",
+   "note": null,
+   "where": "Sec 3.1.2, printed p.52-53",
+   "quote": "The likelihood ratio estimator can have high variance, since we are sampling entire trajectories."
+  },
+  {
+   "claim": "A2C uses the one-step TD error as a single-sample advantage; update is on-policy.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.32-3.33, Alg 5; target y_t = r_t + gamma(1-done)V_w(s_{t+1}) with stop-gradient",
+   "note": null,
+   "where": "Sec 3.2.1, printed p.56",
+   "quote": "This method is therefore called advantage actor critic or A2C."
+  },
+  {
+   "claim": "Shared actor-critic loss combines TD loss, policy gradient term and entropy bonus; PopArt normalises the loss scales so lambda weights can stay fixed.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.34-3.38, shared network with value and policy heads",
+   "note": null,
+   "where": "Sec 3.2.1, printed p.56",
+   "quote": "To handle the dynamically varying scales of the different loss functions, we can use the PopArt method of"
+  },
+  {
+   "claim": "GAE is an exponentially weighted average of n-step advantages with recursion A_t = delta_t + gamma lambda A_{t+1}; lambda trades bias for variance.",
+   "kind": "reported",
+   "source": "Schulman et al. 2016 [Sch+16b]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.45-3.47, Alg 6; w_n = lambda^(n-1); A^(1) high bias/low variance, A^(inf) unbiased/high variance",
+   "note": null,
+   "where": "Sec 3.2.2, printed p.57",
+   "quote": "Here λ ∈[0, 1] is a parameter that controls the bias-variance tradeoff: larger values decrease the bias but increase the variance."
+  },
+  {
+   "claim": "The general estimator sum_t Psi_t grad log pi can use MC return, MC with baseline, advantage, Q, or TD residual as Psi_t.",
+   "kind": "reported",
+   "source": "Schulman et al. 2016",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.48-3.53",
+   "note": null,
+   "where": "Sec 3.2.2, printed p.58",
+   "quote": "where Ψt may be any of the following:"
+  },
+  {
+   "claim": "Two-timescale actor-critic: let the critic learn faster so it tracks the current policy; phasic policy gradient alternates the two updates.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "No experiment given; cites bilevel optimisation literature and Cobbe et al. 2020",
+   "note": null,
+   "where": "Sec 3.2.3, printed p.58",
+   "quote": "However, it is better to let critic Vw learn using a faster learning rate (or more updates)"
+  },
+  {
+   "claim": "Natural gradient replaces Euclidean distance with a KL constraint approximated by the Fisher matrix, giving update delta = -eta F^-1 g.",
+   "kind": "reported",
+   "source": "Amari 1998 [Ama98]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.57-3.63; step size eta_k = sqrt(epsilon / g^T F^-1 g); empirical Fisher (3.64-3.66) as cheap approximation",
+   "note": null,
+   "where": "Sec 3.2.4.1, printed p.59-60",
+   "quote": "The term F−1g is called the natural gradient."
+  },
+  {
+   "claim": "Natural policy gradient/actor-critic uses the advantage-weighted score as g_kt, F_k as the mean outer product, and solves F^-1 g by conjugate gradient (Hessian-free); K-FAC is a more accurate alternative.",
+   "kind": "reported",
+   "source": "Kakade 2001; Rajeswaran et al. 2017; Martens & Grosse 2015; Wu et al. 2017",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.67-3.68",
+   "note": null,
+   "where": "Sec 3.2.4.2, printed p.60",
+   "quote": "We can compute F−1k gk without having to invert Fk by using the conjugate gradient method"
+  },
+  {
+   "claim": "Separate actor and critic networks may beat a shared trunk for MLP/CNN agents.",
+   "kind": "reported",
+   "source": "[Gar+25]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MLPs/CNNs; no numbers given in the chapter",
+   "note": null,
+   "where": "Sec 3.2.5, printed p.60",
+   "quote": "argue that it can be better to use different networks for the actor and critic"
+  },
+  {
+   "claim": "Deterministic policy gradient theorem: grad J = E[ grad_theta mu(s) grad_a Q(s,a)|a=mu(s) ]; integrates over states only, so lower variance, but needs off-policy exploration.",
+   "kind": "reported",
+   "source": "Silver et al. 2014",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.69-3.73; continuous actions only; off-policy version drops a grad_theta Q term as in Degris et al. 2012",
+   "note": null,
+   "where": "Sec 3.2.6.1, printed p.61",
+   "quote": "The deterministic policy gradient theorem [Sil+14] tells us that the gradient of this expression is given"
+  },
+  {
+   "claim": "DPG is a DQN analogue for continuous actions and needs no importance sampling in actor or critic updates.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.74-3.76",
+   "note": null,
+   "where": "Sec 3.2.6, printed p.61",
+   "quote": "Thus we can think of the resulting method as a version of DQN designed for continuous actions."
+  },
+  {
+   "claim": "DDPG learns Q with DQN machinery (replay buffer, target network) and trains the actor to maximise Q(s, mu(s)).",
+   "kind": "reported",
+   "source": "Lillicrap et al. 2016",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.77-3.78",
+   "note": null,
+   "where": "Sec 3.2.6.2, printed p.62",
+   "quote": "uses the DQN"
+  },
+  {
+   "claim": "TD3 adds target policy smoothing, clipped double Q (min over two critics) and delayed policy updates to DDPG.",
+   "kind": "reported",
+   "source": "Fujimoto, van Hoof, Meger 2018",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.79-3.80, Alg 8; noise clipped to [-c,c] in target action",
+   "note": null,
+   "where": "Sec 3.2.6.3, printed p.62-63",
+   "quote": "extends DDPG in 3 main ways."
+  },
+  {
+   "claim": "Wasserstein policy optimisation (WPO) gives a DPG-like update for stochastic policies, preconditioned by the Fisher matrix; diagonal Gaussian makes F cheap.",
+   "kind": "reported",
+   "source": "Pfau et al. 2025 [Pfa+25]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.81-3.83; policy diagonal Gaussian; critic updated DQN-style",
+   "note": null,
+   "where": "Sec 3.2.6.4, printed p.62-64",
+   "quote": "This is fast to compute and invert."
+  },
+  {
+   "claim": "Policy improvement lower bound: J(pi)-J(pi_k) >= surrogate L(pi,pi_k) minus a TV penalty weighted by 2 gamma C/(1-gamma)^2.",
+   "kind": "reported",
+   "source": "Achiam et al. 2017",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.85; C = max_s |E_pi[A_pik]|; trust-region form 3.86 constrains E[TV] <= epsilon",
+   "note": null,
+   "where": "Sec 3.3.1, printed p.64-65",
+   "quote": "Then one can show [Ach+17] that"
+  },
+  {
+   "claim": "A KL bound delta implies the TV constraint with delta = epsilon^2/2 (Pinsker-style link used by TRPO and V-MPO).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.87 and 3.96",
+   "note": null,
+   "where": "Sec 3.3.2 and 3.3.4, printed p.65, 67",
+   "quote": "then π also satisfies the TV constraint with δ = ϵ2"
+  },
+  {
+   "claim": "TRPO: first-order expansion of the surrogate, second-order expansion of the KL, natural-gradient step with eta=sqrt(2 delta / v^T F v), conjugate gradient, then backtracking line search.",
+   "kind": "reported",
+   "source": "Schulman et al. 2015b [Sch+15b]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.87-3.90; Fisher approximated as g g^T",
+   "note": null,
+   "where": "Sec 3.3.2, printed p.65",
+   "quote": "We then use a backtracking line search procedure to ensure the trust region is satisfied."
+  },
+  {
+   "claim": "PPO objective is min(rho A, clip(rho,1-eps,1+eps) A) with multiple minibatch/epoch updates per rollout; derived as a simplification of the TV constraint (E[TV] = 1/2 E|ratio-1|).",
+   "kind": "reported",
+   "source": "Schulman et al. 2017 [Sch+17]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.91-3.92, Alg 9 with GAE; support of pi must lie within support of pi_k",
+   "note": null,
+   "where": "Sec 3.3.3, printed p.66",
+   "quote": "which is a simplification of TRPO."
+  },
+  {
+   "claim": "PPO clip simplifies to min(rho A, (1+eps)A) when A>=0 and min(rho A, (1-eps)A) when A<0.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.93-3.95; from OpenAI Spinning Up",
+   "note": null,
+   "where": "Sec 3.3.3.1, printed p.66-67",
+   "quote": "we can combine these two cases by defining"
+  },
+  {
+   "claim": "PPO needs action likelihoods, hard for diffusion policies; DPPO treats denoising steps as an inner MDP, NCDPO fixes noise and backpropagates through the chain.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Diffusion policies; Ren et al. 2024, Yang et al. 2025",
+   "note": null,
+   "where": "Sec 3.3.3.2, printed p.67",
+   "quote": "The PPO algorithm relies on being able to compute the likelihood of a candidate action."
+  },
+  {
+   "claim": "V-MPO is on-policy EM: E step reweights samples by exp(A/lambda*)/Z with lambda* from a dual; M step is weighted max likelihood under a KL trust region; reversed KL makes it mode-covering.",
+   "kind": "reported",
+   "source": "Song et al. 2019 [FS+19]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.96-3.103",
+   "note": null,
+   "where": "Sec 3.3.4, printed p.67-68",
+   "quote": "Note that here the KL is reversed compared to TRPO in Section 3.3.2."
+  },
+  {
+   "claim": "Off-policy evaluation by importance sampling is unbiased; per-decision IS lowers variance.",
+   "kind": "reported",
+   "source": "Precup, Sutton, Singh 2000",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.104-3.108; ratio of trajectory probs reduces to product of pi/pi_b",
+   "note": null,
+   "where": "Sec 3.4.1, printed p.68-69",
+   "quote": "It can be verified that Eπb"
+  },
+  {
+   "claim": "V-trace truncates importance weights with c (trace cutting) and rho (fixed-point choice); best c=1 reported by IMPALA.",
+   "kind": "reported",
+   "source": "Espeholt et al. 2018",
+   "metric": "V-trace truncation c",
+   "value": "1",
+   "unit": "hyperparameter value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMPALA (Espeholt et al. 2018), Eq 3.111-3.113; Atari/DMLab-scale setting not described in this chapter",
+   "note": null,
+   "where": "Sec 3.4.2.1, printed p.70",
+   "quote": "In [Esp+18], they find c = 1 works best."
+  },
+  {
+   "claim": "V-trace rho=1 reported best; rho->inf gives V^pi and rho->0 gives V^b.",
+   "kind": "reported",
+   "source": "Espeholt et al. 2018",
+   "metric": "V-trace truncation rho",
+   "value": "1",
+   "unit": "hyperparameter value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same as above",
+   "note": null,
+   "where": "Sec 3.4.2.1, printed p.70",
+   "quote": "In [Esp+18], they find ρ = 1 works best."
+  },
+  {
+   "claim": "V-trace variance stays bounded only if off-policy replay data is mixed with fresh on-policy data.",
+   "kind": "reported",
+   "source": "[SHS20]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analysis of V-trace variance, Schmitt/Hessel/Simonyan 2020",
+   "note": null,
+   "where": "Sec 3.4.2.1, printed p.70",
+   "quote": "They show that to keep this bounded, it is necessary to mix some off-policy data"
+  },
+  {
+   "claim": "IMPALA trained one agent on all 57 Atari games and beat A3C thanks to off-policy corrections.",
+   "kind": "reported",
+   "source": "Espeholt et al. 2018",
+   "metric": "games",
+   "value": "57",
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMPALA shared CNN+LSTM for value and policy; no scores quoted in this chapter",
+   "note": null,
+   "where": "Sec 3.4.2.3, printed p.71",
+   "quote": "to play all 57 games at a high level."
+  },
+  {
+   "claim": "Off-policy PPO/TRPO/V-MPO: generalise the lower bound to any reference policy (mixture of past policies) and use V-trace-style advantage with truncated ratios.",
+   "kind": "reported",
+   "source": "Queeney et al. 2021, 2024",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.121-3.123 (Generalized PPO)",
+   "note": null,
+   "where": "Sec 3.4.3, printed p.72",
+   "quote": "The key insight is to realize that we can generalize the lower bound in Equation (3.85) to any reference"
+  },
+  {
+   "claim": "Gradient-free policy search (CEM, ES, random search, EGGROLL) handles non-differentiable policies and avoids poor local optima of gradient methods.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Brief survey, no numbers",
+   "note": null,
+   "where": "Sec 3.5, printed p.72-73",
+   "quote": "gradient descent cannot be applied to non-differentiable policies"
+  },
+  {
+   "claim": "RL as inference adds optimality variables with p(O=1|s,a) proportional to exp(G/eta), enabling off-policy learning without importance sampling; chapter links it to MPO, SAC, SMC planning and LLM test-time inference.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.124; G may be R, Q or A; Fig 3.3. LLM link is a forward pointer to Sec 6.2.4.11, not developed in this chapter",
+   "note": "The text breaks across lines: 'some kinds of LLM test-time inference, as discussed in Section 6.2.4.11'",
+   "where": "Sec 3.6, printed p.73",
+   "quote": "and some kinds of LLM"
+  },
+  {
+   "claim": "Policy learning as variational inference: with q using true dynamics, the ELBO is sum_t E_q[G/eta - KL(pi_q || pi_p)], avoiding optimism bias.",
+   "kind": "reported",
+   "source": "Levine 2018 [Lev18]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.127-3.135, following Levine 2018",
+   "note": null,
+   "where": "Sec 3.6.2, printed p.74-75",
+   "quote": "Since DKL (q(τ) ∥pπ(τ|O = 1)) ≥0, we see that log p(O = 1|π) ≥J(pπ, q); hence J is called the evidence"
+  },
+  {
+   "claim": "EM control: E step gives q(a|s) proportional to pi_prev(a|s) exp(G/eta); M step is weighted maximum likelihood.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.138-3.141",
+   "note": null,
+   "where": "Sec 3.6.3, printed p.75",
+   "quote": "which we recognize as a weighted maximum likelihood problem."
+  },
+  {
+   "claim": "KL control with uniform prior and G=R gives the maximum entropy RL objective R - eta H.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.142",
+   "note": null,
+   "where": "Sec 3.6.4, printed p.76",
+   "quote": "This is called the maximum entropy RL objective"
+  },
+  {
+   "claim": "MPO is EM control with G=Q (Retrace or one-step Bellman); eta found by minimising a dual; M step adds a Gaussian prior around previous params (Fisher-scaled), equal to a KL trust region.",
+   "kind": "reported",
+   "source": "Abdolmaleki et al. 2018",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.143-3.149; Z(s) estimated by Monte Carlo with M samples from the prior policy",
+   "note": null,
+   "where": "Sec 3.6.5, printed p.76",
+   "quote": "This is an instance of EM control, where"
+  },
+  {
+   "claim": "AWR uses G=A (GAE advantages, TD(lambda) values); AWAC uses G=Q (TD(0)); both are EM control with closed-form E step and temperature as a hyperparameter.",
+   "kind": "reported",
+   "source": "Peng et al. 2019; Nair et al. 2020",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.6.7",
+   "note": null,
+   "where": "Sec 3.6.7, printed p.77",
+   "quote": "are both EM control methods."
+  },
+  {
+   "claim": "SAC is off-policy actor-critic for max-entropy RL, with policy update through the actor's own distribution so no importance sampling is needed.",
+   "kind": "reported",
+   "source": "Haarnoja et al. 2018a,b",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.150-3.152; objective R + alpha H",
+   "note": null,
+   "where": "Sec 3.6.8, printed p.77",
+   "quote": "eliminating the need to use importance"
+  },
+  {
+   "claim": "Optimal soft policy in the tabular case is a softmax over Q/alpha and V* = alpha log sum exp(Q*/alpha).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.153-3.161, derived with a Lagrange multiplier",
+   "note": null,
+   "where": "Sec 3.6.8.2, printed p.78",
+   "quote": "The optimal policy is therefore the softmax over Q-values:"
+  },
+  {
+   "claim": "SAC uses two soft Q networks with min target and EMA target networks; REDQ uses N>=2 networks.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.162-3.165",
+   "note": null,
+   "where": "Sec 3.6.8.3, printed p.78-79",
+   "quote": "suggest fitting two soft Q functions"
+  },
+  {
+   "claim": "SAC policy loss J = E[alpha log pi - Q] is optimised with the reparameterisation trick (lower variance than REINFORCE); Gumbel-softmax or SAC-Discrete for discrete actions.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.166-3.168, Alg 11; Gaussian policy",
+   "note": null,
+   "where": "Sec 3.6.8.4, printed p.79",
+   "quote": "The latter is much lower variance, so is preferable."
+  },
+  {
+   "claim": "SAC temperature alpha can be tuned automatically toward a target entropy H.",
+   "kind": "reported",
+   "source": "Haarnoja et al. 2018b",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "J(alpha) = E[-alpha (log pi + H_target)]; H_target is a hyperparameter",
+   "note": null,
+   "where": "Sec 3.6.8.5, printed p.79",
+   "quote": "to automatically adjust the temperature parameter"
+  },
+  {
+   "claim": "Active inference minimises expected free energy, splitting into epistemic and extrinsic terms; related to control as inference when p(o) proportional to exp R(o).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 3.169-3.172",
+   "note": null,
+   "where": "Sec 3.6.9, printed p.81-82",
+   "quote": "Control as inference is closely related to a technique known as active inference"
+  }
+ ],
+ "limits": [
+  "Survey chapter: no experiments of its own; every number is a hyperparameter or count taken from other work.",
+  "Chapter says it omits network implementation details (activations, LayerNorm) and does not tackle epistemic uncertainty/exploration in RL-as-inference.",
+  "LLM/RLHF use (GRPO, DPO, token-level MDP) is not in this chapter; only a forward pointer to LLM test-time inference in Sec 6.2.4.11. Figure 3.2 credit line contains a stray 'foo'.",
+  "Algorithm 8 writes the policy loss with a square, (Q(s,mu(s)))^2, which looks like a typo; Alg 8 calls update-actor while the loop calls update-policy.",
+  "Eq 3.8 and some equation text have typos in the source (e.g. 'r + 3 gamma^2')."
+ ],
+ "practices": [
+  "Use V(s) as the baseline to reduce variance (Sec 3.1.5).",
+  "Add an entropy term to actor-critic losses to keep the policy stochastic (Sec 3.2.1).",
+  "Use a stop-gradient on the TD target (Sec 3.2.1).",
+  "Use PopArt to normalise TD, PG and entropy loss scales when sharing a network (Sec 3.2.1, 3.2.5).",
+  "Let the critic learn faster than the actor (two timescale) (Sec 3.2.3).",
+  "Use conjugate gradient instead of inverting the Fisher matrix (Sec 3.2.4.2).",
+  "For off-policy actor-critic, use V-trace with c=1 and rho=1 as reported by IMPALA (Sec 3.4.2.1).",
+  "Mix off-policy replay data with fresh on-policy data to bound V-trace variance (Sec 3.4.2.1).",
+  "Prefer the reparameterisation trick over REINFORCE for SAC's actor update (Sec 3.6.8.4).",
+  "Use clipped double Q (min of two critics) to counter overestimation in TD3 and SAC (Sec 3.2.6.3, 3.6.8.3)."
+ ],
+ "terms": [
+  {
+   "term": "likelihood ratio / score function estimator",
+   "definition": "grad J = E[grad log p_theta(tau) R(tau)]; grad log pi is the (Fisher) score function",
+   "where": "Sec 3.1.1"
+  },
+  {
+   "term": "reward-to-go",
+   "definition": "G_k = r_k + gamma r_{k+1} + ... , the return from step k",
+   "where": "Eq 3.17"
+  },
+  {
+   "term": "advantage function",
+   "definition": "A(s,a) = Q(s,a) - V(s)",
+   "where": "Sec 3.1.5"
+  },
+  {
+   "term": "actor-critic",
+   "definition": "policy gradient where the expected return is estimated by TD learning of a value function instead of MC rollouts",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "policy improvement methods",
+   "definition": "methods that try to monotonically improve performance of the policy at each step",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "natural gradient",
+   "definition": "F^-1 g, the gradient preconditioned by the inverse Fisher information matrix",
+   "where": "Sec 3.2.4.1"
+  },
+  {
+   "term": "optimality variables",
+   "definition": "O_t indicating whether the action at time t is optimal, p(O_t=1|s,a) proportional to exp(G/eta)",
+   "where": "Sec 3.6"
+  },
+  {
+   "term": "EM control / KL control",
+   "definition": "two ways to solve the ELBO: EM alternates non-parametric E and parametric M steps; KL control optimises only the variational policy",
+   "where": "Sec 3.6.2-3.6.4"
+  },
+  {
+   "term": "maximum entropy RL",
+   "definition": "standard RL objective plus an entropy regulariser on the policy",
+   "where": "Sec 3.6.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Williams 1992 REINFORCE",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "REINFORCE algorithm [Wil92]",
+   "quote": null
+  },
+  {
+   "work": "Sutton et al. 1999 policy gradient theorem",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Policy gradient theorem [Sut+99]",
+   "quote": null
+  },
+  {
+   "work": "Kakade & Langford 2002",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Cited for rewriting the gradient over states [KL02]",
+   "quote": null
+  },
+  {
+   "work": "Barto, Sutton, Anderson 1983 actor-critic",
+   "year": 1983,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[BSA83]",
+   "quote": null
+  },
+  {
+   "work": "Mnih et al. 2016 A3C",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Asynchronous A2C [Mni+16]",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al. 2016 GAE",
+   "year": 2016,
+   "arxiv": "1506.02438",
+   "relation": "uses-method",
+   "note": "[Sch+16b]",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al. 2015 TRPO",
+   "year": 2015,
+   "arxiv": "1502.05477",
+   "relation": "uses-method",
+   "note": "[Sch+15b]",
+   "quote": null
+  },
+  {
+   "work": "Schulman et al. 2017 PPO",
+   "year": 2017,
+   "arxiv": "1707.06347",
+   "relation": "uses-method",
+   "note": "[Sch+17]",
+   "quote": null
+  },
+  {
+   "work": "Achiam et al. 2017 CPO",
+   "year": 2017,
+   "arxiv": "1705.10528",
+   "relation": "uses-method",
+   "note": "Policy improvement lower bound [Ach+17]",
+   "quote": null
+  },
+  {
+   "work": "Silver et al. 2014 DPG",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Sil+14]",
+   "quote": null
+  },
+  {
+   "work": "Lillicrap et al. 2016 DDPG",
+   "year": 2016,
+   "arxiv": "1509.02971",
+   "relation": "uses-method",
+   "note": "[Lil+16]",
+   "quote": null
+  },
+  {
+   "work": "Fujimoto et al. 2018 TD3",
+   "year": 2018,
+   "arxiv": "1802.09477",
+   "relation": "uses-method",
+   "note": "[FHM18]",
+   "quote": null
+  },
+  {
+   "work": "Haarnoja et al. 2018 SAC",
+   "year": 2018,
+   "arxiv": "1801.01290",
+   "relation": "uses-method",
+   "note": "[Haa+18a; Haa+18b]",
+   "quote": null
+  },
+  {
+   "work": "Abdolmaleki et al. 2018 MPO",
+   "year": 2018,
+   "arxiv": "1806.06920",
+   "relation": "uses-method",
+   "note": "[Abd+18]",
+   "quote": null
+  },
+  {
+   "work": "Song et al. 2019 V-MPO",
+   "year": 2019,
+   "arxiv": "1909.12238",
+   "relation": "uses-method",
+   "note": "[FS+19]",
+   "quote": null
+  },
+  {
+   "work": "Espeholt et al. 2018 IMPALA / V-trace",
+   "year": 2018,
+   "arxiv": "1802.01561",
+   "relation": "uses-method",
+   "note": "[Esp+18]",
+   "quote": null
+  },
+  {
+   "work": "Munos et al. 2016 Retrace",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Mun+16]",
+   "quote": null
+  },
+  {
+   "work": "Amari 1998 natural gradient",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Ama98]",
+   "quote": null
+  },
+  {
+   "work": "Kakade 2001 natural policy gradient",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Kak01]",
+   "quote": null
+  },
+  {
+   "work": "Martens & Grosse 2015 KFAC",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[MG15]",
+   "quote": null
+  },
+  {
+   "work": "Pfau et al. 2025 WPO",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Pfa+25]",
+   "quote": null
+  },
+  {
+   "work": "Levine 2018 RL and control as probabilistic inference",
+   "year": 2018,
+   "arxiv": "1805.00909",
+   "relation": "uses-method",
+   "note": "[Lev18]",
+   "quote": null
+  },
+  {
+   "work": "Peng et al. 2019 AWR; Nair et al. 2020 AWAC",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[Pen+19; Nai+20]",
+   "quote": null
+  },
+  {
+   "work": "Queeney et al. 2021/2024 off-policy policy improvement",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "[QPC21; QPC24]",
+   "quote": null
+  },
+  {
+   "work": "Ren et al. 2024 DPPO; Yang et al. 2025 NCDPO",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "PPO for diffusion policies",
+   "quote": null
+  },
+  {
+   "work": "Kakade; Agarwal et al. 2021 policy gradient theory; Weng 2018; Lehmann 2024",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pointers for more detail [Aga+21a; Wen18b; Leh24]",
+   "quote": null
+  },
+  {
+   "work": "Murphy, Reinforcement Learning: A Comprehensive Overview",
+   "year": 2024,
+   "arxiv": "2412.05265",
+   "relation": "related",
+   "note": "This is chapter 3 of the same arXiv overview",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.1",
+   "caption": "Changing the mean of a Gaussian by a fixed amount (from solid to dotted curve) can have more impact when the (shared) variance is small (as in a) compared to when the variance is large (as in b).",
+   "page": 9,
+   "why": "Shows why Euclidean steps in parameter space are wrong for distributions, motivating natural gradient and trust regions."
+  },
+  {
+   "figure": "Fig 3.2",
+   "caption": "Conceptual illustration of how Wasserstein policy optimization (WPO) combines elements of stochastic and deterministic policy gradient methods for a 2d action space.",
+   "page": 14,
+   "why": "Three-panel contrast of score-function PG (scalar Q per sample), DPG (grad_a Q) and WPO (sampled actions with grad_a Q)."
+  },
+  {
+   "figure": "Fig 3.3",
+   "caption": "A graphical model for optimal control.",
+   "page": 23,
+   "why": "MDP with optimality variables O_t; the single picture behind MPO, SAC and max-ent RL."
+  }
+ ],
+ "code": [
+  {
+   "where": "Alg 6, printed p.57",
+   "snippet": "def GAE(r_{1:T}, v_{1:T}, gamma, lambda): A_T = 0; for t = T-1:1: delta_t = r_t + gamma v_{t+1} - v_t; A_t = delta_t + gamma lambda A_{t+1}; y_t = A_t + v_t; Return (A_{1:T}, y_{1:T})",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3.92",
+   "snippet": "pi_{k+1} = argmax_pi E_{(s,a)~p_pik}[ min(rho_k A, clip(rho_k,1-eps,1+eps) A) ], rho_k = pi(a|s)/pi_k(a|s)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3.94-3.95",
+   "snippet": "L = min(rho A, g(eps,A)); g = (1+eps)A if A>=0 else (1-eps)A",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3.167",
+   "snippet": "J_pi(theta) = E_{s~D}[ E_{a~pi_theta}[ alpha log pi_theta(a|s) - Q_w(s,a) ] ]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Section map from extract.py printed empty; pages derived as printed page minus 50 (matches figures.py captions: Fig 3.1 on PDF p9, printed p59).",
+  "Equations are flattened in the text cache; code snippets are reconstructed, not verbatim.",
+  "No embedded instructions found."
+ ]
+}

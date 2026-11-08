@@ -3,8 +3,8 @@ origin: synthesis
 sources:
   - ../practice/text-analytics-with-python/Ch08 - Semantic Analysis/
   - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
-  - Bird, Klein and Loper, Natural Language Processing with Python, https://www.nltk.org/book/
   - https://wordnet.princeton.edu/
+  - Bird, Klein and Loper, Natural Language Processing with Python (O'Reilly, 2009), https://www.nltk.org/book/
   - https://spacy.io/usage/linguistic-features#named-entities
   - https://sklearn-crfsuite.readthedocs.io/
 confidence: high
@@ -79,7 +79,7 @@ large antonym: ['small']
 
 ### Similarity and disambiguation
 
-Because synsets form a tree of is-a links, you can measure how far apart two senses are, and find what they have in common.
+Because synsets form a tree of is-a links, you can measure how far apart two senses are, and find what they have in common. Sizes and scale: WordNet 3.0 holds 117,659 synsets (the count `len(list(wn.all_synsets()))` returns today, and the figure the NLTK book's text gives; its Table 2-2 says "145k", which the book does not reconcile), and "car" alone has 5 of them. Depth shows how deep the is-a chain runs: baleen whale sits at minimum depth 14 below the root `entity`. The book's path-similarity examples against right whale give 0.25 for the minke whale, 0.17 for the orca, 0.08 for a tortoise and 0.04 for a novel (all reproduce in current NLTK), and its authors add that "the numbers won't mean much" beyond the ranking (*NLP with Python*, ch. 2). The 0.25 means a shortest path of three edges (1 / (1 + 3)), through their lowest common hypernym, the baleen whale. Dated: in the book's NLTK 2 code `synset.definition`, `lemma_names` and `lemma.name` are attributes, and in NLTK 3 they are methods, as the snippets here use.
 
 ```python
 from nltk.wsd import lesk
@@ -165,6 +165,8 @@ The same text can go through Stanford's CRF-based tagger (`nltk.tag.StanfordNERT
 | LLM extraction | Prompted | Any, defined in the prompt | Flexible schema; check precision |
 
 ## Building your own NER tagger (Sarkar ch. 8c)
+
+Part-of-speech tags are the input to this tagger (feature `postag` below), and the NLTK book's ladder shows how far a tagger gets before any sequence model: on Brown news with the full tagset, tagging everything as a noun scores about 0.13, a unigram tagger 0.81 on a held-out 10%, and a bigram-to-unigram-to-noun backoff chain 0.845, with ambiguity capping n-gram taggers at about 1 context in 20 having more than one tag (*NLP with Python*, ch. 5). Code that reproduces the ladder is in [text classification](02-text-classification.md#held-out-discipline-from-the-nltk-book). The book notes that tagging is "an early example of a sequence classification task" and the CRF below is its modern form. Its Brill rules (for example, change NN to VB after "to") are readable but the chapter reports no accuracy for them.
 
 When the entity types are your own (product codes, drug names, contract clauses), train a tagger. Sarkar uses the Kaggle GMB corpus (`ner_dataset.csv.gz`, about 48k sentences, 17 BIO tags: geo, org, per, gpe, tim, art, eve, nat) and a **conditional random field**.
 

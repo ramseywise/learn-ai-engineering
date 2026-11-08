@@ -92,6 +92,8 @@ Choices that matter:
 
 An RNN reads one token at a time and carries a hidden state. The state is a running summary of everything read so far, and the last state (or a pooling of all states) feeds the classifier. Training unrolls the loop and backpropagates through time, so the gradient for an early word is a product of many Jacobians, which shrinks or explodes ([sequence models](05-sequence-models.md#vanishing-gradients-and-the-forget-gate-bias) measures that). The cells, in the same form as [the NumPy versions](05-sequence-models.md#the-recurrent-cell):
 
+For scale, Buduma's ch. 7 LSTM (30,000-word vocabulary, length 500, learned 512-d embedding, one 512-unit LSTM, dropout keep 0.5) reaches about 86% on 50,000 IMDb reviews, then overfits. Its 3-gram feed-forward POS tagger on frozen 300-d Google News vectors (900 inputs) passes 96% on CoNLL-2000, though its listing builds the test set from the train file (*Fundamentals of Deep Learning*, ch. 7).
+
 ```text
 RNN   h_t = tanh(W_x x_t + W_h h_{t-1} + b)        same weights at every step
 

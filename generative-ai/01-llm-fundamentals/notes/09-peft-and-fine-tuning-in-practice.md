@@ -40,6 +40,7 @@ sources:
   - https://arxiv.org/abs/1902.00751
   - https://arxiv.org/abs/2402.09353
   - https://arxiv.org/abs/1602.07868
+  - "Snowflake Special Edition, Generative AI and LLMs For Dummies (Wiley, 2024), ch. 3"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -154,6 +155,8 @@ Quantization for *serving* (int8/int4 weights, KV-cache compression) is an infer
 | Missing or stale facts | Retrieval | Almost never; fine-tuning is a poor fact store |
 | Task needs a skill the model lacks | Decompose the task; use a stronger model | You have thousands of good examples. Phoenix & Taylor's rule of thumb (*Prompt Engineering for GenAI*, ch. 1) is that fine-tuning starts to beat prompting somewhere in the low thousands of examples |
 | Cost or latency | Smaller model plus a good prompt | Distil a large model's outputs into a small one |
+
+The ladder is the same one an introductory vendor primer lists for adapting a model: prompt engineering, in-context learning, retrieval, fine-tuning, then RLHF (*GenAI and LLMs for Dummies*, ch. 3). Two of its definitions are wrong, though. It says in-context learning means "training a language model with a data set" aligned to the domain, but in-context learning updates no weights: the examples sit in the prompt and are gone after the call. It also calls RLHF "ongoing" fine-tuning "in near real time"; RLHF is an offline stage run on a fixed batch of human preference labels ([chapter 08](08-preference-optimisation-overview.md)). Its fine-tuning recipe (pick a pretrained model, gather task examples, evaluate) is correct but leaves out the hard part, which is the data.
 
 The "skill the model lacks" row matters most for narrow classification with plenty of labels. HELM's 2022 runs found that on CivilComments toxicity detection even the best prompted LLM scored barely above chance. Yang et al.'s practitioner survey uses that result to argue that a fine-tuned small model (their cut-off is under 20B parameters) still wins such tasks. Their example is Google's Perspective API, a fine-tuned multilingual BERT with distilled CNNs, which remained among the best toxicity detectors ([arXiv:2304.13712](https://arxiv.org/abs/2304.13712) (Yang et al., TKDD 2024)).
 

@@ -6,7 +6,7 @@ sources:
   - https://www.kaggle.com/datasets/zhangluyuan/ab-testing (ab_data.csv, not included)
   - https://www.statsmodels.org/stable/stats.html#power-and-sample-size-calculations
   - https://doi.org/10.1007/s10618-008-0114-1 (Kohavi et al., DMKD, 2009)
-  - Reinhart, Statistics Done Wrong (No Starch, 2015)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 2, Statistical Power; ch. 3, Pseudoreplication; ch. 6, Double-Dipping in the Data)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 3)
 confidence: high
 cleaned: 2026-11-01
@@ -459,10 +459,10 @@ Kohavi and colleagues list limits that are worth repeating. A test tells you whi
 | Segment fishing | "it worked on iOS" | pre-register segments; treat others as hypotheses for the next test |
 | Simpson's paradox | arm mix differs across segments | [stratify](04-correlation-and-causation.md) |
 | Variance too high | revenue tests never conclude | [CUPED](03-experimentation-at-scale.md): regress out a pre-period covariate |
-| Analysing by pageview | noise looks significant | analyse at the unit of randomisation |
+| Analysing by pageview | noise looks significant; ten patients measured 100 times are still ten patients (*Statistics Done Wrong*, ch. 3) | analyse at the unit of randomisation |
 | Ignoring SRM | a real-looking result from a broken split | check before reading outcomes, and do not reweight |
-| Reading "not significant" as "no effect" | a harmful change launches as harmless | compare the interval with the MDE |
-| Stopping at first significance | one in four A/A tests "wins" at 20 looks | fix N, or use a sequential method |
+| Reading "not significant" as "no effect" | a harmful change launches as harmless; Reinhart reports a median neuroscience power of about 20% (ch. 2) | compare the interval with the MDE |
+| Stopping at first significance | one in four A/A tests "wins" at 20 looks; stopped trials overstate effects by 29% on average (*Statistics Done Wrong*, ch. 6, as reported) | fix N, or use a sequential method |
 
 ---
 

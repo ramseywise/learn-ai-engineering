@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html
   - https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
+  - "Wilson, Machine Learning Engineering in Action (Manning, 2022), ch. 1-4"
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -83,6 +84,8 @@ Two thresholds split the score, the model's probability of a problem, into three
 
 So the prize against today is 4.471 − 3.312 = 1.159 euros per invoice, at those prices, and moving from the fitted model to a perfect one would add at most 0.07. That second number is the one to show a team that wants to spend the quarter on model architecture. And a project can fail here, honestly and cheaply: at [a review price of 20 and a 60% catch rate](../../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md#when-review-stops-paying) there's no review band at all. **Framing hands on** the written criteria, a price per mistake, and the size of the prize.
 
+Wilson's practitioner advice (experience-based, with no measurements behind it) fits this stage. His own rough estimate puts planning first among the reasons ML projects fail, at 30%, with no sample or method given, so read it as a prior, not a statistic (*ML Engineering in Action*, ch. 1). His fix is to keep the first meeting on what will be built and why, and leave how and when for later, and to call a meeting at each deliverable instead of on a weekly cadence (*ML Engineering in Action*, ch. 1, 4).
+
 ## What "correct" means, at three levels
 
 "Correct" is three different things here, and each can pass while the next fails.
@@ -137,7 +140,11 @@ Four decisions come out of this, and each is an argument from the table, not a m
 3. **Keep the checks whichever reader you choose.** They don't trust the model, so you can swap the model. They also miss what arithmetic can't see, so vendor and IBAN need [their own checks](../../../ai-engineering/08-multimodal-engineering/notes/02-document-understanding.md#a-pipeline-you-can-run), such as check digits or a supplier list.
 4. **Use a model that produces a calibrated probability for the route.** The thresholds only mean something if [the probability does](../../../data-science/01-classical-ml/notes/13-automate-review-or-reject.md#calibration-is-the-precondition). An LLM's stated confidence would have to pass the same calibration test before you could use it there.
 
+Wilson adds three experience-based rules. Prefer the simplest rung that solves the problem and climb only when value stops arriving: quick wins, then heuristics, then classical ML, then deep learning (*ML Engineering in Action*, ch. 2). Size the platform to the problem: weekly inference means a batch job, megabyte-scale data means a database and one VM instead of a 25-node Spark cluster, and training that takes minutes stays on CPUs (*ML Engineering in Action*, ch. 1). And when candidates tie, score them on a weighted matrix of accuracy, tuning sensitivity, difficulty, training and inference cost and team familiarity, rather than on the metric alone. (*ML Engineering in Action*, ch. 3).
+
 The join between these pieces is the part nobody measured, and it's where Sculley's warning applies. The router takes the extractor's output as input, so the extractor is an **unstable data dependency**: "even 'improvements' to input signals may have arbitrary detrimental effects", because a downstream consumer was calibrated on the old signal. A better extractor could shift the router's probabilities with no bug anywhere. Version the extractor's output, feed the router a named version, and recalibrate before changing it. The fixed thresholds carry the same debt: Sculley's "Fixed Thresholds in Dynamic Systems" are what the pay and reject cuts become after a model update, so derive them from held-out data on each release. **This stage hands on** a route for each sub-task, the versions they read, and the price at which you'd change your mind.
+
+One more caution on metrics comes from the same book. An ALS recommender reached an RMSE of 0.2334, yet the demo failed: the top 300 recommendations held only 4 products in 80 shades, and a per-category count of unique products would have caught it (*ML Engineering in Action*, ch. 3).
 
 ## Offline and online metrics
 

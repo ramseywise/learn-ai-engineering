@@ -1,0 +1,73 @@
+{
+ "schema": 1,
+ "key": "sha1:2903b4b59346",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch15-quality-acceptance-testing.pdf",
+ "bib": {"title": "Machine Learning Engineering in Action, ch. 15: Quality and acceptance testing", "authors": ["Ben Wilson"], "first_author": "Wilson", "year": 2022, "venue": "Manning (book chapter)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 76223, "chars_total": 76223, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "What must be built between finishing model development and release (data consistency, fallbacks, acceptance testing, interpretability) to keep an ML solution healthy in production?",
+ "hypothesis": null,
+ "contributions": [
+  "Training/inference skew and feature stores as the data-consistency fix",
+  "Fallback and cold-start design for prediction failures",
+  "Three qualitative QA strategies compared: biased internal, dogfooding, SME evaluation",
+  "SHAP-based interpretability with code for plots"
+ ],
+ "method": null,
+ "results": [
+  {"claim": "A regression-driven controller without a fallback pushed a chuck from about 2,800 RPM to 15,000 RPM, the author's anecdote for why guardrails are needed.", "kind": "worked-example", "source": null, "metric": "commanded spin speed", "value": "15,000", "unit": "RPM", "baseline_value": "2,800", "n": null, "setup": "Author's own manufacturing anecdote; linear regression on temperature and humidity applied outside tested range where viscosity curve was nonlinear", "quote": "2,800 RPM and tried to instruct it to spin at 15,000 RPM.", "table": null, "note": "Anecdote, not a controlled experiment", "where": "p449, 15.2.1"},
+  {"claim": "In the dog-grooming cold-start example, the model is bypassed and a rule-based pseudo-prediction is served for users with fewer than three past appointments.", "kind": "worked-example", "source": null, "metric": "min appointments before model used", "value": "3", "unit": "appointments", "baseline_value": null, "n": null, "setup": "Hypothetical service recommender; heuristic fallbacks are popularity by region, popularity today, SME-curated, high-inventory", "quote": "had at least three", "table": null, "note": "Fig 15.7 box; body text on p451 says history of at least three appointments", "where": "p451, 15.2.2"},
+  {"claim": "The music-recommender example stores the 1,000 most similar songs per song in a NoSQL serving layer.", "kind": "worked-example", "source": null, "metric": "neighbours stored per song", "value": "1,000", "unit": "songs", "baseline_value": null, "n": null, "setup": "Hypothetical tri-branch Siamese CNN on mel spectrograms (first 45 s of audio), Euclidean and cosine distance", "quote": "tracks the 1,000 most", "table": null, "note": null, "where": "p453, 15.3"},
+  {"claim": "SME-based QA recommends about 50 users per genre (or 50 internal users with differing genre preference) rather than DS-team self-testing.", "kind": "worked-example", "source": null, "metric": "users sampled per QA round", "value": "50", "unit": "users", "baseline_value": null, "n": null, "setup": "Music playlist example, Fig 15.9 and 15.12", "quote": "Identify 50 users", "table": null, "note": "Fig 15.12 says 'Select 50 users with primary affinity to genre'", "where": "p455 Fig 15.9"},
+  {"claim": "In the wildfire example the shap waterfall for the largest historic fire shows a baseline prediction of 2.879.", "kind": "worked-example", "source": null, "metric": "shap baseline prediction", "value": "2.879", "unit": null, "baseline_value": null, "n": null, "setup": "Random forest on forest-fire data, Fig 15.15; most severe row is 69,002 acres burned", "quote": "prediction = 2.879", "table": null, "note": "Also: 69,002 acres burned", "where": "p468 Fig 15.15"},
+  {"claim": "Listing 15.2 plots waterfalls for the top 5 burn-area events.", "kind": "worked-example", "source": null, "metric": "top-n events", "value": "5", "unit": "events", "baseline_value": null, "n": null, "setup": "fire_data.nlargest on 'area'", "quote": "nlargest(5,", "table": null, "note": null, "where": "p468 Listing 15.2"},
+  {"claim": "Training/inference skew from a feature missing online either gets imputed (losing variance, possibly worse than the original model) or raises exceptions so every prediction falls to the fallback service.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 15.2 scenario: new warehouse features added at retraining but absent from online store", "quote": null, "table": null, "note": null, "where": "p441"}
+ ],
+ "limits": [
+  "No experiments or measured results; every number is an illustrative scenario or a code parameter.",
+  "SHAP caveat the author states: it explains the model, not reality; must be explained to the business before showing plots.",
+  "Dogfooding still carries bias: employee accounts are unrepresentative and employees are more critical of their own profile.",
+  "Full model code, Optuna tuning and companion notebook live in the book's GitHub repo (Chapter 15), not in the chapter.",
+  "Shap code uses shap.Explainer on a random forest; API details (e.g. explainer.expected_value[0], waterfall_plot with a custom object) may have dated since 2022. The validate_row assert is written with a tuple, so it never fires."
+ ],
+ "practices": [
+  "Validate that inference features are available online per SLA before release; check offline/online consistency by scheduled statistical job or a feature store (15.1.1).",
+  "Define each feature once in a feature store with ACID storage, low-latency serving layer, denormalised key-value model and read-only access for consumers (15.1.2).",
+  "Run key-metric definition changes through a change-point process with all producer and consumer groups, then sync via ETL to the store (15.1.3, Fig 15.4).",
+  "Avoid team-private data silos; write data where DE and others can see it, preferably a feature store (15.1.4).",
+  "Always have a fallback for model output that violates business rules or is out of range, and test the fallback repeatedly (15.2, Fig 15.6).",
+  "Ask SMEs and prior-art owners for safe ranges, defaults and past failures before designing fallbacks (15.2.1).",
+  "Provide a cold-start default (popularity, region, SME-curated, high-inventory) that is fast, simple and relevant, and reuse it as the fallback (15.2.2).",
+  "Do not release on DS-team qualitative review; prefer SME evaluation of other real users' predictions over dogfooding over self-testing (15.3).",
+  "Use unseen-data prediction distributions and random sample review, but avoid handcrafted samples or own accounts (15.3.1).",
+  "Add XAI before it is needed; use shap summary plots for global feature impact and waterfall plots for the worst historical events (15.4)."
+ ],
+ "terms": [
+  {"term": "cold-start problem", "definition": "models that require historical data to function for which that data hasn't been generated yet", "where": "p448, p450"},
+  {"term": "dogfooding", "definition": "consuming the results of your own product; opening functionality so everyone at a company can use it, break it and give feedback", "where": "p457"},
+  {"term": "training and inference skew", "definition": "mismatch between offline training data and online serving data, in feature presence or in processing logic", "where": "p441"},
+  {"term": "feature store", "definition": "single source of truth for registered feature calculations, synchronised between offline storage and an online in-memory layer", "where": "p441-442"},
+  {"term": "approximate Shapley estimation", "definition": "sample rows, swap the feature under test with sampled values, average absolute prediction differences, weighted by number of replaced features", "where": "p461-462"}
+ ],
+ "lineage": [
+  {"work": "A Unified Approach to Interpreting Model Predictions (Lundberg and Lee, NeurIPS 2017)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "Basis for the shap package used in 15.4", "quote": "A Unified Approach to Interpreting Model Predictions"},
+  {"work": "Optuna", "year": null, "arxiv": null, "relation": "related", "note": "Used in companion repo to tune the example model", "quote": null},
+  {"work": "Hyperopt (earlier chapter of same book)", "year": null, "arxiv": null, "relation": "related", "note": "Mentioned as predecessor of Optuna", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 15.2", "caption": "Inference skew due to a feature update", "page": 440, "why": "Shows how a feature added offline but absent online breaks or degrades the model."},
+  {"figure": "Fig 15.3", "caption": "The basic concept of a feature store", "page": 443, "why": "One feature definition feeding offline and online stores and many consumers."},
+  {"figure": "Fig 15.4", "caption": "Setting a data change-point process for updating a critical feature store entry", "page": 444, "why": "Change-management flow across DE, BI, finance, DS."},
+  {"figure": "Fig 15.6", "caption": "Figuring out the importance of safeguards and fallbacks in engineering work", "page": 450, "why": "Cavalier versus proper engineering flow."},
+  {"figure": "Fig 15.7", "caption": "Logical diagram of a cold start solution", "page": 452, "why": "Serving API routes to model or heuristic fallback by appointment count."},
+  {"figure": "Fig 15.9", "caption": "Different qualitative testing strategies", "page": 455, "why": "Compares biased, dogfooding and SME QA paths in one flow."},
+  {"figure": "Fig 15.13", "caption": "Approximate kernel Shapley values implementation in shap", "page": 462, "why": "Row replacement and weighted-average mechanics."},
+  {"figure": "Fig 15.14", "caption": "The shap summary plot, showing each feature's substitution and prediction delta for each row", "page": 466, "why": "Shows rain feature having no impact."},
+  {"figure": "Fig 15.15", "caption": "Waterfall plot of the most severe wildfire in history", "page": 468, "why": "Per-feature contributions for one extreme prediction."}
+ ],
+ "code": [
+  {"where": "p464-465, Listing 15.1", "snippet": "explainer = shap.Explainer(model)\nexplainer.expected_value = explainer.expected_value[0]\nshap_values = explainer(data)", "verbatim": true},
+  {"where": "p468, Listing 15.2", "snippet": "shap_obj = ShapObject(final_rf_model.model, final_rf_model.X)\ninteresting_rows = fire_data.nlargest(5, 'area').reset_index()['index'].values\nwaterfalls = [shap_obj.plot_waterfall(x) for x in interesting_rows]", "verbatim": true}
+ ],
+ "problems": ["Text extraction interleaves figure labels; figure content read only from labels, not images.", "No embedded instructions found."]
+}

@@ -138,7 +138,7 @@ Three lessons sit in those lines. The answer depends on the base rate as much as
 
 ### The same mistake in hypothesis testing
 
-A p-value is a P(data | no effect). People read it as P(no effect | data). Reinhart's version of the calculation tests 100 candidate cancer drugs, 10 of which work, with 80% power and a 5% threshold: about 8 real detections and about 5 false ones, so one significant drug in three or so is a dud (*Statistics Done Wrong*, ch. 4). His text rounds to 13 discoveries and 62%; without rounding the 4.5 false positives give 64%.
+A p-value is a P(data | no effect). People read it as P(no effect | data). Reinhart's version of the calculation tests 100 candidate cancer drugs, 10 of which work, with 80% power and a 5% threshold: about 8 real detections and about 5 false ones, so one significant drug in three or so is a dud (*Statistics Done Wrong*, ch. 4). His text rounds to 13 discoveries and 62%, a false discovery rate of 38%; without rounding the 4.5 false positives give 64% real. He makes the same point with a mammogram: at 0.8% prevalence, 90% sensitivity and a 7% false-positive rate, a positive result means about a 9% chance of cancer, and he reports that two-thirds of doctors read p < 0.05 as a 95% chance the result is true (ch. 4, as reported).
 
 ```python
 tested, works = 100, 10

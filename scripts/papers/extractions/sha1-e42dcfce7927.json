@@ -1,0 +1,249 @@
+{
+ "schema": 1,
+ "key": "sha1:e42dcfce7927",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch12-holding-gains-by-watching-drift.pdf",
+ "bib": {
+  "title": "Holding on to your gains by watching for drift (Chapter 12, Machine Learning Engineering in Action)",
+  "authors": [
+   "Ben Wilson"
+  ],
+  "first_author": "Wilson",
+  "year": 2022,
+  "venue": "Manning (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43304,
+  "chars_total": 43304,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What kinds of drift degrade a production ML model, how are they monitored, and how should a team respond?",
+ "hypothesis": "Models will drift; there is no static implementation, so every production model needs continuous monitoring and a defined retraining response.",
+ "contributions": [
+  "Six-way taxonomy of drift (feature, label, concept, prediction, reality, feedback) with measurement methods and corrective actions (Table 12.1)",
+  "Monitoring recipes per drift type",
+  "Passive vs active retraining patterns (Fig 12.6)",
+  "Approximate retraining periodicity by application (Table 12.2)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Worked example: a temperature unit change (F to C) upstream shifts a feature and collapses revenue lift from positive to a large loss.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "revenue lift",
+   "value": "20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fictional ice cream propensity-to-buy model, monthly passive retraining, emails sent at propensity > 60%, no monitoring; mid-June feed change",
+   "quote": "From a revenue lift of 20%, the test group is now showing a 300% loss.",
+   "table": null,
+   "note": "Illustrative narrative, not measured.",
+   "where": "p337 (section 12.1.1, Feature drift)"
+  },
+  {
+   "claim": "Label drift monitoring for classifiers should use Fisher's exact test with a very low alpha.",
+   "kind": "claim",
+   "source": null,
+   "metric": "alpha",
+   "value": "< 0.01",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Compare recent prediction class counts in a time window with validation (test) predictions from training",
+   "quote": "Fisher’s exact test with a very low alpha value (< 0.01)",
+   "table": null,
+   "note": null,
+   "where": "p341"
+  },
+  {
+   "claim": "Label drift can leave holdout loss equal or better while a fixed send threshold (e.g. 90% probability) admits nearly all customers, inflating cost.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "send threshold",
+   "value": "90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Marketing sends customized coupons only above threshold; prediction distribution shifts after eight weeks (Fig 12.2)",
+   "quote": "only if the probability for using one was above 90%?",
+   "table": null,
+   "note": "Eight weeks appears in the Fig 12.2 labels.",
+   "where": "p339"
+  },
+  {
+   "claim": "Approximate retraining periodicity ranges from hourly/daily (recommendation) to semiannual/annual (equipment failure); fraud is biweekly, churn monthly, image labeling two to six months.",
+   "kind": "claim",
+   "source": null,
+   "metric": "retraining periodicity",
+   "value": "Two to six months",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Author's experience across industries; row Image content labeling (attribution: % error in classification). Loosely approximated.",
+   "quote": null,
+   "table": "Table 12.2, row Image content labeling, column Retraining periodicity (approximate): Two to six months",
+   "note": "Other rows: churn Monthly; CLV Weekly; Transportation/demand pricing Monthly; recommendation Hourly or daily; fraud Biweekly; equipment failure Semiannually or annually; sales forecasting Daily or weekly. Table layout in extracted text is garbled for row-to-cell mapping.",
+   "where": "Table 12.2, p350"
+  }
+ ],
+ "limits": [
+  "No empirical data: all examples are fictional ice cream scenarios and the retraining periodicities are the author's loose estimates",
+  "No threshold values given for mean/variance/SPC alerts except alpha < 0.01",
+  "Drift taxonomy is the author's own and differs from the covariate/prior/concept shift split in the literature (feature drift ~ covariate shift, label drift here means prediction-distribution shift)",
+  "No code, no named drift library; only MLflow tracking is mentioned"
+ ],
+ "practices": [
+  "Monitor every production model for drift; no model is static (p336).",
+  "Log training-time feature statistics (mean, median, stddev, IQR) in MLflow so drift checks need no expensive recomputation (p345).",
+  "Feature monitoring: compare training-time vs recent mean/median/stddev/IQR and alert when the delta exceeds a level (p345).",
+  "Distribution equivalency: convert continuous features to pdf and categoricals to pmf, compare with Wasserstein metric or Hellinger distance (p345).",
+  "Apply statistical process control (Western Electric rules) on smoothed feature values, and SPC on categorical membership share (p345).",
+  "Label drift for classifiers: store windowed prediction class counts, track label ratios with acceptable deviation, test with Fisher's exact test alpha < 0.01 (p341).",
+  "Label drift for regressors: windowed mean, median, stddev, IQR of predictions with thresholds; optionally fit a distribution and compare with Kolmogorov-Smirnov test (p341).",
+  "Concept drift: log primary loss and the attribution (business) metric, aggregate prediction statistics over a window, trend them, and treat unexplained drift as grounds to retrain or revisit features (p342-343).",
+  "Three simple feature checks: step change in mean, step change in variance (needs longer window to avoid false positives), and spike in variation beyond history (p348-349).",
+  "Retrain passively on a schedule (sliding window or all data), comparing prior production and new model on the same fresh holdout; keep the winner; alert when no new model wins for too many iterations (p351-352).",
+  "Retrain actively when monitored prediction distributions or attribution leave tolerance or SPC/static thresholds; promote winner via CI/CD (p352).",
+  "For obvious ETL faults, repair or rescale features, retrain, validate on new holdout (p350).",
+  "If business impact is statistically significantly negative, stop using the model immediately, do root-cause analysis, shut down permanently if the benefit is gone (p350).",
+  "For reality drift, either abandon or rebuild after feature engineering; never quietly ignore (p347).",
+  "Detect feedback drift by recording metrics at each retraining and watching for failure to return to acceptable loss (p347).",
+  "Avoid kitchen-sink feature vectors because they make feature monitoring hard to scale (p337)."
+ ],
+ "terms": [
+  {
+   "term": "Feature drift",
+   "definition": "Shift in input feature data, e.g. a numeric scaling change from upstream ETL; includes feature ignorance, inference data beyond the training range",
+   "where": "p337-339"
+  },
+  {
+   "term": "Feature ignorance",
+   "definition": "Inference data arrives beyond the bounds of what the model was trained on",
+   "where": "p338"
+  },
+  {
+   "term": "Label drift",
+   "definition": "A shift in the prediction distribution, typically caused by a shift in the distribution of several critical features",
+   "where": "p339-340"
+  },
+  {
+   "term": "Concept drift",
+   "definition": "Introduction of a large latent (not collected) variable that has a strong influence on a model’s predictions",
+   "where": "p341"
+  },
+  {
+   "term": "Prediction drift",
+   "definition": "Affects predictions like label drift but is directly related to a feature that is part of the model; detected through feature monitoring and attribution measurement",
+   "where": "p343-345"
+  },
+  {
+   "term": "Reality drift",
+   "definition": "A special case of concept drift: foundational, unforeseen outside shifts (pandemic, black swan) with profound large-scale impact",
+   "where": "p346"
+  },
+  {
+   "term": "Feedback drift",
+   "definition": "Acting on the model's outputs shrinks variance in the data until little signal remains (diminishing returns)",
+   "where": "p346-347"
+  },
+  {
+   "term": "Passive retraining",
+   "definition": "Scheduled job trains on a sliding window or all data and compares with the production model on new holdout",
+   "where": "p351"
+  },
+  {
+   "term": "Active retraining",
+   "definition": "Automated, triggered retraining when monitored attribution or prediction quality leaves tolerance",
+   "where": "p352"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Machine Learning Engineering in Action, chapter 11 (attribution measurement)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Builds on attribution monitoring and the ice cream recommender from the preceding chapter",
+   "quote": null
+  },
+  {
+   "work": "MLflow tracking server",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Used to log training-time feature statistics and per-retrain metrics",
+   "quote": null
+  },
+  {
+   "work": "Fisher's exact test; Kolmogorov-Smirnov test; Wasserstein metric; Hellinger distance; Western Electric SPC rules",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Named statistical tools for drift detection, no citations given",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 12.1",
+   "caption": "Feature drift by way of numeric scaling changes",
+   "page": "PDF p5 (book p338)",
+   "why": "Shows F to C scale change in a feature feed"
+  },
+  {
+   "figure": "Fig 12.2",
+   "caption": "Label drift is a shift in the prediction distribution.",
+   "page": "PDF p7 (book p340)",
+   "why": "Training-time vs week-8 prediction histograms; loss may not move"
+  },
+  {
+   "figure": "Fig 12.3",
+   "caption": "Concept drift effects on model performance, business impact, and attribution measurement",
+   "page": "PDF p9 (book p342)",
+   "why": "Latent cause outside the measured features"
+  },
+  {
+   "figure": "Fig 12.4",
+   "caption": "A highly beneficial impact to the business from a model’s output. This can create other problems and might need rapid adjustment",
+   "page": "PDF p11 (book p344)",
+   "why": "Prediction drift visible only in attribution, not loss"
+  },
+  {
+   "figure": "Fig 12.5",
+   "caption": "Setting threshold boundaries around a feature to alert on large-magnitude changes",
+   "page": "PDF p15 (book p348)",
+   "why": "Three alert rules: mean step, variance step, variation spike"
+  },
+  {
+   "figure": "Fig 12.6",
+   "caption": "Passive retraining (scheduled) and active retraining (triggered) to respond to model drift",
+   "page": "PDF p18 (book p351)",
+   "why": "Side-by-side flowcharts of the two retraining loops"
+  },
+  {
+   "figure": "Table 12.1",
+   "caption": "Prediction drift types and corrective actions",
+   "page": "PDF p4 (book p336)",
+   "why": "Drift type to measurement to corrective action map"
+  },
+  {
+   "figure": "Table 12.2",
+   "caption": "Model stability and robustness to drift",
+   "page": "PDF p16 (book p349)",
+   "why": "Retraining periodicity by application"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 12.1 and 12.2 flatten into a column stream in the text; row-to-cell mapping is partly inferred.",
+  "Page numbers for figures come from the captions tool (PDF pages); book page numbers are from the text headers."
+ ]
+}

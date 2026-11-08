@@ -134,6 +134,8 @@ Name: count, dtype: int64
 11       NaN      gus  right_only
 ```
 
+The same audit is how the book catches a silent loss: merging 2010 state populations to areas gives NaN density for rows whose key exists on only one side, and `isnull().any()` on the merged frame points at them. After fixing the key, the densest place is Washington, DC at 8,898.9 residents per square mile and the sparsest is Alaska at 1.09 (*Python Data Science Handbook*, ch. 3).
+
 When the key has a different name on each side, use `left_on` and `right_on`. When both sides have a non-key column of the same name, pandas adds suffixes, which you should set to something meaningful.
 
 ```python

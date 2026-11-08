@@ -316,6 +316,25 @@ orders.loc[orders["region"] == "unassigned", "region"] = "unknown"
 4      1005  unassigned     96.0  large
 ```
 
+NumPy has one more setting rule that bites. With repeated positions, `x[i] += 1` reads once and writes once per position, so a repeat is counted only once. `np.add.at` applies the operation unbuffered (*Python Data Science Handbook*, ch. 2).
+
+```python
+x = np.zeros(5, dtype=int)
+i = [1, 1, 1, 3]
+x[i] += 1
+print(x)
+y = np.zeros(5, dtype=int)
+np.add.at(y, i, 1)
+print(y)
+```
+
+```text
+[0 1 0 1 0]
+[0 3 0 1 0]
+```
+
+The book builds a histogram this way, `np.searchsorted(bins, x)` followed by `np.add.at(counts, i, 1)`, and times it against `np.histogram` with 20 bins on [-5, 5]: on 100 points the hand-rolled version took 19.5 µs against 97.6 µs, but on 1,000,000 points 135 ms against 68.7 ms (`%timeit` best of 3, NumPy 1.11). The faster algorithm depended on input size, so time at your real size. The same chapter's other timings are 2.91 s for a Python loop taking reciprocals of 1,000,000 integers against 4.6 ms for `1.0 / big_array`, and `sum` against `np.sum` at 104 ms against 442 µs on 1,000,000 floats. Use `np.sum`, `np.min` and the like on arrays, never the built-ins.
+
 ## Choosing an index
 
 So far the index has been a meaningless row number. When a column really does identify rows, make it the index with `set_index`, and lookups read as what they are. `reset_index` is the reverse: it moves the index back to being a column.

@@ -1,0 +1,70 @@
+{
+ "schema": 1,
+ "key": "sha1:7dca6ae1b87c",
+ "pdf": "data-engineering/sources/ml-engineering-in-action/ch11-model-measurement-why-its-so-important.pdf",
+ "bib": {"title": "Model measurement and why it's so important (Chapter 11, Machine Learning Engineering in Action)", "authors": ["Ben Wilson"], "first_author": "Wilson", "year": 2022, "venue": "Manning (book chapter)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 66489, "chars_total": 66489, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "How should an ML team measure and report a deployed model's impact in business metrics, and which statistical tests fit an A/B attribution analysis?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {"claim": "In the running example, marketing sends a bulk coupon email each week to 50,000 customers at a fixed time, the control against which a personalized send-time model is tested.", "kind": "worked-example", "source": null, "metric": null, "value": "50,000", "unit": "emails per week", "baseline_value": null, "n": null, "setup": "Ice cream coupon example, control is Monday 8 a.m. PST bulk send", "quote": "Each week, we send out 50,000 of them", "table": null, "note": null, "where": "Fig 11.2, p.303"},
+  {"claim": "RFM (recency, frequency, monetary) uses five quantile buckets per variable, giving 125 cohorts from 111 to 555, collapsed with marketing SMEs into three meta-groups (high, medium, low value) used as strata.", "kind": "worked-example", "source": null, "metric": null, "value": "125", "unit": "RFM cells", "baseline_value": null, "n": null, "setup": "Stratification for the coupon A/B test", "quote": "When combined, RFM values create a matrix of 125 elements ranging from the lowest-", "table": null, "note": "Sidebar, p.306", "where": "p.306-308"},
+  {"claim": "RFM origin claim: roughly 80% of revenue comes from 20% of customers (attributed to Bult and Wansbeek).", "kind": "reported", "source": "Bult and Wansbeek, Optimal Selection for Direct Mail", "metric": null, "value": "80%/20%", "unit": null, "baseline_value": null, "n": null, "setup": "Direct marketing", "quote": "The pair estimated that 80% of a company’s revenue actually", "table": null, "note": null, "where": "p.306"},
+  {"claim": "Sample-size calculation for the test uses statsmodels tt_ind_solve_power over effect sizes 0.01 to 0.5, with power 0.8, alpha 0.2 and then 0.01, two-sided; smaller alpha or smaller lift needs many more samples (log scale).", "kind": "worked-example", "source": null, "metric": "required sample size", "value": "0.8", "unit": "power", "baseline_value": null, "n": null, "setup": "Listing 11.1, effect sizes [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.5]; ratio 1; alpha 0.2 and 0.01", "quote": "In both cases, we’re leaving the power", "table": null, "note": "Power is stated as 0.8 on p.318 (the quote ends at a line break; the value follows in the next line). No sample-size values are printed in text, only in Fig 11.10.", "where": "p.317-318"},
+  {"claim": "On the high-value cohort over the first 150 days the test and control series are non-stationary so nonparametric Mann-Whitney U is the right test; the book reads it as about 97% certainty that they differ.", "kind": "worked-example", "source": null, "metric": "Mann-Whitney U significance", "value": "~ 97%", "unit": "certainty", "baseline_value": null, "n": "150 days", "setup": "Simulated data from the companion repo, high-value cohort", "quote": "Based on the results, we can, with ~ 97% certainty,", "table": null, "note": "'Certainty' wording is the book's; it is 1 minus a p-value, not a probability that the hypothesis is true.", "where": "Fig 11.13, p.324"},
+  {"claim": "Categorical coupon uptake is tested with Fisher's exact and chi-square contingency tests on a 2x2 happen/not-happen matrix; example is 50,000 coupons over the first 50 days with all cohorts pooled.", "kind": "worked-example", "source": null, "metric": null, "value": "50,000", "unit": "coupons", "baseline_value": null, "n": "50 days", "setup": "Listing 11.5 mock data, single pooled group", "quote": "example 50,000 coupons issued during the first 50 days", "table": null, "note": null, "where": "p.329"}
+ ],
+ "limits": [
+  "Book chapter: all data are simulated for illustration; no empirical results from a real deployment.",
+  "The chapter's sample-size and test code assumes normality and balanced groups for the power calculation; nonparametric power is not covered.",
+  "Bias measurement is mentioned as required for customer-facing models but not covered.",
+  "Drift detection is deferred to the next chapter.",
+  "Listings use deprecated or fragile calls (matplotlib 'seaborn' style, wilcoxon on unpaired samples)."
+ ],
+ "practices": [
+  "Report model impact in the business's own metrics (revenue, coupon usage), not ML loss metrics; keep both for the project's lifetime (p.310-311).",
+  "Agree the business metric definitions with the team that already computes them (finance, operations, QA) (p.331-332).",
+  "Talk to SMEs before release and ask what OKRs and queries they use to judge success (p.332).",
+  "Use random sampling within strata (RFM meta-groups) to balance control and test and cut within-group variance (p.305-308).",
+  "Do not let one group be badly unbalanced between control and test, e.g. 90% of top-RFM customers in control (thought exercise, p.308).",
+  "Compute required sample size and time to a conclusive result before release and tell the business (p.317-319).",
+  "Fix the evaluation rules and a monitoring job for significance tests in advance; do not read early daily deltas (Fig 11.11, p.320).",
+  "Check normality (plot a density) before choosing between parametric and nonparametric tests; revenue is often heavy-tailed (Fig 11.12, p.321).",
+  "Use Mann-Whitney U for non-stationary or non-normal series; ANOVA/t-test only for stationary normal data (p.323-324).",
+  "Use Tukey HSD for pairwise comparisons among many groups (p.327).",
+  "Use Fisher's exact or chi-square for happen/not-happen metrics (p.329).",
+  "Never claim causation from model correlations or from a significant A/B result alone; an A/B test only rejects equivalence and shows the predictions are useful (p.310, 316).",
+  "Scale monitoring to criticality: standard ML metrics for internal tooling; drift detection for decision-critical internal models; attribution, drift and bias detection for customer-facing models (p.323).",
+  "When several changes ship together, accept the confounding, release the best solution first and run variation tests later (p.317)."
+ ],
+ "terms": [
+  {"term": "RFM", "definition": "recency, frequency, and monetary value; five quantile-based buckets on each, giving 125 cells", "where": "p.306"},
+  {"term": "Attribution measurement", "definition": "measuring a model's effect on business metrics via a controlled test against a baseline treatment", "where": "Fig 11.1, p.301"},
+  {"term": "Tukey HSD", "definition": "honestly significant difference; a parametric test doing all pairwise group comparisons at once", "where": "p.327"},
+  {"term": "Stratified sampling", "definition": "random sampling within groups identified by prior analysis so control and test have balanced latent behavior", "where": "Fig 11.4, p.305"}
+ ],
+ "lineage": [
+  {"work": "Bult and Wansbeek, Optimal Selection for Direct Mail", "year": 1995, "arxiv": null, "relation": "related", "note": "Origin of RFM; year not printed in chapter, so unsure", "quote": null},
+  {"work": "Peters et al., Elements of Causal Inference (MIT Press)", "year": 2017, "arxiv": null, "relation": "related", "note": "Recommended for DOE and causal modeling", "quote": null},
+  {"work": "Companion code github.com/BenWilson2/ML-Engineering", "year": null, "arxiv": null, "relation": "uses-method", "note": "Plot and data generators", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 11.4", "caption": "Minimizing latent factor effects by stratified grouping in order to reduce within-group variance", "page": 305, "why": "Contrasts simple random split with random sampling within RFM strata"},
+  {"figure": "Fig 11.10", "caption": "Sample size determination based on confidence requirements", "page": 318, "why": "Log-scale sample size versus lift for two alpha values"},
+  {"figure": "Fig 11.11", "caption": "Ignoring hypothesis testing creates frustration.", "page": 320, "why": "Timeline of naive daily test-minus-control readings flipping sign"},
+  {"figure": "Fig 11.12", "caption": "A normalcy validation check on revenue by customers", "page": 321, "why": "Half-Cauchy revenue shows why t-tests fail"},
+  {"figure": "Fig 11.13", "caption": "Plotting test and control groups over time, showing the nonparametric nature of the data", "page": 324, "why": "Non-stationary test vs control with test p-values"},
+  {"figure": "Fig 11.9", "caption": "The sea of influences to events that is unknowable to a model.", "page": 315, "why": "Observed features versus unobserved causes"},
+  {"figure": "Table 11.2", "caption": "Examples of project metrics vs. business metrics", "page": 310, "why": "ML metric to business metric mapping per use case"}
+ ],
+ "code": [
+  {"where": "Listing 11.1, p.317-318", "snippet": "sample_sizes = [tt_ind_solve_power(x, None, 0.2, 0.8, 1, 'two-sided') for x in x_effects]", "verbatim": true},
+  {"where": "Listing 11.2, p.322", "snippet": "t_test = ttest_ind(a, b, equal_var=False)", "verbatim": true},
+  {"where": "Listing 11.4, p.327", "snippet": "paired_test = pairwise_tukeyhsd(value, group, alpha)", "verbatim": true},
+  {"where": "Listing 11.5, p.329", "snippet": "fisher_stat, fisher_p = fisher_exact(matrix)", "verbatim": true}
+ ],
+ "problems": ["Figure text is interleaved with body text in places; sample size values appear only in Fig 11.10 (not in text). No embedded instructions found."]
+}

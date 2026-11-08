@@ -147,6 +147,8 @@ Eight steps is short, so a plain RNN keeps up, at far fewer parameters, and all 
 
 Backpropagation through $T$ steps multiplies $T$ factors, and if they're below one the signal vanishes. The simplest test: the label is the sign of the first number, and all later numbers are noise. So the network must carry one bit through the whole sequence. PyTorch initialises an LSTM's biases like everything else, so its forget gate starts near 0.5 and halves the memory at every step. Setting the forget-gate bias to 1, an old recommendation supported by Jozefowicz et al.'s architecture search ([PMLR v37](https://proceedings.mlr.press/v37/jozefowicz15.html) (Jozefowicz, Zaremba and Sutskever, ICML 2015)), starts it near keep:
 
+Buduma's ch. 7 gives the bound for one input neuron and one recurrent neuron with tied weights: the gradient of the loss with respect to an input $k$ steps back is at most $|w_{rec}|^k|w_{in}|$ (since $f'\le1$), so it decays geometrically when $|w_{rec}|<1$ (*Fundamentals of Deep Learning*, ch. 7).
+
 ```python
 def seqs(n, T, seed):
     g = torch.Generator().manual_seed(seed)
@@ -282,6 +284,8 @@ Training feeds in the true previous character, and sampling feeds back its own o
 
 A word is a one-hot vector until you embed it, and in one-hot form every pair of words is equally far apart. The **Operations on word vectors** notebook uses pretrained GloVe ([Pennington, Socher and Manning, EMNLP 2014](https://aclanthology.org/D14-1162/)). The arithmetic works on any vectors, so these are small ones constructed to carry the idea. Dimension 0 is gender and the others are "royalty", "age" and "occupation":
 
+Buduma's ch. 6 trains Skip-Gram with noise-contrastive estimation: 128-d embeddings, a 10,000-word vocabulary, a window of 5 each side, 64 noise words, SGD at 0.1, 5 epochs, with nearest neighbours by cosine and a t-SNE plot (perplexity 30) (*Fundamentals of Deep Learning*, ch. 6). Its NCE loss is a simplification, not the textbook form, so don't cite it for the formula. It also notes that an embedding lookup is a one-hot row times the matrix.
+
 ```python
 vec = {"man": [ 1, 0, 0.3, 0], "woman": [-1, 0, 0.3, 0], "king": [ 1, 1, 0.5, 0], "queen": [-1, 1, 0.5, 0],
        "boy": [ 1, 0, -0.8, 0], "girl": [-1, 0, -0.8, 0], "doctor": [0.4, 0, 0.5, 1], "nurse": [-0.5, 0, 0.5, 1]}
@@ -315,6 +319,8 @@ Neutralise and its companion equalise come from Bolukbasi et al. ([arXiv:1607.06
 ## Seq2seq and attention
 
 Sutskever et al. mapped a sequence to a sequence by encoding the input into one vector and decoding from it ([arXiv:1409.3215](https://arxiv.org/abs/1409.3215) (Sutskever, Vinyals and Le, NeurIPS 2014)). That single vector becomes the bottleneck. Bahdanau et al. let the decoder look back at all encoder states at each step, weighted by a learned score ([arXiv:1409.0473](https://arxiv.org/abs/1409.0473) (Bahdanau, Cho and Bengio, ICLR 2015)). Your **Neural machine translation** notebook applies this to dates. Here is the same task with synthetic dates, with and without attention. The model below runs in seconds:
+
+Buduma's ch. 7 scores attention additively, $v^\top\tanh(W_1h+W_2q)$ (its prose says dot product, its code does not), and runs the TF translate tutorial model on WMT'15 English to French, which took eight M40 GPUs for four days, with training perplexity falling from about 6 to 4 and no BLEU reported (*Fundamentals of Deep Learning*, ch. 7). Its ch. 8 reads the same softmax weighting as soft addressing of an external memory (a Neural Turing Machine or DNC), $r=M^\top w$. On bAbI its TF reimplementation of the DNC averages 15.78% error, against 16.7±7.6% in the DNC paper, and fails path finding at 98.21% error; that is one run set against a mean of runs (ch. 8). Memory-augmented models were largely overtaken by Transformers.
 
 ```python
 months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
@@ -409,6 +415,8 @@ After six epochs on the same data, attention gets every held-out date right, whi
 ## Autoencoders: the bottleneck on its own
 
 The seq2seq model squeezed a sentence through one vector and suffered for it. An **autoencoder** makes that squeeze the whole point. An encoder maps the input to a small vector called the **code**, a decoder rebuilds the input from the code, and the loss is the difference between input and output, so no labels are needed. It can't copy the input through a narrow code, so it has to learn what's regular in the data. Hinton and Salakhutdinov set this out as a non-linear generalisation of PCA, and showed a deep network reaching a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA ([*Reducing the Dimensionality of Data with Neural Networks*](https://doi.org/10.1126/science.1127647), *Science* 2006). Deep ones were hard to train then, which is why that paper needed layer-wise pretraining.
+
+Buduma's ch. 6 measures a 2-D MNIST autoencoder by L2 reconstruction distance (not MSE): 4.78 after about 200 epochs, against 5.75 from a 1 to the other 1s on average, 8.94 to the nearest other class (7s) and 11.05 to the farthest (0s). It beats 2-D PCA by eye only, with no PCA number. PCA also fails on two concentric circles, where variance is equal in every direction. It adds sparsity penalties (a KL term, or keeping the top $k$ activations) beside denoising, untested (*Fundamentals of Deep Learning*, ch. 6).
 
 ```python
 # illustrative: from practice/autoencoder.py, on scikit-learn's digits (8 by 8 pixels, scaled 0 to 1)

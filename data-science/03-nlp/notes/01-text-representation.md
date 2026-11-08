@@ -7,7 +7,8 @@ sources:
   - ../practice/text-analytics-with-python/Ch04 - Feature Engineering for Text Representation/Ch04a - Feature Engineering Text Data - Traditional Strategies.ipynb
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
   - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
-  - Bird, Klein and Loper, Natural Language Processing with Python, https://www.nltk.org/book/
+  - Bird, Klein and Loper, Natural Language Processing with Python (O'Reilly, 2009), https://www.nltk.org/book/
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - ../practice/intro-to-nlp/nltk/text_preprocessing_nltk.ipynb
   - ../practice/intro-to-nlp/tensorFlow/text-processing/
   - ../practice/intro-to-nlp/tensorFlow/tensor-intro-review/tensorFlow_tokenizing_review.ipynb
@@ -105,7 +106,7 @@ with expansion: brown fox not jump lazy dog
 enter world pandora nd century paraplegic marine dispatch moon pandora unique mission become tear follow order protect alien civilization
 ```
 
-**Stemming and lemmatisation.** A stemmer chops suffixes by rule. It is fast and may produce non-words. A lemmatiser looks up the dictionary form using the part of speech, which is slower and produces real words. The output below shows the difference, and also why part of speech matters: alone, "better" is read as an adverb and maps to "well", whereas as an adjective it would map to "good". M&G compare both on IMDb and find that lemmatisation gives a slightly better and smaller vocabulary, but the gain over plain tokens is small, and larger when training data is scarce.
+**Stemming and lemmatisation.** A stemmer chops suffixes by rule. It is fast and may produce non-words. A lemmatiser looks up the dictionary form using the part of speech, which is slower and produces real words. The output below shows the difference, and also why part of speech matters: alone, "better" is read as an adverb and maps to "well", whereas as an adjective it would map to "good". M&G compare both on IMDb: spaCy lemmatisation cuts the `min_df=5` vocabulary from 27,271 to 21,596 features, and with only 1% of the 25,000 training reviews (five random splits) best CV accuracy moves from 0.721 to 0.731, a small gain that they expect to be largest when data is scarce (*Intro to ML with Python*, ch. 7). The NLTK book's one 38-token sentence shows the usual trade: Porter maps "lying" to "lie" while Lancaster leaves it, both over-stem other words (Porter gives "denni" and "mandat"), and the WordNet lemmatiser turns "women" into "woman" but leaves "lying" and "distributing" alone when no part of speech is passed (*NLP with Python*, ch. 3). Its hand-written suffix stripper over-strips the same way ("is" becomes "i", "basis" becomes "basi"), which the authors accept when a stem only has to be a consistent key, not a word.
 
 ```python
 from nltk.stem import PorterStemmer, LancasterStemmer
@@ -124,6 +125,22 @@ lying        lie        lying      lie
 studies      studi      study      study
 organization organ      org        organization
 better       better     bet        well
+```
+
+The tokeniser matters as much as the stemmer. A single regular expression keeps contractions and hyphenated words whole, where NLTK's Treebank-style `word_tokenize` splits clitics off (*NLP with Python*, ch. 3, pattern from its Alice example).
+
+```python
+import re
+from nltk import word_tokenize
+
+text = "It's hot-tempered, and it won't wait."
+print(re.findall(r"\w+(?:[-']\w+)*|'|[-.(]+|\S\w*", text))
+print(word_tokenize(text))
+```
+
+```text
+["It's", 'hot-tempered', ',', 'and', 'it', "won't", 'wait', '.']
+['It', "'s", 'hot-tempered', ',', 'and', 'it', 'wo', "n't", 'wait', '.']
 ```
 
 ### Linguistic structure (Sarkar ch. 1, 3b)
@@ -219,7 +236,7 @@ stop_words + min_df=5       5,175 features  0.451% non-zero
 
 ### n-grams
 
-Single words lose "not good" and "Supreme Court". Adding pairs and triples recovers some local order, at the price of many more features. On IMDb, M&G's `(1, 3)` range with TF-IDF and logistic regression goes from 0.89 to 0.91. Pair n-grams with `min_df`, since most long n-grams occur once and teach nothing.
+Single words lose "not good" and "Supreme Court". Adding pairs and triples recovers some local order, at the price of many more features. On IMDb, M&G's `(1, 3)` range with TF-IDF and logistic regression goes from 0.89 to 0.91. Pair n-grams with `min_df`, since most long n-grams occur once and teach nothing. The same sparsity breaks generation: a greedy bigram model that always takes the commonest successor, built on the Genesis text, loops ("the land of the land of the land"), because the best-seen next word of "land" leads back to "of" (*NLP with Python*, ch. 2).
 
 ```python
 cv12 = CountVectorizer(ngram_range=(1, 2), min_df=5)
@@ -398,6 +415,7 @@ flowchart LR
 
 - **Default stop-word lists contain negations.** Both NLTK's and scikit-learn's lists include "not". Removing them turns "not good" into "good", so check the list against your task.
 - **Fitting the vectoriser on all the data.** The vocabulary and IDF then contain the test set. Put the vectoriser in the pipeline.
+- **Testing vocabulary membership against a list.** Keep the vocabulary as a `set` or `dict`: the NLTK book times 1,000 membership tests on a 100,000-word vocabulary at 2.8 s for a list and 0.0037 s for a set, on 2009 hardware, so read it as an order-of-magnitude (about 1,000x) argument (*NLP with Python*, ch. 4).
 - **Calling `.toarray()`.** A matrix with a few hundred thousand features and a few percent of a percent non-zero will not fit in memory as a dense array.
 - **`max_features` before `min_df` thinking.** Keeping the most frequent features keeps the corpus-specific stop words and throws away the rare, informative ones.
 - **Different preprocessing at inference.** A model trained on lemmas and served on raw text degrades with no error. This is [train/serve skew](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves): the world hasn't moved, but serving computes features differently from training. One function, or a layer inside the model.
@@ -441,7 +459,7 @@ top 100 words: 44.2% of tokens
 words seen once: 9,561 of 21,809
 ```
 
-The top 100 words are 44.2% of all tokens, and 9,561 of the 21,809 vocabulary words, about 44%, occur once. This long tail is why `min_df` removes so much at so little cost.
+The top 100 words are 44.2% of all tokens, and 9,561 of the 21,809 vocabulary words, about 44%, occur once. This long tail is why `min_df` removes so much at so little cost. The NLTK book finds the same shape in a novel: *Moby Dick* has 260,819 tokens but 19,317 types, lowercasing alone cuts that to 17,231, the 50 commonest tokens (mostly function words and punctuation) cover nearly half the text, and about 9,000 types are hapaxes (*NLP with Python*, ch. 1). Tokens per type also varies by genre, from 4.3 in humour to 8.3 in romance fiction on the Brown corpus (ch. 1), so a vocabulary setting tuned on one genre will not transfer. On the whole Brown corpus the top eight tokens (the , . of and to a in) already cover 25.97% (ch. 4).
 
 </details>
 

@@ -1,0 +1,370 @@
+{
+ "schema": 1,
+ "key": "sha1:1896c725898b",
+ "pdf": "data-analytics/sources/statistical-rethinking/ch07-interactions.pdf",
+ "bib": {
+  "title": "Statistical Rethinking, Chapter 7: Interactions",
+  "authors": [
+   "Richard McElreath"
+  ],
+  "first_author": "McElreath",
+  "year": null,
+  "venue": "book chapter (Statistical Rethinking, first edition, pp. 209-239; map/rethinking-package era)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78029,
+  "chars_total": 78029,
+  "engine": "pymupdf",
+  "skipped": "none; footnotes 106-115 are not in the cached text"
+ },
+ "type": "book-chapter",
+ "question": "How do we let the association between a predictor and an outcome depend on another predictor, and how do we fit, interpret and plot such interactions?",
+ "hypothesis": null,
+ "contributions": [
+  "Builds a linear interaction by making a slope its own linear model",
+  "Shows symmetry of linear interactions",
+  "Triptych plots and centering for continuous interactions",
+  "Design-formula syntax for interactions"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Adding a dummy for Africa gives a parallel line: it shifts the intercept but cannot change the slope",
+   "kind": "measured",
+   "source": null,
+   "metric": "WAIC",
+   "value": 476.5,
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); m7.4 (rugged + cont_africa) vs m7.3 (rugged only, WAIC 539.6)",
+   "quote": "m7.4 476.5",
+   "table": "Table (R code 7.5), row m7.4, column WAIC; dWAIC 63.1 vs m7.3",
+   "note": null,
+   "where": "p.215"
+  },
+  {
+   "claim": "Linear interaction model m7.5 gets most WAIC weight over the dummy-only model",
+   "kind": "measured",
+   "source": null,
+   "metric": "WAIC weight",
+   "value": 0.97,
+   "unit": "Akaike weight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); compare(m7.3,m7.4,m7.5)",
+   "quote": "Model family m7.5 has about 97% of the WAIC-estimated model weight.",
+   "table": "Table (R code 7.8), row m7.5, column weight",
+   "note": "WAIC m7.5 469.6, m7.4 476.4, m7.3 539.7; dWAIC m7.4 6.8 with dSE 6.22, so interaction is sparse-data uncertain",
+   "where": "p.217"
+  },
+  {
+   "claim": "Interaction posterior mean bAR (rugged x Africa)",
+   "kind": "measured",
+   "source": null,
+   "metric": "posterior mean",
+   "value": 0.35,
+   "unit": "log-GDP per ruggedness unit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); precis(m7.5), sd 0.13, 5.5%-94.5% 0.14 to 0.55",
+   "quote": "bAR\n0.35",
+   "table": "precis(m7.5), row bAR, column Mean",
+   "note": null,
+   "where": "p.221"
+  },
+  {
+   "claim": "MAP slope of log-GDP on ruggedness within Africa",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "slope",
+   "value": 0.17,
+   "unit": "log-GDP per ruggedness unit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); gamma = bR + bAR",
+   "quote": "γ = βR + βAR(1) = −0.18 + 0.35 = 0.17",
+   "table": null,
+   "note": null,
+   "where": "p.221"
+  },
+  {
+   "claim": "Posterior mean slope outside Africa (reversal of sign)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "slope",
+   "value": -0.18,
+   "unit": "log-GDP per ruggedness unit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10))",
+   "quote": "γ = βR + βAR(0) = −0.18",
+   "table": null,
+   "note": null,
+   "where": "p.221"
+  },
+  {
+   "claim": "Posterior probability that the slope in Africa is below the slope outside Africa",
+   "kind": "measured",
+   "source": null,
+   "metric": "P(gamma.Africa < gamma.notAfrica)",
+   "value": 0.0036,
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); sampled from posterior of m7.5",
+   "quote": "[1] 0.0036",
+   "table": null,
+   "note": "Tiny despite visual overlap of the two marginal densities in Fig 7.5: the difference must be computed from joint samples",
+   "where": "p.222"
+  },
+  {
+   "claim": "For a minimum-ruggedness nation, moving to Africa lowers expected log-GDP by about 2 points; at maximum ruggedness (6.2) the effect is almost nil",
+   "kind": "measured",
+   "source": null,
+   "metric": "expected reduction",
+   "value": 2,
+   "unit": "log-GDP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, rugged data, log(rgdppc_2000) on terrain ruggedness, all countries with GDP data, MAP fit with map(), flat-ish priors (a~N(8,100), b~N(0,1), sigma~U(0,10)); the mirror reading of the same interaction (Fig 7.6), min rugged 0.003",
+   "quote": "the expected reduction in log-GDP is about 2 full points",
+   "table": null,
+   "note": null,
+   "where": "p.224"
+  },
+  {
+   "claim": "Tulips: interaction model m7.7 vs main-effects m7.6, almost all weight to interaction",
+   "kind": "measured",
+   "source": null,
+   "metric": "WAIC weight",
+   "value": 0.99,
+   "unit": "Akaike weight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, tulips data (27 beds-by-treatment rows), blooms on water and shade, MAP fit with map(), priors N(.,100); uncentered predictors; WAIC 296.4 vs 305.8",
+   "quote": "m7.7 296.4",
+   "table": "Table (R code 7.22), row m7.7, column weight; weight 0.99, dWAIC 9.3",
+   "note": null,
+   "where": "p.229"
+  },
+  {
+   "claim": "Uncentered tulip fit: intercept swings between models and shade main effect flips sign when the interaction is added",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercept a in m7.7 (53.49 in m7.6; bS -38.95 vs 35.00)",
+   "value": -84.26,
+   "unit": "blooms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, tulips data (27 beds-by-treatment rows), blooms on water and shade, MAP fit with map(), priors N(.,100); coeftab(m7.6,m7.7), Nelder-Mead, maxit=1e4",
+   "quote": "-84.26",
+   "table": "coeftab(m7.6,m7.7), row a, column m7.7",
+   "note": null,
+   "where": "p.229"
+  },
+  {
+   "claim": "Centered tulip fit: main effects stay stable with or without the interaction and the intercept is the grand mean",
+   "kind": "measured",
+   "source": null,
+   "metric": "intercept a in m7.9 (129.00 in m7.8)",
+   "value": 129.01,
+   "unit": "blooms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, tulips data (27 beds-by-treatment rows), blooms on water and shade, MAP fit with map(), priors N(.,100); predictors centered, coeftab(m7.8,m7.9), start values given",
+   "quote": "129.01",
+   "table": "coeftab(m7.8,m7.9), row a, column m7.9",
+   "note": null,
+   "where": "p.231"
+  },
+  {
+   "claim": "Centered interaction model m7.9 posterior mean for interaction bWS",
+   "kind": "measured",
+   "source": null,
+   "metric": "posterior mean",
+   "value": -51.87,
+   "unit": "blooms per water x shade unit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, tulips data (27 beds-by-treatment rows), blooms on water and shade, MAP fit with map(), priors N(.,100); precis(m7.9), sd 12.95",
+   "quote": "-51.87",
+   "table": "precis(m7.9), row bWS, column Mean",
+   "note": "bW 74.96, bS -41.14, sigma 45.22",
+   "where": "p.232"
+  },
+  {
+   "claim": "At the mean water level, going from least to most shade roughly halves bloom size; at highest water, shade cuts it by about two-thirds",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "McElreath ch7, tulips data (27 beds-by-treatment rows), blooms on water and shade, MAP fit with map(), priors N(.,100); Fig 7.7 bottom row, 97% interval of mean",
+   "quote": "Going from the least (−1) to the most shade, blooms are approximately halved in size.",
+   "table": null,
+   "note": null,
+   "where": "p.234"
+  },
+  {
+   "claim": "Splitting data into Africa and non-Africa fits would force separate sigma, hurt model comparison and block borrowing across groups (the case for multilevel models)",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument, section 7.1",
+   "quote": "When we split the data, this borrowing is impossible.",
+   "table": null,
+   "note": null,
+   "where": "p.214"
+  }
+ ],
+ "limits": [
+  "Uses MAP quadratic approximation (map), not MCMC; the chapter says it needs a more capable conditioning engine in the next chapter",
+  "Flat/weak priors on tulips; author says flat priors are not the best thing to do",
+  "Only 27 tulip rows; interaction for Africa rests on few African countries (dSE nearly equals dWAIC between m7.5 and m7.4)",
+  "WAIC use is debated here since no one resamples nations; author says reasonable people disagree",
+  "Bed (cluster) variable left out of tulip analysis; deferred to exercise 7H1",
+  "Linear interactions are only a descriptive epicycle; a mechanistic model would be better (author)",
+  "First-edition rethinking/map code, dated against ulam/quap"
+ ],
+ "practices": [
+  "Do not split data by group to get different slopes; model the split inside one model so sigma is shared and uncertainty on the grouping is quantified (p.213-214)",
+  "Do not read an interaction from a table of means; plot posterior predictions (p.219, p.233)",
+  "Compute any derived quantity (e.g. gamma) from posterior samples so it carries uncertainty (p.221)",
+  "Compute the distribution of a difference directly; marginal-density overlap is not a test (p.222)",
+  "Centre continuous predictors: the intercept becomes the grand mean, main effects keep their meaning across models, and optimisation converges (p.225-232)",
+  "Give optimiser explicit start values and consider Nelder-Mead or more iterations when MAP fitting fails (p.228-230)",
+  "Use a triptych plot, fixing the other variable at several values, for continuous interactions (p.233)",
+  "Treat the two readings of a linear interaction as the same model and plot both (p.223-225)",
+  "Use non-standard interval widths (97%) to remind that 95% is arbitrary (p.215)"
+ ],
+ "terms": [
+  {
+   "term": "interaction",
+   "definition": "a kind of conditioning, a way of allowing parameters (really their posterior distributions) to be conditional on further aspects of the data",
+   "where": "p.210"
+  },
+  {
+   "term": "linear interaction",
+   "definition": "built by extending the linear modeling strategy to parameters within the linear model (a slope defined as a linear model)",
+   "where": "p.210, 216"
+  },
+  {
+   "term": "triptych plot",
+   "definition": "a panel of three complementary figures that comprise a whole picture of the regression results",
+   "where": "p.225, 233"
+  },
+  {
+   "term": "centering",
+   "definition": "create a new variable that contains the same information as the original, but has a new mean of zero",
+   "where": "p.230"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Wald (survivorship bias in WWII bombers)",
+   "year": 1950,
+   "arxiv": null,
+   "relation": "related",
+   "note": "conditioning on survival motivates the chapter; Wald 1950 book on decision theory",
+   "quote": null
+  },
+  {
+   "work": "Primate milk data (earlier chapters of Statistical Rethinking)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "motivating example only",
+   "quote": null
+  },
+  {
+   "work": "rugged data (Nunn and Puga style terrain ruggedness/Africa)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "reference not printed in cached text; author and year not stated, footnotes 109-111 missing",
+   "quote": null
+  },
+  {
+   "work": "tulips data",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "greenhouse bloom experiment, 27 rows",
+   "quote": null
+  },
+  {
+   "work": "Statistical Rethinking chapter 6 (WAIC) and chapter 12 (multilevel models)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "WAIC for comparing interaction models; multilevel models described as massive interaction models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7.2",
+   "caption": "Separate linear regressions inside and outside of Africa, for log-GDP against terrain ruggedness.",
+   "page": 4,
+   "why": "Shows the sign reversal that motivates the interaction"
+  },
+  {
+   "figure": "Fig 7.3",
+   "caption": "Including a dummy variable for African nations has no effect on the slope.",
+   "page": 8,
+   "why": "Parallel lines: dummy shifts intercept only"
+  },
+  {
+   "figure": "Fig 7.4",
+   "caption": "Posterior predictions for the terrain ruggedness model, including the interaction between Africa and ruggedness.",
+   "page": 12,
+   "why": "Recovered slope reversal in one model"
+  },
+  {
+   "figure": "Fig 7.5",
+   "caption": "Posterior distributions of the slope relating terrain ruggedness to log-GDP.",
+   "page": 14,
+   "why": "Shows derived parameter gamma has a posterior; overlap vs difference"
+  },
+  {
+   "figure": "Fig 7.6",
+   "caption": "The other side of the interaction between ruggedness and continent.",
+   "page": 17,
+   "why": "Symmetry of the interaction"
+  },
+  {
+   "figure": "Fig 7.7",
+   "caption": "Triptych plot of predicted blooms across water treatments, without (top row) and with (bottom row) an interaction effect.",
+   "page": 26,
+   "why": "Equal slopes without interaction versus water-dependent slopes"
+  }
+ ],
+ "code": [
+  {
+   "where": "R code 7.7, p.217",
+   "snippet": "mu <- a + gamma*rugged + bA*cont_africa ,\ngamma <- bR + bAR*cont_africa ,",
+   "verbatim": true
+  },
+  {
+   "where": "R code 7.13, p.221",
+   "snippet": "gamma.Africa <- post$bR + post$bAR*1\ngamma.notAfrica <- post$bR + post$bAR*0",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Footnotes (106-115) absent from cached text so dataset citations are unknown",
+  "Section map printed empty; year not printed in chapter text"
+ ]
+}

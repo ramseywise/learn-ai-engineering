@@ -41,6 +41,8 @@ The second and third lines parsed the same string into two different days, the 3
 
 The printed dtype is `datetime64[us]`, microsecond resolution. Pandas 3.0 changed this: older versions parsed to nanoseconds by default, and pandas now infers the unit, with microseconds for strings like these ([pandas 3.0 release notes](https://pandas.pydata.org/docs/whatsnew/v3.0.0.html)). It rarely shows, except in one case the release notes warn about. Converting a datetime to an integer now gives a number 1000 times smaller than old code expected, so state the unit with `as_unit` first if you depend on it.
 
+Resolution also sets the range. A 64-bit nanosecond timestamp spans only about 292 years, so `pd.Timestamp.min` and `max` are 1677-09-21 and 2262-04-11, the span the book quotes as 1678 to 2262 (*Python Data Science Handbook*, ch. 3). Coarser units widen it, which matters for historical dates.
+
 ```python
 d = pd.Series(pd.to_datetime(["2025-01-03"]))
 print(d.astype("int64").iloc[0], d.dt.as_unit("ns").astype("int64").iloc[0])

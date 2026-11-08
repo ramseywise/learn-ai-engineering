@@ -24,6 +24,7 @@ sources:
   - "Zhou et al. 2024, Self-Discover — https://arxiv.org/abs/2402.03620"
   - "Yang et al. 2024, Buffer of Thoughts — https://arxiv.org/abs/2406.04271"
   - "Valmeekam et al. 2024, LLMs Still Can't Plan; Can LRMs? — https://arxiv.org/abs/2409.13373"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 9"
 confidence: high
 cleaned: 2026-11-01
   - Aksitov et al. 2023, ReST meets ReAct: Self-Improvement for Multi-Step Reasoning LLM Agent — https://arxiv.org/abs/2312.10003
@@ -282,6 +283,8 @@ Three failure modes matter more for agents than the technique itself:
 | **Non-sequential expertise** | Bridge play, where experts weigh the whole hand instead of stepping through it | Examples from an expert, or a specialist model |
 
 The reasoning a model shows can also be a story told after the fact, so asking "why" does not audit it. The book's own success case makes this point by accident. Asked for the flow of crude oil through a 25 cm pipe, zero-shot Claude applied the laminar-flow formula and reported 84 m³/s, while itself remarking that the figure seemed very high and the flow would be turbulent. Dividing by the pipe's area gives a speed of about 1,700 m/s, so the formula does not apply and the number is meaningless. The book still counts this as the prompt triggering the right behavior. Well-formed steps are not evidence of a correct answer, so check the result independently, as with the restock arithmetic.
+
+Arsanjani and Bustos place a plain single agent (one model, tools through function calling, ReAct) at the base of their agent-level patterns and add structure only when it fails: memory, then RAG, then a self-correction pass. Their self-correction step is a second prompt that casts the model as an auditor: check the preliminary decision against the policy context and say whether anything was missed. It "requires at least two separate LLM calls instead of one", a cost they state without measuring. Their loan examples script the model's replies, and the chapter's claims that RAG "drastically reduces hallucinations" and that a multimodal agent cuts processing time carry no numbers or citations (*Agentic Architectural Patterns*, ch. 9).
 
 Providers now apply much of this inside their models, so zero-shot CoT helps small models more than reasoning models, and thinking modes replace the hand-written instruction. The authors' practical advice is to use a thinking model as a teacher that writes examples for a smaller one, and to set a reminder to retest any CoT prompt every six months, since a hotfix or new model may make it unnecessary.
 

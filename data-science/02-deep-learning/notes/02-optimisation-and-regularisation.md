@@ -201,6 +201,8 @@ Plain gradient descent has one step size for every parameter and no memory. Each
 
 Your **Optimization methods** notebook writes these in NumPy on "moons". After the same epochs: mini-batch GD 79.7%, momentum 79.7%, Adam 94%. Learning-rate decay completes that notebook. Here they are on digits after 10 epochs, over five seeds, with Lion written out to show how little it stores:
 
+Buduma's ch. 4 times momentum on its MNIST ReLU network (rate 0.01, momentum 0.9): about 18,000 minibatches to reach cost 0.1 without it and just over 2,000 with it, read from one TensorBoard run (*Fundamentals of Deep Learning*, ch. 4). It also gives the heuristic for why local minima worry less in high dimensions: if each of the three kinds of critical point were equally likely in each dimension, a random one would be a minimum with probability $1/3^d$. That is an argument and not a measurement. It says AdaGrad "tends to cause a premature drop in learning rate", which is why RMSprop and Adam replace its running sum with a moving average.
+
 ```python
 class Lion(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-4, b1=0.9, b2=0.99, wd=0.0):
@@ -320,6 +322,8 @@ Your **Regularization** notebook uses data from a French football goalkeeper, de
 | Dropout | Mask $D = (\text{rand} < p_{keep})$; $A \mathrel{*}= D / p_{keep}$ (inverted dropout); same mask in backward; **off at test time** | 93% / 95% |
 
 Dropout comes from Srivastava et al., who frame it as training an exponential family of thinned networks that share weights ([JMLR 2014](https://jmlr.org/papers/v15/srivastava14a.html)). To make overfitting visible on digits I took 300 training rows and replaced the labels of 30% with random ones. A wide network has the capacity to memorise those flips:
+
+Buduma's ch. 2 adds two details. Max-norm clips each neuron's incoming weight vector to a radius $c$ (typically 3 or 4) after each step, and dropout there is *inverted*: survivors are divided by the keep probability $p$ in training so that $E[\text{output}] = p\cdot x/p = x$ and no rescaling is needed at test time (*Fundamentals of Deep Learning*, ch. 2). Its $p$ is the keep probability, the reverse of PyTorch's. It also gives a decision rule for the three-way split: training error that stalls means rethink the architecture, validation error that stalls while training improves means regularise, and a poor test score means more data.
 
 ```python
 g = torch.Generator().manual_seed(0)

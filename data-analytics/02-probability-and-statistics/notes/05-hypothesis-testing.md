@@ -4,7 +4,7 @@ sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_inferential_statistics.py
   - ../practice/courses/umich_statistical_analysis.py
-  - Reinhart, Statistics Done Wrong (No Starch, 2015)
+  - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 1 to 6 and 9 to 12; figures not printed in the chapters are cited as reported by Reinhart)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 3, Statistical Experiments and Significance Testing)
   - https://doi.org/10.1080/00031305.2016.1154108 (ASA statement on p-values, The American Statistician, 2016)
   - https://doi.org/10.1111/j.2517-6161.1995.tb02031.x (Benjamini and Hochberg, JRSS B, 1995)
@@ -109,6 +109,10 @@ lift 0.0004, z 2.98, p 2.9e-03, relative lift 0.9%
 ```
 
 Statistically clear, and 0.9% in relative terms. Whether that is worth shipping is a business question that the p-value cannot answer.
+
+A p-value also depends on what you would have done had the data come out differently. Nine right answers out of 12 true/false questions is p = 0.073 against guessing if the plan was "ask 12 questions" (binomial), and p = 0.033 if the plan was "ask until three are wrong" (negative binomial), on identical data (*Statistics Done Wrong*, ch. 1; both values recomputed here with scipy). So the stopping rule is part of the analysis plan. Reinhart's remedy is to report the interval, which answers the same question and shows the effect size; he reports that 97% of experimental psychology papers use significance tests while about 10% give confidence intervals, and that 89% of *Nature* articles report p values without intervals or effect sizes (ch. 1, as reported; the endnotes are not in the chapter PDF).
+
+Comparing two intervals by eye is the same error in another form. If two drugs have the same true effect and each trial has power B, the chance that exactly one comes out significant is 2B(1 − B), which peaks at 50% when each trial has 50% power (*Statistics Done Wrong*, ch. 5, Fig. 5-1). Reinhart's example is a serum trial in which 43% improved on the serum and 22% on control, the first called significant and the second not, though the authors conceded the difference between the groups was not (as reported). Five statin meta-analyses, three "yes" and two "inconclusive", all had a relative risk of death near 0.9 (ch. 5, Fig. 5-2). And two 95% intervals can overlap while the test of their difference still gives p < 0.05: with equal standard errors the test rejects once the estimates sit more than 2.77 standard errors apart (1.96 · √2), but the intervals only stop overlapping at 3.92 (my arithmetic, for ch. 5's point). Test the difference directly.
 
 ### One worked resampling test
 
@@ -269,7 +273,7 @@ P(at least one false positive in 20): 0.642
 simulated: uncorrected 0.619, Bonferroni 0.052
 ```
 
-The vast search effect is the same arithmetic in disguise. Give 20,000 people ten coin tosses each and the chance that somebody tosses ten heads is above 99%, though it is 1 in 1,000 for any named person (*Practical Statistics*, ch. 2). Note that the book's Bonferroni sentence divides alpha by the number of observations; it means the number of tests (*Practical Statistics*, ch. 3).
+The vast search effect is the same arithmetic in disguise. Give 20,000 people ten coin tosses each and the chance that somebody tosses ten heads is above 99%, though it is 1 in 1,000 for any named person (*Practical Statistics*, ch. 2). Note that the book's Bonferroni sentence divides alpha by the number of observations; it means the number of tests (*Practical Statistics*, ch. 3). Reinhart gives the same arithmetic for the jelly-bean cartoon: 20 true nulls give a 64% chance of at least one hit, 45 give 90% and 100 give 99% (*Statistics Done Wrong*, ch. 4). He reports that the average 1980s medical trial made 30 therapeutic comparisons, and that 241 fMRI studies used 207 distinct combinations of methods and corrections; an uncorrected voxel test on a dead salmon gave p = 0.001 in an 81 mm³ cluster (ch. 4, as reported). His caveat on the fixes: Bonferroni costs power, and Benjamini-Hochberg controls the average false discovery rate but does not remove the base-rate problem of [chapter 2](02-probability-foundations.md#the-same-mistake-in-hypothesis-testing).
 
 | Correction | Controls | Rule | When |
 |---|---|---|---|
@@ -310,7 +314,8 @@ Uncorrected, 3 of 11 discoveries are false. Bonferroni and Holm reject five real
 - **Many segments** ("it worked for Android users in Germany"). Each segment is a test. Also the small-N trap from [chapter 3](03-distributions-and-sampling.md).
 - **Many looks** at the same test over time. That is [peeking](../../03-experimentation-and-causality/notes/03-experimentation-at-scale.md).
 - **Data dredging.** The Michigan coursework script ([practice/courses/umich_statistical_analysis.py](../practice/courses/umich_statistical_analysis.py), week 4) lists three remedies: Bonferroni, holding out data to confirm what you found, and pre-registering what you expect and why.
-- **The garden of forking paths:** choices about outliers, transforms and subsets made after seeing the data. Reinhart's fix is to write the analysis plan first (*Statistics Done Wrong*, ch. 9).
+- **The garden of forking paths:** choices about outliers, transforms and subsets made after seeing the data. Reinhart's fix is to write the analysis plan first (*Statistics Done Wrong*, ch. 9). He reports simulations in which covariate sets, exclusions and outlier rules alone move the effect size by a factor of two, and ones where trying several analyses lifts the false-positive rate above 50% for a dataset. His demonstration is a 20-student experiment in which listeners to one Beatles song came out 1.5 years younger than listeners to another (p < 0.05, controlling for father's age, a covariate chosen after looking).
+- **Repeated measures.** Ten patients measured 100 times each give 1,000 data points per arm and 10 patients; the extra rows tighten the estimate for those ten people and say nothing more about the population. Corrections for dependence usually give wider intervals and larger p-values than the naive analysis (*Statistics Done Wrong*, ch. 3). The fixes are to average within subject, use clustered standard errors or a hierarchical model ([clustered standard errors](06-regression-and-glms.md#clustered-standard-errors)), and randomise within blocks. The chapter's cautionary case is the early-1970s menstrual synchrony result: two women with 28- and 30-day cycles drift apart by two days, then four, so a chance overlap is expected, and with an average gap of seven days between period starts the 'synchrony' was an artefact of the null used (ch. 3).
 
 ## Significant results exaggerate
 
@@ -336,6 +341,16 @@ share of significant results with the wrong sign 0.009
 
 The test has 17% power, and the estimates that reach significance average 2.5 times the truth, with almost 1% of them pointing the wrong way. Anyone who ships on that result and forecasts the effect from it will be disappointed later. It is why a replication or holdback often shows a smaller effect than the launch analysis, without anything having gone wrong except selection.
 
+Reinhart (ch. 2, all as reported) puts field numbers on the cause: the median neuroscience study has about 20% power, fewer than 3% of *Science* and *Nature* articles compute power before starting, and more than four-fifths of negative randomised trials in major medical journals (1975 to 1990) could not have detected a 25% difference. Halving heart-attack death risk from 20% to 10% at 80% power needs 400 patients, 200 per arm; 50 would feel adequate and is far too few. At the extreme, for a true 0.3% shift in a birth sex ratio, the rare significant results overstate it at least twentyfold and 40% of them point the wrong way, against 0.9% in the 17%-power run above, because power falls toward α and the sign becomes close to a coin flip. Power can also be found by simulation: generate many datasets with the expected effect and count the share that come out significant.
+
+### Stopping early and double dipping
+
+Testing after every pair of patients from 10 to 100 per group, with no true difference, produces a p-value path that wanders across 0.05 and lets you stop on a win (*Statistics Done Wrong*, ch. 6, Fig. 6-1); the experiment pillar puts the rate at about one in four A/A tests at 20 looks ([peeking](../../03-experimentation-and-causality/notes/03-experimentation-at-scale.md)). Reinhart reports that trials stopped early exaggerate effects by an average of 29% over similar trials that ran to plan, and that more than half of surveyed academic psychologists admitted deciding whether to collect more data after checking significance (ch. 6, as reported). Circularity is the other half. Choosing regions, features or cutoffs on the same data you then test inflates the effect: Reinhart reports that neuroimaging papers break the rule perhaps 40% of the time. Regression to the mean is the sibling: pick the extreme units, measure again, and they move back toward average with no treatment at all. The fixes are a stopping rule and N fixed in advance, choosing on one half of the data and testing on the other (the hold-out remedy the Michigan script lists), and randomly splitting extreme units into treatment and control.
+
+### What the published record looks like
+
+Reinhart's closing chapters collect the field evidence, all of it reported from endnotes that the chapter PDFs omit. Amgen could reproduce 6 of 53 landmark preclinical cancer studies; Nature papers carry typos or errors in their p-values about 38% of the time. Psychologists sent data for only 64 of 249 requested studies, and 15% of the papers had a significant result that was significant only through an error. Adding unpublished data erased the TP53 correlation found across 18 published studies, and Pfizer's unpublished reboxetine data, three times the published volume, showed the drug ineffective. In a review of clinical-trial registrations, more than 40% were filed after recruitment began (ch. 10 and 11). Two checks follow. If a literature's estimated effect implies each study had 20% power but 90% of published studies are significant, results are missing; that is how Francis tested Bem's 10-experiment paper, 9 of which were significant (ch. 11). And for any paper you rely on, ask the six questions in ch. 12: how the sample size was set, how variables were selected, whether the results support the conclusion, whether there are intervals and effect sizes, whether the tests and multiplicity corrections fit, and what the stopping rule was. In a review of the *New England Journal of Medicine* 2001 to 2010, 146 of 363 articles testing a standard practice (about 40%) concluded it should be abandoned; Schoenfeld and Ioannidis found 216 studies linking 40 of 50 cookbook ingredients to cancer, mostly disagreeing (ch. 12). On the practitioner's side, the checkable analysis is a script under version control, tested against known inputs (ch. 10).
+
 ---
 
 ## Pitfalls
@@ -347,6 +362,8 @@ The test has 17% power, and the estimates that reach significance average 2.5 ti
 - **Choosing the test after seeing the result.** Switching one-sided to two-sided, or trimming outliers once the p-value disappoints, voids the false-positive rate.
 - **Running a rank test and reporting a revenue conclusion.** Mann-Whitney tests a tendency toward larger values. It does not test means.
 - **Forecasting from a significant result at low power.** The winner's curse inflates the estimate.
+- **Judging by interval overlap.** Overlapping 95% intervals can still hide p < 0.05; test the difference.
+- **Choosing the stopping rule after the data.** The same 9 of 12 is p = 0.073 or 0.033 depending on the plan.
 - **Unpaired analysis of paired data.** It throws away the main benefit of the design, as the p = 0.33 versus p = 0.0004 comparison showed.
 
 ---

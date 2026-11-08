@@ -169,7 +169,7 @@ flowchart LR
 | [ai-engineering/09-safety-and-security](ai-engineering/09-safety-and-security/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/01-llm-fundamentals](generative-ai/01-llm-fundamentals/README.md) | 0 of 18 | 17 | yes |
 | [generative-ai/02-rag-retrieval](generative-ai/02-rag-retrieval/README.md) | 0 of 19 | 18 | yes |
-| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 14 | 13 | yes |
+| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 16 | 15 | yes |
 | [generative-ai/04-agentic-frameworks](generative-ai/04-agentic-frameworks/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/05-RL](generative-ai/05-RL/README.md) | 0 of 17 | 16 | yes |
 | [generative-ai/06-observability](generative-ai/06-observability/README.md) | 0 of 7 | 6 | yes |
@@ -179,7 +179,7 @@ flowchart LR
 | [data-analytics/01-python-for-data-analysis](data-analytics/01-python-for-data-analysis/README.md) | 0 of 8 | 7 | yes |
 | [data-analytics/02-probability-and-statistics](data-analytics/02-probability-and-statistics/README.md) | 0 of 9 | 8 | yes |
 | [data-analytics/03-experimentation-and-causality](data-analytics/03-experimentation-and-causality/README.md) | 0 of 6 | 5 | yes |
-| [data-analytics/04-bayesian-analysis](data-analytics/04-bayesian-analysis/README.md) | 0 of 8 | 7 | yes |
+| [data-analytics/04-bayesian-analysis](data-analytics/04-bayesian-analysis/README.md) | 0 of 9 | 8 | yes |
 | [data-analytics/05-visualisation-and-storytelling](data-analytics/05-visualisation-and-storytelling/README.md) | 0 of 7 | 6 | yes |
 | [data-analytics/06-applied-analyses](data-analytics/06-applied-analyses/README.md) | 0 of 13 | 12 | yes |
 | [data-science/01-classical-ml](data-science/01-classical-ml/README.md) | 2 of 17 | 16 | yes |

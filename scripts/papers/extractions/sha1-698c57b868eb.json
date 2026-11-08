@@ -1,0 +1,169 @@
+{
+ "schema": 1,
+ "key": "sha1:698c57b868eb",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch10-system-level-patterns-production-readiness.pdf",
+ "bib": {
+  "title": "System-Level Patterns for Production Readiness (Chapter 10, Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": ["Arsanjani", "Bustos"],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53881,
+  "chars_total": 53881,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which system-level infrastructure patterns turn a multi-agent proof of concept into a secure, governed, scalable production system, and in what order should they be adopted?",
+ "hypothesis": "Patterns should be adopted progressively as complexity, risk and scale grow, mapped to the GenAI Maturity Model; security first, registry last.",
+ "contributions": [
+  "Maps four system-level patterns (Tool and Agent Registry, Real-Time Compliance Monitoring, Agent Authentication and Authorization, Event-Driven Reactivity) to GenAI Maturity Model levels 3 to 5 (Table 10.1)",
+  "A three-phase enterprise rollout sequence (Table 10.2)",
+  "A system integration blueprint (API gateway, message bus, central registry, governance services) and a chained supply chain example",
+  "Context/Problem/Solution/Consequences write-up and toy Python for each pattern"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Worked example: a PreferredVendorAPI mock tool returns a quote of 95.00 and a WebScraper mock returns 98.50, and the agent picks the minimum; both prices are invented for the toy registry code.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "quote price",
+   "value": "95.00",
+   "unit": null,
+   "baseline_value": "98.50",
+   "n": null,
+   "setup": "Toy ToolRegistry code, mock tools registered under capability get_quote; ProcurementAgent calls all and takes min price. No real data.",
+   "quote": "return {\"source\": \"PreferredVendorAPI\", \"price\": 95.00}",
+   "table": null,
+   "note": "Invented illustration, not a measurement.",
+   "where": "p.348, Tool and Agent Registry, Example implementation"
+  },
+  {
+   "claim": "Worked example: Patient-12345 has only billing consent so the monitor denies research access, while Patient-67890 with clinical_research consent is allowed; patient IDs and consent records are invented.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy HIPAAComplianceMonitor with a default-deny policy function and a mock consent dictionary.",
+   "quote": null,
+   "table": null,
+   "note": "Invented; no figure is measured.",
+   "where": "pp.351-354"
+  },
+  {
+   "claim": "Worked example: in the authorization demo, a sales_role agent asking for payment details is refused with a 403 Forbidden, while an expired token during the supply chain flow yields 401 Unauthorized and the agent re-authenticates and retries.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "HTTP status",
+   "value": "403",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy CustomerDataAgent with a role-to-permission ACL; the 'token' is just the role string. The 401 case is in the supply chain resiliency note.",
+   "quote": "the authorization check would fail, and the request would be denied with a 403 Forbidden",
+   "table": null,
+   "note": "The text says the request is denied with a 403; the code also returns 401 for unknown roles. Illustrative only.",
+   "where": "pp.343, 357-358"
+  },
+  {
+   "claim": "Claim: it is neither necessary nor advisable to implement all patterns for a day-one proof of concept; adopt them progressively.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' guidance, no data.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p.340"
+  },
+  {
+   "claim": "Claim: the chapter reports no measurements, benchmarks, latency figures or cost figures of any kind; all numbers are toy values or IDs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole chapter.",
+   "quote": null,
+   "table": null,
+   "note": "The chapter mentions 'performance indicators that define success' (p.345) but none are given in this chapter.",
+   "where": "whole chapter"
+  }
+ ],
+ "limits": [
+  "No empirical evidence: no benchmarks, latency or overhead numbers for registry, policy engine or gateway; all code is mock.",
+  "Authentication code trusts a role string as the token, which the code comments admit; no JWT validation is shown.",
+  "The text refers to 'performance indicators that define success' but the chapter has none, so a section appears to have been cut.",
+  "Only four patterns are covered; guardrails on model output, human approval and sandboxing are not in this chapter.",
+  "Product names (Okta, Entra ID, Consul, etcd, Kafka, OPA) may date."
+ ],
+ "practices": [
+  "Adopt patterns progressively by maturity level: level 3 gets basic IAM service accounts and webhooks, level 4 adds auth, event reactivity and compliance monitoring, level 5 adds the registry (Table 10.1, p.340-341).",
+  "Phase 1 secure the foundation: integrate with enterprise IAM from day one and treat the agent as a first-class service identity (Table 10.2, p.344).",
+  "Phase 2: add an event bus for decoupling and compliance monitoring for any workflow with sensitive data, PII or financial transactions (Table 10.2, p.345).",
+  "Phase 3: add the Tool and Agent Registry when moving to a true multi-agent system (Table 10.2, p.345).",
+  "Enforce compliance at action level, row level and field level (e.g. block PII/PHI) before any operation proceeds (p.342).",
+  "Compliance monitoring goes beyond authorization: AuthZ asks whether an agent can access, the monitor asks whether it should given current state such as consent (p.350).",
+  "Default-deny in the policy engine; use a standard policy language such as Rego for OPA; place policy choke points at data stores, external APIs and user communication rather than checking every action (pp.350, 352, 354).",
+  "Block violating actions, log a compliance breach and optionally alert a human supervisor (p.350).",
+  "Issue each agent a unique credential, use short-lived tokens (JWT), RBAC with permissions on roles not agents (p.355).",
+  "Do not invent your own auth protocol; use OAuth 2.0 client credentials flow for machine-to-machine and OIDC for authentication (p.358-359).",
+  "Centralise token validation and initial authorization in an API gateway; check signature, expiry, audience and scopes, rotate tokens (pp.341, 359).",
+  "High security: signed JWTs validated against a rotating JWKS and mutual TLS (p.355).",
+  "Keep client_id and client_secret in a secrets manager such as Vault, AWS Secrets Manager or Google Secret Manager, never hardcoded (p.360).",
+  "On a 401 the agent should catch the error, re-authenticate and retry instead of crashing (p.343).",
+  "Event-driven agents need backpressure, dead-letter queues for poison messages and idempotent actions because of redelivery (pp.360-361).",
+  "Version event schemas (Avro or Protobuf); start with a managed bus (Pub/Sub, SQS/SNS) before self-hosting Kafka (p.364).",
+  "Registry: a rich metadata schema (name, description, input/output schema, endpoint) is the key; a JSON file or database suffices for simple cases, Consul or etcd for enterprise; design for high availability (pp.346, 349)."
+ ],
+ "terms": [
+  {"term": "Tool and Agent Registry", "definition": "a centralized registry, a service that acts as a \"yellow pages\" for the system's capabilities", "where": "p.346"},
+  {"term": "Real-Time Compliance Monitoring", "definition": "a dedicated, system-wide compliance monitor, which can be another specialized agent or a dedicated policy engine service, acting as a governance layer", "where": "p.350"},
+  {"term": "Agent Authentication and Authorization", "definition": "integrate the agentic system with an IAM framework, treating agents as first-class citizens with digital identities; authentication = who is this agent, authorization = what is it allowed to do", "where": "pp.354-355"},
+  {"term": "Event-Driven Reactivity", "definition": "build the system on an event-driven architecture with producers, a message bus and consumer agents so a push model triggers the sense-plan-act loop instead of polling", "where": "p.360"},
+  {"term": "Dead-letter queue", "definition": "captures malformed events that cause agents to crash, preventing a poison pill from blocking the queue", "where": "p.360"},
+  {"term": "Idempotency", "definition": "agent actions designed so a redelivered event does not execute the same action twice", "where": "pp.360-361"}
+ ],
+ "lineage": [
+  {"work": "GenAI Maturity Model (the authors' own, earlier chapters)", "year": null, "arxiv": null, "relation": "extends", "note": "patterns mapped to levels 3, 4, 5", "quote": null},
+  {"work": "Chapter 4 agent-level architecture (same book)", "year": 2026, "arxiv": null, "relation": "extends", "note": "this chapter moves from agent internals to the surrounding system", "quote": null},
+  {"work": "Open Policy Agent / Rego", "year": null, "arxiv": null, "relation": "related", "note": "recommended policy engine", "quote": null},
+  {"work": "OAuth 2.0, RFC 6749; OpenID Connect", "year": null, "arxiv": null, "relation": "uses-method", "note": "client credentials flow for agent identity", "quote": null},
+  {"work": "Apache Kafka, RabbitMQ, Google Cloud Pub/Sub", "year": null, "arxiv": null, "relation": "related", "note": "message bus options", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 10.1", "caption": "A system integration architecture showing how system-level patterns provide the foundational infrastructure for agentic applications", "page": 342, "why": "Shows gateway, message bus, registry and governance layer around the agents in one picture."},
+  {"figure": "Fig 10.2", "caption": "A sequence diagram showing how system-level patterns chain together in an automated supply chain workflow", "page": 344, "why": "Seven-step trace of one event through event bus, IAM, gateway, registry and compliance monitor."},
+  {"figure": "Fig 10.3", "caption": "The Tool and Agent Registry pattern decouples the agent from the tool implementation", "page": 346, "why": "Register, discover, invoke."},
+  {"figure": "Fig 10.4", "caption": "The Real-Time Compliance Monitoring pattern intercepts actions for policy adjudication", "page": 351, "why": "Interception and allow/deny against a policy engine."},
+  {"figure": "Fig 10.5", "caption": "The Agent Authentication and Authorization pattern secures interactions using standard IAM protocols", "page": 356, "why": "JWT from IAM, gateway validation, RBAC check."},
+  {"figure": "Fig 10.6", "caption": "The Event-Driven Reactivity pattern enables scalable and responsive systems through a central message bus", "page": 361, "why": "Producer, bus, consumer agents push model."},
+  {"figure": "Table 10.1", "caption": "Mapping system-level patterns to the GenAI Maturity Model", "page": 340, "why": "Which pattern is needed at which level."},
+  {"figure": "Table 10.2", "caption": "A phased rollout for system-level patterns", "page": 344, "why": "Adoption order with rationale."}
+ ],
+ "code": [
+  {"where": "pp.351-353, compliance monitor", "snippet": "def policy_engine_adjudicate(action: str, resource_id: str, consent_types: list) -> bool:\n    if action == \"access_patient_record_for_research\":\n        return \"clinical_research\" in consent_types\n    return False # Default deny", "verbatim": true},
+  {"where": "p.357, authorization check", "snippet": "allowed_actions = self.acl.get(agent_role)\nif requested_action not in allowed_actions:\n    return \"Error: 403 Forbidden\"", "verbatim": true},
+  {"where": "p.348, registry", "snippet": "class ToolRegistry: register_tool(tool_name, capability, endpoint, schema) / discover_tools(capability) -> self.registry.get(capability, [])", "verbatim": false}
+ ],
+ "problems": [
+  "Text came out with bullet and numbering glyphs separated from their lines and stray idx_ index markers; code indentation is lost in the cache, so snippets are reconstructed.",
+  "No embedded instructions found. The chapter ends with a Packt newsletter promo."
+ ]
+}
