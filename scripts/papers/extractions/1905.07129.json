@@ -1,0 +1,197 @@
+{
+ "schema": 1,
+ "key": "1905.07129",
+ "pdf": "ai-engineering/05-graph-engineering/sources/zhang-2019-ernie.pdf",
+ "bib": {
+  "title": "ERNIE: Enhanced Language Representation with Informative Entities",
+  "authors": ["Zhengyan Zhang", "Xu Han", "Zhiyuan Liu", "Xin Jiang", "Maosong Sun", "Qun Liu"],
+  "first_author": "Zhang",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 1441-1451",
+  "arxiv": "1905.07129",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45016,
+  "chars_total": 45016,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a BERT-style language representation model be improved on knowledge-driven tasks by fusing entity embeddings from a knowledge graph into its layers during pre-training?",
+ "hypothesis": "Informative entities in KGs can enhance language representation with external knowledge.",
+ "contributions": [
+  "A knowledgeable aggregator (K-Encoder) that fuses token and entity embeddings",
+  "A denoising entity auto-encoder (dEA) pre-training task over token-entity alignments",
+  "Gains over BERT on entity typing and relation classification, comparable results on GLUE"
+ ],
+ "method": {
+  "summary": "ERNIE stacks a BERT-style T-Encoder (N=6 layers) under a K-Encoder (M=6 aggregators) that fuses token embeddings with TransE entity embeddings aligned by TAGME/Wikidata links. It is pre-trained on English Wikipedia aligned to Wikidata with MLM, NSP and a new dEA entity-prediction loss, then fine-tuned with marker tokens for entity typing and relation classification.",
+  "task": "Knowledge-enhanced language representation pre-training; entity typing, relation classification, GLUE",
+  "trains": true,
+  "datasets": [
+   {"name": "English Wikipedia aligned to Wikidata", "role": "pretrain", "size": "nearly 4,500M subwords and 140M entities", "split": null, "source": "English Wikipedia, Wikidata", "preprocessing": "sentences with fewer than 3 entities discarded"},
+   {"name": "Wikidata subset for TransE", "role": "pretrain", "size": "5,040,986 entities and 24,267,796 fact triples", "split": null, "source": "Wikidata", "preprocessing": "TransE embeddings (dim 100) used as fixed entity inputs"},
+   {"name": "FIGER", "role": "both", "size": "2,000,000 train / 10,000 dev / 563 test, 113 types", "split": "as given", "source": "Ling et al. 2015; train distantly supervised, test human annotated", "preprocessing": null},
+   {"name": "Open Entity", "role": "both", "size": "2,000 train / 2,000 dev / 2,000 test, 6 types", "split": "as given", "source": "Choi et al. 2018; manually annotated", "preprocessing": null},
+   {"name": "FewRel", "role": "both", "size": "8,000 train / 16,000 dev / 16,000 test, 80 relations", "split": "rearranged from few-shot setting: 100 instances per class for train, 200 per class for dev and test", "source": "Han et al. 2018c", "preprocessing": "facts related to FewRel dropped from the KG before pre-training"},
+   {"name": "TACRED", "role": "both", "size": "68,124 train / 22,631 dev / 15,509 test, 42 relations", "split": "as given", "source": "Zhang et al. 2017", "preprocessing": "nearly 80% null instances"},
+   {"name": "GLUE (8 datasets)", "role": "eval", "size": "MNLI 392k, QQP 363k, QNLI 104k, SST-2 67k, CoLA 8.5k, STS-B 5.7k, MRPC 3.5k, RTE 2.5k", "split": "leaderboard submission", "source": "Wang et al. 2018", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "ERNIE", "role": "proposed", "params": "about 114M", "architecture": "T-Encoder (BERT Transformer) + K-Encoder of aggregators with token and entity multi-head attention and an information fusion layer", "init_from": "Google BERT released parameters for the Transformer blocks that encode tokens; entity encoding modules randomly initialised", "tokenizer": "subword", "vocab": null, "layers": "N=6 T-Encoder, M=6 K-Encoder", "hidden": "Hw=768, He=100", "heads": "Aw=12, Ae=4", "context": "256 tokens in pre-training (reduced from 512)", "other": {"entity_embeddings": "TransE, fixed during training", "entity_alignment": "entity aligned to first token of its named-entity phrase"}},
+   {"name": "BERT (BASE)", "role": "baseline", "params": "about 110M", "architecture": "Transformer encoder", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "NFGEC, UFET, CNN, PA-LSTM, C-GCN", "role": "baseline", "params": null, "architecture": "task-specific neural models", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "sum of dEA, MLM and NSP losses; dEA is cross-entropy over entities in the given sequence (Eq. 7); 5% of alignments get a random entity, 15% are masked, rest unchanged",
+   "optimizer": "Adam (fine-tuning stated; pre-training largely follows BERT)",
+   "lr": "pre-training 5e-5; fine-tuning 5e-5, 3e-5, 2e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "pre-training 512; fine-tuning 32; FIGER 2048",
+   "steps": null,
+   "epochs": "pre-training 1 epoch; fine-tuning 3 to 10; FIGER 2 or 3",
+   "tokens": null,
+   "seq_len": "256",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"note": "other pre-training hyper-parameters 'largely follow' BERT without values given"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated (single results reported, no seeds or variance)",
+   "prompting": "Fine-tuning input: [CLS] for common tasks; [ENT] marks around mention for entity typing; [HD] and [TL] marks around head and tail for relation classification; [CLS] output used for classification",
+   "retrieval": "Entity mentions linked to KG entities with TAGME (Ferragina and Scaiella 2010) because most datasets lack entity annotations",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Strict accuracy / loose macro / loose micro (FIGER)", "definition": "strict accuracy is the ratio of instances whose predictions are identical to human annotations", "unit": "%", "higher_is_better": true},
+    {"name": "Precision / Recall / micro-F1 (Open Entity, TACRED)", "definition": "standard; TACRED micro-averaged", "unit": "%", "higher_is_better": true},
+    {"name": "Macro P/R/F1 (FewRel)", "definition": "macro averaged because FewRel has no null instances", "unit": "%", "higher_is_better": true},
+    {"name": "GLUE task scores", "definition": "leaderboard evaluation submissions", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["NFGEC (Attentive, LSTM)", "UFET", "BERT fine-tuned with same input format", "CNN", "PA-LSTM", "C-GCN", "BERT-BASE"],
+   "protocol": "Single reported numbers; no significance test or seeds stated. CNN, PA-LSTM and C-GCN TACRED numbers taken from Zhang et al. 2018."
+  },
+  "availability": {
+   "code": "https://github.com/thunlp/ERNIE",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "models.ERNIE.params", "quote": "The total parameters are about 114M.", "where": "Sec 4.2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "ERNIE improves FewRel relation classification macro F1 over BERT by about 3.4 points.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "88.32", "unit": "%", "baseline_value": "84.89 (BERT)", "n": null,
+   "setup": "FewRel rearranged to 100 train / 200 dev / 200 test instances per class, 80 classes, fine-tuned from BERT-initialised ERNIE, macro averaged; FewRel-related facts removed from the KG before pre-training",
+   "quote": "ERNIE achieves an absolute F1 increase of 3.4% over BERT",
+   "table": "Table 5, row ERNIE, column FewRel F1", "note": null, "where": "Sec 4.4, Table 5"
+  },
+  {
+   "claim": "ERNIE improves TACRED micro F1 over BERT by nearly 2 points and has the best recall and F1.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "67.97", "unit": "%", "baseline_value": "66.00 (BERT); C-GCN 66.40", "n": null,
+   "setup": "TACRED 68,124 train, 42 relations, micro averaged, entities linked with TAGME",
+   "quote": "increases the F1 of BERT by nearly 2.0%",
+   "table": "Table 5, row ERNIE, column TACRED F1", "note": null, "where": "Sec 4.4, Table 5"
+  },
+  {
+   "claim": "On FIGER (distantly supervised) ERNIE raises strict accuracy over BERT by about 5 points; authors read this as KG knowledge regularising against noisy labels.",
+   "kind": "measured", "source": null, "metric": "strict accuracy", "value": "57.19", "unit": "%", "baseline_value": "52.04 (BERT); 55.60 (NFGEC LSTM)", "n": null,
+   "setup": "FIGER, 2M distantly labelled train, 563 human-annotated test, batch 2048, 2 or 3 epochs",
+   "quote": "indicating the external knowledge regularizes ERNIE to avoid ﬁtting the noisy labels",
+   "table": "Table 2, row ERNIE, column Acc.", "note": "ERNIE macro 76.51, micro 73.39 vs BERT 75.16, 71.63", "where": "Sec 4.3, Table 2"
+  },
+  {
+   "claim": "On Open Entity ERNIE reaches F1 75.56 versus 73.56 for BERT.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "75.56", "unit": "%", "baseline_value": "73.56 (BERT); 68.00 (UFET)", "n": null,
+   "setup": "Open Entity, 2,000 train / dev / test, 6 types, fine-tuned with [ENT] marks",
+   "quote": null,
+   "table": "Table 3, row ERNIE, column F1", "note": "P 78.42 vs 76.37, R 72.90 vs 70.96", "where": "Sec 4.3, Table 3"
+  },
+  {
+   "claim": "Ablation: removing entity input at fine-tuning keeps FewRel F1 at 85.79 and removing dEA gives 85.62; both lose most of the gain over BERT (84.89), so the full model needs both.",
+   "kind": "measured", "source": null, "metric": "F1", "value": "85.79", "unit": "%", "baseline_value": "88.32 (full ERNIE); 84.89 (BERT)", "n": null,
+   "setup": "FewRel, same rearranged split; w/o entities = fine-tuning without entity sequence input, w/o dEA = pre-training without dEA",
+   "quote": "which increases the F1 score of BERT by 0.9%",
+   "table": "Table 7, row w/o entities, column F1", "note": "w/o dEA F1 85.62, text says +0.7%", "where": "Sec 4.6, Table 7"
+  },
+  {
+   "claim": "ERNIE is comparable to BERT-BASE on GLUE: same on QQP and SST-2, slightly lower on MNLI, better on CoLA and RTE, worse on STS-B and MRPC.",
+   "kind": "measured", "source": null, "metric": "GLUE scores", "value": null, "unit": "%", "baseline_value": null, "n": null,
+   "setup": "8 GLUE datasets, leaderboard submissions, BERT numbers from the leaderboard",
+   "quote": "In short, ERNIE achieves comparable results with BERTBASE on GLUE.",
+   "table": null, "note": "e.g. MNLI 84.0/83.2 vs 84.6/83.4; RTE 68.8 vs 66.4; STS-B 83.2 vs 85.8 (Table 6)", "where": "Sec 4.5, Table 6"
+  },
+  {
+   "claim": "Knowledge module adds about 4M parameters over BERT-BASE (114M vs 110M).",
+   "kind": "measured", "source": null, "metric": "parameters", "value": "114M", "unit": "parameters", "baseline_value": "110M", "n": null,
+   "setup": "N=6, M=6, Hw=768, He=100, Aw=12, Ae=4",
+   "quote": "The total parameters are about 114M.", "table": null, "note": null, "where": "Sec 4.2"
+  },
+  {
+   "claim": "Pre-training corpus and KG scale.",
+   "kind": "measured", "source": null, "metric": "Wikidata subset", "value": "24,267,796", "unit": "fact triples", "baseline_value": null, "n": null,
+   "setup": "Wikidata sample with 5,040,986 entities used for TransE; corpus nearly 4,500M subwords and 140M entities",
+   "quote": "we sample part of Wikidata which contains 5, 040, 986 entities and 24, 267, 796 fact triples", "table": null, "note": null, "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "Only English Wikipedia and a Wikidata subset; authors list ConceptNet and other knowledge sources, feature-based models and larger annotated corpora as future work.",
+  "Initialised from BERT-BASE rather than trained from scratch because of cost; pre-trained one epoch only; max sequence length cut to 256.",
+  "Entities are fixed TransE vectors (dim 100) over only the entity-linked tokens; alignment errors from TAGME are handled only heuristically via dEA noise (5% random, 15% masked).",
+  "No seeds, variance or significance tests; BERT baseline is the authors' fine-tuning of BERT with the same marker input.",
+  "Ablation done only on FewRel; the ablation shows the gain depends on both dEA and entity input, and the 'w/o dEA' variant gains only 0.7 F1 over BERT.",
+  "GLUE shows no benefit and some losses; authors say GLUE does not require external knowledge.",
+  "Reproducibility: warmup, schedule, weight decay, dropout, hardware and compute not stated.",
+  "Text KG is used as embeddings, not as graph structure or retrieval at inference; not a KG-RAG method."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "dEA (denoising entity auto-encoder)", "definition": "randomly masks some token-entity alignments and requires the system to predict all corresponding entities based on aligned tokens", "where": "Sec 3.4"},
+  {"term": "T-Encoder / K-Encoder", "definition": "underlying textual encoder for lexical and syntactic information, and upper knowledgeable encoder that integrates token-oriented knowledge into textual information", "where": "Sec 3.2"}
+ ],
+ "lineage": [
+  {"work": "BERT: Pre-training of deep bidirectional transformers", "year": 2019, "arxiv": "1810.04805", "relation": "extends", "note": "T-Encoder identical to BERT and initialised from BERT-BASE; main baseline", "quote": null},
+  {"work": "TransE (Bordes et al.)", "year": 2013, "arxiv": null, "relation": "uses-method", "note": "knowledge embeddings for entity inputs", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "multi-head attention in aggregators", "quote": null},
+  {"work": "Sun et al. ERNIE: Enhanced representation through knowledge integration", "year": 2019, "arxiv": null, "relation": "related", "note": "knowledge masking; same model name by coincidence (footnote 1)", "quote": null},
+  {"work": "TAGME (Ferragina and Scaiella)", "year": 2010, "arxiv": null, "relation": "uses-method", "note": "entity linking of mentions to KG", "quote": null},
+  {"work": "NFGEC (Shimaoka et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "FIGER and Open Entity baseline", "quote": null},
+  {"work": "UFET / Ultra-fine entity typing (Choi et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "Open Entity dataset and baseline", "quote": null},
+  {"work": "FIGER (Ling et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "entity typing dataset", "quote": null},
+  {"work": "FewRel (Han et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "relation classification, rearranged", "quote": null},
+  {"work": "TACRED / PA-LSTM (Zhang et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "dataset and baseline", "quote": null},
+  {"work": "C-GCN (Zhang et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "graph convolution over pruned dependency trees; slightly beats BERT on TACRED", "quote": null},
+  {"work": "GLUE (Wang et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "common-task check", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An example of incorporating extra knowledge information for language understanding.", "page": 1, "why": "Shows why KG types (Song, Book) disambiguate 'UNK wrote UNK in UNK'."},
+  {"figure": "Fig 2", "caption": "The left part is the architecture of ERNIE. The right part is the aggregator for the mutual integration of the input of tokens and entities.", "page": 3, "why": "T-Encoder under K-Encoder with token/entity attention and information fusion layer."},
+  {"figure": "Fig 3", "caption": "Modifying the input sequence for the specific tasks.", "page": 5, "why": "Shows [ENT], [HD], [TL] marker tokens."},
+  {"figure": "Table 7", "caption": "Ablation study on FewRel (%).", "page": 8, "why": "Isolates entity input and dEA contributions."}
+ ],
+ "code": [
+  {"where": "Eq. 4, Sec 3.3", "snippet": "h_j = sigma(W~_t w~_j + W~_e e~_k + b~); w_j = sigma(W_t h_j + b_t); e_k = sigma(W_e h_j + b_e)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found. Equations are garbled by PDF extraction, so the code snippet is a paraphrase. Fig 2 text is scattered in extraction."
+ ]
+}

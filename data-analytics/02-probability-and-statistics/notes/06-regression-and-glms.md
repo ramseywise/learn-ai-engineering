@@ -113,6 +113,8 @@ Read it from the left. Each `coef` is a *conditional* difference: `new_checkout`
 
 `std err` is the coefficient's sampling standard deviation, and `t` is the ratio of the two. `[0.025, 0.975]` is the 95% confidence interval, which is what you should report. R² at 0.30 tells you the share of variance explained. It is low, and that is fine for inference. Whether the effect estimate is unbiased depends on the randomisation and has nothing to do with R².
 
+A prediction needs a different interval. The confidence interval covers the average outcome for everyone with those inputs, and the prediction interval covers one new person, adding the irreducible error. The book's advertising fit gives a 95% confidence interval of 10,985 to 11,528 around 11,256 units of sales and a prediction interval of 7,930 to 14,580 around the same centre (*ISLP*, ch. 3). Report the first for an effect or an average, the second for a single user's spend.
+
 ### Why add pre-period covariates
 
 ```python
@@ -244,7 +246,7 @@ slope without point 2.02, with one high-leverage point -0.18
 leverage of that point 0.55 (average 0.010), Cook's D 107.0
 ```
 
-One row of 201 changed a slope of 2.02 to −0.18. It has 55 times the average leverage. The book's version is a house regression where the largest standardized residual (-4.33) is a partial-interest sale priced $757,753 off, and dropping the influential rows moves the Bathrooms coefficient from 2,282 to -16,132 (*Practical Statistics*, ch. 4). Extrapolation fails quietly too: the same fit prices a 5,000 sq ft empty lot at -$522,202 because every training row has a building. Always look at the top few rows by Cook's distance, and go back to the question from chapter 1: what is this row? Then decide.
+One row of 201 changed a slope of 2.02 to −0.18. It has 55 times the average leverage, and the average is always (p + 1)/n for p predictors (*ISLP*, ch. 3). The same chapter flags studentized residuals beyond 3 in absolute value as outliers, and its worst case is a point that is both: high leverage with a large residual. The book's version is a house regression where the largest standardized residual (-4.33) is a partial-interest sale priced $757,753 off, and dropping the influential rows moves the Bathrooms coefficient from 2,282 to -16,132 (*Practical Statistics*, ch. 4). Extrapolation fails quietly too: the same fit prices a 5,000 sq ft empty lot at -$522,202 because every training row has a building. Always look at the top few rows by Cook's distance, and go back to the question from chapter 1: what is this row? Then decide.
 
 ### Multicollinearity
 
@@ -273,7 +275,11 @@ x1 alone: coef 2.05, SE 0.041
 prediction RMSE both 0.920, x1 alone 0.920
 ```
 
-The variance inflation factor (VIF) is how much a coefficient's variance is inflated by correlation with the other predictors. The two coefficients sum to the right total but their split is arbitrary: their standard errors are 20 times larger than the solo fit's. The predictions, however, are just as good. So collinearity is a problem for *explanation* and mostly not for prediction. It biases nothing, but it inflates the SEs. In the book's King County house-price model (R² = 0.5407, in-sample), the bedroom coefficient is negative once square feet and bathrooms are in, because bedrooms and size move together; take size out and it flips to +$27,657 (*Practical Statistics*, ch. 4). Drop or combine predictors if you need to interpret them. For a randomised treatment, collinearity with covariates is not a concern, because assignment is independent of them by construction.
+The variance inflation factor (VIF) is how much a coefficient's variance is inflated by correlation with the other predictors: 1 / (1 − R²ⱼ), where R²ⱼ comes from regressing predictor *j* on all the others. Here that is 391, so R²ⱼ is 0.997. The rule of thumb is that 5 or 10 is a problem (*ISLP*, ch. 3). The two coefficients sum to the right total but their split is arbitrary: their standard errors are 20 times larger than the solo fit's. The predictions, however, are just as good. So collinearity is a problem for *explanation* and mostly not for prediction. It biases nothing, but it inflates the SEs. In the book's King County house-price model (R² = 0.5407, in-sample), the bedroom coefficient is negative once square feet and bathrooms are in, because bedrooms and size move together; take size out and it flips to +$27,657 (*Practical Statistics*, ch. 4). Drop or combine predictors if you need to interpret them. In the book's Credit data, credit limit and rating have VIFs of 160.67 and 160.59, and the limit coefficient's standard error grows 12-fold once rating is in. Dropping rating takes R² from 0.754 to 0.75 and the VIFs close to 1. In the right-hand panel below, the least-squares fit sits at the end of a long thin valley of near-equal fits, so a small change in the data moves the pair along it.
+
+![Contour plots of the residual sum of squares: a closed ellipse for limit and age, a long narrow valley for limit and rating](../../sources/images/islp-ch03-linear-regression-fig3-15.png)
+
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 3.15. Credit data, balance regressions.* For a randomised treatment, collinearity with covariates is not a concern, because assignment is independent of them by construction.
 
 ### Clustered standard errors
 

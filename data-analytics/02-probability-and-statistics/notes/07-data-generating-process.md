@@ -488,7 +488,7 @@ Three limits on what this shows:
 
 - **You usually cannot estimate rho from your sample**, because everyone in the sample has R = 1. You need outside information about the population or a benchmark.
 - **It is about population means and totals.** Meng's identity concerns a sample average. It does not say every estimate from big data is useless, as the next section shows.
-- **Weighting helps but is no escape.** He finds it often reduces the error a lot, but it does not remove the penalty for large N when the weights are imperfect. [Surveys and sampling design](../../06-applied-analyses/notes/12-surveys-and-sampling-design.md#weighting-post-stratification-raking-and-their-limit) runs the repair.
+- **Weighting helps but is no escape.** He finds it often reduces the error a lot, but it does not remove the penalty for large N when the weights are imperfect. [Surveys and sampling design](../../06-applied-analyses/notes/12b-weighting-the-margin-and-the-question.md#weighting-post-stratification-raking-and-their-limit) runs the repair.
 
 ---
 

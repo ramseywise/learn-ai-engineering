@@ -1,0 +1,695 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1145/3437801.3441578",
+ "pdf": "ai-engineering/07-inference-engineering/sources/fang-2021-turbotransformers.pdf",
+ "bib": {
+  "title": "TurboTransformers: An Efficient GPU Serving System For Transformer Models",
+  "authors": [
+   "Jiarui Fang",
+   "Yang Yu",
+   "Chengduo Zhao",
+   "Jie Zhou"
+  ],
+  "first_author": "Fang",
+  "year": 2021,
+  "venue": "PPoPP '21 (ACM)",
+  "arxiv": "2010.05680",
+  "doi": "10.1145/3437801.3441578"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 70629,
+  "chars_total": 70629,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How can transformer models be served on GPUs with low latency and high throughput when computation is heavy and input length varies per request?",
+ "hypothesis": "A variable-length-aware runtime (fused kernels, faster batch reductions, graph-aware chunk allocator) plus a DP batch scheduler beats fixed-length-oriented runtimes and naive batching on variable-length workloads.",
+ "contributions": [
+  "A new parallel algorithm for batch reduction kernels like Softmax and LayerNorm on GPU",
+  "A sequence-length-aware memory allocation algorithm using the computation graph",
+  "A sequence-length-aware batch scheduler using dynamic programming to reach optimal throughput"
+ ],
+ "method": {
+  "summary": "A C++/Python GPU runtime fuses non-GEMM kernels between GEMMs, uses a multi-element warp reduction for Softmax/LayerNorm, and a chunk-based allocator that computes tensor offsets from the graph once the sequence length is known. A serving framework (message queue, response cache, batch scheduler) sorts queued requests by length and picks batch boundaries by dynamic programming over a measured cost table.",
+  "task": "transformer inference serving (BERT-style classification, Seq2seq translation decoder)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Randomly generated texts",
+    "role": "eval",
+    "size": "not stated",
+    "split": "BERT/Albert/DistilBert lengths uniform 5-500; Decoder Chinese texts length 28-137; serving workloads length uniform 2-100 and 5-500",
+    "source": "randomly generated/sampled; same random seed across tests",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "TurboTransformers runtime",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fused-kernel GPU runtime",
+    "init_from": "loads pre-trained PyTorch/transformers models (BertModel.from_torch)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "modes": "Turbo (FP32 GEMM), Turbo-TC (Tensor Core GEMM)",
+     "chunk": "DEFAULT_CHUNK_SIZE 2MB, K_SCALE 1.2"
+    }
+   },
+   {
+    "name": "Bert (base)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "4096 (as printed in Table 3; likely a typo for base BERT)",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "inter_size": "3072"
+    }
+   },
+   {
+    "name": "Albert (large config)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "4096",
+    "heads": "64",
+    "context": null,
+    "other": {
+     "inter_size": "16384"
+    }
+   },
+   {
+    "name": "DistilBert",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "4096 (as printed)",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "inter_size": "3072"
+    }
+   },
+   {
+    "name": "Seq2Seq Decoder (Chinese-English NMT)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "3072 (as printed)",
+    "heads": "16",
+    "context": null,
+    "other": {
+     "beam_size": "4",
+     "max_target_len": "500"
+    }
+   },
+   {
+    "name": "PyTorch v1.5.0",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "onnxruntime-gpu v1.3.0",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TensorFlow-XLA (TF 1.13), FasterTransformer v1, TensorRT v5.1.5",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "fixed-length BERT only"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "Seq2Seq decoder beam_size=4, max_target_len=500; otherwise not stated",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Runtime: sequential execution of randomly generated requests of different lengths, one run, same seed across systems; number of repetitions not stated. Serving: Poisson arrivals at 20-1500 req/sec; duration not stated.",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "batch_scheduler": "hungry strategy, max batch size 20; lazy alternative uses timeout and max batch size and fires if wait plus estimated latency exceeds half the latency constraint",
+    "cached_cost": "warmup over all (seq len, batch size) takes tens of minutes; large spaces sampled and interpolated",
+    "response_cache": "turned off in serving experiments",
+    "allocator": "chunk 2MB, K_SCALE 1.2, unused chunks released after each inference",
+    "Tensor Core": "on for Turbo-TC and for the 5-500 serving experiment"
+   },
+   "other": {
+    "hardware": "AMD Ryzen 7 3700X CPU and one RTX 2060 GPU (kernel speedups Fig 5 on Tesla V100; profiling motivations on V100 and M40)",
+    "software": "g++ 7.5.0, nvcc 10.2, CUDA 10.2, CentOS 7, docker 19.03.8"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Latency",
+     "definition": "per-request inference latency",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "Speedup",
+     "definition": "baseline latency / Turbo latency",
+     "unit": "x",
+     "higher_is_better": true
+    },
+    {
+     "name": "Serving throughput",
+     "definition": "responses per second at which service saturates (critical point where request and serving throughput are equal)",
+     "unit": "resp/sec",
+     "higher_is_better": true
+    },
+    {
+     "name": "Memory footprint",
+     "definition": "intermediate tensor footprint; peak GPU memory by nvidia-smi sampled every 1 ms",
+     "unit": "MB",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PyTorch 1.5.0",
+    "onnxruntime-gpu 1.3.0",
+    "TensorFlow-XLA",
+    "FasterTransformer v1",
+    "TensorRT 5.1.5",
+    "PyTorch-NoBatch",
+    "Turbo-NoBatch",
+    "Turbo-Naive-Batch"
+   ],
+   "protocol": "Single machine, random inputs with fixed seed; no variance, repeats or significance tests reported. Accuracy not evaluated except the claim of minimal precision loss for Tensor Core."
+  },
+  "availability": {
+   "code": "https://github.com/Tencent/TurboTransformers (BSD; artifact branch ppopp21_artifact_centos)",
+   "weights": null,
+   "data": "inputs randomly generated by benchmark scripts"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.Bert.hidden",
+    "quote": "num_layer=12, num_head=12, hidden_size=4096, inter_size=3072",
+    "where": "Table 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Serving throughput at saturation: PyTorch no batching vs Turbo with DP batch scheduler, lengths 2-100",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 402,
+   "unit": "resp/sec",
+   "baseline_value": "99 (PyTorch-NoBatch); 237 Turbo-NoBatch; 323 Turbo-Naive-Batch",
+   "n": null,
+   "setup": "BERT classification service, RTX 2060, Poisson arrivals, lengths uniform 2-100, hungry strategy, max batch 20, cache off",
+   "quote": "The serving throughput of PyTorch-Nobatch is saturated at 99 resp/sec. The serving throughput of Turbo-NoBatch is saturated at 237 resp/sec (2.39x). Turbo-Naive-Batch improves it to 323 resp/sec (3.26x) and the Turbo-DP-Batch futher improves it to 402 resp/sec (4.06x).",
+   "table": null,
+   "note": null,
+   "where": "p12 Sec 6.3"
+  },
+  {
+   "claim": "Serving throughput at saturation with lengths 5-500 and Tensor Cores: Turbo-TC-DP-Batch vs PyTorch-NoBatch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 144,
+   "unit": "resp/sec",
+   "baseline_value": "60 (PyTorch-NoBatch); 120 Turbo-TC-NoBatch",
+   "n": null,
+   "setup": "BERT service, RTX 2060, lengths uniform 5-500, Tensor Core on, max batch 20",
+   "quote": "Turbo-TC-DP-Batch further improves it to 144 resp/sec (2.4x).",
+   "table": null,
+   "note": null,
+   "where": "p12 Sec 6.3"
+  },
+  {
+   "claim": "Naive batching hurts on widely varying lengths: worse than no batching at 5-500",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 98,
+   "unit": "resp/sec",
+   "baseline_value": "120 Turbo-TC-NoBatch",
+   "n": null,
+   "setup": "BERT service, RTX 2060, lengths 5-500, Turbo-TC-Naive-Batch",
+   "quote": "Due to the additional zero-padding overhead, Turbo-TC-Naive-Batch's throughput is 98 resp/sec, which is even worse than Turbo-NoBatch.",
+   "table": null,
+   "note": null,
+   "where": "p12 Sec 6.3"
+  },
+  {
+   "claim": "DP scheduler improves worked example throughput by 35% (five requests 17,18,52,63,77)",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 35,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative example, base BERT; 3 batches vs 1 batch of 5 (20.62 ms vs 15.24 ms in Fig 8)",
+   "quote": "As shown in Figure 8, the response throughput (resp/sec) improved 35% by the optimal scheduling scheme.",
+   "table": null,
+   "note": null,
+   "where": "p8 Sec 5"
+  },
+  {
+   "claim": "Average runtime speedup over PyTorch on fixed-length BERT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.54,
+   "unit": "x",
+   "baseline_value": "PyTorch 1.0",
+   "n": null,
+   "setup": "BERT, RTX 2060, batch sizes 1 and 20, seq lengths 10-500; range 1.23x-2.77x",
+   "quote": "Compared with PyTorch, the speedup of Turbo is 1.23x-2.77x, on average 1.54x.",
+   "table": null,
+   "note": null,
+   "where": "p11 Sec 6.2.3"
+  },
+  {
+   "claim": "Average speedup over PyTorch on variable-length BERT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.25,
+   "unit": "x",
+   "baseline_value": "PyTorch 1.0",
+   "n": null,
+   "setup": "BERT, RTX 2060, random lengths 5-500; range 0.97x-2.44x; gains larger on short inputs",
+   "quote": "In the case of Bert inference, Turbo's speedups to PyTorch are ranging from 0.97x-2.44x, on average 1.25x.",
+   "table": null,
+   "note": null,
+   "where": "p9 Sec 6.2.1"
+  },
+  {
+   "claim": "Average speedup over onnxruntime on variable-length BERT is about parity",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.01,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, RTX 2060, random lengths 5-500; range 0.88x-1.05x",
+   "quote": "In the case of Bert, the speedups of Turbo to onnxruntime are ranging from 0.88x-1.05x, on average 1.01x.",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6.2.1"
+  },
+  {
+   "claim": "On fixed-length BERT, Turbo is on average slower than TensorRT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.87,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, RTX 2060, speedup of Turbo vs TensorRT 5.1.5, range 0.53x-0.96x; TensorRT uses offline tuning",
+   "quote": "Compared with TensorRT, the speedup of Turbo is 0.53x-0.96x, on average 0.87x.",
+   "table": null,
+   "note": null,
+   "where": "p11 Sec 6.2.3"
+  },
+  {
+   "claim": "On fixed-length BERT, Turbo is on average slightly slower than FasterTransformer",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.91,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, RTX 2060, FasterTransformer v1, range 0.71x-1.32x",
+   "quote": "Compared with Faster Transformers, the speedup of Turbo is 0.71x-1.32x, on average 0.91x.",
+   "table": null,
+   "note": null,
+   "where": "p11 Sec 6.2.3"
+  },
+  {
+   "claim": "Peak GPU memory of Turbo vs PyTorch and onnxruntime",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 663,
+   "unit": "MB",
+   "baseline_value": "1307 PyTorch; 1653 onnxruntime",
+   "n": null,
+   "setup": "BERT, lengths random, nvidia-smi sampled every 1 ms, includes CUDA context",
+   "quote": "the peak GPU memory used for Turbo is 663 MB while the GPU peak memory used by PyTorch is 1307 MB and 1653 MB for onnxruntime.",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6.2.2"
+  },
+  {
+   "claim": "Max intermediate-tensor memory of Turbo allocator",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12.15,
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, random lengths 5-500, C++ API; close to GSOC; PyTorch/onnxruntime caches grow and never shrink after a length-460 request",
+   "quote": "the maximum memory usage of us is 12.15 MB.",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6.2.2"
+  },
+  {
+   "claim": "Allocator offset-scheduling overhead as share of inference latency",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.8,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, random lengths 5-500; range 0.07%-5.77%",
+   "quote": "the average cost of offset scheduling (cost of Algorithm 1) is 1.8% on average (0.07%-5.77%) of DNN inference latency.",
+   "table": null,
+   "note": null,
+   "where": "p11 Sec 6.2.2"
+  },
+  {
+   "claim": "PyTorch BERT spends 38.2% of time in non-GEMM kernels at large batch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 38.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tesla V100, BERT, batch 20, seq len 128",
+   "quote": "only 61.8% of the time is spent on GEMM kernels, and 38.2% is spent on non-GEMM intensive cores",
+   "table": null,
+   "note": null,
+   "where": "p4 Sec 4.1.1"
+  },
+  {
+   "claim": "PyTorch leaves the GPU idle 80.64% of the time at batch 1, seq len 40",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 80.64,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tesla V100, BERT, batch 1, seq len 40 (kernel launch overhead)",
+   "quote": "GPU is completely idle 80.64% of the time.",
+   "table": null,
+   "note": null,
+   "where": "p4 Sec 4.1.1"
+  },
+  {
+   "claim": "Softmax share of attention time before optimizing at batch 20 seq 500",
+   "kind": "measured",
+   "source": null,
+   "metric": "Softmax/Attention time",
+   "value": 90.68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PyTorch Softmax measured vs attention with our runtime; after optimization 15.46%",
+   "quote": "90.68%",
+   "table": null,
+   "note": "Table 2 cells; after-values 15.46%; LayerNorm 83.38% before, 4.24% after",
+   "where": "p4 Table 2 row Softmax/Attention before, column (20, 500)"
+  },
+  {
+   "claim": "Allocation waits idle: 50% of compute idle on Tesla M40 when allocating on demand",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tesla M40, batch 20, seq len 128",
+   "quote": "50% of the computing resources idle wait for memory allocation ready on Tesla M40 (batch size = 20, sequence length = 128)",
+   "table": null,
+   "note": null,
+   "where": "p6 Sec 4.2"
+  },
+  {
+   "claim": "GEMM share of Turbo BERT time at seq 20 and 400",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 70.31,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, RTX 2060; GEMM 82.80% at seq 400; Softmax 1.85%/4.57%; LayerNorm 2.71%/3.64%",
+   "quote": "In the sequence length 20, the GEMM kernels account for 70.31% of overall computation time.",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6.2.1"
+  },
+  {
+   "claim": "Average Albert speedup over PyTorch is smaller because GEMM dominates",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.17,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Albert (large config), RTX 2060, lengths 5-500; range 1.04x-1.45x",
+   "quote": "In Albert inference, Turbo's speedups to PyTorch are ranging from 1.04x-1.45x, on average 1.17x.",
+   "table": null,
+   "note": null,
+   "where": "p9 Sec 6.2.1"
+  },
+  {
+   "claim": "Decoder average speedup over PyTorch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.16,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seq2Seq decoder, RTX 2060, source length 28-137; range 1.14x-1.20x",
+   "quote": "In the case of Decoder inference, Turbo's speedups to PyTorch are ranging from 1.14x-1.20x, on average 1.16x.",
+   "table": null,
+   "note": null,
+   "where": "p10 Sec 6.2.1"
+  },
+  {
+   "claim": "Latency at saturation under DP batching: avg latency 24.74 ms at 402 req/sec; DP raises long-request latency vs naive batching at 2-100",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 24.74,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT, RTX 2060, lengths 2-100, Turbo-DP-Batch avg latency at 402 req/sec (min 4.23, max 57.02)",
+   "quote": "Turbo-DP-Batch sorts the requests in MQ, the execution of long sequences is delayed, thus increasing their latency.",
+   "table": null,
+   "note": null,
+   "where": "p12 Table 4, row 402, column Turbo-DP-Batch"
+  }
+ ],
+ "limits": [
+  "All experiments run on a single consumer RTX 2060 (plus V100/M40 for motivating profiles); no data-center GPU serving numbers for the end-to-end systems.",
+  "Workloads are randomly generated texts with uniform length distributions; real traffic length distributions, SLO tail latencies (p99) and accuracy are not evaluated.",
+  "No repeats, variance or significance tests; PyTorch 1.5 / onnxruntime 1.3 / TensorRT 5.1.5 versions are dated.",
+  "GEMM is not optimized, so long sequences gain little; runtime is about 10% slower than FasterTransformer and TensorRT on fixed-length input.",
+  "DP scheduler reorders requests, delaying long ones; needs a warmup cost table taking tens of minutes, assumes load balancer keeps servers within SLO.",
+  "Encoder and small decoder models only; no autoregressive LLM serving, KV cache or continuous batching.",
+  "Table 3 hidden_size values (4096 for Bert) look inconsistent with base BERT."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "FasterTransformer V1 (NVIDIA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "fused-kernel BERT; baseline for reduction kernels, no memory manager",
+   "quote": null
+  },
+  {
+   "work": "Pisarchyk and Lee, Efficient Memory Management for Deep Neural Net Inference",
+   "year": 2020,
+   "arxiv": "2001.03288",
+   "relation": "extends",
+   "note": "Greedy by Size for Offset Calculation adapted into FindGapFromchunk",
+   "quote": null
+  },
+  {
+   "work": "Clipper",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adaptive/delayed batching and response cache",
+   "quote": null
+  },
+  {
+   "work": "Nexus",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "batch scheduler, load balancer",
+   "quote": null
+  },
+  {
+   "work": "TF-serving, Ebird, BatchMaker",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed-length batching systems",
+   "quote": null
+  },
+  {
+   "work": "onnxruntime, PyTorch, TensorFlow-XLA, TensorRT",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "runtime comparisons",
+   "quote": null
+  },
+  {
+   "work": "BERT; ALBERT; DistilBERT; Transformer (Vaswani 2017)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models served",
+   "quote": null
+  },
+  {
+   "work": "Lin and Grover, Using CUDA warp-level primitives",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "classical warpReduce pattern the batch reduction improves",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Kernel fusion of a transformer encoder. The part in darker color is a multi-head attention. The part in lighter color is a feed forward network.",
+   "page": 4,
+   "why": "Unfused vs fused encoder layer graph"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Parallel batch reduction optimizations on three hardware levels.",
+   "page": 5,
+   "why": "Shows warpAllReduceSum_XElem batching of reductions"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "A memory allocation example uses our proposed variable-length-aware allocator.",
+   "page": 7,
+   "why": "Chunk/offset layout when seq len goes 200 to 240"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Batching brings performance gain for the base BERT serving on RTX 2060 GPU. The y-axis illustrates the normalized latency of inferring a request of batch size 1.",
+   "page": 8,
+   "why": "Why batching helps, esp. short sequences"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "An example of batch scheduler for variable-length requests.",
+   "page": 8,
+   "why": "Padding vs batching tradeoff in 5 requests: 3 batches 15.24 ms vs 1 batch 20.62 ms"
+  },
+  {
+   "figure": "Fig 14",
+   "caption": "Benchmarking the runtimes for fixed-length input tasks on RTX 2060. The y-axis indicates normalized speedup of TurboTransformers.",
+   "page": 11,
+   "why": "Runtime comparison against PyTorch, onnxrt, XLA, FT, TensorRT"
+  },
+  {
+   "figure": "Fig 15",
+   "caption": "Serving throughput under different request throughput (Sequence Length 2-100).",
+   "page": 12,
+   "why": "Saturation curves for four serving systems"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "The latency of four serving systems (sequence length 2-100). Table item contains the avg (min, max) latency in ms.",
+   "page": 12,
+   "why": "Latency at each critical point, infinity where saturated"
+  }
+ ],
+ "code": [
+  {
+   "where": "p10 Eq 2",
+   "snippet": "state[i] = min_{0<=j<=i}( cached_cost[request_list[i].len][i-j+1] * (i-j+1) + states[j-1] )",
+   "verbatim": false
+  },
+  {
+   "where": "p5 Eq 1",
+   "snippet": "Var(x) = E(x-E(x))^2 = E(x^2) - E^2(x)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure text in extraction has garbled glyphs around Fig 4 (no loss of prose). Table 4/5 columns are flattened; Table 5 header lists PyTorch NoBatch, NaiveBatch, NoBatch, Turbo-DP-Batch, columns inferred as PyTorch-NoBatch, Turbo-TC-NaiveBatch, Turbo-TC-NoBatch, Turbo-DP-Batch from the text. No embedded instructions found."
+ ]
+}

@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 3
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 2 A/B testing, ch. 4 sorting Reddit comments)
   - https://www.evanmiller.org/bayesian-ab-testing.html
   - https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html (Stucchio, expected-loss decision rule)
@@ -258,6 +259,8 @@ The columns give how often each rule ships B when B has no effect, when it costs
 **Row 4.** A minimum sample size is what protects you. Waiting until day 14 and then applying the same rule drops harmful shipping to 3.8%, about what the daily probability rule manages, while still shipping real wins essentially always. Running full weeks also handles day-of-week effects.
 
 The rule is therefore: an expected-loss threshold, a minimum sample size set in advance, and full weeks. Also, don't call the test "immune to peeking" in a planning meeting, because the second row of this table says it isn't. These figures depend on this setup (effect sizes, traffic, ε), and you should rerun `simulate` with yours.
+
+Efron and Hastie give the frequentist side of this table a cleaner small case. An experiment is scheduled for 30 monthly looks and ends at Z = 1.66, just over the 1.645 cutoff. The investigators had also peeked at month 20 (Z = 0.79) and would have stopped had it been significant, so the rule they actually followed rejects a true null with probability 0.074, not 0.05 (recomputed here as one minus the joint normal CDF at 1.645 with correlation √(20/30)). The likelihood is the same whether or not the experiment might have stopped early, so the posterior is untouched, which is the likelihood principle behind "Bayesians may peek". The book's own caveat is the reason the simulation above exists: that leniency holds only for a prior that reflects real experience, and "the Bayesian's right to ignore selection bias … must then be treated with caution" under a flat default. Frequentism, in their words, replaces the choice of a prior with the choice of a method, so a prior is the price Bayes pays and the stopping rule is the price the p-value pays (*Computer Age Statistical Inference*, ch. 3). Their meter-reader fable makes the same point: a voltmeter that would have clipped at 100 volts makes the mean of 12 readings (92, range 82 to 99) biased in a frequentist's eyes, though no reading was ever clipped.
 
 McElreath's closing chapter makes the same argument from the other side: an analysis plan fixed before the data arrives (a mock analysis, registered publicly, with any later changes documented and justified) is the part of the pipeline that a researcher controls, and an analysis designed after seeing the data can overfit in ways that priors and regularisation cannot reliably repair (*Statistical Rethinking*, ch. 15). It is an essay, with no numbers of its own to test.
 

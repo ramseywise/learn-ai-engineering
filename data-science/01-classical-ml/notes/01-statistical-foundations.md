@@ -9,7 +9,7 @@ sources:
   - https://doi.org/10.1214/10-STS330 (Shmueli, Statistical Science, 2010; link only, read in full)
   - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Science, 2001; link only, paper and discussion read)
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 1-2
-  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 7
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 7 and 12
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -189,6 +189,17 @@ Two ways to break this, both covered in [04](04-model-evaluation.md):
 
 - **Tuning on the test set**: choosing $C$ for an SVM by test score turns the test set into a validation set, and the reported score is optimistic.
 - **Leakage**: fitting a scaler or feature selector on all the data before splitting. The model has then seen statistics of the test rows ([03](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)).
+
+### Correcting the training error: cross-validation and covariance penalties
+
+The training (apparent) error $\overline{\text{err}}$ is always optimistic, because the fit was chosen to match those rows. Efron and Hastie name the gap: the true error $\text{Err}$ of a rule exceeds $\overline{\text{err}}$ by a penalty, and there are two ways to estimate it (*Computer Age*, ch. 12). **Cross-validation** refits on subsets. On 39 supernovas (10 spectral predictors, a lasso whose $\lambda$ was picked by $C_p$, 13 random groups of 3) the apparent squared error is 0.72 and the cross-validated estimate 1.17, 62% higher, so $R^2$ falls from 0.816 to 0.701. On the spam emails (4,061 emails, 57 predictors each reduced to nonzero or zero, logistic regression) the apparent error is 0.064 (295 wrong) and 10-fold CV gives 0.069, 8% higher. A model can instead *compute* the penalty. For squared error it is $\frac{2\sigma^2}{N}\sum_i \mathrm{cov}(\hat\mu_i, y_i)$, the covariance of each fitted value with its own label. For a linear rule $\hat\mu = My$ that is Mallows' $C_p$, $\overline{\text{err}} + \frac{2\sigma^2}{N}\mathrm{tr}(M)$, and for OLS $\mathrm{tr}(M)=p$. On the supernovas ($\sigma^2=1$, known) OLS with 10 predictors gives $0.719 + 0.513 = 1.23$. The lasso with 7 nonzero coefficients has the same apparent error, 0.720, and a smaller penalty, $2\cdot 7/39 = 0.359$, so $C_p$ is 1.08. That estimate ignores that the 7 was itself chosen from the data. The same covariance defines **degrees of freedom**, $\mathrm{df}=\frac12\sum_i \mathrm{cov}(\hat\mu_i,y_i)/\sigma^2$, so a rule that is not linear still gets one. For `lowess(x, y, 1/3)` on the kidney data ($N=157$, Gaussian noise assumed) Stein's SURE, which uses $\sum_i\partial\hat\mu_i/\partial y_i$ by numerical differentiation, gives total df 6.67, and a parametric bootstrap (1,000 replications, $\sigma^2=3.28$ from a 12th-degree polynomial fit) gives 6.81, a penalty of 0.284 on an apparent error of 3.15 (about 9%). The same bootstrap prices a rule's selection step: the supernova lasso costs 6.85 df with $p=7$ fixed and 7.48 when $p$ is chosen each time, so choosing $p$ cost about 0.6 df.
+
+![Apparent and cross-validated misclassification error against degrees of freedom for a glmnet lasso sequence on the spam data](../../sources/images/casi-fig12-2.png)
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 12.2*
+
+The figure shows the gap on a whole lasso sequence: the apparent error (blue) keeps falling with model size and the CV estimate (red) runs 4% to 8% above it, with the lowest CV error, 0.067, at 47 predictors. The authors call that dip too small to take seriously given the noise, and note that picking the best rule by its CV error is not itself cross-validated. They also caution that CV estimates the average error of the *algorithm* more than that of the one fitted rule. In 500 bootstrap simulations of the supernova recipe the CV estimate averaged 1.07 against a true error of 1.02, yet was negatively correlated with the true error of the individual fitted rules (Fig. 12.3 caption). Use a covariance penalty when a believable noise model exists, and CV otherwise, with $J$ about 10 groups (*Computer Age*, ch. 12; the $C_p$ and SURE numbers come from the supernova and kidney fits, one data set each).
+
+The other warning concerns the split, not the estimator. In a simulated study with 360 subjects (180 patients and 180 controls), 100 genes whose signals are transient episodes of about 30 days, and a random forest trained on 300 days, a random 60-day test set gives 15% error. Testing on the *last* 60 days gives 27%, nearly double, because the training and test days that sit close together share the same transient episodes. A validation set is more believable the further it is separated from the training set in time or place, and CV can separate folds by cutting contiguous blocks instead of random rows ([splitters](04-model-evaluation.md#splitters)) (*Computer Age*, ch. 12, simulated data).
 
 [Training and tuning](09-training-and-tuning.md) runs the full loop on real data, from the split through search to the final score.
 

@@ -1,0 +1,588 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1111/nyas.15007",
+ "pdf": "generative-ai/08-eval/sources/bommasani-2023-holistic-evaluation-language-models.pdf",
+ "bib": {
+  "title": "Holistic Evaluation of Language Models",
+  "authors": [
+   "Percy Liang",
+   "Rishi Bommasani",
+   "Tony Lee",
+   "Dimitris Tsipras",
+   "Dilara Soylu",
+   "Michihiro Yasunaga",
+   "Yian Zhang",
+   "Deepak Narayanan",
+   "Yuhuai Wu",
+   "et al. (50 authors)"
+  ],
+  "first_author": "Liang",
+  "year": 2023,
+  "venue": "Transactions on Machine Learning Research (08/2023)",
+  "arxiv": "2211.09110",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 636850,
+  "chars_total": 636850,
+  "engine": "pymupdf",
+  "skipped": "Appendix E per-dataset descriptions (E.1-E.3) and the reference list were skimmed, not read line by line; lone checkmark lines were filtered from the text before reading."
+ },
+ "type": "benchmark",
+ "question": "How can language models be evaluated holistically, across many scenarios and metrics under standardized conditions, so trade-offs and gaps are visible?",
+ "hypothesis": null,
+ "contributions": [
+  "Taxonomy of scenarios and metrics",
+  "Broad coverage: 16 core scenarios x 7 metrics plus 7 targeted evaluations",
+  "Evaluation of 30 models on all 42 scenarios under standardized conditions",
+  "25 top-level findings; release of raw prompts and completions and a modular toolkit"
+ ],
+ "method": {
+  "summary": "Top-down taxonomy of scenarios (task, domain, language) and 7 metric categories, then an implemented subset run on 30 models with 5-shot prompting. 4,939 runs total.",
+  "task": "holistic language model evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "16 core scenarios (BoolQ, NarrativeQA, NewsQA, NaturalQuestions open/closed, QuAC, HellaSwag, OpenBookQA, TruthfulQA, MMLU, MS MARCO regular and TREC, CNN/DM, XSUM, IMDB, CivilComments, RAFT)",
+    "role": "eval",
+    "size": "at most 1000 instances per scenario",
+    "split": "validation/test; NaturalQuestions dev, RAFT dev, MS MARCO dev",
+    "source": "public datasets, see App B",
+    "preprocessing": "App B per scenario (e.g. articles truncated at 512 tokens for CNN/DM and XSUM)"
+   },
+   {
+    "name": "26 targeted scenarios (language, knowledge, reasoning, copyright, disinformation, bias, toxicity)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "App E",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "30 models, 12 organizations, 16 families (10 open, 17 limited-access, 3 closed)",
+    "role": "evaluated",
+    "params": "350M to 530B",
+    "architecture": "mostly autoregressive Transformers; T5, UL2, T0++ encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "examples": "J1, Anthropic-LM, BLOOM, T0++, Cohere, GPT-J, GPT-NeoX, T5, UL2, OPT, TNLGv2, GPT-3, InstructGPT, Codex, GLM, YaLM"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature-only; argmax for short outputs",
+   "temperature": "0 for short-output scenarios; for long-form scenarios follows prior work",
+   "top_p": null,
+   "max_tokens": "set per scenario from the longest reference; stop sequence newline is the primary stop condition",
+   "samples": "3 runs (3 choices of fixed in-context examples); 1 completion per input; at most 1000 eval instances per scenario",
+   "prompting": "5 in-context examples (reduced for long examples), fixed across test instances, class-coverage sampling",
+   "retrieval": null,
+   "parameters": {
+    "ECE": "10 uniform-mass bins",
+    "robustness": "worst case over composite perturbation (lowercase, contractions, misspell p=0.1, 1-3 spaces)",
+    "toxicity": "Perspective API, threshold p>=0.5",
+    "multiple_choice": "joint, separate, separate-calibrated; Table 14 gives defaults",
+    "MS MARCO": "re-rank top 30 BM25 passages, 4 in-context examples"
+   },
+   "other": {
+    "priority": "all models run on priority 1 and 2 scenarios",
+    "cost": "12,169,227,491 tokens, 17,431,479 queries, 19,500 GPU hours"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "exact match, quasi-exact match, F1, RR@10, NDCG@10, ROUGE-2, BPB by scenario",
+     "unit": "% or BPB",
+     "higher_is_better": true
+    },
+    {
+     "name": "calibration",
+     "definition": "ECE (10 bins) and selective classification (acc@10%, SCAA)",
+     "unit": "ECE",
+     "higher_is_better": false
+    },
+    {
+     "name": "robustness",
+     "definition": "worst-case accuracy over perturbations",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "fairness",
+     "definition": "worst-case accuracy under counterfactual perturbations plus subgroup disparities",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "bias",
+     "definition": "total variation distance of demographic representation and stereotypical associations from uniform",
+     "unit": "TVD",
+     "higher_is_better": false
+    },
+    {
+     "name": "toxicity",
+     "definition": "fraction of generations with Perspective API score >= 0.5",
+     "unit": "fraction",
+     "higher_is_better": false
+    },
+    {
+     "name": "efficiency",
+     "definition": "denoised and idealized inference runtime; training energy and CO2 estimates",
+     "unit": "s, MWh, mtCO2",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "prior reported results where comparable"
+   ],
+   "protocol": "3 in-context-example runs; head-to-head win rate across scenarios; no significance testing (conceded)"
+  },
+  "availability": {
+   "code": "https://github.com/stanford-crfm/helm",
+   "weights": null,
+   "data": "https://crfm.stanford.edu/helm/v0.1.0 (raw prompts and completions released)"
+  },
+  "prompts": [
+   {
+    "purpose": "Multiple-choice prompt template (MMLU anatomy), 5 in-context examples",
+    "text": "{instructions} The following are multiple choice questions (with answers) about anatomy.\n{train input} Question: ...\n{train reference} A. ...\n{train output} Answer: C\n{test input} Question: ...\n{test output} Answer:\nDecoding parameters: temperature = 0, max tokens = 1",
+    "where": "Fig 23, p46"
+   },
+   {
+    "purpose": "MS MARCO relevance prompt",
+    "text": "Query: how many eye drops per ml\nDoes the passage answer the query?\nAnswer:",
+    "where": "App B.2.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.samples",
+    "quote": "we repeat all evaluations for 3 runs, meaning 3 choices of the in-context examples.",
+    "where": "Sec 7"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Before HELM, models were evaluated on 17.9% of the core scenarios on average, after pooling prior reports; HELM raises this to 96.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "coverage of core scenarios",
+   "value": "17.9% -> 96.0%",
+   "unit": "% of (model, core scenario) pairs",
+   "baseline_value": "17.9",
+   "n": null,
+   "setup": "30 models x 16 core scenarios, prior work compiled by the authors (Figure 4)",
+   "quote": "were evaluated on 17.9% of our core scenarios, even after compiling evaluations dispersed across different",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.1, Fig 4"
+  },
+  {
+   "claim": "HELM measures 98 of 112 (core scenario, metric) pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "metric coverage",
+   "value": "87.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 core scenarios x 7 metrics; 14 pairs not computed, mostly not well defined (e.g. no generation means no toxicity)",
+   "quote": "of the possible 112 (scenario, desiderata) pairs or 87.5%.",
+   "table": null,
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Total evaluation cost: 4,939 runs, about 12.2B tokens, 17.4M queries, $38,001 on commercial APIs, about 19,500 GPU hours for open models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "38,001",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 30 models, 42 scenarios",
+   "quote": "$38,001 for the commercial APIs",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2"
+  },
+  {
+   "claim": "text-davinci-002 scores 62.0% on TruthfulQA, versus the runner-up Anthropic-LM v4-s3 (52B).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "62.0",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HELM v0.1.0: 30 models, 16 core scenarios, 5-shot prompting, <=1000 instances per scenario, 3 in-context-example runs; TruthfulQA, joint multiple-choice adaptation",
+   "quote": "the largest margin is on TruthfulQA where text-davinci-002 achieves accuracy of 62.0% compared to second",
+   "table": null,
+   "note": "Runner-up printed as 36.2% in Sec 1.2 and Sec 8.4 but 35.4% in Sec 8.3.",
+   "where": "Sec 8.3"
+  },
+  {
+   "claim": "OPT (175B) on HellaSwag: accuracy collapses from 79.1% to 30.2% when the multiple-choice format changes from separate 0-shot to joint 5-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "30.2",
+   "unit": "% accuracy",
+   "baseline_value": "79.1",
+   "n": null,
+   "setup": "OPT (175B), HellaSwag; joint 5-shot prompt vs separate 0-shot prompt (79.1%)",
+   "quote": "drops precipitously to 30.2% (almost random accuracy) when the",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 23, Sec 8.2"
+  },
+  {
+   "claim": "Prompting format and in-context examples change accuracy 'across all scenarios and for all metrics'; the adaptation method that maximises accuracy differs across models.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablations of format, example choice, example count, multiple-choice method",
+   "quote": "All models show significant sensitivity to the formatting of prompt, the particular",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 22"
+  },
+  {
+   "claim": "TNLG v2 (530B) on NarrativeQA drops from 72.6% standard accuracy to 38.9% under robustness perturbations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "robust accuracy",
+   "value": "38.9",
+   "unit": "% accuracy (worst case over perturbations)",
+   "baseline_value": "72.6",
+   "n": null,
+   "setup": "NarrativeQA; typos, casing, contractions, spacing composite",
+   "quote": "precipitously drops from 72.6% standard accuracy",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 4"
+  },
+  {
+   "claim": "OPT (175B) on CivilComments Black split drops from 51.3% to 8.8% robust accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "robust accuracy",
+   "value": "8.8",
+   "unit": "% accuracy (worst case)",
+   "baseline_value": "51.3",
+   "n": null,
+   "setup": "CivilComments, Black split; contrast-set/perturbation robustness",
+   "quote": "OPT (175B) drops from 51.3%",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 12"
+  },
+  {
+   "claim": "OPT (175B) on TwitterAAE: 1.506 bits per byte for White English vs 2.114 for African American English.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BPB",
+   "value": "2.114",
+   "unit": "bits per byte (lower is better)",
+   "baseline_value": "1.506",
+   "n": null,
+   "setup": "TwitterAAE, OPT (175B)",
+   "quote": "OPT (175B) is the most accurate model on TwitterAAE but its accuracy degrades from 1.506 bits",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 5"
+  },
+  {
+   "claim": "text-davinci-002 reaches 74.4% ROUGE-L on NarrativeQA, above UnifiedQA-v2 (67.4%), an example of findings 'lying in plain sight' once evaluation is unified.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": "74.4",
+   "unit": "% ROUGE-L",
+   "baseline_value": "67.4",
+   "n": null,
+   "setup": "NarrativeQA, text-davinci-002 5-shot",
+   "quote": "we find text-davinci-002 achieves an accuracy of 74.4% ROUGE-L on NarrativeQA, which sets a",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 21"
+  },
+  {
+   "claim": "code-davinci-002 gets 52.1% on GSM8K; the next best, text-davinci-002, gets 35.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "52.1",
+   "unit": "% accuracy",
+   "baseline_value": "35.0",
+   "n": null,
+   "setup": "GSM8K, 5-shot",
+   "quote": "achieves an accuracy of 52.1%, where the next best model is text-davinci-002 at 35.0% and no other",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 16"
+  },
+  {
+   "claim": "On BBQ, the three most accurate models are the only ones whose ambiguous-context bias aligns with social biases; text-davinci-002 reaches 89.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "89.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BBQ, 30 models",
+   "quote": "(89.5% accuracy)",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 19"
+  },
+  {
+   "claim": "On RAFT, text-davinci-002 scores 40.8% on the Systematic Review Inclusion split where several models score 97.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "40.8",
+   "unit": "% accuracy",
+   "baseline_value": "97.5",
+   "n": null,
+   "setup": "RAFT Systematic Review Inclusion split",
+   "quote": "accuracy of 40.8% compared to 97.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 13"
+  },
+  {
+   "claim": "Win rate above chance (>55%) in head-to-head accuracy comparisons occurs only for models of at least 50B parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "55",
+   "unit": "% head-to-head win rate",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All core scenarios, 30 models",
+   "quote": "at a rate well above chance (i.e. > 55%) are at least 50B parameters",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 25, Fig 26"
+  },
+  {
+   "claim": "Upstream bits-per-byte on The Pile is a poor predictor of downstream accuracy across model families.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Across model families; some models trained on The Pile (Table 13)",
+   "quote": "BPB on The Pile is a poor",
+   "table": null,
+   "note": null,
+   "where": "Sec 1.2 finding 24, Fig 30"
+  },
+  {
+   "claim": "Reliability caveat: only 3 in-context-example seeds and 1000 instances per scenario, so some comparisons may be statistically insignificant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "seeds",
+   "value": "3",
+   "unit": "seeds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All scenarios",
+   "quote": "we only run 3 random seeds (due to cost) for selecting in-context",
+   "table": null,
+   "note": null,
+   "where": "Sec 11.2"
+  },
+  {
+   "claim": "Contamination is not verified: HELM flags only disclosed cases (Table 13, Appendix G) and says the extent remains unclear.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 13 lists strong contamination for the Pile models on The Pile, T0++ on six scenarios, weak for GPT-3-lineage models on NQ, QuAC, BoolQ, HellaSwag, OpenBookQA",
+   "quote": "we cannot verify whether the model was trained on the data we evaluate",
+   "table": null,
+   "note": null,
+   "where": "Sec 6, App G"
+  },
+  {
+   "claim": "Adaptation is part of the result: the 3 multiple-choice methods (joint, separate, separate-calibrated) give strictly ordered accuracy on HellaSwag for all six models (separate > separate-calibrated > joint).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HellaSwag, six models",
+   "quote": "precisely aligns with the empirical findings",
+   "table": null,
+   "note": "Inference times for OPT (175B) are printed '0.71s vs. 0.187s', a probable typo.",
+   "where": "Sec 8.2, Fig 33"
+  }
+ ],
+ "limits": [
+  "Contamination is not verified: only disclosed cases are flagged (App G, Table 13).",
+  "3 seeds and 1000 instances per scenario may leave some claims statistically insignificant (Sec 11.2).",
+  "Closed API models are a snapshot; PaLM and Gopher are not evaluated.",
+  "Fairness aggregation is left to the reader; no single fairness score (App C.4).",
+  "Toxicity relies on Perspective API; perturbations are approximate simulations of dialect.",
+  "Energy and CO2 figures are rough estimates with stated caveats (App C.7).",
+  "Aggregation across metrics is a design choice the authors flag (Sec 11.3)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "scenario",
+   "definition": "a (task, domain, language) triple describing a use case",
+   "where": "Sec 3"
+  },
+  {
+   "term": "adaptation",
+   "definition": "procedure that turns a language model into a system for a scenario, here prompting",
+   "where": "Sec 7"
+  },
+  {
+   "term": "strong/weak contamination",
+   "definition": "extensive vs marginal exposure to the evaluation distribution",
+   "where": "App G"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "few-shot prompting; contamination concern",
+   "quote": null
+  },
+  {
+   "work": "BIG-Bench",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "related",
+   "note": "priority/lite idea; compared in App F",
+   "quote": null
+  },
+  {
+   "work": "SuperGLUE",
+   "year": 2019,
+   "arxiv": "1905.00537",
+   "relation": "related",
+   "note": "prior benchmark compared in Table 12",
+   "quote": null
+  },
+  {
+   "work": "EleutherAI LM Evaluation Harness",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior evaluation, 71 datasets",
+   "quote": null
+  },
+  {
+   "work": "On the Opportunities and Risks of Foundation Models",
+   "year": 2021,
+   "arxiv": "2108.07258",
+   "relation": "extends",
+   "note": "Bommasani et al. 2021 desiderata",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "language modeling scenario; contaminates several models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The importance of the taxonomy to HELM.",
+   "page": 3,
+   "why": "Shows the top-down scenario taxonomy versus dataset collections."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Many metrics for each use case.",
+   "page": 4,
+   "why": "The 7 metrics x scenarios idea."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Standardizing language model evaluation.",
+   "page": 5,
+   "why": "Coverage matrix before (17.9%) and after (96.0%)."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Scenarios-metrics matrix.",
+   "page": null,
+   "why": "98 of 112 pairs."
+  },
+  {
+   "figure": "Fig 26",
+   "caption": "Head-to-head win rate per each model.",
+   "page": 51,
+   "why": "Headline accuracy ranking."
+  },
+  {
+   "figure": "Fig 33",
+   "caption": "Multiple-choice adaptation.",
+   "page": 58,
+   "why": "Adaptation sensitivity."
+  },
+  {
+   "figure": "Fig 23",
+   "caption": "Prompt formatting.",
+   "page": 46,
+   "why": "The exact prompt template."
+  }
+ ],
+ "code": [
+  {
+   "where": "App C.3",
+   "snippet": "Robustness = 1/n sum_i min_j m(model(T_j(x_i)), y_i)",
+   "verbatim": false
+  },
+  {
+   "where": "App C.1.2",
+   "snippet": "RR@K = 1/rank if rank <= K else 0",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Cache has heavy figure-axis noise; lone checkmark lines were filtered.",
+  "Ledger DOI 10.1111/nyas.15007 is wrong; real id is arXiv:2211.09110 (TMLR 2023).",
+  "No embedded instructions found."
+ ]
+}

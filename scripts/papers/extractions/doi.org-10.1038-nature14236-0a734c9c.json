@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1038/nature14236",
+ "pdf": "generative-ai/05-RL/sources/mnih-2015-human-level-control-through-deep.pdf",
+ "bib": {
+  "title": "Human-level control through deep reinforcement learning",
+  "authors": [
+   "Volodymyr Mnih",
+   "Koray Kavukcuoglu",
+   "David Silver",
+   "Andrei A. Rusu",
+   "Joel Veness",
+   "Marc G. Bellemare",
+   "Alex Graves",
+   "Martin Riedmiller",
+   "Andreas K. Fidjeland",
+   "Georg Ostrovski",
+   "Stig Petersen",
+   "Charles Beattie",
+   "Amir Sadik",
+   "Ioannis Antonoglou",
+   "Helen King",
+   "Dharshan Kumaran",
+   "Daan Wierstra",
+   "Shane Legg",
+   "Demis Hassabis"
+  ],
+  "first_author": "Mnih",
+  "year": 2015,
+  "venue": "Nature 518, 529-533",
+  "arxiv": null,
+  "doi": "10.1038/nature14236"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48111,
+  "chars_total": 48111,
+  "engine": "pymupdf",
+  "skipped": "Extended Data Tables 1-4 are images; read by rendering pages 10-13 and viewing them. Supplementary Discussion is not in the PDF."
+ },
+ "type": "empirical",
+ "question": "Can a single RL agent learn successful control policies directly from raw pixels and game score across many Atari 2600 games with one algorithm, architecture and hyperparameter set?",
+ "hypothesis": "Combining Q-learning with a deep convolutional network, experience replay and a periodically updated target network gives stable end-to-end learning from high-dimensional input.",
+ "contributions": [
+  "Deep Q-network (DQN): convolutional Q-function trained end to end with a Q-learning variant",
+  "Experience replay and a separate, periodically cloned target network to stabilise training",
+  "Human-level-comparable performance on 49 Atari games with fixed hyperparameters"
+ ],
+ "method": {
+  "summary": "A convolutional network maps 4 stacked 84x84 luminance frames to one Q-value per action. It is trained with Q-learning on uniformly sampled minibatches from a replay memory, with TD targets from a target network cloned every C updates. A separate network is trained per game with identical settings.",
+  "task": "Atari 2600 game playing from pixels (Arcade Learning Environment)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Atari 2600 games (ALE), 49 games",
+    "role": "both",
+    "size": "50M frames of training per game (about 38 days of game experience)",
+    "split": "no split; hyperparameter search on 5 games (Pong, Breakout, Seaquest, Space Invaders, Beam Rider)",
+    "source": "Bellemare et al. 2013 ALE",
+    "preprocessing": "max over current and previous frame per pixel; Y channel; rescale to 84x84; stack m=4 frames; rewards clipped to [-1,1] in training; frame skip k=4; up to 30 no-op actions at episode start"
+   }
+  ],
+  "models": [
+   {
+    "name": "DQN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 conv layers + 2 FC, ReLU",
+    "init_from": "random weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 conv + 2 FC",
+    "hidden": "512 units in last hidden layer",
+    "heads": null,
+    "context": "4 stacked frames",
+    "other": {
+     "conv1": "32 filters 8x8 stride 4",
+     "conv2": "64 filters 4x4 stride 2",
+     "conv3": "64 filters 3x3 stride 1",
+     "output": "linear, one per valid action, 4 to 18 actions"
+    }
+   },
+   {
+    "name": "Best linear learner",
+    "role": "baseline",
+    "params": null,
+    "architecture": "linear function approximator on hand-designed features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Contingency (SARSA)",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Q-learning squared TD error with target y = r + gamma max_a' Q(s',a';theta-), error clipped to [-1,1]",
+   "optimizer": "RMSProp, gradient momentum 0.95, squared gradient momentum 0.95, min squared gradient 0.01 (Extended Data Table 1)",
+   "lr": "0.00025 (Extended Data Table 1)",
+   "lr_schedule": null,
+   "warmup": "replay start size 50000 frames of uniform random policy (Extended Data Table 1)",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4 frames",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "reward clipping to [-1,1]; error clipping",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "total_frames": "50 million per game",
+    "replay_memory": "1,000,000 most recent frames",
+    "target_update_C": "10000 parameter updates (Extended Data Table 1)",
+    "epsilon": "linear 1.0 to 0.1 over first 1,000,000 frames, then 0.1",
+    "gamma": "0.99",
+    "action_repeat": "4",
+    "update_frequency": "4 actions between successive SGD updates",
+    "no_op_max": "30",
+    "hyperparameter_search": "informal on 5 games, no grid search"
+   }
+  },
+  "inference": {
+   "decoding": "epsilon-greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "30 evaluation episodes per game, up to 5 min each, random no-op starts; one network per game, single training run apparent",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "eval_epsilon": "0.05"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Average score per episode",
+     "definition": "game score over 30 evaluation episodes",
+     "unit": "game points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Normalised performance",
+     "definition": "100 x (DQN score - random score)/(human score - random score)",
+     "unit": "% of human",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random agent (10 Hz action selection)",
+    "Professional human games tester",
+    "Best linear learner (Bellemare 2013)",
+    "Contingency/SARSA (Bellemare 2012)"
+   ],
+   "protocol": "30 episodes per game, std reported across episodes; no significance test; ablations use 10M frames, 3 learning rates, best checkpoint evaluated every 250k frames on 135k validation frames"
+  },
+  "availability": {
+   "code": "https://sites.google.com/a/deepmind.com/dqn, non-commercial only",
+   "weights": null,
+   "data": "Atari ALE emulator"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.target_update_C",
+    "quote": null,
+    "where": "Extended Data Table 1, row target network update frequency, value 10000 (image)"
+   },
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "Extended Data Table 1, row learning rate, value 0.00025 (image)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DQN outperforms the best existing RL methods on 43 of 49 games",
+   "kind": "measured",
+   "source": null,
+   "metric": "games won vs best prior method",
+   "value": 43,
+   "unit": "games",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DQN, one network per game, 49 Atari 2600 games, 50M training frames, eval 30 episodes up to 5 min with epsilon 0.05",
+   "where": "p.2 (Nature p.530)",
+   "note": null,
+   "quote": "Our DQN method outperforms the best existing reinforcement learning methods on 43 of the games"
+  },
+  {
+   "claim": "DQN reaches more than 75% of the human score on 29 of 49 games",
+   "kind": "measured",
+   "source": null,
+   "metric": "games >75% human-normalised",
+   "value": 29,
+   "unit": "games",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DQN, one network per game, 49 Atari 2600 games, 50M training frames, eval 30 episodes up to 5 min with epsilon 0.05; normalised 100*(DQN-random)/(human-random)",
+   "where": "p.2-3",
+   "note": null,
+   "quote": "achieving more than 75% of the human score on more than half of the games (29 games;"
+  },
+  {
+   "claim": "Replay and target network each matter: on Breakout, Enduro, River Raid, Seaquest, Space Invaders the full agent beats every ablation. Breakout 316.8 (replay+target Q), 240.7 (replay, no target Q), 10.2 (no replay, target Q), 3.2 (neither); Enduro 1006.3/831.4/141.9/29.1; River Raid 7446.6/4102.8/2867.7/1453.0; Seaquest 2894.4/822.6/1003.0/275.8; Space Invaders 1088.9/826.3/373.2/302.0. Values are only in an image table, so not machine-checked.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average episode score",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10M training frames, standard hyperparameters, best of 3 learning rates, eval every 250k frames for 135k validation frames, highest average episode score reported; evaluation episodes not truncated at 5 min",
+   "where": "Extended Data Table 3 (p.12 of PDF); numbers read from rendered image",
+   "note": null,
+   "table": "Extended Data Table 3 (image; numbers not in text layer)"
+  },
+  {
+   "claim": "Replacing the conv network by a single linear layer (with replay and target network) collapses scores: Breakout 316.8 vs 3.00, Enduro 1006.3 vs 62.0, River Raid 7446.6 vs 2346.9, Seaquest 2894.4 vs 656.9, Space Invaders 1088.9 vs 301.3 (DQN vs Linear). Image table only.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10M frames, 3 learning rates, best reported, 5 validation games",
+   "where": "Extended Data Table 4 (p.13 of PDF)",
+   "note": null,
+   "table": "Extended Data Table 4 (image; numbers not in text layer)"
+  },
+  {
+   "claim": "Hyperparameters: replay memory 1,000,000 most recent frames, minibatch 32, RMSProp, epsilon annealed linearly 1.0 to 0.1 over the first million frames then fixed at 0.1, 50M frames total",
+   "kind": "measured",
+   "source": null,
+   "metric": "training frames",
+   "value": 50,
+   "unit": "million frames",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training on every game",
+   "where": "Methods, Training details",
+   "note": null,
+   "quote": "We trained for a total of 50 million frames (that is, around 38 days of game experience in total) and used a replay memory of 1 million most recent frames."
+  },
+  {
+   "claim": "Epsilon-greedy behaviour policy anneals linearly from 1.0 to 0.1 over the first million frames",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.1,
+   "unit": "final epsilon",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training",
+   "where": "Methods, Training details",
+   "note": null,
+   "quote": "The behaviour policy during training was e-greedy with e annealed linearly from 1.0 to 0.1 over the first million frames, and fixed at 0.1 thereafter."
+  },
+  {
+   "claim": "Rewards clipped to +1/-1 during training only, to keep derivatives small and allow one learning rate across games; authors concede it removes reward-magnitude information",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "clip bound",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training only; evaluation on unmodified games",
+   "where": "Methods, Training details",
+   "note": null,
+   "quote": "we clipped all positive rewards at 1 and all negative rewards at 21, leaving 0 rewards unchanged"
+  },
+  {
+   "claim": "Target network is cloned from Q every C updates; Extended Data Table 1 gives C = 10000 parameter updates",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10000,
+   "unit": "updates",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 value",
+   "where": "Methods; Extended Data Table 1 (image: target network update frequency 10000)",
+   "note": "The value 10000 is only in the image of Extended Data Table 1; the quote gives the mechanism. Value not machine-checked.",
+   "quote": "every C updates we clone the network Q to obtain a target network ^Q and use ^Q for generating the Q-learning targets yj forthe followingC updates to Q"
+  },
+  {
+   "claim": "Bellman error term is clipped to [-1,1], equivalent to absolute-value loss outside that interval, which further improved stability",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Training",
+   "where": "Methods, Training algorithm",
+   "note": null,
+   "quote": "We also found it helpful to clip the error term from the update"
+  },
+  {
+   "claim": "Discount factor gamma 0.99 throughout",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.99,
+   "unit": "gamma",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All games",
+   "where": "Methods, Algorithm",
+   "note": null,
+   "quote": "c was set to 0.99 throughout"
+  },
+  {
+   "claim": "Frame skip k=4: agent sees and selects every 4th frame, last action repeated",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "frames",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All games",
+   "where": "Methods, Training details",
+   "note": null,
+   "quote": "We use k 5 4 for all games."
+  },
+  {
+   "claim": "Hyperparameters were chosen by informal search on 5 games, not grid search, then held fixed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5,
+   "unit": "games",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Pong, Breakout, Seaquest, Space Invaders, Beam Rider",
+   "where": "Methods",
+   "note": null,
+   "quote": "performing an informal search on the games Pong, Breakout, Seaquest, Space Invaders and Beam Rider"
+  },
+  {
+   "claim": "Learning-rate 0.00025, RMSProp momentum 0.95, squared-gradient momentum 0.95, min squared gradient 0.01, replay start size 50000 uniform-random frames, update frequency 4, no-op max 30, history length 4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extended Data Table 1 (image, not in text layer)",
+   "where": "Extended Data Table 1 (p.10 of PDF)",
+   "note": null,
+   "table": "Extended Data Table 1 (image; numbers not in text layer)"
+  },
+  {
+   "claim": "Input is 84x84x4 preprocessed frames; conv 32 8x8 s4, conv 64 4x4 s2, conv 64 3x3 s1, FC 512 ReLU, linear output 4-18 actions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 512,
+   "unit": "hidden units in FC layer",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Architecture",
+   "where": "Methods, Model architecture",
+   "note": null,
+   "quote": "The final hidden layer is fully-connected and consists of 512 rectifier units."
+  },
+  {
+   "claim": "Human tester baseline: about 20 episodes per game of max 5 min after about 2 h practice",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2,
+   "unit": "h practice",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Professional human games tester, same emulator, no pause/save/reload",
+   "where": "Methods, Evaluation procedure",
+   "note": null,
+   "quote": "following around 2 h of practice playing each game"
+  },
+  {
+   "claim": "A 60 Hz random agent baseline changes normalised DQN performance by more than 5% in only six games",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "games",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random-agent baseline sensitivity",
+   "where": "Methods, Evaluation procedure",
+   "note": null,
+   "quote": "changing the normalized DQN performance by more than 5% in only six games"
+  }
+ ],
+ "limits": [
+  "Games needing temporally extended planning, such as Montezuma's Revenge, remain a major challenge (score 0).",
+  "Reward clipping prevents distinguishing reward magnitudes and may affect performance (authors).",
+  "Replay buffer overwrites with recent transitions and samples uniformly; authors suggest prioritised sampling (prioritized sweeping) as future work.",
+  "Hyperparameters chosen by informal search on 5 games; better values conceivable; no seeds or variance across training runs reported.",
+  "Ablation uses only 5 games, 10M frames, best checkpoint, so numbers are optimistic maxima.",
+  "Human comparison: single professional tester, about 20 episodes, 2 h practice."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Experience replay",
+   "definition": "store the agent's experiences e_t=(s_t,a_t,r_t,s_t+1) in a data set and apply Q-learning updates to samples drawn uniformly at random",
+   "where": "p.2, Methods"
+  },
+  {
+   "term": "Target network",
+   "definition": "every C updates clone the network Q to obtain a target network ^Q used to generate the Q-learning targets for the following C updates",
+   "where": "Methods"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Watkins & Dayan, Q-learning",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base algorithm",
+   "quote": null
+  },
+  {
+   "work": "Lin, Reinforcement learning for robots using neural networks",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "experience replay",
+   "quote": null
+  },
+  {
+   "work": "Riedmiller, Neural fitted Q iteration",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "stable but retrains networks de novo; too inefficient for large networks",
+   "quote": null
+  },
+  {
+   "work": "Bellemare et al., Arcade Learning Environment",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Atari platform and best linear learner baseline",
+   "quote": null
+  },
+  {
+   "work": "Bellemare, Veness, Bowling, contingency awareness (SARSA)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Moore & Atkeson, Prioritized sweeping",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "suggested future direction for replay",
+   "quote": null
+  },
+  {
+   "work": "Tsitsiklis & Van Roy, TD learning with function approximation",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "divergence with nonlinear approximators",
+   "quote": null
+  },
+  {
+   "work": "Tesauro, TD-Gammon",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier RL success",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Schematic illustration of the convolutional neural network.",
+   "page": "Nature p.529 (PDF p.2)",
+   "why": "Architecture in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Training curves tracking the agent's average score and average predicted action-value (Space Invaders, Seaquest).",
+   "page": "Nature p.530 (PDF p.3)",
+   "why": "Shows stable training of score and Q"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of the DQN agent with the best reinforcement learning methods in the literature, normalised to human.",
+   "page": "Nature p.531 (PDF p.4)",
+   "why": "49-game bar chart"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Two-dimensional t-SNE embedding of last hidden layer representations in Space Invaders.",
+   "page": "Nature p.532 (PDF p.5)",
+   "why": "Learned representations track value"
+  },
+  {
+   "figure": "Extended Data Fig 1",
+   "caption": "t-SNE of human and agent play states.",
+   "page": "PDF p.8",
+   "why": "Generalisation across policies"
+  },
+  {
+   "figure": "Extended Data Fig 2",
+   "caption": "Learned value functions on Breakout and Pong.",
+   "page": "PDF p.9",
+   "why": "Value trace through game events"
+  },
+  {
+   "figure": "Extended Data Table 1",
+   "caption": "List of hyperparameters and their values",
+   "page": "PDF p.10",
+   "why": "All hyperparameters"
+  },
+  {
+   "figure": "Extended Data Table 3",
+   "caption": "The effects of replay and separating the target Q-network",
+   "page": "PDF p.12",
+   "why": "2x2 ablation"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1 (Methods)",
+   "snippet": "Initialize replay memory D to capacity N; Q random weights theta; target Q^ with theta- = theta; for each step: epsilon-greedy action, store (phi_t,a_t,r_t,phi_t+1) in D, sample minibatch, y_j = r_j if terminal else r_j + gamma max_a' Q^(phi_j+1,a';theta-), gradient step on (y_j - Q(phi_j,a_j;theta))^2, every C steps reset Q^ = Q",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Extended Data Tables 1-4 are images with no text layer; their values were read from rendered pages and cannot pass the numeric text check, so table results have null value.",
+  "Figure page numbers beyond Fig 4 are PDF page indices inferred from rendering; figures.py captions returned nothing.",
+  "No embedded instructions found.",
+  "Check warns on method numbers (lr 0.00025, 10000, 50000, 0.95, 0.01, 1,000,000) because they come from the image of Extended Data Table 1; verified by viewing the rendered page."
+ ]
+}

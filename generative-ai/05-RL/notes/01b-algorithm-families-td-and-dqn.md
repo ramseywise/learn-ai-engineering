@@ -7,6 +7,7 @@ sources:
   - "Buduma & Locascio, \"Fundamentals of Deep Learning\" (O'Reilly, 2017), ch. 9"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/1312.5602
+  - https://doi.org/10.1038/nature14236 (Mnih et al., DQN, Nature 2015)
   - https://arxiv.org/abs/1707.06347
   - https://arxiv.org/abs/2106.01345 (Decision Transformer)
   - https://arxiv.org/abs/1207.4708
@@ -21,7 +22,7 @@ cleaned: 2026-11-08
 ## Algorithm families
 
 **Value-based:** The agent estimates the expected long-term return (the "value") of
-states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks). DQN ([arXiv:1312.5602](https://arxiv.org/abs/1312.5602), Mnih et al., 2013) learned Q-values straight from raw pixels with a CNN. Its experience replay buffer broke the correlation between consecutive frames. With one architecture and one set of hyperparameters it played seven Atari games and beat a human expert on three. Both the games and the "one agent, no per-game tuning" rule came from the **Arcade Learning Environment** ([arXiv:1207.4708](https://arxiv.org/abs/1207.4708), Bellemare et al., JAIR 2013). ALE's authors tuned on five training games and reported on 50 test games drawn at random, the train/test split applied to environments. Their own SARSA(λ) agents on hand-built features beat trivial baselines in only 40 of 55 games, and sparse-reward games such as Montezuma's Revenge defeated everything. DQN's contribution was to learn the features from pixels.
+states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks). DQN ([arXiv:1312.5602](https://arxiv.org/abs/1312.5602), Mnih et al., 2013) learned Q-values straight from raw pixels with a CNN. Its experience replay buffer broke the correlation between consecutive frames. With one architecture and one set of hyperparameters it played seven Atari games and beat a human expert on three. Both the games and the "one agent, no per-game tuning" rule came from the **Arcade Learning Environment** ([arXiv:1207.4708](https://arxiv.org/abs/1207.4708), Bellemare et al., JAIR 2013). ALE's authors tuned on five training games and reported on 50 test games drawn at random, the train/test split applied to environments. Their own SARSA(λ) agents on hand-built features beat trivial baselines in only 40 of 55 games, and sparse-reward games such as Montezuma's Revenge defeated everything. DQN's contribution was to learn the features from pixels. The 2015 Nature version, with replay and a target network, is under [Deep Q-networks](#deep-q-networks-and-learning-from-logs).
 
 **Policy-based:** Directly optimize the policy without an explicit value function.
 Policy gradient methods compute `∇E[R]` and update `π_θ` toward higher-reward trajectories.
@@ -210,6 +211,28 @@ outliers. The `max` in the target overestimates values whenever estimates are no
 Q-learning** picks the action with one network and scores it with the other (*RL: An Introduction*, ch. 6, Ex. 6.7). Rainbow
 combines that with prioritized replay, dueling (V + A) heads, n-step targets, noisy-net
 exploration and distributional returns.
+
+**What the 2015 paper measured.** [Mnih et al., *Nature* 2015](https://doi.org/10.1038/nature14236) is the version with the target network. It trained one network per game, with the same architecture and hyperparameters on all 49 Atari games, for 50 million frames (about 38 days of game time), and tested over 30 episodes of up to 5 minutes at ε = 0.05. **DQN beat the best earlier RL method on 43 of the 49 games and reached more than 75% of a professional human tester's score on 29** (100 × (DQN − random)/(human − random); one tester with about 2 hours of practice per game). The input is the last 4 frames at 84×84, passed through conv 32 filters 8×8 stride 4, conv 64 4×4 stride 2, conv 64 3×3 stride 1 and a 512-unit dense layer, with one output per action (4 to 18). Training used a 1-million-frame replay memory, minibatches of 32, RMSProp at learning rate 0.00025, γ = 0.99, ε annealed from 1.0 to 0.1 over the first million frames, a target network cloned every 10,000 updates, and one update per 4 frames. Rewards were clipped to ±1 and the TD error to [−1, 1]. The authors tuned these informally on five games (Pong, Breakout, Seaquest, Space Invaders, Beam Rider) and then held them fixed.
+
+![The DQN network: an 84 by 84 by 4 frame stack, three convolutional layers, two fully connected layers, and one output per joystick action.](../sources/images/mnih-2015-dqn-nature-fig1.png)
+*Image Source: Mnih et al., [Human-level control through deep reinforcement learning](https://doi.org/10.1038/nature14236) (Nature, 2015), Fig. 1*
+
+The ablation is the part to remember. On five games, 10 million frames, best of three learning rates and the best checkpoint's average episode score, the four combinations of replay and target network gave:
+
+| Game | Replay + target | Replay only | Target only | Neither |
+|---|---|---|---|---|
+| Breakout | 316.8 | 240.7 | 10.2 | 3.2 |
+| Enduro | 1006.3 | 831.4 | 141.9 | 29.1 |
+| River Raid | 7446.6 | 4102.8 | 2867.7 | 1453.0 |
+| Seaquest | 2894.4 | 822.6 | 1003.0 | 275.8 |
+| Space Invaders | 1088.9 | 826.3 | 373.2 | 302.0 |
+
+Removing replay costs far more than removing the target network, and a single linear layer on the same pixels with both tricks scored 3.0 on Breakout and 62.0 on Enduro against 316.8 and 1006.3 (Extended Data Tables 3 and 4, read from the rendered tables). The tricks are best-checkpoint maxima from one setup, with no seeds or variance reported, so read the ordering and not the gaps.
+
+![Bar chart of DQN against the best linear learner across 49 Atari games, normalised so random play is 0 percent and the human tester is 100 percent; Video Pinball, Boxing and Breakout exceed 1,300 percent while Montezuma's Revenge is 0 percent.](../sources/images/mnih-2015-dqn-nature-fig3.png)
+*Image Source: Mnih et al., [Human-level control through deep reinforcement learning](https://doi.org/10.1038/nature14236) (Nature, 2015), Fig. 3. Error bars are the s.d. over 30 evaluation episodes.*
+
+What it does not do: Montezuma's Revenge scores 0, and the authors say games needing "more temporally extended planning strategies" remain a major challenge. Reward clipping means the agent cannot tell a small reward from a large one, uniform replay treats every transition alike (prioritised replay is named as future work), and the memory holds only the most recent million frames.
 
 ![Percentage of left actions from state A under Q-learning and double Q-learning; Q-learning starts near 50 percent, peaks near 95 percent, and decays slowly toward the 5 percent optimum, while double Q-learning stays lower.](../sources/images/murphy-rl-fig2-8.png)
 *Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 2.8, reproduced from Sutton & Barto Fig. 6.5 with permission*

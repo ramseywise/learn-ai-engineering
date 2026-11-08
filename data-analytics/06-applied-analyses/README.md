@@ -18,10 +18,13 @@ Complete analyses, each going from a business question through a dataset to a re
 | 6 | [SQL for analytics](notes/06-sql-for-analytics.md) | Where did the year's revenue change come from? |
 | 7 | [Survival and event history](notes/07-survival-and-event-history.md) | When will a customer leave, and does the welcome call delay it? |
 | 8 | [States and sequences](notes/08-states-and-sequences.md) | Which journeys lead to a second order, and what is a customer in each state worth? |
-| 9 | [Marketing measurement](notes/09-marketing-measurement.md) | Where should next quarter's budget go, and what is a new customer worth? |
-| 10 | [Operations and supply chain](notes/10-operations-and-supply-chain.md) | How much of each product should the warehouse hold, and how many packers on a Monday? |
+| 9 | [Marketing measurement](notes/09-marketing-measurement.md) | Where should next quarter's budget go? |
+| 9b | [Customer lifetime value](notes/09b-customer-lifetime-value.md) | What is a new customer worth, and does a channel's cost per customer sit below it? |
+| 10 | [Operations and supply chain](notes/10-operations-and-supply-chain.md) | How much of each product should the warehouse order and hold? |
+| 10b | [Packers: queues, Little's law and a shift plan](notes/10b-packers-queues-and-a-shift-plan.md) | How many packers on a Monday, and what does the shift plan cost? |
 | 11 | [Metric trees and defining metrics](notes/11-metric-trees.md) | Which number should the shop run on, what feeds it, and what would catch it being gamed? |
-| 12 | [Surveys and sampling design](notes/12-surveys-and-sampling-design.md) | What share of customers are satisfied, and how sure can a survey make us? |
+| 12 | [Surveys and sampling design](notes/12-surveys-and-sampling-design.md) | Who should we ask, and how do we stop the people who answer from misleading us? |
+| 12b | [Weighting, the margin and the question](notes/12b-weighting-the-margin-and-the-question.md) | What share of customers are satisfied, and how sure can a survey make us? |
 
 Chapter 5 also holds a separate case, [segmenting B2B customers by behaviour](notes/05-segmentation-and-rfm.md#case-segmenting-b2b-customers-by-behaviour), which tests whether cohorts found by clustering deserve trust on synthetic data.
 

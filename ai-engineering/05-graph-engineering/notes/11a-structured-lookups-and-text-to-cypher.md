@@ -4,6 +4,7 @@ sources:
   - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 14
   - Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 15
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L4–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
+  - Bird, Klein & Loper, Natural Language Processing with Python (O'Reilly, 2009), ch. 10
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
 cleaned: 2026-11-01
@@ -57,6 +58,8 @@ Two cautions from the notebook. One query filters `WHERE addr.city = 'California
 ---
 
 ## Text-to-Cypher
+
+The idea is older than LLMs. NLTK's feature grammar `sql0.fcfg` builds a `SEM` value alongside the parse, so "What cities are located in China" comes out as `SELECT City FROM city_table WHERE Country="china"` (*Natural Language Processing with Python*, ch. 10). It breaks in two places: the schema is hard-wired into the grammar rules (`N[SEM='City FROM city_table'] -> 'cities'`, so a renamed table or field makes the SQL unexecutable), and every new question shape, such as adding "and have populations above 1,000,000", needs new rules. An LLM that reads the schema at prompt time replaces both, which is why the schema-first prompt below matters.
 
 ### Think like the expert: schema first
 

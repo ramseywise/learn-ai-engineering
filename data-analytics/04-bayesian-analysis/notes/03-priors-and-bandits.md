@@ -1,6 +1,8 @@
 ---
 origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 3, 6, 13 and 21
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 6 Getting our priorities straight)
   - http://proceedings.mlr.press/v22/kaufmann12/kaufmann12.pdf (Kaufmann et al., Bayes-UCB, AISTATS 2012)
   - https://doi.org/10.1214/08-aoas191 (Gelman et al., AOAS, 2008)
@@ -82,6 +84,22 @@ Beta(0.5, 0.5): mean 0.500, 95% of mass in [0.002, 0.998]
 ```
 
 Beta(3, 97) says "around 3%, give or take". Beta(30, 970) has the same mean and claims ten times the evidence. Beta(½, ½) is the Jeffreys prior and piles its mass at the edges.
+
+### Jeffreys: a flat prior that survives a transform
+
+Jeffreys' rule sets the prior proportional to the square root of the Fisher information, g(θ) ∝ I(θ)^½, and the result transforms correctly: reparametrise to φ = t(θ) and the rule applied to φ gives the same posterior. That removes the objection to flat priors above. For a Poisson count x with rate θ the rule gives g(θ) ∝ θ^(−½), so observing x = 10 gives a Gamma(10.5) posterior with mean 10.5, against Gamma(11) and mean 11.0 under a flat prior (recomputed here). Efron and Hastie's Fig. 13.1 shows the flat-prior posterior sitting about 0.5 to the right of the confidence density for the same data, with the Jeffreys posterior nearly on top of it (*Computer Age Statistical Inference*, ch. 13).
+
+![Posterior of the Poisson rate after observing x = 10 under a flat prior and under Jeffreys' prior, with the confidence density](../../sources/images/computer-age-statistical-inference-fig13-1.png)
+
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 13.1*
+
+The book's second case is a sample correlation of 0.498 from n = 22 students' mechanics and vectors scores, assuming a bivariate normal. The Jeffreys posterior gives a 95% credible interval of [0.093, 0.750], nearly the Neyman confidence interval, while the flat and a triangular shrinkage prior g(θ) = 1 − |θ| give visibly different curves (ch. 3, Fig. 3.2).
+
+![Posterior density of the correlation under flat, Jeffreys and triangular priors, with 0.093 and 0.750 marked](../../sources/images/computer-age-statistical-inference-fig3-2.png)
+
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 3.2*
+
+Two limits come with it. In one parameter Jeffreys tends to match frequentist coverage, but with ten normal means xᵢ ~ N(θᵢ, 1) the joint Jeffreys prior is flat and "can produce disastrous overall results" (ch. 3, pointing to ch. 13), and no single prior is uninformative for every target t(θ). The flat default is also where the winner's curse below begins: for the top gene of 6,033 in a prostate study (x = 5.29), a flat prior returns 5.29, while the empirical Bayes prior the book builds later returns 4.11 (ch. 3).
 
 ### Useful distributions for priors
 
@@ -206,6 +224,8 @@ BMH ch. 6 derives the link between penalised regression and Bayesian MAP estimat
 | Lasso (L1 penalty λ‖β‖₁) | MAP with a Laplace prior on each β |
 | Penalty strength λ | prior precision (tighter prior = larger λ) |
 
+James et al. state the same pairing: under independent Gaussian priors ridge is both the posterior mode and mean, and under a Laplace prior lasso is the posterior mode (*An Introduction to Statistical Learning with Applications in Python*, ch. 6, Fig. 6.11). In their orthonormal special case ridge divides each least-squares coefficient by 1 + λ, while the lasso subtracts λ/2 and clips at zero (eqs. 6.14 and 6.15, "soft thresholding"), which is the mechanism behind lasso's exact zeros.
+
 The claim is exact and easy to check. With unit noise, a Normal(0, τ) prior corresponds to a ridge penalty of 1/τ². We use 60 rows and six inputs, of which only two matter.
 
 ```python
@@ -311,6 +331,22 @@ mean shrunken estimate among winners 0.220
 Conditioning on significance selects the experiments whose noise pointed up, so winners report a lift three times their true one. The prior is estimated across all experiments: the variance of the observed lifts, less the known noise. Multiply each estimate by the resulting factor, and the mean among winners falls from 0.759 to 0.220, against a truth of 0.246.
 
 This is empirical Bayes in the form that avoids BMH's objection. The prior comes from the whole population of 2,000, in which any one experiment's own result is a tiny share, so its data is not meaningfully counted twice. The simulation is ideal in having a known noise and a truly Normal population, and real programmes need the second checked.
+
+### Empirical Bayes without a prior family: Robbins' formula
+
+The simulation above assumed a Normal prior. Robbins' formula needs none. If x is a count drawn from Poisson(θ) with θ from an unknown prior, then E{θ | x} = (x + 1) y(x+1) / y(x), where y(x) is the number of cases that showed count x, because the observed counts already carry the prior's information. Efron and Hastie's table is one year of claims on 9,461 automobile policies: 7,840 had no claims, 1,317 had one and 239 had two. For a customer with no claims the formula gives 1 × 1,317 / 7,840 = 0.168 expected claims next year. It is erratic where counts are thin: at x = 5 it returns 6.00 (recomputed from the book's table), while a gamma prior fitted by maximum likelihood gives about 1.34 (*Computer Age Statistical Inference*, ch. 6).
+
+The same idea predicts what has not been seen yet. Corbet trapped butterflies for two years in Malaya: 118 species were caught once, 74 twice, 44 three times. Fisher's missing-species estimate of the number of new species in a further t units of trapping time (one unit being the original two years) is Ê(t) = y₁t − y₂t² + y₃t³ − …, which gives Ê(½) = 45.2 ± 11.2 new species (*Computer Age Statistical Inference*, ch. 6, Table 6.3 and Fig. 6.2). The series fails for t > 1, and the gamma-prior version gives Ê(2) = 123 as educated guessing. On Shakespeare's 884,647 words, with 14,376 words used once and 31,534 distinct, a new canon of equal size would bring 11,430 ± 178 unseen words (t = 1; re-summing the printed counts up to x = 100 gives about 11,490, the tail being unprinted).
+
+![Butterfly data: expected number of new species against additional trapping time, nonparametric with one standard deviation band and the gamma model dashed](../../sources/images/computer-age-statistical-inference-fig6-2.png)
+
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 6.2*
+
+Both cases estimate the marginal counts and read the prior off them, which the book later calls f-modelling. Its alternative is g-modelling: fit the prior g(θ) itself, usually a spike at zero plus a smooth slab, and deconvolve. In a 1,000-case simulation with X ~ N(θ, 1), the standard deviation of the estimated g from nonparametric f-modelling averaged more than 20 times that of the g-model at similar bias, and a parametric f-model reduced it without reaching the g-model (ch. 21, Fig. 21.11). On the 6,033-gene prostate data the g-model puts the null probability at 0.946 against 0.984 from the f-model locfdr.
+
+![Standard deviation of the estimated prior for the g-model and two f-models in the artificial example](../../sources/images/computer-age-statistical-inference-fig21-11.png)
+
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 21.11*
 
 ## Eliciting priors from experts
 

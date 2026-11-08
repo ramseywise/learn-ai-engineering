@@ -1,4 +1,4 @@
-# Bayesian Analysis lecture deck. Covers notes 01-07.
+# Bayesian Analysis lecture deck. Covers notes 01-07, including the companions 01b and 07b.
 # Build: make slides PILLAR=data-analytics/04-bayesian-analysis STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Larkspur, a fictional online plant shop. All Larkspur numbers come from
@@ -86,6 +86,37 @@ parts:
         notes: >-
           For the tanks, the posterior mean, median and MAP disagree: 982, 958 and 912. Which one to report depends on a loss function, which is part five. The text-message story shows a latent switch as one more unknown: over 74 days the rate moves from 17.76 to 22.68 a day, and the switchpoint posterior puts 0.489 on day 45 and 0.354 on day 44, with no change-point test in sight.
 
+      - layout: bullets
+        level: deep
+        title: A Bayes factor depends on how you define the alternative
+        recall: Why does the Bayes factor for the Belgian euro coin flip with the definition of "biased"?
+        bullets:
+          - "**Data:** 140 heads in 250 spins; the Guardian quoted p under 7%."
+          - "**Cheat (x = 140/250):** **6.08**, but it peeks at the data."
+          - "**Two values (0.4 or 0.6):** **1.33**."
+          - "**Uniform on x:** **0.47**, which favours the fair coin."
+        aside:
+          title: Odds, not adjectives
+          accent: "D4621A"
+          body: "A factor of 2 from 1:1 prior odds is 2:1, about 66%. Only a factor near 100 gives over 99%."
+        takeaway: A Bayes factor needs a defined alternative, and the verdict flips with the definition, so report the prior on the effect with it.
+        source: notes/01b-grids-hypotheses-and-simulation.md
+        notes: >-
+          Think Bayes ch. 11. The BIC approximation shows the same split from the other side: in a logistic regression on 39 patients z = 2.36 is substantial to strong on Fisher's scale, yet the BIC Bayes factor is 5.49, and at n = 10,000 a z of 3.29 gives 2.24 (Efron and Hastie, ch. 13).
+
+      - layout: cards
+        level: deep
+        title: How many species are in the sample?
+        recall: How does the species problem get a prior when the number of species is itself unknown?
+        cards:
+          - {title: Dirichlet, body: "3 lions, 2 tigers, 1 bear: posterior means 44%, 33%, 22%, against 50%, 33%, 17% by maximum likelihood.", accent: "1E3A5F"}
+          - {title: A hierarchy, body: "A uniform prior on n, a Dirichlet over n prevalences, then the reads.", accent: "1E3A5F"}
+          - {title: The answer, body: "400 reads, 61 species seen: n has mode 72, 90% interval 66 to 79.", accent: "D4621A"}
+        takeaway: When the number of categories is unknown, put a prior on that number too, and the posterior tells you how many you have not seen.
+        source: notes/01b-grids-hypotheses-and-simulation.md
+        notes: >-
+          Gut sample B1242 from the Belly Button Biodiversity pilot. The most abundant species holds 23% of reads but is estimated at 20%, since unseen species take part of the share. Fisher's empirical Bayes answer to the same question is in the priors part.
+
   - title: Trusting the sampler
     summary: One MCMC step · Diagnostics · Fix the model
     notes: >-
@@ -165,6 +196,46 @@ parts:
         source: notes/03-priors-and-bandits.md
         notes: >-
           Flat Beta(1,1) against a biased Beta(2,10). A prior is not a permanent thumb on the scale, unless it puts zero mass somewhere. Priors also take back a winner's inflation: of 2000 simulated experiments, 91 reach significance, their mean observed lift is 0.759 against a mean true lift of 0.246, and a prior fitted across all experiments brings it to 0.220. The last part returns to this with segments.
+
+      - layout: image
+        level: deep
+        title: Jeffreys survives a change of variable
+        recall: What does a Jeffreys prior fix about flat priors, and what does it still not fix?
+        image: ../../sources/images/computer-age-statistical-inference-fig3-2.png
+        caption: "Posterior of a correlation (r = 0.498, n = 22) under flat, Jeffreys and triangular priors (Efron and Hastie, 2016, Fig. 3.2)."
+        bullets:
+          - "**Rule:** prior proportional to the square root of the Fisher information."
+          - "**Interval:** Jeffreys gives [0.093, 0.750], near the Neyman interval."
+          - "**Poisson x = 10:** Gamma(10.5), mean 10.5, against 11.0 flat."
+          - "**Limit:** ten normal means with a flat joint prior go badly wrong."
+        takeaway: Jeffreys' prior is a flat prior that does not change with the parameterisation, and it still does not make high-dimensional problems safe.
+        source: notes/03-priors-and-bandits.md
+        notes: >-
+          Efron and Hastie ch. 3 and 13. Their line is that frequentism replaces the choice of a prior with the choice of a method. No single prior is uninformative for every function of the parameter.
+
+      - layout: compare
+        level: deep
+        title: Empirical Bayes reads the prior off the counts
+        recall: How does Robbins' formula estimate next year's claims without assuming a prior, and where does it fail?
+        emphasis: none
+        left:
+          title: "Robbins' formula"
+          bullets:
+            - "**Rule:** (x + 1) y(x+1) / y(x), no prior family."
+            - "**9,461 policies:** 7,840 with none, 1,317 with one."
+            - "**x = 0:** 1,317 / 7,840 = **0.168** claims next year."
+          tag: "x = 5 gives 6.00, because counts are thin"
+        right:
+          title: "Gamma prior fitted by ML"
+          bullets:
+            - "**Smooth:** x = 5 gives about **1.34**."
+            - "**Missing species:** Corbet's butterflies, 45.2 new species in half the trapping time."
+            - "**Shakespeare:** 11,430 ± 178 unseen words for an equal-sized canon."
+          tag: "Extrapolation past one unit of time is educated guessing"
+        takeaway: With many parallel cases the counts carry the prior, but the formula is erratic where counts are thin, and a smooth fit trades that for an assumption.
+        source: notes/03-priors-and-bandits.md
+        notes: >-
+          Efron and Hastie ch. 6 and 21. g-modelling fits the prior itself instead of the counts: in a 1,000-case simulation the standard deviation of the estimate from nonparametric f-modelling averaged more than 20 times that of the g-model. The book's printed standard error for the butterfly estimate disagrees with its own formula, so the note quotes the table.
 
       - layout: code
         title: Thompson sampling is one line of posterior
@@ -257,7 +328,7 @@ parts:
         takeaway: Calling it Bayesian does not make daily stopping safe, so choose the rule and judge it by its error rates.
         source: notes/04-bayesian-ab-testing.md
         notes: >-
-          The expected-loss rule ships most no-effect tests, since under no effect shipping costs little. Waiting until day 14 cuts the harmful ships at minus half a point from 14 percent to 4. That can be a fine choice, but only if you know that is what you chose.
+          Efron and Hastie's small case: peeking once at month 20 of 30 raises the false-rejection rate of a z test from 0.05 to 0.074, and the posterior is untouched by it only for a prior with real experience behind it. The expected-loss rule ships most no-effect tests, since under no effect shipping costs little. Waiting until day 14 cuts the harmful ships at minus half a point from 14 percent to 4. That can be a fine choice, but only if you know that is what you chose.
 
   - title: From posterior to decision
     summary: Loss functions · Bayes action · Dollars
@@ -494,6 +565,82 @@ parts:
         source: notes/07-multilevel-models-and-partial-pooling.md
         notes: >-
           With 5 markets τ hits zero in 8% of datasets. MixedLM's single answer of 2.52 compares with a PyMC interval of 0.37 to 9.74, and a correlation can sit at the boundary of 1.00. On a logit scale, the within-market effect is not the population-averaged one: 0.500 against 0.306, and the typical market's 4.89% is not the average of 6.71%.
+
+      - layout: bullets
+        level: deep
+        title: Varying slopes shrink in two dimensions
+        recall: What does a varying-slopes model add to varying intercepts, and what did 20 cafes teach about the correlation?
+        bullets:
+          - "**Setup:** 20 cafes, 5 morning and 5 afternoon visits, true correlation −0.7."
+          - "**Correlation:** posterior mean −0.42, 89% interval [−0.74, −0.03]."
+          - "**RMSE cut by partial pooling:** 18% on intercepts, 20% on slopes."
+        aside:
+          title: Sign, not size
+          accent: "D4621A"
+          body: "With 20 groups the sign of a correlation is learned and its size is not. The LKJ prior pulls it towards zero."
+        takeaway: Model the intercept and slope together so each borrows from the other, and expect the correlation itself to be poorly pinned down.
+        source: notes/07b-varying-slopes-measurement-error-and-missing-data.md
+        notes: >-
+          McElreath ch. 13, re-run with one seed. The same chapter's admissions model with a varying gender slope has the lowest WAIC, 5191.4 against 5201.2 and 5201.9.
+
+      - layout: table
+        level: deep
+        title: Non-centring helps most when data is thin
+        recall: When does a non-centred parameterisation help, and does it cure thin data?
+        header: [Cafes x visits, Form, Divergences, Min ESS, Max r_hat]
+        widths: [3, 2.2, 2, 1.8, 1.8]
+        rows:
+          - ["20 x 10", Centred, "1", "1,210", "1.003"]
+          - ["20 x 10", Non-centred, "0", "811", "1.004"]
+          - ["30 x 2", Centred, "203", "25", "1.130"]
+          - ["30 x 2", Non-centred, "8", "270", "1.014"]
+        highlight: [2]
+        takeaway: With plenty of data the two forms agree, and with thin data the centred model fails, so treat non-centring as one lever and not a cure.
+        source: notes/07b-varying-slopes-measurement-error-and-missing-data.md
+        notes: >-
+          Raise target_accept, tighten the sigma prior or simplify the model as well. McElreath's non-centred chimpanzee model, with 54 nominal and about 18 effective parameters, had no divergences.
+
+      - layout: compare
+        level: deep
+        title: Ignoring measurement error attenuates the slope
+        recall: How far did a noisy predictor pull the slope toward zero, and what did modelling the error recover?
+        emphasis: right
+        left:
+          title: Ignores error
+          bullets:
+            - "**Slope:** 0.81 (sd 0.14)."
+            - "**Truth 1.0** sits more than one sd away."
+          tag: "50 points, standard errors known"
+        right:
+          title: Models error
+          bullets:
+            - "**Slope:** 0.94 (sd 0.10)."
+            - "**True values** are parameters, with the known standard errors as likelihoods."
+            - "**9 divergences:** needs a non-centred form."
+          tag: "Same data"
+        takeaway: A noisy predictor biases a slope toward zero, and treating the true values as parameters recovers most of it.
+        source: notes/07b-varying-slopes-measurement-error-and-missing-data.md
+        notes: >-
+          A simulated set, not McElreath's states data, where modelling the divorce error gave an age-at-marriage slope of −0.55 (sd 0.21), roughly half the naive one.
+
+      - layout: code
+        level: deep
+        title: Impute missing predictors inside the model
+        recall: Why does a careless imputation model make the slope more confident and more wrong?
+        lang: Text output
+        code: |-
+          complete cases (17)       bn 0.49 (sd 0.31)
+          impute, no link to mass   bn 0.26 (sd 0.22)
+          impute, N ~ mass          bn 0.41 (sd 0.26)
+          truth                     bn 0.50
+        bullets:
+          - "**Setup:** 29 species, 12 missing neocortex values."
+          - "**Naive imputation** ignores mass and shrinks the slope."
+          - "**One draw:** complete cases landed on the truth by luck."
+        takeaway: Give the imputation model the same relationships as the outcome model, or the missing rows will pull the estimate down and tighten it falsely.
+        source: notes/07b-varying-slopes-measurement-error-and-missing-data.md
+        notes: >-
+          McElreath's primate milk data keeps 17 of 29 species when rows are deleted. The simulation shows the standard deviation falling from 0.31 to 0.26 when the model uses the partial rows, in one run.
 
   - title: Wrap-up
     agenda: false

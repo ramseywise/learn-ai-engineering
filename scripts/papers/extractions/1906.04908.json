@@ -1,0 +1,478 @@
+{
+ "schema": 1,
+ "key": "1906.04908",
+ "pdf": "generative-ai/08-eval/sources/kulal-2019-spoc.pdf",
+ "bib": {
+  "title": "SPoC: Search-based Pseudocode to Code",
+  "authors": [
+   "Sumith Kulal",
+   "Panupong Pasupat",
+   "Kartik Chandra",
+   "Mina Lee",
+   "Oded Padon",
+   "Alex Aiken",
+   "Percy Liang"
+  ],
+  "first_author": "Kulal",
+  "year": 2019,
+  "venue": "NeurIPS 2019 (PDF is the arXiv v1 'Preprint. Under review')",
+  "arxiv": "1906.04908",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 39096,
+  "chars_total": 39096,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can long, functionally correct programs be synthesized from line-by-line pseudocode plus test cases by searching over translations, and can compiler-error credit assignment make that search cheaper?",
+ "hypothesis": "Localizing which pseudocode line's translation caused a compile error and focusing search there beats uninformed best-first search under a fixed compilation budget.",
+ "contributions": [
+  "SPoC dataset: 18,356 C++ programs with human-authored line-level pseudocode and ~38.6 test cases each",
+  "Evaluation by functional correctness (hidden test cases) at a budget of B synthesis trials",
+  "Two error-localization methods: multiclass classifier and prefix-based pruning"
+ ],
+ "method": {
+  "summary": "A seq2seq model proposes 100 candidate code lines per pseudocode line; best-first search over line combinations compiles and tests programs on public tests until one passes or the budget runs out. Error localization (neural multiclass line predictor, or prefix-based pruning via extra compiles) down-weights or blacklists offending candidates.",
+  "task": "pseudocode-to-code synthesis with test-case validation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SPoC",
+    "role": "both",
+    "size": "18,356 programs, 677 problems, 59 annotators; avg 14.7 lines, 38.6 tests",
+    "split": "TESTP: 158 held-out problems (1,820 programs, 10.1%); TESTW: 7 held-out workers (1,752 programs, 9.7%, 186 overlap with TESTP); rest train/dev 90:10",
+    "source": "Codeforces accepted C++ solutions to easiest-level problems; pseudocode from Amazon Mechanical Turk workers",
+    "preprocessing": "Filtered programs with #define, classes, structs, templates, switch, malloc; single-statement blocks grouped with preceding control statement"
+   }
+  ],
+  "models": [
+   {
+    "name": "seq2seq line translator",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM encoder-decoder with attention-based copying and coverage vector (OpenNMT)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "one pseudocode line",
+    "other": {
+     "beam_size_M": "100"
+    }
+   },
+   {
+    "name": "multiclass error localizer",
+    "role": "proposed",
+    "params": null,
+    "architecture": "three LSTMs (pseudocode line, code line, error message) + positional encoding of line offset, feedforward line embedding, LSTM across lines, feedforward logits, softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "abstain_threshold_beta_mul": "0.95",
+     "downweight_alpha": null
+    }
+   }
+  ],
+  "training": {
+   "objective": "log-likelihood (translation: p(code line | pseudocode line); localizer: log-likelihood of offending line on programs with one gold line replaced by a generated candidate that fails to compile)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": "beam search per line (M=100) then best-first search over combinations by product of line probabilities, heap-based",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "deterministic search; budget B = synthesis trials (one compile + run on public tests); budgets in Fig 4 table: 10, 100, 1000, 3000",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beta_mul": "0.95",
+    "alpha": null,
+    "prefix_offsets_tested": "delta_i in {0,1,2}",
+    "budget_unit": "each additional compiler call in prefix pruning counts as one trial"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "success rate at B",
+     "definition": "fraction of test examples where the system outputs a program that compiles and passes all public and hidden tests within B trials; the final program is checked on hidden tests, search sees only public tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "line-level functional correctness",
+     "definition": "replace gold line y_i by candidate c_ij and check the program still passes public and hidden tests",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "trials reduction",
+     "definition": "change in number of trials vs plain best-first search (absolute and relative; mean, median, geometric mean)",
+     "unit": "trials, ratio",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "top-one translation (B=1)",
+    "best-first search without localization",
+    "i*=ierr (down-weight compiler-reported line)",
+    "oracle (B=infinity)"
+   ],
+   "protocol": "single run per configuration (no seeds or intervals stated); two test sets TESTP and TESTW"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://cs.stanford.edu/~sumith/spoc/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best-first search with error localization lifts success rate from top-one to 44.7% under 100 compilations (abstract figure).",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate at B=100",
+   "value": "44.7",
+   "unit": "%",
+   "baseline_value": "25.6",
+   "n": null,
+   "setup": "SPoC (C++ pseudocode-to-program, 100 candidates per line), budget B = number of compiler calls plus public-test executions; abstract headline",
+   "note": "Abstract prints top-one as 25.6%; Introduction prints 24.6%; Fig 4 gives 17.8 (TESTP) and 30.7 (TESTW). The paper does not say how 44.7 is averaged; Fig 4 B=100 cells are 32.5-34.2 (TESTP) and 50.5-53.7 (TESTW).",
+   "where": "Abstract",
+   "quote": "using the top-one translation of the pseudocode from 25.6% to 44.7%."
+  },
+  {
+   "claim": "Top-one translation success rate stated in the introduction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate at B=1",
+   "value": "24.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SPoC test set, top-one translation of each pseudocode line",
+   "note": "Abstract says 25.6%.",
+   "where": "Sec 1",
+   "quote": "Using the top-one translation of the pseudocode yields a success rate of 24.6% on the test set."
+  },
+  {
+   "claim": "Compilation errors dominate failures during best-first search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of failures that are compile errors",
+   "value": "88.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-first search on SPoC",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "we focus on compilation errors, which constitute 88.7% of the failure cases in"
+  },
+  {
+   "claim": "Reported compiler line number is wrong a fifth of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "reported error line != actual offending line",
+   "value": "21.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SPoC, compiler error messages",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "Empirically, the reported line number does not match the actual incorrect line 21.7% of the time."
+  },
+  {
+   "claim": "Line-level functional correctness of top candidate is high, judged by substituting into the gold program and running public and hidden tests.",
+   "kind": "measured",
+   "source": null,
+   "metric": "line-level accuracy rank 1",
+   "value": "84.0 (TESTP), 87.0 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "translation model, line substituted into gold program, passes public+hidden tests",
+   "note": null,
+   "where": "Sec 6, Fig 3a",
+   "quote": "translation model achieves a high accuracy of 84–87% under this notion of functional correctness.",
+   "table": "Figure 3(a), rank 1: 84.0 TESTP, 87.0 TESTW; rank 100: 92.0, 94.7"
+  },
+  {
+   "claim": "Line-level accuracy does not carry to program level: programs built from all top-one lines succeed rarely.",
+   "kind": "measured",
+   "source": null,
+   "metric": "program success at B=1",
+   "value": "17.8 (TESTP), 30.7 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "combining top candidate of each line",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "have an even lower success rates of 17.8% on TESTP and 30.7% on TESTW."
+  },
+  {
+   "claim": "Only a minority of programs have every top-one line correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "programs with all top lines correct",
+   "value": "18.2 (TESTP), 32.0 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "line correctness judged by test substitution",
+   "note": null,
+   "where": "Sec 6, Fig 3b",
+   "quote": "Figure 3(b) shows that only 18.2% of programs in TESTP and 32.0% of"
+  },
+  {
+   "claim": "Oracle (infinite budget) ceiling given 100 candidates per line.",
+   "kind": "measured",
+   "source": null,
+   "metric": "oracle success rate",
+   "value": "55.2 (TESTP), 71.4 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "M=100 candidates per line, assuming incorrect candidates never combine to correct behaviour",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "a maximum success rate of 55.2% on TESTP and 71.4% on TESTW given our lists of candidates"
+  },
+  {
+   "claim": "Down-weighting the compiler-reported line makes search worse than no localization at large budgets.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate B=3000, i*=ierr vs none",
+   "value": "34.7 vs 39.1 (TESTP); 53.1 vs 59.4 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-first search",
+   "note": null,
+   "where": "Fig 4",
+   "table": "Figure 4, rows no localization and i*=ierr, column B=3000"
+  },
+  {
+   "claim": "Multiclass localizer helps most at small budgets (B=100).",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate B=100, multiclass vs none",
+   "value": "34.2 vs 32.5 (TESTP); 53.7 vs 51.0 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-first search, beta_mul=0.95",
+   "note": null,
+   "where": "Fig 4",
+   "table": "Figure 4, rows multiclass and no localization, column B=100"
+  },
+  {
+   "claim": "Prefix-based pruning wins at large budgets but loses at B=10 because extra compiles count against budget.",
+   "kind": "measured",
+   "source": null,
+   "metric": "success rate B=3000 and B=10, prefix-based",
+   "value": "40.3 and 25.3 (TESTP); 60.7 and 41.0 (TESTW)",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-first search; each pruning compile counts as one trial",
+   "note": null,
+   "where": "Fig 4",
+   "table": "Figure 4, row prefix-based, columns B=10 and B=3000"
+  },
+  {
+   "claim": "Multiclass localizer reduces trials on 13.5% of examples (median -26 trials, x0.58 relative) but turns 1.6% of successes into failures.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share improved",
+   "value": "13.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all test examples",
+   "note": "Text says multiclass decreases trials in 15.5% of examples (13.5 + 2.0 failed-to-succeeds); the intro's 'median reduction of 26 trails' matches.",
+   "where": "Table 2",
+   "table": "Table 2, row multiclass/improves number of trials, column count; median absolute -26.0"
+  },
+  {
+   "claim": "Multiclass localizer decreases the number of trials in 15.5% of examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share with fewer trials",
+   "value": "15.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all test examples",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "decreases the number of trials in 15.5% of all examples"
+  },
+  {
+   "claim": "Prefix-based pruning worsens trial count for 15.7% of examples, improves it for 4.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share worsened",
+   "value": "15.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all test examples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row prefix-based/worsens number of trials, column count"
+  },
+  {
+   "claim": "Dataset size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "programs",
+   "value": "18,356",
+   "unit": "programs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "677 Codeforces problems, 59 crowdworkers",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "Our dataset contains 18,356 programs submitted for 677 programming problems."
+  },
+  {
+   "claim": "Average tests per program in SPoC vs NAPS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg test cases",
+   "value": "38.6 vs 7.5",
+   "unit": "tests",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Number of test cases (average), columns NAPS and SPoC"
+  }
+ ],
+ "limits": [
+  "Only compile errors (88.7% of failures) are used for credit assignment; runtime and wrong-answer failures give only the sparse pass/fail signal.",
+  "Oracle ceiling (55.2%/71.4%) assumes incorrect candidates never combine into correct behaviour.",
+  "Programs are from easiest Codeforces problems; C++ only; line-aligned pseudocode is required.",
+  "Multiclass localizer is unverified and can catastrophically break an otherwise solvable case (1.6% succeeded->fails).",
+  "Training hyperparameters, alpha, optimizer, hardware and seeds are not given; single runs with no variance.",
+  "Abstract (25.6%) and introduction (24.6%) disagree on the top-one success rate; the 44.7% headline is not directly readable from Fig 4 cells.",
+  "Public tests drive search and hidden tests only judge the final program, so the success rate counts hidden-test generalisation, but the paper does not report how often a public-pass program fails hidden tests."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "success rate at B",
+   "definition": "the fraction of test examples where the system generates an accepted program under the budget of B trials",
+   "where": "Sec 6"
+  },
+  {
+   "term": "synthesis trial",
+   "definition": "each trial the system can issue a single call to the compiler and execute the compiled program on public test cases",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "NAPS: Natural program synthesis dataset",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration; has tests but only 6% human pseudocode",
+   "quote": null
+  },
+  {
+   "work": "DeepFix (Gupta et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "error correction model the multiclass localizer resembles",
+   "quote": null
+  },
+  {
+   "work": "OpenNMT (Klein et al.)",
+   "year": 2017,
+   "arxiv": "1701.02810",
+   "relation": "uses-method",
+   "note": "seq2seq translation toolkit",
+   "quote": null
+  },
+  {
+   "work": "Ling et al. Latent predictor networks (MTG, HS)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "datasets evaluated by BLEU / exact match",
+   "quote": null
+  },
+  {
+   "work": "Codeforces",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of problems, programs, tests",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Given L pseudocode lines x1:L (with indentation levels l1:L) and public test cases, our task is to synthesize a program with code lines y1:L. The program is evaluated against both public and hidden test cases.",
+   "page": 2,
+   "why": "shows public vs hidden test cases"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Success rates at budgets B of best-first search with different error localization methods.",
+   "page": 7,
+   "why": "success-vs-budget curves and B table; the budgeted-success idea"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Line-level accuracy vs program-level outcomes",
+   "page": 6,
+   "why": "84-87% per line collapses to 18-31% per program"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "PDF is arXiv v1 marked 'Preprint. Under review', not the NeurIPS camera-ready.",
+  "Figure 4 curves not readable from text; only its table cells are."
+ ]
+}

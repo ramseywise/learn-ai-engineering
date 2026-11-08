@@ -5,6 +5,7 @@ sources:
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 1-2, 4-5, 10-11, 20)
   - https://doi.org/10.1214/aos/1176344552 (Efron, Bootstrap Methods, Annals of Statistics, 1979; not held)
   - https://doi.org/10.1007/s10618-008-0114-1 (sample-size rule of thumb)
+  - James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (ch. 3, Linear Regression)
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 8, Estimation)
 confidence: high
 cleaned: 2026-11-01
@@ -138,7 +139,7 @@ revenue/user 2.681, SE 0.301, 95% CI [2.091, 3.272]
 
 So: 2.68 per user, plausibly 2.09 to 3.27. That is the finance answer, and it says 2.50 is fine as a plan and 3.20 is optimistic but not ruled out.
 
-Efron and Hastie's phrasing is a good one to borrow: report 54.25 ± 0.95, and the "±" tells the reader not to trust the digits after it (the mean of 211 kidney-filtration scores; *Computer Age*, ch. 2). The standard error is the inference and the mean is the algorithm. The same chapter names the plug-in rule (estimate the variance from the sample and divide by n), the delta method, MLE theory, the bootstrap and pivotal statistics as the five ways to get a standard error when the population is unknown. For non-smooth statistics only the bootstrap is easy: on those 211 scores it gives 0.78 for a 25% Winsorized mean and 0.87 for the median, against 0.95 for the mean (B = 1,000). A standard error also inherits the model it was computed under. In a kidney-score regression on 157 people, the linear fit's standard error at age 80 is 0.42, while a bootstrap of a lowess curve on the same points gives 0.70, and the ±2 SE bars cover about 95% only if the straight line is right (*Computer Age*, ch. 1).
+Efron and Hastie's phrasing is a good one to borrow: report 54.25 ± 0.95, and the "±" tells the reader not to trust the digits after it (the mean of 211 kidney-filtration scores; *Computer Age*, ch. 2). The standard error is the inference and the mean is the algorithm. A regression slope has one too: its variance is σ²/Σ(xᵢ − x̄)², so it is pinned down better when the x values are spread out, and the formula assumes errors with a common variance that are uncorrelated (*ISLP*, ch. 3). The same chapter names the plug-in rule (estimate the variance from the sample and divide by n), the delta method, MLE theory, the bootstrap and pivotal statistics as the five ways to get a standard error when the population is unknown. For non-smooth statistics only the bootstrap is easy: on those 211 scores it gives 0.78 for a 25% Winsorized mean and 0.87 for the median, against 0.95 for the mean (B = 1,000). A standard error also inherits the model it was computed under. In a kidney-score regression on 157 people, the linear fit's standard error at age 80 is 0.42, while a bootstrap of a lowess curve on the same points gives 0.70, and the ±2 SE bars cover about 95% only if the straight line is right (*Computer Age*, ch. 1).
 
 ### What a 95% interval means
 

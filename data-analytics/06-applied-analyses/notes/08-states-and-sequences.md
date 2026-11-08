@@ -757,4 +757,4 @@ Exercises use `practice/ch08_states_sequences.py`.
 
 ## Next
 
-States and chains give one route to lifetime value. [Marketing measurement](09-marketing-measurement.md) takes up the rest of it: attribution, mix models and lifetime value fitted as a model, and what each marketing pound buys.
+States and chains give one route to lifetime value. [Marketing measurement](09-marketing-measurement.md) takes up attribution and mix models, and [its second half](09b-customer-lifetime-value.md) takes up lifetime value fitted as a model, and what each marketing pound buys.

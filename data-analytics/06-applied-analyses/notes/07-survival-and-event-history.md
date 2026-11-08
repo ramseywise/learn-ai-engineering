@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - "Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), chapter 9, survival analysis and the EM algorithm"
+  - "James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (chapter 11, survival analysis and censored data)"
   - "https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If, chapter 17)"
   - https://lifelines.readthedocs.io/en/latest/jupyter_notebooks/Proportional%20hazard%20assumption.html (lifelines documentation, Testing the proportional hazard assumption and Time varying survival regression)
 confidence: high
@@ -89,6 +90,8 @@ Both averages fall far short of the true mean of 401.8 days. The **Kaplan-Meier 
 
 Its median of 255 days is close to the true 248. Notice what it cannot do: the data stop at 1,088 days, while the generator's longest lifetime runs to over 10,000. No method reads a full mean out of three years of data without assuming a shape for the tail, so report the median or a **restricted mean**, the average days subscribed within a stated horizon. Here that is 361 days within the first 1,080, against a truth of 355.
 
+The textbook version of the trap has numbers you can check (*ISLP*, ch. 11). Of 88 brain-tumour patients, 53 were alive when the study ended. The share known to be past 20 months is 48/88 = 55%. Dividing by the 71 not censored before month 20 gives 48/71 = 68%, which throws away the 17 of the 40 early exits who were censored, although someone censored at 19.9 months very likely lasted past 20. Kaplan-Meier gives 71%. All of it assumes *independent* censoring: given the covariates, the time to the event is unrelated to the time of censoring. If the sickest patients drop out early, survival is overstated, and the data cannot say whether that happened, so you argue it from how the data were collected. Censoring at the end of our extract is safe in this sense; dropping records for a reason tied to leaving is not.
+
 The estimator is older than the software. An insurer's life table builds the same product from one year of policy data: at each age the hazard is deaths over policy holders, and multiplying one minus the hazard from age 30 gives a 30-year-old's chance of living past 80 as 0.506, with no need to wait fifty years (*Computer Age*, ch. 9, Table 9.1, a fictitious company with deaths based on 2010 US male rates). It assumes the hazards do not drift over calendar time. The interval around a curve comes from Greenwood's formula: the standard deviation of the survival estimate at time *j* is the estimate times the square root of the sum, over exits up to *j*, of y/(n(n − y)), where n is the number at risk and y the exits at that time (*Computer Age*, ch. 9, eq. 9.18). The shaded bands above are that formula. The book's head and neck cancer trial shows its limit: Kaplan-Meier medians of 324 days for chemotherapy plus radiation against 182 for chemotherapy alone (51 and 45 patients), yet Greenwood bars at any single day overlap enough to leave the comparison unclear. A curve-by-curve interval is a poor test of a difference, which is the reason for the log-rank test below.
 
 Censoring is also a missing-data problem, and the same book makes the link with the EM algorithm (*Computer Age*, ch. 9, section 9.5). Take 40 points from a bivariate normal with the second coordinate missing for the last 20. Fill the gaps with 0, estimate the means, spreads and correlation, replace each missing value by its conditional expectation under that fit, and repeat. The correlation estimate climbs from 0.162 at step 1 to 0.823 by step 20 and is still creeping in the third decimal, so convergence can be slow. The point to keep is that "still here" is one more kind of missing value, which a method must model rather than fill with the last day seen.
@@ -119,6 +122,8 @@ log-rank across four channels: chi2 296.7 on 3 df, p = 5.0e-64
 
 The **log-rank test** compares, at each exit, how many exits each group had with how many it would have had if all the curves were the same. It says the channels differ, which we could already see. It doesn't say by how much, and it can't adjust for anything, and this question needs adjusting.
 
+Its mechanics are short (*ISLP*, ch. 11). At each exit time, build a 2×2 table of who left and who stayed in each group. If the curves were equal, group 1 would have its share of the risk set times the exits at that time. Sum observed minus expected over all exit times, then divide by the square root of the summed variances. The result is close to a standard Normal in large samples. On the 88 brain-tumour patients, females against males gives W = 1.2, a p-value of 0.2 by the Normal and 0.25 by 1,000 permutations, so no difference can be claimed.
+
 ## The Cox model, and the number that hides the story
 
 From here the event is a cancel, and a downgrade simply ends a subscriber's time at risk, because the question is about cancels. We come back to that choice under competing risks.
@@ -126,6 +131,18 @@ From here the event is a cancel, and a downgrade simply ends a subscriber's time
 The **Cox proportional hazards model** (Cox, 1972) says each subscriber's hazard is a common baseline hazard over tenure, whatever shape that takes, multiplied by a factor for their characteristics. It never estimates the baseline, only the factors. Each factor is a **hazard ratio**: 0.8 means that at any given tenure this group's chance of leaving now is 20% lower. "Proportional" is the assumption that this ratio holds still over tenure.
 
 The estimation trick is worth knowing, because it explains the sentence "never estimates the baseline". At each exit time, the chance that the person who left is subscriber *i*, among everyone still at risk, is proportional to exp(c'β) for their covariates c. Multiply those chances over all exits and the baseline hazard cancels, leaving the **partial likelihood** L(β) = ∏ exp(c_i'β) / Σ_{k at risk} exp(c_k'β), which is then maximised like an ordinary likelihood (*Computer Age*, ch. 9, eq. 9.38). The book's pediatric cancer table shows how to read the output: with 1,620 children and 160 observed deaths, a standardised distance from the treatment centre has a hazard ratio of 1.34 per standard deviation (95% interval 1.17 to 1.55, z = 4.12), calendar date of entry 0.63 (0.54 to 0.74, z = −5.86, which the authors read as a treatment protocol that improved), and age 0.79 (0.67 to 0.94). Sex (0.98) and race (1.33, p = .095) show no clear effect. Only 160 events carry the whole fit, so the count of events, not of rows, sets the precision; the same is true of a churn model with a long list of covariates and few cancels. The authors note that the partial likelihood is highly efficient when proportional hazards holds, which is the assumption the check below tests.
+
+Adjusting can reveal what a log-rank test hides, which is the reverse of the confounding story. In 244 heart-and-lung trials, 156 published during the study period, positive results against negative ones gives a log-rank p of 0.36, and a Cox model with that single covariate agrees (coefficient 0.15, standard error 0.16). With the other covariates in, the coefficient is 0.55 (standard error 0.18, z = 3.02), a hazard ratio of about 1.7: at any point in time, holding the rest fixed, positive trials are published sooner (*ISLP*, ch. 11). The unadjusted test ignored the other covariates, which is the book's whole explanation.
+
+![Kaplan-Meier curves for time to publication of positive and negative trials, nearly overlapping until about month 40](../../sources/images/islp-ch11-survival-analysis-fig11-5.png)
+
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 11.5. Unadjusted; log-rank p = 0.36.*
+
+![The same two groups adjusted for the other covariates: positive-result trials publish clearly sooner](../../sources/images/islp-ch11-survival-analysis-fig11-6.png)
+
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 11.6. Cox-adjusted curves at mean covariate values.*
+
+To judge a Cox model on held-out people, there is no residual to compute: a censored person has no true time, and the model returns a curve for each person, not one predicted time. The book scores each held-out person by the risk x'β from training-half coefficients and cuts the scores into tertiles, which should give ordered survival curves. A lasso penalty, tuned by cross-validated partial likelihood, kept only budget and impact. It also reports **Harrell's concordance index**: among pairs where the earlier time is an observed exit, the share in which the higher-risk person exits first. A Cox model fitted on one half scored C = 0.733 on the other, so it picked which of two trials would publish first 73.3% of the time, against 0.5 for a coin (*ISLP*, ch. 11).
 
 ```python
 # From here the event is a cancel, and a downgrade ends a subscriber's time at risk, because the question is about cancels.
@@ -584,6 +601,7 @@ What would change this: a randomised gain below about 0.4 box-months, where the 
 ## Pitfalls
 
 - **Averaging over those who left.** The symptom is a lifetime that seems short and improves as data grow, because the longest stayers are the ones missing. Use Kaplan-Meier, and report a median or restricted mean.
+- **Assuming censoring is harmless.** The symptom is dropouts that look like the sickest, or the unhappiest, leaving the file early. The data cannot test independent censoring, so check how records were removed.
 - **Counting the future as the present.** A "had the price rise" flag that applies to a subscriber's whole life gives them credit for months before it happened. Split the time at the change.
 - **Quoting one hazard ratio when it moves.** The symptom is a failed proportional hazards check, on a covariate that matters. Report bands, or better, curves.
 - **Reading a p-value from `check_assumptions` as a size.** Large samples flag tiny departures. Plot the ratio over tenure before you change the model.
