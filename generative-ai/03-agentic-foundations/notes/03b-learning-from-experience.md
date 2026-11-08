@@ -81,6 +81,10 @@ A running summary that gets updated in place has its own failure mode. Srinivasa
 
 The same worry shows up when several agents share one store. *Agentic Architectural Patterns* (ch. 5) calls it Shared Epistemic Memory: one agent writes a fix it found (its example is an Error 503 solved by clearing a cache) to a shared vector database and another retrieves it weeks later. Its listed risk is that wrong or malicious entries propagate to every agent. Its remedies are to store objective facts as structured JSON and nuanced experience as vectors, to track provenance, to let agents rate each other's entries, and to give a governance agent the job of pruning. It reports no measured gain.
 
+![Shared epistemic memory: a monitoring agent writes a storm event, the logistics agent reads it and writes the delay, the notification agent reads both and acts](../sources/images/agentic-architectural-patterns-fig6-5.png)
+
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 6-5*
+
 ---
 
 ## The other end: memory in the weights

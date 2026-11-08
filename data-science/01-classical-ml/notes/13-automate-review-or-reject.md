@@ -36,16 +36,16 @@ The oracle uses the true probabilities, and its AUC of 0.861 is the ceiling. The
 
 ## The vocabulary, and one collision
 
-The literature calls this the *reject option*: a classifier may decline to answer. That is the review route here, and it collides with the plain meaning of "reject", which is what this chapter calls sending an invoice back. So a word of warning when you read the papers: **their "reject" means abstain**, and our "reject" is an automated decision.
+The literature calls this the *reject option*: a classifier may decline to answer. That is the review route here, and it collides with "reject", which this chapter uses for sending an invoice back. When you read the papers: **their "reject" means abstain**, and our "reject" is an automated decision.
 
 [GA 08/04](../../../generative-ai/08-eval/notes/04-graders.md) meets the same idea from the grading side: score a language model's "I don't know" the same as a wrong answer, and guessing always wins. Each number below answers a different question.
 
 - **Straight-through rate:** the share of cases decided with no person involved. Papers call this *coverage*.
 - **Precision on the automated share:** of the cases decided alone, how many were decided correctly. For a pay route, its complement is the *error rate on paid invoices*, which papers call *selective risk*.
 - **Human correction rate:** of the cases people see, the share where the person's decision differs from what the model suggested.
-- **Risk-coverage curve:** selective risk at each level of coverage, which is what you get by sliding the threshold.
+- **Risk-coverage curve:** selective risk at each level of coverage, from sliding the threshold.
 
-The first two are the trade-off. The third is a product metric, and [DS 01/14](14-learning-from-corrections.md#a-correction-rate-reads-two-things-at-once) shows why you shouldn't read too much into it.
+The first two are the trade-off. The third is a product metric, and [DS 01/14](14-learning-from-corrections.md#a-correction-rate-reads-two-things-at-once) shows why not to over-read it.
 
 ## Price each route, and the thresholds follow
 

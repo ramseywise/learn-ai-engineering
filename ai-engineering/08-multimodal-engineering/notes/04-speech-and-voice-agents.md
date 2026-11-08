@@ -45,10 +45,18 @@ Coverage has continued to expand. Omnilingual ASR is open-source recognition for
 
 Producing speech with a language model needs a compact sequence of discrete tokens that can stand in for audio. Neural codecs provide this. SoundStream compresses audio with an encoder, a residual vector quantizer and a decoder, and one model covers 3 to 18 kbps ([arXiv:2107.03312](https://arxiv.org/abs/2107.03312) (Zeghidour et al., IEEE/ACM TASLP 2022)). EnCodec does the same in real time, with a streaming architecture ([arXiv:2210.13438](https://arxiv.org/abs/2210.13438) (Défossez et al., TMLR 2023)). VALL-E showed that once speech is codec tokens, a language model can do text-to-speech with zero-shot voice cloning from a three-second sample ([arXiv:2301.02111](https://arxiv.org/abs/2301.02111) (Wang et al., 2023-01, preprint)). That power brings a real risk, which is covered in [chapter 9.1](../../09-safety-and-security/notes/01-threat-model.md).
 
+![VALL-E overview](../sources/images/wang-vall-e-fig1.png)
+
+*Image Source: Wang et al., [Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers](https://arxiv.org/abs/2301.02111) (2023), Fig. 1. Text and a three-second acoustic prompt condition a language model over codec tokens.*
+
 ![EnCodec: waveform through an encoder, residual vector quantizer and decoder, trained with reconstruction and discriminator losses](../sources/images/defossez-encodec-fig1.png)
 *Image Source: Défossez et al., [High Fidelity Neural Audio Compression](https://arxiv.org/abs/2210.13438) (TMLR 2023), Fig. 1.*
 
 Codec tokens are built to rebuild the waveform. A second kind of token comes from self-supervised recognisers and is built to predict what was said. HuBERT makes its targets offline. It clusters MFCC frames into 100 groups with k-means, trains a model to predict the cluster of each masked frame, then re-clusters that model's own layer-6 features into 500 groups and trains again. Each round gave better units. With 500 clusters each time, the share of phone uncertainty that the cluster label removes rose from 0.276 (MFCC) to 0.637 (round-1 layer 6) to 0.704 (round-2 layer 9), and dev-other word error fell from 18.40 to 10.75 (100k pre-training steps, 10-hour fine-tune). Putting the loss only on masked frames is what made noisy targets usable: on unmasked frames alone, training failed at 96.37 WER ([arXiv:2106.07447](https://arxiv.org/abs/2106.07447) (Hsu et al., IEEE/ACM TASLP 2021)). w2v-BERT learns its token IDs and predicts them in one pass, with a contrastive loss to keep the codebook alive. Without that loss, masked prediction collapsed every time they tried it. Pretrained on 60,000 hours of Libri-Light, the 0.6B model reached 1.5/2.9 WER on LibriSpeech test/test-other with no language model, and pretrained instead on 34,300 hours of English voice-search audio it cut WER from 8.9 to 6.2 against a matched contrastive baseline ([arXiv:2108.06209](https://arxiv.org/abs/2108.06209) (Chung et al., ASRU 2021)). Both papers test recognition only, on English. Neither generates speech from its units, and HuBERT lists generation as future work, so when a later speech model calls units like these its "semantic tokens", check its own evidence for that.
+
+![HuBERT masked cluster prediction](../sources/images/hsu-hubert-fig1.png)
+
+*Image Source: Hsu et al., [HuBERT](https://arxiv.org/abs/2106.07447) (IEEE/ACM TASLP 2021), Fig. 1. The model predicts offline k-means cluster labels for masked frames.*
 
 The token rate explains why this suits streaming. Kyutai's Mimi codec, used by Moshi, runs at 12.5 frames per second with 8 codebooks of 2,048 entries, which you can check directly:
 
@@ -83,7 +91,15 @@ A frame of 80 ms sets a floor on how quickly such a system can react, and 1.1 kb
 
 Not all speech generation goes through codec tokens and a language model. Voicebox trains a 330M-parameter non-autoregressive model with flow matching to fill in masked mel-spectrogram frames given the text, so one model does zero-shot voice cloning, noise removal and editing by choosing the mask. On filtered LibriSpeech test-clean with a three-second prompt, it scored 1.9% word error rate against 5.9% for VALL-E (VALL-E's figure is from its own paper), and speaker similarity 0.681 against 0.580. It ran about 20 times faster at 2 function evaluations (0.31 s for 10 s of audio), but that edge shrinks to 4% slower at 64 ([arXiv:2306.15687](https://arxiv.org/abs/2306.15687) (Le et al., NeurIPS 2023)). It was trained on read audiobooks only, so conversational speech is untested. Audiobox kept the same flow-matching base and added natural-language descriptions of the voice or sound, reaching speaker similarity 0.745 against 0.710 for UniAudio on LibriSpeech zero-shot TTS. Its general-purpose pre-training cut sound-effect FAD by about 20% ([arXiv:2312.15821](https://arxiv.org/abs/2312.15821) (Vyas et al., 2023-12, preprint)). Neither paper releases its training data.
 
+![Audiobox inputs](../sources/images/vyas-audiobox-fig1.png)
+
+*Image Source: Vyas et al., [Audiobox](https://arxiv.org/abs/2312.15821) (2023), Fig. 1. One model takes a style description, transcript, audio context and voice prompt.*
+
 Speech-to-speech translation shows the same cascade-versus-direct trade-off as the voice agent itself. SeamlessM4T's single model, 2.3B parameters, beat a Whisper-Large-v2 plus NLLB-3.3B cascade on Fleurs into-English speech-to-text, 24.0 against 22.7 BLEU across 81 directions. It lost on English-out (21.5 against 22.2). Its direct speech output scored 25.8 against 23.2 ASR-BLEU for a three-stage cascade. **Humans disagreed with the metric**: on the 24 languages rated, direct speech-to-speech scored XSTS 3.87 against 4.04 for the cascade, and annotators flagged 206 generations with audio problems against 22 ([arXiv:2308.11596](https://arxiv.org/abs/2308.11596) (Seamless Communication, 2023-08, preprint)). The v2 model and streaming follow-up raised Fleurs into-English speech-to-text to 26.6 BLEU. In streaming mode, at an EMMA threshold of 0.5, speech output reached 22.1 ASR-BLEU against 29.7 offline, with the output ending 2.79 s after the speaker. A preserved-expression variant lowered the clarity MOS from 4.58 to 4.09 ([arXiv:2312.05187](https://arxiv.org/abs/2312.05187) (Seamless Communication, 2023-12, preprint)). Treat the streaming cost as the price of a shorter latency budget, and rate output with people before trusting BLEU.
+
+![SeamlessM4T model overview](../sources/images/communication-seamlessm4t-fig4.png)
+
+*Image Source: Seamless Communication, [SeamlessM4T](https://arxiv.org/abs/2308.11596) (2023), Fig. 4. One model covers speech and text input and output.*
 
 ## Two architectures
 
@@ -111,6 +127,10 @@ flowchart TD
 Translation is the task where speech-to-speech first had to prove itself against the cascade. Translatotron 3 trains a direct Spanish-English model from monolingual speech only, with a masked autoencoder, an embedding-mapping loss and back-translation. On a proprietary synthesized conversational set it beat a weak unsupervised ASR+MT+TTS cascade by **13.27 BLEU (En→Es) and 18.14 (Es→En)**, and it carried the speaker's voice over (speaker-embedding similarity about 0.6, against about 0.16 for the cascade's random voices). The result is much thinner on real speech: on Common Voice Spanish to English it scored 10.67 BLEU against 9.92 for the cascade (the paper's Table 2 says 10.76), well behind supervised systems from other papers on Es→En (14.25 against 18.2 to 29.0 on the synthesized Common Voice 11 set). Every score is measured offline on short utterances, and the paper has no latency or streaming result ([arXiv:2305.17547](https://arxiv.org/abs/2305.17547) (Nachmani et al., 2023-05, preprint)).
 
 A middle design keeps a recogniser's encoder and skips its transcript. LLaSM puts a Whisper encoder and a small trained adaptor in front of Chinese-LLAMA2-7B and replaces placeholder tokens in the prompt with the audio embeddings, in the way LLaVA does for images. Stage one trains only the adaptor on public ASR data, with Whisper and the LLM frozen. Stage two trains the adaptor and the LLM on 508k samples (199k conversations; 428k English, 80k Chinese) whose human turns were voiced with Azure text-to-speech. The authors argue this removes the ASR step and its errors. The paper reports no word error rate, benchmark or cascade baseline, only example conversations, and its speech inputs are synthetic, so the efficiency claim is untested. It also gives no learning rate, batch size or compute, and its output is text ([arXiv:2308.15930](https://arxiv.org/abs/2308.15930) (Shu et al., 2023-08, preprint)).
+
+![LLaSM architecture](../sources/images/shu-llasm-fig1.png)
+
+*Image Source: Shu et al., [LLaSM](https://arxiv.org/abs/2308.15930) (2023), Fig. 1. A modal encoder and adaptor turn audio into embeddings that join the text embeddings.*
 
 | | Cascade | Speech-to-speech |
 |---|---|---|

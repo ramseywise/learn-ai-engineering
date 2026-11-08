@@ -189,6 +189,11 @@ One star is a report, while an enterprise warehouse is many stars that can be co
 | Driver shifts | x | x | | | x |
 | Vehicle inspections | x | | | x | |
 
+Kimball's own matrix is larger: six processes down the side, from retail sales to purchase orders, against eight common dimensions across the top. Reading a column shows what has to be conformed first (Date and Product appear in every row), and reading a row shows which dimensions a new process can reuse (ch. 3).
+
+![The sample data warehouse bus matrix: six business processes against eight common dimensions, marked where a process uses a dimension](../../sources/images/dwt-ch03-fig3-8.png)
+*Image Source: Kimball and Ross, [*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/) (Wiley, 2002), Fig. 3.8*
+
 Conformed dimensions give you a safe way to combine facts, and a tempting wrong way sits right next to it. Add a shifts fact at one row per zone, day and shift, then ask for fares and drivers by zone.
 
 ```python

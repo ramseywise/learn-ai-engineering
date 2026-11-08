@@ -1,0 +1,395 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.17863/cam.132164",
+ "pdf": "generative-ai/05-RL/sources/watkins-1989-learning-delayed-rewards.pdf",
+ "bib": {
+  "title": "Learning from Delayed Rewards",
+  "authors": ["Christopher John Cornish Hellaby Watkins"],
+  "first_author": "Watkins",
+  "year": 1989,
+  "venue": "PhD thesis, King's College, University of Cambridge",
+  "arxiv": null,
+  "doi": "10.17863/cam.132164"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 0,
+  "chars_total": 240,
+  "engine": "pymupdf",
+  "skipped": "Nothing skipped. The PDF is a 241-page scan with no text layer (cached text is 240 characters), so the whole thesis was read as rendered page images (2-up, 100 dpi). Thesis page = pdf page minus 7. Pages 1-241 viewed; reference list skimmed. Every quote and number below is transcribed from images, so the number-in-text check cannot confirm them."
+ },
+ "type": "theory",
+ "question": "How can an autonomous agent learn an efficient strategy for acting under delayed rewards by incremental dynamic programming, without a model of its environment, and when can such learning be proved to converge?",
+ "hypothesis": "Simple primitive learning methods (TD-style value estimation, policy learning, and Q-learning) can be seen as incremental dynamic programming and can learn near-optimal behaviour from experience alone.",
+ "contributions": [
+  "A systematic family of primitive learning algorithms framed as incremental dynamic programming (Ch. 7)",
+  "TD(lambda) return estimators with activity traces and a lambda-return with time-varying lambda_t (Ch. 7 sections 1-2)",
+  "One-step Q-learning, a Monte-Carlo value iteration over action values, with a convergence proof for finite MDPs (Ch. 7 section 3, Appendix 1)",
+  "Multi-step (lambda) Q-learning, with no convergence proof (Ch. 7 section 3)",
+  "Policy-learning methods and the meta-stable policy problem (Ch. 7 sections 4-6)",
+  "Discussion of innate knowledge, hierarchical control and function approximation (Ch. 8-10)",
+  "Two demonstrations: continuous route-finding with CMAC policy and value, and Skinner-box conditioning with one-step and multi-step Q-learning (Ch. 11)"
+ ],
+ "method": {
+  "summary": "Mostly theory and design. Ch. 3-6 recast Markov decision processes and dynamic programming; Ch. 7 derives model-free incremental DP methods including Q-learning; Appendix 1 proves one-step Q-learning converges via a notional action-replay process. Ch. 11 runs two small simulations (Pascal on a Sun 3) with CMAC function approximation.",
+  "task": "Reinforcement learning with delayed rewards in finite or small continuous MDPs: route finding and operant conditioning schedules",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Demo 1: route finding",
+    "role": "train",
+    "size": "simulated; square state space of side 2 centred on the origin; runs of up to 5000 successes after an obstacle is added",
+    "split": null,
+    "source": "simulated environment",
+    "preprocessing": "Move cost c(d) = c1 d + c2 d^2 on intended move length (-0.3l - 3l^2); target at top right gives reward 10.0 then relocates the agent uniformly at random; actions curtailed at the edge."
+   },
+   {
+    "name": "Demo 2: Skinner box schedules FI, VI, CFI, CVI, FR",
+    "role": "train",
+    "size": "50 runs per condition, each 20T learning trials (2000 for T=100) of up to 100 steps, then 20 test trials",
+    "split": "learning then test with pi0 and alpha0 set to 0",
+    "source": "simulated environment",
+    "preprocessing": "Subjective state (m,p): m_{t+1} = 1 - 0.95(1 - m_t), reset to 0 on reward; p_{t+1} = 1 - 0.95(1 - p_t) on a peck; noise +-0.025."
+   }
+  ],
+  "models": [
+   {
+    "name": "Demo 1 policy f and value U, each a CMAC",
+    "role": "proposed",
+    "params": "CMAC table size 40,000 each (inferred: the table size is given once, for the CMAC; whether it applies to f and U each is not stated)",
+    "architecture": "CMAC (Albus 1981), 10 overlapping tilings, U(x) = (1/10)[u[k1]+...+u[k10]]; square size 0.2",
+    "init_from": "value and action initialised to 0",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Demo 2 Q function, one CMAC per action (peck, no peck)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CMAC, patch side 0.2, 10 patches per point; U^Q(x) = max_a Q(x,a)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Demo 1: TD(lambda)-style value and single-action policy learning. Demo 2: one-step Q update Q_{t+1} = adjust(Q_t, <x_t,a_t>, alpha, r_t + gamma U^Q_t(x_{t+1})); some runs use multi-step Q-learning with M=3 and lambda_t = exp[-eta(U^Q_t(x_t) - Q_t(x_t,a_t))].",
+   "optimizer": "Incremental CMAC adjust rule u[k_i] := u[k_i] + alpha(v - U(x)); skipped if |U(x)-v| < epsilon",
+   "lr": "Demo 1: alpha 0.5 for value, beta+ 0.1 and beta- 0.025 for policy. Demo 2: alpha0 0.5, decayed as alpha_t = T/(T+Y_t(x_t)) alpha_0",
+   "lr_schedule": "Demo 2: T/(T+Y) decay where Y is a CMAC occupancy count incremented by c = 0.25; T = 100 default (T = 300 tested in plot 12)",
+   "warmup": null,
+   "batch_size": "online, one update per step",
+   "steps": "Demo 1: until 1000 successes (plots at 3, 10, 100, 1000; then 500 and 5000 after an obstacle). Demo 2: 2000 learning trials per run at T=100, trial ends on reward or 100 steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Sun 3 workstation",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "Demo 2: 50 runs with different seeds. Demo 1: one run shown, 'selected arbitrarily'; other seeds said to be qualitatively similar",
+   "other": {
+    "demo1_gamma": "0.9",
+    "demo1_N": "2 time steps (value learning period)",
+    "demo1_M": "1 time step (policy learning period)",
+    "demo1_eta": "5.0, lambda_t = exp(-eta|b_t|)",
+    "demo1_exploration": "action a_t = f_t(x_t) + b_t, b_t of exponentially distributed length with mean 0.1",
+    "demo2_gamma": "0.95",
+    "demo2_pi0": "0.5, experiment probability pi_t = T/(T+Y_t(x_t)) pi_0, experiment picks the lower-valued action",
+    "demo2_peck_cost": "-0.5 for FI, CFI, VI, CVI; -0.25 for FR",
+    "demo2_reward": "10.0, maximum reward frequency 1 in 10",
+    "demo2_M": "1 default, 3 in plots 3 and 4",
+    "demo2_time_and_peck_factors": "0.95",
+    "random_number_generator": "Press et al 1986 subtractive generator"
+   }
+  },
+  "inference": {
+   "decoding": "Behaviour policy is the learned policy plus experiment. Demo 2 experiments with probability pi_t by choosing the lower-valued action.",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Demo 2: 50 runs per condition, 20 test trials each with pi0 = alpha0 = 0",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Average cumulative pecks against time since last reward",
+     "definition": "Mean over 50 runs of cumulative pecks in the 20 test trials; compared with the optimal policy's expected return",
+     "unit": "pecks per time step",
+     "higher_is_better": null
+    },
+    {
+     "name": "Contour plots of U^Q and of Q(peck) - Q(no peck)",
+     "definition": "Averaged over 50 runs; the zero contour shows where the preferred action switches",
+     "unit": "value units",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Analytically derived optimal policy per schedule (VI: expected return r = gamma^(n-1)/(1-gamma^n) [(1-p)^n c + (1-(1-p)^n) r])",
+    "Always pecking (more than 25% below optimal in VI at default cost)"
+   ],
+   "protocol": "No statistical tests. Qualitative comparison of plots 1-23 (list on p. 184) against analytic optimal policies."
+  },
+  "availability": {
+   "code": "Not released; Ch. 11 says implementations were in Pascal on a Sun 3. No listing in the thesis.",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "method.training.other.demo1 parameters",
+    "quote": null,
+    "where": "p. 155 parameter table (read from the scan)"
+   },
+   {
+    "field": "method.training.other.demo2 parameters",
+    "quote": null,
+    "where": "pp. 180-181 parameter table; protocol p. 182"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Q-learning is defined in Ch. 7 section 3 (p. 96) as Q_{t+1}(x_t,a_t) = (1-alpha)Q_t(x_t,a_t) + alpha(r_t + gamma U^Q_t(x_{t+1})), with U^Q_t(x) = max_a Q_t(x,a) and other entries unchanged. Alpha is a small positive 'learning factor'.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite MDP, tabular Q, any action-selection policy that tries each action in each state many times.",
+   "quote": null,
+   "table": null,
+   "note": "Scan, no text layer: the equation is transcribed from p. 96; the same rule appears in general form with alpha_n and the nth observation [x_n a_n r_n y_n] on p. 221 (Appendix 1 section 1).",
+   "where": "Ch. 7 section 3, p. 96; Appendix 1 section 1, p. 221"
+  },
+  {
+   "claim": "One-step Q-learning converges to the optimal action values if there are infinitely many observations of each (x,a), and for each (x,a) the learning factors are positive, decrease monotonically with n, tend to zero, and sum to infinity. Appendix 1 section 3, p. 227, states these as sufficient conditions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite MDP; observations [x a r y] independent transitions, need not form a connected sequence, action choice arbitrary. The original p. 227 wording requires only monotone decrease per (x,a), 'not ... along the sequence of observations'.",
+   "quote": null,
+   "table": null,
+   "note": "The corrigenda (pdf pp. 5-6) replace pp. 227-228 with conditions: rewards have finite mean and variance, r and y are sampled independently from a distribution depending only on x and a, and the per-pair learning factors are monotonically decreasing, tend to zero, and sum to infinity. The proof as printed on p. 228 is the original version.",
+   "where": "Appendix 1 section 3, p. 227; corrigenda"
+  },
+  {
+   "claim": "Action-Replay Theorem: Q_n(x,a) produced by one-step Q-learning equals the optimal action value Q*_ARP(<x,n>,a) of the notional action-replay process at stage n, for all x, a and n >= 0, proved by induction.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ARP has layers 0..n. An action in <x,k> replays an eligible earlier observation l <= k with probability alpha_l, moving to <y_l, l-1> with reward r_l; if none is replayed the ARP ends with payoff Q_0(x,a).",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix 1 sections 2-3, pp. 221-226"
+  },
+  {
+   "claim": "The proof then shows the ARP approaches the real process: the depth d(<x,k>,a), the sum of learning factors over observations of (x,a), grows without bound, so the probability of reaching layer 0 becomes arbitrarily small. The max learning factor becomes small, so ARP transition probabilities and reward means are uniformly close to the real ones, and Q*_ARP at level n approaches the real optimal Q*.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite state and action sets, the three sufficient conditions above.",
+   "quote": null,
+   "table": null,
+   "note": "A sketch rather than a rate: no convergence rate, no bound on n, no treatment of function approximation.",
+   "where": "Appendix 1 section 3, p. 228"
+  },
+  {
+   "claim": "Only one-step Q-learning has a convergence proof. Watkins says of the others, including multi-step Q-learning, that he has not been able to prove they will always work, because behaviour must be allowed to vary almost arbitrarily.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ch. 7 section 7 summary (p. 112) and p. 98.",
+   "quote": null,
+   "table": null,
+   "note": "Also p. 112: 'Unless the agent tries all actions in all states, no primitive learning method can be guaranteed to converge to an optimal solution.' Transcribed from the image.",
+   "where": "pp. 98, 112"
+  },
+  {
+   "claim": "TD(lambda) is given as a mixture of corrected n-step returns: r^lambda = (1-lambda)[r^(1) + lambda r^(2) + ...], with recursion r^lambda_t = r_t + gamma(1-lambda)U_t(x_{t+1}) + gamma lambda r^lambda_{t+1}. The update U_{t+1}(x_t) = (1-alpha)U_t(x_t) + alpha r^lambda_t equals U + alpha sum (gamma lambda)^n e_{t+n}, with prediction difference e_t = r_t + gamma U_t(x_{t+1}) - U_t(x_t).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ch. 7 sections 1-2, pp. 81-94. A corrigendum to p. 90 adds a correction term for U changing between steps, and a p. 91 insert bounds activity traces |C(x,t)| < 1/(1-gamma lambda).",
+   "quote": null,
+   "table": null,
+   "note": "Watkins cites Sutton (1988) as the origin of TD methods. He presents the recursion as incremental DP by Monte-Carlo method, with activity traces C(x,t) for implementation.",
+   "where": "pp. 88-94"
+  },
+  {
+   "claim": "Demo 1 (route finding): a CMAC policy and value learner reached efficient paths. A value 'mountain' with spurs and 'well worn paths' formed, and the agent adapted after an obstacle was introduced.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "gamma 0.9, alpha 0.5, beta+ 0.1, beta- 0.025, N 2, M 1, eta 5.0, b 0.1, CMAC square 0.2, table 40,000, reward 10.0, move cost -0.3l - 3l^2. Plots at 3, 10, 100 and 1000 successes; the obstacle shortens moves by 10x with cost unchanged, with plots at 500 and 5000 successes after.",
+   "quote": null,
+   "table": null,
+   "note": "A single run chosen arbitrarily; no quantitative performance measure. Watkins says the table could be cut to little more than 1% of its size and eta has surprisingly little effect.",
+   "where": "Ch. 11 section 7, pp. 147-168"
+  },
+  {
+   "claim": "Demo 2 (Skinner box): with default parameters, one-step Q-learning gave near-optimal but not optimal performance. M=3 multi-step Q-learning beat M=1 on every schedule except CVI, since values propagate faster. Under VI (not an adequate state space), performance was within about 25% of optimal across peck costs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Defaults gamma 0.95, alpha0 0.5, pi0 0.5, T 100, c 0.25, peck cost -0.5 (-0.25 for FR), reward 10.0; 50 runs per condition, 20T learning trials, then 20 test trials. M=3, eta=0 is plot 3 against plot 1.",
+   "quote": null,
+   "table": null,
+   "note": "For FR, mean pecks after 10 steps exceeds 9 with M=3; in VI about 5 pecks in 15 steps. Plots 3 and 4 are very similar so eta matters little. On FI and CFI all 50 runs ended identical, always pecking on the first step, which Watkins cannot explain ('I am at a loss to explain this'). Optimal VI interval at cost -0.5 is 3 time steps (2 nearly optimal); pecking every step is over 25% below optimal.",
+   "where": "Ch. 11 sections 8.1-8.3, pp. 208-213"
+  },
+  {
+   "claim": "Watkins attributes the slow early learning and 'superstitions' (Skinner 1948) in Demo 2 to adventitious correlations and the initial policy: state-action pairs that happen to precede rewards get repeated, and with M=1 reward news takes time to percolate back. He suggests making lambda depend on the visit count Y (near 1 for small Y).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ch. 11 sections 8.4-9, pp. 211-214. An explanation by Watkins, not tested by experiment.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "pp. 211-214"
+  },
+  {
+   "claim": "Meta-stable policies: always following the current estimated-optimal policy can make learning indefinitely slow (example MDP A to F, discount 0.9, optimal loop ACDEF). A 'random policy trick' and enough experimentation avoid it.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ch. 7 section 6, pp. 106-112; diagram p. 108.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "pp. 106-112"
+  }
+ ],
+ "limits": [
+  "Convergence proof covers only tabular one-step Q-learning on finite MDPs, with no rate, and only for asymptotic visitation of every state-action pair. Multi-step Q-learning, policy methods and CMAC function approximation are unproven (pp. 98, 112, Ch. 10).",
+  "Watkins says he has not tackled convergence theoretically for function approximation (Ch. 10), and that he has not implemented any hierarchical control examples (Ch. 9, Ch. 12).",
+  "Ch. 11 demos are single small simulations or 50-run averages with no significance tests, no baselines other than analytic optimal policies, and no released code.",
+  "The state space used for the VI schedule is not adequate, so results there are informal. Unexplained result: FI and CFI converge identically but suboptimally.",
+  "Watkins calls taking the maximum of estimates as an estimate of the maximum 'dubious statistical practice', yet Appendix 1 shows convergence; bias is small with two actions.",
+  "Ch. 12 further work: autonomous tuning of learning parameters, better function representation, and linking MDPs in hierarchies.",
+  "Dated: tabular and CMAC methods, no neural-network Q function, no replay buffer or target network (so no DQN-style stability issues are discussed). The corrigendum, not the printed p. 227-228, gives the final sufficient conditions."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Q-learning (one-step)",
+   "definition": "Incremental, Monte-Carlo value iteration over action values: Q_{t+1}(x_t,a_t) = (1-alpha)Q_t(x_t,a_t) + alpha(r_t + gamma U^Q_t(x_{t+1})), with U^Q_t(x) = max_a Q_t(x,a).",
+   "where": "Ch. 7 section 3, p. 96"
+  },
+  {
+   "term": "action-value Q_f(x,a)",
+   "definition": "Value of performing action a in state x once, then following policy f.",
+   "where": "Ch. 4, p. 46 (paraphrased from the scan)"
+  },
+  {
+   "term": "learning factor",
+   "definition": "alpha, a small positive number controlling the size of each update; may depend on x and a.",
+   "where": "pp. 96, 221"
+  },
+  {
+   "term": "action-replay process (ARP)",
+   "definition": "A notional MDP built from the data in which an action replays an earlier observation [x a r y], used only as a proof device.",
+   "where": "Appendix 1 section 2, p. 221"
+  },
+  {
+   "term": "activity trace C(x,t)",
+   "definition": "Eligibility-style quantity used to implement the TD(lambda) update incrementally across earlier states.",
+   "where": "Ch. 7, p. 91"
+  }
+ ],
+ "lineage": [
+  {"work": "Sutton, Learning to Predict by the Methods of Temporal Differences", "year": 1988, "arxiv": null, "relation": "extends", "note": "TD(lambda) framing and temporal credit assignment", "quote": null},
+  {"work": "Sutton, Temporal Credit Assignment in Reinforcement Learning (PhD thesis)", "year": 1984, "arxiv": null, "relation": "extends", "note": "Credit assignment and delayed reward framing", "quote": null},
+  {"work": "Barto, Sutton, Anderson, Neuronlike Adaptive Elements", "year": 1983, "arxiv": null, "relation": "related", "note": "Actor-critic style policy plus value learning (Ch. 7 section 4)", "quote": null},
+  {"work": "Bellman and Dreyfus, Applied Dynamic Programming", "year": 1962, "arxiv": null, "relation": "uses-method", "note": "Dynamic programming and value iteration basis", "quote": null},
+  {"work": "Howard, Dynamic Programming and Markov Processes", "year": 1960, "arxiv": null, "relation": "uses-method", "note": "Policy improvement", "quote": null},
+  {"work": "Bertsekas, Dynamic Programming and Stochastic Control", "year": 1976, "arxiv": null, "relation": "uses-method", "note": "MDP and DP theory", "quote": null},
+  {"work": "Witten, An Adaptive Optimal Controller for Discrete-Time Markov Environments", "year": 1977, "arxiv": null, "relation": "related", "note": "Policy plus value learning", "quote": null},
+  {"work": "Samuel, Some Studies in Machine Learning Using the Game of Checkers", "year": 1959, "arxiv": null, "relation": "related", "note": "Early learning of evaluation functions (Ch. 6)", "quote": null},
+  {"work": "Albus, Brains, Behaviour, and Robotics (CMAC)", "year": 1981, "arxiv": null, "relation": "uses-method", "note": "Function approximator in Ch. 10-11", "quote": null},
+  {"work": "Wheeler and Narendra, Decentralised Learning in Finite Markov Chains", "year": 1986, "arxiv": null, "relation": "related", "note": "Policy-only learning", "quote": null},
+  {"work": "Widrow, Gupta, Maitra, Punish/reward: Learning with a Critic", "year": 1973, "arxiv": null, "relation": "related", "note": "Policy learning idea similar to the asymmetric beta+/beta- rule", "quote": null},
+  {"work": "Skinner, Superstition in the Pigeon", "year": 1948, "arxiv": null, "relation": "related", "note": "Superstition explanation in Ch. 11", "quote": null},
+  {"work": "Ferster and Skinner, Schedules of Reinforcement", "year": 1957, "arxiv": null, "relation": "uses-data", "note": "Reinforcement schedules FI, VI, FR in Demo 2", "quote": null},
+  {"work": "Wilson, Classifier Systems and the Animat Problem", "year": 1987, "arxiv": null, "relation": "related", "note": "Simulated autonomous learning agents", "quote": null}
+ ],
+ "figures": [
+  {"figure": "p. 96 (pdf 103)", "caption": "Q-learning definition (no caption: text and equation)", "page": 96, "why": "The first definition of the Q update rule."},
+  {"figure": "Diagram of example MDP A to F", "caption": "(untitled)", "page": 108, "why": "Shows why following the current best policy gives meta-stable, slow learning."},
+  {"figure": "CMAC overlapping squares", "caption": "(untitled)", "page": 145, "why": "Shows the tile-coding function approximator used in both demos."},
+  {"figure": "Route-finding policy and value plots", "caption": "(plots at 3, 10, 100, 1000 successes)", "page": 156, "why": "Value mountain and well-worn paths forming; pdf pp. 163-170."},
+  {"figure": "Plot 1 and plots 6-7, 11", "caption": "(Skinner-box plots)", "page": 185, "why": "Performance per schedule, FI value and Q-difference contours, VI theoretical returns; pdf pp. 192-214."},
+  {"figure": "Appendix 1 action-replay procedure", "caption": "(pseudocode)", "page": 224, "why": "The ARP replay algorithm underlying the convergence proof."}
+ ],
+ "code": [
+  {"where": "p. 96", "snippet": "Q_{t+1}(x_t,a_t) = (1-alpha) Q_t(x_t,a_t) + alpha (r_t + gamma U^Q_t(x_{t+1}))", "verbatim": false},
+  {"where": "p. 221", "snippet": "Q_n(x,a) = (1-alpha_n) Q_{n-1}(x,a) + alpha_n [ r_n + gamma U^Q_{n-1}(y_n) ] if x = x_n and a = a_n; otherwise Q_{n-1}(x,a)", "verbatim": false},
+  {"where": "p. 224", "snippet": "To perform a in <x,k>, for k > 0: if x = x_k and a = a_k then either (with probability alpha_k) go to <y_k, k-1> with immediate reward r_k and halt, or (with probability 1 - alpha_k) perform a in <x,k-1>; else perform a in <x,k-1>. To perform a in <x,0>: terminate the ARP with an immediate reward of Q_0(x,a).", "verbatim": false}
+ ],
+ "problems": [
+  "The PDF is a scan with no text layer (240 cached characters). All content was read from rendered images, so quotes and values are transcribed or left null, and the check script cannot confirm any number in text.",
+  "Result values and quotes are null on purpose; numbers appear in claim, setup and note fields only.",
+  "Corrigenda in pdf pp. 5-6 change pp. 90, 91, 98 and 227-228; the printed p. 227-228 and the corrected conditions differ slightly.",
+  "No embedded instructions found."
+ ]
+}

@@ -328,6 +328,11 @@ Strengholt (Microsoft), in "Data Mesh: Topologies and domain granularity" on Tow
   coarse-grained    5 aligned                 6 governed
 ```
 
+Strengholt's own diagram draws all six at once, each as domains (blue) inside grey boxes that mark team independence. Topology 1 is a mesh of every domain to every other, 2 and 6 put a dark distribution domain in the middle, 3 puts one beside the source-side domains only, 4 groups domains along a value chain, and 5 links a few large domains directly, in his order.
+
+![Six governance topologies for a data mesh: fine-grained fully federated, fine-grained fully governed, hybrid federated, value chain-aligned, coarse-grained aligned, and coarse-grained and governed, drawn as domains in grey team boxes with links or a central distribution domain](../../sources/images/strengholt-mesh-topologies.png)
+*Image Source: Piethein Strengholt, [Data Mesh: Topologies and domain granularity](https://towardsdatascience.com/data-mesh-topologies-and-domain-granularity-65290a4ebb90/) (Towards Data Science), governance topologies figure*
+
 | # | Topology | Shape | Trade-off | Who picks it |
 |---|---|---|---|---|
 | 1 | Fine-grained, fully federated | Dehghani's pure form. Many small domains, each data product its own "architectural quantum"; data shared peer to peer; governance metadata logically central | Most flexible, but needs every domain to conform on interoperability and security, duplicates infrastructure, and makes cross-domain lookups problematic ("data gravity and decentralization don't go hand in hand") | Cloud-born, multi-cloud, young firms with many strong engineers |

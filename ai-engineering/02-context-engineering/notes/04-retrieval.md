@@ -69,6 +69,9 @@ These combine. A common shape is a cached prefix (instructions, tool definitions
 
 **Retrieval can beat the long window it replaces, but not on every task.** LC-Boost ([arXiv:2405.15318](https://arxiv.org/abs/2405.15318) (Qian et al., 2024-05, preprint)) lets GPT-3.5-turbo-16K work through a long input in 4K pieces, choosing per piece among seven actions (retrieve, move on, append or merge evidence, answer, aggregate). Averaged over 12 mostly LongBench datasets it scored **56.4 on multi-document QA against 38.7 for the same model reading everything**, and 47.8 vs 39.8 on single-document QA. It lost on code completion (59.0 vs 72.1 for Yi-9B-200K) and gained little on summarization (31.8 vs 28.1). Cost followed the task: 34.1% of brute-force tokens on NarrativeQA, but **112% on GovReport**, because summarization needs every part. Choosing the action per query beat any fixed strategy in the ablation, except few-shot SAMSum. The caveats: GPT-3.5 as the only base model, no variance, a 32-query set of the authors' own for the whole-context test, and 2024 baselines.
 
+![Brute force, naive RAG, LC-Boost with RAG and LC-Boost divide-and-conquer on two toy questions: naive RAG misses the aggregation question that a sequential scan answers](../sources/images/qian-lc-boost-fig1.png)
+*Image Source: Qian et al., [Are Long-LLMs A Necessity For Long-Context Tasks?](https://arxiv.org/abs/2405.15318) (2024), Fig. 1*
+
 ## Just-in-time context
 
 ![Comparison of Agentic RAG and Non-Agentic RAG](../sources/images/li-ai-agents-in-depth-fig3-12.svg)

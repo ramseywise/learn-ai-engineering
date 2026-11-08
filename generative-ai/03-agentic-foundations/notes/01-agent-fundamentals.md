@@ -310,6 +310,10 @@ The same frame gives an **autonomy spectrum**:
 
 Nearly every production system sits in the middle. Koenigstein calls this **orchestrated autonomy**: the model chooses freely inside regions you designed, but it cannot redesign its control graph, invent new topologies or reliably create its own tools. AI Scientist v2 shows how far that goes today. It submitted three papers to an ICLR 2025 workshop and one was accepted, at workshop level, not the main track. Reviewers found methodological gaps and shallow analysis, and the system still made citation errors and misleading figure descriptions (*AI Agents: The Definitive Guide*, ch. 1). Sakana's own paper shows how much of the run was orchestrated. An experiment-manager agent runs best-first tree search over experiment code in four fixed stages, and a VLM reviews the figures. Humans then picked 3 of about 20 generated ideas and, for each, the best manuscript across several seeds ([Sakana AI, 2025-04](https://pub.sakana.ai/ai-scientist-v2/paper/paper.pdf)). The accepted paper averaged 6.33 (scores 6, 7, 6), roughly the top 45% of 43 submissions, at a workshop whose acceptance rates the authors put at 60–80%. Their own code review found about 57% overlap between its training and test sets, and the paper was withdrawn after review as agreed with the organizers.
 
+![Orchestrated autonomy with predefined decision points against full autonomy, where the model could generate new tools and decision paths](../sources/images/ai-agents-definitive-guide-fig1-4.png)
+
+*Image Source: Nicole Koenigstein, *AI Agents: The Definitive Guide* (O'Reilly, 2026), Fig. 1-4*
+
 ---
 
 **Moved.** The tool-calling decision that RL put into the model, and the three ways an agent learns (context, artifacts, parameters, with CoALA's memory vocabulary, AgentGym and Thought Cloning), are in [1c — model as agent and how agents learn](01c-model-as-agent-and-how-agents-learn.md).

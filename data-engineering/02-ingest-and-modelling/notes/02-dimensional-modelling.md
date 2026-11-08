@@ -105,6 +105,11 @@ Kimball's design process is four steps (ch. 2), and the order is the useful part
 
 The grain comes first, and at the most atomic level the source can give you. Rolled-up tables answer the questions you predicted, while atomic ones answer those too and the ones nobody has asked yet. Kimball's case study runs on 100 grocery stores and about 60,000 products, and still picks the individual line item.
 
+Kimball's embellished retail schema shows what the atomic grain buys. The frequent-shopper, clerk and time-of-day dimensions are added to the transaction fact as three new foreign keys, and no existing key, fact or application has to change. Had the grain been daily sales by store and product, those three dimensions would not apply to it (ch. 2).
+
+![The POS retail sales transaction fact with the original four dimensions on the right and three added dimensions on the left, each joined by a new foreign key](../../sources/images/dwt-ch02-fig2-11.png)
+*Image Source: Kimball and Ross, [*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/) (Wiley, 2002), Fig. 2.11*
+
 Here is that design in DuckDB. Each piece carries a decision worth naming.
 
 ```python
@@ -243,6 +248,11 @@ FROM fact_trips"""))
 These are three answers to "what do we charge per mile?". The ratio of sums, 3.41 dollars, is the real one, total fares over total miles. The average of per-trip ratios, 4.10, is a different quantity that weights a one-block trip the same as a run to the airport, and short trips carry a large share of the flag fall. It is a legitimate number if that is what you meant, and a 20% overstatement if it is not. The sum of ratios is nonsense, though it is the one a dashboard tool produces when someone drags a stored `fare_per_mile` column onto a chart with the default aggregation. That is the case for not storing it: leave out the column, and no one can sum it.
 
 Fact tables also come in three structural kinds (ch. 5). A **transaction** fact has one row per event and never changes, like ours. A **periodic snapshot** has one row per entity per period, such as vehicles in service each day. An **accumulating snapshot** has one row per process instance, updated as it moves through milestones, such as order placed, shipped, delivered. The tests in Kimball's comparison table: an accumulating snapshot is the only kind whose rows are revisited and updated, it carries one date key per milestone, and several date columns alone do not make a fact table an accumulating snapshot. It fits short-lived processes with a definite end, while long-lived ones such as bank accounts belong in a periodic snapshot. Because many milestone dates are unknown at first load, the date keys must be surrogates pointing at an "Unknown" row, not literal SQL dates (ch. 5). Real instances run wide: a university applicant pipeline carries 15 role-playing date keys and a health-care billing line seven (ch. 12, ch. 13). Pick by the question you are asked: the transaction fact tells you what happened, the snapshot how things stood.
+
+Kimball's order-fulfilment table is the accumulating snapshot at full size. It carries nine date roles, from the order date to the invoice date, plus quantities for each stage and the lags between them, and its rows are revisited as the order moves (ch. 5). The dates have to be surrogate keys that can point at an Unknown row, because most of them are not known when the row is first loaded.
+
+![The order fulfillment accumulating snapshot fact table: nine date keys, other dimension keys, degenerate order and invoice numbers, stage quantities and lag columns](../../sources/images/dwt-ch05-fig5-10.png)
+*Image Source: Kimball and Ross, [*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/) (Wiley, 2002), Fig. 5.10*
 
 What happens when a dimension changes, the shapes that keep one manageable, conformed dimensions and drilling across, and when the star is the wrong tool continue in [part two](02b-dimensional-modelling-history-and-conformed-dimensions.md), which carries on with this script.
 

@@ -7,6 +7,7 @@ sources:
   - "Buduma & Locascio, \"Fundamentals of Deep Learning\" (O'Reilly, 2017), ch. 9"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/1312.5602
+  - https://doi.org/10.17863/cam.132164 (Watkins, PhD thesis, Cambridge, 1989)
   - https://doi.org/10.1038/nature14236 (Mnih et al., DQN, Nature 2015)
   - https://arxiv.org/abs/1707.06347
   - https://arxiv.org/abs/2106.01345 (Decision Transformer)
@@ -138,6 +139,8 @@ print(round(Q[3]["right"], 3))   # 0.1 * (-0.5 + 0.99 * 10.0 - 0.0)
 ```text
 0.94
 ```
+
+Q-learning is from Watkins' PhD thesis, *Learning from Delayed Rewards* (PhD thesis, University of Cambridge, 1989, Ch. 7 and Appendix 1; [doi:10.17863/cam.132164](https://doi.org/10.17863/cam.132164)). He writes the update as Q ← (1−α)Q + α(r + γ·max_a Q(s′,a)) and calls it incremental, Monte-Carlo value iteration. The agent may act any way it likes as long as it tries every action in every state many times. His convergence proof, via a notional "action-replay" process, covers the **tabular one-step** case on finite MDPs: it needs infinitely many visits to each pair and learning factors that fall to zero but sum to infinity, and derives no rate, though he asserts convergence is rapid. He could prove nothing for multi-step Q-learning or for function approximation. His own demonstrations were small (a CMAC route-finding task and a simulated Skinner box, one run or 50 seeds, no competing methods, only the analytic optimum), so the evidence for deep Q-learning comes from the DQN papers, not here.
 
 Q-learning bootstraps from the best next action, so it learns the value of the greedy policy
 while it explores with ε-greedy. SARSA bootstraps from the action it actually takes next, so it

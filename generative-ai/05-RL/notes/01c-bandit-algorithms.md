@@ -6,6 +6,8 @@ sources:
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 2"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 7)
   - https://doi.org/10.1137/s0097539701398375 (Auer et al., Exp3, SIAM J. Comput. 2002)
+  - https://doi.org/10.1023/a:1013689704352 (Auer et al., UCB1, Mach. Learn. 2002)
+  - https://arxiv.org/abs/1402.0555 (Agarwal et al., ICML 2014)
   - https://arxiv.org/abs/1003.0146
   - https://arxiv.org/abs/1802.09127
   - https://arxiv.org/abs/1508.03326
@@ -23,8 +25,12 @@ A bandit is the one-state case of the problem in [01](01-rl-foundations.md): no 
 - **Regret guarantees (Lattimore & Szepesvári).** Regret is R_n = nμ* − E[ΣX_t], which equals Σ_i Δ_i·E[T_i(n)], the gap times the expected pull count of each arm (*Bandit Algorithms*, ch. 4, Lemma 4.5). Bounds below assume k arms, horizon n and 1-subgaussian rewards unless stated.
   - *Explore-then-commit* on two arms with gap Δ, tuned to Δ: R_n ≤ min{nΔ, Δ + (4/Δ)(1 + max{0, log(nΔ²/4)})}. A commit time chosen from n alone gives only O(n^(2/3)) (ch. 6, Eq. 6.6, Exercise 6.5).
   - *UCB* with confidence δ = 1/n²: R_n ≤ 3ΣΔ_i + Σ 16 log n/Δ_i, and gap-free 8√(nk log n) + 3ΣΔ_i. It needs n in advance (ch. 7). The anytime variant: limsup R_n/log n ≤ Σ 2/Δ_i (ch. 8). MOSS drops the log factor, 39√(kn) + ΣΔ_i (ch. 9, Thm 9.1). For Bernoulli rewards KL-UCB has limsup R_n/log n ≤ ΣΔ_i/d(μ_i, μ*) and is never worse than UCB, since d ≥ 2Δ² (ch. 10, Thm 10.6).
+  - *Where UCB1 comes from.* [Auer, Cesa-Bianchi & Fischer, Mach. Learn. 2002](https://doi.org/10.1023/a:1013689704352) (building on Agrawal 1995 and the Lai & Robbins 1985 lower bound) gave the first index policy with logarithmic regret **uniformly over n**, not just asymptotically, for any rewards in [0, 1]. UCB1 plays the arm maximising x̄_j + √(2 ln n / n_j) and loses at most 8·Σ(ln n)/Δ_i + (1 + π²/3)·ΣΔ_j (Thm 1). The 8/Δ² constant is worse than the Lai-Robbins optimum, since D(p_j‖p*) ≥ 2Δ². UCB2 pushes the leading constant toward 1/(2Δ²) as α → 0, at a growing additive constant (Thm 2). On Bernoulli bandits with 2 or 10 arms (100,000 plays, 100 runs, no error bars reported) a tuned ε_n-greedy usually did best but degraded quickly when c was mistuned, and the untuned UCB1-TUNED, which replaces the bonus with a variance-based one, matched it but has no regret bound.
   - *Adversarial rewards in [0,1]:* Exp3 with η = √(2 log k/(nk)) gets R_n ≤ √(2nk log k) in expectation, yet its regret is heavy-tailed: some bandit has P(regret ≥ n/4) > 1/131 (ch. 11, Thm 11.2, Note 1). Exp3-IX biases the estimator upward, so with probability 1−δ the regret is O(√(nk log(k/δ))) (ch. 12). In the book's k = 5, n = 10⁴ run its *expected* regret is higher than Exp3's (Fig. 12.1).
   - *Floors.* Any policy has some Gaussian instance with R_n ≥ (1/27)√((k−1)n) once n ≥ k−1 (ch. 15, Thm 15.2, sketched in ch. 13). A policy consistent on an unstructured class has liminf R_n/log n ≥ Σ Δ_i/d_inf; for unit-variance Gaussians that is Σ 2/Δ_i, so the UCB asymptotics above are tight (ch. 16, Thm 16.2 and Table 16.1; the 2/Δ form is our substitution). Beating that line on one instance costs regret elsewhere (Fig. 16.1). Expected regret ≤ B√((k−1)n) also forces a tail: some Gaussian instance has regret ≥ ¼·min{n, (1/B)·√((k−1)n)·log(1/(4δ))} with probability ≥ δ (ch. 17, Thm 17.1).
+
+![Two panels over 1 to 100,000 plays on a 10-armed Bernoulli bandit with parameters 0.9, 0.8, 0.8, 0.8, 0.7, 0.7, 0.7, 0.6, 0.6, 0.6. Left, percent of plays on the best arm: UCB-tuned rises first, the three epsilon-greedy settings lag, all near 98 at the end. Right, regret: UCB-tuned ends near 146, UCB2 near 193, epsilon-greedy with c of 0.10, 0.15 and 0.20 between about 250 and 265.](../sources/images/auer-2002-ucb-fig10.png)
+*Image Source: Auer, Cesa-Bianchi & Fischer, [Finite-time Analysis of the Multiarmed Bandit Problem](https://doi.org/10.1023/a:1013689704352) (Mach. Learn., 2002), Fig. 10 (distribution 12; 100 runs). Mis-tuned ε_n-greedy ends above UCB-tuned and UCB2 here.*
 
 ![Regret against difficulty for several policies. A horizontal line marks the minimax floor of order √n, and a rising line marks the instance-optimal floor. An over-specialised policy sits at n almost everywhere and dips far below the instance line on one instance.](../sources/images/bandit-algorithms-fig16-1.png)
 *Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 16.1. Schematic.*
@@ -58,6 +64,15 @@ analytics for the case with no context, and for Thompson sampling. Two results a
   context-free bandit. The paper's other lasting contribution is **replay evaluation**: a
   bandit policy can be scored offline, without bias, on logs collected under a uniformly
   random policy.
+- **Oracle-efficient contextual bandits** ([arXiv:1402.0555](https://arxiv.org/abs/1402.0555),
+  Agarwal et al., ICML 2014). Against a policy class Π, the algorithm reaches the optimal
+  O(√(KT ln(T|Π|/δ))) regret for i.i.d. contexts using only an argmax oracle (a supervised
+  learner), about √(KT/ln(|Π|/δ)) calls over T rounds, where the earlier Randomized UCB needed
+  about T⁵. On RCV1 (781,265 examples, linear model, progressive-validation 0/1 loss) the
+  practical Online Cover variant scored **0.0530** against 0.051 for the full-information
+  supervised learner, in 12 s. LinUCB scored 0.128 and took 59 hours, and then only after a
+  projection to 1,000 dimensions. One dataset, no repeats, and the experiment is not the analysed
+  algorithm (it uses a doubly robust estimator).
 - **Thompson sampling with neural nets** ([arXiv:1802.09127](https://arxiv.org/abs/1802.09127),
   Riquelme et al., 2018) benchmarked approximate Bayesian deep nets as posteriors. Many methods
   that work in supervised learning did poorly here because their uncertainty estimates converge

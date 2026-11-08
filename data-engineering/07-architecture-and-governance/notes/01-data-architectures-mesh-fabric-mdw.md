@@ -119,6 +119,11 @@ This is one aggregate with no concurrency, so it says nothing about a hundred an
 
 A lakehouse ([CIDR 2021](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf)) drops the RDW copy and adds warehouse features (ACID transactions, schema enforcement, time travel) to the lake through an open table format: Delta Lake, Apache Iceberg or Hudi. [Table formats](../../04-warehouse-lakehouse-streaming/notes/02-table-formats.md) shows how, and [lakehouse against warehouse](../../04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md) runs the comparison.
 
+The paper's own picture is the clearest account of what changes. In the first generation, structured data goes through ETL into a warehouse. In today's two-tier architecture, a lake feeds a warehouse through ETL, BI and reports read the warehouse, and data science and machine learning read the lake directly, so data exists twice. In the lakehouse, one metadata, caching and indexing layer sits on the lake, and every consumer reads through it, with ETL running inside the layer (Fig. 1).
+
+![Three data platform architectures: first-generation platforms with ETL into a warehouse, two-tier architectures with a lake and a warehouse, and lakehouse platforms with one metadata, caching and indexing layer over the lake](../../sources/images/zaharia-lakehouse-fig1.png)
+*Image Source: Armbrust, Ghodsi, Xin and Zaharia, [Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics](https://www.cidrdb.org/cidr2021/papers/cidr2021_paper17.pdf) (CIDR 2021), Fig. 1*
+
 ## Data fabric
 
 Serra calls a **data fabric** an evolution of the MDW, an added layer that improves accessibility, security, discoverability and availability, and whose defining philosophy is that it can consume any and all data in the organisation. He counts eight features:

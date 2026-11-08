@@ -57,7 +57,15 @@ The training recipe came nine months earlier in TALM ([arXiv:2205.12255](https:/
 
 Toolformer ([arXiv:2302.04761](https://arxiv.org/abs/2302.04761), Schick et al., 2023-02) is also the clearest evidence that tool calls help where the model is weakest. GPT-J (6.7B) was shown a few demonstrations per API and wrote candidate calls into its own training text. A call was kept only when inserting its result made the following tokens easier to predict. The model was then fine-tuned on what survived. With a calculator it scored 40.4 on ASDiv, against 14.0 for GPT-3 175B and 14.8 for the same model with tools disabled. With a QA tool it scored 53.5 on LAMA T-REx against GPT-3's 39.8. Each call was a single inline lookup with no chaining. Multi-step tool use needed ReAct-style loops and, later, models trained for function calling.
 
+![Toolformer data pipeline: sample API calls, execute them, keep those that lower the loss on the next tokens](../sources/images/schick-toolformer-fig2.png)
+
+*Image Source: Schick et al., [Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) (2023), Fig. 2*
+
 ChemCrow ([arXiv:2304.05376](https://arxiv.org/abs/2304.05376) (Bran et al., 2023-04)) shows the same effect in a ReAct loop. GPT-4 at temperature 0.1 was given 18 chemistry tools, including name-to-SMILES conversion, reaction planning and a cloud robot lab. It planned and ran real syntheses of DEET and three thiourea organocatalysts. On 14 tasks graded by four expert chemists, tool-less GPT-4 won only the easy tasks it could answer from memory, and ChemCrow won on the harder and novel ones. Two caveats apply. A GPT-4 grader preferred tool-less GPT-4's fluent but wrong answers. And in the authors' own reproducibility check, the tools returned the right product in all 5 runs of one task, but in 2 of them the model misread that product's SMILES string and drew the wrong conclusion about the mechanism.
+
+![ChemCrow against GPT-4: expert score differences by task, and expert versus EvaluatorGPT scores](../sources/images/bran-chemcrow-fig4.png)
+
+*Image Source: Bran et al., [ChemCrow: Augmenting large-language models with chemistry tools](https://arxiv.org/abs/2304.05376) (2023), Fig. 4*
 
 ![ReAct trajectory: thought, action, observation repeated until an answer](../sources/images/li-ai-agents-in-depth-fig1-4.svg)
 
@@ -257,6 +265,10 @@ The switch is measurable. In OpenHands on SWE-bench Verified, o1 at high reasoni
 
 **Acting does not beat thinking on every task.** In the ReAct paper's own HotpotQA result with PaLM-540B, ReAct scored 27.4 EM against 29.4 for CoT. The best score, 35.1, came from falling back to self-consistent CoT when ReAct ran out of steps (Yao et al., ICLR 2023). ALAMA ([arXiv:2412.00722](https://arxiv.org/abs/2412.00722) (Huang et al., COLING 2025)) found the same with one-shot prompts. With Llama-3-8B-Instruct, a ReAct-style retrieval mechanism was the weakest of five on GSM8K (71.8% against 80.1% for Reflection) and no better than plain CoT on HotpotQA (15.8 against 17.6 EM; GPT-3.5 tied them at 22.2). All five mechanisms solved only 42.6% of the GSM8K questions, but an oracle that picked the right mechanism per question solved 96.9%. Training the model to choose for itself reached 82.2%, well short of that ceiling. KnowSelf ([arXiv:2504.03553](https://arxiv.org/abs/2504.03553) (Qiao et al., ACL 2025)) makes the same choice at every step. A fine-tuned Llama-3.1-8B emitted a `[Knowledge]` token to fetch a rule from a knowledge base on 15% of its ALFWorld steps. It scored 84.3, against 77.6 for WKM, which injects knowledge at every step. On Gemma-2B, injecting knowledge at every step scored below reflection alone. So the design question is not ReAct or CoT. It is when the model should reach outside itself.
 
+![ReAct on a HotpotQA question and an AlfWorld game against standard, chain-of-thought and act-only prompting](../sources/images/yao-react-fig1.png)
+
+*Image Source: Yao et al., [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) (2022), Fig. 1*
+
 If you do run ReAct as text, Phoenix and Taylor's hand-built loop shows the three parts you need (*Prompt Engineering for Generative AI*, ch. 6):
 
 - **Parse the last action, not the first.** Use a case-insensitive regex such as `(?i)action\s*:\s*([^\n]+)`, which captures up to the end of the line, and a second one for `action_input`. Take the last match in the response.
@@ -287,6 +299,10 @@ The reasoning a model shows can also be a story told after the fact, so asking "
 
 Arsanjani and Bustos place a plain single agent (one model, tools through function calling, ReAct) at the base of their agent-level patterns and add structure only when it fails: memory, then RAG, then a self-correction pass. Their self-correction step is a second prompt that casts the model as an auditor: check the preliminary decision against the policy context and say whether anything was missed. It "requires at least two separate LLM calls instead of one", a cost they state without measuring. Their loan examples script the model's replies, and the chapter's claims that RAG "drastically reduces hallucinations" and that a multimodal agent cuts processing time carry no numbers or citations (*Agentic Architectural Patterns*, ch. 9).
 
+![Self-correction loop: a preliminary output and the goals go into a critique prompt, and the critique joins the output in the final decision](../sources/images/agentic-architectural-patterns-fig9-6.png)
+
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 9-6*
+
 Providers now apply much of this inside their models, so zero-shot CoT helps small models more than reasoning models, and thinking modes replace the hand-written instruction. The authors' practical advice is to use a thinking model as a teacher that writes examples for a smaller one, and to set a reminder to retest any CoT prompt every six months, since a hotfix or new model may make it unnecessary.
 
 A 2023 survey of the road from chain of thought to agents ([arXiv:2311.11797](https://arxiv.org/abs/2311.11797) (Zhang et al., 2023-11, preprint)) gathers two conditions from other papers under which CoT works: a model of preferably at least 20 billion parameters, and parametric knowledge that is relevant to the task and interconnected. It also reports that CoT-verification gains often came from oracles or external tools such as search engines and calculators, which is the table's advice to supply the fact. It runs no experiments, covers ReAct in one descriptive paragraph without numbers, and stops at October 2023.
@@ -294,6 +310,14 @@ A 2023 survey of the road from chain of thought to agents ([arXiv:2311.11797](ht
 Three papers show where the limit sits. Self-Discover ([arXiv:2402.03620](https://arxiv.org/abs/2402.03620) (Zhou et al., 2024-02, preprint)) has the model compose a JSON reasoning plan once per task. Zero-shot with GPT-4 it scored 81% on 23 BigBench-Hard tasks against 75% for zero-shot CoT, and 73% against 71% on a 200-problem MATH subsample. A hand-check of 99 wrong MATH answers found **74.7% were calculation errors and 25.3% bad plans**: a better plan does not fix arithmetic, which is the table's second row. Buffer of Thoughts ([arXiv:2406.04271](https://arxiv.org/abs/2406.04271) (Yang et al., NeurIPS 2024)) retrieves a stored thought-template, often code, and instantiates it. With GPT-4 it solved 82.4% of Game of 24 against 74.0% for Tree of Thoughts, at about 12% of the cost of multi-query methods. Valmeekam et al. ([arXiv:2409.13373](https://arxiv.org/abs/2409.13373) (2024-09, preprint)) ran 600 Blocksworld planning instances: o1-preview solved 97.8% zero-shot, but **only 52.8% once the predicates were renamed**, where no non-reasoning LLM reached 5%, and 23.63% on 110 larger problems. The classical planner Fast Downward solved 600 of 600 in 0.265 s. It was one run of a preview model; the authors' remedy is an LLM plus a sound verifier.
 
 Two papers train the tool habit instead of prompting it. ReST meets ReAct ([arXiv:2312.10003](https://arxiv.org/abs/2312.10003) (Aksitov et al., 2023-12, preprint)) fine-tunes a search-using ReAct agent on its own trajectories: the prompted PaLM 2-L agent answers 2,000 questions (no labels), its reranked trajectories train the next model, and a second generation repeats this. On Bamboogle (125 two-hop questions, auto-evaluated) **the fine-tuned PaLM 2-XS reached 65.9 against 70.3 for the prompted L teacher**, and the fine-tuned L reached 76.1. Quality beat quantity: dropping about 30% of trajectories by hand-filtering lowered XS by 2.5 points, and four trajectories per question added 0.3 over two. The models and search API are not public, the tool is one search API, and only two generations were run. Adapting While Learning ([arXiv:2411.00412](https://arxiv.org/abs/2411.00412) (Lyu et al., ICML 2025)) trains the other half, when to call a tool at all. It labels each training question easy or hard from the model's own direct-answer accuracy: easy ones keep the direct answer, hard ones get the tool trace. On Llama-3.1-8B over six scientific datasets, answer accuracy rose 29.11 points on the no-tool prompt (30.20 to 59.31), but base Llama forced to use tools already reached 57.60, so the gain is mostly internalised knowledge and fewer calls: the base model called tools on 90.96% of questions against 51.72% after training, and open-ended Climate questions fell from 7.21 to 2.70 calls on average. GPT-4o, Claude-3.5 and Llama-70B stayed near 50% tool-decision accuracy, and GPT-4o still led on MATH (82.94 against 62.35). Single runs on test sets of 80-280 questions, with simulator-generated data from the same templates as the tools.
+
+![Adapting While Learning: world knowledge learning, then tool usage adaptation on easy and hard problems](../sources/images/lyu-adapting-while-learning-fig1.png)
+
+*Image Source: Lyu et al., [Adapting While Learning: Grounding LLMs for Scientific Problems with Tool Usage Adaptation](https://arxiv.org/abs/2411.00412) (2025), Fig. 1*
+
+![ReST meets ReAct search agent as a state machine: decision step, web search, summarization, answer, two self-checks](../sources/images/aksitov-rest-meets-react-fig2.png)
+
+*Image Source: Aksitov et al., [ReST meets ReAct: Self-Improvement for Multi-Step Reasoning LLM Agent](https://arxiv.org/abs/2312.10003) (2023), Fig. 2*
 
 ---
 

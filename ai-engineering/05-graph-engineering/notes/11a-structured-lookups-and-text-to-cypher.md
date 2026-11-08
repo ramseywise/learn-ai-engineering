@@ -69,6 +69,9 @@ Ch14's method is to ask what a domain expert would do (*KG & LLMs in Action*, ch
 2. **Map** those onto schema labels and relationship types.
 3. **Construct** the Cypher.
 
+![Red Camaros spotted in this area at this time, translated in three stages: request in natural language, semantic components mapped to schema classes and relationships, then a constrained traversal with Model, Color, timestamp and position constraints written as a Cypher query](../sources/images/negro-kg-and-llms-in-action-fig14-2.png)
+*Image Source: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), Fig. 14.2 (the figure's time filter is reversed; see the note after the query below)*
+
 ```cypher
 MATCH path = (v:Vehicle)<-[:PLATE_READ]-(e:CameraEvent)-[:HAS_EVENT]-(c:ANPRCamera)
 WHERE v.model = "Camaro" AND v.color = "Red"

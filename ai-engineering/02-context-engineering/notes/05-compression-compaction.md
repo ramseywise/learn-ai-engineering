@@ -238,6 +238,9 @@ The upstream management module borrows the CPU cache model. Context lives at lev
 
 MemGPT made this design concrete: the agent manages its own tiers through tool calls, and summarized history is evicted to a searchable recall store. In its multi-session recall test, GPT-4 went from 32.1% to 92.5%, against a baseline that saw only a summary of past sessions ([arXiv:2310.08560](https://arxiv.org/abs/2310.08560) (Packer et al., 2023-10); mechanics and caveats in [agentic foundations 03](../../../generative-ai/03-agentic-foundations/notes/03-memory-as-an-operating-system.md#the-os-analogy)).
 
+![MemGPT: a fixed context holds system instructions, working context and a FIFO queue; a function executor and queue manager move data to and from recall and archival storage](../sources/images/packer-memgpt-fig3.png)
+*Image Source: Packer et al., [MemGPT](https://arxiv.org/abs/2310.08560) (2023), Fig. 3*
+
 The useful habit is thinking in **promotion and demotion**. Compaction demotes content from L1 to L2. Retrieval promotes it back. A good design makes both moves cheap and explicit, rather than letting the window be the only tier ([06](06-memory.md)).
 
 ---

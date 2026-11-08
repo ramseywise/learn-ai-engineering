@@ -11,6 +11,7 @@ sources:
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://cdn.openai.com/WebGPT.pdf (WebGPT)
   - https://arxiv.org/abs/1707.06347
+  - https://doi.org/10.1007/bf00992696 (Williams, REINFORCE, Mach. Learn. 1992)
   - https://arxiv.org/abs/2503.06072 (post-training survey, notation and taxonomy)
   - https://arxiv.org/abs/2402.03300
   - https://arxiv.org/abs/2503.14476 (DAPO)
@@ -159,6 +160,8 @@ summary of ch. 5 is that the policy gradient algorithms differ *only* in what th
 | n-step or GAE advantage `Â_t` | A2C / PPO | The bias–variance dial |
 | reward minus the mean of the other k−1 samples | RLOO | Leave-one-out baseline, no critic, whole completion is one action |
 | group-normalized reward | GRPO | Baseline from sibling samples, no critic |
+
+**Where REINFORCE comes from.** Williams ([Machine Learning, 1992](https://doi.org/10.1007/bf00992696)) named the family: for stochastic units with immediate reward, the update Δw = α·(r − b)·∂ln g/∂w moves the weights, on average, along the gradient of expected reward, and its inner product with that gradient is never negative (Thm 1). With a common α the term is an unbiased gradient estimate, provided the baseline b is conditionally independent of the unit's current output (it may depend on past rewards). The paper proves nothing about variance: it says only that the analysis gives no basis for choosing among baselines, and asserts, from extensive but unreported simulations (and Sutton, 1984), that a reinforcement-comparison baseline can greatly speed convergence. It has no returns-to-go, discounting or state values, and warns of convergence to inferior actions. The MDP form is the later theorem below.
 
 **What the theorem says exactly.** Sutton and Barto's version (ch. 13, Sec. 13.2) states that `∇J(θ) ∝ Σ_s μ(s) Σ_a q_π(s,a)·∇π(a|s,θ)`, with no derivative of the state distribution μ. The constant is the average episode length in the episodic case, and it is 1 (an equality) in the continuing case. REINFORCE is the sampled form, `θ ← θ + α·G_t·∇π(A_t|S_t)/π(A_t|S_t)`, and the book calls `∇ln π` the eligibility vector. The baseline identity behind the next paragraph is one line: `Σ_a b(s)·∇π(a|s) = b(s)·∇1 = 0`, so any `b` that does not depend on the action leaves the expected update unchanged. Their one-step actor-critic is the Ψ = δ_t row of the table (the book notes it is sometimes called A2C), and its critic adds bias even though a Monte Carlo critic would too (ch. 13, Sec. 13.5).
 

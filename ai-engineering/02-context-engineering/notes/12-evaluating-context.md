@@ -163,6 +163,9 @@ Advertised window size is not effective window size. Test your model on your tas
 - **Length sweep:** run the same task at 10%, 25%, 50% and 75% of the window with realistic filler. Plot score against length. The knee in the curve is the effective budget ([03](03-budgeting-the-window.md)).
 - **Position sweep:** put the key evidence at the start, middle and end. A large middle dip means you should move important content to the edges ([02](02-context-anatomy.md)).
 
+![GPT-4-Turbo accuracy on BABILong tasks qa1 to qa5 by context length, falling to near zero on qa2 and qa3 at 64K and 128K](../sources/images/kuratov-babilong-fig3.png)
+*Image Source: Kuratov et al., [In Search of Needles in a 11M Haystack](https://arxiv.org/abs/2402.10790) (2024), Fig. 3*
+
 ---
 
 ## Ablation: the core context experiment
