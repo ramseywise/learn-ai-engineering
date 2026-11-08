@@ -1,0 +1,69 @@
+{
+ "schema": 1,
+ "key": "sha1:9c1038f80084",
+ "pdf": "data-science/sources/fundamentals-of-deep-learning/ch04-beyond-gradient-descent.pdf",
+ "bib": {"title": "Fundamentals of Deep Learning, Chapter 4: Beyond Gradient Descent", "authors": ["Nikhil Buduma (book author; not printed in the chapter text)"], "first_author": "Buduma", "year": 2017, "venue": "book chapter (O'Reilly)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 41090, "chars_total": 41090, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "Why does plain mini-batch gradient descent struggle on deep-network error surfaces, and which optimizers fix it?",
+ "hypothesis": null,
+ "contributions": ["Argues spurious local minima are exaggerated and saddle points and ill-conditioning are the real obstacles", "Introduces momentum, second-order methods, AdaGrad, RMSProp and Adam"],
+ "method": null,
+ "results": [
+  {"claim": "In a toy MNIST feed-forward net, momentum 0.9 at learning rate 0.01 reaches cost 0.1 in just over 2,000 minibatch steps versus nearly 18,000 without.", "kind": "measured", "source": null, "metric": "steps to cost 0.1", "value": "2,000 vs 18,000", "unit": "minibatch steps", "baseline_value": "18,000", "n": null, "setup": "MNIST feed-forward ReLU network from Ch. 3, TensorFlow MomentumOptimizer, learning_rate 0.01, momentum 0.9; single run read from TensorBoard curves", "quote": "requires nearly 18,000 steps (minibatches), whereas with momentum (left), we require just over 2,000.", "table": null, "note": "Text says with-momentum is (left); the Fig 4-9 caption says with (right) and without (left). Left/right is inconsistent.", "where": "p.76"},
+  {"claim": "A random critical point in d dimensions is a local minimum with probability 1/3^d, so local minima get exponentially rarer as parameters grow (heuristic assuming the three 1-D forms are equally likely).", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Heuristic: each of d axis slices is minimum, maximum or inflection with equal probability; the book defers rigour to Dauphin et al. 2014", "quote": "In other words, as the dimensionality of our parameter space increases, local minima become exponentially more rare.", "table": null, "note": null, "where": "p.71"},
+  {"claim": "Linear interpolation from a random init to the SGD solution shows no troublesome local minima, so the difficulty is finding the direction, not getting stuck.", "kind": "reported", "source": "Goodfellow, Vinyals and Saxe 2014 (arXiv:1412.6544); the book reproduces it on its own MNIST net over alpha in [-2, 2) step 0.01 using test data", "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Linear interpolation between random init and SGD solution, for a wide variety of practical networks", "quote": "we find that there are no truly troublesome local minima", "table": null, "note": null, "where": "p.69"},
+  {"claim": "On elliptical contours the gradient can point 90 degrees from the direction of the minimum.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "2-D contour argument, no experiment", "quote": "the gradient can be as inaccurate as 90 degrees away from the correct direction!", "table": null, "note": null, "where": "p.72"},
+  {"claim": "Adam defaults in TensorFlow are learning_rate 0.001, beta1 0.9, beta2 0.999, epsilon 1e-08; only the learning rate may need changing.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "tf.train.AdamOptimizer (TensorFlow 0.x API)", "quote": "tf.train.AdamOptimizer(learning_rate=0.001, beta1=0.9,", "table": null, "note": "beta2=0.999, epsilon=1e-08 are on the next line", "where": "p.82"},
+  {"claim": "AdaGrad tends to drop the learning rate prematurely and works poorly for some deep models; RMSProp (decay 0.9, epsilon 1e-10 in the TF template) fixes this with an exponential moving average.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Qualitative, no experiment", "quote": "tf.train.RMSPropOptimizer(learning_rate, decay=0.9,", "table": null, "note": "momentum=0.0, epsilon=1e-10 on next line", "where": "pp.79-80"}
+ ],
+ "limits": [
+  "No experiments beyond the toy MNIST MLP: single run, no seeds, no variance, no comparison between optimizers (a script is only pointed to).",
+  "Dated: TensorFlow 0.x API (placeholders, Session, tf.initialize_variables, SummaryWriter, xrange); says Nesterov, conjugate gradient and L-BFGS are not in TensorFlow; AdaDelta unsupported. All now available.",
+  "Dated: calls second-order methods unpopular and RMSProp a default for seasoned practitioners; says there is little consensus on optimizer choice. AdamW, weight decay decoupling, LR schedules and warmup are not covered.",
+  "The 1/3^d argument assumes the three 1-D critical point types are equally likely; the book admits this is loose.",
+  "Says it is an open question whether spurious local minima are common; the interpolation evidence is from Goodfellow et al. 2014.",
+  "Code snippets contain errors: random walk uses step_range=10 though text says -10 to 10 with a stray fused line; momentum_rand_walk.append() has no argument; the interpolated output layer applies relu to logits."
+ ],
+ "practices": [
+  "Use momentum (typically 0.9) to damp oscillating gradients; it may need a reduced learning rate (p.75-76).",
+  "Prefer RMSProp or Adam over AdaGrad for deep nets; Adam defaults usually work and only the learning rate may need changing (p.80-82).",
+  "Do not expect optimizer choice to be the main lever; architecture that is easier to train has produced most breakthroughs (p.83).",
+  "Diagnose local minima by interpolating loss between init and trained weights, not by plotting loss over time (p.66-69)."
+ ],
+ "terms": [
+  {"term": "model identifiability", "definition": "Neuron permutations (n! per layer) and ReLU weight rescaling by k and 1/k give equivalent networks, hence many harmless local minima", "where": "p.65"},
+  {"term": "spurious local minimum", "definition": "a weight configuration that incurs a higher error than the configuration at the global minimum", "where": "p.66"},
+  {"term": "critical point", "definition": "a point at which the gradient is the zero vector", "where": "p.69"},
+  {"term": "saddle point", "definition": "a critical point that is neither minimum nor maximum, a flat region", "where": "p.69"},
+  {"term": "ill-conditioned Hessian", "definition": "the gradient changes under our feet as we move in the direction of steepest descent", "where": "p.73"},
+  {"term": "momentum", "definition": "v_i = m v_{i-1} - eps g_i; theta_i = theta_{i-1} + v_i", "where": "p.75"},
+  {"term": "AdaGrad", "definition": "per-parameter learning rate divided by the root of the accumulated squared gradients", "where": "p.79"},
+  {"term": "RMSProp", "definition": "AdaGrad with an exponentially weighted moving average of squared gradients, decay rho", "where": "p.80"},
+  {"term": "Adam", "definition": "moving averages of first and second gradient moments with bias correction 1-beta^i", "where": "p.81-82"}
+ ],
+ "lineage": [
+  {"work": "Goodfellow, Vinyals, Saxe: Qualitatively characterizing neural network optimization problems", "year": 2014, "arxiv": "1412.6544", "relation": "uses-method", "note": "linear interpolation experiment", "quote": null},
+  {"work": "Dauphin et al.: Identifying and attacking the saddle point problem", "year": 2014, "arxiv": null, "relation": "related", "note": "saddle points dominate in high dimension", "quote": null},
+  {"work": "Polyak: Some methods of speeding up the convergence of iteration methods", "year": 1964, "arxiv": null, "relation": "related", "note": "classical momentum", "quote": null},
+  {"work": "Sutskever et al.: On the importance of initialization and momentum", "year": 2013, "arxiv": null, "relation": "related", "note": "Nesterov momentum", "quote": null},
+  {"work": "Duchi, Hazan, Singer: Adaptive Subgradient Methods", "year": 2011, "arxiv": null, "relation": "related", "note": "AdaGrad", "quote": null},
+  {"work": "Tieleman and Hinton: Lecture 6.5 rmsprop", "year": 2012, "arxiv": null, "relation": "related", "note": "RMSProp", "quote": null},
+  {"work": "Kingma and Ba: Adam", "year": 2014, "arxiv": "1412.6980", "relation": "related", "note": "Adam", "quote": null},
+  {"work": "Moller: Scaled Conjugate Gradient", "year": 1993, "arxiv": null, "relation": "related", "note": "conjugate gradient for nonconvex nets", "quote": null},
+  {"work": "Broyden: A new method of solving nonlinear simultaneous equations (BFGS); Bonnans et al. 2006 (L-BFGS)", "year": 1969, "arxiv": null, "relation": "related", "note": "quasi-Newton", "quote": null},
+  {"work": "Bengio et al.: Greedy Layer-Wise Training of Deep Networks", "year": 2007, "arxiv": null, "relation": "related", "note": "pretraining the chapter says was superseded", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 4-3", "caption": "The cost function of a three-layer feed-forward network as we linearly interpolate on the line connecting a randomly initialized parameter vector and an SGD solution", "page": 7, "why": "Shows a smooth path with a flat spot near alpha=1 and no local minima"},
+  {"figure": "Fig 4-7", "caption": "Direction of the gradient changes as we move along steepest descent", "page": 11, "why": "Shows ill-conditioning"},
+  {"figure": "Fig 4-8", "caption": "Momentum smooths volatility in the step sizes during a random walk using an exponentially weighted moving average", "page": 14, "why": "Shows the smoothing effect of the EWMA"},
+  {"figure": "Fig 4-9", "caption": "Comparing training a feed-forward network with (right) and without (left) momentum", "page": 14, "why": "The only empirical speedup, ~18,000 vs ~2,000 steps"}
+ ],
+ "code": [
+  {"where": "p.75", "snippet": "v_i = m v_{i-1} - eps g_i ; theta_i = theta_{i-1} + v_i", "verbatim": false},
+  {"where": "p.76", "snippet": "optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)", "verbatim": true},
+  {"where": "p.81-82", "snippet": "m_i = b1 m_{i-1} + (1-b1) g_i ; v_i = b2 v_{i-1} + (1-b2) g_i*g_i ; m~ = m/(1-b1^i) ; v~ = v/(1-b2^i) ; theta -= eps m~/(delta + sqrt(v~))", "verbatim": false}
+ ],
+ "problems": ["Math symbols garbled in the text cache (Greek letters appear as replacement characters); formulas reconstructed from context.", "Author name not printed in the chapter pages; Buduma is from the book, not the text.", "No embedded instructions found."]
+}

@@ -147,7 +147,7 @@ same absolute lift at 20% baseline                  101,400  x3.25
 | higher baseline, same absolute lift | larger | variance p(1−p) peaks at 0.5 |
 | unequal split | larger total | see below |
 
-The inverse square is the law from [estimation](../../02-probability-and-statistics/notes/04-estimation.md): precision costs data quadratically. Most sizing arguments end here. If the plan needs 122,000 per arm and you can get 40,000, either accept that you can only detect bigger effects, or find a less noisy metric or [a variance-reduction method](03-experimentation-at-scale.md), or do not run the test. An underpowered test does not just risk missing the effect. When it does reach significance, the estimate is inflated, as the [winner's curse](../../02-probability-and-statistics/notes/05-hypothesis-testing.md) showed.
+The inverse square is the law from [estimation](../../02-probability-and-statistics/notes/04-estimation.md): precision costs data quadratically. Most sizing arguments end here. If the plan needs 122,000 per arm and you can get 40,000, either accept that you can only detect bigger effects, or find a less noisy metric or [a variance-reduction method](03-experimentation-at-scale.md), or do not run the test. An underpowered test does not just risk missing the effect. When it does reach significance, the estimate is inflated, as the [winner's curse](../../02-probability-and-statistics/notes/05-hypothesis-testing.md) showed. The book sizes rare-event tests by the count of events, not visitors: at a 1.1% click rate, 300 visitors per arm and a 10% lift is hopeless, and even a 50% lift at 2,000 per arm produced 19 against 34 clicks, which a permutation test still did not call significant (*Practical Statistics*, ch. 3).
 
 ### From users to days
 

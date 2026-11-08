@@ -186,7 +186,7 @@ percentiles: {0.5: 37.0, 0.9: 141.0, 0.95: 236.0, 0.99: 427.0}
 with the two 48,000 rows left in: mean 161.25, std 2139.32, median 37.45
 ```
 
-The standard deviation squares every deviation, so one large value dominates it. The interquartile range (the distance from the 25th to the 75th percentile) and the median absolute deviation (MAD, the median distance from the median) ignore the tail entirely. The last line shows the sensitivity directly: two bad rows move the mean from 65.86 to 161.25 and the standard deviation from 93.65 to 2,139, while the median barely shifts from 37.38 to 37.45. Two rows out of twenty thousand did that.
+The standard deviation squares every deviation, so one large value dominates it. The interquartile range (the distance from the 25th to the 75th percentile) and the median absolute deviation (MAD, the median distance from the median) ignore the tail entirely. The last line shows the sensitivity directly: two bad rows move the mean from 65.86 to 161.25 and the standard deviation from 93.65 to 2,139, while the median barely shifts from 37.38 to 37.45. Two rows out of twenty thousand did that. The same ordering shows in the 2010 census populations of the 50 US states: mean 6,162,876, 10% trimmed mean 4,783,697 (five states dropped from each end), median 4,436,370. The standard deviation is 6,848,235 against a MAD of 3,849,870, almost half; R's `mad` already multiplies by 1.4826 so that it matches the SD on Normal data, which is why a raw MAD looks too small beside an SD (*Practical Statistics*, ch. 1). Weights fix a different problem: murder rates averaged over states give each state equal say, but weighting by population gives a mean of 4.45 and a weighted median of 4.4 per 100,000 per year.
 
 That single comparison is the most reliable outlier detector you have. When the mean and median, or the standard deviation and the IQR, disagree by a lot, the tail is running the summary, and you should look at the tail. And report percentiles rather than one number: 141 at p90 and 427 at p99 tell a planner far more than a mean does.
 
@@ -292,7 +292,7 @@ Those two hundred groups are arbitrary, assigned at random, so no group is reall
 
 ### Association
 
-Correlation is the first number people reach for between two numeric columns, and the Pearson version has a similar weakness to the mean.
+Correlation is the first number people reach for between two numeric columns, and the Pearson version has a similar weakness to the mean. Before correlating, look: once a scatterplot saturates into a black blob, hexagonal binning or contours show the density instead (432,733 King County tax records in the book's example), and a violin plot shows the mass near zero that a boxplot of flight delays hides (*Practical Statistics*, ch. 1).
 
 ```python
 b = clean[clean.revenue > 0]

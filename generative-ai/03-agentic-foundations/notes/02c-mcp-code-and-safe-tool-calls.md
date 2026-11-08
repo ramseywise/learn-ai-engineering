@@ -12,7 +12,7 @@ sources:
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 1"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
-  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 2"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 2"
   - "Sprague et al. 2024, To CoT or not to CoT? — https://arxiv.org/abs/2409.12183"
   - "Mirzadeh et al. 2024, GSM-Symbolic — https://arxiv.org/abs/2410.05229"
   - "Hao et al. 2024, Training Large Language Models to Reason in a Continuous Latent Space (Coconut) — https://arxiv.org/abs/2412.06769"

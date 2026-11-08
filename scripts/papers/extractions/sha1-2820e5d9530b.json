@@ -1,0 +1,471 @@
+{
+ "schema": 1,
+ "key": "sha1:2820e5d9530b",
+ "pdf": "data-science/sources/intro-to-ml-with-python/ch04-representing-data-engineering-features.pdf",
+ "bib": {
+  "title": "Representing Data and Engineering Features (Chapter 4, Introduction to Machine Learning with Python)",
+  "authors": [
+   "Andreas C. Muller",
+   "Sarah Guido"
+  ],
+  "first_author": "Muller",
+  "year": 2016,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 68251,
+  "chars_total": 68251,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should categorical and continuous features be represented and engineered so that a given model family (linear vs tree) performs well?",
+ "hypothesis": "Representation and the match between features and model matter more than exact parameters.",
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "One-hot encoded adult features with logistic regression give 0.81 test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.81,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Adult income (1994 census), 32561 rows, columns age, workclass, education, gender, hours-per-week, occupation, income; get_dummies -> 44 features; LogisticRegression default; train_test_split random_state=0 (default 75/25)",
+   "quote": "Test score: 0.81",
+   "table": null,
+   "note": null,
+   "where": "p.217 In[7]"
+  },
+  {
+   "claim": "Tree and linear models on one-hot-binned wave data (10 bins, 100 samples) make identical predictions; binning helps linear, not trees.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "wave dataset n=100, bins=np.linspace(-3,3,11), DecisionTreeRegressor(min_samples_split=3)",
+   "quote": "Binning features generally has no bene",
+   "table": null,
+   "note": null,
+   "where": "p.224"
+  },
+  {
+   "claim": "Ridge on Boston Housing gains from degree-2 polynomial/interaction features: 0.621 to 0.753 test R^2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.753,
+   "unit": null,
+   "baseline_value": 0.621,
+   "n": null,
+   "setup": "Boston Housing, 379 train rows, 13 features MinMax-scaled to [0,1], degree-2 PolynomialFeatures -> 105 features; train_test_split random_state=0; test R^2",
+   "quote": "Score with interactions: 0.753",
+   "table": null,
+   "note": null,
+   "where": "p.231 In[30]"
+  },
+  {
+   "claim": "Random forest on the same Boston data is hurt slightly by polynomial features: 0.799 without, 0.763 with.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.763,
+   "unit": null,
+   "baseline_value": 0.799,
+   "n": null,
+   "setup": "Boston Housing, 379 train rows, 13 features MinMax-scaled to [0,1], degree-2 PolynomialFeatures -> 105 features; train_test_split random_state=0; test R^2; RandomForestRegressor(n_estimators=100), no random_state",
+   "quote": "Score with interactions: 0.763",
+   "table": null,
+   "note": null,
+   "where": "p.231 In[31]"
+  },
+  {
+   "claim": "Degree-2 expansion of 13 Boston features yields 105 features (incl. constant).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 105,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PolynomialFeatures(degree=2) default include_bias=True on 13 features",
+   "quote": "X_train_poly.shape: (379, 105)",
+   "table": null,
+   "note": null,
+   "where": "p.230 In[28]"
+  },
+  {
+   "claim": "Ridge on raw Poisson-count features: R^2 0.622.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.622,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Synthetic Poisson count data, 1000 samples x 3 features (RandomState(0), X=poisson(10*exp(normal))), target y=X_org.w; Ridge default, train_test_split random_state=0; test R^2",
+   "quote": "Test score: 0.622",
+   "table": null,
+   "note": null,
+   "where": "p.234 In[35]"
+  },
+  {
+   "claim": "Ridge after log(X+1) on the count features: R^2 0.875.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.875,
+   "unit": null,
+   "baseline_value": 0.622,
+   "n": null,
+   "setup": "Synthetic Poisson count data, 1000 samples x 3 features (RandomState(0), X=poisson(10*exp(normal))), target y=X_org.w; Ridge default, train_test_split random_state=0; test R^2",
+   "quote": "Test score: 0.875",
+   "table": null,
+   "note": null,
+   "where": "p.235 In[38]"
+  },
+  {
+   "claim": "Univariate selection (SelectPercentile 50%, f_classif) keeps 40 of 80 features; logistic regression 0.930 on all features to 0.940 on selected.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.94,
+   "unit": null,
+   "baseline_value": 0.93,
+   "n": null,
+   "setup": "Breast cancer + 50 N(0,1) noise features (rng 42) = 80 features, test_size=.5 (284 train), random_state=0; LogisticRegression default; test accuracy",
+   "quote": "Score with only selected features: 0.940",
+   "table": null,
+   "note": null,
+   "where": "p.238 In[41]"
+  },
+  {
+   "claim": "Model-based selection (RandomForest 100 trees, random_state=42, threshold median) gives 0.951.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.951,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Breast cancer + 50 N(0,1) noise features (rng 42) = 80 features, test_size=.5 (284 train), random_state=0; LogisticRegression default; test accuracy",
+   "quote": "Test score: 0.951",
+   "table": null,
+   "note": null,
+   "where": "p.240 In[45]"
+  },
+  {
+   "claim": "RFE with the same random forest down to 40 features also gives 0.951 (logistic regression on top, and the forest itself).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.951,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Breast cancer + 50 N(0,1) noise features (rng 42) = 80 features, test_size=.5 (284 train), random_state=0; LogisticRegression default; test accuracy; RFE(n_features_to_select=40), forest trained 40 times",
+   "quote": "Test score: 0.951",
+   "table": null,
+   "note": null,
+   "where": "p.241 In[47], In[48]"
+  },
+  {
+   "claim": "Random forest on raw POSIX time cannot extrapolate: test R^2 -0.04 (text says -0.03).",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": -0.04,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2; RandomForestRegressor(n_estimators=100, random_state=0); feature POSIX time",
+   "quote": "Test-set R^2: -0.04",
+   "table": null,
+   "note": "Output prints -0.04 but the text says 'The R2 is \u20130.03'.",
+   "where": "p.245 In[55]"
+  },
+  {
+   "claim": "Random forest with hour of day only: R^2 0.60.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.6,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2",
+   "quote": "Test-set R^2: 0.60",
+   "table": null,
+   "note": null,
+   "where": "p.246 In[56]"
+  },
+  {
+   "claim": "Random forest with day of week + hour: R^2 0.84.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.84,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2",
+   "quote": "Test-set R^2: 0.84",
+   "table": null,
+   "note": null,
+   "where": "p.246 In[57]"
+  },
+  {
+   "claim": "LinearRegression with integer day/hour: R^2 0.13.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.13,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2",
+   "quote": "Test-set R^2: 0.13",
+   "table": null,
+   "note": null,
+   "where": "p.247 In[58]"
+  },
+  {
+   "claim": "Ridge on one-hot day+hour: R^2 0.62.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.62,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2; OneHotEncoder then Ridge()",
+   "quote": "Test-set R^2: 0.62",
+   "table": null,
+   "note": null,
+   "where": "p.248 In[60]"
+  },
+  {
+   "claim": "Ridge on one-hot day x hour interactions (PolynomialFeatures degree 2, interaction_only): R^2 0.85, matching the forest and interpretable via coefficients.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R^2",
+   "value": 0.85,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Citi Bike one station, Aug 2015, 3-hour bins (248 points); first 184 (23 days) train, last 64 (8 days) test, chronological; test R^2",
+   "quote": "Test-set R^2: 0.85",
+   "table": null,
+   "note": null,
+   "where": "p.248 In[61]"
+  }
+ ],
+ "limits": [
+  "Code is scikit-learn pre-0.20 API: pandas .ix, OneHotEncoder(sparse=False) integer-only, get_feature_names, load_boston (removed from sklearn 1.2); all dated.",
+  "Single splits, single seeds, no variance; small differences (0.930 vs 0.940) rest on 285 test rows.",
+  "Authors concede feature selection rarely gives large gains on real data and the cancer-noise example is synthetic.",
+  "Does not cover target/frequency encoding, high-cardinality categories, ColumnTransformer/Pipeline or leakage in CV (selection fitted on train only is stated).",
+  "Text/code slips: Fig 4-8 code applies log twice; text says value 2 has 62 appearances but bincount shows 68; get_dummies sample says 46 columns vs X.shape 44 features."
+ ],
+ "practices": [
+  "Check string categorical columns with value_counts for spelling/case variants before encoding (p.214-215).",
+  "One-hot encode nominal categoricals; do not treat integer-coded categories (e.g. workclass codes) as continuous (p.213, 218).",
+  "Call get_dummies on train and test together, or align columns, so dummy columns mean the same thing (p.217).",
+  "Separate the target (both income dummy columns) from features before training (p.216).",
+  "Bin continuous features to give linear models nonlinear power; binning is pointless for trees (p.224).",
+  "Add bin x feature interactions to give each bin its own slope (p.225-226).",
+  "Add polynomial/interaction features for linear and naive Bayes models; trees find interactions themselves (p.231-236).",
+  "Apply log(X+1) to skewed count features (and possibly log(y+1) target) for linear models/NNs; irrelevant for trees (p.234-235).",
+  "Fit feature selection on the training split only (p.236).",
+  "Use expert knowledge features (holidays, hour, weekday); for time series split chronologically (p.242-244).",
+  "Trees cannot extrapolate beyond the training feature range; do not feed raw timestamps (p.245)."
+ ],
+ "terms": [
+  {
+   "term": "one-hot encoding",
+   "definition": "replace a categorical variable with one new 0/1 feature per category; exactly one is 1 (also one-out-of-N, dummy variables)",
+   "where": "p.213"
+  },
+  {
+   "term": "dummy encoding (statistics)",
+   "definition": "k categories encoded into k-1 features to avoid a rank-deficient data matrix",
+   "where": "p.214"
+  },
+  {
+   "term": "binning (discretization)",
+   "definition": "split a continuous feature into a fixed number of intervals and represent a point by its bin",
+   "where": "p.220"
+  },
+  {
+   "term": "feature engineering",
+   "definition": "the question of how to represent your data best for a particular application",
+   "where": "p.211"
+  },
+  {
+   "term": "univariate statistics (feature selection)",
+   "definition": "test each feature individually for a significant relationship with the target and keep the most significant",
+   "where": "p.236"
+  },
+  {
+   "term": "model-based feature selection",
+   "definition": "use a supervised model's feature importances to keep the most important features, considering all at once",
+   "where": "p.238"
+  },
+  {
+   "term": "recursive feature elimination (RFE)",
+   "definition": "start with all features, build a model, discard the least important, repeat until a prespecified number remain",
+   "where": "p.240"
+  },
+  {
+   "term": "POSIX time",
+   "definition": "number of seconds since January 1970 00:00:00",
+   "where": "p.244"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adult income dataset (1994 census)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "UCI adult.data",
+   "quote": null
+  },
+  {
+   "work": "Citi Bike public trip data (Aug 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "mglearn load_citibike",
+   "quote": null
+  },
+  {
+   "work": "Boston Housing, breast cancer, wave datasets",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "scikit-learn and mglearn",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OneHotEncoder, PolynomialFeatures, SelectPercentile, SelectFromModel, RFE",
+   "quote": null
+  },
+  {
+   "work": "Chapters 2 and 3 of the same book",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "scaling, linear models, polynomial features",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4-1/4-2",
+   "caption": "Linear regression and decision tree on wave data, raw vs binned",
+   "page": 221,
+   "why": "shows binning makes linear model flexible and tree rigid, identical predictions"
+  },
+  {
+   "figure": "Fig 4-4",
+   "caption": "Linear regression with a separate slope per bin",
+   "page": 226,
+   "why": "interaction of bin indicator with feature"
+  },
+  {
+   "figure": "Fig 4-5/4-6",
+   "caption": "10th degree polynomial regression; SVR gamma 1 vs 10",
+   "page": 228,
+   "why": "polynomial vs kernel; boundary blowup"
+  },
+  {
+   "figure": "Fig 4-7/4-8",
+   "caption": "Histogram of count feature before and after log",
+   "page": 233,
+   "why": "skew removal by log"
+  },
+  {
+   "figure": "Fig 4-9 to 4-11",
+   "caption": "Feature masks from SelectPercentile, SelectFromModel, RFE",
+   "page": 238,
+   "why": "compares three selection strategies against 30 true + 50 noise features"
+  },
+  {
+   "figure": "Fig 4-13 to 4-19",
+   "caption": "Citi Bike predictions as features change; final coefficients",
+   "page": 245,
+   "why": "stepwise gain from POSIX time (-0.04) to day x hour interactions (0.85) and trees failing to extrapolate"
+  },
+  {
+   "figure": "Table 4-2",
+   "caption": "Encoding the workclass feature using one-hot encoding",
+   "page": 213,
+   "why": "clear one-hot picture"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.215 In[4]",
+   "snippet": "data_dummies = pd.get_dummies(data)",
+   "verbatim": true
+  },
+  {
+   "where": "p.222 In[12-14]",
+   "snippet": "bins = np.linspace(-3, 3, 11)\nwhich_bin = np.digitize(X, bins=bins)\nencoder = OneHotEncoder(sparse=False)\nencoder.fit(which_bin)\nX_binned = encoder.transform(which_bin)",
+   "verbatim": true
+  },
+  {
+   "where": "p.225 In[19]",
+   "snippet": "X_product = np.hstack([X_binned, X * X_binned])",
+   "verbatim": true
+  },
+  {
+   "where": "p.230 In[28]",
+   "snippet": "poly = PolynomialFeatures(degree=2).fit(X_train_scaled)",
+   "verbatim": true
+  },
+  {
+   "where": "p.234 In[36]",
+   "snippet": "X_train_log = np.log(X_train + 1)\nX_test_log = np.log(X_test + 1)",
+   "verbatim": true
+  },
+  {
+   "where": "p.237 In[39]",
+   "snippet": "select = SelectPercentile(percentile=50)\nselect.fit(X_train, y_train)",
+   "verbatim": true
+  },
+  {
+   "where": "p.239 In[42]",
+   "snippet": "select = SelectFromModel(\n    RandomForestClassifier(n_estimators=100, random_state=42),\n    threshold=\"median\")",
+   "verbatim": true
+  },
+  {
+   "where": "p.240 In[46]",
+   "snippet": "select = RFE(RandomForestClassifier(n_estimators=100, random_state=42),\n             n_features_to_select=40)",
+   "verbatim": true
+  },
+  {
+   "where": "p.248 In[61]",
+   "snippet": "poly_transformer = PolynomialFeatures(degree=2, interaction_only=True,\n                                      include_bias=False)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction has table cells one per line; no instructions embedded.",
+  "Quotes for the binning claim truncated at a hyphen break."
+ ]
+}

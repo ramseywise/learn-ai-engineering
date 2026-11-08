@@ -1,0 +1,305 @@
+{
+ "schema": 1,
+ "key": "sha1:a60746447718",
+ "pdf": "data-science/sources/fundamentals-of-deep-learning/ch07-models-sequence-analysis.pdf",
+ "bib": {
+  "title": "Models for Sequence Analysis (Chapter 7, Fundamentals of Deep Learning)",
+  "authors": ["Mostafa Samir", "Surya Bhupatiraju"],
+  "first_author": "Samir",
+  "year": null,
+  "venue": "book chapter (Fundamentals of Deep Learning, ch. 7, pp. 153-217); year not printed in the text, latest cited work is 2016",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 121699,
+  "chars_total": 121699,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can neural networks process variable-length sequences, from feed-forward n-gram hacks through RNN/LSTM seq2seq with attention?",
+ "hypothesis": null,
+ "contributions": [
+  "Neural n-gram POS tagger with a fixed context window",
+  "Arc-standard dependency parsing (SyntaxNet), beam search and global normalization",
+  "Vanishing-gradient analysis of vanilla RNNs and the LSTM fix",
+  "LSTM sentiment classifier on IMDB",
+  "Encoder-decoder seq2seq, skip-thought vectors, attention",
+  "Walkthrough of the TensorFlow English-to-French translation tutorial code (bucketing, reversed inputs, GO/EOS/PAD, sampled softmax)"
+ ],
+ "method": {
+  "summary": "Tutorial chapter with three small worked implementations: a feed-forward 3-gram POS tagger on CoNLL-2000 with Google News word2vec, an LSTM sentiment classifier on IMDB, and a dissection of the TensorFlow WMT'15 en-fr attention seq2seq translator.",
+  "task": "POS tagging; sentiment classification; en-fr machine translation",
+  "trains": true,
+  "datasets": [
+   {"name": "CoNLL-2000 chunking (POS columns)", "role": "both", "size": null, "split": "train.txt and test.txt as distributed", "source": "http://www.cnts.ua.ac.be/conll2000/chunking/", "preprocessing": "Match gensim schema: digits to '#', dashes to '_', merge adjacent same-tag words into entities (e.g. New_York) if in the model; words not in word2vec get a cached random uniform(-0.25,0.25) 300-d vector"},
+   {"name": "Google News word2vec", "role": "pretrain", "size": "3 million words and phrases, trained on roughly 100 billion words", "split": null, "source": "Google News vectors, loaded with gensim and cached to LevelDB", "preprocessing": null},
+   {"name": "Large Movie Review Dataset (IMDB)", "role": "both", "size": "50,000 reviews", "split": "valid_portion=0.1 passed to tflearn imdb.load_data; the 'val' set is built from testX", "source": "IMDB via tflearn", "preprocessing": "vocabulary pruned to 30,000 most common words; sequences padded to 500 (pad value 0)"},
+   {"name": "WMT'15 English-to-French", "role": "train", "size": null, "split": "en_train/fr_train and en_dev/fr_dev from prepare_wmt_data", "source": "WMT'15 repository", "preprocessing": "word-level tokenization; EOS appended to targets; GO prepended to decoder inputs; PAD; source sequences reversed; bucketing"}
+  ],
+  "models": [
+   {"name": "Feed-forward neural n-gram POS tagger", "role": "proposed", "params": null, "architecture": "3-gram window of frozen 300-d word2vec vectors (900 input), hidden 512 then 256, softmax over 44 tags", "init_from": "Google News word2vec", "tokenizer": null, "vocab": null, "layers": "2 hidden", "hidden": "512, 256", "heads": null, "context": "3 words (current word and 2 before)", "other": {"output_classes": "44 POS tags"}},
+   {"name": "LSTM sentiment model", "role": "proposed", "params": null, "architecture": "embedding [30000,512] learned jointly, single BasicLSTMCell with 512 units, dropout keep 0.5 on input and output, last output into batch-normalized 512->2 layer", "init_from": null, "tokenizer": null, "vocab": "30000", "layers": "1 LSTM (stacked MultiRNNCell version is commented out in the listing)", "hidden": "512", "heads": null, "context": "500 tokens (padded)", "other": {}},
+   {"name": "TensorFlow attention seq2seq translator", "role": "proposed", "params": null, "architecture": "embedding_attention_seq2seq; GRUCell by default, BasicLSTMCell if use_lstm; multi-layer if num_layers>1; sampled softmax with output projection (num_samples default 512); additive attention in the code", "init_from": null, "tokenizer": "word-level", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "buckets example [(5, 10), (10, 15), (20, 25), (30, 40)]", "other": {"embedding_size": "= size (cell size)", "vocab_sizes": "FLAGS.en_vocab_size / fr_vocab_size, values not given", "use_fp16": "optional flag"}}
+  ],
+  "training": {
+   "objective": "POS and sentiment: cross-entropy over softmax (inferred: cross-entropy; the POS section says 'as usual'). Translation: weighted cross-entropy over target tokens (PAD weight 0), sampled softmax; reports perplexity = exp(loss).",
+   "optimizer": "POS: Adam with default hyperparameters. Sentiment: not stated. Translation: vanilla SGD (GradientDescentOptimizer) with global-norm gradient clipping",
+   "lr": null,
+   "lr_schedule": "Translation: learning rate multiplied by learning_rate_decay_factor when loss exceeds the max of the previous 3 checkpoint losses; Fig 7-32 shows it declining almost smoothly to 0",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "Translation: Fig 7-31 caption refers to 50k 'epochs' (the code defines an epoch as one batch)",
+   "epochs": "POS: 1,000 epochs",
+   "tokens": null,
+   "seq_len": "Sentiment 500; translation per bucket",
+   "precision": "Translation: float32, optional float16 via use_fp16; sampled softmax computed in float32",
+   "weight_decay": null,
+   "dropout": "Sentiment: keep_prob 0.5 on LSTM input and output",
+   "regularisation": "POS: batch normalization. Sentiment: dropout plus batch-normalized hidden layer. Translation: gradient clipping (max_gradient_norm value not given)",
+   "hardware": "Translation: eight NVIDIA Telsa M40 GPUs",
+   "compute": null,
+   "wall_clock": "Translation: four days",
+   "seeds": null,
+   "other": {"max_gradient_norm": null, "translation_layers_and_size": null}
+  },
+  "inference": {
+   "decoding": "Translation: greedy argmax over output logits, truncated at first EOS, batch size 1, input truncated if longer than the last bucket. SyntaxNet section describes beam search (beam size b, expansion then pruning) conceptually; the example uses beam size 2.",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "set by the largest bucket",
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "POS tagging accuracy", "definition": "per-word tag accuracy on validation; the code prints 'Validation Error'", "unit": "%", "higher_is_better": true},
+    {"name": "Sentiment test accuracy", "definition": "binary pos/neg accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "Perplexity", "definition": "math.exp(loss) when loss < 300", "unit": "perplexity", "higher_is_better": false}
+   ],
+   "baselines": [],
+   "protocol": "Single run each; no seeds, no baselines, no significance tests. POS accuracy checked on a held-out sentence each epoch."
+  },
+  "availability": {
+   "code": "Book companion repository (feedforward_pos.py); TensorFlow r0.7 translate tutorial; SyntaxNet at github.com/tensorflow/models/tree/master/syntaxnet",
+   "weights": null,
+   "data": "CoNLL-2000, Google News word2vec, IMDB, WMT'15"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "this exact model was trained on eight NVIDIA Telsa M40 GPUs for", "where": "p. 214"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "The 3-gram feed-forward POS tagger exceeds 96% accuracy within 100 epochs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POS accuracy",
+   "value": "over 96",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CoNLL-2000, 3-gram of 300-d Google News vectors, 512-256 hidden, 44 tags, Adam, batch norm, single run. The listing reloads the processed train file as test_dataset, so the held-out status is unclear.",
+   "quote": "the algorithm achieves over 96% accuracy",
+   "table": null,
+   "note": "No test-set number is given; a first-epoch validation error of 0.336 is printed in the sample log.",
+   "where": "p. 162"
+  },
+  {
+   "claim": "The single-layer 512-unit LSTM sentiment model reaches about 86% test accuracy before overfitting.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "approximately 86",
+   "unit": "%",
+   "baseline_value": null,
+   "n": "50,000 reviews",
+   "setup": "IMDB, 30,000-word vocab, length 500, embedding 512 learned jointly, LSTM 512, dropout keep 0.5; training and validation cost diverge late (overfit).",
+   "quote": "generalizes to approximately 86% accuracy on the test",
+   "table": null,
+   "note": null,
+   "where": "p. 188"
+  },
+  {
+   "claim": "The attention seq2seq translator was trained on 8 M40 GPUs for four days.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training hardware",
+   "value": "eight GPUs",
+   "unit": "NVIDIA Telsa M40",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TensorFlow translate tutorial model, WMT'15 en-fr.",
+   "quote": "this exact model was trained on eight NVIDIA Telsa M40 GPUs for",
+   "table": null,
+   "note": "'four days' follows on the next line of the text.",
+   "where": "p. 214"
+  },
+  {
+   "claim": "Training perplexity of the translator falls from about 6 to 4 after 50k steps, called reasonable for NMT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training perplexity",
+   "value": "6 to 4",
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7-31, same translator, training data; the text calls the steps 'epochs'.",
+   "quote": "the perplexity decreases from about 6 to 4",
+   "table": null,
+   "note": "Training perplexity only; no BLEU or dev score reported.",
+   "where": "p. 215, Fig 7-31"
+  },
+  {
+   "claim": "Vanilla RNN gradient wrt an input k steps back is bounded by |w_rec|^k |w_in| and so vanishes when weights are small.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One input neuron, one recurrent neuron, f' at most 1 (tanh, logistic, ReLU), tied weights across time.",
+   "quote": "the gradient quickly diminishes when",
+   "table": null,
+   "note": "The bound only forces vanishing when |w_rec| < 1; the text ties this to small initial weights.",
+   "where": "p. 178"
+  },
+  {
+   "claim": "An exhaustive globally normalized parser over 10-word sentences with 15 actions has an intractable hypothesis space, so training uses a beam.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "hypothesis count",
+   "value": "1,000,000,000,000,000",
+   "unit": "hypotheses",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Average sentence length 10, 15 actions (1 shift, 7 labels for each of left and right arc).",
+   "quote": "1,000,000,000,000,000 possible hypotheses",
+   "table": null,
+   "note": "Arithmetic does not match: 15^10 is about 5.8e11. A parse of n words takes about 2n actions, which would give 15^20, so the printed 1e15 is neither.",
+   "where": "p. 171"
+  },
+  {
+   "claim": "Google News word2vec contains 3 million words and phrases, trained on roughly 100 billion words.",
+   "kind": "reported",
+   "source": "Google News word2vec (Mikolov et al., not cited by name here)",
+   "metric": "vector count",
+   "value": "3 million",
+   "unit": "words and phrases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Used as frozen input embeddings for the POS tagger.",
+   "quote": "It includes vectors for 3 million words and phrases and was trained on roughly 100 billion words.",
+   "table": null,
+   "note": null,
+   "where": "p. 157"
+  },
+  {
+   "claim": "Reversing source sequences improves NMT accuracy because the start of the sentence, which is harder to translate, gets the last say on the final encoder state.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated as a standard trick found by researchers, no citation or number.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p. 196"
+  },
+  {
+   "claim": "Bucketing gives a considerable speedup in training and test time by padding only to the bucket maximum.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example buckets [(5, 10), (10, 15), (20, 25), (30, 40)]; no timing given.",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "p. 196"
+  }
+ ],
+ "limits": [
+  "No baselines, seeds, test-set protocol or significance for any result; the translator reports only training perplexity and no BLEU.",
+  "Translator learning rate, batch size, layer count, cell size, vocab sizes, decay factor, clip norm are not stated; the sentiment learning rate and optimizer, batch size and epochs are also not stated.",
+  "Dated: TensorFlow 0.x APIs (tf.nn.rnn_cell, tf.nn.dynamic_rnn, seq2seq legacy module, tflearn, Python 2 print and xrange); gensim Word2Vec.load_word2vec_format and np.fromstring are deprecated.",
+  "Dated: Parsey McParseface called 'the most accurate publicly reported English language parser as of the publication of this text'; SyntaxNet and GRU (2014) framing predate transformers. The chapter ends at RNN attention and has no self-attention.",
+  "Text describes attention as a dot product of encoder outputs with the decoder state, but the listed code uses additive (Bahdanau) scoring, v^T tanh(W1 h + W2 query).",
+  "Code defect: the 'reload from DB' listing opens pos.train.processed.txt for test_dataset too, so the test set could be the train file.",
+  "Terminology: the text calls one batch step an 'epoch' in the translation loop.",
+  "Padding via 'PAD to 500' for the LSTM takes the last output, which is a padded position when pad is appended at the end, and the text does not address masking or sequence_length."
+ ],
+ "practices": [
+  "Use a fixed n-word context window with pretrained embeddings when the tag depends only on nearby words (p. 155).",
+  "Use beam search instead of greedy decoding when an early output changes later inputs (p. 169-170).",
+  "Use LSTM or GRU in place of vanilla RNNs to avoid vanishing gradients (p. 178-182).",
+  "Learn embeddings jointly with the task for sentiment classification instead of a separate Skip-Gram step (p. 186).",
+  "Bucket sequences by length, reverse the source, add GO and EOS, and zero the loss weight on PAD targets for seq2seq (p. 196-198).",
+  "Anneal the learning rate when the loss fails to improve over the last 3 checkpoints (p. 200).",
+  "Use sampled softmax with an output projection for large target vocabularies (p. 207).",
+  "Clip gradients by global norm when training the seq2seq model with SGD (p. 209)."
+ ],
+ "terms": [
+  {"term": "seq2seq", "definition": "a class of problems where the goal is to transform an input sequence into a corresponding output sequence", "where": "p. 155"},
+  {"term": "neural n-gram", "definition": "predict each tag from a fixed-length subsequence starting at the word of interest and extending n words into the past", "where": "p. 155"},
+  {"term": "arc-standard system", "definition": "dependency parsing as a sequence of SHIFT, LEFT ARC and RIGHT ARC actions over a stack and a buffer", "where": "p. 166"},
+  {"term": "beam search", "definition": "maintain the b most likely hypotheses for the first k actions, with an expansion step and a pruning step", "where": "p. 169"},
+  {"term": "global normalization", "definition": "sum scores over a hypothesis action sequence and normalize over sequences instead of a per-action softmax; made tractable by training with a beam", "where": "p. 171"},
+  {"term": "unrolling", "definition": "express an RNN instance over a fixed number of time steps as a feed-forward network", "where": "p. 175"},
+  {"term": "vanishing gradients", "definition": "gradient wrt inputs several steps in the past diminishes quickly in vanilla RNNs", "where": "p. 178"},
+  {"term": "LSTM memory cell with keep, write and output gates", "definition": "memory cell tensor modified by keep gate (sigmoid mask on old state), write gate (tanh candidate times sigmoid mask) and output gate", "where": "p. 179-181"},
+  {"term": "skip-thought vector", "definition": "sentence embedding from one encoder and two decoders reconstructing the preceding and following sentences", "where": "p. 190"},
+  {"term": "bucketing", "definition": "place encoder/decoder pairs into buckets of similar size and pad only to each bucket's maximum", "where": "p. 196"},
+  {"term": "autoregressive decoding", "definition": "decoding where the next output depends on all previous outputs", "where": "p. 209"}
+ ],
+ "lineage": [
+  {"work": "Nivre 2004, Incrementality in Deterministic Dependency Parsing", "year": 2004, "arxiv": null, "relation": "uses-method", "note": "arc-standard system", "quote": null},
+  {"work": "Chen and Manning 2014, A Fast and Accurate Dependency Parser Using Neural Networks", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "neural arc-standard parsing", "quote": null},
+  {"work": "Andor et al. 2016, Globally Normalized Transition-Based Neural Networks", "year": 2016, "arxiv": "1603.06042", "relation": "uses-method", "note": "global normalization with beam search; SyntaxNet", "quote": null},
+  {"work": "Kilian and Siegelmann 1996, The dynamic universality of sigmoidal neural networks", "year": 1996, "arxiv": null, "relation": "related", "note": "RNN universality", "quote": null},
+  {"work": "Hochreiter and Schmidhuber, LSTM", "year": null, "arxiv": null, "relation": "uses-method", "note": "year not printed in the text", "quote": null},
+  {"work": "Gated Recurrent Unit (Bengio group, 2014)", "year": 2014, "arxiv": null, "relation": "related", "note": "GRUCell is the default cell in the translator", "quote": null},
+  {"work": "Kiros et al. 2015, Skip-Thought Vectors", "year": 2015, "arxiv": null, "relation": "related", "note": "encoder with two decoders", "quote": null},
+  {"work": "Bahdanau, Cho, Bengio 2014/2015, Neural Machine Translation by Jointly Learning to Align and Translate", "year": 2014, "arxiv": "1409.0473", "relation": "uses-method", "note": "attention", "quote": null},
+  {"work": "TensorFlow translate tutorial (r0.7)", "year": null, "arxiv": null, "relation": "uses-method", "note": "simplified version dissected", "quote": null},
+  {"work": "CoNLL-2000 chunking", "year": 2000, "arxiv": null, "relation": "uses-data", "note": "POS data", "quote": null},
+  {"work": "Google News word2vec", "year": null, "arxiv": null, "relation": "uses-data", "note": "frozen embeddings", "quote": null},
+  {"work": "Large Movie Review Dataset (IMDB)", "year": null, "arxiv": null, "relation": "uses-data", "note": "sentiment", "quote": null},
+  {"work": "WMT'15 en-fr", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "translation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 7-8", "caption": "At any step, we have three options: to shift a word from the buffer to the stack, to draw an arc from the right element to the left element (left arc), or to draw an arc from the left element to the right element (right arc)", "page": 166, "why": "Shows the arc-standard stack and buffer"},
+  {"figure": "Fig 7-11", "caption": "An illustration of using beam search (with beam size 2) while deploying a trained SyntaxNet model", "page": 170, "why": "Beam search correcting a greedy mistake"},
+  {"figure": "Fig 7-15", "caption": "We can run an RNN through time to express it as a feedforward network that we can train using backpropagation", "page": 175, "why": "Unrolling"},
+  {"figure": "Fig 7-17", "caption": "The architecture of an LSTM unit", "page": 179, "why": "Gate wiring"},
+  {"figure": "Fig 7-24", "caption": "Illustration of how we use an encoder/decoder recurrent network schema to tackle seq2seq problems", "page": 189, "why": "Encoder-decoder flow with EOS"},
+  {"figure": "Fig 7-27", "caption": "A modification to our original proposal that enables a dynamic attentional mechanism based on the hidden state of the decoder network in the previous time step", "page": 193, "why": "Attention weighting"},
+  {"figure": "Fig 7-30", "caption": "Final padding scheme with buckets, reversing the inputs, and adding the GO token", "page": 197, "why": "Data layout for the translator"},
+  {"figure": "Fig 7-33", "caption": "We can explicitly visualize the weights of the convex sum when the decoder attends over hidden states in the encoder.", "page": 216, "why": "Attention map showing the reordering of 'the European Economic'"}
+ ],
+ "code": [
+  {"where": "p. 187", "snippet": "def inference(input, phase_train):\n    embedding = embedding_layer(input, [30000, 512])\n    lstm_output = lstm(embedding, 512, 0.5, phase_train)\n    output = layer(lstm_output, [512, 2], [2], phase_train)\n    return output", "verbatim": true},
+  {"where": "p. 197", "snippet": "encoder_inputs.append(list(reversed(encoder_input + encoder_pad)))\ndecoder_inputs.append([data_utils.GO_ID] + decoder_input + [data_utils.PAD_ID] * decoder_pad_size)", "verbatim": true},
+  {"where": "p. 200", "snippet": "if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):\n    sess.run(model.learning_rate_decay_op)", "verbatim": true},
+  {"where": "p. 213", "snippet": "s = math_ops.reduce_sum(v[0] * math_ops.tanh(hidden_features[0] + y), [2, 3])\na = nn_ops.softmax(s)\nd = math_ops.reduce_sum(array_ops.reshape(a, [-1, attn_length, 1, 1]) * hidden, [1, 2])", "verbatim": true}
+ ],
+ "problems": [
+  "No instructions embedded in the text. The PDF begins with a stray link to mostafa-samir.github.io (author homepage).",
+  "Equation text is garbled by extraction (subscripts and absolute values lost), reconstructed from context.",
+  "Publication year is not printed in the chapter text."
+ ]
+}

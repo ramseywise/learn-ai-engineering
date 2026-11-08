@@ -11,19 +11,14 @@ sources:
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Chip Huyen, AI Engineering (O'Reilly, 2025), ch. 6"
   - https://arxiv.org/abs/2506.02153
-  - https://arxiv.org/abs/2512.16301
   - https://pub.sakana.ai/ai-scientist-v2/paper/paper.pdf
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
-  - https://arxiv.org/abs/2203.07540
-  - https://arxiv.org/abs/2306.00323
-  - https://arxiv.org/abs/2309.02427
-  - https://arxiv.org/abs/2312.06585
-  - https://arxiv.org/abs/2406.04151
   - https://arxiv.org/abs/2207.05608 (Inner Monologue)
   - "Yang et al. 2023, Foundation Models for Decision Making — https://arxiv.org/abs/2303.04129"
   - "Chu et al. 2026, Agentic World Modeling — https://arxiv.org/abs/2604.22748"
   - "Kambhampati 2024, Can LLMs Reason and Plan? — https://arxiv.org/abs/2403.04121"
   - "Jin et al. 2024, From LLMs to LLM-based Agents for Software Engineering — https://arxiv.org/abs/2408.02479"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 2, 3, 4"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -152,6 +147,8 @@ Tools can be sorted by the direction of interaction:
 4. The model decides what to do next.
 
 The developer defines and runs tools. The model makes every decision about using them.
+
+A tool is stateless and does one atomic action. Arsanjani and Bustos draw the other end of the spectrum as an *AgentTool*: a whole fine-grained agent, with its own state, workflow and tools, packaged so that another agent calls it like a tool. Their example is a customer-onboarding orchestrator that calls a KYC agent, a credit-check agent and a plain `send_email` tool. Use a plain tool for atomic, deterministic steps and an AgentTool when the step needs its own loop (*Agentic Architectural Patterns*, ch. 3; a definition with an invented example, not a measurement).
 
 **General vs. specialized.** Start with the narrowest capability that works and widen it when the task demands. A sandboxed code interpreter composes better than a growing pile of single-purpose tools. Sandbox it with network off by default, a confined working directory, and CPU, memory, time and output limits. High-risk or tightly governed operations stay as **dedicated tools** with explicit parameters, narrow permissions and an audit trail: payments, deletes, outbound email, deploys. Rule of thumb: *general capabilities for composition and exploration; specialized tools to constrain risk and enforce business rules.* Depth: [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md).
 
@@ -315,44 +312,7 @@ Nearly every production system sits in the middle. Koenigstein calls this **orch
 
 ---
 
-## Model as agent
-
-Frontier models now internalize **the tool-calling decision policy** through RL: when to call, which tool, what arguments, whether to continue, how to chain hundreds of calls. Examples are Kimi K3, with stable 200–300-call chains, and GPT-5.6 with Responses-API built-in web search and code interpreter, plus an intent-clarification step before research begins. Two points are often confused:
-
-- **RL teaches the decision; it doesn't contain the tool.** `web_search` and the sandbox still run outside the weights, server-side as API built-ins. The orchestration loop has moved from client to server, and the decision has moved into the model.
-- **A stronger model makes the harness matter more, not less.** The more decisions the model owns, the more a wrong one costs, so constraint, verification and correction get finer-grained. See [harness 01](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md).
-
-Freeform tool calling (`type: "custom"`) lets the model send raw text, such as Python or SQL, rather than JSON-escaped arguments. It changes the API format, not the architecture. The loop is still: detect call → execute → return.
-
-Upstream labs: [1-2 web-search-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/web-search-agent) · [1-3 search-codegen](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/search-codegen) (both need API keys).
-
-### How agents learn
-
-![Three Levels of Agent Capability Updates](../sources/images/li-ai-agents-in-depth-fig1-2.svg)
-*Figure 1-2, Three Levels of Agent Capability Updates. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter1.md) (Apache-2.0).*
-
-Agents learn in three ways, which differ in where the update lives and how long it lasts:
-
-| Path | Where | Persists | Best for |
-|---|---|---|---|
-| Contextual adaptation | Current context (examples, state, retrieval) | This task only | Fast, cheap adjustment |
-| External artifacts | Knowledge docs, prompts/Skills, code and harness | Across tasks; auditable | Facts, language-expressible strategy, deterministic rules |
-| Parameters | Weights, via post-training | Permanently | High-dimensional skills rules can't express |
-
-They work together at different timescales. Depth: [loop 08 — self-improving loops](../../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md).
-
-CoALA gives the three paths a memory vocabulary, borrowed from Soar-era cognitive architectures ([arXiv:2309.02427](https://arxiv.org/abs/2309.02427) (Sumers et al., TMLR 2024)). The context is *working memory*. Long-term memory is *episodic* (past trajectories), *semantic* (facts and lessons, as when Reflexion stores "there is no dishwasher in kitchen" after a failed episode), and *procedural*. Procedural memory covers both the weights and the agent's own code: prompt templates, skills, retrieval and decision logic. Learning becomes one more *internal* action, alongside reasoning and retrieval, while *external* actions touch the world. The framing ranks the risk: **writing procedural memory is far riskier than writing episodic or semantic memory**, because a bad prompt or skill update can break the agent or let it subvert its designers' intent. CoALA's advice on the action space matches the formula above: take the smallest action space the task needs, since every added action makes the decision problem harder.
-
-The parameters row splits by *what* gets trained. Jiang et al. sort weight updates into four kinds. You can train the agent on tool-execution signals (A1, such as passing tests) or on judgments of its final output (A2). Or you can freeze the agent and train its tools instead, either independently of any agent (T1, such as a pretrained retriever) or against the frozen agent's own feedback (T2) ([arXiv:2512.16301](https://arxiv.org/abs/2512.16301) (Jiang et al., 2025-12)). T2 can be far cheaper. The s3 searcher, rewarded by how much its retrieved documents lift a frozen generator above naive top-k retrieval, reached 58.9% average QA accuracy from 2.4k training examples. Search-R1, which trains the whole agent (A2), needed about 170k examples for comparable accuracy, so s3 used about 70× less data and trained about 33× faster. A trained specialist can also *graduate* into a tool. SWE-Grep is an RL-trained code-search subagent that coding agents call, so the main agent's weights never change. The survey's open-problems section lists what goes wrong when the agent learns:
-
-- RL for reasoning can erode the safety guardrails set during SFT (their DeepSeek-R1 case study).
-- Trial and error with real tools can take actions that resetting the episode cannot undo.
-- A compromised tool can return injected data that turns the calling agent into a confused deputy.
-
-**Imitate first, then explore.** The usual recipe for the parameters row is behavioral cloning on expert trajectories, then training on the agent's own rollouts. AgentGym tests it across 11 environments with Llama-2-Chat-7B ([arXiv:2406.04151](https://arxiv.org/abs/2406.04151) (Xi et al., 2024-06, preprint)). Cloning 6,130 ReAct-format trajectories gives the base agent. AgentEvol then runs four rounds: sample once per instruction from a wider instruction set, keep only the successful trajectories, fine-tune on them plus the original set. That is the reward-filtered self-training of ReST-EM ([arXiv:2312.06585](https://arxiv.org/abs/2312.06585) (Singh et al., TMLR 2024)) applied to agents. It lifted WebShop from 66.5 to 76.5, ALFWorld from 77.5 to 88.0 and BabyAI from 69.3 to 82.7, **beating cloning on 2.4× as many expert trajectories** on all three. The same tables bound the claim. On SciWorld the extra expert data won by far (74.5 against 38.0). Exploring only the instructions already seen in cloning added little (ALFWorld 80.5), so the gain comes from task breadth, not just more rollouts. Adding failed trajectories through DPO on success/failure pairs did worse than training on successes alone on all four tasks tested. The argument for interaction is older. On ScienceWorld's 30 elementary-science tasks, a 1.5M-parameter DRRN trained online for 100k steps averaged 0.17, against 0.08 for an 11B T5 cloned from about 211k expert steps ([arXiv:2203.07540](https://arxiv.org/abs/2203.07540) (Wang et al., EMNLP 2022)). That comparison is not clean: the RL agent picks from the simulator's list of valid actions, while the T5 generates candidates that are mostly invalid and must be filtered against the same list.
-
-**Clone the reasoning, not just the actions.** Thought Cloning trains a BabyAI agent from scratch on 1M synthetic trajectories whose thoughts are the oracle solver's plan rendered as text, with a loss on both thought and action ([arXiv:2306.00323](https://arxiv.org/abs/2306.00323) (Hu and Clune, NeurIPS 2023)). It learns faster than plain behavioral cloning, and the gap widens the further test mazes are out of distribution, zero-shot and after fine-tuning. A same-size variant without the thought loss does not close the gap, so it is not just extra parameters. Because the plan is visible, a monitor that halts the agent when a thought declares a forbidden action **cut unsafe episodes from 37–57% to under 0.6%** across three test behaviors. This is the trained counterpart of the ablation above, where removing reasoning made consecutive decisions contradict each other. The setting is narrow: rule-generated thoughts in a grid world, a small model trained from scratch, no LLM.
-
+**Moved.** The tool-calling decision that RL put into the model, and the three ways an agent learns (context, artifacts, parameters, with CoALA's memory vocabulary, AgentGym and Thought Cloning), are in [1c — model as agent and how agents learn](01c-model-as-agent-and-how-agents-learn.md).
 ---
 
 ## Choosing a model
@@ -367,6 +327,7 @@ Release cycles move too fast for version picks, so here are the directions:
 - **Price doesn't track quality.** In Albada's mid-2025 snapshot, DeepSeek-v3 scored 87.2 on MMLU at 2.75× / 3.65× the cheapest model's input/output price. Claude 4 Opus with extended thinking scored 86.5 at 75× / 125× (*Building Applications with AI Agents*, ch. 2). Koenigstein quotes closed models at up to $150 / $600 per M input/output tokens (o1-pro), against about $0.3 / $3 for open models over 200B parameters on low-cost hosts (*AI Agents: The Definitive Guide*, ch. 4). Both snapshots are dated, but the point holds: benchmark the cheaper model before assuming you need the flagship.
 - **Staff by role, not one model for everything.** Koenigstein's research team uses Qwen3-32B with thinking off for the researchers, note taker and writer. The analyst gets Qwen3-235B-A22B with a 1,536-token thinking budget plus a ModernBERT encoder that scores documents. GPT-4.1 is the supervisor that routes and decides when to finish. Turn thinking on for planning, decomposition, tool selection and verification. Turn it off for short, low-risk turns. Budgets of about 1,000+ thinking tokens work for non-trivial reasoning; raise them for math, code and multi-tool plans. Too small a budget truncates the reasoning (*AI Agents: The Definitive Guide*, ch. 4). Albada makes the same point from the other side: route simple queries to small models and design for a *multimodel* system from the start (*Building Applications with AI Agents*, ch. 1). NVIDIA's position paper pushes the default further: most agent calls are narrow, repetitive, format-bound subtasks, so a model under 10B should be the default and the LLM the exception. They cite serving a 7B model at 10–30× lower latency, energy and FLOPs than a 70–175B one. Their migration path is to log every non-chat agent call, collect 10k–100k examples, cluster them into tasks and fine-tune a specialist per cluster ([arXiv:2506.02153](https://arxiv.org/abs/2506.02153) (Belcak et al., 2025-06)). The paper runs no experiments. Its estimates that 40–70% of LLM calls in MetaGPT, Open Operator and Cradle could move to small models come from reading the code, not from measurement, and the authors' employer sells the inference stack they recommend.
 - **Know the four tiers.** Lakshmanan and Hapke sort models into frontier, distilled, open-weight and locally hostable. On the LMArena leaderboard of April 6, 2025, they read Gemini Flash as about 20 times cheaper than Gemini Pro for a modest drop in rating, and they note that a 400-point Elo gap means roughly 10:1 odds of being preferred (*Generative AI Design Patterns*, ch. 1). The prices have moved since, but the method lasts: plot rating against price and start at the knee of the curve.
+- **Test effective context, not advertised context.** Arsanjani and Bustos list context window next to model size, tool use, robustness, adaptability and cost among their eleven selection dimensions. They tell you to run a needle-in-a-haystack test on your own task, varying the needle's position and the haystack's length, because a vendor's stated window (they cite one million tokens for some Gemini models, up to an experimental two million) is not the length the model uses well. The chapter measures nothing itself, so it is a checklist and not evidence. Their staffing advice matches the bullet above: a large model orchestrates and delegates sub-tasks to smaller specialists (*Agentic Architectural Patterns*, ch. 2).
 - **Keep the prefix byte-stable.** Reordering messages, trimming old turns or injecting documents into the middle of the context invalidates the cached KV entries after the change. Put the static system prompt first and append new material at the end (*AI Agents: The Definitive Guide*, ch. 4).
 
 ---
@@ -390,6 +351,8 @@ Albada adds a rung below the LLM, plain code, and rates every rung on four facto
 | Strengths | Steps can't be skipped or reordered ("no booking before payment"); injection is confined to a single node | Handles the unforeseen: layovers, cancellations, mid-flow changes |
 | Weakness | Can only follow preset exception branches or hand off | Costlier; errors compound; needs explicit stop conditions |
 | Fits | Compliance-critical, decomposable processes | Open-ended tasks with unpredictable step counts (SWE-bench, computer use, research) |
+
+Arsanjani and Bustos draw the same three lines in a comparison table. A bare LLM is stateless and passive: it answers when prompted and pursues no goal. A workflow is deterministic and rigid, following a fixed path, and cannot plan dynamically or adapt to what it did not foresee. An agent is the structure around the model that supplies goals, memory and tools. Their table is a definitional contrast, backed by travel-planning and loan-processing illustrations and no measurement (*Agentic Architectural Patterns*, ch. 4).
 
 Real systems **mix them**: compliance-critical spine as workflow, flexible parts as agent nodes (n8n canvases do this visually). Anthropic's three principles for either: **keep it simple** (direct API calls over frameworks), **keep it transparent** (show plans, logs, trajectories), and **design the ACI** (agent–computer interface) so misuse is impossible. That is *poka-yoke*: like the SIM card's notched corner, the tool should only fit one way. Depth: [harness 07 — orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md).
 
@@ -463,4 +426,4 @@ The loop above has no opinion about what a tool is allowed to do, so that has to
 
 ## Next
 
-→ [01b — what an agent costs](01b-what-an-agent-costs.md): where the tokens go in a loop, cost per solved task, and which components are worth it. Then [02 — tool use and the ReAct loop](02-tool-use-and-react.md). Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).
+→ [01b — what an agent costs](01b-what-an-agent-costs.md): where the tokens go in a loop, cost per solved task, and which components are worth it; and [01c — model as agent and how agents learn](01c-model-as-agent-and-how-agents-learn.md). Then [02 — tool use and the ReAct loop](02-tool-use-and-react.md). Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).

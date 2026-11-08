@@ -1,0 +1,216 @@
+{
+ "schema": 1,
+ "key": "sha1:e20818195dc3",
+ "pdf": "data-science/sources/fundamentals-of-deep-learning/ch03-implementing-neural-networks-tensorflow.pdf",
+ "bib": {
+  "title": "Implementing Neural Networks in TensorFlow (Chapter 3)",
+  "authors": [
+   "not printed in the chapter text"
+  ],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (Fundamentals of Deep Learning, folder name; not printed in the chapter text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42116,
+  "chars_total": 42116,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you express, train and monitor logistic regression and a feed-forward network on MNIST with TensorFlow's graph, variable, session and device primitives?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduces TensorFlow variables, operations, placeholders, sessions, variable scopes and device placement",
+  "Builds and trains a logistic regression MNIST model and a two-hidden-layer ReLU network, with TensorBoard logging"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Logistic regression on MNIST reaches 91.9% test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "91.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST 28x28, 784-10 softmax, plain SGD lr 0.01, batch 100, script sets training_epochs=1000 but text says 100 epochs",
+   "quote": "Running the script gives us a final accuracy of 91.9% on the test set within 100 epochs",
+   "table": null,
+   "note": "Script sets training_epochs = 1000; prose says 100 epochs. Elsewhere the same model is called an 8.1% error rate.",
+   "where": "p.57"
+  },
+  {
+   "claim": "Feed-forward net with two 256-unit ReLU hidden layers reaches 98.2% accuracy on MNIST.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "98.2",
+   "unit": "%",
+   "baseline_value": "91.9",
+   "n": null,
+   "setup": "MNIST, 784-256-256-10, He-style normal init stddev sqrt(2/n_in), softmax folded into loss, 300 epochs; split (test vs validation) and lr/batch not restated for this run",
+   "quote": "The model operates with an accuracy of 98.2%, which is nearly a 78% reduction in the per-digit error rate compared to our first attempt.",
+   "table": null,
+   "note": "Summary says 1.8 errors per 100 digits. (8.1-1.8)/8.1 = 77.8%, consistent with the 78% claim.",
+   "where": "p.61"
+  },
+  {
+   "claim": "Logistic regression error rate on MNIST is 8.1%, which the authors say would mean errors on nearly 30% of 4-digit check amounts.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "error rate",
+   "value": "8.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Logistic regression MNIST model; 4-digit amounts treated as 4 independent digit reads",
+   "quote": "Using  a logistic regression model, we were able to achieve an 8.1% error rate on the MNIST dataset.",
+   "table": null,
+   "note": "1-0.919^4 = 28.6%, consistent with 'nearly 30%'.",
+   "where": "p.59"
+  },
+  {
+   "claim": "He et al. (2015) show weight variance for ReLU units should be 2/n_in; the chapter says switching back to uniform(-1,1) init significantly hurts the ReLU net, with no number given.",
+   "kind": "claim",
+   "source": "He et al. 2015, Delving Deep into Rectifiers",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ReLU feed-forward MNIST net",
+   "quote": "changing tf.random_nor",
+   "table": null,
+   "note": "No measured effect size is reported.",
+   "where": "p.61"
+  }
+ ],
+ "limits": [
+  "Teaches TensorFlow 1.x graph/session API (tf.Session, placeholder, feed_dict, tf.initialize_all_variables, tf.mul, tf.scalar_summary, tf.merge_all_summaries, tf.train.SummaryWriter(graph_def=), softmax_cross_entropy_with_logits(output,y) positional logits-first, Python 2 print statements, pip tensorflow 'for Python 2.7', CUDA 8.0 / cuDNN manual install); all removed or renamed in TF 2.x, so code does not run as printed.",
+  "Code has errors: inference() in logistic example creates constant_initializer but never assigns it to init; install test uses tf.mul and defines a twice with b missing (prints 6); CUDA Toolkit 8.0 then 7.0 inconsistently; 'from read_data import get_minibatch()' is invalid syntax; mnist object never loaded in the script.",
+  "Reports single runs, no seeds, no variance; lr 0.01 and batch 100 given only for logistic regression; the multilayer run's lr/batch are not stated.",
+  "Chapter does not print authors or year in this extract; Theano vs Torch vs TensorFlow comparison reflects 2015-2017 state."
+ ],
+ "practices": [
+  "Use tf.get_variable inside tf.variable_scope instead of tf.Variable when a sub-network is reused, so weights are shared rather than duplicated (p.49-50).",
+  "Call scope.reuse_variables() explicitly to enable sharing; default is to raise an over-sharing ValueError (p.50).",
+  "Split a model into inference, loss, training and evaluate functions (p.53-55).",
+  "Fold softmax into the loss (softmax_cross_entropy_with_logits) rather than the inference phase for better performance (p.61).",
+  "For ReLU layers initialise weights with normal stddev sqrt(2/fan_in) (p.60-61).",
+  "Pass an absolute path to tensorboard --logdir (p.58).",
+  "Use allow_soft_placement with tf.device so ops fall back when the chosen device is missing (p.51).",
+  "Log scalar cost per minibatch and validation error per epoch, and checkpoint with tf.train.Saver (default keeps latest five) (p.55-57)."
+ ],
+ "terms": [
+  {
+   "term": "TensorFlow variable",
+   "definition": "in-memory buffers that contain tensors; unlike normal tensors they survive across multiple executions of a graph",
+   "where": "p.43"
+  },
+  {
+   "term": "placeholder",
+   "definition": "a component populated every single time the computation graph is run, used to pass input data",
+   "where": "p.45-46"
+  },
+  {
+   "term": "session",
+   "definition": "how a TensorFlow program interacts with a computation graph; builds the graph, initializes variables, runs it",
+   "where": "p.46"
+  },
+  {
+   "term": "kernel",
+   "definition": "device-specific implementation of an operation (e.g. CPU vs GPU)",
+   "where": "p.45"
+  },
+  {
+   "term": "tf.get_variable",
+   "definition": "checks if a variable with this name exists, retrieves it if so, or creates it using the shape and initializer",
+   "where": "p.49"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TensorFlow: Large-Scale Machine Learning on Heterogeneous Distributed Systems (Abadi et al.)",
+   "year": 2016,
+   "arxiv": "1603.04467",
+   "relation": "uses-data",
+   "note": "Table 3-1 operation categories taken from the white paper",
+   "quote": null
+  },
+  {
+   "work": "Delving Deep into Rectifiers (He et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "variance 2/n_in initialisation for ReLU",
+   "quote": null
+  },
+  {
+   "work": "Cox, The Regression Analysis of Binary Sequences",
+   "year": 1958,
+   "arxiv": null,
+   "relation": "related",
+   "note": "logistic regression",
+   "quote": null
+  },
+  {
+   "work": "MNIST",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "28x28 handwritten digits; train/validation/test via mnist object",
+   "quote": null
+  },
+  {
+   "work": "Theano, Torch, Caffe, Neon, Keras",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternatives compared qualitatively",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3-1",
+   "caption": "Three operations are added to the graph when instantiating a TensorFlow variable.",
+   "page": 44,
+   "why": "shows init tensor, assign and variable op"
+  },
+  {
+   "figure": "Table 3-1",
+   "caption": "A summary table of TensorFlow operations",
+   "page": 45,
+   "why": "op categories"
+  },
+  {
+   "figure": "Figure 3-3",
+   "caption": "Building multi-GPU models in a tower-like fashion",
+   "page": 52,
+   "why": "tower pattern"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.50 variable scope layer",
+   "snippet": "def layer(input, weight_shape, bias_shape):\n weight_init = tf.random_uniform_initializer(minval=-1, maxval=1)\n bias_init = tf.constant_initializer(value=0)\n W = tf.get_variable(\"W\", weight_shape, initializer=weight_init)\n b = tf.get_variable(\"b\", bias_shape, initializer=bias_init)\n return tf.matmul(input, W) + b",
+   "verbatim": false
+  },
+  {
+   "where": "p.60-61 ReLU layer and loss",
+   "snippet": "weight_stddev = (2.0/weight_shape[0])**0.5\nw_init = tf.random_normal_initializer(stddev=weight_stddev)\nreturn tf.nn.relu(tf.matmul(input, W) + b)\nxentropy = tf.nn.softmax_cross_entropy_with_logits(output, y)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Chapter text does not print authors, year or publisher; bib fields left unknown.",
+  "Source code listings contain errors (see limits); not instructions.",
+  "Text 'changing tf.random_nor mal_initializer' is hyphenation-broken; one result quote is a fragment for that reason."
+ ]
+}

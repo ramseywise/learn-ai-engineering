@@ -156,7 +156,7 @@ error ≈ sqrt(Var(Z)) / sqrt(N)
 | 10,000 | 0.01 |
 | 1,000,000 | 0.001 |
 
-The error column above tracks that rule, though a single run can land on either side of it. Halving the error costs four times the data. [Experimentation at scale](../../03-experimentation-and-causality/notes/03-experimentation-at-scale.md) turns the same arithmetic into a sample-size formula.
+The error column above tracks that rule, though a single run can land on either side of it. Halving the error costs four times the data. (*Practical Statistics*, ch. 2 states the same square-root rule for the standard error.) [Experimentation at scale](../../03-experimentation-and-causality/notes/03-experimentation-at-scale.md) turns the same arithmetic into a sample-size formula.
 
 ## Central Limit Theorem
 
@@ -221,7 +221,7 @@ survey of responders: 11.062 from 57,152 rows
 simple random sample: 3.001 from 5,000 rows
 ```
 
-Larkspur emails a spend survey to everyone and buyers are four times likelier to reply. The result has 57,000 rows and is more than three times too high. A simple random sample of 5,000 is within about 4% of the truth. Sampling error shrinks with n. Selection bias does not. ([Surveys and sampling design](../../06-applied-analyses/notes/12-surveys-and-sampling-design.md) builds the better sample.) Before admiring a large N, ask how the rows got into the table. [Meng (Annals of Applied Statistics, 2018)](https://doi.org/10.1214/18-AOAS1161SF) puts a number on it for the 2016 US election: a correlation of only about -0.005 between responding and reporting a vote for Trump leaves a sample of 1% of eligible voters, about 2.3 million people, with the same mean squared error as a simple random sample of about 400. [The data generating process](07-data-generating-process.md#big-is-not-the-same-as-representative) takes this further.
+Larkspur emails a spend survey to everyone and buyers are four times likelier to reply. The result has 57,000 rows and is more than three times too high. A simple random sample of 5,000 is within about 4% of the truth. Sampling error shrinks with n. Selection bias does not. The textbook case is the 1936 US presidential poll: the Literary Digest mailed more than 10 million ballots and called it wrongly, while Gallup's 2,000-person sample did not (*Practical Statistics*, ch. 2). ([Surveys and sampling design](../../06-applied-analyses/notes/12-surveys-and-sampling-design.md) builds the better sample.) Before admiring a large N, ask how the rows got into the table. [Meng (Annals of Applied Statistics, 2018)](https://doi.org/10.1214/18-AOAS1161SF) puts a number on it for the 2016 US election: a correlation of only about -0.005 between responding and reporting a vote for Trump leaves a sample of 1% of eligible voters, about 2.3 million people, with the same mean squared error as a simple random sample of about 400. [The data generating process](07-data-generating-process.md#big-is-not-the-same-as-representative) takes this further.
 
 ## The small-N trap
 

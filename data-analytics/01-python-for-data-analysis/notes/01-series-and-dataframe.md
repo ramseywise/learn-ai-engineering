@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 1 and 5; 3rd ed. open access at https://wesmckinney.com/book/pandas-basics"
+  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 1, 5, 12 and 13; 3rd ed. open access at https://wesmckinney.com/book/pandas-basics"
   - "VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 3; https://jakevdp.github.io/PythonDataScienceHandbook/03.00-introduction-to-pandas.html"
   - "McKinney, Data Structures for Statistical Computing in Python (SciPy 2010), https://doi.org/10.25080/Majora-92bf1922-00a"
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
@@ -355,6 +355,10 @@ orders["product"] = orders["product"].astype("str")
 category
 ['filter', 'grinder', 'kettle', 'scale']
 ```
+
+The payoff is memory and group speed. A category column stores each distinct label once and an integer code per row (`.cat.codes`). McKinney's example is a 10-million-element string Series cycling through four labels: 80,000,080 bytes as strings against 10,000,272 as `category`, about 8 times less, after a one-off 726 ms `astype` (one run, machine unstated; *Python for Data Analysis*, ch. 12). He also notes that `groupby` is faster on a categorical because it works on the integer codes, but gives no timing. A filtered categorical keeps its unused levels, so call `remove_unused_categories()` before counting. The 2017 text keeps strings as `object`, which is why the saving looked so large. Pandas 3 stores text as `str`, so measure before assuming 8 times.
+
+Handing a frame to a model library is a dtype question too. `.values` (today `to_numpy()`) on a mixed-type frame returns an `object` array, so select the numeric model columns first, as in `df.loc[:, cols].to_numpy()` (*Python for Data Analysis*, ch. 13). Keep the column names: a coefficient array carries none, and `pd.Series(coef, index=names)` puts them back. Dummy columns for a categorical are better built inside the model formula (Patsy's `C(x)`, which drops one level when there is an intercept) than by hand with `get_dummies`, because the same formula can then rebuild the identical design matrix for new data. Statistics that a transform learns, such as a mean to centre by, must come from the training data only (ch. 13: the Titanic example fills 177 missing ages with the train median for train and test alike).
 
 ## Making new columns
 

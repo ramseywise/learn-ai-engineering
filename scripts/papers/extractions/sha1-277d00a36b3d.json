@@ -1,0 +1,46 @@
+{
+ "schema": 1,
+ "key": "sha1:277d00a36b3d",
+ "pdf": "data-analytics/sources/think-bayes/ch14-hierarchical-model.pdf",
+ "bib": {"title": "Think Bayes, Chapter 14: A Hierarchical Model", "authors": ["Allen B. Downey"], "first_author": "Downey", "year": null, "venue": "book chapter (Think Bayes, 1st ed.)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 9389, "chars_total": 9389, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "How do you infer both the per-second particle count n and the long-run emission rate r from a Geiger counter reading, using a model with two levels?",
+ "hypothesis": null,
+ "contributions": ["Geiger counter problem solved as a two-level (meta-Suite) Bayesian model", "Link between causal structure and hierarchical modelling"],
+ "method": null,
+ "results": [
+  {"claim": "With detection fraction f=0.1 and k=15 counted, the posterior of n is centred on 150, the value k/f.", "kind": "worked-example", "source": null, "metric": "most likely n", "value": "150", "unit": "particles", "baseline_value": null, "n": null, "setup": "Geiger problem, Poisson prior on n given r, binomial likelihood with f=0.1, k=15 in one second, grid over r with Detector(high=500, step=1)", "quote": "Not surprisingly, the most likely value for n is 150.", "table": null, "note": null, "where": "14.5"},
+  {"claim": "The posterior of r is also centred on 150 particles per second, and is somewhat tighter than that of n.", "kind": "worked-example", "source": null, "metric": "most likely r", "value": "150", "unit": "particles per second", "baseline_value": null, "n": null, "setup": "Same hierarchical Emitter model, f=0.1, k=15", "quote": "And if 150 particles are emitted in one second, the most likely value of r is", "table": null, "note": "Fig 14.2 shows both posteriors; the 'tighter' claim is in prose only, no spread number given.", "where": "14.5"},
+  {"claim": "Longer-run parameters (r) can be estimated with more certainty than single-period quantities (n).", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Geiger example only", "quote": null, "table": null, "note": "Verbatim: 'In general, we can be more certain about the long-range emission rate, r, than about the number of particles emitted in any particular second, n.'", "where": "14.5"},
+  {"claim": "Using the Update normalising constant as the Emitter likelihood avoids computing it twice, giving fewer lines and faster code.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Emitter.Likelihood returns hypo.Update(data)", "quote": null, "table": null, "note": "No timing given.", "where": "14.4"}
+ ],
+ "limits": ["Single worked problem with one observation (k=15); no comparison to pooled or unpooled alternatives, no shrinkage or partial pooling across groups.", "Grid-based, Python 2 thinkbayes code; r grid values for Fig 14.2 not stated.", "Exercise 14.1 (mosquito trap, counts 30 and 20) is posed without a solution."],
+ "practices": [
+  "Reason from the chain of causation from parameters to data, solve the forward problem, then invert with Bayes (14.1).",
+  "Build a hierarchical model with causes at the top and effects at the bottom; causal information flows down, inference flows up (14.6).",
+  "Compute the posterior of n for each r first, then the posterior of r bottom-up (14.6).",
+  "Use the Update normalising constant as the likelihood of the upper level (14.4).",
+  "Get the posterior of n as a mixture of the Detectors weighted by the Emitter's probabilities (14.5)."
+ ],
+ "terms": [
+  {"term": "forward problem", "definition": "Given the parameters of the system, find the distribution of the data.", "where": "14.1"},
+  {"term": "inverse problem", "definition": "Given the data, find the distribution of the parameters.", "where": "14.1"},
+  {"term": "meta-Suite", "definition": "A Suite that contains other Suites as values.", "where": "14.3"},
+  {"term": "hierarchical model", "definition": "A model with multiple levels of Suites.", "where": "14.3"}
+ ],
+ "lineage": [
+  {"work": "Tom Campbell-Ricketts, Maximum Entropy blog", "year": null, "arxiv": null, "relation": "related", "note": "source of the problem idea", "quote": null},
+  {"work": "E. T. Jaynes, Probability Theory: The Logic of Science", "year": null, "arxiv": null, "relation": "related", "note": "origin of Geiger and mosquito problems", "quote": null},
+  {"work": "Think Bayes Section 11.2 (SuiteLikelihood)", "year": null, "arxiv": null, "relation": "extends", "note": "same normalising-constant trick", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 14.1", "caption": "Posterior distribution of n for three values of r.", "page": 2, "why": "Shows n posterior shifting with fixed r = 100, 250, 400."},
+  {"figure": "Fig 14.2", "caption": "Posterior distributions of n and r.", "page": 5, "why": "Shows both marginals centred near 150, r narrower."}
+ ],
+ "code": [
+  {"where": "14.2", "snippet": "class Detector(thinkbayes.Suite):\n    def __init__(self, r, f, high=500, step=1):\n        pmf = thinkbayes.MakePoissonPmf(r, high, step=step)\n        thinkbayes.Suite.__init__(self, pmf, name=r)\n        self.r = r\n        self.f = f\n\n    def Likelihood(self, data, hypo):\n        k = data\n        n = hypo\n        p = self.f\n        return thinkbayes.EvalBinomialPmf(k, n, p)", "verbatim": true},
+  {"where": "14.3-14.5", "snippet": "class Emitter(thinkbayes.Suite):\n    def __init__(self, rs, f=0.1):\n        detectors = [Detector(r, f) for r in rs]\n        thinkbayes.Suite.__init__(self, detectors)\n    def Likelihood(self, data, hypo):\n        return hypo.Update(data)\n    def DistOfR(self):\n        items = [(detector.r, prob) for detector, prob in self.Items()]\n        return thinkbayes.MakePmfFromItems(items)\n    def DistOfN(self):\n        return thinkbayes.MakeMixture(self)", "verbatim": false}
+ ],
+ "problems": ["Short chapter (9389 chars). Section map found only 14.6 heading. Code listings in the text carry comments '# class Detector' on Emitter methods (book typo). Not about multilevel regression or partial pooling."]
+}

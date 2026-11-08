@@ -1,0 +1,565 @@
+{
+ "schema": 1,
+ "key": "sha1:f704434df340",
+ "pdf": "data-science/sources/intro-to-ml-with-python/ch05-model-evaluation-improvement.pdf",
+ "bib": {
+  "title": "Chapter 5: Model Evaluation and Improvement",
+  "authors": [],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (Introduction to Machine Learning with Python, per directory name; not printed in the extracted text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 106873,
+  "chars_total": 106873,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should supervised models be evaluated and tuned: cross-validation, grid search and metrics beyond accuracy and R2?",
+ "hypothesis": null,
+ "contributions": [
+  "Cross-validation variants (k-fold, stratified, leave-one-out, shuffle-split, group)",
+  "Grid search with CV, nested CV, parameter-grid analysis",
+  "Metrics for imbalanced binary, multiclass and regression, plus threshold/curve analysis and scoring parameter use"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Tuning SVC (C, gamma) on the test set reports 97% but the honest test score with a train/validation/test split is 92%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "92%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, 150 samples, split 112/38 then train/valid/test 84/28/38, SVC grid 6x6 over C and gamma",
+   "quote": "So we can only claim to classify new data 92% correctly, not 97% correctly as we thought before!",
+   "table": null,
+   "note": "Naive test-set search best score 0.97 (In[18]); validation-set search gave valid 0.96, test 0.92 (In[20]).",
+   "where": "p262-263, In[18], In[20]"
+  },
+  {
+   "claim": "Grid search with 5-fold CV on the training set then a single test evaluation gives 97% test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "0.97",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, train_test_split random_state=0 (112/38), GridSearchCV(SVC(), 6x6 grid, cv=5); best C=100, gamma=0.01",
+   "quote": "Test set score: 0.97",
+   "table": null,
+   "note": null,
+   "where": "p266, In[28]"
+  },
+  {
+   "claim": "Nested CV (5x5 stratified, 36-point grid) estimates SVC at 98% mean accuracy on iris, at a cost of 900 models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean nested CV accuracy",
+   "value": "0.98",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris full 150 samples, inner and outer StratifiedKFold(5), 36 parameter combinations",
+   "quote": "Mean cross-validation score:  0.98",
+   "table": null,
+   "note": "Cost quoted: 36 * 5 * 5 = 900 models.",
+   "where": "p273, In[34]"
+  },
+  {
+   "claim": "Grid search with 5-fold CV costs 36*5 = 180 model fits for the 6x6 grid.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "models trained",
+   "value": "180",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVC, 6x6 grid, cv=5",
+   "quote": "we need to train 36 * 5 = 180 models",
+   "table": null,
+   "note": null,
+   "where": "p264"
+  },
+  {
+   "claim": "Unstratified 3-fold CV on class-ordered iris gives zero accuracy in every fold.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, LogisticRegression, KFold(n_splits=3) no shuffle",
+   "quote": "Cross-validation scores:",
+   "table": "In[11] output [ 0.  0.  0.]",
+   "note": "Shuffled KFold(3, shuffle=True, random_state=0) gives [0.9, 0.96, 0.96].",
+   "where": "p257, In[11]-In[12]"
+  },
+  {
+   "claim": "Default 3-fold CV on iris with logistic regression gives 0.961, 0.922, 0.958; 5-fold mean is 0.96.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean CV accuracy",
+   "value": "0.96",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, LogisticRegression, cv=5 mean (scores 1, 0.967, 0.933, 0.9, 1)",
+   "quote": "Average cross-validation score: 0.96",
+   "table": null,
+   "note": null,
+   "where": "p253, In[6]"
+  },
+  {
+   "claim": "Leave-one-out on iris runs 150 iterations and gives 0.95 mean accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean accuracy",
+   "value": "0.95",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, LogisticRegression, LeaveOneOut",
+   "quote": "Mean accuracy: 0.95",
+   "table": null,
+   "note": null,
+   "where": "p257, In[13]"
+  },
+  {
+   "claim": "Grid search cv_results_ shows SVC accuracy ranges from about 40% to 96% across the C/gamma grid.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CV accuracy",
+   "value": "96%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "iris, SVC RBF, 6x6 grid C and gamma in 0.001..100, cv=5",
+   "quote": "the accuracy is around 96%",
+   "table": null,
+   "note": "Low end: 'around 40%' in text; mean_test_score 0.366 in Table of In[31].",
+   "where": "p269"
+  },
+  {
+   "claim": "A majority-class dummy classifier gets about 90% accuracy on the 9-vs-rest digits task, while a depth-2 tree gets 92% and logistic regression 98%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.90",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits, y = target==9, train_test_split random_state=0, test n=450 (403 negative, 47 positive)",
+   "quote": "Test score: 0.90",
+   "table": null,
+   "note": "DecisionTree max_depth=2: 0.92; random-proportion DummyClassifier: 0.80; LogisticRegression(C=0.1): 0.98.",
+   "where": "p278-279, In[38]-In[40]"
+  },
+  {
+   "claim": "Confusion matrix for logistic regression on 9-vs-rest: TN 401, FP 2, FN 8, TP 39.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "[[401,2],[8,39]]",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, LogisticRegression(C=0.1), test n=450",
+   "quote": "Confusion matrix:",
+   "table": "In[41] output [[401 2] [ 8 39]]",
+   "note": "Decision tree [[390,13],[24,23]]; dummy [[361,42],[43,4]]; majority [[403,0],[47,0]].",
+   "where": "p280"
+  },
+  {
+   "claim": "F1 separates models that accuracy barely distinguishes: majority 0.00, dummy 0.10, tree 0.55, logistic regression 0.89.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 (positive class)",
+   "value": "0.89",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, 'nine' positive class, test n=450",
+   "quote": "f1 score logistic regression: 0.89",
+   "table": null,
+   "note": "Text later says dummy f-score is 0.13 on the nine class (p286) while In[45] and the report print 0.10.",
+   "where": "p284, In[45]"
+  },
+  {
+   "claim": "Logistic regression classification report for 'nine': precision 0.95, recall 0.83, f1 0.89 on support 47.",
+   "kind": "measured",
+   "source": null,
+   "metric": "precision/recall/f1",
+   "value": "0.95/0.83/0.89",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, test n=450",
+   "quote": "nine       0.95      0.83      0.89        47",
+   "table": null,
+   "note": null,
+   "where": "p285, In[48]"
+  },
+  {
+   "claim": "Lowering the SVC decision threshold from 0 to -0.8 raised class-1 recall from 0.67 to 1.00 and cut precision from 0.35 to 0.32.",
+   "kind": "measured",
+   "source": null,
+   "metric": "class 1 recall",
+   "value": "1.00",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_blobs(n_samples=(400,50), cluster_std=[7.0,2], random_state=22), SVC(gamma=.05), test n=113 (104 neg, 9 pos)",
+   "quote": "1       0.32      1.00      0.49         9",
+   "table": null,
+   "note": "Baseline report at threshold 0: class 1 precision 0.35, recall 0.67, f1 0.46.",
+   "where": "p287-288, In[51]-In[53]"
+  },
+  {
+   "claim": "On the 4000/500 imbalanced blobs, F1 prefers SVC (0.656) over random forest (0.610) but average precision slightly prefers RF (0.666 vs 0.663).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average precision",
+   "value": "0.666 vs 0.663",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "make_blobs(n_samples=(4000,500)), SVC(gamma=.05), RandomForest(n_estimators=100, max_features=2, random_state=0)",
+   "quote": "Average precision of random forest: 0.666",
+   "table": null,
+   "note": "f1: rf 0.610, svc 0.656; AP svc 0.663.",
+   "where": "p292, In[57]-In[58]"
+  },
+  {
+   "claim": "AUC for random forest 0.937 vs SVC 0.916 on the same imbalanced blobs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC AUC",
+   "value": "0.937",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same data as above, test split random_state=0",
+   "quote": "AUC for Random Forest: 0.937",
+   "table": null,
+   "note": "SVC 0.916.",
+   "where": "p295, In[61]"
+  },
+  {
+   "claim": "Three SVMs with identical 90% accuracy on 9-vs-rest have AUC 0.50, 0.90, 1.00 for gamma 1, 0.05, 0.01.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC AUC",
+   "value": "0.50/0.90/1.00",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, SVC with gamma in [1, 0.05, 0.01]",
+   "quote": "gamma = 1.00  accuracy = 0.90  AUC = 0.50",
+   "table": null,
+   "note": "Text prose says gamma=1.0 AUC 'chance level' and gamma=0.05 'drastically improves to an AUC of 0.5', which contradicts the printed 0.90.",
+   "where": "p296, In[62]"
+  },
+  {
+   "claim": "Random scoring gives AUC 0.5 regardless of class imbalance.",
+   "kind": "claim",
+   "source": null,
+   "metric": "ROC AUC",
+   "value": "0.5",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "definition",
+   "quote": "Predicting randomly always produces an AUC of 0.5, no matter how imbalanced the classes in a dataset are.",
+   "table": null,
+   "note": null,
+   "where": "p295"
+  },
+  {
+   "claim": "Multiclass logistic regression on 10-class digits: accuracy 0.953, micro F1 0.953, macro F1 0.954.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.953",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits, LogisticRegression default, train_test_split random_state=0, test n=450",
+   "quote": "Accuracy: 0.953",
+   "table": null,
+   "note": null,
+   "where": "p297-299, In[63], In[66]"
+  },
+  {
+   "claim": "Cross-validated AUC for SVC on 9-vs-rest is 0.994/0.99/0.996 versus accuracy 0.9 in every fold.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROC AUC per fold",
+   "value": "0.994",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, SVC default, 3-fold CV",
+   "quote": "AUC scoring: [ 0.994  0.99   0.996]",
+   "table": null,
+   "note": null,
+   "where": "p300, In[67]"
+  },
+  {
+   "claim": "Selecting gamma by AUC (0.01) beats selecting by accuracy (0.0001) on both test AUC and test accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": "1.000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "digits 9-vs-rest, GridSearchCV gamma in [0.0001,0.01,0.1,1,10], default cv",
+   "quote": "Test set accuracy: 1.000",
+   "table": null,
+   "note": "Accuracy-selected: CV acc 0.970, test AUC 0.992, test acc 0.973. AUC-selected: CV AUC 0.997, test AUC 1.000, test acc 1.000.",
+   "where": "p301, In[68]-In[69]"
+  }
+ ],
+ "limits": [
+  "Small toy datasets (iris 150, digits 450 test), single splits; no variance or significance on the metric comparisons.",
+  "Code uses old scikit-learn API (n_iter, sklearn.metrics.scorer SCORERS, 'mean_squared_error' scorer names, 'avg / total' reports); modern names are neg_mean_squared_error, n_splits, get_scorer_names.",
+  "Text inconsistencies: prose says gamma=0.05 AUC 0.5 while output is 0.90; dummy f-score 0.13 in prose vs 0.10 in output; In[17]/In[16] and In[34]/In[35] numbering duplicates.",
+  "Calibration and cost-sensitive evaluation are only mentioned, not covered; regression metrics get one paragraph."
+ ],
+ "practices": [
+  "Hold out a test set used once; select models and parameters on a validation set or by cross-validation on the training set (p262-263, p266, p302).",
+  "Use stratified k-fold for classification and plain k-fold for regression, which is the scikit-learn default; shuffle with a fixed random_state if the data is ordered (p255-257).",
+  "Use GroupKFold when samples from the same patient/speaker/person must not span train and test (p259-260).",
+  "Start with a coarse grid, inspect cv_results_ as a heat map, and widen the range if the optimum is on an edge; never tune ranges on the test set (p267-271).",
+  "Use a list of dicts as param_grid for conditional parameters such as kernel (p271).",
+  "Use nested CV only to assess how well a model class generalizes on a dataset, not to produce a model (p273).",
+  "Grid search and CV are embarrassingly parallel: set n_jobs, but do not nest n_jobs inside the estimator (p274-275).",
+  "Choose the metric closest to the business goal; accuracy misleads on imbalanced data, so compare against DummyClassifier baselines (p275-279).",
+  "Use precision when false positives are costly, recall when false negatives are costly, F1 to combine; look at the confusion matrix first (p283-285).",
+  "Tune the decision threshold on a validation set, never the test set; fix an operating point such as 90% recall (p288-289).",
+  "Prefer AUC or average precision over accuracy for imbalanced data and model selection, and pass scores (decision_function/predict_proba), not predictions (p292-297, p300).",
+  "For multiclass imbalance use macro F1 to weight classes equally, micro F1 to weight samples equally (p299).",
+  "Pass scoring= to GridSearchCV and cross_val_score to select by the metric you care about (p300-301)."
+ ],
+ "terms": [
+  {
+   "term": "k-fold cross-validation",
+   "definition": "the data is first partitioned into five parts of (approximately) equal size, called folds, each used once as test set",
+   "where": "p252"
+  },
+  {
+   "term": "stratified cross-validation",
+   "definition": "we split the data such that the proportions between classes are the same in each fold as they are in the whole dataset",
+   "where": "p255"
+  },
+  {
+   "term": "shuffle-split",
+   "definition": "each split samples train_size many points for the training set and test_size many (disjoint) points for the test set, repeated n_splits times",
+   "where": "p258"
+  },
+  {
+   "term": "nested cross-validation",
+   "definition": "an outer loop over train/test splits, with a grid search run inside each outer training set; the result is a list of scores, not a model",
+   "where": "p273"
+  },
+  {
+   "term": "validation set",
+   "definition": "the set used to select the parameters of the model, between training and test",
+   "where": "p262"
+  },
+  {
+   "term": "false positive / false negative",
+   "definition": "incorrect positive prediction / incorrect negative prediction (type I / type II error)",
+   "where": "p277"
+  },
+  {
+   "term": "precision",
+   "definition": "TP/(TP+FP), how many predicted positives are actually positive (PPV)",
+   "where": "p282-283"
+  },
+  {
+   "term": "recall",
+   "definition": "TP/(TP+FN), how many positives are captured (sensitivity, hit rate, TPR)",
+   "where": "p283"
+  },
+  {
+   "term": "f1-score",
+   "definition": "2 * precision*recall / (precision+recall), harmonic mean",
+   "where": "p283"
+  },
+  {
+   "term": "average precision",
+   "definition": "area under the precision-recall curve",
+   "where": "p292"
+  },
+  {
+   "term": "AUC",
+   "definition": "area under the ROC curve; probability that a random positive scores higher than a random negative",
+   "where": "p295"
+  },
+  {
+   "term": "operating point",
+   "definition": "a requirement such as 90% recall set on a classifier",
+   "where": "p289"
+  },
+  {
+   "term": "calibration",
+   "definition": "a calibrated model provides an accurate measure of its uncertainty",
+   "where": "p288"
+  },
+  {
+   "term": "macro/weighted/micro averaging",
+   "definition": "macro = unweighted per-class mean; weighted = support-weighted; micro = pooled TP/FP/FN counts",
+   "where": "p299"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Predicting Good Probabilities with Supervised Learning (Niculescu-Mizil, Caruana)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited for calibration",
+   "quote": null
+  },
+  {
+   "work": "Data Science for Business (Provost, Fawcett)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "recommended for turning predictions into business decisions",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "all code; also mglearn helper plots",
+   "quote": null
+  },
+  {
+   "work": "iris and digits datasets (scikit-learn load_iris, load_digits)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "worked examples",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5-1",
+   "caption": "Data splitting in five-fold cross-validation",
+   "page": 252,
+   "why": "Shows each fold as test once."
+  },
+  {
+   "figure": "Fig 5-2",
+   "caption": "Comparison of standard cross-validation and stratified cross-validation when the data is ordered by class label",
+   "page": 255,
+   "why": "Explains why plain KFold fails on iris."
+  },
+  {
+   "figure": "Fig 5-4",
+   "caption": "Label-dependent splitting with GroupKFold",
+   "page": 260,
+   "why": "Groups stay whole in train or test."
+  },
+  {
+   "figure": "Fig 5-5",
+   "caption": "A threefold split of data into training set, validation set, and test set",
+   "page": 262,
+   "why": "Basic split for tuning."
+  },
+  {
+   "figure": "Fig 5-7",
+   "caption": "Overview of the process of parameter selection and model evaluation with GridSearchCV",
+   "page": 265,
+   "why": "Whole tuning workflow in one picture."
+  },
+  {
+   "figure": "Fig 5-8",
+   "caption": "Heat map of mean cross-validation score as a function of C and gamma",
+   "page": 269,
+   "why": "Shows 40% to 96% sensitivity."
+  },
+  {
+   "figure": "Fig 5-9",
+   "caption": "Heat map visualizations of misspecified search grids",
+   "page": 269,
+   "why": "Three failure patterns of grid ranges."
+  },
+  {
+   "figure": "Fig 5-11",
+   "caption": "Confusion matrix for binary classification",
+   "page": 281,
+   "why": "TP/FP/FN/TN layout."
+  },
+  {
+   "figure": "Fig 5-12",
+   "caption": "Heatmap of the decision function and the impact of changing the decision threshold",
+   "page": 287,
+   "why": "Threshold shift visualised."
+  },
+  {
+   "figure": "Fig 5-14",
+   "caption": "Comparing precision recall curves of SVM and random forest",
+   "page": 291,
+   "why": "Models win at different operating points."
+  },
+  {
+   "figure": "Fig 5-17",
+   "caption": "Comparing ROC curves of SVMs with different settings of gamma",
+   "page": 296,
+   "why": "Same accuracy, very different AUC."
+  }
+ ],
+ "code": [
+  {
+   "where": "p264, In[25]-In[28]",
+   "snippet": "grid_search = GridSearchCV(SVC(), param_grid, cv=5)\ngrid_search.fit(X_train, y_train)\ngrid_search.score(X_test, y_test)",
+   "verbatim": false
+  },
+  {
+   "where": "p273, In[34]",
+   "snippet": "scores = cross_val_score(GridSearchCV(SVC(), param_grid, cv=5),\n                         iris.data, iris.target, cv=5)",
+   "verbatim": true
+  },
+  {
+   "where": "p274, In[35]",
+   "snippet": "def nested_cv(X, y, inner_cv, outer_cv, Classifier, parameter_grid): ... (explicit double loop, see chapter)",
+   "verbatim": false
+  },
+  {
+   "where": "p287, In[52]",
+   "snippet": "y_pred_lower_threshold = svc.decision_function(X_test) > -.8",
+   "verbatim": true
+  },
+  {
+   "where": "p300, In[67]",
+   "snippet": "cross_val_score(SVC(), digits.data, digits.target == 9, scoring=\"roc_auc\")",
+   "verbatim": false
+  },
+  {
+   "where": "p279, In[38]",
+   "snippet": "dummy_majority = DummyClassifier(strategy='most_frequent').fit(X_train, y_train)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No title, authors or year in the extracted text; bib authors left empty (book identity inferred only from the directory name).",
+  "Section map from extract.py was uninformative (repeated headings).",
+  "Prose/output contradictions noted in limits."
+ ]
+}

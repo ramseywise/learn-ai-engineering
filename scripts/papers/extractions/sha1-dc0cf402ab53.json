@@ -1,0 +1,423 @@
+{
+ "schema": 1,
+ "key": "sha1:dc0cf402ab53",
+ "pdf": "data-analytics/sources/python-data-science-handbook/ch02-introduction-numpy.pdf",
+ "bib": {
+  "title": "Introduction to NumPy (Chapter 2, Python Data Science Handbook)",
+  "authors": [
+   "Jake VanderPlas"
+  ],
+  "first_author": "VanderPlas",
+  "year": 2016,
+  "venue": "O'Reilly Media (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 108592,
+  "chars_total": 108592,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should data be stored and manipulated as in-memory numerical arrays in Python using NumPy?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains fixed-type ndarray vs Python list/int overhead",
+  "Covers array attributes, indexing, slicing, views, reshape, concatenate/split",
+  "Covers ufuncs, aggregations, broadcasting, masks, fancy indexing, sorting/partitioning, structured arrays"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Python-loop reciprocal of one million integers takes seconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "2.91",
+   "unit": "s per loop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IPython %timeit, best of 3, compute_reciprocals over np.random.randint(1,100,size=1000000), Python 3.4/NumPy 1.11 era hardware",
+   "quote": "1 loop, best of 3: 2.91 s per loop",
+   "table": null,
+   "note": null,
+   "where": "p.51 (In[2])"
+  },
+  {
+   "claim": "Vectorised 1.0/big_array on the same array takes milliseconds, orders of magnitude faster than the loop.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "4.6",
+   "unit": "ms per loop",
+   "baseline_value": "2.91 s",
+   "n": null,
+   "setup": "Same 1,000,000-element array, %timeit, best of 3",
+   "quote": "100 loops, best of 3: 4.6 ms per loop",
+   "table": null,
+   "note": null,
+   "where": "p.52 (In[4])"
+  },
+  {
+   "claim": "Built-in sum on a 1e6-element float array is about 235x slower than np.sum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "104",
+   "unit": "ms per loop (built-in sum)",
+   "baseline_value": "442 us np.sum",
+   "n": null,
+   "setup": "np.random.rand(1000000), %timeit best of 3",
+   "quote": "10 loops, best of 3: 104 ms per loop",
+   "table": null,
+   "note": "np.sum: 442 us per loop (ratio computed: 104 ms / 442 us ~ 235)",
+   "where": "p.59 (In[4])"
+  },
+  {
+   "claim": "np.sum on the same array takes microseconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "442",
+   "unit": "us per loop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "np.random.rand(1000000), %timeit best of 3",
+   "quote": "1000 loops, best of 3: 442 µs per loop",
+   "table": null,
+   "note": null,
+   "where": "p.59 (In[4])"
+  },
+  {
+   "claim": "Built-in min is much slower than np.min on 1e6 floats.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "82.3",
+   "unit": "ms per loop (built-in min)",
+   "baseline_value": "497 us np.min",
+   "n": null,
+   "setup": "same big_array, %timeit best of 3",
+   "quote": "10 loops, best of 3: 82.3 ms per loop",
+   "table": null,
+   "note": "np.min: 497 us per loop",
+   "where": "p.60 (In[7])"
+  },
+  {
+   "claim": "Custom searchsorted + np.add.at binning beats np.histogram on 100 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "19.5",
+   "unit": "us per loop (custom)",
+   "baseline_value": "97.6 us np.histogram",
+   "n": null,
+   "setup": "100 normal values, 20 bins on [-5,5], %timeit best of 3",
+   "quote": "Custom routine: 10000 loops, best of 3: 19.5 µs per loop",
+   "table": null,
+   "note": "Text is split over lines: 'Custom routine:' then '10000 loops, best of 3: 19.5 µs per loop'. np.histogram: 97.6 us.",
+   "where": "p.84-85"
+  },
+  {
+   "claim": "On 1,000,000 points np.histogram is about twice as fast as the custom add.at routine, so the winner flips with size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "68.7",
+   "unit": "ms per loop (np.histogram)",
+   "baseline_value": "135 ms custom",
+   "n": null,
+   "setup": "1e6 randn values, same bins, %timeit best of 3",
+   "quote": "10 loops, best of 3: 68.7 ms per loop",
+   "table": null,
+   "note": "Custom routine: 135 ms per loop",
+   "where": "p.85 (In[26])"
+  },
+  {
+   "claim": "Structured-array field access is far faster than via record array attribute access.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "241",
+   "unit": "ns per loop (data['age'])",
+   "baseline_value": null,
+   "n": null,
+   "setup": "structured array of 4 records, %timeit best of 3",
+   "quote": "1000000 loops, best of 3: 241 ns per loop",
+   "table": null,
+   "note": "data_rec['age']: 4.61 us; data_rec.age: 7.27 us",
+   "where": "p.96 (In[17])"
+  },
+  {
+   "claim": "A 3-D int64 array of shape (3,4,5) uses 480 bytes; nbytes = itemsize x size.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "480",
+   "unit": "bytes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "x3 = np.random.randint(10,size=(3,4,5)); itemsize 8, size 60",
+   "quote": "nbytes: 480 bytes",
+   "table": null,
+   "note": null,
+   "where": "p.43 (In[4])"
+  },
+  {
+   "claim": "Seattle 2014 rainfall: 215 days without rain and 150 with rain out of 365.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "150",
+   "unit": "days with rain",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seattle2014.csv PRCP column /254 -> inches, 365 values",
+   "quote": "Number days with rain:         150",
+   "table": null,
+   "note": "215 days without rain; 37 days > 0.5 in; 29 days between 0.5 and 1.0 in. The printed label says '< 0.1 inches' but the code tests (inches<0.2): label/code mismatch in source; value 75.",
+   "where": "p.75 (In[25])"
+  },
+  {
+   "claim": "29 days had rainfall between 0.5 and 1.0 inches (same answer by De Morgan form).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "29",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seattle 2014, np.sum((inches > 0.5) & (inches < 1))",
+   "quote": "So we see that there are 29 days with rainfall between 0.5 and 1.0 inches.",
+   "table": null,
+   "note": null,
+   "where": "p.74"
+  },
+  {
+   "claim": "Median height of US presidents is 182 cm; mean 179.738 cm.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "182",
+   "unit": "cm (median)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "president_heights.csv, 42 values; mean 179.738095238, std 6.93184344275 (population std, ddof=0), min 163, max 193",
+   "quote": "We see that the median height of US presidents is 182 cm, or just shy of six feet.",
+   "table": null,
+   "note": "Std uses NumPy default ddof=0 (not stated in text; inferred)",
+   "where": "p.62"
+  },
+  {
+   "claim": "Broadcasting rules: pad fewer-dim shape with ones on the left; stretch size-1 dims; error if sizes disagree and neither is 1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rules 1-3 for all binary ufuncs",
+   "table": null,
+   "note": null,
+   "where": "p.65",
+   "quote": null
+  },
+  {
+   "claim": "Slices of NumPy arrays are no-copy views, unlike Python list slices; use .copy() for a copy.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "x2_sub = x2[:2,:2]; modifying it changes x2",
+   "table": null,
+   "note": null,
+   "where": "p.46",
+   "quote": null
+  },
+  {
+   "claim": "x[i] += 1 with repeated indices increments once per unique index; np.add.at applies repeats.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "i=[2,3,3,4,4,4]; x[i]+=1 gives 1 at 3 and 4, np.add.at gives 2 and 3",
+   "table": null,
+   "note": null,
+   "where": "p.83",
+   "quote": null
+  }
+ ],
+ "limits": [
+  "Edition/year not printed in the chapter text; 2016 inferred from NumPy 1.11.1 output and Python 3.4 references (1st edition).",
+  "Timings are single-machine %timeit 'best of 3' with no hardware stated, from the old IPython format.",
+  "Written for NumPy 1.11 / Python 3.4: np.float_, np.complex_, np.bool_ aliases (Table 2-1) were removed in NumPy 2.0; legacy np.random.seed/RandomState/np.random.* is superseded by np.random.default_rng; plt.plot(linestyle='steps') is removed in modern Matplotlib (use drawstyle='steps'); seaborn.set() is now set_theme(); text says 'array module available since Python 3.3' and recommends NumPy >=1.8.",
+  "Array printouts show old repr (e.g. dtype=bool, 3.14159 formatting) and default int64 on the book's platform; on Windows NumPy<2 default int was int32.",
+  "Source typos: Table 2-3 labels np.mean as 'Compute median of elements'; Table 2-4 shows np.dtype('f8') == np.int64 (should be float64); the rain output label '< 0.1 inches' tests <0.2; 'Out[12]' of np.empty shows ones (arbitrary).",
+  "No guidance on memory layout (C vs Fortran order), np.einsum, matmul, np.where, or np.unique; structured arrays deferred to Pandas for real work."
+ ],
+ "practices": [
+  "Replace Python loops over arrays with vectorised ufunc expressions (p.52).",
+  "Use np.sum/np.min/np.max etc. rather than built-in sum/min/max/any/all on arrays (p.60, p.74).",
+  "Use & | ~ with parentheses, not and/or, for Boolean array logic (p.74-78).",
+  "Use .copy() when a slice must not alias the original (p.46).",
+  "Use np.add.at when indices repeat in an accumulate (p.83).",
+  "Use np.partition/argpartition instead of a full sort when only k smallest are needed (p.88-90).",
+  "Use out= to avoid temporary arrays in large computations (p.57).",
+  "Use np.expm1 and np.log1p for precision at small inputs (p.55).",
+  "Seed np.random for reproducibility (p.42).",
+  "Use Pandas rather than structured arrays for everyday heterogeneous data (p.96).",
+  "Pass axis= to aggregations; axis names the dimension collapsed (p.60).",
+  "Be wary: assigning floats into int arrays silently truncates (p.44)."
+ ],
+ "terms": [
+  {
+   "term": "ufunc",
+   "definition": "Vectorized operations in NumPy are implemented via ufuncs, whose main purpose is to quickly execute repeated operations on values in NumPy arrays.",
+   "where": "p.52"
+  },
+  {
+   "term": "broadcasting",
+   "definition": "a set of rules for applying binary ufuncs (addition, subtraction, multiplication, etc.) on arrays of different sizes.",
+   "where": "p.63"
+  },
+  {
+   "term": "fancy indexing",
+   "definition": "like the simple indexing but we pass arrays of indices in place of single scalars.",
+   "where": "p.78"
+  },
+  {
+   "term": "masking operation",
+   "definition": "indexing on a Boolean array to select values at positions where the mask is True.",
+   "where": "p.76"
+  },
+  {
+   "term": "structured array",
+   "definition": "arrays with compound data types.",
+   "where": "p.93"
+  },
+  {
+   "term": "axis",
+   "definition": "specifies the dimension of the array that will be collapsed, rather than the dimension that will be returned.",
+   "where": "p.60"
+  },
+  {
+   "term": "Big-O notation",
+   "definition": "a means of describing how the number of operations required for an algorithm scales as the input grows in size.",
+   "where": "p.92"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "NumPy",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "library taught; version 1.11.1 shown",
+   "quote": null
+  },
+  {
+   "work": "Pandas",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used to load CSVs; Chapter 3",
+   "quote": null
+  },
+  {
+   "work": "astroML",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Fig 2-4 code adapted from astroML documentation",
+   "quote": null
+  },
+  {
+   "work": "Matplotlib / Seaborn",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "plotting for figures",
+   "quote": null
+  },
+  {
+   "work": "scipy.special",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "specialised ufuncs gamma, erf",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2-1",
+   "caption": "The difference between C and Python integers",
+   "page": 36,
+   "why": "shows PyObject_HEAD overhead of a Python int"
+  },
+  {
+   "figure": "Fig 2-2",
+   "caption": "The difference between C and Python lists",
+   "page": 38,
+   "why": "contiguous buffer vs block of pointers"
+  },
+  {
+   "figure": "Fig 2-4",
+   "caption": "Visualization of NumPy broadcasting",
+   "page": 65,
+   "why": "shows stretched shapes for a+5, M+a, a+b"
+  },
+  {
+   "figure": "Fig 2-9",
+   "caption": "A histogram computed by hand",
+   "page": 84,
+   "why": "searchsorted + add.at result"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.65 rules / p.56",
+   "snippet": "np.multiply(x, 10, out=y)",
+   "verbatim": true
+  },
+  {
+   "where": "p.90 In[16]",
+   "snippet": "dist_sq = np.sum((X[:,np.newaxis,:] - X[np.newaxis,:,:]) ** 2, axis=-1)",
+   "verbatim": true
+  },
+  {
+   "where": "p.90 In[22]",
+   "snippet": "nearest_partition = np.argpartition(dist_sq, K + 1, axis=1)",
+   "verbatim": true
+  },
+  {
+   "where": "p.84 In[23]",
+   "snippet": "i = np.searchsorted(bins, x)\nnp.add.at(counts, i, 1)",
+   "verbatim": true
+  },
+  {
+   "where": "p.69 In[18-19]",
+   "snippet": "Xmean = X.mean(0)\nX_centered = X - Xmean",
+   "verbatim": true
+  },
+  {
+   "where": "p.75 In[23]",
+   "snippet": "np.sum((inches > 0.5) & (inches < 1))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Hyphenation and ligatures (e.g. 'Compari-sons', math symbols for O(N^2) rendered as '�') appear in the text; no instructions embedded.",
+  "Edition/year not printed; 2016 inferred."
+ ]
+}

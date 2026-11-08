@@ -4,7 +4,7 @@ sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 1 Introduction, ch. 2 A little more on PyMC)
   - https://github.com/prasoon2211/bayesian_inference_talk (DataTalks.Club talk, Introduction to Bayesian Inference for Parameter Estimation)
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers
-  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 1 to 5, 7 and 8)
+  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 1 to 5, 7 and 8; ch. 9 to 15 are in 01b)
   - https://doi.org/10.1080/01621459.1965.10480775 (Warner, JASA, 1965)
   - https://doi.org/10.1080/01621459.1989.10478858 (Dalal, Fowlkes and Hoadley, JASA, 1989)
 confidence: high
@@ -401,7 +401,7 @@ sorted by predicted p: 00000100010010000001111
 
 The total number of failures is matched, but the fit is built to do that, so the check to trust is one the model was not tuned on. Splitting at 65°F shows the model expects about 3.3 cold failures against the 4 of 4 observed, and about 3.8 warm ones against 3. That is close, given how few launches there are. The last line is a rough form of BMH's **separation plot**: launches sorted by predicted probability, with 1 marking a real failure. A good model piles the 1s on the right. Here, most of them are, but three sit among the warm launches where it expected few, so the model is useful and not sharp.
 
-## Predicting the next game: the posterior predictive as a mixture
+## Predicting a game: the posterior predictive as a mixture
 
 An estimate is rarely the last step. Downey's Boston Bruins problem asks for a prediction: the Bruins lost their first two Stanley Cup final games 0-1 and 2-3, then won 8-1 and 4-0. What is the chance they win game 5, and the series? (*Think Bayes*, ch. 7). Goal scoring is modelled as a Poisson process, so a team's goals in a game are Poisson(λ) and the time to its first goal is exponential with rate λ. The prior on each team's λ is a Gaussian with mean about 2.7 and sd 0.3, a spread taken from the 2010-11 per-team averages, and the data are each team's four scores (0, 2, 8, 4 for Boston and 1, 3, 1, 0 for Vancouver).
 
@@ -584,8 +584,10 @@ Downey's version of the same problem is the locomotive problem: one train number
 
 The talk's recommended path is BMH, then McElreath's *Statistical Rethinking* ([local PDF](../../sources/RM-StatRethink-Bayes.pdf)), then Gelman et al., [*Bayesian Data Analysis*](https://sites.stat.columbia.edu/gelman/book/). For the same ideas in plain Python, read Downey's [*Think Bayes*](https://greenteapress.com/wp/think-bayes/). All are listed in the pillar's [references](../references.md).
 
+Two-parameter grids, Bayes factors, comparing two people, simulating a joint, species counts and the locomotive estimators continue in [chapter 1b](01b-grids-hypotheses-and-simulation.md).
+
 ---
 
 ## Next
 
-[Chapter 2: MCMC and PyMC](02-mcmc-and-pymc.md) opens the box. `pm.sample` has been doing the work here; next you write a sampler by hand, learn to tell whether one worked, and port old PyMC3 code.
+[Chapter 1b](01b-grids-hypotheses-and-simulation.md) pushes the grid to two parameters and to testing hypotheses; then [Chapter 2: MCMC and PyMC](02-mcmc-and-pymc.md) opens the box. `pm.sample` has been doing the work here; next you write a sampler by hand, learn to tell whether one worked, and port old PyMC3 code.

@@ -262,7 +262,7 @@ percentile 95% CI [1.47  2.239]
 delta 95% CI      [1.453 2.212]
 ```
 
-Bootstrap and delta agree on the SE (0.195 against 0.193). When they disagree, suspect the data before the theory. The delta method needed a page of algebra, and the bootstrap needed three lines, and would have worked just as well for a median or a 90th percentile, where the algebra gets far harder.
+Bootstrap and delta agree on the SE (0.195 against 0.193). When they disagree, suspect the data before the theory. The delta method needed a page of algebra, and the bootstrap needed three lines, and would have worked just as well for a median or a 90th percentile, where the algebra gets far harder. The book's example is the median of Lending Club applicant income: with R = 1,000 resamples the original median is $62,000, the bootstrap standard error about $209, and the resampled medians sit about $70 below the original, a bias estimate (*Practical Statistics*, ch. 2). The same chapter adds that the bootstrap does not rescue a small sample: it describes the sampling variability of the data you have, and cannot invent data you lack.
 
 ### Percentile and BCa
 

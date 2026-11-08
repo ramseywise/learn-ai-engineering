@@ -1,0 +1,56 @@
+{
+ "schema": 1,
+ "key": "sha1:aae7381cfcf3",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch08-human-resources-management.pdf",
+ "bib": {"title": "The Data Warehouse Toolkit, 2nd ed., Chapter 8: Human Resources Management", "authors": ["Ralph Kimball", "Margy Ross"], "first_author": "Kimball", "year": 2002, "venue": "Wiley (book chapter)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 26501, "chars_total": 26501, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "How should HR data, whose facts are mostly non-numeric and constantly changing, be modelled dimensionally?",
+ "hypothesis": null,
+ "contributions": ["Time-stamped type 2 employee transaction dimension replacing a factless transaction fact table", "Periodic snapshot fact keyed to the month-end employee transaction row", "Audit dimension for lineage and data-quality metadata", "Skills keyword outrigger and delimited-list outrigger for multivalued attributes", "Survey questionnaire fact schema"],
+ "method": null,
+ "results": [
+  {"claim": "A time-stamped employee transaction dimension holding 100,000 employees at 10 transactions each per year stays small.", "kind": "worked-example", "source": null, "metric": "raw size of employee transaction dimension", "value": "10", "unit": "GB", "baseline_value": null, "n": null, "setup": "100,000 employees, 10 HR profile transactions per employee per year, 2,000-byte rows, 5 years", "quote": "5 years of profile data only adds up to 10 GB (5 years x 100,000 employees x 2,000 bytes x 10 transactions per year) of raw data", "table": null, "note": null, "where": "p.189"}
+ ],
+ "limits": ["No measurements; sizing is a single back-of-envelope example.", "Leading-wildcard LIKE searches on the delimited skills list are conceded to be slow when the dimension is large.", "Written in 2002; the expiration-date-in-far-future advice and SQL (UNION/INTERSECTION, pattern indexes) reflect that era's engines."],
+ "practices": [
+  "Do not keep a factless transaction fact table whose row count equals a type 2 dimension's; fold the transaction into the dimension (p.188-189).",
+  "Give each transaction-dimension row its own surrogate key, not a smart key of employee ID, code and date (p.189).",
+  "Store transaction effective and expiration date/times on each row so the dimension can be time-sliced alone; constrain date >= effective and < expiration (p.190).",
+  "Set the current row's expiration to an arbitrary far-future date rather than null, to keep queries simple (p.190).",
+  "Add a most-recent-transaction indicator and update the prior row when a new transaction arrives (p.190).",
+  "Collapse source-system microtransactions into one supertransaction (e.g. promotion), ideally from a high-level action field in the HR application (p.191).",
+  "Put numeric attributes that are summed in a fact table; ones only constrained on stay in the dimension (p.189).",
+  "In a monthly periodic snapshot, use the employee transaction key effective on the last day of the month; treat balances as semiadditive, averaged over time (p.192).",
+  "Add one audit foreign key to fact tables carrying source system, extract software version, allocation logic version, null reason, post-load alteration and outlier flags, as textual decodes (p.193-194).",
+  "For multivalued skills, use a skills group outrigger; OR queries are simple, AND needs UNION/INTERSECTION SQL hidden behind an interface (p.195-196).",
+  "Alternatively use one delimited string per skills list (e.g. \\Unix\\C++\\) and LIKE '%\\UNIX\\%' so AND/OR are single SELECTs; normalise case; pin in memory or use a pattern index if slow (p.196).",
+  "Model surveys as one fact row per question per respondent, with role-playing responding and reviewed employee dimensions plus survey, question and response category dimensions (p.197-198)."
+ ],
+ "terms": [
+  {"term": "Time-stamped type 2 dimension", "definition": "Adding effective and expiration date/time stamps, along with a transaction description, on each row can embellish the design of a type 2 slowly changing dimension to allow very precise time slicing of the dimension by itself.", "where": "p.190"},
+  {"term": "Audit dimension", "definition": "A dimension referenced by a single audit foreign key in a fact table, making data staging lineage and confidence metadata regular queryable data.", "where": "p.193"},
+  {"term": "Skills group outrigger", "definition": "A dimension joined to the employee dimension where one group key maps to one row per keyword skill, handling a variable number of skills.", "where": "p.195"},
+  {"term": "Supertransaction", "definition": "A single warehouse transaction (e.g. employee promotion) encapsulating many source-system microtransactions.", "where": "p.191"},
+  {"term": "Semiadditive fact", "definition": "A balance, which must be averaged across the time dimension after adding across the other dimensions.", "where": "p.192"}
+ ],
+ "lineage": [
+  {"work": "Chapter 7 (accounting and finance), same book", "year": 2002, "arxiv": null, "relation": "related", "note": "Previous cross-industry application chapter; referenced for comparison.", "quote": null},
+  {"work": "Chapter 13 multivalued dimensions, same book", "year": 2002, "arxiv": null, "relation": "related", "note": "Forward reference: multivalued dimension joined directly to a fact table.", "quote": null},
+  {"work": "Slowly changing dimension type 2 (Kimball)", "year": 2002, "arxiv": null, "relation": "extends", "note": "Chapter extends type 2 with effective/expiration stamps and transaction type.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 8.1", "caption": "Initial draft for tracking employee change transactions.", "page": 188, "why": "Shows the factless transaction fact with equal row count to a type 2 dimension, the design the chapter rejects."},
+  {"figure": "Figure 8.2", "caption": "Employee transaction dimension.", "page": 190, "why": "The replacement: one dimension with effective/expiration stamps and latest indicator."},
+  {"figure": "Figure 8.3", "caption": "HR periodic snapshot with employee transaction dimension.", "page": 192, "why": "Lists the monthly snapshot facts and month-end keys."},
+  {"figure": "Figure 8.4", "caption": "HR periodic snapshot with audit dimension.", "page": 194, "why": "Audit dimension columns for ETL status and row counts."},
+  {"figure": "Figure 8.5", "caption": "Skills group keyword dimension outrigger.", "page": 195, "why": "Outrigger structure for multivalued skills."},
+  {"figure": "Figure 8.6", "caption": "Delimited skills list dimension outrigger.", "page": 197, "why": "Single-string alternative that avoids UNION/INTERSECTION."},
+  {"figure": "Figure 8.7", "caption": "HR survey schema.", "page": 197, "why": "Question-grain survey fact with role-playing employee dimensions."}
+ ],
+ "code": [
+  {"where": "p.195", "snippet": "(SELECT EMPLOYEE_ID, EMPLOYEE_NAME FROM EMPLOYEE, SKILLS WHERE EMPLOYEE.SKILLSGROUP = SKILLS.SKILLSGROUP AND SKILL = \"UNIX\") UNION / INTERSECTION (SELECT ... SKILL = \"LINUX\")", "verbatim": false},
+  {"where": "p.196", "snippet": "SKILL_LIST LIKE '%\\UNIX\\%' AND SKILL_LIST LIKE '%\\LINUX\\%'", "verbatim": false}
+ ],
+ "problems": ["Section map was empty (no numbered headings); chapter has few headings.", "Text contains a stray 'TEAMFLY' watermark and blank lines; no instructions embedded.", "Page numbers in 'where' are printed book page numbers inferred from the text."]
+}

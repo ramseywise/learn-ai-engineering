@@ -151,7 +151,7 @@ print(j[["order_id", "product", "qty_sold", "qty_target"]].head(3))
 
 ## The many-to-many blow-up
 
-This is the most expensive mistake in the chapter. Orders to customers is **many-to-one**: a customer appears many times in `orders` and once in `customers`, so every order finds one partner and the row count holds. But when a key repeats on both sides, a merge returns every combination of matching rows, and the frame grows without any warning. McKinney describes this as the Cartesian product of the matching rows ([McKinney, *Python for Data Analysis*, ch. 8](https://wesmckinney.com/book/data-wrangling)).
+This is the most expensive mistake in the chapter. Orders to customers is **many-to-one**: a customer appears many times in `orders` and once in `customers`, so every order finds one partner and the row count holds. But when a key repeats on both sides, a merge returns every combination of matching rows, and the frame grows without any warning. McKinney describes this as the Cartesian product of the matching rows ([McKinney, *Python for Data Analysis*, ch. 8](https://wesmckinney.com/book/data-wrangling)): with three `b` rows on the left and two on the right, the result has six (toy frames, ch. 8). The book also notes that `merge` defaults to an inner join, and that joining columns on columns discards both frames' indexes, whereas `DataFrame.join` is a left join that keeps the left row index.
 
 Suppose a promotions table lists two promotions for `ana` and two for `ben`, and someone merges it to attach a promotion to each order.
 
@@ -354,7 +354,7 @@ print(tall.drop(columns="variable"))
 
 ## stack and unstack
 
-`melt` and `pivot` work on columns. `stack` and `unstack` do the same job on index levels, and you meet them most often just after a multi-key groupby. `unstack` moves an index level up into the columns, and missing combinations become `NaN`.
+`pivot` is equivalent to `set_index([...])` followed by `unstack`, which is why the two reshape families agree (*Python for Data Analysis*, ch. 8). `stack` drops missing cells by default, so it inverts `unstack`; pass `dropna=False` to keep them. Selection on a MultiIndex is much faster once it is lexicographically sorted from the outermost level (`sort_index`; the book gives no timing). `melt` and `pivot` work on columns. `stack` and `unstack` do the same job on index levels, and you meet them most often just after a multi-key groupby. `unstack` moves an index level up into the columns, and missing combinations become `NaN`.
 
 ```python
 sales = orders.groupby(["region", "product"])["qty"].sum()

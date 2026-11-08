@@ -226,7 +226,7 @@ Opening Monday's and Tuesday's emails have a correlation of 0.28 across all user
 
 ## Random variables, expectation and variance
 
-A *random variable* assigns a number to each outcome. It has a probability mass function if discrete, a density if continuous, and a CDF either way. Two numbers summarise it. The expectation E[X] is its long-run mean. The variance Var(X) = E[(X − E[X])²] is its mean squared distance from that mean, and its square root is the standard deviation.
+A *random variable* assigns a number to each outcome. It has a probability mass function if discrete, a density if continuous, and a CDF either way. Two numbers summarise it. The expectation E[X] is its long-run mean. The variance Var(X) = E[(X − E[X])²] is its mean squared distance from that mean, and its square root is the standard deviation. A worked case from Bruce and Bruce: a webinar attendee buys a $300 service with probability 5%, a $50 one with 15% and nothing otherwise, so the expected value per attendee is 0.05 × 300 + 0.15 × 50 = $22.50 per month (*Practical Statistics*, ch. 1).
 
 ### Linearity needs no independence
 

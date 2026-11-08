@@ -1,0 +1,344 @@
+{
+ "schema": 1,
+ "key": "sha1:dd2b467a865c",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch11-time-series.pdf",
+ "bib": {
+  "title": "Chapter 11: Time Series",
+  "authors": [],
+  "first_author": "McKinney",
+  "year": null,
+  "venue": "book chapter (Python for Data Analysis, O'Reilly), pp. 317-362; author, edition and year are not printed in the extracted text (output timestamps show 2017)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71239,
+  "chars_total": 71239,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you represent, index, shift, time-zone convert, resample and window time series data in pandas?",
+ "hypothesis": null,
+ "contributions": [
+  "Taxonomy of time data (timestamps, fixed periods, intervals, elapsed time)",
+  "Tour of datetime parsing, DatetimeIndex, date_range/offsets, shift, tz handling, Period/PeriodIndex, resample, rolling/expanding/ewm"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Resampling 12 one-minute points (0..11) to 5min bins with closed='right' gives sums 0, 15, 40, 11, with a leading bin labelled 1999-12-31 23:55:00.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "bin sum",
+   "value": "40",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ts of np.arange(12) at freq T from 2000-01-01; ts.resample('5min', closed='right').sum(); pandas 0.2x (2017)",
+   "quote": "2000-01-01 00:05:00    40",
+   "table": null,
+   "note": "In[216] and In[217] print identical code (both closed='right') though the text says the default is left-closed; the default-closed call is not shown.",
+   "where": "p.350 In[216]"
+  },
+  {
+   "claim": "OHLC resampling at 5min returns open/high/low/close columns, e.g. first bin open 0, high 4, low 0, close 4.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 12-point minute series; ts.resample('5min').ohlc()",
+   "quote": "2000-01-01 00:00:00     0     4    0      4",
+   "table": null,
+   "note": null,
+   "where": "p.351 In[220]"
+  },
+  {
+   "claim": "Adding offsets Hour(2)+Minute(30) yields a 150-minute offset.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "minutes",
+   "value": "150",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pandas.tseries.offsets Hour(2)+Minute(30)",
+   "quote": "Out[87]: <150 * Minutes>",
+   "table": null,
+   "note": null,
+   "where": "p.331 In[87]"
+  },
+  {
+   "claim": "The period 2012Q4 with fiscal year ending January (Q-JAN) runs 2011-11-01 to 2012-01-31.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pd.Period('2012Q4', freq='Q-JAN').asfreq('D', 'start'/'end')",
+   "quote": "Out[178]: Period('2012-01-31', 'D')",
+   "table": null,
+   "note": null,
+   "where": "p.343 In[177-178]"
+  },
+  {
+   "claim": "A 4 PM timestamp on the second-to-last business day of the 2012Q4 (Q-JAN) quarter is 2012-01-30 16:00.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "p4pm = (p.asfreq('B','e') - 1).asfreq('T','s') + 16 * 60",
+   "quote": "Out[180]: Period('2012-01-30 16:00', 'T')",
+   "table": null,
+   "note": null,
+   "where": "p.343 In[179-180]"
+  },
+  {
+   "claim": "In A-JUN frequency, Aug-2007 belongs to fiscal period 2008.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pd.Period('Aug-2007','M').asfreq('A-JUN')",
+   "quote": "Out[169]: Period('2008', 'A-JUN')",
+   "table": null,
+   "note": null,
+   "where": "p.341 In[168-169]"
+  },
+  {
+   "claim": "Tz-aware Timestamp stores UTC nanoseconds since the Unix epoch; the value is unchanged by tz_convert.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "ns since epoch",
+   "value": "1299902400000000000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pd.Timestamp('2011-03-12 04:00').tz_localize('utc') then tz_convert('America/New_York')",
+   "quote": "Out[134]: 1299902400000000000",
+   "table": null,
+   "note": null,
+   "where": "p.338 In[133-134]"
+  },
+  {
+   "claim": "A daily series from 2000-01-01 over 100 days has monthly means -0.165893, 0.078606, 0.223811, -0.063643 (random data).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "np.random.randn(100) on pd.date_range('2000-01-01', periods=100, freq='D'); unseeded in text",
+   "quote": "2000-01-31   -0.165893",
+   "table": null,
+   "note": null,
+   "where": "p.348 In[211]"
+  },
+  {
+   "claim": "Rolling std with window 250 and min_periods=10 yields NaN until the 10th observation, then 0.077496 on 2003-01-15.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.077496",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AAPL close resampled to B and forward filled; stock_px_2.csv",
+   "quote": "2003-01-15    0.077496",
+   "table": null,
+   "note": null,
+   "where": "p.356 In[241-242]"
+  },
+  {
+   "claim": "close_px.rolling('20D').mean() over the stock frame has 2292 rows.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "rows",
+   "value": "2292",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AAPL, MSFT, XOM, B-resampled, 2003-01-02 to 2011-10-14",
+   "quote": "[2292 rows x 3 columns]",
+   "table": null,
+   "note": null,
+   "where": "p.358 In[247]"
+  },
+  {
+   "claim": "The macrodata example has 203 quarterly rows from 1959Q1 to 2009Q3, indexed via PeriodIndex(year=, quarter=, freq='Q-DEC').",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "rows",
+   "value": "203",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "examples/macrodata.csv",
+   "quote": "length=203, freq='Q-DEC')",
+   "table": null,
+   "note": null,
+   "where": "p.347 In[205]"
+  }
+ ],
+ "limits": [
+  "Written against a 2017 pandas (outputs show datetime(2017, 9, 25...)); aliases such as 'M','BM','H','T','A-DEC', resample(kind=, loffset=) and the bare rolling_corr name are version-specific and need checking against the current pandas docs.",
+  "Examples use unseeded random data, so printed numbers are not reproducible; stock_px_2.csv and macrodata.csv are book files not described in the chapter.",
+  "Timedelta indexes, custom frequency classes and irregular/experimental time are explicitly out of scope.",
+  "Typographical faults in the text: In[216]/In[217] are identical; ma60 variable uses window 30 while the prose says 60-day; the convention default is 'start' in prose but 'end' in Table 11-5."
+ ],
+ "practices": [
+  "Work in UTC and convert for display, since time zones are the most unpleasant part of time series work (11.4).",
+  "Use datetime.strptime for known formats and dateutil.parser.parse / pd.to_datetime for mixed ones; beware parse('42') becomes year 2042 (11.1).",
+  "Check index.is_unique and aggregate duplicate timestamps with groupby(level=0) (11.2).",
+  "Select ranges by partial date string or slice; slices are views, so edits write through to the original (11.2).",
+  "Prefer resample over groupby with offset.rollforward for binning by month (11.3).",
+  "Pass freq to shift to move timestamps rather than discard data; use ts / ts.shift(1) - 1 for percent change (11.3).",
+  "Use Period/PeriodIndex for fiscal calendars; the same 2012Q4 differs by fiscal year end (11.5).",
+  "When downsampling, decide explicitly which side is closed and which edge labels the bin; defaults are arbitrary (11.6 footnote).",
+  "For periods, downsampling target must be a subperiod and upsampling target a superperiod, else an exception (11.6).",
+  "Use rolling(..., min_periods=n) to avoid NaN at the start, rolling('20D') for irregular series, ewm(span=) for faster adaptation (11.7)."
+ ],
+ "terms": [
+  {
+   "term": "anchored offset",
+   "definition": "Frequencies that describe points in time that are not evenly spaced, such as 'M' and 'BM', which depend on month length and weekends.",
+   "where": "p.331"
+  },
+  {
+   "term": "NaT",
+   "definition": "Not a Time, pandas's null value for timestamp data.",
+   "where": "p.321"
+  },
+  {
+   "term": "Period",
+   "definition": "A timespan such as a day, month, quarter or year, with a frequency; Period(2007, 'A-DEC') spans Jan 1 to Dec 31, 2007.",
+   "where": "p.339"
+  },
+  {
+   "term": "downsampling / upsampling",
+   "definition": "Aggregating higher frequency data to lower frequency / converting lower frequency to higher frequency.",
+   "where": "p.348"
+  },
+  {
+   "term": "OHLC resampling",
+   "definition": "Per bucket: first (open), last (close), maximum (high) and minimal (low) values.",
+   "where": "p.351"
+  },
+  {
+   "term": "moving window functions",
+   "definition": "Statistics evaluated over a sliding window or with exponentially decaying weights, including functions without a fixed-length window.",
+   "where": "p.354"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "pytz / Olson time zone database",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "source of time zone information wrapped by pandas",
+   "quote": null
+  },
+  {
+   "work": "dateutil",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parser.parse for date strings",
+   "quote": null
+  },
+  {
+   "work": "scipy.stats.percentileofscore",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "used in user-defined rolling apply",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 11-1",
+   "caption": "Period frequency conversion illustration",
+   "page": 341,
+   "why": "shows annual period subdivided into monthly periods"
+  },
+  {
+   "figure": "Fig 11-2",
+   "caption": "Different quarterly frequency conventions",
+   "page": 343,
+   "why": "shows how 2012Q4 shifts with fiscal year end"
+  },
+  {
+   "figure": "Fig 11-3",
+   "caption": "Five-minute resampling illustration of closed, label conventions",
+   "page": 351,
+   "why": "closed/label bin edges at a glance"
+  },
+  {
+   "figure": "Fig 11-7",
+   "caption": "Simple moving average versus exponentially weighted",
+   "page": 359,
+   "why": "EW adapts faster"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.332",
+   "snippet": "ts / ts.shift(1) - 1",
+   "verbatim": true
+  },
+  {
+   "where": "p.334",
+   "snippet": "ts.groupby(offset.rollforward).mean()",
+   "verbatim": true
+  },
+  {
+   "where": "p.343",
+   "snippet": "p4pm = (p.asfreq('B', 'e') - 1).asfreq('T', 's') + 16 * 60",
+   "verbatim": true
+  },
+  {
+   "where": "p.347",
+   "snippet": "index = pd.PeriodIndex(year=data.year, quarter=data.quarter,\n                       freq='Q-DEC')",
+   "verbatim": true
+  },
+  {
+   "where": "p.350",
+   "snippet": "ts.resample('5min', closed='right', label='right', loffset='-1s').sum()",
+   "verbatim": true
+  },
+  {
+   "where": "p.358",
+   "snippet": "ewma60 = aapl_px.ewm(span=30).mean()",
+   "verbatim": true
+  },
+  {
+   "where": "p.359",
+   "snippet": "corr = returns.AAPL.rolling(125, min_periods=100).corr(spx_rets)",
+   "verbatim": true
+  },
+  {
+   "where": "p.361",
+   "snippet": "score_at_2percent = lambda x: percentileofscore(x, 0.02)\nresult = returns.AAPL.rolling(250).apply(score_at_2percent)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Author and year not printed in the extracted text. Figures are plots not present in text."
+ ]
+}

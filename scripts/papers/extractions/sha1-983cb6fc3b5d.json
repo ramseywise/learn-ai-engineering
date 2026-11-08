@@ -1,0 +1,264 @@
+{
+ "schema": 1,
+ "key": "sha1:983cb6fc3b5d",
+ "pdf": "data-analytics/sources/think-bayes/ch10-approximate-bayesian-computation.pdf",
+ "bib": {
+  "title": "Think Bayes, Chapter 10: Approximate Bayesian Computation",
+  "authors": [
+   "Allen B. Downey"
+  ],
+  "first_author": "Downey",
+  "year": 2013,
+  "venue": "book chapter (Think Bayes, 1st ed., O'Reilly/Green Tea Press)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25160,
+  "chars_total": 25160,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Is the coefficient of variation of adult height greater for women than for men (the Variability Hypothesis), and how can a Bayesian estimate of mean and standard deviation scale to 400,000 data points?",
+ "hypothesis": null,
+ "contributions": [
+  "Grid-based joint posterior over (mu, sigma) of a Gaussian, with prior ranges chosen from classical standard errors",
+  "Log-likelihood updates to avoid underflow, plus a memoized sufficient-sum speedup",
+  "ABC: likelihood of summary statistics instead of the full dataset, with robust statistics (median, inter-percentile range)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Raw BRFSS summary: men 178 cm mean, 7.7 cm sd; women 163 cm mean, 7.3 cm sd; CV 0.0433 men vs 0.0444 women.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CV",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CDC BRFSS self-reported adult US heights, 154407 men and 254722 women",
+   "quote": "For men CV is 0.0433; for women it is 0.0444.",
+   "table": null,
+   "note": null,
+   "where": "p.111"
+  },
+  {
+   "claim": "The naive per-datum update fails at 1000 values with total probability zero from floating-point underflow.",
+   "kind": "measured",
+   "source": null,
+   "metric": "values before failure",
+   "value": "1000",
+   "unit": "values",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grid suite over (mu, sigma), likelihood from Gaussian pdf, first 1000 BRFSS values",
+   "quote": "If we select the ﬁrst 1000 values and run the program again, we get an error",
+   "table": null,
+   "note": null,
+   "where": "p.114"
+  },
+  {
+   "claim": "Log-likelihood updates with memoized summation speed the exact computation about 100x, full dataset in under a minute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": "100",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exact grid posterior on 154407 men and 254722 women",
+   "quote": "This optimization speeds up the computation by about a factor of 100",
+   "table": null,
+   "note": "Unlogged log-likelihood version: author says it might take an hour.",
+   "where": "p.118"
+  },
+  {
+   "claim": "ABC with sample-statistic likelihood processes the whole dataset in about a second and agrees with the exact result to about 5 digits.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": "1",
+   "unit": "second",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LogUpdateSetABC using sample mean and sd, entire BRFSS data, author's computer",
+   "quote": "On my computer this function processes the entire dataset in about a sec-",
+   "table": null,
+   "note": "Digits agreement: 'with about 5 digits of precision' (p.119).",
+   "where": "p.119"
+  },
+  {
+   "claim": "With robust ABC (median, IPR, num_sigmas=1), posterior mean CV is 0.0410 for men and 0.0429 for women, with no overlap, so women appear more variable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "posterior mean CV",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ABC on median and 68% IPR, num_sigmas=1, BRFSS",
+   "quote": "The mean for men is 0.0410; for women it is 0.0429.",
+   "table": null,
+   "note": null,
+   "where": "p.123"
+  },
+  {
+   "claim": "The conclusion reverses with num_sigmas=2: men appear more variable with equal confidence, so the answer depends on the choice of summary statistic.",
+   "kind": "measured",
+   "source": null,
+   "metric": "num_sigmas",
+   "value": 2,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same ABC, wider inter-percentile range",
+   "quote": "but with num_sigmas=2 we conclude with equal conﬁdence that men are more vari-",
+   "table": null,
+   "note": null,
+   "where": "p.123"
+  },
+  {
+   "claim": "Outliers in the data: three adults at 61 cm and four women at 229 cm, motivating robust statistics.",
+   "kind": "measured",
+   "source": null,
+   "metric": "outlier counts",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CDC BRFSS self-reported adult US heights, 154407 men and 254722 women",
+   "quote": "there are three adults with reported height",
+   "table": null,
+   "note": null,
+   "where": "p.119"
+  },
+  {
+   "claim": "Prior range of 4 standard errors covers all non-negligible likelihood; larger has no effect.",
+   "kind": "claim",
+   "source": null,
+   "metric": "num_stderrs",
+   "value": "4",
+   "unit": "standard errors",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Grid prior ranges from m and s",
+   "quote": "With num_stderrs=4, the range is big enough to cover all values with non-negligible likelihood.",
+   "table": null,
+   "note": null,
+   "where": "p.113"
+  }
+ ],
+ "limits": [
+  "Single illustrative dataset; no repeated runs, timings are on the author's machine ('not-very-fast computer', no hardware given).",
+  "Grid enumeration over (mu, sigma) only; no MCMC or higher-dimensional treatment.",
+  "Author concedes the Variability Hypothesis may be too vague to evaluate; result depends on num_sigmas.",
+  "Choice of summary statistics is a modeling decision with no general rule given.",
+  "Uses data twice (to set prior range and to update); author argues this is harmless here.",
+  "Code is Python 2 and uses thinkbayes.py, which has dated."
+ ],
+ "practices": [
+  "Use classical estimates and standard errors (s/sqrt(n), s/sqrt(2(n-1))) to choose the grid range for a prior, p.112.",
+  "Compute likelihoods under a log transform and subtract the maximum before exponentiating to avoid underflow, p.114-116.",
+  "Factor out and memoize sums that depend on only one parameter, p.117.",
+  "When the full-data likelihood is tiny and costly, use the likelihood of summary statistics (ABC), p.118.",
+  "Choose robust summary statistics (median, IPR) when outliers are likely errors, p.121.",
+  "Pick summary statistics that capture both location and spread; 49th and 51st percentiles would leave sigma unconstrained, p.122."
+ ],
+ "terms": [
+  {
+   "term": "Approximate Bayesian Computation (ABC)",
+   "definition": "Replace the likelihood of the exact dataset with the likelihood of sample statistics: two datasets are alike if they yield the same summary statistics",
+   "where": "p.118, p.124"
+  },
+  {
+   "term": "coefficient of variation (CV)",
+   "definition": "the standard deviation divided by the mean; a dimensionless measure of variability relative to scale",
+   "where": "p.111"
+  },
+  {
+   "term": "underflow",
+   "definition": "a product of many small densities too small for floating point, rounded down to zero",
+   "where": "p.114"
+  },
+  {
+   "term": "inter-percentile range (IPR)",
+   "definition": "range spanning any given fraction p of the distribution; IQR for p=0.5",
+   "where": "p.121"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Think Bayes chapter 9 (two-parameter joint distribution)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "same joint-suite method applied to Gaussian mu, sigma",
+   "quote": "In Chapter 9 we estimated two parameters simultaneously using a joint dis-"
+  },
+  {
+   "work": "CDC Behavioral Risk Factor Surveillance System (BRFSS)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "self-reported heights",
+   "quote": null
+  },
+  {
+   "work": "Variability Hypothesis (Meckel, early nineteenth century, via Wikipedia)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hypothesis tested",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10.1",
+   "caption": "Contour plot of the posterior joint distribution of mean and standard deviation of height for men in the U.S.",
+   "page": 12,
+   "why": "Shows how tight the posterior is (mean ~178.5, sd ~7.3)."
+  },
+  {
+   "figure": "Fig 10.2",
+   "caption": "Contour plot of the posterior joint distribution of mean and standard deviation of height for women in the U.S.",
+   "page": 12,
+   "why": "Counterpart for women."
+  },
+  {
+   "figure": "Fig 10.3",
+   "caption": "Posterior distributions of CV for men and women, based on robust estimators.",
+   "page": 14,
+   "why": "Non-overlapping CV posteriors drive the (fragile) conclusion."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.114-116",
+   "snippet": "suite.Log()\nsuite.LogUpdateSet(xs)\nsuite.Exp()\nsuite.Normalize()",
+   "verbatim": true
+  },
+  {
+   "where": "p.118",
+   "snippet": "loglike = -n * math.log(sigma) - total / 2 / sigma**2",
+   "verbatim": true
+  },
+  {
+   "where": "p.119",
+   "snippet": "stderr_m = sigma / math.sqrt(n)\nloglike = EvalGaussianLogPdf(m, mu, stderr_m)\nstderr_s = sigma / math.sqrt(2 * (n-1))\nloglike += EvalGaussianLogPdf(s, sigma, stderr_s)",
+   "verbatim": true
+  },
+  {
+   "where": "p.121",
+   "snippet": "s = ipr / 2 / num_sigmas",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations and figure axes are garbled in text extraction but code was readable. Chapter 10 here is the first-edition numbering. No embedded instructions."
+ ]
+}

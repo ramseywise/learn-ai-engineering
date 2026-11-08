@@ -1,0 +1,270 @@
+{
+ "schema": 1,
+ "key": "sha1:958a721441ed",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch13-introduction-modeling-libraries.pdf",
+ "bib": {
+  "title": "Chapter 13: Introduction to Modeling Libraries in Python (Python for Data Analysis)",
+  "authors": [],
+  "first_author": "(not printed in chapter)",
+  "year": 2017,
+  "venue": "book chapter, O'Reilly (publisher not printed; year inferred from the statsmodels output date 25 Sep 2017)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 32739,
+  "chars_total": 32739,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you move from pandas data wrangling to model fitting with Patsy, statsmodels and scikit-learn?",
+ "hypothesis": null,
+ "contributions": [
+  "pandas-to-NumPy handoff via .values and loc",
+  "Patsy formulas and design matrices incl. stateful transforms and categoricals",
+  "short statsmodels intro (OLS, AR)",
+  "short scikit-learn intro (LogisticRegression, cross-validation) on Titanic"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Fitted OLS with sm.OLS on 100 simulated rows recovers coefficients near true beta [0.1,0.3,0.5] (no intercept, array API).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "N=100, 3 features, noise variance 0.1, seed 12345; sm.OLS(y, X) without add_constant",
+   "quote": "Out[72]: array([ 0.1783,  0.223 ,  0.501 ])",
+   "table": null,
+   "note": null,
+   "where": "p.396 In[72]"
+  },
+  {
+   "claim": "OLS summary R-squared on the simulated data.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "R-squared",
+   "value": 0.43,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same simulated OLS, N=100",
+   "quote": "R-squared:                       0.430",
+   "table": null,
+   "note": null,
+   "where": "p.395 In[73]"
+  },
+  {
+   "claim": "Formula API with intercept gives intercept 0.033559 and coefficients near truth.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "smf.ols('y ~ col0 + col1 + col2') on the same data",
+   "quote": "Intercept    0.033559",
+   "table": null,
+   "note": null,
+   "where": "p.396 Out[78]"
+  },
+  {
+   "claim": "AR(2) simulation (b0=0.8, b1=-0.4, N=1000) fitted with MAXLAGS=5 gives lag coefficients 0.7845 and -0.4085, later lags near zero.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "sm.tsa.AR(values).fit(5), 1000 steps, noise variance 0.1",
+   "quote": "array([-0.0062,  0.7845, -0.4085, -0.0136,  0.015 ,  0.0143])",
+   "table": null,
+   "note": null,
+   "where": "p.397 Out[85]"
+  },
+  {
+   "claim": "Titanic train set has 177 missing Age and 687 missing Cabin values.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "kaggle titanic train.csv",
+   "quote": "Age            177",
+   "table": null,
+   "note": null,
+   "where": "p.398 Out[89]"
+  },
+  {
+   "claim": "Four-fold cross-validated accuracies for LogisticRegression(C=10) on Titanic with Pclass, IsFemale, Age.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "cross_val_score(model, X_train, y_train, cv=4); Age NaN filled with train median",
+   "quote": "array([ 0.7723,  0.8027,  0.7703,  0.7883])",
+   "table": null,
+   "note": null,
+   "where": "p.401 Out[113]"
+  },
+  {
+   "claim": "Patsy centering of x1 and standardising of x0 are stateful: new data must be transformed with the in-sample mean and std via build_design_matrices.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "patsy.build_design_matrices([X.design_info], new_data)",
+   "quote": "These are called stateful transformations, because you must use statistics like the mean or standard deviation of the original dataset when transforming a new dataset.",
+   "table": null,
+   "note": null,
+   "where": "p.389"
+  }
+ ],
+ "limits": [
+  "Authors say it is not comprehensive; each library merits its own book.",
+  "Dated: statsmodels sm.tsa.AR was removed (replaced by AutoReg/AutoRegResults, ARIMA) in later statsmodels; np.linalg.lstsq(X, y) now warns without rcond=None; LogisticRegression repr shows multi_class='ovr', solver='liblinear', n_jobs=1 of 2017 sklearn; Patsy is in maintenance, formulaic is a successor; DataFrame.values superseded by .to_numpy(); chapter admits sklearn has no deep pandas integration (since changed: set_output('pandas'), ColumnTransformer). Judged from knowledge outside the text, not from the chapter.",
+  "Titanic imputation uses the median Age, with no claim the model is good: 'I make no claims that this is a good model'.",
+  "No test accuracy is computed (y_true unavailable)."
+ ],
+ "practices": [
+  "Use .values only for homogeneous data; heterogeneous frames become object arrays (p.385).",
+  "Select model columns with data.loc[:, cols].values (p.385).",
+  "Prefer Patsy over hand-built get_dummies for non-numeric columns, less error-prone (p.386).",
+  "Use + 0 to suppress intercept; with an intercept Patsy drops one category level to avoid collinearity (pp.388, 391).",
+  "Wrap arithmetic in I() inside formulas since + means term inclusion (p.390).",
+  "Reapply stateful transforms to held-out data with build_design_matrices and saved design_info (p.389).",
+  "Reattach column names to coefficients via X.design_info.column_names (p.388).",
+  "Fill missing values before statsmodels/sklearn and use training-set statistics for both train and test (p.399).",
+  "Use cross-validation (cross_val_score, LogisticRegressionCV) to tune and avoid overfitting (p.400-401).",
+  "Consult current docs, since books go out of date (p.401)."
+ ],
+ "terms": [
+  {
+   "term": "feature engineering",
+   "definition": "any data transformation or analytics that extract information from a raw dataset that may be useful in a modeling context",
+   "where": "p.383"
+  },
+  {
+   "term": "stateful transformations",
+   "definition": "transformations like center and standardize that need statistics (mean, std) of the original dataset when applied to new data",
+   "where": "p.389"
+  },
+  {
+   "term": "design matrix",
+   "definition": "Patsy DesignMatrix: NumPy ndarray with additional metadata (design_info)",
+   "where": "p.387"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Patsy",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "formula syntax inspired by R and S",
+   "quote": null
+  },
+  {
+   "work": "statsmodels",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "OLS, AR",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "LogisticRegression, cross_val_score",
+   "quote": null
+  },
+  {
+   "work": "Kaggle Titanic",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train.csv/test.csv",
+   "quote": null
+  },
+  {
+   "work": "Mueller and Guido, Introduction to Machine Learning with Python",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "VanderPlas, Python Data Science Handbook",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  },
+  {
+   "work": "Geron, Hands-On Machine Learning with Scikit-Learn and TensorFlow",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "further reading",
+   "quote": null
+  }
+ ],
+ "figures": [],
+ "code": [
+  {
+   "where": "p.385",
+   "snippet": "data.loc[:, model_cols].values",
+   "verbatim": true
+  },
+  {
+   "where": "p.387",
+   "snippet": "y, X = patsy.dmatrices('y ~ x0 + x1', data)",
+   "verbatim": true
+  },
+  {
+   "where": "p.388",
+   "snippet": "coef = pd.Series(coef.squeeze(), index=X.design_info.column_names)",
+   "verbatim": true
+  },
+  {
+   "where": "p.390",
+   "snippet": "new_X = patsy.build_design_matrices([X.design_info], new_data)",
+   "verbatim": true
+  },
+  {
+   "where": "p.396",
+   "snippet": "results = smf.ols('y ~ col0 + col1 + col2', data=data).fit()",
+   "verbatim": true
+  },
+  {
+   "where": "p.401",
+   "snippet": "scores = cross_val_score(model, X_train, y_train, cv=4)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Chapter text does not print author or book title; bib.authors left empty.",
+  "In-text claim of dated API is from outside knowledge, flagged in limits.",
+  "Page numbers are book pages, from running footers."
+ ]
+}

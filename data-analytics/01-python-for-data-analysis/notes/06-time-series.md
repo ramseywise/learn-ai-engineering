@@ -269,7 +269,7 @@ Freq: 5min, dtype: int64
 Freq: 5min, dtype: int64
 ```
 
-Both versions are right, and they answer slightly different questions. In finance and logging, whether the value stamped 09:05 is included in the 09:05 bar is a real decision, so make it on purpose. Weekly bins need the same care: `W-SUN` ends the week on Sunday, and a retail team that reports Monday-to-Sunday wants exactly that.
+The right-closed result is the one McKinney prints for the same 12-point series, sums 0, 15, 40 and 11 (*Python for Data Analysis*, ch. 11); his text never shows the default-closed call next to it, and says the defaults are arbitrary. Both versions are right, and they answer slightly different questions. In finance and logging, whether the value stamped 09:05 is included in the 09:05 bar is a real decision, so make it on purpose. Weekly bins need the same care: `W-SUN` ends the week on Sunday, and a retail team that reports Monday-to-Sunday wants exactly that.
 
 Going the other way, **upsampling**, creates rows with nothing in them, and you must choose how to fill them. Carrying a value forward assumes it held until the next one, which suits a monthly price list and misrepresents a monthly sales total.
 
@@ -314,7 +314,7 @@ Friday      536.0
 Name: revenue, dtype: float64
 ```
 
-Saturday leads, as the weekly pattern we built in says it should. Grouping by weekday is how you check for a pattern like that on real data, before you trust any comparison across days.
+Periods also express fiscal calendars. With a year ending in January (`Q-JAN`), 2012Q4 runs 1 November 2011 to 31 January 2012, and in `A-JUN` August 2007 belongs to the 2008 period (*Python for Data Analysis*, ch. 11). Resampling periods needs the target to be a subperiod (downsampling) or superperiod (upsampling), or pandas raises. Saturday leads, as the weekly pattern we built in says it should. Grouping by weekday is how you check for a pattern like that on real data, before you trust any comparison across days.
 
 ## Time zones
 
@@ -334,7 +334,7 @@ DatetimeIndex(['2024-03-30 23:00:00+01:00', '2024-04-01 00:00:00+02:00'],
 0 days 23:00:00
 ```
 
-The zone also changes the answer to "which day was this sale?". The second stamp is 22:00 on March 31 in UTC, but it is already April 1 in Oslo, so a daily or even a monthly total by local date differs from one by UTC date. Choose the reporting zone before you resample. The last line shows the other hazard: March 31 was the day the clocks went forward in Oslo, so that local day lasted 23 hours.
+A zone-aware timestamp stores UTC nanoseconds since the epoch, so `tz_convert` changes only how it is displayed: the stored integer (1299902400000000000 in McKinney's example) does not move (*Python for Data Analysis*, ch. 11). The zone also changes the answer to "which day was this sale?". The second stamp is 22:00 on March 31 in UTC, but it is already April 1 in Oslo, so a daily or even a monthly total by local date differs from one by UTC date. Choose the reporting zone before you resample. The last line shows the other hazard: March 31 was the day the clocks went forward in Oslo, so that local day lasted 23 hours.
 
 ## Rolling windows
 
@@ -395,7 +395,7 @@ print(dec)
 
 The December bump starts on the 1st. The centred column rises early, on November 29, days before the jump took place, by reading from the future, and the trailing column reacts only after the event. For a chart the centred line is acceptable. For a forecast, or anything claiming to predict, it is cheating.
 
-Rolling works on any statistic. A rolling standard deviation is a quick volatility chart, and `rolling(...).corr(other)` gives a rolling correlation, which is the example McKinney builds on stock data in `practice/mckinney/ch11.ipynb`.
+Rolling works on any statistic. A rolling standard deviation is a quick volatility chart, and `rolling(...).corr(other)` gives a rolling correlation, which is the example McKinney builds on stock data in `practice/mckinney/ch11.ipynb`: `returns.AAPL.rolling(125, min_periods=100).corr(spx_rets)` (*Python for Data Analysis*, ch. 11). With `min_periods=10` a window of 250 gives `NaN` until the tenth observation, and `rolling("20D")` is the form for irregular timestamps.
 
 ## Pitfalls
 
@@ -405,6 +405,8 @@ Rolling works on any statistic. A rolling standard deviation is a quick volatili
 - **Old frequency aliases.** `M`, `Q`, `Y`, `H` and `T` now raise an error. Use `ME`, `QE`, `YE`, `h`, `min`.
 - **Comparing raw monthly sums.** Months have 28 to 31 days. Check per-day means too.
 - **Leakage.** A negative `shift` and `center=True` both read the future. Fine on a chart, and not in a model.
+- **Removed or renamed resample arguments.** The book's `resample(..., loffset="-1s")` no longer exists (shift the index instead), `pd.TimeGrouper` is now `pd.Grouper(freq=...)`, and `PeriodIndex(year=, quarter=)` is deprecated.
+- **Duplicate timestamps.** Check `index.is_unique`, and aggregate with `groupby(level=0)` before resampling.
 - **Unsorted index.** Sort before you slice or take rolling windows: `sort_index()`. Check with `index.is_monotonic_increasing`.
 - **Local-time arithmetic across daylight saving.** Store in UTC and convert for display.
 

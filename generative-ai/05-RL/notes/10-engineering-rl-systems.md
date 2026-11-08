@@ -130,7 +130,7 @@ later can force a change of algorithm. For massive action spaces, policy gradien
 
 **Online, offline, concurrent.** Online learning explores but needs a live or simulated
 environment. Offline learning uses logs but cannot explore and suffers distribution shift
-(see [DQN](01-rl-foundations.md#deep-q-networks-and-learning-from-logs)). Concurrent learning runs many agents in
+(see [DQN](01b-algorithm-families-td-and-dqn.md#deep-q-networks-and-learning-from-logs)). Concurrent learning runs many agents in
 parallel on one problem (ch. 9). Simulations are worth building first, but a policy that works
 perfectly in simulation can still fail in the real world (ch. 9).
 

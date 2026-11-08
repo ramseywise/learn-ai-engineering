@@ -11,6 +11,7 @@ sources:
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4, 11"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 4"
   - https://arxiv.org/abs/2303.17491
   - https://arxiv.org/abs/2303.17651
   - https://arxiv.org/abs/2310.01798
@@ -50,6 +51,8 @@ The AutoGen course walks through Ng's four patterns with one lesson each, plus t
 | L6 | Planning | Stock report | `GroupChat` with speaker transitions |
 
 The course is pyautogen 0.2. AutoGen has since been rewritten (0.4 is event-driven) and Microsoft now points new work at the Microsoft Agent Framework; the patterns carry over, the class names do not. See [05 — framework survey](05-framework-survey.md).
+
+Agents can also talk without addressing each other. *Agentic Architectural Patterns* (ch. 4) separates direct communication, where one agent sends another a structured message (`{"task": "reorder_part", "quantity": 500}`), from indirect communication through a shared environment, called stigmergy: one agent writes `{"status": "complete"}` to a shared database and another, which watches that record, starts the next step. Direct messages give a clear, auditable chain of delegation; the shared record couples agents only through its schema. The chapter shows both with worked examples and no measurements.
 
 ---
 

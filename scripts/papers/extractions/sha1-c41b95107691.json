@@ -1,0 +1,166 @@
+{
+ "schema": 1,
+ "key": "sha1:c41b95107691",
+ "pdf": "data-analytics/sources/practical-statistics-for-data-scientists/ch06-statistical-machine-learning.pdf",
+ "bib": {
+  "title": "Chapter 6. Statistical Machine Learning (Practical Statistics for Data Scientists)",
+  "authors": ["Peter Bruce", "Andrew Bruce"],
+  "first_author": "Bruce",
+  "year": 2017,
+  "venue": "book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 66213,
+  "chars_total": 66213,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do KNN, decision trees, bagging/random forests and boosting work, and how do you keep them from overfitting?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "A default XGBoost fit on the Lending Club loan data overfits: training error is far below test error.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "train error",
+   "value": "14.6",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lending Club loan_data, xgboost 250 rounds, default params, binary:logistic, 10,000 random test records, rest train",
+   "quote": "Boosting leads to an error rate of only 14.6% for the training set.",
+   "table": null,
+   "note": "Text says test error 36.2%, but the printed R output is mean(error_default) 0.3715; train_error printed 0.145622.",
+   "where": "Regularization: Avoiding Overfitting"
+  },
+  {
+   "claim": "With lambda=1000 (eta=.1, subsample=.63) the XGBoost train error rises to 33.2% and test error falls to 34.8%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "test error",
+   "value": "0.3483",
+   "unit": "fraction",
+   "baseline_value": "0.3715",
+   "n": 10000,
+   "setup": "same loan data and split as default xgboost, 250 rounds, lambda=1000",
+   "quote": "1:  250    0.332405\n> mean(error_penalty)\n[1] 0.3483",
+   "table": null,
+   "note": "baseline_value is the default model's printed test error 0.3715 (text says 36.2%).",
+   "where": "Regularization: Avoiding Overfitting"
+  },
+  {
+   "claim": "5-fold CV over eta and max_depth selects eta=0.1, max_depth=3 (or 6); deeper trees and larger eta are worse.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "CV error",
+   "value": "35.41",
+   "unit": "%",
+   "baseline_value": "40.19",
+   "n": null,
+   "setup": "xgboost 100 rounds, loan_data, 5 folds, grid eta in {.1,.5,.9} x max_depth in {3,6,12}; baseline is the worst cell (eta .9, depth 12)",
+   "quote": "1 0.1         3     35.41",
+   "table": null,
+   "note": null,
+   "where": "Hyperparameters and Cross-Validation"
+  },
+  {
+   "claim": "Random forest on two predictors (500 trees) has OOB error 38.53%; with all columns (3 vars per split) 34.38%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "OOB error rate",
+   "value": "38.53",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 3000,
+   "setup": "loan3000, borrower_score + payment_inc_ratio, randomForest defaults",
+   "quote": "OOB estimate of  error rate: 38.53%",
+   "table": null,
+   "note": "Full-data model prints 34.38%.",
+   "where": "Random Forest"
+  },
+  {
+   "claim": "Without standardization KNN neighbours are matched almost only on revol_bal (dollars); standardizing gives neighbours similar on all variables.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "loan data, 4 predictors, k=5, R knn with and without scale()",
+   "quote": "The five nearest neighbors are much more alike in all the variables providing a more sensible result.",
+   "table": null,
+   "note": null,
+   "where": "Standardization"
+  },
+  {
+   "claim": "KNN with K=20 on 200 loans: 14 defaulted vs 6 paid-off within the neighbourhood gives default, probability 0.7.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "KNN default probability",
+   "value": "0.7",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "loan200, dti and payment_inc_ratio, K=20",
+   "quote": "14 defaulted loans lie within the circle as compared with only 6 paid-off",
+   "table": null,
+   "note": "Probability 0.7 is printed with the fraction image missing in the text.",
+   "where": "A Small Example: Predicting Loan Default"
+  }
+ ],
+ "limits": [
+  "All numbers are single illustrative runs on Lending Club data with no seeds, repeats or intervals.",
+  "Code uses R (FNN, rpart, randomForest, xgboost); ntreelimit and the knn syntax are older xgboost/FNN versions.",
+  "Equations (Euclidean, Gini, entropy, bagged estimate, Adaboost, ridge, lasso) are images and are missing from the extracted text.",
+  "Published 2017: no gradient-boosting variants such as LightGBM or CatBoost."
+ ],
+ "practices": [
+  "Standardize predictors before KNN, PCA or clustering so large-scale variables do not dominate distance (Standardization).",
+  "Choose K by accuracy on holdout/validation data; low K overfits, high K oversmooths; typically K 1-20, odd to avoid ties (Choosing K).",
+  "Use KNN probabilities with a cutoff below 0.5 for rare classes (KNN note).",
+  "Use KNN output as a feature for a second-stage model (KNN as a Feature Engine).",
+  "Prune trees or set cp by repeated train/validation partitioning; try a few cp values in exploration (Stopping the Tree from Growing).",
+  "Prefer permutation (out-of-bag accuracy decrease) variable importance over Gini decrease, which is training-based and less reliable (Variable Importance).",
+  "Tune random forest nodesize and maxnodes by cross-validation to avoid overfitting noisy data (Hyperparameters).",
+  "For XGBoost use small eta (0.1) with more rounds, shallow trees, subsample/colsample, and lambda/alpha regularization; tune by cross-validation (XGBoost, Hyperparameters and Cross-Validation).",
+  "Omit one dummy in linear/logistic regression after one-hot encoding; not needed for KNN and trees (One Hot Encoder)."
+ ],
+ "terms": [
+  {"term": "bias-variance tradeoff", "definition": "Variance refers to the modeling error that occurs because of the choice of training data; bias refers to the modeling error that occurs because you have not properly identified the underlying real-world scenario; this error would not disappear if you simply added more training data.", "where": "Choosing K sidebar"},
+  {"term": "hyperparameters", "definition": "parameters that you need to set before fitting a model; they are not optimized as part of the training process", "where": "Hyperparameters"},
+  {"term": "bagging", "definition": "A general technique to form a collection of models by bootstrapping the data.", "where": "Key terms"},
+  {"term": "random forest", "definition": "bagging applied to decision trees that also samples variables at each split; rule of thumb p=sqrt(P) (formula image missing)", "where": "Random Forest"},
+  {"term": "boosting", "definition": "A general technique to fit a sequence of models by giving more weight to the records with large residuals for each successive round.", "where": "Key terms"},
+  {"term": "out-of-bag (OOB) error", "definition": "the error rate for the trained models, applied to the data left out of the training set for that tree", "where": "Random Forest"},
+  {"term": "regularization", "definition": "A technique to avoid overfitting by adding a penalty term to the cost function on the number of parameters in the model.", "where": "Key terms"},
+  {"term": "impurity", "definition": "The extent to which a mix of classes is found in a subpartition of the data (the more mixed, the more impure).", "where": "Key terms for trees"},
+  {"term": "pruning", "definition": "The process of taking a fully grown tree and progressively cutting its branches back, to reduce overfitting.", "where": "Key terms for trees"},
+  {"term": "cross-validation", "definition": "randomly splits up the data into K different groups (folds); a model is trained on data not in the fold and evaluated on the fold; best hyperparameters have lowest average error", "where": "Hyperparameters and Cross-Validation"}
+ ],
+ "lineage": [
+  {"work": "Breiman and others, CART (1984)", "year": 1984, "arxiv": null, "relation": "surveys", "note": "origin of tree models", "quote": null},
+  {"work": "Breiman, bagging (1994)", "year": 1994, "arxiv": null, "relation": "surveys", "note": "bootstrap aggregating", "quote": null},
+  {"work": "Chen and Guestrin, XGBoost", "year": null, "arxiv": null, "relation": "surveys", "note": "stochastic gradient boosting implementation; no citation printed", "quote": null},
+  {"work": "Lending Club loan data", "year": null, "arxiv": null, "relation": "uses-data", "note": "running example", "quote": null},
+  {"work": "King County housing data", "year": null, "arxiv": null, "relation": "uses-data", "note": "KNN feature example, no results", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 6-2", "caption": "KNN prediction of loan default using two variables: debt-to-income ratio and loan payment-to-income ratio", "page": null, "why": "shows the 20-neighbour boundary"},
+  {"figure": "Fig 6-10", "caption": "The error rate of the default XGBoost versus a penalized version of XGBoost", "page": null, "why": "default test error rises while train falls; penalized does not"}
+ ],
+ "code": [],
+ "problems": [
+  "Math formulas are images and absent from the text; table 6-2 and 6-1 flattened.",
+  "Text reports XGBoost default test error 36.2% but the printed output is 0.3715.",
+  "Penalized-model prose says training error is only slightly lower than test, but printed train 0.3324 is lower than test 0.3483.",
+  "Figure captions only: figures not inspected."
+ ]
+}

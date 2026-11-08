@@ -166,7 +166,7 @@ new_checkout:C(device)[T.tablet]    1.108
 joint p for the interactions: 0.396
 ```
 
-The effect on desktop (the baseline) is 0.87, on mobile 0.87 + 0.79 and on tablet 0.87 + 1.11. They look different, yet the joint test gives p = 0.40, so the data do not distinguish them. Test the interaction, as opposed to noticing that one segment is significant and another is not. Interaction estimates also have larger standard errors than main effects, so experiments rarely have the power to detect them.
+The effect on desktop (the baseline) is 0.87, on mobile 0.87 + 0.79 and on tablet 0.87 + 1.11. They look different, yet the joint test gives p = 0.40, so the data do not distinguish them. Test the interaction, as opposed to noticing that one segment is significant and another is not. The same book shows an interaction that is large: price per extra square foot is $177 in the cheapest zip-code group and $447 in the dearest, a factor of almost 2.7, and the dearest group alone adds almost $340,000 as a main effect (*Practical Statistics*, ch. 4). Interaction estimates also have larger standard errors than main effects, so experiments rarely have the power to detect them.
 
 The simple-regression algebra behind this table is short, and *Think Stats* gives it in one place (ch. 9). With one predictor the least-squares slope is β = Cov(X, Y) / Var(X) and the intercept is α = ȳ − β·x̄. R² equals ρ², the square of Pearson's correlation, and it is 1 − Var(residual) / Var(Y): the share of the mean squared error removed compared with always guessing ȳ. So R² = 0.64 means the model cuts squared prediction error by 64%, a more careful wording than "explains 64% of the variability". The book notes least squares is the maximum likelihood fit when residuals are independent of x, normal, mean zero and of constant variance, and argues that computational convenience is no longer a reason to prefer squared loss over a cost function that matches the problem.
 
@@ -243,7 +243,7 @@ slope without point 2.02, with one high-leverage point -0.18
 leverage of that point 0.55 (average 0.010), Cook's D 107.0
 ```
 
-One row of 201 changed a slope of 2.02 to −0.18. It has 55 times the average leverage. Always look at the top few rows by Cook's distance, and go back to the question from chapter 1: what is this row? Then decide.
+One row of 201 changed a slope of 2.02 to −0.18. It has 55 times the average leverage. The book's version is a house regression where the largest standardized residual (-4.33) is a partial-interest sale priced $757,753 off, and dropping the influential rows moves the Bathrooms coefficient from 2,282 to -16,132 (*Practical Statistics*, ch. 4). Extrapolation fails quietly too: the same fit prices a 5,000 sq ft empty lot at -$522,202 because every training row has a building. Always look at the top few rows by Cook's distance, and go back to the question from chapter 1: what is this row? Then decide.
 
 ### Multicollinearity
 
@@ -272,7 +272,7 @@ x1 alone: coef 2.05, SE 0.041
 prediction RMSE both 0.920, x1 alone 0.920
 ```
 
-The variance inflation factor (VIF) is how much a coefficient's variance is inflated by correlation with the other predictors. The two coefficients sum to the right total but their split is arbitrary: their standard errors are 20 times larger than the solo fit's. The predictions, however, are just as good. So collinearity is a problem for *explanation* and mostly not for prediction. It biases nothing, but it inflates the SEs. Drop or combine predictors if you need to interpret them. For a randomised treatment, collinearity with covariates is not a concern, because assignment is independent of them by construction.
+The variance inflation factor (VIF) is how much a coefficient's variance is inflated by correlation with the other predictors. The two coefficients sum to the right total but their split is arbitrary: their standard errors are 20 times larger than the solo fit's. The predictions, however, are just as good. So collinearity is a problem for *explanation* and mostly not for prediction. It biases nothing, but it inflates the SEs. In the book's King County house-price model (R² = 0.5407, in-sample), the bedroom coefficient is negative once square feet and bathrooms are in, because bedrooms and size move together; take size out and it flips to +$27,657 (*Practical Statistics*, ch. 4). Drop or combine predictors if you need to interpret them. For a randomised treatment, collinearity with covariates is not a concern, because assignment is independent of them by construction.
 
 ### Clustered standard errors
 
@@ -387,6 +387,10 @@ baseline 0.80: coef 0.4 moves it to 0.856 (+0.056)
 ```
 
 A coefficient of 0.4 multiplies the odds by e^0.4 = 1.49 at every baseline, but adds one percentage point at a 2% base and ten at a 50% base. "Divide by 4" is the rule of thumb for the maximum effect (0.4/4 = 0.10, reached at p = 0.5). When p is small, the odds ratio approximates the relative risk, and the two drift apart as p grows.
+
+### Rare outcomes
+
+With 5% defaults, a logistic model fitted to the raw data predicts a default for only 0.39% of loans, less than a twelfth of the expected share, because rarely crossing 0.5 is what minimises error. Weighting each default by 1/p (about 20) lifts the mean predicted default to 43%, and the same effect comes from undersampling the non-defaults. The weighted model is not better calibrated, so predicted probabilities must be rescaled before they are quoted as risk. Do not judge such a model on accuracy: always predicting "no purchase" at a 0.1% purchase rate is 99.9% accurate. Use ROC and AUC (the book's loan model has AUC about 0.59, a weak ranker) or lift (*Practical Statistics*, ch. 5).
 
 ### Separation
 

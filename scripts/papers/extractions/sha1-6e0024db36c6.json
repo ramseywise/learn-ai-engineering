@@ -1,0 +1,232 @@
+{
+ "schema": 1,
+ "key": "sha1:6e0024db36c6",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch06-data-loading-storage-file.pdf",
+ "bib": {
+  "title": "Chapter 6: Data Loading, Storage, and File Formats (Python for Data Analysis)",
+  "authors": [
+   "Wes McKinney"
+  ],
+  "first_author": "McKinney",
+  "year": null,
+  "venue": "O'Reilly book chapter (pages 167-190; edition not printed in the excerpt, content matches the 2nd ed.)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41999,
+  "chars_total": 41999,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you get tabular, hierarchical and remote data into pandas DataFrames and write it back out in text, binary, web and database formats?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "read_csv has grown to a very large option surface; the docs are the place to find the right parameters for a messy file.",
+   "kind": "claim",
+   "source": null,
+   "metric": "read_csv parameter count",
+   "value": "over 50",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "pandas read_csv at the time of writing (2017-era pandas)",
+   "quote": "read_csv has\nover 50 as of this writing",
+   "table": null,
+   "note": null,
+   "where": "p.168"
+  },
+  {
+   "claim": "Worked example: counting bank failures by closing year from an FDIC HTML table via read_html then to_datetime; 2010 had the most.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "failures in 2010",
+   "value": "157",
+   "unit": "banks",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FDIC failed bank list HTML file used in pandas docs, 15 distinct years; data as of the book's download (latest closing date Sept 2016)",
+   "quote": "2010    157",
+   "table": null,
+   "note": null,
+   "where": "p.181, Out[78]"
+  },
+  {
+   "claim": "Worked example: chunked read_csv with chunksize=1000 over a 10000-row file aggregates key value_counts without loading all rows at once; top key E at 368.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "count of key E",
+   "value": "368.0",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": 10000,
+   "setup": "examples/ex6.csv, 10000 rows x 5 columns, chunksize=1000",
+   "quote": "E    368.0",
+   "table": null,
+   "note": null,
+   "where": "p.174, Out[40]"
+  },
+  {
+   "claim": "pickle is recommended only as short-term storage because format stability across library versions is not guaranteed.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pandas to_pickle/read_pickle",
+   "quote": "pickle is only recommended as a short-term storage format.",
+   "table": null,
+   "note": null,
+   "where": "p.184"
+  },
+  {
+   "claim": "HDF5 can speed up I/O-bound analysis and suits write-once, read-many data; simultaneous writers can corrupt the file.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HDFStore via PyTables; no benchmark given",
+   "quote": "HDF5 is not a database. It is best suited for write-once, read-many\ndatasets.",
+   "table": null,
+   "note": null,
+   "where": "p.186"
+  }
+ ],
+ "limits": [
+  "No benchmarks of any format's speed or size; claims about HDF5 speed are asserted.",
+  "Dated: read_msgpack, skip_footer, squeeze, date_parser, keep_date_col, ExcelWriter.save() and pd.read_table are removed or deprecated in modern pandas; Parquet is explicitly not covered ('still developing') and is now the standard columnar choice.",
+  "Print errata in this text: In [82] perf.head() shows an empty DataFrame, and the HDFStore listing Out[96] already shows obj2/obj3 before they are created.",
+  "The chapter says the 3rd edition and online docs give current API; the text read has no edition or year printed."
+ ],
+ "practices": [
+  "Look at the raw file (cat/type) before choosing read_csv arguments (p.168).",
+  "Use header=None with names=[...] when the file has no header row (p.169).",
+  "Use index_col with a list of names to build a hierarchical index (p.170).",
+  "Use sep='\\s+' (a regex) for whitespace-separated files (p.171).",
+  "Use skiprows for comment or junk lines (p.171).",
+  "Use na_values, as a list or per-column dict, for custom missing-value sentinels (p.172).",
+  "Use nrows to sample a big file and chunksize to iterate through it, aggregating piece by piece (p.174).",
+  "Use to_csv with na_rep, index=False, header=False, columns= to control output (p.175-176).",
+  "Use the csv module with a Dialect or keyword args for malformed single-character-delimited files; fall back to str.split or re.split for multi-character delimiters (p.176-178).",
+  "Build DataFrames from lists of dicts parsed from JSON, selecting columns; use to_json(orient='records') for row-wise output (p.179-180).",
+  "Use read_html to extract <table> elements into a list of DataFrames; use lxml.objectify for general XML (p.180-183).",
+  "Use pickle only for short-term storage; consider HDF5 or Feather for larger or cross-language needs (p.184-185).",
+  "Use HDFStore format='table' when you need queries (slower than 'fixed'); avoid concurrent writers (p.185-186).",
+  "Use requests plus resp.json() for web APIs and pass the list of dicts to DataFrame (p.187).",
+  "Use read_sql with a SQLAlchemy engine instead of building DataFrames from fetchall and cursor.description (p.190)."
+ ],
+ "terms": [
+  {
+   "term": "serialization",
+   "definition": "storing data efficiently in binary format",
+   "where": "p.183"
+  },
+  {
+   "term": "HDF5",
+   "definition": "hierarchical data format; stores multiple datasets and metadata with on-the-fly compression, for large scientific array data",
+   "where": "p.184"
+  },
+  {
+   "term": "Feather",
+   "definition": "A cross-language column-oriented file format ... uses the Apache Arrow columnar memory format",
+   "where": "p.184"
+  },
+  {
+   "term": "bcolz",
+   "definition": "A compressable column-oriented binary format based on the Blosc compression library",
+   "where": "p.184"
+  },
+  {
+   "term": "CSV dialect",
+   "definition": "a csv.Dialect subclass defining delimiter, quotechar, quoting, lineterminator, skipinitialspace, doublequote, escapechar",
+   "where": "p.177-178"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "pandas",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "The library whose I/O API is taught",
+   "quote": null
+  },
+  {
+   "work": "Python csv, json, pickle, sqlite3 standard library modules",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Used for manual parsing and serialization",
+   "quote": null
+  },
+  {
+   "work": "lxml, Beautiful Soup, html5lib",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "HTML/XML parsers behind read_html",
+   "quote": null
+  },
+  {
+   "work": "PyTables / h5py, SQLAlchemy, requests, Apache Parquet",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Named alternatives or backends",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 6-1",
+   "caption": "Parsing functions in pandas",
+   "page": 167,
+   "why": "One-glance map of read_* functions by format."
+  },
+  {
+   "figure": "Table 6-2",
+   "caption": "Some read_csv/read_table function arguments",
+   "page": 172,
+   "why": "Reference for the options that handle messy files."
+  },
+  {
+   "figure": "Table 6-3",
+   "caption": "CSV dialect options",
+   "page": 177,
+   "why": "Dialect attributes for the csv module."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.174",
+   "snippet": "chunker = pd.read_csv('examples/ex6.csv', chunksize=1000)\ntot = pd.Series([])\nfor piece in chunker:\n    tot = tot.add(piece['key'].value_counts(), fill_value=0)\ntot = tot.sort_values(ascending=False)",
+   "verbatim": true
+  },
+  {
+   "where": "p.177",
+   "snippet": "class my_dialect(csv.Dialect):\n    lineterminator = '\\n'\n    delimiter = ';'\n    quotechar = '\"'\n    quoting = csv.QUOTE_MINIMAL\nreader = csv.reader(f, dialect=my_dialect)",
+   "verbatim": true
+  },
+  {
+   "where": "p.190",
+   "snippet": "db = sqla.create_engine('sqlite:///mydata.sqlite')\npd.read_sql('select * from test', db)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Edition/year not printed in the excerpt; bib.year left null.",
+  "Text is code-heavy; tables extracted as flat lines but readable."
+ ]
+}

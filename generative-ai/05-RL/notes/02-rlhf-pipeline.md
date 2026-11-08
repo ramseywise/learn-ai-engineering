@@ -540,7 +540,7 @@ policy (the LLM) using **Proximal Policy Optimization (PPO)** to maximize expect
 while staying close to the SFT policy. The KL-to-reference objective is maximum-entropy RL with a
 prior, and its optimum π\* ∝ π_ref · exp(r/β) is exactly what DPO inverts
 ([01](01-rl-foundations.md#entropy-and-maximum-entropy-rl-sac)). The advantage estimator, GAE,
-blends TD targets ([01](01-rl-foundations.md#temporal-difference-learning-q-learning-vs-sarsa)).
+blends TD targets ([01](01b-algorithm-families-td-and-dqn.md#temporal-difference-learning-q-learning-vs-sarsa)).
 
 **PPO objective for language models:**
 

@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 10; 3rd ed. open access at https://wesmckinney.com/book/data-aggregation"
+  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 10, 12 and 14; 3rd ed. open access at https://wesmckinney.com/book/data-aggregation"
   - "Wickham, The Split-Apply-Combine Strategy for Data Analysis (JSS 2011), https://doi.org/10.18637/jss.v040.i01"
   - "McKinney, Data Structures for Statistical Computing in Python (SciPy 2010), https://doi.org/10.25080/Majora-92bf1922-00a"
   - "VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 3; https://jakevdp.github.io/PythonDataScienceHandbook/03.08-aggregation-and-grouping.html"
@@ -268,6 +268,8 @@ print(orders[["order_id", "product", "qty", "qty_vs_product"]].sort_values("qty_
 9      1011  filter    6            2.25
 ```
 
+The group-wise z-score shows why `transform` beats `apply` when the function is built from group statistics. `(df["value"] - g.transform("mean")) / g.transform("std")` gives the same numbers as `g.apply(normalize)` (first value -1.161895 in McKinney's output), but uses the string aliases' fast path instead of calling Python once per group (*Python for Data Analysis*, ch. 12; no timing given). The same holds for a share within group: `df.total / df.groupby("tz").total.transform("sum")` replaces an `apply` that normalises each group (ch. 14, the 1.USA.gov time-zone counts). A transform function must return a scalar or a same-shape object, and must not mutate its input. For a time-binned group per key, combine keys and a time grouper, `df.groupby(["key", pd.Grouper(freq="5min")]).sum()`; the book writes `pd.TimeGrouper`, which was removed.
+
 A group-wise fill is the same move. Filling a missing rating with the mean of its own region beats the global mean when regions differ, though as chapter 2 said, you should first ask why it is missing at all.
 
 ```python
@@ -297,7 +299,9 @@ print(sorted(repeat["customer"].unique()), len(repeat))
 ['ana', 'ben', 'cara', 'dev'] 9
 ```
 
-`apply` is the general escape hatch. It passes each group as a DataFrame to your function and stitches whatever comes back into a result. Use it when nothing more specific fits, such as selecting the top order per region or computing a weighted average, and reach for it last, as it is the slowest of the options.
+The same shape drives the MovieLens example: `ratings.groupby("title").size() >= 250` keeps 1,216 films from 1,000,209 ratings, and a mean-rating gap by gender over those films ranks Dirty Dancing as the most female-favoured (M minus F = -0.83). The book admits that 250 is an arbitrary cutoff, so state it (*Python for Data Analysis*, ch. 14). Its baby-names diversity measure is `apply` on a sorted group: `prop.sort_values(ascending=False).cumsum().values.searchsorted(0.5) + 1` counts the names needed to cover half of a year's births, 117 for boys in 2010 against 25 in 1900 (ch. 14; descriptive, no test).
+
+The book also says custom aggregation functions are generally much slower than the built-in ones (no timing given; *Python for Data Analysis*, ch. 10), so reach for `apply` last. `apply` is the general escape hatch. It passes each group as a DataFrame to your function and stitches whatever comes back into a result. Use it when nothing more specific fits, such as selecting the top order per region or computing a weighted average, and reach for it last, as it is the slowest of the options.
 
 ```python
 def top(d, n=1):
@@ -350,7 +354,7 @@ To decide among these four methods, ask what shape comes back.
 
 ## Groups from buckets
 
-Chapter 2's `cut` and `qcut` produce keys ready for a groupby, which is how you get a table of behaviour by size band. Grouping by a categorical key raises a question of what to do with empty categories. Since pandas 3.0, the `observed` option defaults to `True`, so only categories present in the data appear, while `observed=False` lists all of them and is what you want for a report with a fixed row list.
+McKinney's decile example shows the difference: on 1,000 random rows `qcut` gives 100 rows per bucket, while equal-width `cut` gave uneven counts of 95, 598, 297 and 10 in his four-bucket case (*Python for Data Analysis*, ch. 10; unseeded data, so not reproducible). Chapter 2's `cut` and `qcut` produce keys ready for a groupby, which is how you get a table of behaviour by size band. Grouping by a categorical key raises a question of what to do with empty categories. Since pandas 3.0, the `observed` option defaults to `True`, so only categories present in the data appear, while `observed=False` lists all of them and is what you want for a report with a fixed row list.
 
 ```python
 band = pd.cut(orders["revenue"], bins=[0, 20, 50, 100, 200], labels=["<=20", "20-50", "50-100", "100+"])
@@ -410,7 +414,7 @@ unknown    96.0         0.0   22.0  118.0
 total     382.0        97.5   44.0  523.5
 ```
 
-`crosstab` is the special case of counting. `normalize` turns counts into shares of the row, the column or the whole, which is how you compare groups of different sizes.
+In the book's tips data, `pd.crosstab([tips.time, tips.day], tips.smoker, margins=True)` totals 244 parties, 151 non-smoking and 93 smoking (*Python for Data Analysis*, ch. 10). `crosstab` is the special case of counting. `normalize` turns counts into shares of the row, the column or the whole, which is how you compare groups of different sizes.
 
 ```python
 print(pd.crosstab(orders["region"], orders["category"]))

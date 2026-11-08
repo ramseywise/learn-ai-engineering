@@ -5,6 +5,7 @@ sources:
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
   - https://arxiv.org/abs/1601.00670 (Blei, Kucukelbir and McAuliffe, JASA, 2017)
   - https://python.arviz.org/
+  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 10)
   - https://www.pymc.io/
   - ../practice/BayesianML/week_4/
 confidence: high
@@ -45,6 +46,14 @@ Two consequences follow, and BMH stresses both:
 
 - **A prior of zero stays zero.** If the prior assigns no mass to a region, no amount of data can move the posterior there. Choose supports generously ([chapter 3](03-priors-and-bandits.md)).
 - **Thousands of samples, not tens.** Summaries are Monte Carlo estimates, and their error shrinks like 1/√(effective samples).
+
+### When the likelihood is costly: summaries instead of data
+
+Two cheaper routes sit between a full grid and a sampler, and both appear in Downey's height example (*Think Bayes*, ch. 10): a grid over (mean, sigma) for the BRFSS self-reported heights of 154,407 men (mean 178 cm, sd 7.7) and 254,722 women (163 cm, 7.3). Multiplying a density per datum underflows to zero by 1,000 values, so work in log-likelihood, and sum the squared deviations once instead of looping over the data; that made the exact grid about 100 times faster, under a minute for the full data.
+
+The second route is approximate Bayesian computation. Replace the data with summary statistics whose sampling distributions are known (the sample mean m ~ Normal(mu, sigma/√n) and the sample sd s ~ Normal(sigma, sigma/√(2(n−1)))) and score each grid point on those two numbers. It handled the whole dataset in about a second and matched the exact posterior to about five digits. With robust summaries (the median and the 68% inter-percentile range, num_sigmas = 1) the posterior mean coefficient of variation was 0.0410 for men and 0.0429 for women with no overlap, so women looked more variable. With num_sigmas = 2 the same code concluded, with equal confidence, that men were. The answer depended on the summary chosen, and the chapter gives no rule for choosing it. Raw CVs were 0.0433 and 0.0444. The grid range was set at four standard errors around the sample mean, which uses the data twice and is harmless only because the prior is effectively flat there.
+
+Use summaries when the exact likelihood is costly, check that two reasonable summaries agree, and treat disagreement as the result.
 
 ## What one MCMC step does
 

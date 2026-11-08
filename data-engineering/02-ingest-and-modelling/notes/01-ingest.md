@@ -10,6 +10,7 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 3"
   - https://github.com/PacktPublishing/LLM-Engineers-Handbook
   - https://debezium.io/documentation/reference/stable/features.html
+  - "Kimball and Ross, The Data Warehouse Toolkit, 2nd ed. (Wiley, 2002), ch. 16, 17"
   - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
@@ -369,6 +370,8 @@ Whichever you pick, keep hold of three kinds of change record and what they can 
 | Window replace | Only if the window is immutable | Within the window | Low | Low |
 | Watermark + overlap | Within the overlap | No | Medium, needs an index | Low |
 | Log-based CDC | Yes | Yes | Low on the query path | High: connector, broker, snapshots |
+
+What happens to a change after it lands is the staging step. Kimball keeps a master cross-reference table per dimension (surrogate key, operational key, effective and expiration dates, most-recent flag, CRC) and compares each incoming row's CRC against it: the same CRC means ignore the row, a Type 1 change overwrites in place, a Type 2 change adds a row and expires the old one. Referential integrity is enforced in staging, not at load. A fact whose key has no dimension row halts the load, goes to a reloadable suspense file, or gets a per-key "Description Unknown for Operational Key XYZ" row, never one shared dummy key. Dimensions are published before facts (*Data Warehouse Toolkit*, ch. 16). The same chapter's warning applies to ingest: unclean source data has no short-term fix, so assess data feasibility before committing to a schedule, and the warehouse should follow application integration, not lead it, because incompatible data cannot be cleaned downstream once information is lost (ch. 16, ch. 17).
 
 ---
 

@@ -1,0 +1,281 @@
+{
+ "schema": 1,
+ "key": "sha1:80d1dac0ff97",
+ "pdf": "data-science/sources/fundamentals-of-deep-learning/ch09-deep-reinforcement-learning.pdf",
+ "bib": {
+  "title": "Deep Reinforcement Learning (Chapter 9, Fundamentals of Deep Learning)",
+  "authors": [
+   "Nicholas Locascio"
+  ],
+  "first_author": "Locascio",
+  "year": null,
+  "venue": "book chapter (O'Reilly, Fundamentals of Deep Learning), pp. 245-276",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 62353,
+  "chars_total": 62353,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do deep neural networks fit into reinforcement learning, via policy gradients and Deep Q-Networks?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "A typical discount factor gamma lies between 0.99 and 0.97.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Discounted future return, general advice",
+   "quote": "A typical γ hyperparameter setting is between 0.99 and 0.97.",
+   "table": null,
+   "note": null,
+   "where": "p.251"
+  },
+  {
+   "claim": "Typical annealed epsilon-greedy runs anneal epsilon from 0.99 to 0.1 over 10,000 scenarios.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Annealed epsilon-greedy, general advice",
+   "quote": "Typical settings for annealed",
+   "table": null,
+   "note": "Text says 'start low and increase', contradicting annealing from high to low; the quote is truncated at a line break.",
+   "where": "p.253"
+  },
+  {
+   "claim": "A3C learns Atari Breakout in under 12 hours versus 3 to 4 days for DQN.",
+   "kind": "reported",
+   "source": "Mnih et al. 2016, Asynchronous methods for deep RL (as cited)",
+   "metric": null,
+   "value": 12,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A3C vs DQN on Atari Breakout",
+   "quote": "A3C agents can learn to play Atari Breakout in less than 12",
+   "table": null,
+   "note": null,
+   "where": "p.275"
+  },
+  {
+   "claim": "UNREAL learns around 10 times faster than A3C on the Labyrinth environment.",
+   "kind": "reported",
+   "source": "Jaderberg et al. 2016, RL with unsupervised auxiliary tasks (as cited)",
+   "metric": null,
+   "value": 10,
+   "unit": "x faster",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UNREAL vs A3C, Labyrinth",
+   "quote": "UNREAL is able to learn around 10",
+   "table": null,
+   "note": null,
+   "where": "p.276"
+  },
+  {
+   "claim": "Of 8 explore-exploit sampling settings for the policy-gradient CartPole agent, epsilon-greedy annealed 1.0 to 0.001 did best; fixed epsilon 0.05 and 0.9 did poorly (read from Fig 9-6, no numbers given).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "PGAgent, CartPole-v0, 2 hidden layers of 16 units, Adam lr 1e-3, 5000 episodes",
+   "quote": "We try out 8 different sampling methods, and achieve best results with epsilon greedy",
+   "table": null,
+   "note": null,
+   "where": "p.260"
+  },
+  {
+   "claim": "DQN agent trained 1,000 episodes on Breakout shows an upward reward trend (Fig 9-7, no numbers); superhuman Atari typically needs several days of training.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DQNAgent on Breakout-v0, 1,000 episodes",
+   "quote": "we can see a general upward trend in reward pretty quickly",
+   "table": null,
+   "note": null,
+   "where": "p.272"
+  }
+ ],
+ "limits": [
+  "No numeric results are printed; performance is shown only in Fig 9-6 and 9-7.",
+  "Code is TensorFlow 1.x (tf.placeholder, tf.Session, slim, tf.variable_scope), gym CartPole-v0/Breakout-v0, scipy imresize: all dated and not runnable on current stacks.",
+  "Code has bugs: calculate_naive_returns loops over range(len(rewards), 0) which is empty and uses an undefined name; the PG 'solved' check slices episode_rewards[:-100] (the first, not last, 100) and runs when i % 10 is nonzero; DQN main sets solved False in both branches; ExperienceReplayTable.sample_batch returns discounted_returns as the terminal flag; annealing text says epsilon starts low and increases while code decreases it; PG policy loss multiplies by return with no baseline or normalisation.",
+  "The chapter's own text says build_model returns three action nodes, but CartPole has 2 actions.",
+  "Covers 2013-2016 methods only (DQN, A3C, UNREAL, DRQN); no PPO, TRPO, DDPG, SAC, double/dueling DQN, prioritised replay, or RLHF."
+ ],
+ "practices": [
+  "Use discounted return with gamma 0.97 to 0.99 so agents value reward soon (p.251).",
+  "Anneal epsilon from high to low so the agent explores early and exploits late; fixed epsilon performed poorly (pp.253, 261).",
+  "Stabilise DQN with a lagged target network and experience replay with random sampling and eviction of old experience (pp.263-264).",
+  "Stack the last 4 frames as channels to give DQN velocity information; DRQN replaces this with a recurrent layer (pp.265, 273).",
+  "Use an advantage (R_t - V(s_t)) rather than raw return in actor-critic (p.275)."
+ ],
+ "terms": [
+  {
+   "term": "MDP",
+   "definition": "S, a finite set of possible states; A, a finite set of actions; P(r, s' | s, a), a state transition function; R, reward function",
+   "where": "p.248"
+  },
+  {
+   "term": "Policy",
+   "definition": "the way in which our agent acts based on its current state; a function pi that chooses the action a that the agent will take in state s",
+   "where": "p.249"
+  },
+  {
+   "term": "Discounted future return",
+   "definition": "R_t = sum gamma^t r_{t+k+1}; gamma between 0 and 1, high gamma little discounting",
+   "where": "p.251"
+  },
+  {
+   "term": "Q-function",
+   "definition": "Q(s,a) calculates the maximum discounted future return when action a is performed in state s",
+   "where": "p.261"
+  },
+  {
+   "term": "Bellman equation",
+   "definition": "Q*(s_t,a_t) = E[r_t + gamma max_a' Q*(s_t+1, a')]",
+   "where": "p.261"
+  },
+  {
+   "term": "Target Q-network",
+   "definition": "a copy of the prediction network that lags in its parameter updates",
+   "where": "p.264"
+  },
+  {
+   "term": "Experience replay",
+   "definition": "store all experiences as (s,a,r,s') tuples and sample batches at random to break correlation",
+   "where": "p.264"
+  },
+  {
+   "term": "Advantage",
+   "definition": "A_t = Q*(s_t,a_t) - V(s_t); A3C approximates it as R_t - V(s_t)",
+   "where": "p.275"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Mnih et al., Human-level control through deep reinforcement learning (Nature 518, 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DQN implemented in the chapter",
+   "quote": null
+  },
+  {
+   "work": "Brockman et al., OpenAI Gym",
+   "year": 2016,
+   "arxiv": "1606.01540",
+   "relation": "uses-data",
+   "note": "environments CartPole-v0, Breakout-v0",
+   "quote": null
+  },
+  {
+   "work": "Sutton et al., Policy Gradient Methods for RL with Function Approximation (NIPS 1999)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "policy gradients",
+   "quote": null
+  },
+  {
+   "work": "Mnih et al., Asynchronous methods for deep RL (ICML 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "A3C",
+   "quote": null
+  },
+  {
+   "work": "Konda and Tsitsiklis, Actor-Critic Algorithms (NIPS 1999)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "actor-critic",
+   "quote": null
+  },
+  {
+   "work": "Jaderberg et al., Reinforcement Learning with Unsupervised Auxiliary Tasks",
+   "year": 2016,
+   "arxiv": "1611.05397",
+   "relation": "related",
+   "note": "UNREAL",
+   "quote": null
+  },
+  {
+   "work": "Sorokin et al., Deep Attention Recurrent Q-Network",
+   "year": 2015,
+   "arxiv": "1512.01693",
+   "relation": "related",
+   "note": "DAQRN",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9-6",
+   "caption": "Explore-exploit configurations affect how fast and how well learning occurs",
+   "page": 16,
+   "why": "Compares 8 epsilon settings on CartPole at a glance"
+  },
+  {
+   "figure": "Fig 9-4",
+   "caption": "An example of an MDP.",
+   "page": 5,
+   "why": "States, actions, transitions and rewards in one picture"
+  },
+  {
+   "figure": "Fig 9-7",
+   "caption": "Our DQN agent gets increasingly better at Breakout during training",
+   "page": 29,
+   "why": "DQN learning curve"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.251",
+   "snippet": "def discount_rewards(rewards, gamma=0.98):\n    discounted_returns = [0 for _ in rewards]\n    discounted_returns[-1] = rewards[-1]\n    for t in range(len(rewards)-2, -1, -1): # iterate backwards\n        discounted_returns[t] = rewards[t] + discounted_returns[t+1]*gamma\n    return discounted_returns",
+   "verbatim": true
+  },
+  {
+   "where": "p.254",
+   "snippet": "arg min_theta  - sum_i R_i log p(y_i | x_i; theta)   (policy-gradient loss)",
+   "verbatim": false
+  },
+  {
+   "where": "p.263",
+   "snippet": "min_theta sum_e sum_t ( Q(s_t,a_t|theta) - (r_t + gamma max_a' Q(s_t+1,a'|theta)) )",
+   "verbatim": false
+  },
+  {
+   "where": "p.272",
+   "snippet": "target_q_t = (1. - terminal) * agent.gamma * max_q_t_plus_1 + reward",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Extraction text has a few garbled symbols (epsilon rendered as a replacement glyph, equations broken across lines).",
+  "No ledger-listed year or arXiv; year of the book is not printed in this chapter. Ledger row says pillar classical-ml, though the pillar to use is 02-deep-learning."
+ ]
+}

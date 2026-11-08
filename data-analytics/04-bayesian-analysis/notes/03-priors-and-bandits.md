@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/0901.4011
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 3, 4 and 7)
   - https://doi.org/10.1016/0196-8858(85)90002-8
+  - "Sutton and Barto, Reinforcement Learning: An Introduction, 2nd ed. (MIT Press, 2018), ch. 2"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -191,7 +192,7 @@ Downey draws the practical rule from this: with a lot of data an informative and
 
 The same swamping shows up on the Euro coin (140 heads in 250 spins, [chapter 1](01-bayesian-inference.md#the-coin-beta-binomial)). Downey compares a uniform prior over x = 0 to 100 with a triangular prior peaking at 50, which believes a lopsided coin less. After the 250 spins the medians (56) and the 90% credible intervals (51 to 61) are identical, and the means are 55.95 and 55.74, within 0.5% (*Think Bayes*, ch. 4; I re-ran both and the numbers match). He adds two caveats. Convergence needs the two people to agree on the model as well as the data, since a different likelihood moves the posterior however much data arrives. And a hypothesis given prior probability 0 keeps posterior probability 0 whatever is observed, which is the reasoning behind **Cromwell's rule**: never assign 0 to anything remotely possible (*Think Bayes*, ch. 4). That is the same warning as "never put zero prior mass where the truth could be" above, with a name.
 
-With little data the prior can decide the answer. In Downey's Boston Bruins series forecast, four games of scores and a prior on goals per game with sd 0.3 give the Bruins a 57% chance of the series, and the same data with a prior of sd 0.85 (the spread of pair-by-pair averages rather than team averages) give 80%. [Chapter 1](01-bayesian-inference.md#predicting-the-next-game-the-posterior-predictive-as-a-mixture) has the code (*Think Bayes*, ch. 7).
+With little data the prior can decide the answer. In Downey's Boston Bruins series forecast, four games of scores and a prior on goals per game with sd 0.3 give the Bruins a 57% chance of the series, and the same data with a prior of sd 0.85 (the spread of pair-by-pair averages rather than team averages) give 80%. [Chapter 1](01-bayesian-inference.md#predicting-a-game-the-posterior-predictive-as-a-mixture) has the code (*Think Bayes*, ch. 7).
 
 ## Regularisation is a prior
 
@@ -438,6 +439,15 @@ rate 0.99: mean reward per pull 0.179
 ```
 
 The forgetful strategy reacts to the swap and earns about 10% more per pull. On a stationary problem it would cost a little, because forgetting throws away evidence.
+
+### Sutton and Barto's testbed, and the exact Bayesian answer
+
+The standard benchmark is the 10-armed testbed: 2,000 random bandits, each arm's true value drawn from Normal(0, 1), each reward Normal(true value, 1), 1,000 steps per run, sample-average estimates starting at 0 (*Reinforcement Learning: An Introduction*, ch. 2). A purely greedy learner levelled off near 1 reward per step against about 1.54 for always pulling the best arm, and found the best arm in only about a third of the runs: in the rest, disappointing early draws from the best arm sent it elsewhere for good. Epsilon-greedy at 0.1 found the best arm sooner but never chose it more than 91% of the time, and 0.01 improves more slowly but is expected to end higher, which the authors state and the 1,000 plotted steps do not show.
+
+Thompson sampling above is the posterior-sampling version of the same trade. Two points from the chapter sharpen it:
+
+- **Non-stationarity.** Sample averages assume arms do not change. If they drift, a constant step size weights recent rewards more, which is the "forgetful strategy" above, and the authors note that effectively non-stationary problems are the most common in reinforcement learning.
+- **The exact answer is intractable.** Treating the posterior as the problem's information state gives the Bayes-optimal exploration, but even with two actions and two rewards a 1,000-step horizon has 2^2000 leaves in its tree. Thompson sampling and UCB are the feasible stand-ins, which is why the chapter's "Bayesian" bandit is an approximation.
 
 ### Bandit or A/B test?
 

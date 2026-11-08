@@ -1,0 +1,483 @@
+{
+ "schema": 1,
+ "key": "sha1:4eecadd5e0a3",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xiao-foundations-llms/ch04-alignment.pdf",
+ "bib": {
+  "title": "Alignment (Chapter 4 of Foundations of Large Language Models)",
+  "authors": [
+   "Tong Xiao",
+   "Jingbo Zhu"
+  ],
+  "first_author": "Xiao",
+  "year": 2025,
+  "venue": "book chapter (NiuTrans/NLPBook)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 134487,
+  "chars_total": 134487,
+  "engine": "pymupdf",
+  "skipped": "nothing; the chapter has no reference list in the PDF, so lineage is from in-text citations only. Year 2025 is inferred from the content (mentions o1/o3, 2024 citations); the PDF prints no date."
+ },
+ "type": "book-chapter",
+ "question": "How are LLMs aligned with user instructions and human preferences, through SFT, RLHF (reward model plus PPO), DPO and related refinements, and inference-time methods?",
+ "hypothesis": null,
+ "contributions": [
+  "A unified derivation of SFT loss masking, reward modelling with Bradley-Terry, A2C/PPO for RLHF, and DPO, in one notation",
+  "Refinements: listwise/pointwise/fine-grained rewards, reward ensembles, AI feedback, process supervision, Best-of-N"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The FLAN instruction-tuning collection is built from 1,836 tasks and holds 15 million samples.",
+   "kind": "reported",
+   "source": "Longpre et al., 2023",
+   "metric": "dataset size",
+   "value": "15 million samples",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FLAN fine-tuning dataset cited as an example of large-scale instruction data",
+   "quote": "the FLAN fine-tuning dataset, which is compiled from 1,836 tasks, contains 15 million samples",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.3"
+  },
+  {
+   "claim": "A 1,000-sample instruction dataset was enough to fine-tune LLaMa 65B to be competitive with or better than models given much more fine-tuning.",
+   "kind": "reported",
+   "source": "Zhou et al., 2023a (LIMA)",
+   "metric": "dataset size",
+   "value": "1,000 samples",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLaMa 65B fine-tuned on carefully crafted prompts and samples from a variety of NLP tasks",
+   "quote": "built an instruction-following dataset containing only 1,000 samples",
+   "table": null,
+   "note": "The chapter gives no benchmark numbers for the comparison.",
+   "where": "Sec 4.2.3"
+  },
+  {
+   "claim": "Earlier instruction-tuning datasets cover over 100 NLP tasks and more than one million samples.",
+   "kind": "reported",
+   "source": "Wang et al. 2022b; Sanh et al. 2022; Longpre et al. 2023",
+   "metric": "dataset size",
+   "value": "more than one million samples",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Early academic-task instruction datasets in a unified format",
+   "quote": "contain over 100 NLP tasks and more than one million samples",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.4"
+  },
+  {
+   "claim": "Weak-to-strong fine-tuning (GPT-4-level model, GPT-2-level supervision) reached a performance gap recovered of around 0.8 on 22 NLP classification tasks.",
+   "kind": "reported",
+   "source": "Burns et al., 2023a",
+   "metric": "PGR",
+   "value": "around 0.8",
+   "unit": "fraction of gap recovered",
+   "baseline_value": null,
+   "n": "22 tasks",
+   "setup": "Strong model fine-tuned on weak-model labels; PGR = max{0,(Pw2s-Pweak)/(Pceiling-Pweak)}; ceiling is the strong model fine-tuned on ground truth",
+   "quote": "PGR can be around 0.8 on 22 NLP classification tasks",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.5, after Eq 4.11"
+  }
+ ],
+ "limits": [
+  "No experiments of its own: every empirical number is quoted from other work, and the chapter gives no hyperparameters (learning rate, batch size, beta, epsilon, N for Best-of-N) for any method.",
+  "Sparse-reward discussion and the advantage-as-shaped-reward link (Eq 4.64-4.66) are argued, not measured.",
+  "Authors concede no fully satisfactory solution to reward overoptimisation exists (Sec 4.4.1.4) and weak-to-strong generalisation still needs investigation.",
+  "Dated or absent: no GRPO, RLVR/verifiable-reward RL, KTO/IPO/SimPO, constitutional AI or LLM-as-judge detail; o1/o3 are mentioned only in passing; PPO is presented as the main RLHF algorithm.",
+  "Notation slips: text says 'the model presented in Eq. (4.47)' where the surrogate is Eq. (4.45); Fig 4.4 caption cites Wang et al., 2023b while the text cites Wang et al., 2023d for self-instruct; the PPO reference policy is called theta_ref in the text and theta_old in Fig 4.9; Eq. 4.45 is written without the baseline-subtracted clip, and Eq. 4.52 is a sequence log-ratio penalty rather than a per-token KL.",
+  "Eq. 4.41/4.40 minimise a loss while Eq. 4.28 is written as a gradient to ascend; sign conventions differ between the policy-gradient and loss forms.",
+  "The PDF has no reference list, so cited works cannot be matched to arXiv ids from this source."
+ ],
+ "practices": [
+  "Compute the SFT loss only on output tokens: run the forward pass on the concatenated [x,y] and zero the loss on x (Sec 4.2.1, Fig 4.2).",
+  "For multi-turn chat SFT, represent the whole conversation as one sequence and mask the loss on every user turn, so one pass trains all K responses (Eq 4.6-4.7, Fig 4.3).",
+  "Mitigate overfitting and forgetting in SFT with regularisation, early stopping, a smaller learning rate and diverse source data (Sec 4.2.1).",
+  "Use parameter-efficient fine-tuning when full SFT is too costly (Sec 4.2.1).",
+  "Build SFT data by writing prompt templates for existing NLP tasks and filling slots from labelled datasets, by scraping natural QA data, or by crowdsourcing (Sec 4.2.2.1).",
+  "Use self-instruct (task pool, sample instructions, generate new instruction, generate sample, filter) to bootstrap more SFT data from a small seed set (Sec 4.2.2.2).",
+  "For classification tasks, generate the input from instruction plus a chosen output (input inversion) to avoid class-skewed synthetic data (Sec 4.2.2.2).",
+  "Prefer smaller higher-quality SFT sets, selected by an LLM quality rater, heuristics or influence, over scaling raw volume (Sec 4.2.3).",
+  "Train the reward model as a decoder plus a linear head on the last-token state, with the Bradley-Terry pairwise loss, then score each (x,y) independently during RL (Sec 4.3.2).",
+  "Initialise the reward and value models from the pre-trained LLM, and the reference and policy models from the instruction-tuned model (Sec 4.3.3).",
+  "Subtract a value-function baseline (advantage / TD error) and clip the importance ratio, plus a log-ratio penalty to the reference policy, in PPO (Sec 4.3.3).",
+  "Prefer pairwise or listwise reward training over pointwise regression because human scores are noisy; pointwise suits abundant, consistent labels (Sec 4.4.1.1).",
+  "Combine several reward models (ensembles, aspect-specific, off-the-shelf LLMs) to reduce overoptimisation (Sec 4.4.1.4).",
+  "Use DPO when a reward model and online sampling are too costly; use PPO-style online RL when exploration and generalisation matter (Sec 4.4.2).",
+  "Make AI-feedback preference data diverse (different LLMs, prompts, demonstrations) and use label-token probabilities as soft labels; use human feedback for subjective values (Sec 4.4.3).",
+  "For reasoning tasks, supervise intermediate steps (process-based) rather than only the final answer, and annotate steps the model is confident about but that are wrong (Sec 4.4.4).",
+  "Use Best-of-N reranking or rejection-sampling fine-tuning as cheap alignment, and keep the N-best list diverse (Sec 4.4.5)."
+ ],
+ "terms": [
+  {
+   "term": "alignment",
+   "definition": "the process of aligning model outputs with human expectations",
+   "where": "Ch.4 intro"
+  },
+  {
+   "term": "instruction alignment (instruction fine-tuning)",
+   "definition": "tune the LLM to accurately respond to user instructions and intentions",
+   "where": "Sec 4.2"
+  },
+  {
+   "term": "supervised fine-tuning (SFT)",
+   "definition": "further training on task-specific instructions paired with expected outputs, with loss computed only over the output tokens conditioned on the input",
+   "where": "Sec 4.1, 4.2.1"
+  },
+  {
+   "term": "self-instruct",
+   "definition": "prompt an LLM to create a new instruction by learning from other instructions, then fill in the other fields and generate outputs",
+   "where": "Sec 4.2.2.2"
+  },
+  {
+   "term": "superficial alignment hypothesis",
+   "definition": "learning primarily occurs during pre-training, and the subsequent fine-tuning or alignment phase does not significantly contribute to the underlying knowledge base of an LLM",
+   "where": "Sec 4.2.3"
+  },
+  {
+   "term": "sample efficiency",
+   "definition": "a machine learning method is sample efficient if it can learn effectively from a small number of training examples",
+   "where": "Sec 4.2.3"
+  },
+  {
+   "term": "weak-to-strong generalization",
+   "definition": "using smaller, less complex models to improve the training of larger, more complex models",
+   "where": "Sec 4.2.5"
+  },
+  {
+   "term": "performance gap recovered (PGR)",
+   "definition": "max{0, (P_weak->strong - P_weak)/(P_ceiling - P_weak)}: how much of the gap between ceiling and weak-model performance the weak-to-strong model recovers",
+   "where": "Eq 4.11"
+  },
+  {
+   "term": "RLHF",
+   "definition": "LLMs learn from comparisons of model outputs using reward models",
+   "where": "Sec 4.3"
+  },
+  {
+   "term": "policy (LLM)",
+   "definition": "the probability distribution over tokens the LLM predicts given the preceding context, pi(a|s)=Pr(y_t|x,y<t)",
+   "where": "Eq 4.14"
+  },
+  {
+   "term": "advantage",
+   "definition": "A(s_t,a_t) = sum_{k>=t} r_k - V(s_t), the relative benefit of action a_t compared to the expected value of following the policy from s_t; also the TD error r_t + gamma V(s_{t+1}) - V(s_t)",
+   "where": "Eq 4.27, 4.31"
+  },
+  {
+   "term": "Bradley-Terry model",
+   "definition": "probabilistic model giving Pr(ya>yb|x)=Sigmoid(r(x,ya)-r(x,yb))",
+   "where": "Eq 4.35"
+  },
+  {
+   "term": "Plackett-Luce model",
+   "definition": "generalises Bradley-Terry to rankings of many items, with worth alpha(y)=exp(r(x,y))",
+   "where": "Eq 4.58-4.61"
+  },
+  {
+   "term": "overoptimization (reward hacking)",
+   "definition": "over-aligning LLMs with an imperfect reward proxy decreases performance; Goodhart's law: when a measure becomes a target, it ceases to be a good measure",
+   "where": "Sec 4.4.1.4"
+  },
+  {
+   "term": "DPO",
+   "definition": "direct preference optimization: optimises the policy directly on preference pairs with no explicit reward model, via the implicit reward r=beta log(pi/pi_ref)+beta log Z",
+   "where": "Sec 4.4.2"
+  },
+  {
+   "term": "outcome-based vs process-based supervision",
+   "definition": "outcome-based supervises only when the end result is verified; process-based supervises all intermediate steps in addition to the last",
+   "where": "Sec 4.4.4 (after Uesato et al., 2022)"
+  },
+  {
+   "term": "Best-of-N sampling",
+   "definition": "use the reward model to select the best one from N alternative outputs generated by the LLM",
+   "where": "Sec 4.4.5"
+  },
+  {
+   "term": "rejection sampling (for fine-tuning)",
+   "definition": "select the best outputs from N-best lists with the reward model, then fine-tune the LLM on them",
+   "where": "Sec 4.4.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Ouyang et al. 2022 (InstructGPT)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "SFT with annotated input-output pairs; synthetic data in tuning sets",
+   "quote": null
+  },
+  {
+   "work": "Wei et al. 2022a",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "instruction fine-tuning on annotated pairs",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2023d; Honovich et al. 2023 (self-instruct)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of the synthetic-instruction pipeline",
+   "quote": null
+  },
+  {
+   "work": "Longpre et al. 2023 (FLAN collection)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "1,836 tasks, 15M samples; input inversion",
+   "quote": null
+  },
+  {
+   "work": "Zhou et al. 2023a (LIMA)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "1,000-sample SFT and the superficial alignment hypothesis",
+   "quote": null
+  },
+  {
+   "work": "Burns et al. 2023a",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "weak-to-strong generalization, PGR",
+   "quote": null
+  },
+  {
+   "work": "Christiano et al. 2017; Stiennon et al. 2020",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of RLHF",
+   "quote": null
+  },
+  {
+   "work": "Bradley and Terry 1952; Plackett 1975",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "preference models behind the reward losses",
+   "quote": null
+  },
+  {
+   "work": "Williams 1992; Mnih et al. 2016; Schulman et al. 2015, 2017",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "REINFORCE, A2C, TRPO, PPO",
+   "quote": null
+  },
+  {
+   "work": "Rafailov et al. 2024 (DPO)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "direct preference optimization",
+   "quote": null
+  },
+  {
+   "work": "Eisenstein et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "squared-sum reward regulariser (Eq 4.63)",
+   "quote": null
+  },
+  {
+   "work": "Ng et al. 1999",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "potential-based reward shaping",
+   "quote": null
+  },
+  {
+   "work": "Gao et al. 2023a; Coste et al. 2024",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "overoptimisation and reward-model ensembles",
+   "quote": null
+  },
+  {
+   "work": "Lee et al. 2023; Cui et al. 2024; Dubois et al. 2024",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "AI feedback and preference data diversity",
+   "quote": null
+  },
+  {
+   "work": "Uesato et al. 2022; Lightman et al. 2024",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "outcome vs process supervision; step labels incl. neutral",
+   "quote": null
+  },
+  {
+   "work": "Lambert et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LLMs as reward models reach state-of-the-art",
+   "quote": null
+  },
+  {
+   "work": "Sutton and Barto 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RL background",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4.1",
+   "caption": "Schematic illustration of the pre-training-then-alignment pipeline",
+   "page": 155,
+   "why": "one-glance map of pre-training, SFT, RLHF and prompting"
+  },
+  {
+   "figure": "Fig 4.2",
+   "caption": "Illustration of supervised fine-tuning for LLMs (loss only on the output part)",
+   "page": 158,
+   "why": "shows loss masking on the input"
+  },
+  {
+   "figure": "Fig 4.3",
+   "caption": "SFT for conversational models: loss only on the LLM responses",
+   "page": 160,
+   "why": "multi-turn masking"
+  },
+  {
+   "figure": "Fig 4.4",
+   "caption": "Illustration of self-instruct",
+   "page": 164,
+   "why": "the synthetic-data loop"
+  },
+  {
+   "figure": "Fig 4.5",
+   "caption": "Using small models to improve large models (synthetic data, KD loss, data selection, ensemble, cascade)",
+   "page": 171,
+   "why": "five weak-to-strong patterns"
+  },
+  {
+   "figure": "Fig 4.6",
+   "caption": "Supervised fine-tuning vs. reinforcement learning from human feedback",
+   "page": 173,
+   "why": "contrasts MLE with reward-model-guided RL"
+  },
+  {
+   "figure": "Fig 4.7",
+   "caption": "LLM as policy in reinforcement learning",
+   "page": 175,
+   "why": "maps state, action, policy, reward and value to tokens"
+  },
+  {
+   "figure": "Fig 4.8",
+   "caption": "Architecture of a Transformer-based reward model",
+   "page": 180,
+   "why": "decoder plus linear head on the last token"
+  },
+  {
+   "figure": "Fig 4.9",
+   "caption": "Illustration of RLHF",
+   "page": 186,
+   "why": "four models and their losses in one diagram"
+  },
+  {
+   "figure": "Fig 4.10",
+   "caption": "Standard RLHF (PPO) vs. DPO",
+   "page": 194,
+   "why": "shows DPO removes the reward and value models"
+  },
+  {
+   "figure": "Fig 4.11",
+   "caption": "Two LLM responses to a math problem (correct answer, flawed reasoning in response 2)",
+   "page": 199,
+   "why": "outcome vs process supervision"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 4.3",
+   "snippet": "log Pr(x,y) = log Pr(x) [set to 0] + log Pr(y|x) [loss computation]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.6",
+   "snippet": "multi-turn: loss on log Pr(y_k | x_1,y_1,...,x_k) only; user-turn terms set to 0",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.11",
+   "snippet": "PGR = max{0, (P_weak->strong - P_weak) / (P_ceiling - P_weak)}",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.31",
+   "snippet": "A(s_t,a_t) = r_t + gamma V(s_{t+1}) - V(s_t)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.34-4.36",
+   "snippet": "r(x,y)=h_last W_r;  Pr(ya>yb|x)=Sigmoid(r(x,ya)-r(x,yb));  L_r = -E log Pr(ya>yb|x)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.50, 4.53",
+   "snippet": "Clip = min(ratio*A, bound(ratio,1-eps,1+eps)*A);  U_ppo-clip = U_clip - beta*Penalty;  Penalty = sum_t log pi_theta(a_t|s_t) - sum_t log pi_ref(a_t|s_t)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.57, 4.60",
+   "snippet": "L_list = -E[ 2/(N(N-1)) sum_{ya>yb} log Pr(ya>yb|x) ];  Plackett-Luce: log Pr(Y|x)=sum_k log Pr(y_jk | x, Y>=k)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.63",
+   "snippet": "L_reg = L_pair - lambda E (r(x,ya)+r(x,yb))^2",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.65-4.66",
+   "snippet": "f = gamma Phi(s_{t+1}) - Phi(s_t); with Phi=V: r' = r + gamma V(s_{t+1}) - V(s_t)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.80-4.82",
+   "snippet": "r(x,y)=beta(log pi_theta/pi_ref + log Z(x));  L_dpo = -E log Sigmoid(beta log pi_theta(ya|x)/pi_ref(ya|x) - beta log pi_theta(yb|x)/pi_ref(yb|x))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.83-4.86",
+   "snippet": "process reward r(x,y)=sum_k log Pr(correct|x,y<=k);  BoN: y_best = argmax_{y in N-best} r(x,y)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "The PDF carries no reference list or date; year 2025 is inferred.",
+  "Text extraction splits equations across lines, so formulas in `code` were rebuilt by hand (verbatim false)."
+ ]
+}

@@ -12,7 +12,7 @@ sources:
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4, 11"
-  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 3"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 3, 5"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
   - "Huang et al. 2024, Understanding the planning of LLM agents: A survey — https://arxiv.org/abs/2402.02716"
   - "Yao et al. 2023, Tree of Thoughts — https://arxiv.org/abs/2305.10601"
@@ -212,6 +212,17 @@ Albada adds the cost driver: agents spend tokens sharing context and coordinatin
 Part of that overhead is learned verbosity, and it can be trained out. Optima trains one Llama 3 8B model to play both agents, with a reward that weighs task score, token count and readable messages ([arXiv:2410.08115](https://arxiv.org/abs/2410.08115) (Chen et al., Findings of ACL 2025)). On 2WikiMultiHopQA, with the evidence split so that neither agent can answer alone, F1 rose from 25.9 with plain multi-agent debate to 74.2, on 55 tokens per task instead of 544. Its untrained baseline is the more useful number for design. **Plain debate between two Llama 3 8B agents lost to one agent with self-consistency (n=8) on all four reasoning benchmarks** (MATH 29.8% vs. 35.7%, GSM8K 72.5% vs. 80.3%). Even after training, Optima stayed below self-consistency on MATH. Talking pays when the context is split across agents, not as a way to reason better.
 
 Use cases from the book, roughly from least to most complex: parallel breadth-first work ("by far, the most common, useful, and least complex use of multiple agents", *Generative AI Design Patterns*, ch. 7), multistep pipelines, collaborative content, complex reasoning, adversarial verification (red team / blue team), domain integration, self-improving systems.
+
+*Agentic Architectural Patterns* (ch. 5) catalogues the same space as patterns with stated pros and cons, and adds a few the notes above lack. All of it is worked examples with invented figures, not measurement.
+
+- **Agent Router.** An LLM with a strict schema turns the request into an (action, resource) intent, and a capability graph maps that pair to the one agent registered for it. If no entry exists the request is rejected, so the graph is a whitelist. It costs one extra LLM call before any work starts. The chapter's guidance is 10 to 20 canonical actions and resources, function calling for the extraction step, and a semantic cache for repeat queries. That is the same split as the description-only routers in [04b](04b-when-more-agents-pay.md), made explicit.
+- **Supervisor and swarm.** The supervisor should coordinate and not do domain work (avoid a "God agent"), checkpoint after every step because it is a single point of failure, hand off in strict schemas and own retries and fallbacks. The swarm replaces the supervisor with a shared task board: an agent pulls a task whose status matches its skill (new, researched, drafted, complete) and updates it. Its advice is to start centralized, and that many systems end up hybrid, a top-level orchestrator handing a sub-goal to a self-organising crew.
+- **Blackboard.** The blackboard of the previous section, with a controller running post, evaluate, integrate over typed, versioned facts that carry a confidence and a timestamp, and an append-only history for audit. It warns against using it for low-latency simple tasks and says to prune stale facts, or the board becomes a noisy scratchpad.
+- **Contract-Net.** A solicitor broadcasts a task, bidders reply with cost, ETA and confidence, and the award goes to the best utility. It needs a bid deadline and a reputation score, because bidders can overstate confidence.
+- **Consensus, negotiation, resource allocation.** Agents average toward a shared value until they are within a tolerance, or exchange offers and counter-offers, or queue for a scarce resource by priority. Each needs a round cap or fallback so it terminates, and logs of the intermediate states. The consensus example is a $110M, $95M and $102M forecast converging to $103M in a toy run, not a result.
+- **Multi-agent planning.** The orchestrator decomposes the goal into sub-tasks with explicit dependencies, runs the independent ones in parallel and passes their outputs to a final writer. Keep the plan revisable, since a static plan fails when a sub-task fails.
+
+The chapter also covers formation control (drone swarms with local control laws); that is robotics and is left out here.
 
 ---
 

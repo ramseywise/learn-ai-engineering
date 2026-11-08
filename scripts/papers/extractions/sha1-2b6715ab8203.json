@@ -1,0 +1,391 @@
+{
+ "schema": 1,
+ "key": "sha1:2b6715ab8203",
+ "pdf": "data-science/sources/intro-to-ml-with-python/ch07-working-text-data.pdf",
+ "bib": {
+  "title": "Chapter 7: Working with Text Data (Introduction to Machine Learning with Python)",
+  "authors": [],
+  "first_author": "Müller",
+  "year": 2017,
+  "venue": "O'Reilly book chapter (authors, year and book title are not printed in the chapter text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 73777,
+  "chars_total": 73777,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should text strings be turned into numeric features (bag-of-words, tf-idf, n-grams, normalization, topic models) for scikit-learn models, shown on IMDb sentiment classification?",
+ "hypothesis": null,
+ "contributions": [
+  "Walks through CountVectorizer, min_df, stopwords, TfidfVectorizer, n-grams, lemmatization vs stemming and LDA on the IMDb reviews, with CV scores."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Bag-of-words on IMDb train reviews yields a 74,849-word vocabulary.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "74,849",
+   "unit": "features",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; default CountVectorizer",
+   "quote": "The shape of X_train, the bag-of-words representation of the training data, is 25,000×74,849",
+   "table": null,
+   "note": null,
+   "where": "p.331"
+  },
+  {
+   "claim": "Logistic regression on raw counts gets 88% mean 5-fold CV accuracy with default C.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.88",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; CountVectorizer defaults",
+   "quote": "Mean cross-validation accuracy: 0.88",
+   "table": null,
+   "note": null,
+   "where": "p.332"
+  },
+  {
+   "claim": "Tuning C (best C=0.1) lifts CV accuracy to 89%; test accuracy is 88%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.89",
+   "unit": "accuracy",
+   "baseline_value": 0.88,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; CountVectorizer defaults; test accuracy 0.88",
+   "quote": "Best cross-validation score: 0.89",
+   "table": null,
+   "note": null,
+   "where": "p.332"
+  },
+  {
+   "claim": "min_df=5 cuts the vocabulary from 74,849 to 27,271 features with no change in CV accuracy (0.89).",
+   "kind": "measured",
+   "source": null,
+   "metric": "n features",
+   "value": "27,271",
+   "unit": "features",
+   "baseline_value": 74849,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; CountVectorizer(min_df=5)",
+   "quote": "bring down the number of features to 27,271",
+   "table": null,
+   "note": null,
+   "where": "p.333"
+  },
+  {
+   "claim": "Built-in English stopword list has 318 words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "318",
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "scikit-learn ENGLISH_STOP_WORDS",
+   "quote": "Number of stop words: 318",
+   "table": null,
+   "note": null,
+   "where": "p.335"
+  },
+  {
+   "claim": "Stopwords removal drops only 305 features (27,271 to 26,966) and CV accuracy falls from 0.89 to 0.88, so not worth it here.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.88",
+   "unit": "accuracy",
+   "baseline_value": 0.89,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; CountVectorizer(min_df=5, stop_words='english')",
+   "quote": "Best cross-validation score: 0.88",
+   "table": null,
+   "note": null,
+   "where": "p.335"
+  },
+  {
+   "claim": "tf-idf (min_df=5, norm=None) pipeline with logistic regression gives CV accuracy 0.89, a slight gain over counts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.89",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; make_pipeline(TfidfVectorizer(min_df=5, norm=None), LogisticRegression())",
+   "quote": "As you can see, there is some improvement when using tf–idf instead of just word counts.",
+   "table": null,
+   "note": "Printed score equals the 0.89 for counts at two-decimal precision; the improvement is asserted in text, not visible in the printed numbers.",
+   "where": "p.337"
+  },
+  {
+   "claim": "Adding bigrams and trigrams with tf-idf raises CV accuracy to 0.91 (best ngram_range (1,3), C=100).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.91",
+   "unit": "accuracy",
+   "baseline_value": 0.89,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5 with C grid extended to 100; TfidfVectorizer(min_df=5), ngram_range in (1,1),(1,2),(1,3)",
+   "quote": "Best cross-validation score: 0.91",
+   "table": null,
+   "note": null,
+   "where": "p.342"
+  },
+  {
+   "claim": "Lemmatization (spaCy) reduces features from 27,271 to 21,596 on IMDb with min_df=5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "n features",
+   "value": "21,596",
+   "unit": "features",
+   "baseline_value": 27271,
+   "n": null,
+   "setup": "IMDb Maas dataset, 25,000 train / 25,000 test reviews, balanced; LogisticRegression, GridSearchCV C in [0.001..10], cv=5; CountVectorizer(tokenizer=lemma, min_df=5)",
+   "quote": "lemmatization reduced the number of features from 27,271 (with the standard CountVectorizer processing) to 21,596",
+   "table": null,
+   "note": null,
+   "where": "p.347"
+  },
+  {
+   "claim": "With only 1% of data as training set, lemmatization raises best CV accuracy from 0.721 to 0.731.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.731",
+   "unit": "accuracy",
+   "baseline_value": 0.721,
+   "n": null,
+   "setup": "IMDb; StratifiedShuffleSplit n_iter=5, train_size=0.01, test_size=0.99, random_state=0; LogisticRegression C grid; counts min_df=5",
+   "quote": "Best cross-validation score (lemmatization): 0.731",
+   "table": null,
+   "note": "Baseline printed as 'Best cross-validation score (standard CountVectorizer): 0.721'. Mean over 5 random splits; no variance given.",
+   "where": "p.347"
+  },
+  {
+   "claim": "LDA topic models with 10 topics and 100 topics (batch, max_iter=25, random_state=0) on 10,000-word BoW; components_ shape (10, 10000).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "(10, 10000)",
+   "unit": "shape",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDb train; CountVectorizer(max_features=10000, max_df=.15)",
+   "quote": "(10, 10000)",
+   "table": null,
+   "note": null,
+   "where": "p.350"
+  }
+ ],
+ "limits": [
+  "Single dataset (IMDb) and single classifier (logistic regression); CV scores printed to 2 decimals, no variance.",
+  "CV scores at 0.88/0.89 cannot distinguish min_df, stopwords or tf-idf effects.",
+  "Author notes cross-validation with CountVectorizer is valid only because default settings collect no statistics; Pipeline preferred (fn 6).",
+  "LDA is randomized: changing random_state can give quite different topics; interpretations should be verified against documents.",
+  "Dated: scikit-learn API (get_feature_names, n_topics, n_iter), spaCy 1.x 'en' model and tokens_from_list; word2vec and RNNs are outside the scope, no transformers."
+ ],
+ "practices": [
+  "Check whether a string feature is categorical, a free string mappable to categories, structured, or real text before choosing treatment (p.324).",
+  "Avoid manually entered values for concepts better captured as categorical variables (p.324).",
+  "Strip HTML such as <br /> before vectorizing (p.327).",
+  "For high-dimensional sparse data like BoW, linear models such as LogisticRegression often work best (p.332).",
+  "Tune C by cross-validation (p.332).",
+  "Use min_df to drop rare tokens: fewer features, faster, more interpretable, same accuracy (p.333-334).",
+  "Fixed stopword lists are mostly helpful for small datasets; alternative is max_df (p.335).",
+  "Use a Pipeline with TfidfVectorizer so idf statistics are fit inside CV folds only (p.336).",
+  "Include unigrams, adding bigrams helps in most cases; longer n-grams up to 5 risk feature explosion and overfitting (p.341).",
+  "Inspect largest coefficients to introspect text models (p.338-343).",
+  "Try lemmatization or stemming when squeezing out performance, especially for small datasets (p.347).",
+  "For topic models drop very common words (max_df) and verify topics by reading top documents (p.348, 355).",
+  "LDA topic weights can serve as a compact representation for supervised learning with few examples (p.355)."
+ ],
+ "terms": [
+  {
+   "term": "corpus",
+   "definition": "the dataset in text analysis",
+   "where": "p.325"
+  },
+  {
+   "term": "document",
+   "definition": "each data point, represented as a single text",
+   "where": "p.325"
+  },
+  {
+   "term": "bag of words",
+   "definition": "discard structure of the input text and only count how often each word appears in each text in the corpus",
+   "where": "p.327"
+  },
+  {
+   "term": "tokenization / vocabulary building / encoding",
+   "definition": "split each document into tokens; collect and number all words in any document; count occurrences per document",
+   "where": "p.328"
+  },
+  {
+   "term": "tf-idf",
+   "definition": "give high weight to any term that appears often in a particular document, but not in many documents in the corpus",
+   "where": "p.336"
+  },
+  {
+   "term": "n-gram",
+   "definition": "sequences of tokens; pairs are bigrams, triplets trigrams",
+   "where": "p.339"
+  },
+  {
+   "term": "stemming",
+   "definition": "rule-based heuristic, like dropping common suffixes, to conflate words with the same stem",
+   "where": "p.344"
+  },
+  {
+   "term": "lemmatization",
+   "definition": "a dictionary of known word forms is used and the role of the word in the sentence is taken into account; the standardized form is the lemma",
+   "where": "p.344"
+  },
+  {
+   "term": "topic modeling",
+   "definition": "umbrella term for assigning each document to one or multiple topics, usually without supervision",
+   "where": "p.347"
+  },
+  {
+   "term": "Latent Dirichlet Allocation",
+   "definition": "finds groups of words (topics) that appear together frequently; each document is a mixture of a subset of the topics",
+   "where": "p.348"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Maas et al. IMDb large movie review dataset (Andrew Maas)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "25,000 train / 25,000 test, reviews score >=6 positive",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al., Distributed Representations of Words and Phrases and Their Compositionality",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "recommended for word vectors (word2vec)",
+   "quote": null
+  },
+  {
+   "work": "Sutskever, Vinyals, Le, Sequence to Sequence Learning with Neural Networks",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "recommended for RNN text generation",
+   "quote": null
+  },
+  {
+   "work": "Bird, Klein, Loper, Natural Language Processing with Python",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "nltk book",
+   "quote": null
+  },
+  {
+   "work": "Manning, Raghavan, Schütze, Introduction to Information Retrieval",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "IR/NLP reference",
+   "quote": null
+  },
+  {
+   "work": "Porter stemmer (nltk); spaCy lemmatizer; scikit-learn; mglearn",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tools used",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 7-1",
+   "caption": "Bag-of-words processing",
+   "page": 6,
+   "why": "Shows tokenize, vocabulary, count on 'This is how you get ants.'"
+  },
+  {
+   "figure": "Fig 7-2",
+   "caption": "Largest and smallest coefficients of logistic regression trained on tf-idf features",
+   "page": 17,
+   "why": "Shows which words drive positive/negative predictions"
+  },
+  {
+   "figure": "Fig 7-3",
+   "caption": "Heat map visualization of mean cross-validation accuracy as a function of the parameters ngram_range and C",
+   "page": 20,
+   "why": "Shows bigrams help a lot, trigrams little"
+  },
+  {
+   "figure": "Fig 7-4",
+   "caption": "Most important features when using unigrams, bigrams, and trigrams with tf-idf rescaling",
+   "page": 21,
+   "why": "'not worth' vs 'well worth' shows context"
+  },
+  {
+   "figure": "Fig 7-5",
+   "caption": "Visualization of only the important trigram features of the model",
+   "page": 22,
+   "why": "Trigram effects are limited"
+  },
+  {
+   "figure": "Fig 7-6",
+   "caption": "Topic weights learned by LDA",
+   "page": 32,
+   "why": "Genre-specific vs rating-specific topics"
+  }
+ ],
+ "code": [
+  {
+   "where": "In[7]-[11] p.329-330",
+   "snippet": "vect = CountVectorizer()\nvect.fit(bards_words)\nbag_of_words = vect.transform(bards_words)",
+   "verbatim": true
+  },
+  {
+   "where": "In[23] p.337",
+   "snippet": "pipe = make_pipeline(TfidfVectorizer(min_df=5, norm=None),\n                     LogisticRegression())\nparam_grid = {'logisticregression__C': [0.001, 0.01, 0.1, 1, 10]}\ngrid = GridSearchCV(pipe, param_grid, cv=5)",
+   "verbatim": true
+  },
+  {
+   "where": "p.336",
+   "snippet": "tfidf(w, d) = tf * log((N + 1) / (N_w + 1)) + 1  (then L2 normalization)",
+   "verbatim": false
+  },
+  {
+   "where": "In[32] p.341",
+   "snippet": "param_grid = {\"logisticregression__C\": [0.001, 0.01, 0.1, 1, 10, 100],\n              \"tfidfvectorizer__ngram_range\": [(1, 1), (1, 2), (1, 3)]}",
+   "verbatim": true
+  },
+  {
+   "where": "In[41]-[42] p.348-349",
+   "snippet": "vect = CountVectorizer(max_features=10000, max_df=.15)\nlda = LatentDirichletAllocation(n_topics=10, learning_method=\"batch\", max_iter=25, random_state=0)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Chapter text has no author, year or book title; bib is inferred from the ledger path (intro-to-ml-with-python) and left authors empty.",
+  "tf-idf formula is garbled in extraction (fraction layout); reconstructed in code entry as verbatim=false.",
+  "Text says 'at least 20 percent' of documents removed but code uses max_df=.15 (source inconsistency).",
+  "No embedded instructions found."
+ ]
+}

@@ -24,6 +24,7 @@ Larkspur's checkout test from the previous pillar gets a new question. [Chapter 
 | # | Chapter | You will be able to |
 |---|---|---|
 | 1 | [Bayesian inference](notes/01-bayesian-inference.md) | Write a generative model, compute a Beta-Binomial posterior by hand and fit the same model in PyMC |
+| 1b | [Grids, hypotheses and simulation](notes/01b-grids-hypotheses-and-simulation.md) | Read two-parameter posteriors through marginals and conditionals, compute a Bayes factor and say what it hinges on, and simulate a joint distribution |
 | 2 | [MCMC and PyMC](notes/02-mcmc-and-pymc.md) | Explain one Metropolis step, read r_hat, ESS and divergences, and fix a sampler by reparameterising |
 | 3 | [Priors and bandits](notes/03-priors-and-bandits.md) | Run a prior predictive check, pick a default prior for logistic regression, and implement Thompson sampling |
 | 4 | [Bayesian A/B testing](notes/04-bayesian-ab-testing.md) | Report P(B > A), a lift interval and expected loss, and say what peeking does to each |
@@ -31,7 +32,7 @@ Larkspur's checkout test from the previous pillar gets a new question. [Chapter 
 | 6 | [Bayesian machine learning](notes/06-bayesian-machine-learning.md) | Derive EM and the ELBO, see where ADVI underestimates uncertainty, and run a GP with Bayesian optimisation |
 | 7 | [Multilevel models and partial pooling](notes/07-multilevel-models-and-partial-pooling.md) | Fit random intercepts and slopes in `MixedLM` and PyMC, choose between clustered SEs, fixed effects and a multilevel model, and say when partial pooling does not help |
 
-Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Chapter 7 needs 2 and 4, plus clustered SEs from [regression](../02-probability-and-statistics/notes/06-regression-and-glms.md) and the design effect from [probability foundations](../02-probability-and-statistics/notes/02-probability-foundations.md). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
+Read 1 to 5 in order (1b follows 1 and can wait until after 2). Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Chapter 7 needs 2 and 4, plus clustered SEs from [regression](../02-probability-and-statistics/notes/06-regression-and-glms.md) and the design effect from [probability foundations](../02-probability-and-statistics/notes/02-probability-foundations.md). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
 
 ## Builds on and feeds into
 

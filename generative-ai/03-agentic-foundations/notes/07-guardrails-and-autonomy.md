@@ -5,7 +5,7 @@ sources:
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
-  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 1, 2, 3"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 2, 3, 5"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -156,6 +156,8 @@ The unknown tool is denied by default, and the hard limit applies even with appr
 Grounding supplies some of those triggers. *Agentic Architectural Patterns* (ch. 3) lists four: cite the source for what was retrieved, cross-check critical claims the model generated itself against a trusted database (possibly through a dedicated fact-checking sub-agent), act on confidence scores where the platform exposes them, and ask a clarifying question when the input is ambiguous. Its example sends a diagnosis to mandatory senior review when the model's stated confidence is below 70%. That cut-off is an illustration, and the chapter does not say how well model-stated confidence tracks correctness.
 
 Escalation needs a payload, not just a trigger. *Agentic Architectural Patterns* (ch. 1) tells the story of an e-commerce returns and order-status agent that passed its pilot on curated FAQs and a clean static copy of the order database, and was pulled from production after about a week. Three failures, each a design gap: it had only the internal order table, so a courier-strike delay left it repeating "has been shipped"; a Final Sale question missed its knowledge base, so it generalized from the standard policy and promised a full cash refund the company could not honor; and its only fallback was "I cannot help with that", with no chat transfer, ticket number or history passed to a person, so customers started over. The fixes are the controls in this note: ground the answer or say it is not known, and hand over the conversation when it escalates. It is one anonymized, unquantified case, with no rates of failure.
+
+Containment has a pattern of its own. *Agentic Architectural Patterns* (ch. 5) borrows the supervision tree from Erlang and Akka. Supervisors manage only the lifecycle of their child agents, and capabilities are granted per subtree, so a research branch cannot reach billing tools. When a child crashes or breaks a policy, a one-for-one strategy restarts only that child, and an escalate strategy fails the supervisor itself so the problem moves up the tree. Two rules matter in practice: stop restarting a child that crashes repeatedly (its example is 5 crashes in 1 second) so a crash loop does not burn resources, and do not let children bypass their supervisor to talk to the root. For conflicts between agents it prefers policy-based resolution, where a fixed rule such as "all loan batches must pass a fairness check before approval" overrides a speed KPI, logs the reason for every resolution, and ends in a human when automation cannot decide. It also suggests simulating agent interactions before deployment. The chapter gives no failure-rate or recovery-time data.
 
 ---
 

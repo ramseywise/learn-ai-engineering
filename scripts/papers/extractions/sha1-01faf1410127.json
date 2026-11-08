@@ -1,0 +1,61 @@
+{
+ "schema": 1,
+ "key": "sha1:01faf1410127",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch07-accounting.pdf",
+ "bib": {"title": "Accounting (Chapter 7, The Data Warehouse Toolkit, 2nd ed.)", "authors": ["Ralph Kimball", "Margy Ross"], "first_author": "Kimball", "year": 2002, "venue": "Wiley (book chapter)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 35602, "chars_total": 35602, "engine": "pymupdf", "skipped": "Authors are not printed in the chapter text; Kimball and Ross taken from the task statement. Figures 7.1-7.4 are read as text labels only."},
+ "type": "book-chapter",
+ "question": "How should general ledger, budgeting and actual-versus-budget data be modelled dimensionally?",
+ "hypothesis": null,
+ "contributions": ["G/L periodic snapshot plus journal-entry transaction schemas", "Net-change grain for budget facts and the budget-commitment-payment chain", "Consolidated actual-vs-budget fact table and its limits", "Options for multiple fiscal calendars"],
+ "method": null,
+ "results": [
+  {"claim": "Worked example of net-change budget grain: an original budget of 200,000 is followed by a 40,000 increase in June and a negative 25,000 in October, each stored as a separate fact row.", "kind": "worked-example", "source": null, "metric": "June budget increase row", "value": 40000, "unit": "$", "baseline_value": 200000, "n": null, "setup": "Budget fact table at net-change grain per budget line item, G/L account, organization and effective month (Fig 7.3)", "quote": "have another row in June for a $40,000 increase and then another in October", "table": null, "note": "October row is negative $25,000; summing all rows to date gives the current approved budget (215,000 by arithmetic, not printed).", "where": "p.183"},
+  {"claim": "A company may have 13 four-week accounting periods in a fiscal year starting September 1 instead of 12 calendar months, so fiscal periods need their own treatment.", "kind": "worked-example", "source": null, "metric": "accounting periods per fiscal year", "value": 13, "unit": "periods", "baseline_value": 12, "n": null, "setup": "Illustration of fiscal calendar misaligned with Gregorian months", "quote": "a company may have 13 four-week accounting periods", "table": null, "note": null, "where": "p.179"},
+  {"claim": "A subsidiary fiscal period dimension would hold about 36 fiscal periods for three years times the number of unique calendars.", "kind": "worked-example", "source": null, "metric": "rows in subsidiary fiscal period dimension per calendar", "value": 36, "unit": "rows (three years)", "baseline_value": null, "n": null, "setup": "Third option for many subsidiary-specific fiscal calendars", "quote": "(approximately 36 for three years) times the number of unique calendars.", "table": null, "note": null, "where": "p.179"},
+  {"claim": "Account numbers 1,000 through 1,999 might be assets and 2,000 to 2,999 liabilities, so account type should be a dimension attribute rather than a filter on the first digit.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Chart of accounts as an intelligent key", "quote": "might be asset accounts, whereas account numbers ranging from 2,000 to 2,999", "table": null, "note": null, "where": "p.175"},
+  {"claim": "To-date (QTD/YTD) columns should not be stored in fact tables because they are not true to the grain and overstate results when summed; compute them in the access application.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "G/L periodic snapshot fact table", "quote": "In general, to-date totals should be calculated, not stored in the fact table.", "table": null, "note": null, "where": "p.177"}
+ ],
+ "limits": ["2002 text: references Oracle variable-width columns, bit-mapped indexes and OLAP cube vendors as then-current; modern columnar warehouses change several trade-offs.", "No data or measurements; design advice only.", "Consolidated fact tables are a dimensionality compromise at the least common denominator of dimensions (p.184).", "Defers budgeting chain detail to Adamson and Venerable, Data Warehouse Design Solutions (Wiley 1998)."],
+ "practices": [
+  "Pair a G/L periodic snapshot (grain: one row per accounting period per lowest-level chart-of-accounts account) with a journal-entry transaction fact table (p.175-178).",
+  "Split the chart of accounts into a G/L account dimension and an organization roll-up dimension; add a separate G/L (books) dimension when multiple sets of books exist (p.175-176).",
+  "Use bridge tables from Chapter 6 for ragged organization hierarchies; handle fixed-depth hierarchies as attributes (p.176).",
+  "Store the period-end balance as a semiadditive fact because otherwise balances need recomputing from the beginning of time (p.176).",
+  "Do not store quarter-to-date or year-to-date facts; calculate them in the data access application or via roll-up attributes on the period dimension (p.177, 184).",
+  "For multiple currencies hold both local and corporate-currency amounts per row and a currency foreign key (p.177).",
+  "Treat the journal entry number as a degenerate dimension; use a single amount with a debit/credit indicator, and a two-row decode dimension or DR/CR abbreviation (p.178-179).",
+  "For one fiscal calendar, make fiscal periods hierarchical attributes of the daily date dimension; for few calendars, add labelled attribute sets to one date dimension (p.179).",
+  "For many fiscal calendars, use a date-by-subsidiary outrigger exposed through a view, separate physical date dimensions sharing surrogate keys, or a subsidiary fiscal period foreign key in the fact table (p.179-180).",
+  "Do not replace the operational system's official financial statements; optionally build an aggregated financial statement database by period and cost center (p.180).",
+  "Set budget fact grain to the net change of a line item in a cost center per month, not a monthly status snapshot, so the single budget amount is fully additive (p.181-182).",
+  "Model budget, commitments and payments as a chain of fact tables with growing dimension lists and combine them by drill-across (p.183).",
+  "Replicate the category name into the subcategory column for uneven hierarchies to avoid a Not Applicable bucket (p.182).",
+  "Build a consolidated actual-vs-budget fact table only when the facts share grain and dimensionality; do not force-fit with artificial facts or dimensions (p.184-185).",
+  "Show actuals at both effective and planned currency conversion rates so remote managers are not penalised for rate changes (p.184).",
+  "Conform dimensions across the warehouse even when buying packaged analytic solutions (p.186)."
+ ],
+ "terms": [
+  {"term": "Chart of accounts", "definition": "The cornerstone of the G/L, an intelligent key usually consisting of a series of identifiers.", "where": "p.175"},
+  {"term": "Semiadditive fact", "definition": "A fact such as a balance that is not additive across all dimensions (here, over time).", "where": "p.176"},
+  {"term": "Net change granularity", "definition": "Budget fact grain: the change to a budget line item in a cost center during the month; summing over time gives the current approved budget.", "where": "p.181-183"},
+  {"term": "Consolidated (second-level) fact table", "definition": "Fact tables that combine metrics at a common granularity.", "where": "p.184"},
+  {"term": "Degenerate dimension", "definition": "An identifier such as the journal entry number kept in the fact table with no dimension table.", "where": "p.178"},
+  {"term": "Date dimension outrigger", "definition": "A table keyed by date and subsidiary holding subsidiary-specific fiscal groupings.", "where": "p.179"}
+ ],
+ "lineage": [
+  {"work": "Adamson and Venerable, Data Warehouse Design Solutions", "year": 1998, "arxiv": null, "relation": "related", "note": "Recommended for the budgeting chain.", "quote": null},
+  {"work": "Kimball Toolkit Chapter 2 (date dimension)", "year": null, "arxiv": null, "relation": "extends", "note": "Calendar and fiscal period as hierarchical date attributes.", "quote": null},
+  {"work": "Kimball Toolkit Chapter 3 (consolidated fact tables)", "year": null, "arxiv": null, "relation": "extends", "note": "Introduced consolidated or second-level fact tables.", "quote": null},
+  {"work": "Kimball Toolkit Chapter 5 (multiple currencies, uneven hierarchies)", "year": null, "arxiv": null, "relation": "extends", "note": "Local plus standard currency facts.", "quote": null},
+  {"work": "Kimball Toolkit Chapter 6 (bridge tables, packaged solutions, conformance)", "year": null, "arxiv": null, "relation": "extends", "note": "Variable-depth hierarchy bridge and stovepipe warnings.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 7.1", "caption": "General ledger (G/L) periodic snapshot.", "page": 177, "why": "Shows the snapshot fact with balance, debit, credit and net change against period, G/L, account and organization dimensions."},
+  {"figure": "Fig 7.2", "caption": "General ledger (G/L) journal entry transactions.", "page": 178, "why": "Shows transaction fact with degenerate journal number and debit-credit indicator dimension."},
+  {"figure": "Fig 7.3", "caption": "Annual budget schema.", "page": 182, "why": "Net-change budget fact with effective date and budget line item dimension."},
+  {"figure": "Fig 7.4", "caption": "Actual versus budget consolidated fact table.", "page": 185, "why": "Actual, budget and variance side by side on shared dimensions."}
+ ],
+ "code": [],
+ "problems": ["Page headers contain stray TEAMFLY watermark and blank lines.", "Figures are extracted as text labels only, with no layout.", "No embedded instructions found."]
+}

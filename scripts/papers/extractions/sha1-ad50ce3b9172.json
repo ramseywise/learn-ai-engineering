@@ -1,0 +1,280 @@
+{
+ "schema": 1,
+ "key": "sha1:ad50ce3b9172",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch06-explainability-compliance-agentic-patterns.pdf",
+ "bib": {
+  "title": "Explainability and Compliance Agentic Patterns (Chapter 6, Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": [
+   "Arsanjani",
+   "Bustos"
+  ],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt Publishing",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 39763,
+  "chars_total": 39763,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which architectural patterns make a multi-agent system explainable (why did the agent do that) and verifiably compliant (did it follow the rules), and how does the need grow with maturity?",
+ "hypothesis": null,
+ "contributions": [
+  "Four patterns: Instruction Fidelity Auditing, Fractal Chain-of-Thought (FCoT) Embedding, Persistent Instruction Anchoring, Shared Epistemic Memory",
+  "A mapping of the patterns to the GenAI Maturity Model levels (Table 6.1)",
+  "A composition recipe: layer the patterns, with at least two or three live"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Recommended practice: instantiate at least two or three of the four patterns concurrently for production reliability (advice, no measurement).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-3 patterns",
+   "unit": "patterns",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hierarchical multi-agent systems; no experiment or evidence given",
+   "quote": "designing systems with at least two or three of these patterns instantiated concurrently is a",
+   "table": null,
+   "note": null,
+   "where": "Pattern composition, p.201"
+  },
+  {
+   "claim": "Worked example: a DiscountAgent applies a 15% WELCOME discount to order #5678 without checking the first-order constraint; the auditor fails it. Invented scenario.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "15%",
+   "unit": "discount",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented e-commerce scenario (user123, order #5678); auditor stub hard-codes check_customer_history to return False",
+   "quote": "Apply a 15% 'WELCOME' discount",
+   "table": null,
+   "note": null,
+   "where": "Instruction Fidelity Auditing, pp.185-187"
+  },
+  {
+   "claim": "Worked example: summary of Q3 data with revenue 10M and profit 2M yields a 20% margin; the LLM call is simulated by a hard-coded string, so it shows nothing about anchoring effectiveness.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "20%",
+   "unit": "profit margin",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Invented financial reporting scenario; simulated LLM",
+   "quote": "profit margin of 20%",
+   "table": null,
+   "note": "20% is derived from 2M/10M, not stated as a derivation. The prose says revenue: 10M and the code says revenue: '10M'.",
+   "where": "Persistent Instruction Anchoring, p.195"
+  },
+  {
+   "claim": "Worked example: a fact about server status true five minutes ago may be false now; an entry 20 minutes old should be re-verified. Illustrative, not measured.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "20 minutes",
+   "unit": "age of fact",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Guidance on TTL/timestamp schema for shared memory",
+   "quote": "This fact is 20 minutes old; I should verify it",
+   "table": null,
+   "note": null,
+   "where": "Shared Epistemic Memory guidance, p.200"
+  },
+  {
+   "claim": "The chapter asserts the anchoring pattern 'significantly improves the recall of upstream instructions' with no data.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rests on the 'lost in the middle' argument; nothing measured in the chapter",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Persistent Instruction Anchoring consequences, p.196"
+  }
+ ],
+ "limits": [
+  "No experiments, benchmarks or measured numbers; every number is from an invented scenario or advice.",
+  "Code is conceptual: the LLM calls and audit logic are stubbed (audit does a string match on 'first order'; check_customer_history returns False).",
+  "Costs (latency, tokens) of audit and FCoT are named but never quantified.",
+  "Level numbering is inconsistent: Table 6.1 says single agent = Level 5 and multi-agent = Level 6; the summary says Level 4 and Level 5. The GenAI Maturity Model is defined elsewhere in the book.",
+  "Prose uses SharedMemory.update({dict}) with one argument; the code uses update(key, value). The code's update only handles event_log and shipments.",
+  "'Lost in the middle' is asserted with no citation in this chapter; FCoT and chain-of-agents are named without references.",
+  "Persistent Instruction Anchoring is a prompt-level reminder, not enforcement; no guarantee, and auditing is the only independent check."
+ ],
+ "practices": [
+  "Audit only at high-risk handoffs, not every step, to balance compliance against latency (Instruction Fidelity Auditing guidance, p.188).",
+  "Have the auditor compare the worker output against the original instruction, not perform the task, and return a structured verdict with a reason (p.185-186).",
+  "On a FAIL verdict the supervisor reverts the action and informs the user (p.186).",
+  "Define a clear objective function for self-correction in FCoT and reserve it for complex, high-value tasks given latency and token cost (p.192).",
+  "Implement FCoT as a prompt template with Thought, Self-Correction Check (PASS/FAIL) and Action/Revision steps (p.191).",
+  "Use a standardized, consistently templated anchor format (PERSISTENT_GOAL: [...] or <CONSTRAINT>...</CONSTRAINT>) and re-insert it at each handoff (p.196).",
+  "Back shared memory with a persistent low-latency key-value store such as Redis or Memcached with atomic operations, not an in-memory dict (p.200).",
+  "Require a timestamp and a source_agent_id on every memory entry and use TTL so agents can judge staleness (p.200).",
+  "Expose shared memory through strict typed tools (update_order_status(id, status)), not a generic write_memory(text) (p.200).",
+  "Compose patterns in layers: shared memory as truth, anchoring as reminder, FCoT as internal self-governance, auditing as external gate (p.201)."
+ ],
+ "terms": [
+  {
+   "term": "Instruction Fidelity Auditing",
+   "definition": "A specialized auditor agent compares a worker agent's output against the original instruction before the action is finalized.",
+   "where": "p.185"
+  },
+  {
+   "term": "Silent failure",
+   "definition": "Sub-tasks appear to complete successfully, but the overall outcome is misaligned with the original business intent.",
+   "where": "p.185"
+  },
+  {
+   "term": "Fractal Chain-of-Thought (FCoT) Embedding",
+   "definition": "Structures reasoning as a recursive, multi-scale framework of self-contained units that can be recursively refined.",
+   "where": "p.189"
+  },
+  {
+   "term": "Temporal re-grounding",
+   "definition": "Earlier reasoning steps are formally revised in light of newer evidence, rather than a static append-only log.",
+   "where": "p.189"
+  },
+  {
+   "term": "Dynamic context aperture",
+   "definition": "The agent widens or narrows its focus, zooming in for detail or out to broader context from other agents.",
+   "where": "p.189"
+  },
+  {
+   "term": "Inter-agent reflectivity",
+   "definition": "Agents evaluate and reflect on the reasoning of other agents.",
+   "where": "p.189"
+  },
+  {
+   "term": "Persistent Instruction Anchoring",
+   "definition": "Critical goals or constraints are embedded in semantically significant tags and passed down the chain so they stay salient.",
+   "where": "p.193"
+  },
+  {
+   "term": "Instruction drift",
+   "definition": "Gradual misalignment of final output from the original intent as the instruction is forgotten down the chain.",
+   "where": "p.193"
+  },
+  {
+   "term": "Shared Epistemic Memory",
+   "definition": "A single mutable source of truth outside individual context windows that all agents in a workflow read from and write to.",
+   "where": "p.196"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lost in the middle (named as a problem, no citation printed)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Motivates anchoring",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-agents framework (named, no citation printed)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Shared memory is said to be a key feature of it",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (generic, no citation printed)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "FCoT extends standard CoT with recursion and inter-agent reflection",
+   "quote": null
+  },
+  {
+   "work": "GenAI Maturity Model (earlier chapter of the same book)",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Table 6.1 maps the patterns to its levels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.1",
+   "caption": "Instruction Fidelity Auditing workflow",
+   "page": 4,
+   "why": "Supervisor to worker to auditor to revert loop in one picture"
+  },
+  {
+   "figure": "Fig 6.2",
+   "caption": "FCoT internal reasoning loop",
+   "page": 7,
+   "why": "Thought, check, finalize or refine loop"
+  },
+  {
+   "figure": "Fig 6.3",
+   "caption": "FCoT use case example",
+   "page": 8,
+   "why": "Hempcrete revision example as a flowchart"
+  },
+  {
+   "figure": "Fig 6.4",
+   "caption": "Persistent Instruction Anchoring workflow",
+   "page": 12,
+   "why": "Side-by-side with and without anchor"
+  },
+  {
+   "figure": "Fig 6.5",
+   "caption": "Shared Epistemic Memory Workflow",
+   "page": 16,
+   "why": "Storm event propagating through shared memory to the customer notification"
+  },
+  {
+   "figure": "Table 6.1",
+   "caption": "Mapping explainability and compliance patterns to the GenAI Maturity Model",
+   "page": 2,
+   "why": "How each pattern changes between a single agent and a multi-agent system"
+  }
+ ],
+ "code": [
+  {
+   "where": "Instruction Fidelity Auditing, pp.186-188",
+   "snippet": "audit_verdict = ComplianceAuditAgent().run(original_instruction=original_instruction, worker_output=worker_result)\nif audit_verdict.get(\"audit_status\") == \"PASS\": ... else: ... revert",
+   "verbatim": false
+  },
+  {
+   "where": "FCoT prompt template, p.191",
+   "snippet": "FRACTAL_COT_PROMPT_TEMPLATE with sections: Overall Goal / Shared Context & Peer Agent Summaries / My Previous Reasoning Steps / 1. Thought / 2. Self-Correction Check (Objective, Constraint, Verdict & Justification) / 3. Action / Revision (PASS: act; FAIL: revise a previous thought unit)",
+   "verbatim": false
+  },
+  {
+   "where": "Anchoring, p.194",
+   "snippet": "anchored_instruction = \"PERSISTENT_GOAL: [NO_FORWARD_LOOKING_STATEMENTS]\"",
+   "verbatim": true
+  },
+  {
+   "where": "Shared memory, p.198",
+   "snippet": "class SharedMemory: store = {shipments:{...}, event_log:[]}; update(key, value); read()",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Level numbering inconsistent between Table 6.1 (5/6) and the summary (4/5).",
+  "Prose and code disagree on SharedMemory.update signature; prose has a missing parenthesis.",
+  "PDF text contains stray 'idx_...' tokens (watermark artifacts) and stripped code indentation.",
+  "Typo in the source: CustomerNoctificationAgent.",
+  "No embedded instructions found."
+ ]
+}

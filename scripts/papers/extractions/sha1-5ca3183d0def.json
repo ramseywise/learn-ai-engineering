@@ -1,0 +1,630 @@
+{
+ "schema": 1,
+ "key": "sha1:5ca3183d0def",
+ "pdf": "data-science/sources/nlp-with-python/ch03-processing-raw-text.pdf",
+ "bib": {
+  "title": "Processing Raw Text (Chapter 3, Natural Language Processing with Python)",
+  "authors": [
+   "Steven Bird",
+   "Ewan Klein",
+   "Edward Loper"
+  ],
+  "first_author": "Bird",
+  "year": null,
+  "venue": "book chapter (O'Reilly, NLTK book); year not printed in the chapter text",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 117520,
+  "chars_total": 117520,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do we get raw text from the Web and disk, split it into words and sentences, normalise it (stemming, lemmatisation) and format output, using Python strings, Unicode and regular expressions?",
+ "hypothesis": null,
+ "contributions": [
+  "Pipeline from URL/file to raw string to tokens to nltk.Text to normalised vocabulary (Fig 3-1)",
+  "Regex toolkit for word patterns, stems and tokenisation",
+  "Segmentation as search with an objective and simulated annealing"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Porter stemmer maps 'lying' to 'lie'; Lancaster leaves it as 'lying'; both over-stem other words (Porter 'DENNI', 'ceremoni'; Lancaster 'pow', 'der', 'som').",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "lie",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; 38-token Monty Python sentence 'DENNIS: Listen, strange women lying in ponds ...'; nltk.PorterStemmer vs nltk.LancasterStemmer",
+   "note": null,
+   "where": "3.6 Stemmers",
+   "quote": "Observe that the Porter stemmer correctly handles the word lying (mapping it to lie), whereas the Lancaster stemmer does not."
+  },
+  {
+   "claim": "WordNet lemmatizer converts women->woman, basis, government, executive, mandate but leaves 'lying', 'distributing', 'derives' unchanged (no POS given).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "woman",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; same Monty Python sentence; WordNetLemmatizer.lemmatize with default POS",
+   "note": null,
+   "where": "3.6 Lemmatization",
+   "quote": "Notice that it doesn’t handle lying, but it converts women to woman."
+  },
+  {
+   "claim": "Hand-written regex stemmer r'^(.*?)(ing|ly|ed|ious|ies|ive|es|s|ment)?$' over-strips: 'ly' for lying, 'i' for is, 'basi' for basis, non-words 'distribut', 'deriv'.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "basi",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; same sentence; regex suffix stripper with non-greedy .*?",
+   "note": null,
+   "where": "3.5 Finding Word Stems",
+   "quote": "Notice that our regular expression removed the s from ponds but also from is and basis."
+  },
+  {
+   "claim": "Greedy .* gives ('processe','s') for 'processes'; non-greedy .*? gives ('process','es').",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "processe",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; regex ^(.*)(ing|ly|ed|ious|ies|ive|es|s|ment)$ vs the *? version",
+   "note": null,
+   "where": "3.5",
+   "quote": "The regular expression incorrectly found an -s suffix instead of an -es suffix."
+  },
+  {
+   "claim": "Downloaded Crime and Punishment raw string has 1,176,831 characters and word_tokenize yields 255809 tokens.",
+   "kind": "measured",
+   "source": null,
+   "metric": "characters",
+   "value": "1176831",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; Project Gutenberg text 2554, nltk.word_tokenize on the full file including header and footer",
+   "note": "Token count 255809 printed in the session output (len(tokens)) before header/footer trimming.",
+   "where": "3.1",
+   "quote": "The variable raw contains a string with 1,176,831 characters."
+  },
+  {
+   "claim": "Slice raw[5303:1157681] trims the Gutenberg header/footer; boundaries found by manual inspection using find('PART I') and rfind.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5303",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; Crime and Punishment text",
+   "note": "Authors say content boundaries cannot be detected reliably, so manual inspection is needed.",
+   "where": "3.1",
+   "quote": "raw.find(\"PART I\")",
+   "table": "3.1 code, raw.find output 5303 and rfind output 1157681"
+  },
+  {
+   "claim": "Brown Corpus averages 20.250994070456922 words per sentence.",
+   "kind": "measured",
+   "source": null,
+   "metric": "words per sentence",
+   "value": "20.250994070456922",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; len(brown.words()) / len(brown.sents()) with from __future__ import division",
+   "note": null,
+   "where": "3.8 Sentence Segmentation",
+   "quote": "20.250994070456922"
+  },
+  {
+   "claim": "Segmentation objective (text_size = number of words, plus lexicon_size = characters of space-joined unique words) scores seg3=46, seg2=47, seg1=63; lower is better.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objective (smaller better)",
+   "value": "46",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; 'doyouseethekittyseethedoggydoyoulikethekittylikethedoggy', Brent & Cartwright 1995 style objective; Example 3-3",
+   "note": null,
+   "where": "3.8 Word Segmentation",
+   "table": "Example 3-3 output: evaluate(text, seg3)=46, seg2=47, seg1=63"
+  },
+  {
+   "claim": "Simulated annealing (iterations=5000, cooling_rate=1.2, start temperature=len(segs), stop at 0.5) lowers the objective from 60 to 42 and recovers 'doyou see thekitty see thedoggy doyou like thekitty like thedoggy'.",
+   "kind": "measured",
+   "source": null,
+   "metric": "objective (smaller better)",
+   "value": "42",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; Example 3-4 anneal(text, seg1, 5000, 1.2); stochastic, output varies per run",
+   "note": "Words like thekitty are not split further because the data gives no evidence. Seeds not set.",
+   "where": "3.8",
+   "table": "Example 3-4 printed trace, last line score 42"
+  },
+  {
+   "claim": "Text of length n can be broken in only n-1 places, so segmentation bit strings are one character shorter than the text.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Boolean word-break annotation per character",
+   "note": null,
+   "where": "3.8"
+  },
+  {
+   "claim": "Google hit ratios (Liberman 2005): absolutely adore 289,000 vs definitely adore 1,460 = 198:1; absolutely prefer 644 vs definitely prefer 62,600 = 1:97.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "198:1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3-1 collocation hit counts, Google, 2005",
+   "note": "Counts: love 905,000 vs 51,000 (18:1); like 16,200 vs 158,000 (1:10).",
+   "where": "3.1 search engines",
+   "table": "Table 3-1, row ratio, columns adore and prefer"
+  },
+  {
+   "claim": "Textonym regex ^[ghi][mno][jlk][def]$ over lowercase Words Corpus matches 4 words: gold, golf, hold, hole.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; wordlist = lowercase words in nltk.corpus.words 'en'",
+   "note": null,
+   "where": "3.4",
+   "quote": "Only four words satisfy all these constraints."
+  },
+  {
+   "claim": "supercalifragilisticexpialidocious contains 16 vowels by re.findall(r'[aeiou]').",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "16",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book",
+   "note": null,
+   "where": "3.5",
+   "quote": "16"
+  },
+  {
+   "claim": "Most frequent vowel sequences in WSJ treebank word types: io 549, ea 476, ie 331, ou 329, ai 261.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "549",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; set of word types in nltk.corpus.treebank, regex [aeiou]{2,}",
+   "note": null,
+   "where": "3.5",
+   "table": "3.5 fd.items() output, first entry ('io', 549)"
+  },
+  {
+   "claim": "Rotokas consonant-vowel counts: k-a 418, k-o 420, s-i 100, s-a 0, t-i 0; s and t partly complementary, suggesting they are not distinct phonemes.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "418",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; nltk.corpus.toolbox rotokas.dic, regex [ptksvr][aeiou], ConditionalFreqDist",
+   "note": null,
+   "where": "3.5",
+   "table": "3.5 cfd.tabulate() output, row k column a"
+  },
+  {
+   "claim": "Vowel-dropping compress() regex turns the English UDHR into 'Unvrsl Dclrtn of Hmn Rghts' yet stays readable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; first 75 words of nltk.corpus.udhr English-Latin1",
+   "note": null,
+   "where": "3.5",
+   "quote": "It is sometimes noted that English text is highly redundant, and it is still easy to read"
+  },
+  {
+   "claim": "NLTK regexp_tokenize with a verbose (?x) pattern tokenizes 'That U.S.A. poster-print costs $12.40...' into 6 tokens keeping U.S.A., poster-print, $12.40 and '...' whole.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; pattern with abbreviations, hyphenated words, currency/percent, ellipsis, punctuation",
+   "note": null,
+   "where": "3.7",
+   "quote": "['That', 'U.S.A.', 'poster-print', 'costs', '$12.40', '...']"
+  },
+  {
+   "claim": "Whitespace split leaves punctuation attached ('(not', 'herself,'); \\W+ split yields empty strings at ends and splits won't into won, t; the final pattern keeps won't, it's, hot-tempered as one token each.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; Alice in Wonderland snippet; patterns re.split(r'\\s+'), re.split(r'\\W+'), \\w+|\\S\\w*, \\w+(?:[-']\\w+)*|'|[-.(]+|\\S\\w*",
+   "note": null,
+   "where": "3.7",
+   "quote": "Splitting on whitespace gives us tokens like '(not' and 'herself,'."
+  },
+  {
+   "claim": "Punkt sentence segmenter splits quoted speech inside one logical sentence into several strings; output depends on the pickled model version.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; tokenizers/punkt/english.pickle on chesterton-thursday.txt, sents[171:181]",
+   "note": null,
+   "where": "3.8",
+   "quote": "Note that if the segmenter’s internal data has been"
+  },
+  {
+   "claim": "Formatted accuracy example 3205/9375 prints 34.1867% (and the book notes 100 * count / total relies on from __future__ import division).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "34.1867",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book",
+   "note": null,
+   "where": "3.9",
+   "quote": "'accuracy for 9375 words: 34.1867%'"
+  },
+  {
+   "claim": "Genesis (english-kjv) has 2789 word types.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2789",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; set of nltk.corpus.genesis.words('english-kjv.txt')",
+   "note": null,
+   "where": "3.9",
+   "quote": "2789"
+  },
+  {
+   "claim": "Modals in Brown by genre, e.g. news will=389, religion can=82, humor can=16.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "389",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK 2.x / Python 2 interactive session, chapter 3 of the NLTK book; ConditionalFreqDist over Brown genres",
+   "note": null,
+   "where": "3.9",
+   "table": "Example 3-5 output, row news, column will"
+  },
+  {
+   "claim": "Normalising decimal numbers to a single token 0.0 and acronyms to AAA keeps the vocabulary small and improves the accuracy of many language modelling tasks (asserted, no data).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Non-standard word normalisation",
+   "note": null,
+   "where": "3.6",
+   "quote": "This keeps the vocabulary small and improves the ac-"
+  },
+  {
+   "claim": "Exercise 29 defines Automated Readability Index ARI = 4.71 mu_w + 0.5 mu_s - 21.43 (mu_w letters per word, mu_s words per sentence).",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "4.71",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exercise 29",
+   "note": null,
+   "where": "3.12",
+   "quote": "4.71 μw + 0.5 μs - 21.43"
+  }
+ ],
+ "limits": [
+  "Python 2 throughout: print statements, from urllib import urlopen, raw_input, 'rU' mode, u'' literals, str vs unicode, integer division needing from __future__ import division, wc = width/4 in Example 3-1.",
+  "nltk.clean_html() was removed from NLTK (raises NotImplementedError in 3.x); the book itself points to Beautiful Soup. The sample also shows a typo nltk.html_clean.",
+  "nltk.word_tokenize, the Punkt pickle path 'tokenizers/punkt/english.pickle' and nltk.data.find usage have changed; Punkt now loads via nltk.sent_tokenize and needs a data download. WordNet and corpora need nltk.download.",
+  "Regex quantifier {,n} (e.g. [a-z]{,6}) is used in Table 3-3 and examples; in Python 3 re it is valid but check behaviour per version.",
+  "Table 3-2 lists s.titlecase(), which is not a real str method (the method is title()).",
+  "Stemmer/lemmatizer outputs are on one 38-token sentence only: no accuracy or retrieval-effect measurement. Lemmatizer called without POS tags.",
+  "Segmentation is a toy (4 utterances, 55 characters), single stochastic run, no seed; annealing outputs vary. Google counts (2005) are inconsistent over time and region as the authors note.",
+  "Unicode coverage predates Python 3, where str is Unicode and encoding handled by open(..., encoding=).",
+  "No treatment of subword tokenisation (BPE, WordPiece), which is what modern LLM pipelines use."
+ ],
+ "practices": [
+  "Use NLTK's off-the-shelf stemmers rather than a hand-written regex stemmer, since they handle irregular cases (3.6).",
+  "Pick Porter for indexing/search over word variants; pick the WordNet lemmatizer when you need a vocabulary of valid lemmas (3.6).",
+  "Prefix every regex string with r'...' so backslashes reach the re library (3.4).",
+  "Use non-greedy *? when splitting a stem from a suffix, and (?:...) when parentheses only group (3.5).",
+  "Splitting on whitespace is inadequate; tokenise with a regex or nltk.word_tokenize, and decide what counts as a token by application domain (3.7).",
+  "Use nltk.regexp_tokenize with the (?x) verbose flag and comments for readability; evaluate a tokenizer against gold-standard tokens such as the Penn Treebank sample (3.7).",
+  "Handle contractions with a lookup table, e.g. didn't -> did + n't (3.7).",
+  "Segment text into sentences before word tokenising when only a character stream is available; use Punkt (3.8).",
+  "Map non-standard words (numbers, abbreviations) to special tokens to shrink the vocabulary (3.6).",
+  "Web text contains headers, footers and markup that must be stripped, often by manual inspection of boundary strings (3.1).",
+  "Decode files to Unicode on input and encode on output; the 'plain text' notion is a fiction (3.3).",
+  "Beware false positives and false negatives when pattern-searching a corpus (3.5).",
+  "Normalise case before counting characters or word types (3.2, 3.6)."
+ ],
+ "terms": [
+  {
+   "term": "tokenization",
+   "definition": "the segmentation of a text into basic units—or tokens—such as words and punctuation",
+   "where": "3.10"
+  },
+  {
+   "term": "stemming",
+   "definition": "strip off any affixes",
+   "where": "3.6"
+  },
+  {
+   "term": "lemmatization",
+   "definition": "a process that maps the various forms of a word (such as appeared, appears) to the canonical or citation form of the word, also known as the lexeme or lemma",
+   "where": "3.10"
+  },
+  {
+   "term": "lemma",
+   "definition": "dictionary word of which forms like laptop and laptops are variants",
+   "where": "3.5"
+  },
+  {
+   "term": "normalization",
+   "definition": "converting text to lowercase so that the distinction between The and the is ignored, then optionally stemming and lemmatizing",
+   "where": "3.6"
+  },
+  {
+   "term": "Kleene closure",
+   "definition": "the + and * operators (one or more, zero or more)",
+   "where": "3.4"
+  },
+  {
+   "term": "greedy vs non-greedy star",
+   "definition": "* consumes as much input as possible; *? consumes as little",
+   "where": "3.5"
+  },
+  {
+   "term": "textonym",
+   "definition": "Two or more words that are entered with the same sequence of keystrokes (T9)",
+   "where": "3.4"
+  },
+  {
+   "term": "code point",
+   "definition": "number assigned to each Unicode character, written \\uXXXX in Python",
+   "where": "3.3"
+  },
+  {
+   "term": "decoding / encoding",
+   "definition": "translation into Unicode is decoding; translation out of Unicode is encoding",
+   "where": "3.3"
+  },
+  {
+   "term": "segmentation",
+   "definition": "general problem of which tokenization, sentence splitting and word segmentation are instances",
+   "where": "3.8"
+  },
+  {
+   "term": "objective function",
+   "definition": "a scoring function whose value we will try to optimize (lexicon size plus derivation size; smaller is better)",
+   "where": "3.8"
+  },
+  {
+   "term": "simulated annealing",
+   "definition": "heuristic for finding a good approximation to the optimum value of a function in a large, discrete search space",
+   "where": "3.11"
+  },
+  {
+   "term": "collocation",
+   "definition": "special case of a multiword expression",
+   "where": "3.11"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kiss & Strunk, 2006 (Punkt sentence segmenter)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "NLTK sentence tokenizer used in 3.8",
+   "quote": null
+  },
+  {
+   "work": "Brent & Cartwright, 1995",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "objective function for word segmentation",
+   "quote": null
+  },
+  {
+   "work": "Hearst, 1992",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "'x and other ys' hyponym patterns",
+   "quote": null
+  },
+  {
+   "work": "Liberman, LanguageLog, 2005",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Table 3-1 Google hits",
+   "quote": null
+  },
+  {
+   "work": "Jurafsky & Martin, 2008",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "further reading on regex and morphology",
+   "quote": null
+  },
+  {
+   "work": "Sproat et al., 2001",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "normalising non-standard words",
+   "quote": null
+  },
+  {
+   "work": "Porter stemmer",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "nltk.PorterStemmer, no citation given",
+   "quote": null
+  },
+  {
+   "work": "Lancaster stemmer",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "nltk.LancasterStemmer, no citation given",
+   "quote": null
+  },
+  {
+   "work": "WordNet lemmatizer",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "nltk.WordNetLemmatizer",
+   "quote": null
+  },
+  {
+   "work": "Penn Treebank sample, Brown, Gutenberg, NPS Chat, UDHR, Words, Rotokas corpora",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NLTK corpus collection",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3-1",
+   "caption": "The processing pipeline: We open a URL and read its HTML content, remove the markup and select a slice of characters; this is then tokenized and optionally converted into an nltk.Text object; we can also lowercase all the words and extract the vocabulary.",
+   "page": 86,
+   "why": "Shows the string -> list -> vocabulary type flow"
+  },
+  {
+   "figure": "Fig 3-3",
+   "caption": "Unicode decoding and encoding.",
+   "page": 94,
+   "why": "Decode on read, encode on write"
+  },
+  {
+   "figure": "Fig 3-6",
+   "caption": "Calculation of objective function: Given a hypothetical segmentation of the source text (on the left), derive a lexicon and a derivation table that permit the source text to be reconstructed, then total up the number of characters used by each lexical item (including a boundary marker) and each derivation, to serve as a score of the quality of the segmentation; smaller values of the score indicate a better segmentation.",
+   "page": 114,
+   "why": "Makes the segmentation score concrete (MDL-like)"
+  },
+  {
+   "figure": "Table 3-3",
+   "caption": "Basic regular expression metacharacters, including wildcards, ranges, and closures",
+   "page": 101,
+   "why": "Regex cheat sheet"
+  },
+  {
+   "figure": "Table 3-4",
+   "caption": "Regular expression symbols",
+   "page": 110,
+   "why": "Character-class cheat sheet (\\b \\d \\s \\w)"
+  }
+ ],
+ "code": [
+  {
+   "where": "3.5 stem",
+   "snippet": "def stem(word):\n    regexp = r'^(.*?)(ing|ly|ed|ious|ies|ive|es|s|ment)?$'\n    stem, suffix = re.findall(regexp, word)[0]\n    return stem",
+   "verbatim": true
+  },
+  {
+   "where": "3.5 compress",
+   "snippet": "regexp = r'^[AEIOUaeiou]+|[AEIOUaeiou]+$|[^AEIOUaeiou]'\ndef compress(word):\n    pieces = re.findall(regexp, word)\n    return ''.join(pieces)",
+   "verbatim": true
+  },
+  {
+   "where": "3.7 tokenizer",
+   "snippet": "re.findall(r\"\\w+(?:[-']\\w+)*|'|[-.(]+|\\S\\w*\", raw)",
+   "verbatim": true
+  },
+  {
+   "where": "3.7 regexp_tokenize",
+   "snippet": "pattern = r'''(?x)    # set flag to allow verbose regexps\n    ([A-Z]\\.)+        # abbreviations, e.g. U.S.A.\n  | \\w+(-\\w+)*        # words with optional internal hyphens\n  | \\$?\\d+(\\.\\d+)?%?  # currency and percentages, e.g. $12.40, 82%\n  | \\.\\.\\.            # ellipsis\n  | [][.,;\"'?():-_`]  # these are separate tokens\n'''\nnltk.regexp_tokenize(text, pattern)",
+   "verbatim": true
+  },
+  {
+   "where": "3.6 stemmers",
+   "snippet": "porter = nltk.PorterStemmer()\nlancaster = nltk.LancasterStemmer()\nwnl = nltk.WordNetLemmatizer()",
+   "verbatim": true
+  },
+  {
+   "where": "Example 3-2/3-3",
+   "snippet": "def segment(text, segs):\n    words = []\n    last = 0\n    for i in range(len(segs)):\n        if segs[i] == '1':\n            words.append(text[last:i+1])\n            last = i+1\n    words.append(text[last:])\n    return words\n\ndef evaluate(text, segs):\n    words = segment(text, segs)\n    text_size = len(words)\n    lexicon_size = len(' '.join(list(set(words))))\n    return text_size + lexicon_size",
+   "verbatim": true
+  },
+  {
+   "where": "Example 3-4 anneal",
+   "snippet": "def anneal(text, segs, iterations, cooling_rate):\n    temperature = float(len(segs))\n    while temperature > 0.5:\n        best_segs, best = segs, evaluate(text, segs)\n        for i in range(iterations):\n            guess = flip_n(segs, int(round(temperature)))\n            score = evaluate(text, guess)\n            if score < best:\n                best, best_segs = score, guess\n        score, segs = best, best_segs\n        temperature = temperature / cooling_rate\n    return segs",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Page text carries a repeated site watermark on every page (ignored, not quoted).",
+  "Circled callout markers from the original are missing from the text, so some '' references have no number.",
+  "Source line 211 of the text shows a typo nltk.html_clean next to nltk.clean_html (in the book).",
+  "Segmentation example output in the text has a missing opening quote before kitty in one list (book typo).",
+  "Year of publication and publisher are not printed in the chapter text; bib.year left null.",
+  "No embedded instructions found."
+ ]
+}

@@ -8,7 +8,7 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 7"
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 1"
-  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 1, 4"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 4"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4"
   - "Chen et al. 2024, Internet of Agents — https://arxiv.org/abs/2407.07061"
   - "Li et al. 2024, More Agents Is All You Need — https://arxiv.org/abs/2402.05120"
@@ -331,6 +331,8 @@ smolagents' `CodeAgent` is P22 Code Execution as the default action format: inst
 | Example in repo | `FastMCP("research")` arXiv server ([02](02c-mcp-code-and-safe-tool-calls.md#mcp-tools-served-over-a-protocol)) | AutoGen currency agent served over A2A |
 
 The book that names these two as layers of one stack gives the mental model as vertical against horizontal integration: MCP connects an agent to its tools, A2A connects agents to each other, and they are used together. An orchestrator delegates over A2A, the workers reach their tools over MCP, and results flow back over A2A (*Agentic Architectural Patterns*, ch. 1). Its picture of a remote agent has two parts: an agent server, the endpoint that makes the agent addressable and streams intermediate updates over Server-Sent Events, and an agent card, the metadata that advertises what it can do so a caller can pick the right agent. It stops at the architecture: no latency, adoption or interoperability figures.
+
+The same book's architecture chapter adds two details (*Agentic Architectural Patterns*, ch. 4). It places the protocols in a three-layer stack: function calling for a tool inside one application runtime, where the developer hosts and secures the tool; a tool protocol such as MCP, which moves tool hosting out of the agent's runtime so any compliant system can discover and call it across a process or network boundary; and an agent-to-agent protocol such as A2A, for structured, asynchronous delegation between agents that may run on different frameworks or in different companies. Many systems mix them: function calls for internal actions, protocols for external collaboration. And it names the A2A task states an orchestrator tracks (submitted, working, input-required, completed; the loan example also uses failed), which is the same idea as the typed status below. The chapter is a design description with worked examples (a loan pipeline, a supply chain), not a measurement.
 
 The A2A example wraps an AutoGen agent in an A2A task manager (`on_send_task`, `on_send_task_subscribe` for streaming) and has the agent report a typed status, so the calling agent knows whether to wait, answer a question or give up:
 

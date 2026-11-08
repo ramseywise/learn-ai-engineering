@@ -1,0 +1,298 @@
+{
+ "schema": 1,
+ "key": "sha1:97560fb4edbe",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch09-financial-services.pdf",
+ "bib": {
+  "title": "Financial Services (Chapter 9, The Data Warehouse Toolkit, 2nd ed.)",
+  "authors": [
+   "Ralph Kimball",
+   "Margy Ross"
+  ],
+  "first_author": "Kimball",
+  "year": 2002,
+  "venue": "Wiley (book chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42395,
+  "chars_total": 42395,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should a retail bank's accounts, households, customers and heterogeneous products be modelled dimensionally?",
+ "hypothesis": null,
+ "contributions": [
+  "Dimension triage to avoid too few dimensions",
+  "Household dimension and account-to-customer bridge table",
+  "Multiple minidimensions in one fact table with value banding",
+  "Band definition table for arbitrary value-band reporting",
+  "Point-in-time balances from a transaction fact table",
+  "Core and custom schemas for heterogeneous products"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A daily balance snapshot for a 10 million account bank would be about 3.65 billion fact rows per year, so point-in-time balances come from transaction facts instead.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "daily snapshot rows",
+   "value": 3.65,
+   "unit": "billion rows/year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 million accounts, one snapshot row per account per day",
+   "quote": "If the bank has 10 million accounts, daily snapshots translate into approximately 3.65 billion fact rows per year.",
+   "table": null,
+   "note": null,
+   "where": "p.208 (Point-in-Time Balances)"
+  },
+  {
+   "claim": "Most dimensional models end up with 5 to 15 or so dimensions; at or below the low end, suspect omitted dimensions.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb for dimensional models in general",
+   "quote": "In general, most dimensional models end up with between 5 and 15 or so dimensions.",
+   "table": null,
+   "note": null,
+   "where": "p.200"
+  },
+  {
+   "claim": "The core snapshot ends with six dimensions: month end date, account, household, branch, product, status.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bank monthly account snapshot, grain one row per account per month",
+   "quote": "month end date, account, household, branch, product, and status",
+   "table": null,
+   "note": null,
+   "where": "p.201"
+  },
+  {
+   "claim": "The master account dimension in a big bank may approach 10 million members, which makes type 2 SCD on it unworkable, so product, branch, household and volatile attributes are moved out.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Large retail bank account dimension",
+   "quote": "the master account dimension in a big bank may approach 10 million members",
+   "table": null,
+   "note": null,
+   "where": "p.200"
+  },
+  {
+   "claim": "Example value-band report: 45,678 accounts in the 0-1,000 band totalling $10,222,543, and the report scans more than 90,000 account balances.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Account balance snapshot, five bands (0-1,000 to 10,001 and up)",
+   "quote": "Perhaps only the date dimension was constrained to the current month.",
+   "table": null,
+   "note": null,
+   "where": "p.207-208"
+  }
+ ],
+ "limits": [
+  "Chapter says its schemas are not full-scale industry solutions and should not be viewed as complete.",
+  "Retail banking only; no performance measurements, all examples illustrative.",
+  "Point-in-time technique requires a complete and accurate transaction table; a late-arriving row forces sweeping forward and incrementing later balances and sequence numbers.",
+  "Point-in-time balances are invalid when the balance changes without transactions, e.g. brokerage valuations; use a snapshot instead.",
+  "Dated: Sybase IQ fact indexing was described as becoming standard in competing DBMSs as of 2002; modern columnar engines make this routine."
+ ],
+ "practices": [
+  "Declare the grain first (one row per account per month), then triage for missing dimensions; fewer than about 5 suggests omissions (p.200).",
+  "Pull product and branch out of the account dimension into their own dimensions as smaller entry points and to limit type 2 SCD growth (p.200).",
+  "Check candidate extra dimensions: causal, multiple dates, degenerate, role-playing, status, audit, junk (p.201); they can be added later without changing grain.",
+  "Any descriptive attribute single-valued in the presence of the fact measurements is a candidate for an existing or new dimension (p.201).",
+  "Treat account balances as semi-additive: not additive across time, so average by dividing the balance sum by number of months (p.201).",
+  "Model status as a full dimension with decodes, groupings and reasons rather than a cryptic code in the fact table (p.202).",
+  "Build a household dimension and capture the account-household relationship in the fact table rather than type 2 on the account dimension (p.203).",
+  "Householding needs business rules and algorithms, often specialised matching products (p.203).",
+  "Use an account-to-customer bridge table with a weighting factor for multivalued customers; no bridge if the fact is at customer grain (p.204).",
+  "Split volatile browseable attributes (credit bureau, demographics, scores) into correlated-clump minidimensions keyed in the periodic snapshot; do not make each attribute its own (p.205).",
+  "Band minidimension attributes (income ranges, score ranges) and also store discrete values as facts for data mining and band checking, uniquely labelled (p.205-206).",
+  "For arbitrary value-band reports use a band definition table joined with >= and < joins to the fact; consider an index on the balance fact (p.206-207).",
+  "Use the transaction fact table with transaction sequence number, final flag and ending balance for point-in-time balances; select the max date key on or before the target date per account (p.208-209).",
+  "Key transaction fact on date, account and sequence number rather than time-of-day because sequence differences measure activity (p.209).",
+  "For heterogeneous products keep a core fact and product dimension with common facts, and a custom schema per line of business containing core plus special facts and attributes (p.210-211).",
+  "Custom product dimensions are row subsets of the core product dimension and reuse the same surrogate keys, keeping them conformed (p.211).",
+  "Where lines share table space, link an extended fact table to the core fact via a special join key and make the optimizer resolve core constraints first (p.213).",
+  "Use context-dependent outriggers for line-specific product attributes and account-specific attributes such as mortgage property details, via a view per product type (p.212).",
+  "With transaction-grained facts one core fact table suffices; use the core or custom product dimension depending on cross- or single-product analysis (p.214)."
+ ],
+ "terms": [
+  {
+   "term": "Dimension triage",
+   "definition": "Checking a draft model for missing dimensions when it has too few.",
+   "where": "p.199-200"
+  },
+  {
+   "term": "Role-playing dimension",
+   "definition": "A single physical dimension appearing several times in a fact table, each represented as a separate logical table with unique column names through views.",
+   "where": "p.201"
+  },
+  {
+   "term": "Householding",
+   "definition": "Business rules and algorithms to assign accounts to households.",
+   "where": "p.203"
+  },
+  {
+   "term": "Multivalued dimension",
+   "definition": "A dimension where more than one value, such as several account holders, associates with a single fact row; handled with a bridge table.",
+   "where": "p.204"
+  },
+  {
+   "term": "Minidimension",
+   "definition": "Browseable and changeable attributes broken off into separate dimensions whose keys are in the fact table.",
+   "where": "p.205"
+  },
+  {
+   "term": "Band definition table",
+   "definition": "Table of band group, sort order, range name, lower and upper values joined to a fact by less-than and greater-than joins.",
+   "where": "p.207"
+  },
+  {
+   "term": "Core and custom schemas",
+   "definition": "A core fact and product dimension with common facts, plus per-line-of-business schemas with specific facts and attributes.",
+   "where": "p.211"
+  },
+  {
+   "term": "Context-dependent outrigger",
+   "definition": "Line-specific attributes in an extended-product outrigger reached by a snowflake key from the base product dimension.",
+   "where": "p.213"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kimball and Ross, Chapter 2 (date dimension, degenerate dimensions)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Date surrogate key semantics and degenerate dimensions",
+   "quote": null
+  },
+  {
+   "work": "Kimball and Ross, Chapter 3 (conformed dimensions)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Core and custom product dimensions share keys",
+   "quote": null
+  },
+  {
+   "work": "Kimball and Ross, Chapter 5 (multiple dates, junk dimensions)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Triage candidates",
+   "quote": null
+  },
+  {
+   "work": "Kimball and Ross, Chapter 6 (minidimensions, householding)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Figure 6.4 minidimensions applied to banking",
+   "quote": null
+  },
+  {
+   "work": "Kimball and Ross, Chapter 8 (audit dimension, year-to-date facts)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Contrast with YTD facts",
+   "quote": null
+  },
+  {
+   "work": "Kimball and Ross, Chapter 13 (multivalued dimensions, bridge tables)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bridge weighting deferred there",
+   "quote": null
+  },
+  {
+   "work": "Sybase IQ",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pioneered fact indexing in early 1990s",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 9.2",
+   "caption": "Core snapshot fact table for all accounts.",
+   "page": 202,
+   "why": "Shows the six-dimension monthly account snapshot."
+  },
+  {
+   "figure": "Figure 9.3",
+   "caption": "Account-to-customer bridge table to associate multiple customers with account-level facts.",
+   "page": 205,
+   "why": "Bridge with weighting factor."
+  },
+  {
+   "figure": "Figure 9.4",
+   "caption": "Arbitrary value-band reporting using a band definition table.",
+   "page": 208,
+   "why": "Range join between fact and band table."
+  },
+  {
+   "figure": "Figure 9.5",
+   "caption": "Using a transaction fact table for point-in-time balances.",
+   "page": 210,
+   "why": "Sequence number, final flag, ending balance."
+  },
+  {
+   "figure": "Figure 9.6",
+   "caption": "Specific line-of-business custom schema for checking products.",
+   "page": 212,
+   "why": "Core plus custom fact and product dimension."
+  },
+  {
+   "figure": "Figure 9.7",
+   "caption": "Context-dependent dimension outriggers.",
+   "page": 213,
+   "why": "Mortgage account and product outriggers."
+  },
+  {
+   "figure": "Figure 9.8",
+   "caption": "Heterogeneous products schema using an extended fact table.",
+   "page": 214,
+   "why": "Special join key to extended fact table."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.209 point-in-time balance SQL",
+   "snippet": "SELECT A.ACCTNUM, F.BALANCE\nFROM FACT F, ACCOUNT A\nWHERE F.ACCOUNT_KEY = A.ACCOUNT_KEY\nAND F.DATE_KEY = (SELECT MAX(G.DATE_KEY) FROM FACT G WHERE G.ACCOUNT_KEY = F.ACCOUNT_KEY AND G.DATE_KEY IN (SELECT D.DATE_KEY FROM DATE D WHERE D.FULLDATE <= 'January 5, 2002'))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The extracted SQL lost the comparison operator after F.DATE_KEY (likely =); snippet restores it so not verbatim.",
+  "Page footer 'TEAMFLY' watermark and blank lines in text; ignored.",
+  "No embedded instructions found."
+ ]
+}

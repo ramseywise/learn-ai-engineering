@@ -1,0 +1,287 @@
+{
+ "schema": 1,
+ "key": "sha1:82623eeccba1",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch12-advanced-pandas.pdf",
+ "bib": {
+  "title": "Chapter 12: Advanced pandas",
+  "authors": [],
+  "first_author": null,
+  "year": null,
+  "venue": "book chapter (Python for Data Analysis; author, edition and year not printed in the extracted pages)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25613,
+  "chars_total": 25613,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Which advanced pandas features (Categorical, transform and unwrapped groupby, TimeGrouper resampling, assign/callables/pipe chaining) help a power user write faster and cleaner code?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "A 10-million-element string Series uses 80000080 bytes; its categorical version uses 10000272.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "memory_usage",
+   "value": 10000272,
+   "unit": "bytes (as printed by memory_usage)",
+   "baseline_value": 80000080,
+   "n": null,
+   "setup": "Series of ['foo','bar','baz','qux'] * (N//4), N=10000000; astype('category')",
+   "quote": "Out[58]: \n10000272",
+   "table": null,
+   "note": null,
+   "where": "p.369, In [57]-[58]"
+  },
+  {
+   "claim": "The one-time conversion to category took 726 ms wall time on 10M strings.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "wall time",
+   "value": 726,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "labels.astype('category'), N=10000000, one run, machine unstated",
+   "quote": "Wall time: 726 ms",
+   "table": null,
+   "note": null,
+   "where": "p.369, In [59]"
+  },
+  {
+   "claim": "qcut into 4 labeled quartiles on 1000 normal draws gives 250 per bin.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "count per bin",
+   "value": 250,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "np.random.seed(12345), randn(1000), pd.qcut(draws,4,labels=Q1..Q4), groupby(bins).agg(['count','min','max'])",
+   "quote": "Q1    250 -2.949343 -0.685484",
+   "table": null,
+   "note": null,
+   "where": "p.368-369, Out[51]"
+  },
+  {
+   "claim": "transform('mean') broadcasts group means back to the original shape (key a mean 4.5).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "group mean",
+   "value": 4.5,
+   "unit": "value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "df of key ['a','b','c']*4, value arange(12.)",
+   "quote": "a    4.5",
+   "table": null,
+   "note": null,
+   "where": "p.373, Out[78]"
+  },
+  {
+   "claim": "The unwrapped normalisation (value - transform('mean'))/transform('std') equals apply(normalize); first element -1.161895.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "z-score",
+   "value": -1.161895,
+   "unit": "value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 12-row df, group by key",
+   "quote": "0    -1.161895",
+   "table": null,
+   "note": "Same numbers in Out[84] (transform) and Out[85] (apply).",
+   "where": "p.376, Out[88]"
+  },
+  {
+   "claim": "Resampling 15 one-minute points into 5min bins gives 5 per bin.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "count per bin",
+   "value": 5,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "date_range('2017-05-20 00:00', freq='1min', periods=15)",
+   "quote": "2017-05-20 00:00:00      5",
+   "table": null,
+   "note": null,
+   "where": "p.377, Out[93]"
+  },
+  {
+   "claim": "Per-key 5min resample via groupby(['key', TimeGrouper('5min')]).sum() gives key a first bin 30.0.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "sum",
+   "value": 30.0,
+   "unit": "value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "df2 with 3 keys x 15 minutes, value arange(45.)",
+   "quote": "a   2017-05-20 00:00:00   30.0",
+   "table": null,
+   "note": null,
+   "where": "p.378, Out[98]"
+  },
+  {
+   "claim": "Claim: groupby is faster with categoricals because algorithms use integer codes, not strings (no timing given).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "categorical vs object column",
+   "quote": "GroupBy operations can be significantly faster with categoricals because the underly‐\ning algorithms use the integer-based codes array instead of an array of strings.",
+   "table": null,
+   "note": null,
+   "where": "p.369"
+  },
+  {
+   "claim": "Claim: built-in aggregates like 'mean' or 'sum' are often much faster than a general apply (no timing given).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "groupby transform fast path",
+   "quote": "Built-in aggregate functions like 'mean' or 'sum' are often much faster than a general\napply function.",
+   "table": null,
+   "note": null,
+   "where": "p.376"
+  }
+ ],
+ "limits": [
+  "No timings for groupby or transform speed claims; only the memory (80000080 vs 10000272 bytes) and one conversion time (726 ms) are measured.",
+  "Written against pandas of 2017 (examples dated 2017-05). From outside the source, not printed in it: pd.value_counts top-level, pd.TimeGrouper and the pandas.core.categorical module path are dated (TimeGrouper removed; use pd.Grouper(freq='5min'); Series.value_counts() replaces the top-level function). Verify against current pandas docs before citing as current.",
+  "Book typos: the assign example uses df2.col2.mean() where col1 is meant; 'fast past' should be 'fast path'; In [83] (def normalize) is not numbered.",
+  "Chained assignment example df2['col1_demeaned']=... on a filtered slice triggers SettingWithCopy, which is why the chapter moves to assign (the chapter does not say this)."
+ ],
+ "practices": [
+  "Convert low-cardinality repeated-value columns to category to save memory and speed groupby (p.369).",
+  "Use qcut with labels= for named, ordered quartile bins, then groupby the bins for summaries (p.368).",
+  "Use set_categories when the true category set is larger than observed, so value_counts shows zero counts (p.370-371).",
+  "Use remove_unused_categories after filtering a large categorical (p.371).",
+  "Use pd.get_dummies on a categorical to get one-hot dummies for modelling (p.372).",
+  "Prefer g.transform('mean'/'std') (unwrapped group operation) over apply for normalisation: vectorized, fast path (p.376).",
+  "Use transform when the output must match the input shape; it must not mutate its input (p.373).",
+  "For per-key resampling use groupby([key, TimeGrouper(freq)]); time must be the index (p.378).",
+  "Use assign with callables (lambda x: ...) and [lambda x: ...] filtering to chain without temporaries; in-place assignment may be faster (p.379).",
+  "Use pipe to put your own functions into chains, e.g. a reusable group_demean(df, by, cols) (p.380).",
+  "Chaining is a matter of taste; splitting into steps may read better (p.380)."
+ ],
+ "terms": [
+  {
+   "term": "categorical / dictionary-encoded representation",
+   "definition": "This representation as integers is called the categorical or dictionary-encoded representation.",
+   "where": "p.365"
+  },
+  {
+   "term": "categories",
+   "definition": "The array of distinct values can be called the categories, dictionary, or levels of the data.",
+   "where": "p.365"
+  },
+  {
+   "term": "codes",
+   "definition": "The integer values that reference the categories are called the category codes or simply codes.",
+   "where": "p.365"
+  },
+  {
+   "term": "dummy variables",
+   "definition": "also known as one-hot encoding: a DataFrame with a column for each distinct category with 1s for occurrences and 0 otherwise",
+   "where": "p.372"
+  },
+  {
+   "term": "unwrapped group operation",
+   "definition": "using transform with built-in aggregate strings and doing the arithmetic with vectorized operations rather than apply",
+   "where": "p.376"
+  },
+  {
+   "term": "callable argument",
+   "definition": "assign and many other pandas functions accept function-like arguments, also known as callables",
+   "where": "p.379"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dimension tables in data warehousing",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Categorical encoding likened to dimension table plus integer keys (p.364)",
+   "quote": null
+  },
+  {
+   "work": "Chapter 7 (get_dummies), Chapter 10 (groupby, apply)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier chapters of the same book",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 12-1",
+   "caption": "Categorical methods for Series in pandas",
+   "page": 372,
+   "why": "One-line summary of add/remove/rename/reorder/set categories and the difference between rename, reorder and set."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.366",
+   "snippet": "fruit_cat = df['fruit'].astype('category'); c = fruit_cat.values; c.categories; c.codes",
+   "verbatim": false
+  },
+  {
+   "where": "p.367",
+   "snippet": "pd.Categorical.from_codes(codes, categories, ordered=True)",
+   "verbatim": true
+  },
+  {
+   "where": "p.368",
+   "snippet": "bins = pd.qcut(draws, 4, labels=['Q1', 'Q2', 'Q3', 'Q4'])",
+   "verbatim": true
+  },
+  {
+   "where": "p.371",
+   "snippet": "cat_s2 = cat_s.cat.set_categories(actual_categories)\ncat_s3.cat.remove_unused_categories()",
+   "verbatim": false
+  },
+  {
+   "where": "p.376",
+   "snippet": "normalized = (df['value'] - g.transform('mean')) / g.transform('std')",
+   "verbatim": true
+  },
+  {
+   "where": "p.378",
+   "snippet": "time_key = pd.TimeGrouper('5min')\nresampled = (df2.set_index('time')\n             .groupby(['key', time_key])\n             .sum())",
+   "verbatim": false
+  },
+  {
+   "where": "p.379",
+   "snippet": "result = (load_data()\n          [lambda x: x.col2 < 0]\n          .assign(col1_demeaned=lambda x: x.col1 - x.col1.mean())\n          .groupby('key')\n          .col1_demeaned.std())",
+   "verbatim": true
+  },
+  {
+   "where": "p.380",
+   "snippet": "def group_demean(df, by, cols):\n    result = df.copy()\n    g = df.groupby(by)\n    for c in cols:\n        result[c] = df[c] - g[c].transform('mean')\n    return result\n\nresult = (df[df.col1 < 0]\n          .pipe(group_demean, ['key1', 'key2'], ['col1']))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Author, edition and year are not in the extracted text; bib left empty.",
+  "Page numbers are the book's printed pages (363-381)."
+ ]
+}

@@ -1,0 +1,275 @@
+{
+ "schema": 1,
+ "key": "sha1:4d40f76bae1b",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch15-insurance.pdf",
+ "bib": {
+  "title": "Insurance (Chapter 15)",
+  "authors": [
+   "not printed in chapter"
+  ],
+  "first_author": "unknown",
+  "year": null,
+  "venue": "book chapter (The Data Warehouse Toolkit series; book title not printed in this PDF)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63251,
+  "chars_total": 63251,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do the dimensional-modelling techniques of the earlier chapters combine into a warehouse for a property and casualty insurer covering policies and claims?",
+ "hypothesis": null,
+ "contributions": [
+  "Draft and updated insurance bus matrix",
+  "Policy transaction, monthly premium snapshot, claims transaction, claims accumulating snapshot, consolidated policy/claims and factless accident-event schemas",
+  "A list of ten common dimensional modeling mistakes"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Written and earned premium differ for a pay-in-advance annual policy: a $600 policy written Jan 1 earns $50 a month, and cancelling on Mar 31 gives a written premium of negative $450 for March.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "In February, the written premium is zero, whereas the earned premium is still $50.",
+   "table": null,
+   "note": null,
+   "where": "p.317 Pay-in-Advance Metrics"
+  },
+  {
+   "claim": "Earned premium per month in the worked example",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "the earned premium is $50 ($600 divided by 12 months)",
+   "table": null,
+   "note": null,
+   "where": "p.317"
+  },
+  {
+   "claim": "Pay-in-advance revenue needs both a transaction fact table and a monthly snapshot fact table.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "We can almost never add enough facts to a snapshot schema to do away with the need for a transaction schema, or vice versa.",
+   "table": null,
+   "note": null,
+   "where": "p.317"
+  },
+  {
+   "claim": "Policy transaction fact grain is one row per individual policy transaction, with a single numeric fact, policy transaction amount.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "The grain of the policy transaction fact table would be one row for each indi-",
+   "table": null,
+   "note": null,
+   "where": "p.310"
+  },
+  {
+   "claim": "Monthly premium snapshot grain is one row per coverage and covered item on a policy each month.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "The granularity of the fact table is one row per coverage and covered item on a policy each month.",
+   "table": null,
+   "note": null,
+   "where": "p.316"
+  },
+  {
+   "claim": "Claims accumulating snapshot grain is one row per unique combination of policy, coverage, covered item and claim, created at claim open and updated until close.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "The granularity is one row for each unique combination of policy, coverage, cov-",
+   "table": null,
+   "note": null,
+   "where": "p.323"
+  },
+  {
+   "claim": "Heterogeneous snapshot facts are split physically by line of business instead of filling one table with nulls.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "the answer is to sep-",
+   "table": null,
+   "note": null,
+   "where": "p.318"
+  },
+  {
+   "claim": "Policyholder dimension is large (over 1 million rows), motivating a minidimension for ZIP code tracking.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 15 case study: a $5 billion property and casualty insurer (auto, homeowners, personal property)",
+   "quote": "Given that there are already well over 1 million rows in our policy-",
+   "table": null,
+   "note": null,
+   "where": "p.311"
+  }
+ ],
+ "limits": [
+  "Illustrative case study for one fictional insurer, with no measured results, data sizes or benchmarks.",
+  "Depends on earlier chapters (type 1/2/3 SCD, minidimensions, bridges, heterogeneous products) which are not restated in full.",
+  "Claimant and third-party dimensions are described as dirty and hard to track across claims; no cleansing method given.",
+  "Only policy and claims processes covered; investment, HR, finance and purchasing excluded."
+ ],
+ "practices": [
+  "Handle all policy transactions as one business process and fact table, splitting into quoting/rating/underwriting tables only if needed (p.308).",
+  "Build both a transaction fact table and a monthly periodic snapshot for pay-in-advance revenue; source earned premium from the operational revenue-recognition system rather than re-deriving it (p.308, 317).",
+  "Implement role-playing dates (transaction date, effective date) as views over one physical date table with unique column names (p.310).",
+  "Use type 1 for corrections (date of birth), type 2 for ZIP code, type 3 for en masse segment realignment (p.310-311).",
+  "Move closely monitored, fast-changing attributes of large dimensions (policyholder, covered item) to a minidimension keyed from the fact table (p.312).",
+  "Use a bridge table (SIC group, insured driver) for multivalued attributes, with a weighting factor and optional begin/end dates, plus an Unknown row (p.312, 318).",
+  "Treat coverage limits and deductibles as facts, and keep textual descriptions in dimensions (p.312-313).",
+  "Keep policy number as a degenerate dimension when header attributes live in other dimensions (p.313).",
+  "Add an audit key to each fact row linking to extract time, source table and software version (p.314).",
+  "Handle heterogeneous lines with custom dimension tables per line of business, without custom fact tables for transactions (p.314-315).",
+  "Conform dimensions (identical or subsets) and facts (same definition or different names) across fact tables (p.316, 329).",
+  "Replace the daily date with a month dimension and transaction type with a status dimension in the snapshot (p.316).",
+  "Build a consolidated fact table of premium and claim metrics only after the base models are delivered (p.324).",
+  "Use a factless fact table with a count fixed at 1 for accident events; bridge tables optional to keep grain (p.325).",
+  "Keep the bus matrix at high-level business processes in planning; list each fact table, grain and facts in the implementation matrix (p.320-321).",
+  "Avoid mistakes: text in fact tables; skimping on verbose dimension attributes; snowflaking hierarchies; ignoring attribute change; hardware-only fixes (use aggregates); smart keys instead of integer surrogate keys; ignoring grain; report-driven design; normalized presentation; non-conformed facts and dimensions (p.326-329)."
+ ],
+ "terms": [
+  {
+   "term": "coverage",
+   "definition": "Coverages can be considered the products sold by the insurance company.",
+   "where": "p.309"
+  },
+  {
+   "term": "covered item",
+   "definition": "the house, the car, or other specific insured item",
+   "where": "p.313"
+  },
+  {
+   "term": "reserve",
+   "definition": "a preliminary estimate of the insurance company's eventual liability for the claim",
+   "where": "p.319"
+  },
+  {
+   "term": "subrogation",
+   "definition": "selling the rights to further recoveries to specialists at a discount to get cash immediately and close the books on the claim",
+   "where": "p.320"
+  },
+  {
+   "term": "earned vs written premium",
+   "definition": "written is revenue sold in a month; earned is revenue recognised as coverage is provided",
+   "where": "p.317"
+  },
+  {
+   "term": "consolidated fact table",
+   "definition": "a fact table that combines data from multiple business processes",
+   "where": "p.324"
+  },
+  {
+   "term": "conforming the facts",
+   "definition": "ensuring technical definitions of a fact match exactly across data marts, else they are not both called the same name",
+   "where": "p.329"
+  },
+  {
+   "term": "factless fact table",
+   "definition": "the collision of keys at a point in space and time, with a fact always valued at 1 for counting",
+   "where": "p.325"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Earlier chapters of the same book (Ch 3 inventory/bus matrix, 4 SCD, 5 order management, 6 CRM minidimensions, 7 accounting consolidated facts, 8 audit dimension, 9 multivalued and heterogeneous, 12 factless, 13 diagnosis group)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "chapter says it brings together concepts from nearly all previous chapters",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 15.1/15.6",
+   "caption": "Initial draft bus matrix / Updated insurance bus matrix",
+   "page": 309,
+   "why": "Shows processes by shared dimensions at a glance"
+  },
+  {
+   "figure": "Fig 15.2",
+   "caption": "Policy-creation transaction schema.",
+   "page": 314,
+   "why": "Classic transaction grain star: mostly keys, one amount"
+  },
+  {
+   "figure": "Fig 15.4",
+   "caption": "Periodic policy snapshot schema.",
+   "page": 317,
+   "why": "Written versus earned premium facts"
+  },
+  {
+   "figure": "Fig 15.7",
+   "caption": "Implementation bus matrix detailing fact tables for each business process.",
+   "page": 321,
+   "why": "Grain and facts per fact table"
+  },
+  {
+   "figure": "Fig 15.9",
+   "caption": "Claims accumulating snapshot schema.",
+   "page": 324,
+   "why": "Six role-played dates and lag facts"
+  },
+  {
+   "figure": "Fig 15.11",
+   "caption": "Factless fact table for accident events.",
+   "page": 326,
+   "why": "Many-to-many people and vehicles in an accident"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Chapter PDF does not print the book title or authors; bib authors left as unknown.",
+  "Text contains repeated 'TEAMFLY' watermark and blank lines; no embedded instructions.",
+  "Figures are text-extracted only; bus matrix cell marks (X) are not recoverable from the text."
+ ]
+}

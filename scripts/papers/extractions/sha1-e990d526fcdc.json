@@ -1,0 +1,457 @@
+{
+ "schema": 1,
+ "key": "sha1:e990d526fcdc",
+ "pdf": "generative-ai/05-RL/sources/sutton-barto-rl/ch09-policy-prediction-approximation.pdf",
+ "bib": {
+  "title": "Chapter 9: On-policy Prediction with Approximation (Reinforcement Learning: An Introduction, 2nd ed.)",
+  "authors": [
+   "Richard S. Sutton",
+   "Andrew G. Barto"
+  ],
+  "first_author": "Sutton",
+  "year": 2018,
+  "venue": "MIT Press (book chapter; year inferred from 2nd edition, not printed in the chapter)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 128758,
+  "chars_total": 128758,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can state-value functions be estimated from on-policy experience when the value function is a parameterized function of a weight vector instead of a table?",
+ "hypothesis": null,
+ "contributions": [
+  "Frames each RL update s -> u as a supervised training example",
+  "Defines the mean square value error VE and the on-policy distribution",
+  "Derives gradient Monte Carlo and semi-gradient TD(0) / n-step TD, with linear-case convergence to the TD fixed point and its error bound",
+  "Surveys feature constructions (polynomial, Fourier, coarse and tile coding, RBF), step-size heuristics, ANNs, LSTD, memory-based and kernel methods, interest and emphasis"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Linear semi-gradient TD(0) converges to the TD fixed point w_TD = A^-1 b, and its VE is within a factor 1/(1-gamma) of the minimum VE (continuing case, on-policy).",
+   "kind": "reported",
+   "source": "Tsitsiklis and Van Roy (1997); Sutton (1988) for the stability proof",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear function approximation, on-policy distribution, continuing case, gamma<1",
+   "quote": null,
+   "table": null,
+   "note": "Eq 9.14 is garbled in the text cache so no number is recorded.",
+   "where": "Sec 9.4, Eq 9.12 and 9.14"
+  },
+  {
+   "claim": "Off the on-policy distribution, bootstrapping methods with function approximation may diverge to infinity.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bootstrapping + function approximation, non-on-policy update distribution; deferred to Chapter 11",
+   "quote": "For other update distributions, bootstrapping methods using function approximation may actually diverge to inﬁnity.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.4"
+  },
+  {
+   "claim": "Bootstrapping targets make the update semi-gradient, not true gradient descent: the target depends on w_t and that effect is ignored.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Any bootstrapping target (n-step return, DP target) in Eq 9.7",
+   "quote": "They take into account the e↵ect of changing the weight vector wt on the estimate, but ignore its e↵ect on the target.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.3"
+  },
+  {
+   "claim": "Gradient Monte Carlo with state aggregation (10 groups of 100 states) was run for 100,000 episodes; the result is close to the global minimum of VE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "episodes",
+   "value": 100000,
+   "unit": "episodes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sutton & Barto ch. 9, 1000-state random walk (states 1-1000, start 500, moves up to 100 left/right, terminal rewards -1/+1); alpha 2e-5; 10 groups of 100 states",
+   "quote": "after 100,000 episodes with a step size of",
+   "table": null,
+   "note": null,
+   "where": "Example 9.1"
+  },
+  {
+   "claim": "About 1.37% of time steps are spent in the start state (state 500) of the 1000-state random walk.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mu(start state)",
+   "value": 1.37,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sutton & Barto ch. 9, 1000-state random walk (states 1-1000, start 500, moves up to 100 left/right, terminal rewards -1/+1)",
+   "quote": "On average, about 1.37% of the time steps are spent in the start state.",
+   "table": null,
+   "note": "Text says 0.17% for neighbours and 0.0147% at the extremes, but Fig 9.1 axis labels read 0.0017 and 0.0137 (fractions); the figure and text do not match exactly.",
+   "where": "Example 9.1"
+  },
+  {
+   "claim": "Asymptotic semi-gradient TD(0) values are farther from the true values than the Monte Carlo ones; n-step TD with state aggregation behaves like tabular n-step TD when 20 groups of 50 states are used.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runs averaged",
+   "value": 100,
+   "unit": "runs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sutton & Barto ch. 9, 1000-state random walk (states 1-1000, start 500, moves up to 100 left/right, terminal rewards -1/+1); 20 groups of 50 states for the n-step panel; RMS error over 1000 states and first 10 episodes",
+   "quote": "These data are averages over 100 runs.",
+   "table": null,
+   "note": null,
+   "where": "Example 9.2, Fig 9.2"
+  },
+  {
+   "claim": "Interest and emphasis let two-step semi-gradient TD learn the first state's value exactly: w converges to (4, 2) instead of (3.5, 1.5).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "learned value of first state (true value 4)",
+   "value": 4,
+   "unit": "value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Four-state Markov reward process, reward +1 per step, interest 1 only on the first state, 2-parameter aggregation",
+   "quote": "with interest and emphasis converge to w1 = (4, 2). The latter produces the",
+   "table": null,
+   "note": null,
+   "where": "Example 9.4"
+  },
+  {
+   "claim": "Without interest and emphasis, gradient MC and two-step TD converge to w = (3.5, 1.5), so the first state is valued 3.5 instead of 4.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "learned value of first state",
+   "value": 3.5,
+   "unit": "value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same four-state example",
+   "quote": "will again converge to w1 = (3.5, 1.5), while the methods",
+   "table": null,
+   "note": null,
+   "where": "Example 9.4"
+  },
+  {
+   "claim": "Tile coding with 50 tilings (tiles 200 states wide, offset by 4 states) learns faster than a single tiling (state aggregation) on the random walk, with the step size scaled by 1/50 to match initial learning rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step size, 50 tilings",
+   "value": "0.0001/50",
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sutton & Barto ch. 9, 1000-state random walk (states 1-1000, start 500, moves up to 100 left/right, terminal rewards -1/+1); gradient MC; curves averaged over 30 runs (read from Fig 9.10 caption); alpha 0.0001 single tiling",
+   "quote": "0.0001/50 for the 50 tilings.",
+   "table": null,
+   "note": "Ranking of the two curves is described in the caption/text, not given as a number.",
+   "where": "Fig 9.10"
+  },
+  {
+   "claim": "Fourier basis beats polynomial basis for gradient MC on the random walk (orders 5, 10, 20); the authors do not recommend polynomials for online learning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "step size, polynomial basis (Fourier: 0.00005)",
+   "value": 0.0001,
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sutton & Barto ch. 9, 1000-state random walk (states 1-1000, start 500, moves up to 100 left/right, terminal rewards -1/+1); step sizes roughly optimised per case",
+   "quote": "0.0001 for the polynomial basis and",
+   "table": null,
+   "note": null,
+   "where": "Fig 9.5"
+  },
+  {
+   "claim": "With tile coding, alpha = 1/n (n tilings) gives exact one-trial learning; alpha = 1/(10n) moves the trained state one tenth of the way to the target.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear SGD with n binary features active at once",
+   "quote": "results in exact one-trial learning.",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.5.4"
+  },
+  {
+   "claim": "Rule of thumb: to learn in about tau experiences with substantially the same feature vector, set alpha = (tau * E[x^T x])^-1.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear SGD; works best if feature vectors have near-constant length",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 9.6, Eq 9.19"
+  },
+  {
+   "claim": "Coarse-coding example uses about 50 features over the function; receptive-field width changes early generalization strongly but asymptotic accuracy only slightly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "features",
+   "value": 50,
+   "unit": "features",
+   "baseline_value": null,
+   "n": null,
+   "setup": "1-D square wave, alpha = 0.2/n (n active features), uniform random training examples",
+   "quote": "about 50 over the extent of the function being learned.",
+   "table": null,
+   "note": null,
+   "where": "Example 9.3, Fig 9.8"
+  },
+  {
+   "claim": "A convolutional first layer with 6 feature maps of 5x5 shared-weight units needs only 25 weights per map.",
+   "kind": "reported",
+   "source": "LeCun, Bottou, Bengio and Haffner (1998)",
+   "metric": "weights per feature map",
+   "value": 25,
+   "unit": "weights",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LeCun et al. (1998) handwriting network, Fig 9.15: 28x28 maps, 2x2 subsampling to 14x14",
+   "quote": "just 25 adjustable",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.7"
+  },
+  {
+   "claim": "LSTD is the most data-efficient linear TD(0) form but costs O(d^2) memory and per-step compute against O(d) for semi-gradient TD; it needs epsilon and never forgets.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear value prediction, Sherman-Morrison incremental inverse",
+   "quote": "This algorithm is the most data eﬃcient form of linear TD(0), but it is also more",
+   "table": null,
+   "note": null,
+   "where": "Sec 9.8, Eq 9.20-9.22"
+  },
+  {
+   "claim": "Recommended tile-offset: displacement vector of first odd integers (1,3,5,...,2k-1) with number of tilings a power of 2 at least 4k.",
+   "kind": "reported",
+   "source": "Miller and Glanz (1996)",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Continuous k-dimensional space tile coding",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 9.5.4"
+  }
+ ],
+ "limits": [
+  "Covers prediction only (fixed policy, on-policy); control with function approximation is Chapter 10, off-policy divergence is Chapter 11.",
+  "VE may not be the right objective for finding a better policy (Sec 9.2).",
+  "Convergence theory is mostly limited to tabular and linear approximation; deep ANN success is not backed by it (Sec 9.7).",
+  "Backprop in deep ANNs is said to work poorly without extra techniques (dropout, batch norm, residual connections, layer-wise pretraining); this reflects the 2018 edition and has dated.",
+  "Examples are single toy tasks (1000-state random walk); few hyperparameters are given and no seeds beyond the run counts in captions."
+ ],
+ "practices": [
+  "Treat each RL update s -> u as a supervised training example, then use any online-capable function approximator (Sec 9.1).",
+  "Use a semi-gradient TD method when you need online, continual learning and faster learning; accept it is not a true gradient method (Sec 9.3).",
+  "Do not use plain polynomial features for online RL; prefer Fourier basis or tile coding (Sec 9.5.2, 9.12).",
+  "Tile coding: set alpha = 1/(tau*n) for n tilings, offset tilings asymmetrically, use hashing to cut memory (Sec 9.5.4).",
+  "Set step size by alpha = (tau E[x^T x])^-1 instead of 1/t, which is wrong for TD and function approximation (Sec 9.6).",
+  "Use interest and emphasis when only some states matter (Sec 9.11).",
+  "For deep ANNs, use dropout, batch normalization, residual connections or convolutional structure (Sec 9.7)."
+ ],
+ "terms": [
+  {
+   "term": "semi-gradient method",
+   "definition": "Bootstrapping methods take into account the effect of changing the weight vector on the estimate but ignore its effect on the target; they include only a part of the gradient.",
+   "where": "Sec 9.3"
+  },
+  {
+   "term": "mean square value error (VE)",
+   "definition": "VE(w) = sum_s mu(s)[v_pi(s) - vhat(s,w)]^2, where mu is the on-policy distribution.",
+   "where": "Eq 9.1"
+  },
+  {
+   "term": "on-policy distribution",
+   "definition": "The fraction of time spent in each state while following pi; in continuing tasks the stationary distribution under pi.",
+   "where": "Sec 9.2"
+  },
+  {
+   "term": "TD fixed point",
+   "definition": "w_TD = A^-1 b, with A = E[x_t (x_t - gamma x_{t+1})^T] and b = E[R_{t+1} x_t].",
+   "where": "Eq 9.12"
+  },
+  {
+   "term": "tile coding",
+   "definition": "A form of coarse coding where receptive fields are grouped into offset partitions (tilings) of the state space, so exactly one tile per tiling is active.",
+   "where": "Sec 9.5.4"
+  },
+  {
+   "term": "LSTD",
+   "definition": "Least-Squares TD: estimates A and b from data and solves for the TD fixed point directly, O(d^2) per step.",
+   "where": "Sec 9.8"
+  },
+  {
+   "term": "interest and emphasis",
+   "definition": "Interest I_t is a non-negative measure of how much we care about valuing the state at t; emphasis M_t = I_t + gamma^n M_{t-n} scales the update.",
+   "where": "Sec 9.11"
+  },
+  {
+   "term": "state aggregation",
+   "definition": "States are grouped, with one estimated value (one weight) per group; a special case of SGD where the gradient is 1 for the group's component and 0 elsewhere.",
+   "where": "Sec 9.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Sutton (1988), Learning to predict by the methods of temporal differences",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Linear TD(0) stability argument and convergence",
+   "quote": null
+  },
+  {
+   "work": "Tsitsiklis and Van Roy (1997)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Bound on asymptotic error of linear bootstrapping methods",
+   "quote": null
+  },
+  {
+   "work": "Konidaris, Osentoski and Thomas (2011)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Fourier basis for RL, per-feature step sizes",
+   "quote": null
+  },
+  {
+   "work": "Miller and Glanz (1996)",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Tile coding displacement vectors",
+   "quote": null
+  },
+  {
+   "work": "Albus (1971, 1981) CMAC",
+   "year": 1981,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Origin of tile coding and hashing",
+   "quote": null
+  },
+  {
+   "work": "Bradtke and Barto (1996) LSTD",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Least-squares TD",
+   "quote": null
+  },
+  {
+   "work": "Srivastava et al. (2014) dropout; Ioffe and Szegedy (2015) batch norm; He et al. (2016) residual learning; LeCun et al. (1998) conv nets",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Deep-ANN training techniques mentioned for RL function approximation",
+   "quote": null
+  },
+  {
+   "work": "Tesauro TD-Gammon (1992, 1994); AlphaGo (Silver et al. 2016, 2017)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Deep ANN function approximation successes, Chapter 16",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 9.1",
+   "caption": "Function approximation by state aggregation on the 1000-state random walk task, using the gradient Monte Carlo algorithm.",
+   "page": 204,
+   "why": "Shows the staircase approximation and how mu shifts group values."
+  },
+  {
+   "figure": "Fig 9.2",
+   "caption": "Bootstrapping with state aggregation on the 1000-state random walk task.",
+   "page": 208,
+   "why": "TD asymptote is worse than MC; n-step curves resemble tabular ones."
+  },
+  {
+   "figure": "Fig 9.5",
+   "caption": "Fourier basis vs polynomials on the 1000-state random walk.",
+   "page": 214,
+   "why": "Why polynomials are not recommended online."
+  },
+  {
+   "figure": "Fig 9.9",
+   "caption": "Multiple, overlapping grid-tilings on a limited two-dimensional space.",
+   "page": 217,
+   "why": "Shows four active tiles per state."
+  },
+  {
+   "figure": "Fig 9.10",
+   "caption": "Why we use coarse coding: single tiling vs 50 tilings on the random walk.",
+   "page": 218,
+   "why": "Gain from overlapping tilings."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.202 box",
+   "snippet": "w <- w + alpha [G_t - vhat(S_t,w)] grad vhat(S_t,w)   (gradient Monte Carlo)",
+   "verbatim": false
+  },
+  {
+   "where": "p.203 box",
+   "snippet": "w <- w + alpha [R + gamma vhat(S',w) - vhat(S,w)] grad vhat(S,w)   (semi-gradient TD(0))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 9.20-9.21",
+   "snippet": "A_t = sum_k x_k (x_k - gamma x_{k+1})^T + eps I ; b_t = sum_k R_{k+1} x_k ; w_t = A_t^-1 b_t   (LSTD)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Math symbols and ligatures are garbled in the text cache (for example gamma as a different glyph, 'o↵set'); equations were transcribed from context, not verbatim.",
+  "Summary says semi-gradient TD includes MC and TD(0) 'when n=1 and n=1'; garbled, should be n=infinity and n=1.",
+  "Sec 9.3 text (0.17%, 0.0147%) and Fig 9.1 axis labels (0.0017, 0.0137) disagree on state-distribution percentages.",
+  "Publication year 2018 is inferred (2nd ed.); the chapter does not print it.",
+  "No embedded instructions found."
+ ]
+}

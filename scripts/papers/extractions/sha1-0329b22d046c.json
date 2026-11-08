@@ -1,0 +1,209 @@
+{
+ "schema": 1,
+ "key": "sha1:0329b22d046c",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch07-data-cleaning-preparation.pdf",
+ "bib": {
+  "title": "Chapter 7: Data Cleaning and Preparation (Python for Data Analysis)",
+  "authors": [],
+  "first_author": "McKinney",
+  "year": null,
+  "venue": "book chapter, O'Reilly (pp. 191-219); author, year and edition are not printed in the extracted text",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 47007,
+  "chars_total": 47007,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do pandas and built-in Python handle missing data, duplicates, value transformation, binning, outliers, sampling, dummy variables and string cleaning?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "Data preparation is often reported to take most of an analyst's time.",
+   "kind": "claim",
+   "source": null,
+   "metric": "share of analyst time",
+   "value": "80% or more",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement in the chapter intro; no study cited.",
+   "quote": "Such\ntasks are often reported to take up 80% or more of an analyst’s time.",
+   "table": null,
+   "note": null,
+   "where": "p.191"
+  },
+  {
+   "claim": "qcut into quartiles gives equal-size bins; each of 4 bins holds 250 of 1000 normal draws.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "bin count",
+   "value": "250",
+   "unit": "points per bin",
+   "baseline_value": null,
+   "n": 1000,
+   "setup": "pd.qcut(np.random.randn(1000), 4); contrast with cut, which does not usually give equal counts.",
+   "quote": "(0.62, 3.928]       250",
+   "table": null,
+   "note": null,
+   "where": "p.205, In [90]"
+  },
+  {
+   "claim": "Capping values at +-3 changes a normal sample's std only slightly (column 0: 0.996947 to 0.992920).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "std",
+   "value": "0.992920",
+   "unit": null,
+   "baseline_value": "0.996947",
+   "n": 1000,
+   "setup": "DataFrame of np.random.randn(1000, 4), data[np.abs(data) > 3] = np.sign(data) * 3; no seed given.",
+   "quote": "0.992920",
+   "table": null,
+   "note": "Values are random draws, not reproducible without a seed.",
+   "where": "p.206, In [93] and In [98]"
+  },
+  {
+   "claim": "pd.cut with bins [18,25,35,60,100] on 12 ages gives counts 5, 3, 3, 1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "bin count",
+   "value": "5",
+   "unit": "people in (18, 25]",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "ages = [20, 22, 25, 27, 21, 23, 37, 31, 61, 45, 41, 32]; right-closed bins.",
+   "quote": "(18, 25]     5",
+   "table": null,
+   "note": null,
+   "where": "p.203, In [81]"
+  }
+ ],
+ "limits": [
+  "Examples use the 2nd-edition API: fillna(method='ffill'), (np.abs(data) > 3).any(1), pd.value_counts, from numpy import nan as NA; several are deprecated or removed in current pandas (inferred from my knowledge of later pandas, not from the text).",
+  "Chapter says coverage is not comprehensive and regex writing is out of scope.",
+  "Says missing-data representation in pandas is 'somewhat imperfect' and under ongoing work.",
+  "The slow loop for multi-genre indicator variables is flagged as unsuitable for much larger data.",
+  "Outlier example uses random data without a seed; the 80% figure has no citation."
+ ],
+ "practices": [
+  "Use dropna(how='all') or thresh=n to control how much missing data a row may hold before it is dropped (p.193-194).",
+  "Prefer fillna over dropping when dropping would discard other data in the row; use a dict for per-column fill values, or ffill with limit (p.195-196).",
+  "Analyse the missing data itself to find collection problems or bias before filling or dropping (p.192).",
+  "Use replace to turn sentinel values such as -999 into NaN, passing a list or dict for several values (p.200-201).",
+  "Lowercase before mapping with a dict, or pass a function to map, for element-wise recoding (p.199-200).",
+  "Use rename rather than copying a DataFrame to relabel axes (p.202).",
+  "Use cut for explicit bin edges and qcut for roughly equal-size bins from sample quantiles (p.203-205).",
+  "Use sample(n, replace=True) for random subsets and permutation plus take/iloc for shuffling (p.207).",
+  "Use get_dummies for categorical columns; combine with cut for binned indicators; for multi-membership columns, avoid the Python loop on large data and write to a NumPy array (p.208-211).",
+  "Use the Series .str methods instead of map for strings, because they skip NA values (p.217).",
+  "Compile a regex with re.compile when applying it to many strings, and use raw string literals (p.214).",
+  "Use 'x in s' to test for a substring; find returns -1 where index raises ValueError (p.212)."
+ ],
+ "terms": [
+  {
+   "term": "sentinel value",
+   "definition": "For numeric data, pandas uses the floating-point value NaN (Not a Number) to represent missing data. We call this a sentinel value that can be easily detected",
+   "where": "p.191"
+  },
+  {
+   "term": "NA",
+   "definition": "referring to missing data as NA, which stands for not available",
+   "where": "p.192"
+  },
+  {
+   "term": "regex",
+   "definition": "A single expression, commonly called a regex, is a string formed according to the regular expression language.",
+   "where": "p.213"
+  },
+  {
+   "term": "dummy/indicator matrix",
+   "definition": "If a column in a DataFrame has k distinct values, you would derive a matrix or DataFrame with k columns containing all 1s and 0s.",
+   "where": "p.208"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Python for Data Analysis (other chapters; Chapter 14 MovieLens, Chapter 8 joins)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Chapter points forward to ch. 8 for combining data and ch. 14 for MovieLens 1M.",
+   "quote": null
+  },
+  {
+   "work": "MovieLens 1M dataset (movies.dat)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Used for the genre indicator example; no size or citation given here.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 7-1",
+   "caption": "NA handling methods",
+   "page": 192,
+   "why": "dropna, fillna, isnull, notnull in one list"
+  },
+  {
+   "figure": "Table 7-2",
+   "caption": "fillna function arguments",
+   "page": 197,
+   "why": "value, method, axis, inplace, limit"
+  },
+  {
+   "figure": "Table 7-3",
+   "caption": "Python built-in string methods",
+   "page": 213,
+   "why": "quick reference"
+  },
+  {
+   "figure": "Table 7-4",
+   "caption": "Regular expression methods",
+   "page": 216,
+   "why": "findall/match/search/sub differences"
+  },
+  {
+   "figure": "Table 7-5",
+   "caption": "Partial listing of vectorized string methods",
+   "page": 218,
+   "why": "str accessor reference"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.194",
+   "snippet": "df.dropna(thresh=2)",
+   "verbatim": true
+  },
+  {
+   "where": "p.206",
+   "snippet": "data[np.abs(data) > 3] = np.sign(data) * 3",
+   "verbatim": true
+  },
+  {
+   "where": "p.211",
+   "snippet": "pd.get_dummies(pd.cut(values, bins))",
+   "verbatim": true
+  },
+  {
+   "where": "p.215",
+   "snippet": "pattern = r'([A-Z0-9._%+-]+)@([A-Z0-9.-]+)\\.([A-Z]{2,4})'",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No title page in the PDF: author, edition and year are not printed in the text, so bib.authors is empty and year null. Attribution to McKinney comes from the repo path and the note's sources, not the PDF.",
+  "No embedded instructions found.",
+  "Code listings are text only; some page-break wrapping."
+ ]
+}

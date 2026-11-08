@@ -292,7 +292,7 @@ T= 1024:    6,291,456 attention scores per block,  1024 feed-forward passes per 
 T= 8192:  402,653,184 attention scores per block,  8192 feed-forward passes per block
 ```
 
-That quadratic term is what the alternatives surveyed in [chapter 03](03-scale-and-the-model-zoo.md) try to escape, and the KV cache in [chapter 04](04-decoding-and-inference-behaviour.md) softens at generation time.
+That quadratic term is what the alternatives surveyed in [chapter 03b](03b-beyond-the-transformer.md) try to escape, and the KV cache in [chapter 04](04-decoding-and-inference-behaviour.md) softens at generation time.
 
 ---
 

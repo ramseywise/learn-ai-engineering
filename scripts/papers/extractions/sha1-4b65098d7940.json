@@ -1,0 +1,287 @@
+{
+ "schema": 1,
+ "key": "sha1:4b65098d7940",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch13-health-care.pdf",
+ "bib": {
+  "title": "Health Care (Chapter 13)",
+  "authors": [],
+  "first_author": null,
+  "year": null,
+  "venue": "book chapter (data warehouse toolkit; chapter header 'CHAPTER 13', pp. 255-275)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48373,
+  "chars_total": 48373,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should a dimensional data warehouse be designed for health care billing, medical events and medical records?",
+ "hypothesis": null,
+ "contributions": [
+  "Value circle with conformed dimensions",
+  "Accumulating snapshot for bill line items with role-playing dates",
+  "Multivalued diagnosis dimension via bridge table with weighting factors",
+  "Extended cost facts for P&L",
+  "Complex events with several multivalued dimensions",
+  "Fact dimension for sparse heterogeneous medical records",
+  "Late-arriving fact and dimension row handling"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Real bill-paying organizations see patients with more than 50 diagnoses, so fixed diagnosis slots do not work.",
+   "kind": "claim",
+   "source": null,
+   "metric": "diagnoses per patient (max seen)",
+   "value": "50",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Health care billing warehouse design example in Ch 13 (illustrative, no data)",
+   "quote": "with more than 50 diagnoses!",
+   "table": null,
+   "note": null,
+   "where": "p.263"
+  },
+  {
+   "claim": "Weighting factors in a diagnosis group must sum to exactly 1.00 so allocated totals reconcile.",
+   "kind": "claim",
+   "source": null,
+   "metric": "sum of weighting factors per group",
+   "value": "1.00",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Health care billing warehouse design example in Ch 13 (illustrative, no data)",
+   "quote": "the sum of all the weighting factors in the group is exactly",
+   "table": null,
+   "note": null,
+   "where": "p.264"
+  },
+  {
+   "claim": "Accumulating snapshot rows can be physically reorganised once most rows stabilise, e.g. within 90 days.",
+   "kind": "claim",
+   "source": null,
+   "metric": "stabilisation window (example)",
+   "value": "90 days",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Health care billing warehouse design example in Ch 13 (illustrative, no data)",
+   "quote": "accumulating rows stabilize and stop changing within 90 days (for instance),",
+   "table": null,
+   "note": null,
+   "where": "p.261"
+  },
+  {
+   "claim": "The billing accumulating snapshot has seven date foreign keys, each a role of one date dimension via views.",
+   "kind": "claim",
+   "source": null,
+   "metric": "date roles",
+   "value": "7",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Health care billing warehouse design example in Ch 13 (illustrative, no data)",
+   "quote": "Our example, which is typical, has seven foreign keys pointing to the date dimen-",
+   "table": null,
+   "note": null,
+   "where": "p.261"
+  },
+  {
+   "claim": "A fact dimension turns an event with 10 numeric measurements into 10 fact rows instead of one.",
+   "kind": "claim",
+   "source": null,
+   "metric": "rows per event (example)",
+   "value": "10",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Health care billing warehouse design example in Ch 13 (illustrative, no data)",
+   "quote": "If an event resulted in 10 numeric mea-",
+   "table": null,
+   "note": null,
+   "where": "p.270"
+  }
+ ],
+ "limits": [
+  "Illustrative designs only: no data, benchmarks or measured results.",
+  "Written for 1990s-2000s relational warehouses (Oracle block splits, ICD-9-CM, CPT-4, HCPCS); standards have since moved on (ICD-10).",
+  "Insurance claims processing is deliberately deferred to Chapter 15.",
+  "Allocation of costs and weighting factors is conceded to be controversial and arbitrary.",
+  "Authors and year are not printed in the chapter extract."
+ ],
+ "practices": [
+  "Treat a multi-organisation health care consortium as a value circle: it works only if dimensions (date, patient, responsible party, employer, health plan, payer, provider, treatment, drug, diagnosis, outcome, location) are conformed (p.257).",
+  "Choose accumulating snapshot grain for a short-lived bill line item; transaction grain needs roll-forward and periodic snapshot hides current unpaid status (p.259).",
+  "Add a companion transaction-grain fact table if users need full detail of messy payments (p.260).",
+  "Date foreign keys must be integer surrogates, not date stamps, so 'Not Applicable' can be represented; the date dimension row can hold nulls (p.260-261).",
+  "Assign date surrogate keys consecutively in date order and partition the fact table on treatment date key; put special-condition keys at the top of the range (p.261-262).",
+  "Do not join seven date keys to one date table; create one view per role with relabelled columns (p.262).",
+  "Handle many-valued diagnoses with a diagnosis group key, a bridge table and weighting factors summing to 1.00, rather than multiple slots or a finer grain (p.263-264).",
+  "Offer two views over fact plus bridge, one weighted (correctly weighted report) and one unweighted (impact report) (p.264).",
+  "If a modelling tool needs PK/FK joins, insert a diagnosis group dimension between fact and bridge (p.264-265).",
+  "Reuse a standard portfolio of diagnosis groups in high volume; for hospital stays make groups unique per patient, type 2 SCD, with begin and end date on the bridge (p.265).",
+  "Add activity-based cost facts at the same grain for P&L, accepting that allocations are arbitrary (p.265-266).",
+  "For complex events, combine role-playing and multivalued dimensions and omit weighting factors on them, giving only impact reports (p.268).",
+  "Model sparse heterogeneous records with a fact dimension (entry type) plus generic amount, flag, comment key and file-name columns; return to a classic fact table as density grows (p.269-270).",
+  "Keep free text out of the fact table via a comment dimension; storing image file names rather than blobs lets other tools read images but needs a synchronised file store (p.271).",
+  "For a late-arriving fact row, choose each dimension row whose date stamp is the latest <= treatment date, swap in surrogate keys, insert into the correct partition (p.272).",
+  "Where the warehouse must tie to the books, carry both treatment date and booking date (p.272).",
+  "For a late-arriving dimension row, insert a new row, overwrite later rows, repoint fact foreign keys, and fix begin/end dates; non-date surrogate keys must therefore be unordered (p.273)."
+ ],
+ "terms": [
+  {
+   "term": "value circle",
+   "definition": "a network of organizations that need to share the same critical data (the patient treatment record) with no obvious time ordering",
+   "where": "p.256"
+  },
+  {
+   "term": "treatment billing record",
+   "definition": "corresponds to a line item on a patient bill",
+   "where": "p.256"
+  },
+  {
+   "term": "treatment medical record",
+   "definition": "more comprehensive; includes laboratory tests, findings and provider's notes as well as charged treatments",
+   "where": "p.256"
+  },
+  {
+   "term": "grain",
+   "definition": "the fundamental definition of what constitutes a fact table row",
+   "where": "p.259"
+  },
+  {
+   "term": "roles (role-playing dimension)",
+   "definition": "separate, specifically named views on a single underlying master dimension",
+   "where": "p.262, p.274"
+  },
+  {
+   "term": "diagnosis group bridge",
+   "definition": "bridge table with a row per diagnosis in a group, with a weighting factor",
+   "where": "p.263"
+  },
+  {
+   "term": "correctly weighted report",
+   "definition": "report using weighting factors so grand totals are correct",
+   "where": "p.264"
+  },
+  {
+   "term": "impact report",
+   "definition": "report summarising facts by a multivalued dimension without weighting factors",
+   "where": "p.264"
+  },
+  {
+   "term": "fact dimension",
+   "definition": "dimension (entry type) describing what a fact row means and which of its fact fields are valid",
+   "where": "p.269"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 3 (value chain, conformed dimensions)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "value circle contrasted with value chain",
+   "quote": null
+  },
+  {
+   "work": "Chapter 4 (slowly changing dimensions types 1-3)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SCD procedures reused for patient, provider, payer",
+   "quote": null
+  },
+  {
+   "work": "Chapter 5 (grain choices, junk dimensions)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "transaction/periodic/accumulating grain",
+   "quote": null
+  },
+  {
+   "work": "Chapter 6 (customer consolidation, householding)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "patient matching similar",
+   "quote": null
+  },
+  {
+   "work": "Chapter 9 (multiple customers per account)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "multivalued dimension precedent",
+   "quote": null
+  },
+  {
+   "work": "Chapter 15 (insurance)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "claims processing deferred",
+   "quote": null
+  },
+  {
+   "work": "ICD-9-CM, HCPCS, CPT-4, ADA dental code",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "mandated diagnosis and treatment coding standards",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 13.1",
+   "caption": "Typical health care value circle.",
+   "page": "256",
+   "why": "shows no-order sharing of treatment record"
+  },
+  {
+   "figure": "Fig 13.2",
+   "caption": "Accumulating snapshot fact table for health care billing.",
+   "page": "260",
+   "why": "seven date roles, 2 insurance roles, facts"
+  },
+  {
+   "figure": "Fig 13.3",
+   "caption": "Design for a multivalued diagnosis dimension.",
+   "page": "263",
+   "why": "bridge with weighting factor"
+  },
+  {
+   "figure": "Fig 13.4",
+   "caption": "Diagnosis group dimension to create a primary key relationship.",
+   "page": "264",
+   "why": "PK/FK-safe variant"
+  },
+  {
+   "figure": "Fig 13.7",
+   "caption": "Surgical events transaction fact table extended to show profit and loss.",
+   "page": "268",
+   "why": "six multivalued dimensions"
+  },
+  {
+   "figure": "Fig 13.8",
+   "caption": "Transaction table with sparse, heterogeneous medical record facts and a fact dimension.",
+   "page": "270",
+   "why": "entry type fact dimension"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found.",
+  "Authors, year and book title are not printed in the extract (page header only; 'TEAMFLY' watermark lines), so bib authors are empty and not filled from memory.",
+  "Section map printed empty; figure labels are flattened to text lists."
+ ]
+}

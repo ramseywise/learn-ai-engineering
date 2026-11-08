@@ -259,7 +259,7 @@ Choose from the question. Don't start from the chart you made last time.
 | Is the pattern the same across groups? | Small multiples | `sns.catplot(col=...)`, `sns.relplot(col=...)` |
 | How does a value vary over two categories? | Heatmap of a pivot table | `sns.heatmap(df.pivot_table(...))` |
 
-Notice what the table leaves out. A pie chart compares parts with angles, and in Cleveland and McGill's perception experiments people judged position and length more accurately than angle ([Cleveland & McGill, JASA 1984](https://doi.org/10.1080/01621459.1984.10478080)), so sorted bars nearly always do better. A chart with two y axes implies a relationship set by whichever scales you happened to choose, so draw two panels instead. Pillar 05 returns to both and shows the evidence.
+McKinney uses `pairplot` for exactly this exploratory pass, and notes that `barplot` draws each bar as a mean with a 95% confidence interval by default (tips data, tip percentage by day; *Python for Data Analysis*, ch. 9). His default advice for static graphics is matplotlib plus pandas and seaborn, with Bokeh or Plotly for interactive web plots. Notice what the table leaves out. A pie chart compares parts with angles, and in Cleveland and McGill's perception experiments people judged position and length more accurately than angle ([Cleveland & McGill, JASA 1984](https://doi.org/10.1080/01621459.1984.10478080)), so sorted bars nearly always do better. A chart with two y axes implies a relationship set by whichever scales you happened to choose, so draw two panels instead. Pillar 05 returns to both and shows the evidence.
 
 ## Old notebooks and current seaborn
 
@@ -285,7 +285,7 @@ Since [seaborn 0.12](https://seaborn.pydata.org/whatsnew/v0.12.0.html), data col
 
 ## Saving and showing
 
-`fig.savefig("name.png", dpi=150)` writes the file, and the extension picks the format. Use PNG for screens and notebooks, and SVG or PDF for anything that will be scaled or printed. `fig.tight_layout()` before saving stops titles and labels from overlapping. In a script, call `plt.show()` to open a window, and call `plt.close(fig)` when you make figures in a loop, since each one holds memory until closed. In Jupyter, charts appear on their own at the end of a cell, and every drawing call for a figure must be in one cell.
+`fig.savefig("name.png", dpi=150, bbox_inches="tight")` writes the file (the book's example uses `dpi=400`, and `bbox_inches="tight"` trims surrounding whitespace, *Python for Data Analysis*, ch. 9), and the extension picks the format. Use PNG for screens and notebooks, and SVG or PDF for anything that will be scaled or printed. `fig.tight_layout()` before saving stops titles and labels from overlapping. In a script, call `plt.show()` to open a window, and call `plt.close(fig)` when you make figures in a loop, since each one holds memory until closed. In Jupyter, charts appear on their own at the end of a cell, and every drawing call for a figure must be in one cell.
 
 ## Pitfalls
 

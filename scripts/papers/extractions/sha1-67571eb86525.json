@@ -1,0 +1,597 @@
+{
+ "schema": 1,
+ "key": "sha1:67571eb86525",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch14-data-analysis-examples.pdf",
+ "bib": {
+  "title": "Chapter 14: Data Analysis Examples (Python for Data Analysis, 2nd ed.)",
+  "authors": [
+   "Wes McKinney"
+  ],
+  "first_author": "McKinney",
+  "year": 2017,
+  "venue": "O'Reilly book chapter",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 75761,
+  "chars_total": 75761,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do the book's pandas, NumPy and matplotlib/seaborn techniques combine on five real datasets (Bitly 1.USA.gov, MovieLens 1M, SSA baby names, USDA food, FEC 2012)?",
+ "hypothesis": null,
+ "contributions": [
+  "Five worked analyses: time-zone/OS counts, rating differences by gender, naming trends and diversity, nutrient lookup, campaign donations by occupation/size/state."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Of 3440 records with a tz field, America/New_York is the most common time zone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count of tz=America/New_York",
+   "value": 1251,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records; counted with dict, defaultdict, Counter and Series.value_counts, all agree",
+   "where": "14.1, p405",
+   "note": null,
+   "quote": "Out[18]: 1251"
+  },
+  {
+   "claim": "The empty-string (unknown) time zone is the second most common value.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count of unknown tz",
+   "value": 521,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records",
+   "where": "14.1, p406",
+   "note": null,
+   "table": "Out[24] Counter.most_common(10), row ''"
+  },
+  {
+   "claim": "Records loaded into the DataFrame; only 3440 have 'a' and 'tz', so the other 120 are heartbeat records with a missing tz.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rows in frame",
+   "value": 3560,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records",
+   "where": "14.1, p406",
+   "note": null,
+   "quote": "RangeIndex: 3560 entries, 0 to 3559"
+  },
+  {
+   "claim": "Missing tz values number 120 after fillna('Missing').",
+   "kind": "measured",
+   "source": null,
+   "metric": "count of Missing tz",
+   "value": 120,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records",
+   "where": "14.1, p408",
+   "note": null,
+   "table": "Out[34], row Missing"
+  },
+  {
+   "claim": "Most common first agent token is Mozilla/5.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count of first agent token",
+   "value": 2594,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records; results = pd.Series([x.split()[0] for x in frame.a.dropna()])",
+   "where": "14.1, p409",
+   "note": null,
+   "table": "Out[44], row Mozilla/5.0"
+  },
+  {
+   "claim": "New York has 912 Windows and 339 non-Windows users, the largest group, with os defined as 'Windows' substring in agent string.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Windows count in NY",
+   "value": 912,
+   "unit": "records",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.1 1.USA.gov (Bitly, 2011 hourly snapshot file, one file preserved by the book), pandas DataFrame of JSON records; groupby(['tz','os']).size().unstack().fillna(0), top 10 by row sum via argsort/take",
+   "where": "14.1, p411",
+   "note": null,
+   "table": "Out[55], row America/New_York, column Windows (339.0 Not Windows)"
+  },
+  {
+   "claim": "MovieLens 1M ratings table has about one million rows, merged with users and movies into 10 columns.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ratings rows",
+   "value": 1000209,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2 MovieLens 1M, pd.merge(pd.merge(ratings, users), movies), merge keys inferred from overlapping names",
+   "where": "14.2, p415",
+   "note": "Book prose says 1 million ratings, 6,000 users, 4,000 movies; ids run to 6040 in the output",
+   "quote": "[1000209 rows x 4 columns]"
+  },
+  {
+   "claim": "Filtering to titles with at least 250 ratings leaves 1216 movies (threshold stated as arbitrary).",
+   "kind": "measured",
+   "source": null,
+   "metric": "active titles",
+   "value": 1216,
+   "unit": "movies",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2, data.groupby('title').size() >= 250",
+   "where": "14.2, p417",
+   "note": null,
+   "quote": "[1216 rows x 2 columns]"
+  },
+  {
+   "claim": "Top female-rated film (among active titles) is A Close Shave, mean 4.644444 (male 4.473795).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rating, female",
+   "value": 4.644444,
+   "unit": "mean rating (1-5)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2, pivot_table('rating', index='title', columns='gender', aggfunc='mean'), titles with >=250 ratings",
+   "where": "14.2, p417",
+   "note": null,
+   "table": "Out[86], row Close Shave, A (1995), column F (M 4.473795)"
+  },
+  {
+   "claim": "Largest female-preferred gap is Dirty Dancing, diff (M minus F) of -0.830782.",
+   "kind": "measured",
+   "source": null,
+   "metric": "M-F mean difference",
+   "value": -0.830782,
+   "unit": "rating points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2, mean_ratings['diff'] = mean_ratings['M'] - mean_ratings['F'], titles with >=250 ratings",
+   "where": "14.2, p418",
+   "note": null,
+   "table": "Out[89], row Dirty Dancing (1987), column diff (F 3.790378, M 2.959596)"
+  },
+  {
+   "claim": "Largest male-preferred gap is The Good, The Bad and The Ugly, diff 0.726351.",
+   "kind": "measured",
+   "source": null,
+   "metric": "M-F mean difference",
+   "value": 0.726351,
+   "unit": "rating points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2, same as above, sorted_by_diff[::-1][:10]",
+   "where": "14.2, p418",
+   "note": null,
+   "table": "Out[90], row Good, The Bad and The Ugly, The (1966), column diff (F 3.494949, M 4.221300)"
+  },
+  {
+   "claim": "Highest rating standard deviation regardless of gender is Dumb & Dumber at 1.321333.",
+   "kind": "measured",
+   "source": null,
+   "metric": "std of rating",
+   "value": 1.321333,
+   "unit": "rating std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.2, data.groupby('title')['rating'].std() restricted to active_titles",
+   "where": "14.2, p419",
+   "note": null,
+   "table": "Out[93], row Dumb & Dumber (1994)"
+  },
+  {
+   "claim": "Assembled baby-names frame has 1690784 rows covering 1880-2010 (yob*.txt files, only names with >=5 births per year).",
+   "kind": "measured",
+   "source": null,
+   "metric": "rows in names",
+   "value": 1690784,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3 SSA baby names, pd.concat of 131 yearly files with ignore_index=True",
+   "where": "14.3, p422",
+   "note": null,
+   "quote": "[1690784 rows x 4 columns]"
+  },
+  {
+   "claim": "The top-1000 per (year, sex) subset has 261877 rows.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rows in top1000",
+   "value": 261877,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, groupby(['year','sex']).apply(get_top1000)",
+   "where": "14.3, p425",
+   "note": null,
+   "quote": "[261877 rows x 5 columns]"
+  },
+  {
+   "claim": "In 1880, 90993 female and 110493 male births are in the file (sum of births by sex).",
+   "kind": "measured",
+   "source": null,
+   "metric": "female births 1880",
+   "value": 90993,
+   "unit": "births",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, names1880.groupby('sex').births.sum()",
+   "where": "14.3, p421",
+   "note": null,
+   "table": "Out[98], row F (M 110493)"
+  },
+  {
+   "claim": "In 2010, 117 boy names (most popular first) are needed to cover 50% of births, versus 25 in 1900.",
+   "kind": "measured",
+   "source": null,
+   "metric": "names to reach 50% of births, 2010",
+   "value": 117,
+   "unit": "names",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, top1000 boys, cumsum of sorted prop then searchsorted(0.5)+1",
+   "where": "14.3, p428",
+   "note": "1900 value 25 is Out[125]: 25",
+   "quote": "adding 1 to this result gives you a result of 117"
+  },
+  {
+   "claim": "Boy names needed for 50% of births in 1900.",
+   "kind": "measured",
+   "source": null,
+   "metric": "names to reach 50% of births, 1900",
+   "value": 25,
+   "unit": "names",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, same method, year 1900 boys",
+   "where": "14.3, p428",
+   "note": null,
+   "quote": "Out[125]: 25"
+  },
+  {
+   "claim": "Total births 2010: 1759010 female and 1898382 male.",
+   "kind": "measured",
+   "source": null,
+   "metric": "female births 2010",
+   "value": 1759010,
+   "unit": "births",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, names.pivot_table('births', index='year', columns='sex', aggfunc=sum)",
+   "where": "14.3, p422",
+   "note": null,
+   "table": "Out[102], row 2010, column F (M 1898382)"
+  },
+  {
+   "claim": "Boy names ending in d fell from 0.113858 (1910) to 0.023387 (2010); names ending in n grew since the 1960s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of boys with last letter d, 2010",
+   "value": 0.023387,
+   "unit": "proportion of male births",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, last-letter pivot over full names, normalised per sex and year",
+   "where": "14.3, p430",
+   "note": null,
+   "table": "Out[135], row d, column M 2010 (M 1910 0.113858)"
+  },
+  {
+   "claim": "Leslie-like names: Leslie has 370429 births in top1000 over all years, and by 2010 all are female.",
+   "kind": "measured",
+   "source": null,
+   "metric": "births of Leslie",
+   "value": 370429,
+   "unit": "births",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.3, names matching 'lesl' in top1000",
+   "where": "14.3, p433",
+   "note": null,
+   "table": "Out[148], row Leslie"
+  },
+  {
+   "claim": "USDA JSON database holds 6636 foods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "len(db)",
+   "value": 6636,
+   "unit": "foods",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.4 USDA food database (Ashley Williams JSON version), json.load",
+   "where": "14.4, p435",
+   "note": null,
+   "quote": "Out[156]: 6636"
+  },
+  {
+   "claim": "Stacking each food's nutrient list gives 389355 rows, 14179 of them duplicates; 375176 remain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "duplicate nutrient rows",
+   "value": 14179,
+   "unit": "duplicate rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.4, nutrients.duplicated().sum() then drop_duplicates()",
+   "where": "14.4, p437",
+   "note": "389355 and 375176 are printed row counts of the nutrients frame before and after",
+   "quote": "Out[168]: 14179"
+  },
+  {
+   "claim": "Vegetables and Vegetable Products is the largest food group with 812 foods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "foods in group",
+   "value": 812,
+   "unit": "foods",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.4, pd.value_counts(info.group)",
+   "where": "14.4, p436",
+   "note": null,
+   "table": "Out[165], row Vegetables and Vegetable Products"
+  },
+  {
+   "claim": "The 2012 FEC file has 1001731 contribution rows, 16 columns.",
+   "kind": "measured",
+   "source": null,
+   "metric": "rows in fec",
+   "value": 1001731,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5 FEC 2012 presidential, P00000001-ALL.csv, 150 MB CSV downloaded June 2012",
+   "where": "14.5, p440",
+   "note": null,
+   "quote": "RangeIndex: 1001731 entries, 0 to 1001730"
+  },
+  {
+   "claim": "Mapping candidates to party gives 593746 Democrat and 407985 Republican contributions (Gary Johnson counted Republican).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Democrat contributions",
+   "value": 593746,
+   "unit": "contributions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, fec.cand_nm.map(parties)",
+   "where": "14.5, p442",
+   "note": null,
+   "table": "Out[194], row Democrat (Republican 407985)"
+  },
+  {
+   "claim": "10256 contributions are non-positive (refunds) and are dropped, leaving 991475.",
+   "kind": "measured",
+   "source": null,
+   "metric": "refund rows",
+   "value": 10256,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, (fec.contb_receipt_amt > 0).value_counts()",
+   "where": "14.5, p442",
+   "note": null,
+   "table": "Out[195], row False (True 991475)"
+  },
+  {
+   "claim": "Retirees gave the most in total for Democrats: 25305116.38 against 23.56 million for Republicans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "retired Democrat total",
+   "value": 25305116.38,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, pivot_table of contb_receipt_amt by occupation and party, occupations over 2 million, 17 rows",
+   "where": "14.5, p443",
+   "note": null,
+   "table": "Out[203], row RETIRED, column Democrat"
+  },
+  {
+   "claim": "Obama had 372280 donations in the (10,100] USD bin against Romney's 31853; Romney leads in the (1000,10000] bin.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Obama donations 10-100 USD",
+   "value": 372280,
+   "unit": "donations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, pd.cut with bins [0,1,10,100,1000,10000,100000,1000000,10000000], 694282 Obama/Romney rows",
+   "where": "14.5, p446",
+   "note": null,
+   "table": "Out[214], row (10, 100], column Obama, Barack"
+  },
+  {
+   "claim": "Share of dollars in (1000,10000] going to Obama is 0.447326, Romney 0.552674 (Obama leads in all smaller bins).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Obama share of dollars",
+   "value": 0.447326,
+   "unit": "fraction of bin total",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, bucket_sums normalised by row",
+   "where": "14.5, p446",
+   "note": null,
+   "table": "Out[218], row (1000, 10000], column Obama, Barack"
+  },
+  {
+   "claim": "California: Obama 23824984.24 vs Romney 11237636.60 in contributions; Obama share 0.679498.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CA Obama total",
+   "value": 23824984.24,
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14.5, totals by state, states with total over 100000",
+   "where": "14.5, p447",
+   "note": null,
+   "table": "Out[223], row CA, column Obama, Barack"
+  }
+ ],
+ "limits": [
+  "Pandas version is 0.20-era (book dated 2017); several calls are dated: Int64Index in info output, pd.value_counts, rename(copy=False), groupby().apply returning the group keys, positional sum(1), chained assignment cframe['os']=..., pd.read_table(sep='::') without engine. Dated-API notes are the extractor's annotation, not stated in the chapter.",
+  "Data sources moved: the Bitly feed is shut down (stated), the SSA URL may have moved (stated); book supplies copies in its GitHub repo.",
+  "Chapter's printed output is not fully self-consistent: occ_mapping maps 'C.E.O.' to 'CEO', yet Out[208] still lists 'C.E.O.' for Romney while Out[203] shows CEO.",
+  "The code that stacks USDA nutrients (loop plus concat, In [166]) is absent from the extracted text between 'concatenated together with concat:' and 'If all goes well'.",
+  "Authors concede simplifications: Gary Johnson counted as Republican, 250-rating threshold arbitrary, Windows detected by substring, top-two bins excluded as non-individual donors, donors not de-duplicated by name/zip.",
+  "No inference, tests or uncertainty: all comparisons are descriptive; the diversity hypothesis is 'explored and confirmed' by plot only."
+ ],
+ "practices": [
+  "Handle missing keys in JSON records with 'if key in rec' in the comprehension (14.1).",
+  "Prefer collections.Counter or Series.value_counts to hand-rolled count dicts (14.1).",
+  "Use fillna for NaN and boolean indexing for empty strings when labelling unknown categories (14.1).",
+  "Use nlargest instead of argsort/take for top-n (14.1).",
+  "Normalise within groups with groupby().transform('sum') rather than apply with a function (14.1).",
+  "Merge multi-table data into one frame first (pd.merge chain on overlapping names), then pivot_table (14.2).",
+  "Filter to groups with a minimum count before ranking group means (14.2).",
+  "Sanity-check group-derived columns, e.g. prop sums to 1 within each (year, sex) (14.3).",
+  "Assemble per-year files with a loop of read_csv, adding a year column, then concat(ignore_index=True) (14.3).",
+  "Use cumsum + searchsorted for 'how many items to reach q of the total' (14.3).",
+  "Drop duplicates and rename colliding column names before merging (14.4).",
+  "Use dict.get(x, x) in map so unmapped values pass through when cleaning categories (14.5).",
+  "Restrict to positive amounts before analysing contributions, since refunds are negative (14.5).",
+  "Discretise amounts with pd.cut and compare groups after normalising within buckets (14.5)."
+ ],
+ "terms": [
+  {
+   "term": "indirect index array",
+   "definition": "an array from argsort used with take to select rows in sorted order",
+   "where": "14.1, p410"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Bitly/USA.gov 2011 data feed",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "one hourly snapshot preserved by the book",
+   "quote": null
+  },
+  {
+   "work": "MovieLens 1M, GroupLens Research",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "ratings, users, movies",
+   "quote": null
+  },
+  {
+   "work": "US SSA baby names 1880-2010",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Hadley Wickham used it in R; Laura Wattenberg 2007 last-letter observation",
+   "quote": null
+  },
+  {
+   "work": "USDA food nutrient database, JSON version by Ashley Williams",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "6636 foods",
+   "quote": null
+  },
+  {
+   "work": "US Federal Election Commission 2012 contributions",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "P00000001-ALL.csv",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 14-2/14-3",
+   "caption": "Top time zones by Windows and non-Windows users / percentage",
+   "page": 412,
+   "why": "Shows why normalising within group is needed to compare small groups"
+  },
+  {
+   "figure": "Fig 14-6/14-7",
+   "caption": "Proportion of births in top 1000 names; diversity metric by year",
+   "page": 427,
+   "why": "Two measures of rising name diversity"
+  },
+  {
+   "figure": "Fig 14-8/14-9",
+   "caption": "Proportion of names ending in each letter; d/n/y over time",
+   "page": 431,
+   "why": "Last-letter shift visible at a glance"
+  },
+  {
+   "figure": "Fig 14-13",
+   "caption": "Percentage of total donations received by candidates for each donation size",
+   "page": 447,
+   "why": "Obama dominates small bins, Romney the 1000-10000 bin"
+  }
+ ],
+ "code": [
+  {
+   "where": "14.1 p405",
+   "snippet": "counts = Counter(time_zones); counts.most_common(10)",
+   "verbatim": true
+  },
+  {
+   "where": "14.1 p411",
+   "snippet": "by_tz_os = cframe.groupby(['tz', 'os']); agg_counts = by_tz_os.size().unstack().fillna(0); agg_counts.sum(1).nlargest(10)",
+   "verbatim": true
+  },
+  {
+   "where": "14.1 p413",
+   "snippet": "g = count_subset.groupby('tz'); results2 = count_subset.total / g.total.transform('sum')",
+   "verbatim": true
+  },
+  {
+   "where": "14.2 p416",
+   "snippet": "mean_ratings = data.pivot_table('rating', index='title', columns='gender', aggfunc='mean')",
+   "verbatim": true
+  },
+  {
+   "where": "14.3 p428",
+   "snippet": "def get_quantile_count(group, q=0.5):\n    group = group.sort_values(by='prop', ascending=False)\n    return group.prop.cumsum().values.searchsorted(q) + 1",
+   "verbatim": true
+  },
+  {
+   "where": "14.3 p430",
+   "snippet": "table = names.pivot_table('births', index=last_letters, columns=['sex', 'year'], aggfunc=sum)",
+   "verbatim": true
+  },
+  {
+   "where": "14.5 p445",
+   "snippet": "labels = pd.cut(fec_mrbo.contb_receipt_amt, bins); grouped = fec_mrbo.groupby(['cand_nm', labels]); grouped.size().unstack(0)",
+   "verbatim": true
+  },
+  {
+   "where": "14.5 p443",
+   "snippet": "f = lambda x: occ_mapping.get(x, x)\nfec.contbr_occupation = fec.contbr_occupation.map(f)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Cached text is plain; no embedded instructions found. In [166] nutrient-stacking code missing from text. Figures not in text. Chapter has no bibliographic front matter, so title/author/year come from the task context (book: McKinney, Python for Data Analysis 2nd ed., chapter says 'at the time of this writing (2017)')."
+ ]
+}

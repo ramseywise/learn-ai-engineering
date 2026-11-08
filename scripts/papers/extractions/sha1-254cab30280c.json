@@ -1,0 +1,424 @@
+{
+ "schema": 1,
+ "key": "sha1:254cab30280c",
+ "pdf": "data-analytics/sources/practical-statistics-for-data-scientists/ch05-classification.pdf",
+ "bib": {
+  "title": "Practical Statistics for Data Scientists, Chapter 5: Classification",
+  "authors": [
+   "Peter Bruce",
+   "Andrew Bruce"
+  ],
+  "first_author": "Bruce",
+  "year": 2017,
+  "venue": "O'Reilly book chapter (copyright line: Datastats, LLC)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63042,
+  "chars_total": 63042,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do data scientists classify records into 0/1 (or few) classes, estimate propensities, evaluate classifiers, and handle rare classes?",
+ "hypothesis": null,
+ "contributions": [
+  "Explains naive Bayes, linear discriminant analysis, logistic regression/GLMs, classification metrics (confusion matrix, precision, recall, specificity, ROC, AUC, lift) and imbalanced-data strategies, with R examples on loan data."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Logistic model fitted to a balanced training set predicts roughly half as defaults; the same model type trained on the full (95% paid-off) data predicts almost none.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "share predicted default",
+   "value": 0.39,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lending-club style personal loan data (R, glm/lda/klaR); balanced training set unless stated; full_model glm on unbalanced train_set, share with predicted log-odds > 0",
+   "quote": "Only 0.39% of the loans are predicted to be in default, or less than 1/12 of the expected number.",
+   "table": null,
+   "note": null,
+   "where": "Strategies for Imbalanced Data / Undersampling"
+  },
+  {
+   "claim": "Weighting defaulted loans by 1/p restores predicted default share.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "share predicted default",
+   "value": 43,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "glm with weight=wt (default weight 1/mean(default), others 1) on full loan_all_data",
+   "quote": "The mean of the predicted values is now 43% instead of 0.39%.",
+   "table": null,
+   "note": "Code prints mean(pred > 0) = 0.4344177",
+   "where": "Oversampling and Up/Down Weighting"
+  },
+  {
+   "claim": "Default rate in the full loan data is about 5%.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "default rate",
+   "value": 5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "full loan_all_data",
+   "quote": "In the full data set, only about 5% of the loans were in default:",
+   "table": null,
+   "note": null,
+   "where": "Undersampling"
+  },
+  {
+   "claim": "The example logistic GAM/linear model has weak ranking ability.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "AUC",
+   "value": 0.59,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Loan data, ROC computed on training predictions",
+   "quote": "The model has an AUC of about 0.59, corresponding to a relatively weak classifier.",
+   "table": null,
+   "note": null,
+   "where": "AUC"
+  },
+  {
+   "claim": "At specificity of at least 50%, recall is about 75% on the ROC curve read.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "recall at specificity 50%",
+   "value": 75,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Loan data ROC (Fig 5-6)",
+   "quote": "if we want a classifier with a specificity of at least 50%, then the recall is about 75%.",
+   "table": null,
+   "note": "Read from figure",
+   "where": "ROC Curve"
+  },
+  {
+   "claim": "Coefficient for purpose_small_business is 1.21226 on the log-odds scale (about 3.4x odds vs credit_card).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "log odds ratio",
+   "value": 1.21226,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "logistic regression, outcome ~ payment_inc_ratio + purpose_ + home_ + emp_len_ + borrower_score, family binomial, 46272 obs",
+   "quote": "the regression coefficient for\npurpose_small_business is 1.21226.",
+   "table": null,
+   "note": "The text says the coefficient 'reduces' the odds of defaulting; the sign is positive so it increases them. The exponentiated factor is missing from the extracted text, so exp(1.21226)=3.36 is not from the source.",
+   "where": "Interpreting the Coefficients and Odds Ratios"
+  },
+  {
+   "claim": "borrower_score coefficient is -4.6389; worst borrowers have about 100x the default odds of best.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "odds ratio worst vs best",
+   "value": 100,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same logistic model",
+   "quote": "the default risk from the borrowers with the poorest\ncreditworthiness is 100 times greater than that of the best borrowers!",
+   "table": null,
+   "note": "Chapter text prints coefficient -4.63890 (and -4.638902 in summary); exp(4.64) is ~103.",
+   "where": "Interpreting the Coefficients and Odds Ratios"
+  },
+  {
+   "claim": "Residual deviance of the logistic model.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "residual deviance",
+   "value": 58531,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "same logistic model, summary output",
+   "quote": "Residual deviance: 58531  on 46260  degrees of freedom",
+   "table": null,
+   "note": "Short print gives 58530 and AIC 58550; summary gives 58531 and AIC 58555.",
+   "where": "Assessing the Model"
+  },
+  {
+   "claim": "Confusion matrix of logistic_gam applied to the training set.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "true positives",
+   "value": 14635,
+   "unit": "count",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Loan data; rows true, columns predicted",
+   "quote": "Y = 1 14635    8501",
+   "table": null,
+   "note": "Prose says '6,126 defaulted loans were correctly predicted ... 17,010 incorrectly predicted as paid off', which does not match the printed matrix (14635 TP, 8501 FN).",
+   "where": "Confusion Matrix"
+  },
+  {
+   "claim": "Full-data naive Bayes posterior for a small-business, mortgage, >1 year loan is 0.628 default.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "posterior P(default)",
+   "value": 0.6282794,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "klaR NaiveBayes on purpose_, home_, emp_len_, na.omit(loan_data)",
+   "quote": "[1,] 0.3717206 0.6282794",
+   "table": null,
+   "note": null,
+   "where": "Naive Bayes"
+  },
+  {
+   "claim": "Accuracy trap: a model predicting no purchase for 0.1% purchasers is 99.9% accurate and useless.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "accuracy",
+   "value": 99.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "hypothetical web store",
+   "quote": "a model that predicts that each browser will leave without purchasing will be 99.9%\naccurate.",
+   "table": null,
+   "note": null,
+   "where": "The Rare Class Problem"
+  },
+  {
+   "claim": "Lift of 3 in top decile if 0.3% response vs 0.1% random.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "lift",
+   "value": 3,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "hypothetical example",
+   "quote": "If you can get 0.3% response in this top\ndecile instead of the 0.1% you get overall picking randomly, the algorithm is said\nto have a lift (also called gains) of 3 in the top decile.",
+   "table": null,
+   "note": null,
+   "where": "Lift"
+  }
+ ],
+ "limits": [
+  "All examples are in R on one loan dataset; no Python equivalents.",
+  "Equations were not preserved in the text extraction (odds ratio factors, formulas).",
+  "Chapter is a self-contained excerpt; references to other chapters (KNN, trees, bootstrap) are not included.",
+  "Inconsistencies: confusion-matrix prose numbers differ from the printed matrix; the small_business odds ratio is described as reducing odds of default though the coefficient is positive.",
+  "SMOTE and cost-based classification are described without numbers or code."
+ ],
+ "practices": [
+  "Convert a model's propensity to a decision with a cutoff; lower it when the goal is to find a rare class (Logistic Regression, Predicted Values).",
+  "Convert multiclass problems into a series of binary problems, especially when one class dominates (More than two categories).",
+  "Use accuracy only as a first step; add precision, recall, specificity, ROC/AUC and lift for rare classes (Evaluating Classification Models).",
+  "Treat p-values in logistic regression as relative indicators of variable importance, not formal significance (Assessing the Model).",
+  "Undersample the prevalent class when you have tens of thousands of rare-class records; otherwise oversample/bootstrap or weight (Strategies for Imbalanced Data).",
+  "Weighting is the easy way to change the loss function for a rare class (Adapting the Loss Function).",
+  "Use cost-based expected return, not accuracy or AUC, to pick the cutoff (Cost-Based Classification).",
+  "Explore predictions visually; one metric like AUC does not capture model appropriateness (Exploring the Predictions).",
+  "Normalise predictors before LDA so discriminant weights serve as variable importance (Discriminant Analysis).",
+  "Use naive Bayes when ranking matters since its probabilities are biased (Naive Bayes)."
+ ],
+ "terms": [
+  {
+   "term": "Naive Bayes",
+   "definition": "Uses the probability of observing predictor values given an outcome to estimate the probability of outcome Y=i given predictor values; assumes predictors independent given the outcome.",
+   "where": "Naive Bayes"
+  },
+  {
+   "term": "Posterior probability",
+   "definition": "The probability of an outcome after the predictor information has been incorporated.",
+   "where": "Key terms for naive Bayes"
+  },
+  {
+   "term": "Discriminant function",
+   "definition": "The function that, when applied to the predictor variables, maximizes the separation of the classes.",
+   "where": "Discriminant Analysis"
+  },
+  {
+   "term": "Logit",
+   "definition": "The function that maps the probability of belonging to a class with a range from +/- infinity; synonym log odds.",
+   "where": "Logistic Regression"
+  },
+  {
+   "term": "Odds",
+   "definition": "The ratio of success (1) to not success (0).",
+   "where": "Logistic Regression"
+  },
+  {
+   "term": "Generalized linear model",
+   "definition": "Characterised by a probability distribution (family) and a link function mapping the response to the predictors.",
+   "where": "Generalized Linear Models"
+  },
+  {
+   "term": "Accuracy",
+   "definition": "The percent (or proportion) of cases classified correctly.",
+   "where": "Evaluating Classification Models"
+  },
+  {
+   "term": "Sensitivity (recall)",
+   "definition": "The percent of 1s correctly classified.",
+   "where": "Evaluating Classification Models"
+  },
+  {
+   "term": "Specificity",
+   "definition": "The percent of 0s correctly classified.",
+   "where": "Evaluating Classification Models"
+  },
+  {
+   "term": "Precision",
+   "definition": "The percent of predicted 1s that are actually 1s.",
+   "where": "Evaluating Classification Models"
+  },
+  {
+   "term": "ROC curve",
+   "definition": "A plot of sensitivity versus specificity as the cutoff changes.",
+   "where": "ROC Curve"
+  },
+  {
+   "term": "AUC",
+   "definition": "The total area under the ROC curve; 1 is perfect, 0.5 is random.",
+   "where": "AUC"
+  },
+  {
+   "term": "Lift",
+   "definition": "How effective the model is at identifying comparatively rare 1s at different probability cutoffs.",
+   "where": "Lift"
+  },
+  {
+   "term": "SMOTE",
+   "definition": "Synthetic Minority Oversampling Technique: creates a synthetic record as a randomly weighted average of a rare-class record and a nearest neighbour.",
+   "where": "Data Generation"
+  },
+  {
+   "term": "Uplift",
+   "definition": "Improvement in predicted response for an individual case with treatment A versus B, from an A/B test with treatment as predictor.",
+   "where": "Lift"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fisher 1936, The Use of Multiple Measurements in Taxonomic Problems",
+   "year": 1936,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Origin of discriminant analysis.",
+   "quote": null
+  },
+  {
+   "work": "Chawla, Bowyer, Hall, Kegelmeyer 2002, SMOTE",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Synthetic minority oversampling.",
+   "quote": null
+  },
+  {
+   "work": "Hastie, Tibshirani, Friedman, Elements of Statistical Learning 2nd ed. 2009",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended further reading.",
+   "quote": null
+  },
+  {
+   "work": "James, Witten, Hastie, Tibshirani, An Introduction to Statistical Learning",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Further reading.",
+   "quote": null
+  },
+  {
+   "work": "Hosmer, Lemeshow, Sturdivant, Applied Logistic Regression 3rd ed.",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Standard logistic regression reference.",
+   "quote": null
+  },
+  {
+   "work": "Shmueli, Bruce, Patel, Data Mining for Business Analytics 3rd ed. 2016",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Further reading.",
+   "quote": null
+  },
+  {
+   "work": "Venables and Ripley 1994, Modern Applied Statistics with S (MASS lda)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "related",
+   "note": "R package used for LDA.",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5-1",
+   "caption": "LDA prediction of loan default using two variables: a score of the borrower's creditworthiness and the payment to income ratio.",
+   "page": null,
+   "why": "Shows the linear decision boundary and probability gradient."
+  },
+  {
+   "figure": "Fig 5-2",
+   "caption": "The function that maps a probability to a scale suitable for a linear model (logit)",
+   "page": null,
+   "why": "Visualises logit."
+  },
+  {
+   "figure": "Fig 5-3",
+   "caption": "The relationship between the odds ratio and the log-odds ratio",
+   "page": null,
+   "why": "Coefficient to odds ratio mapping."
+  },
+  {
+   "figure": "Fig 5-5",
+   "caption": "Confusion matrix for a binary response and various metrics",
+   "page": null,
+   "why": "Maps cells to precision, recall, specificity."
+  },
+  {
+   "figure": "Fig 5-6",
+   "caption": "ROC curve for the loan data",
+   "page": null,
+   "why": "Recall vs specificity trade-off."
+  },
+  {
+   "figure": "Fig 5-8",
+   "caption": "Comparison of the classification rules for four different methods",
+   "page": null,
+   "why": "LDA, logistic, GAM and tree decision boundaries side by side."
+  }
+ ],
+ "code": [
+  {
+   "where": "ROC curve",
+   "snippet": "idx <- order(-pred)\nrecall <- cumsum(true_y[idx]==1)/sum(true_y==1)\nspecificity <- (sum(true_y==0) - cumsum(true_y[idx]==0))/sum(true_y==0)",
+   "verbatim": true
+  },
+  {
+   "where": "Oversampling and Up/Down Weighting",
+   "snippet": "wt <- ifelse(loan_all_data$outcome=='default',\n             1/mean(loan_all_data$outcome == 'default'), 1)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations are missing from the text layer (blank lines where formulas sit), so odds-ratio values and formulas are not recorded.",
+  "Page numbers are not in the text cache; figures have page null.",
+  "Section map printed empty from extract.py text.",
+  "No embedded instructions found."
+ ]
+}

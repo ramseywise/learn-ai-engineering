@@ -60,7 +60,7 @@ What it doesn't do: return a model. `cross_val_score` evaluates a *procedure*; r
 
 | Splitter | When | Note |
 |---|---|---|
-| `KFold(n_splits, shuffle=True)` | Regression; data in random order | Without `shuffle`, ordered data (iris is sorted by class) gives 0% folds |
+| `KFold(n_splits, shuffle=True)` | Regression; data in random order | Without `shuffle`, ordered data (iris is sorted by class) gives 0% folds; M&G's `KFold(3)` on iris scores 0 in every fold, `shuffle=True, random_state=0` gives 0.90/0.96/0.96, and leave-one-out (150 fits) gives 0.95 (*Introduction to ML with Python*, ch. 5) |
 | `StratifiedKFold` | Classification (the default for classifiers) | Keeps class proportions in each fold |
 | `LeaveOneOut` | Very small data | $n$ fits; high-variance estimate |
 | `ShuffleSplit`, `StratifiedShuffleSplit` | Control train/test sizes and repeats independently; subsample large data | |
@@ -81,7 +81,7 @@ Hyperparameters (`C`, `gamma`, `max_depth`) are not learned by `fit`. Search the
 ![Overview of the parameter selection and model evaluation process with GridSearchCV](../../sources/images/mueller-guido-gridsearch-overview.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/`*
 
-The three-way split from [01](01-statistical-foundations.md): pick parameters on validation, report on test once.
+The three-way split from [01](01-statistical-foundations.md): pick parameters on validation, report on test once. The cost of skipping it is visible in M&G's iris run (6 × 6 grid over `C` and `gamma` for an `SVC`): scoring the winning grid point on the data it was tuned on reports 0.97, while a proper train/validation/test split (84/28/38 rows) scores 0.92 on the untouched test rows (*Introduction to ML with Python*, ch. 5, "Overfitting the validation set"). With `GridSearchCV(cv=5)` the 36-point grid costs 36 × 5 = 180 fits plus one refit; the same grid under nested 5 × 5 CV is 900.
 
 ```python
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -141,7 +141,7 @@ print(round(scores.mean(), 3))   # an estimate of how well "grid search over SVC
 0.98
 ```
 
-5 × 5 × 36 = 900 fits. It evaluates the model *selection procedure*, not one model. `n_jobs=-1` parallelises.
+5 × 5 × 36 = 900 fits (the book's iris run gives mean accuracy 0.98 for the procedure; *Introduction to ML with Python*, ch. 5, "Nested cross-validation"). It evaluates the model *selection procedure*, not one model. `n_jobs=-1` parallelises.
 
 Why bother: Varma and Simon built "null" datasets of 40 samples with no signal, so the true error of any classifier was 50%, and tuned two classifiers by minimising CV error. The minimum CV error averaged 37.8% for shrunken centroids and 41.7% for an SVM, and on more than one-fifth of datasets the optimism exceeded 20 points. Nested CV gave an almost unbiased estimate, with a slight pessimism from training on 39 samples rather than 40 ([doi:10.1186/1471-2105-7-91](https://doi.org/10.1186/1471-2105-7-91), BMC Bioinformatics 2006). The setup was 6,000 Gaussian features per dataset, the shrunken-centroid parameter tuned by 10-fold CV and the SVM by leave-one-out CV; nested CV averaged 54.2% against the true 50.0% on the null data, and 35.3% against 32.0% for an SVM on data with 10 informative features. The paper tests only these two classifiers on synthetic data with far more features than samples, and gives no cost for the nested loop. Keeping the best of many tries is the [multiple comparisons](../../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md#multiple-comparisons) problem from data analytics.
 
@@ -196,6 +196,8 @@ Always compare against a dummy. If accuracy barely beats it, accuracy is the wro
 [Imbalance, errors and drift](10-imbalance-errors-and-drift.md#imbalance-what-each-remedy-does) tests what class weights, resampling and threshold moving each do when the positive class is rare.
 
 ### Confusion matrix, precision, recall, F1
+
+The book's 9-versus-rest numbers make the point on one split (403 not-nine, 47 nine in the test set): majority-class dummy accuracy 0.90, a depth-2 tree 0.92, logistic regression 0.98, so accuracy barely separates the first two. F1 on the "nine" class does: 0.00 for the majority dummy, 0.10 for a random-proportion dummy, 0.55 for the tree and 0.89 for logistic regression (precision 0.95, recall 0.83; *Introduction to ML with Python*, ch. 5, "Metrics for binary classification").
 
 ```python
 from sklearn.metrics import confusion_matrix, classification_report
@@ -275,6 +277,8 @@ for t in [0, -0.8]:                      # a lower threshold catches more positi
 -0.8 precision 0.758 recall 1.0
 ```
 
+M&G's own version of the move uses a 400 : 50 blob problem and `SVC(gamma=.05)` (113 test points, 9 positives): lowering the threshold from 0 to −0.8 lifts class-1 recall from 0.67 to 1.00 while precision slips from 0.35 to 0.32 (*Introduction to ML with Python*, ch. 5, "Taking uncertainty into account"). The same chapter shows F1 and average precision disagreeing on a 4,000 : 500 problem: F1 puts the SVC ahead (0.656 against 0.610 for a 100-tree forest), average precision puts the forest ahead (0.666 against 0.663) and AUC does too (0.937 against 0.916). Which model is better depends on which operating region you care about.
+
 **Never pick the threshold on the test set.** Use a validation set or CV; `TunedThresholdClassifierCV` (scikit-learn 1.5) does this for you.
 
 ### Precision–recall curve
@@ -313,7 +317,7 @@ AUC svc 1.0 rf 0.995
 
 ROC plots TPR against FPR over all thresholds. **AUC** is the probability that a random positive gets a higher score than a random negative: 0.5 is chance, 1.0 is perfect ranking. A random predictor always scores 0.5 regardless of class balance, which makes AUC a better model-selection metric than accuracy on imbalanced data.
 
-On M&G's digits "is it a 9?" example, SVMs with `gamma` 1, 0.1 and 0.01 all have accuracy 0.90 (the dummy rate), but AUC 0.50, 0.90 and 1.00. The model with `gamma=0.01` ranks perfectly; only the default threshold is wrong.
+On M&G's digits "is it a 9?" example (*Introduction to ML with Python*, ch. 5; 47 nines in 450 test images), SVMs with `gamma` 1, 0.05 and 0.01 all have accuracy 0.90 (the dummy rate), but AUC 0.50, 0.90 and 1.00 (the book's prose says 0.5 for the middle one, but its printed output is 0.90). The model with `gamma=0.01` ranks perfectly; only the default threshold is wrong.
 
 ### The running example: adult census
 
@@ -419,6 +423,8 @@ These are 2021 image classifiers, so don't carry the ranking to other domains or
 
 **Multiclass.** The confusion matrix is $K \times K$; read the off-diagonals for which classes are confused. F1 per class, averaged:
 
+On the ten-class digits task with logistic regression (450 test images) the book gets accuracy 0.953, micro-F1 0.953 and macro-F1 0.954, with 8 and 3 the hardest classes (*Introduction to ML with Python*, ch. 5, "Multiclass classification"). Micro-F1 equals accuracy here, as the table says.
+
 | Average | Weights | Use when |
 |---|---|---|
 | `macro` | Every class equally | Small classes matter as much as large |
@@ -449,7 +455,7 @@ roc_auc {'gamma': 0.01} test AUC 1.0
 58 scorers, e.g. ['neg_mean_absolute_error', 'neg_mean_absolute_percentage_error']
 ```
 
-The two scorers pick different winners, as they do on M&G's split (test AUC 0.92 against 1.00 there). Choose the scorer before you search.
+The two scorers pick different winners, as they do on M&G's split (test AUC 0.992 against 1.000 there; test accuracy 0.973 against 1.000, *Introduction to ML with Python*, ch. 5, "Using evaluation metrics in model selection"). Choose the scorer before you search.
 
 Error metrics are negated (`neg_mean_absolute_error`) because scikit-learn always maximises.
 

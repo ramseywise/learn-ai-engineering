@@ -1,0 +1,519 @@
+{
+ "schema": 1,
+ "key": "sha1:c51c838bec0f",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xiao-foundations-llms/ch05-inference.pdf",
+ "bib": {
+  "title": "Foundations of Large Language Models, Chapter 5: Inference",
+  "authors": [
+   "Tong Xiao",
+   "Jingbo Zhu"
+  ],
+  "first_author": "Xiao",
+  "year": 2025,
+  "venue": "book chapter (NiuTrans/NLPBook)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 117184,
+  "chars_total": 117184,
+  "engine": "pymupdf",
+  "skipped": "PDF has no reference list; figure internals (token grids) are garbled in text, captions read"
+ },
+ "type": "book-chapter",
+ "question": "How is LLM inference computed and searched efficiently: prefill/decode, decoding algorithms, serving-efficiency techniques, and inference-time scaling?",
+ "hypothesis": null,
+ "contributions": [
+  "Prefill-decode framework with KV cache",
+  "Decoding algorithms: greedy, beam, top-k, top-p, temperature, penalties, speculative decoding, stopping",
+  "Serving techniques: prefix caching, batching, continuous batching, PagedAttention, chunked prefilling, parallelization",
+  "Inference-time scaling: context, search, ensembling, verifiers, long thinking, training-based"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Beam widths of 2 to 5 are usually sufficient for high-quality generation; gains diminish with larger beams.",
+   "kind": "claim",
+   "source": null,
+   "metric": "beam width",
+   "value": "K = 2 to K = 5",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Beam search in practical LLM inference",
+   "quote": "In practical LLM inference, a relatively small beam width, such as K = 2 to K = 5, is usually sufficient to achieve high-quality generation.",
+   "table": null,
+   "note": null,
+   "where": "5.1.3.2, p.214"
+  },
+  {
+   "claim": "Self-attention for one generated token costs 2i' vector products, so generating len tokens is quadratic in length.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "time complexity",
+   "value": "O(L×d×len2)",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Standard Transformer decoder, L layers, hidden d, KV cache not reducing attention reads",
+   "quote": "Hence, generating a sequence of length len has a time complexity of O(L×d×len2) for the self-attention",
+   "table": null,
+   "note": null,
+   "where": "5.1.1, p.206"
+  },
+  {
+   "claim": "Top-p worked example in Fig 5.5(d): with p=0.6 only two tokens (renormalised .51/.49) remain.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "top-p",
+   "value": "p = 0.6",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative probabilities .34 .32 .21 .12 .01",
+   "quote": "select top-ranked hypotheses whose probability sum ≥p = 0.6,",
+   "table": null,
+   "note": null,
+   "where": "Fig 5.5(d), p.215"
+  },
+  {
+   "claim": "Top-k worked example in Fig 5.5(c): k=3 renormalises .34/.32/.21 to .39/.36/.25.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "top-k",
+   "value": "k = 3",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative probabilities as above",
+   "quote": "select top-k hypotheses (k = 3),",
+   "table": null,
+   "note": null,
+   "where": "Fig 5.5(c), p.215"
+  },
+  {
+   "claim": "Top-p with p=1 and temperature approaching zero is equivalent to greedy search.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sampling decoding",
+   "quote": "if we set p to 1 and β to a very small number (approaching zero), the top-p sampling method will become equivalent to the greedy search method.",
+   "table": null,
+   "note": null,
+   "where": "5.1.3.3, p.217"
+  },
+  {
+   "claim": "Speculative decoding (Leviathan et al. 2023) accepts a draft token if q<=p, else rejects with probability 1-p/q; the example uses tau=5 draft tokens.",
+   "kind": "reported",
+   "source": "Leviathan et al. 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Draft model Pr_q, verifier Pr_p; greedy variant described; Fig 5.7 uses tau = 5",
+   "quote": "(a) Predict the next τ tokens given the context using the draft model (τ = 5)",
+   "table": null,
+   "note": null,
+   "where": "5.1.3.5, p.218-220"
+  },
+  {
+   "claim": "Prefilling is compute-bound, decoding is memory-bound (Table 5.1).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Transformer inference with KV cache",
+   "quote": "the prefilling process is considered compute-bound.",
+   "table": null,
+   "note": null,
+   "where": "5.1.2, p.209"
+  },
+  {
+   "claim": "Continuous batching has n+1 iterations for a sequence: one prefill and n decode steps; it is prefill-prioritised, raising throughput at the cost of latency.",
+   "kind": "claim",
+   "source": "Yu et al. 2022",
+   "metric": null,
+   "value": "n + 1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Orca iteration-level scheduling (Yu et al. 2022)",
+   "quote": "there are n + 1 iterations in total: one for prefilling, and n for generating the output tokens (one per token).",
+   "table": null,
+   "note": null,
+   "where": "5.2.2.2, p.226"
+  },
+  {
+   "claim": "Chunked prefilling lets a 3-chunk prefill overlap three decode steps instead of one.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "3 chunks",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 5.13 two-sequence example",
+   "quote": "we can perform three decoding steps, rather than only a single decoding step",
+   "table": null,
+   "note": null,
+   "where": "5.2.2.4, p.231"
+  },
+  {
+   "claim": "No empirical benchmark numbers (speedups, accuracies) are given in the chapter.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Whole chapter",
+   "quote": "Inference is now a wide-ranging topic that encompasses many techniques.",
+   "table": null,
+   "note": null,
+   "where": "5.4, p.246"
+  }
+ ],
+ "limits": [
+  "Textbook chapter: no experiments, speedups or throughput numbers; all quantitative content is illustrative (Fig 5.5 probabilities, tau=5).",
+  "Serving is explicitly left shallow: 'Here, we will not go into the details of LLM serving.'",
+  "Quantization, pruning, distillation and long-context attention are deferred to earlier chapters (2, 3, 4); KV-cache memory size formulas, GQA/MLA, FlashAttention are not given.",
+  "Tied to 2025 view (o1, R1, vLLM, TensorRT-LLM, TGI); serving landscape moves fast.",
+  "PDF has no reference list, so citations (Fan 2018, Holtzman 2020, Kwon 2023...) can't be resolved to titles from this file.",
+  "Speculative decoding is described only in its greedy version ('For simplicity, we describe the greedy version')."
+ ],
+ "practices": [
+  "Use greedy or beam search when deterministic, predictable output is needed (formal documents); use sampling for creative/open-ended generation (5.1.3.3).",
+  "Keep beam width small, K=2 to 5 (5.1.3.2).",
+  "Tune k or p carefully: too small is near-greedy, too large gives degenerate output (5.1.3.3).",
+  "Lower temperature sharpens the distribution, higher flattens it (5.1.3.3).",
+  "Pick a draft model that trades cost against acceptance length n_a (5.1.3.5).",
+  "Stop on EOS, max length, time budget, low token probability, or repetition detection (5.1.3.6).",
+  "Report quality and efficiency metrics together: latency, throughput, TTFT, ITL, utilisation, energy, cost (5.1.4).",
+  "Cache KV states of common prefixes keyed by hash of prefix tokens, with LRU eviction (5.2.1).",
+  "Bucket requests by length to cut padding in batches (5.2.2).",
+  "Use continuous (iteration-level) batching for throughput; use chunked prefilling to bound decode latency (5.2.2.2, 5.2.2.4).",
+  "Use PagedAttention-style fixed-size KV blocks to avoid fragmentation (5.2.2.3).",
+  "Disaggregate prefill and decode only with a high-bandwidth, low-latency network for KV transfer (5.2.2).",
+  "Choose verifiers by availability: tools/tests, trained reward model, LLM judge, majority vote (5.3.4.1).",
+  "Prefer diverse ensemble members; gains diminish with more members (5.3.3)."
+ ],
+ "terms": [
+  {
+   "term": "inference",
+   "definition": "the LLM computes the probabilities of possible outputs given an input, and selects the output that maximizes the probability",
+   "where": "p.204"
+  },
+  {
+   "term": "KV cache",
+   "definition": "a structure storing previously generated key-value pairs so they are not regenerated during inference",
+   "where": "5.1.1, p.207"
+  },
+  {
+   "term": "prefilling",
+   "definition": "initializes the KV cache for the input sequence x; compute-bound",
+   "where": "5.1.2"
+  },
+  {
+   "term": "decoding",
+   "definition": "continues generating tokens based on the KV cache; memory-bound",
+   "where": "5.1.2"
+  },
+  {
+   "term": "hypothesis / search space",
+   "definition": "a hypothesis is a tuple of input and output sequences; Y is the set of all output sequences the model can generate",
+   "where": "5.1.3"
+  },
+  {
+   "term": "top-p (nucleus) sampling",
+   "definition": "selects the next token from the smallest set of tokens whose cumulative probability exceeds threshold p",
+   "where": "5.1.3.3"
+  },
+  {
+   "term": "temperature β",
+   "definition": "parameter controlling sharpness of the softmax over logits, exp(u/β)",
+   "where": "5.1.3.3"
+  },
+  {
+   "term": "TTFT",
+   "definition": "time between sending a request and generating the first token",
+   "where": "5.1.4"
+  },
+  {
+   "term": "ITL",
+   "definition": "time taken to generate each subsequent token after the first one",
+   "where": "5.1.4"
+  },
+  {
+   "term": "request-level vs iteration-level scheduling",
+   "definition": "request-level: batch cannot be interrupted once sent; iteration-level: scheduler interacts with the engine at each token step",
+   "where": "5.2.2.1"
+  },
+  {
+   "term": "continuous batching",
+   "definition": "iteration-level scheduling (Orca) where sequences are added/removed between iterations",
+   "where": "5.2.2.2"
+  },
+  {
+   "term": "PagedAttention",
+   "definition": "KV cache divided into fixed-size non-contiguous blocks, inspired by OS paging (vLLM)",
+   "where": "5.2.2.3"
+  },
+  {
+   "term": "chunked prefilling",
+   "definition": "dividing sequences into chunks and prefilling chunk by chunk",
+   "where": "5.2.2.4"
+  },
+  {
+   "term": "parallel vs sequential scaling",
+   "definition": "K independent runs plus verifier vs iterative critique-refine of one solution",
+   "where": "5.3.4.1"
+  },
+  {
+   "term": "PRM / ORM",
+   "definition": "process reward model scores each reasoning step; outcome reward model scores only the final solution",
+   "where": "5.3.4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Fan et al. 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "top-k sampling",
+   "quote": null
+  },
+  {
+   "work": "Holtzman et al. 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "top-p / nucleus sampling",
+   "quote": null
+  },
+  {
+   "work": "Kumar and Byrne 2004",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MBR decoding",
+   "quote": null
+  },
+  {
+   "work": "Su et al. 2022",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "degeneration penalty on hidden-state distance (contrastive search)",
+   "quote": null
+  },
+  {
+   "work": "Leviathan et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "speculative decoding",
+   "quote": null
+  },
+  {
+   "work": "Yu et al. 2022 (Orca)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "continuous batching",
+   "quote": null
+  },
+  {
+   "work": "Kwon et al. 2023 (vLLM)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PagedAttention",
+   "quote": null
+  },
+  {
+   "work": "Agrawal et al. 2023/2024",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "chunked prefilling; prefill- vs decode-prioritised",
+   "quote": null
+  },
+  {
+   "work": "Wu 2023a; Patel 2024; Zhong 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prefill-decode disaggregation",
+   "quote": null
+  },
+  {
+   "work": "Snell et al. 2024/2025; Brown et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "parallel scaling / test-time compute",
+   "quote": null
+  },
+  {
+   "work": "Yao et al. 2024",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "tree of reasoning steps",
+   "quote": null
+  },
+  {
+   "work": "Shinn et al. 2023; Madaan et al. 2024",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "self-refinement",
+   "quote": null
+  },
+  {
+   "work": "Lightman et al. 2024 (PRM800K)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Fig 5.15 example",
+   "quote": null
+  },
+  {
+   "work": "OpenAI o1; DeepSeek-R1",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inference-time scaling exemplars",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5.2/5.3",
+   "caption": "Illustration of the KV cache / prefilling and decoding processes",
+   "page": "208-210",
+   "why": "Shows parallel prefill vs step-by-step decode over one cache"
+  },
+  {
+   "figure": "Fig 5.5",
+   "caption": "Illustrations of greedy decoding, beam decoding, top-k decoding and top-p decoding methods (in one decoding step)",
+   "page": "215",
+   "why": "Same five probabilities pruned four ways"
+  },
+  {
+   "figure": "Fig 5.6",
+   "caption": "Histogram estimates of the distributions generated by the Softmax function with different values of the temperature parameter β (0.1, 0.8, 2.0)",
+   "page": "217",
+   "why": "Temperature sharpening at a glance"
+  },
+  {
+   "figure": "Fig 5.7",
+   "caption": "Illustration of one step of speculative decoding",
+   "page": "220",
+   "why": "Four sub-steps draft/verify/accept/correct"
+  },
+  {
+   "figure": "Fig 5.8",
+   "caption": "Illustrations of basic batching methods",
+   "page": "224",
+   "why": "Padding waste, bucketing, disaggregation"
+  },
+  {
+   "figure": "Fig 5.10/5.11",
+   "caption": "request-level vs iteration-level scheduling; batch adjustment in continuous batching",
+   "page": "227-228",
+   "why": "Why continuous batching raises utilisation"
+  },
+  {
+   "figure": "Fig 5.12",
+   "caption": "Illustration of memory allocation in PagedAttention",
+   "page": "230",
+   "why": "Fragmentation vs paged blocks"
+  },
+  {
+   "figure": "Fig 5.13",
+   "caption": "Comparison of simple iteration-level scheduling and chunked prefilling",
+   "page": "232",
+   "why": "Decode stall removed by chunks"
+  },
+  {
+   "figure": "Fig 5.14",
+   "caption": "Scaling for pre-training, fine-tuning and inference stages [Briski, 2025]",
+   "page": "235",
+   "why": "Three scaling curves"
+  },
+  {
+   "figure": "Fig 5.16/5.17",
+   "caption": "Parallel vs sequential scaling; step-level search with verifiers",
+   "page": "241-243",
+   "why": "Test-time compute strategies"
+  },
+  {
+   "figure": "Table 5.1",
+   "caption": "Prefilling vs Decoding",
+   "page": "211",
+   "why": "Compact comparison table"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5.1",
+   "snippet": "ŷ = argmax_y Pr(y|x)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.2",
+   "snippet": "log Pr(y|x) = log Pr([x,y]) - log Pr(x)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.7",
+   "snippet": "Att(q_i', K, V) = Softmax(q_i' K^T / sqrt(d)) V",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.13",
+   "snippet": "Att(Q,K,V) = Softmax(Q K^T / sqrt(d) + Mask) V",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.29",
+   "snippet": "Pr(y_i|x,y_<i) = exp(u_{y_i}/β) / Σ_{y_j in V_i} exp(u_{y_j}/β)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.30",
+   "snippet": "ŷ = argmax_y ( log Pr(y|x) - λ·Penalty(x,y) )",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.32",
+   "snippet": "n_a = min{ t-1 | 1<=t<=τ, r_t > p(ŷ_{i+t})/q(ŷ_{i+t}) }, r_t ~ U(0,1); n_a = τ if all accepted",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5.37",
+   "snippet": "y_{k+1} = Refine(x, y_k, Feedback(y_k))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF has no reference list, so citations cannot be resolved to titles.",
+  "Fig 5.4 text writes 'Cats are playful.' while the figure shows lowercase 'cats are playful.' (trivial).",
+  "Speculative decoding text alternates between 'verification model' and 'evaluation model' for the same model.",
+  "Table 5.1 cost is qualitative only (High vs Very High).",
+  "No embedded instructions found."
+ ]
+}

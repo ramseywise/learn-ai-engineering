@@ -71,7 +71,7 @@ print(f"observed diff {obs:.2f}, permutation p = {np.mean(np.abs(diffs) >= abs(o
 observed diff 15.32, permutation p = 0.007
 ```
 
-Permutation p = 0.007 and Welch p = 0.009 agree on 400 skewed observations, because the t-test is a good approximation to this procedure. That is what every classical test is: an approximation of "how surprising is this under relabelling or under the null's distribution". When you are unsure a formula applies, you can shuffle instead. And under a true null, p-values are uniform, which is what α = 0.05 means:
+Permutation p = 0.007 and Welch p = 0.009 agree on 400 skewed observations, because the t-test is a good approximation to this procedure. That is what every classical test is: an approximation of "how surprising is this under relabelling or under the null's distribution". When you are unsure a formula applies, you can shuffle instead. The book's price test shows how close the two routes sit on conversion data: price A converts 200 of 23,739 (0.8425%) and price B 182 of 22,588 (0.8057%); 1,000 permutations of a pooled urn of 382 ones and 45,945 zeros give a one-sided p = 0.308, and `prop.test` with a normal approximation gives 0.3498 (*Practical Statistics*, ch. 3). A nearly 5% relative lift is exactly what chance produces about a third of the time. On 36 session times it makes the same point for means: the difference of 21.4 seconds gives a permutation p of about 0.12 and a Welch p of 0.14. And under a true null, p-values are uniform, which is what α = 0.05 means:
 
 ```python
 rng = np.random.default_rng(18)
@@ -268,6 +268,8 @@ print(f"simulated: uncorrected {any_raw / reps:.3f}, Bonferroni {any_bonf / reps
 P(at least one false positive in 20): 0.642
 simulated: uncorrected 0.619, Bonferroni 0.052
 ```
+
+The vast search effect is the same arithmetic in disguise. Give 20,000 people ten coin tosses each and the chance that somebody tosses ten heads is above 99%, though it is 1 in 1,000 for any named person (*Practical Statistics*, ch. 2). Note that the book's Bonferroni sentence divides alpha by the number of observations; it means the number of tests (*Practical Statistics*, ch. 3).
 
 | Correction | Controls | Rule | When |
 |---|---|---|---|

@@ -1,0 +1,52 @@
+{
+ "schema": 1,
+ "key": "sha1:5fd333c6dc00",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch10-telecommunications-utilities.pdf",
+ "bib": {"title": "Telecommunications and Utilities (Chapter 10, The Data Warehouse Toolkit, 2nd ed.)", "authors": ["Ralph Kimball", "Margy Ross"], "first_author": "Kimball", "year": 2002, "venue": "Wiley (book chapter)", "arxiv": null, "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 26949, "chars_total": 26949, "engine": "pymupdf", "skipped": null},
+ "type": "book-chapter",
+ "question": "How do you review a draft dimensional schema for common design flaws, using a wireless-telecom billing case, and how should geographic location be modelled?",
+ "hypothesis": null,
+ "contributions": ["A design-review checklist of common dimensional modeling mistakes", "A worked redesign of a draft customer-billing schema (Fig 10.2 to Fig 10.3)", "Geographic location treated as a permissible snowflaked outrigger, with GIS integration"],
+ "method": null,
+ "results": [
+  {"claim": "A dimensional model typically has 5 to 15 dimensions; 2-3 or 25-30 signals a problem.", "kind": "claim", "source": null, "metric": "dimensions per model", "value": "5 to 15", "unit": "dimensions", "baseline_value": null, "n": null, "setup": "Rule of thumb in design review checklist, no data", "quote": "a dimensional model typically has 5 to 15 dimensions", "table": null, "note": null, "where": "p.223, Too Many (or Too Few) Dimensions"}
+ ],
+ "limits": ["No empirical data; rules of thumb from the authors' consulting experience.", "Does not cover handling of dimension attribute changes in this case (deferred: 'there's more ground to cover').", "Billing case is a 2002 relational star-schema setting; call-detail grain was ruled out for feasibility, not modelled.", "Location outrigger benefit is conditional: little gain if addresses barely overlap across dimensions; view-construct penalty depends on the DBMS."],
+ "practices": [
+  "Ask for the fact table grain first and make team and business share one declaration of it (p.220, Granularity).",
+  "Build the fact table at the lowest grain available for the chosen business process, not the lowest data in the enterprise (p.220-221).",
+  "Keep all additive facts at the declared grain; drop year-to-date facts because they are not perfectly additive and invite double counting; compute YTD with a year constraint on the date dimension (p.221, p.225).",
+  "Give each dimension a single value per fact row and each attribute a single value per dimension row; collapse hierarchies into one dimension (p.221).",
+  "Avoid snowflaking dimensions; outriggers for low-cardinality or frequently reused attribute clusters are the exception (p.221).",
+  "Use a meaningful date dimension with roll-up and filter attributes; do not attach a generic date you cannot name the role of (p.222).",
+  "Replace fixed time-series buckets (month 1..12 columns) with separate fact rows per period (p.222).",
+  "Treat transaction numbers such as bill or invoice number as degenerate dimensions; a dimension with about as many rows as the fact table is the warning sign (p.222).",
+  "Put descriptive decodes next to every code as dimension data, not in the access application (p.222-223).",
+  "Use surrogate keys for all dimension primary keys and fact foreign keys; keep operational codes as attributes (p.223, p.225).",
+  "Move textual facts such as rate-plan type code into a dimension as roll-up attributes (p.224).",
+  "When a service line has a single customer, sales rep and rate plan but the service line dimension has millions of rows, model those as minidimensions of the service line rather than collapsing (p.224-225).",
+  "Model a shared location as an outrigger cloned per role via views with distinguishable column names, like date role-playing (p.226).",
+  "Add geospecific attributes (points, lines, polygons) to the location dimension, or geocode standardised addresses with a GIS tool, without changing existing applications (p.227)."
+ ],
+ "terms": [
+  {"term": "degenerate dimension", "definition": "Operational transaction numbers, such as the invoice or order number, kept in the fact table rather than given their own dimension.", "where": "p.222"},
+  {"term": "outrigger", "definition": "A permissible snowflake: a dimension attached to another dimension, used for a cluster of low-cardinality or frequently reused attributes.", "where": "p.221, p.226"},
+  {"term": "minidimension", "definition": "A separate dimension split out of a large, fast-growing dimension (here customer, sales rep, rate plan off the service line), per Chapter 6.", "where": "p.224-225"},
+  {"term": "service line", "definition": "A phone number; each gets a bill line item and its own billing metrics.", "where": "p.219"},
+  {"term": "textual fact", "definition": "A text value stored in the fact table; seldom sound, belongs in a dimension.", "where": "p.224"}
+ ],
+ "lineage": [
+  {"work": "The Data Warehouse Toolkit, Chapter 2 (surrogate keys, centipede design)", "year": 2002, "arxiv": null, "relation": "extends", "note": "Cross-referenced for surrogate keys and too many dimensions", "quote": null},
+  {"work": "The Data Warehouse Toolkit, Chapter 5 (junk dimension, date role-playing)", "year": 2002, "arxiv": null, "relation": "extends", "note": "Role-playing technique reused for location clones", "quote": null},
+  {"work": "The Data Warehouse Toolkit, Chapter 6 (minidimensions, CRM)", "year": 2002, "arxiv": null, "relation": "extends", "note": "Minidimensions of the service line", "quote": null},
+  {"work": "The Data Warehouse Toolkit, Chapter 9 (dimension triage)", "year": 2002, "arxiv": null, "relation": "related", "note": "For designs with too few dimensions", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 10.2", "caption": "Draft schema prior to design review.", "page": 220, "why": "Shows the flawed starting schema: bill-number dimension, sales org snowflake, YTD fact, textual fact, natural keys."},
+  {"figure": "Figure 10.3", "caption": "Schema following the design review.", "page": 225, "why": "The corrected star: surrogate keys, degenerate bill number, role-played bill date, collapsed sales rep org."},
+  {"figure": "Figure 10.1", "caption": "Subset of the data warehouse bus matrix.", "page": 219, "why": "Business processes (rows) against common dimensions (columns)."}
+ ],
+ "code": [],
+ "problems": ["Page footer artifact 'TEAMFLY' and blank lines in the text; no instructions embedded.", "Figure content (schemas) appears only as flattened field lists in text."]
+}

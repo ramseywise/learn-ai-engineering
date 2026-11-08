@@ -5,7 +5,7 @@ sources:
   - "Yang et al. 2026, Toward Efficient Agents: A Survey of Memory, Tool Use, and Planning — https://arxiv.org/abs/2601.14192"
   - "Xing et al. 2026, Critique of Agent Model — https://arxiv.org/abs/2606.23991"
   - "Zhao & Zhao 2026, Runtime-Independent Persistent Agents — https://arxiv.org/abs/2609.00546"
-  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 2"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 2"
 confidence: medium
 cleaned: 2026-11-06
 ---

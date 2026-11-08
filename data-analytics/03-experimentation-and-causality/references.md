@@ -16,7 +16,7 @@ cleaned: 2026-11-01
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
-| Bruce & Bruce, *Practical Statistics for Data Scientists* (O'Reilly, 2017) | ch. 3 Statistical Experiments and Significance Testing | [PDF](../sources/Practical_Statistics_for_Data_Scientist.pdf) | [01](notes/01-ab-testing.md), [04](notes/04-correlation-and-causation.md) |
+| Bruce & Bruce, *Practical Statistics for Data Scientists* (O'Reilly, 2017). Chapter PDFs in [sources/practical-statistics-for-data-scientists/](../sources/practical-statistics-for-data-scientists/). Folded in as: ch. 3 (A/B tests, power and sample size, bandits outlined) → [01](notes/01-ab-testing.md). Notes cite it as `(*Practical Statistics*, ch. N)` | [PDF](../sources/Practical_Statistics_for_Data_Scientist.pdf) | [01](notes/01-ab-testing.md), [04](notes/04-correlation-and-causation.md) |
 | Downey, *Think Stats* (Green Tea Press; CC BY-NC) | Chapter PDFs in [sources/think-stats/](../sources/think-stats/). Folded in as: ch. 9 (correlation, causation evidence) → [04](notes/04-correlation-and-causation.md). Notes cite it as `(*Think Stats*, ch. 9)` | [PDF](../sources/thinkstats.pdf) | [04](notes/04-correlation-and-causation.md) |
 | Reinhart, *Statistics Done Wrong* (No Starch, 2015) | ch. 2 Power; ch. 3 Pseudoreplication | [PDF](../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf) | [01](notes/01-ab-testing.md) |
 | Kohavi, Tang & Xu, *Trustworthy Online Controlled Experiments* (Cambridge, 2020) | Further reading; no chapter claims are made from it | not held · [site](https://experimentguide.com/) | [03](notes/03-experimentation-at-scale.md) |
