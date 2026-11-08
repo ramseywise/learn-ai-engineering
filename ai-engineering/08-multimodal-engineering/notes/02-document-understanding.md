@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2401.00908
   - https://arxiv.org/abs/2403.03163
   - https://arxiv.org/abs/1904.08920
+  - https://doi.org/10.1109/icdar.2019.00156
   - https://arxiv.org/abs/2502.17651
   - https://arxiv.org/abs/2604.05081
   - https://arxiv.org/abs/1912.13318
@@ -64,7 +65,7 @@ The pipeline's strength is that it is inspectable and its cost is known. Its wea
 
 A fourth idea deserves a mention because it changes the assumption about what you need. DocLLM discards the image and feeds the model OCR text plus each token's bounding box, weighting attention by spatial relationships. Its authors report beating the compared state-of-the-art LLMs on 14 of 16 datasets and generalising to 4 of 5 unseen ones ([arXiv:2401.00908](https://arxiv.org/abs/2401.00908) (Wang et al., ACL 2024)). Reading-order-plus-coordinates is cheap to feed to any language model. If you have a good OCR engine and mostly text pages, try it before you pay for vision.
 
-Earlier work had already shown a similar point for images in general. LoRRA gave a VQA model an OCR module as a first-class part of its architecture, on the grounds that reading text was a separate capability the model should not have to learn from pixels ([arXiv:1904.08920](https://arxiv.org/abs/1904.08920) (Singh et al., CVPR 2019)). The lesson still holds. If reading matters, give the system a reader.
+Earlier work had already shown a similar point for images in general. LoRRA gave a VQA model an OCR module as a first-class part of its architecture, on the grounds that reading text was a separate capability the model should not have to learn from pixels ([arXiv:1904.08920](https://arxiv.org/abs/1904.08920) (Singh et al., CVPR 2019)). The lesson still holds. If reading matters, give the system a reader. OCR-VQA is the book-cover version of the same test: 1,002,146 questions on 207,572 covers, and a baseline that adds OCR text and text-block positions to question and VGG image features reached 48.3% accuracy, with 42.0% from block features alone (image features alone: 14.3%) ([doi:10.1109/ICDAR.2019.00156](https://doi.org/10.1109/icdar.2019.00156) (Mishra et al., ICDAR 2019)). Its answers come from cover metadata, so it covers books only. The baseline is a 51-way classifier over a block index, genre, yes/no, edition or year, and a title or author answer is the OCR text of the block it picks.
 
 ## What it costs
 

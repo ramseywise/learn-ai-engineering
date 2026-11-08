@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 7, 9"
   - https://arxiv.org/abs/2301.13188
+  - https://arxiv.org/abs/2111.05826
   - https://arxiv.org/abs/2302.05543
   - https://arxiv.org/abs/2304.02643
   - https://arxiv.org/abs/2408.00714
@@ -146,6 +147,11 @@ Text-to-image controls style well and composition badly. Three tools fix that.
 - Fix one artifact per pass and iterate.
 
 **Outpainting** is inpainting on a canvas extended with blank borders. It hallucinates more, such as a second castle in the sky (ch. 9).
+
+Before text-guided tools, Palette showed one conditional diffusion recipe covering inpainting, uncropping, colorization and JPEG restoration ([arXiv:2111.05826](https://arxiv.org/abs/2111.05826) (Saharia et al., SIGGRAPH 2022)). It passes no mask to the network: the hole is filled with noise, the loss covers only the masked pixels, and at inference the unmasked pixels are kept. It concatenates the source image to the noisy target and trains one U-Net (the 552M-parameter global-attention configuration in its inpainting ablation, which ran 500K steps at batch 512; the main models ran 1M steps at batch 1024). On ImageNet 256×256 with 20–30% free-form masks it scored FID 5.2 against 9.4 for DeepFillv2 and 12.4 for HiFill (original images: 5.1). With a 128×128 centre mask it scored 6.6 against 18.0 and 20.1. HiFill and Co-ModGAN were run on 512×512 crops, so they saw more context. Uncropping 50% of the image gave FID 5.8 against 18.7 for Boundless, and human raters were fooled by 40% of Palette outputs against 25% and 15% for the two GAN baselines. Repeating the uncrop eight times in each direction built a 256×2304 panorama that stayed coherent. Three limits: sampling takes 1,000 denoising steps (0.8 s per image on a TPUv4 for 1,000 test images), which the authors call slower than GANs; everything is 256×256; and it takes no text prompt.
+
+![Palette extending the central 256×256 pixels of an image into a 256×2304 panorama by repeated uncropping](../sources/images/saharia-palette-fig2.png)
+*Image Source: Saharia et al., [Palette: Image-to-Image Diffusion Models](https://arxiv.org/abs/2111.05826) (SIGGRAPH 2022), Fig. 2*
 
 **Changing one word changes the whole image, unless you pin the attention.** With a fixed seed, editing "dog" to "white dog" usually gives a different dog in a different layout. Prompt-to-Prompt traced this to the cross-attention maps, which bind each prompt word to pixel regions, and it keeps the layout by reusing the original image's maps while sampling with the edited prompt. The same mechanism swaps a word, adds a style word, or reweights a word ([arXiv:2208.01626](https://arxiv.org/abs/2208.01626) (Hertz et al., ICLR 2023)). The idea of attending from words to image regions comes from AttnGAN, a text-to-image GAN that attended to individual words when drawing each subregion ([arXiv:1711.10485](https://arxiv.org/abs/1711.10485) (Xu et al., CVPR 2018)). The evidence is qualitative: example edits with no benchmark. The authors list three limits. Editing a real photo needs DDIM inversion first, which is often inaccurate, and lowering the guidance to reconstruct better also weakens the edit. The attention maps sit at the U-Net bottleneck, too low-resolution for precise local edits. The method can't move an object. When you need to keep the layout and change a word, a fixed seed is not enough: use an attention-injection edit, or inpaint the region.
 

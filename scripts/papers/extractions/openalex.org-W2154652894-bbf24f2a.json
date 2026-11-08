@@ -1,0 +1,445 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2154652894",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lin-2004-rouge.pdf",
+ "bib": {
+  "title": "ROUGE: A Package for Automatic Evaluation of Summaries",
+  "authors": [
+   "Chin-Yew Lin"
+  ],
+  "first_author": "Lin",
+  "year": 2004,
+  "venue": "ACL 2004 Workshop on Text Summarization Branches Out (as an ACL workshop paper; venue not printed in text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38365,
+  "chars_total": 38365,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How well do automatic n-gram, LCS, weighted LCS and skip-bigram overlap measures between candidate and reference summaries agree with human judgments of summary quality?",
+ "hypothesis": "Following BLEU in machine translation, overlap statistics against human reference summaries should correlate with human coverage judgments.",
+ "contributions": [
+  "Introduces the ROUGE package with ROUGE-N, ROUGE-L, ROUGE-W, ROUGE-S and ROUGE-SU",
+  "Evaluates 17 ROUGE measures against human judgments on DUC 2001, 2002, 2003 data with bootstrap confidence intervals",
+  "Shows normalized pairwise LCS in MEAD is an F-measure with beta=1 and sentence-level equals ROUGE-L"
+ ],
+ "method": {
+  "summary": "Defines recall-oriented overlap measures and computes system-level correlation between mean ROUGE scores and mean human coverage scores over DUC 2001-2003 systems, across single/multiple references, case/stem/stopword settings.",
+  "task": "automatic summarization evaluation (metric meta-evaluation)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "DUC 2001/2002/2003 human judgments",
+    "role": "eval",
+    "size": "Single-doc ~100 words: 12 systems (2001, 149 summaries judged/system), 14 systems (2002, 295/system); single-doc ~10 words: 14 systems (2003, 624/system); multi-doc: 10 words 6 systems (2002); 50 words 14 (2001) and 10 (2002); 100 words 14 (2001), 10 (2002), 18 (2003); 200 words 14 (2001), 10 (2002); 400 words 14 (2001). Multi-doc summaries judged per system: 29 (2001), 59 (2002), 30 (2003).",
+    "split": "no split; system-level correlation",
+    "source": "NIST DUC; each system set includes 1 or 2 baselines; manual summary sets: 3 (2001), 2 (2002), 4 (2003)",
+    "preprocessing": "CASE (original), STEM (Porter stemmer), STOP (stopwords removed)"
+   }
+  ],
+  "models": [
+   {
+    "name": "ROUGE evaluation package v1.2.1",
+    "role": "proposed",
+    "params": null,
+    "architecture": "n-gram/LCS/skip-bigram overlap metrics",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "measures": "ROUGE-N N=1..9, ROUGE-L, ROUGE-W alpha=1.2, ROUGE-S and ROUGE-SU with dskip=1(*),4,9 (tables label * for unlimited)"
+    }
+   },
+   {
+    "name": "DUC 2001-2003 participating systems",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Jackknifing over M references: best score over M sets of M-1 references, averaged; max over references for multi-reference",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beta_in_DUC": "set to a very big number so only recall R_lcs counts (text prints 'β set to a very big number')",
+    "ROUGE-W weighting": "f(k)=k^alpha, alpha=1.2 in package; k^2 in worked example",
+    "ROUGE-S max skip distance": "d_skip = 1, 4, 9 tested; 0 equals bigram overlap F-measure",
+    "ROUGE-SU": "adds unigram counting unit (equivalent to begin-of-sentence marker)",
+    "multi-reference": "max over references, with jackknifing"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson correlation of system-average ROUGE vs average human coverage",
+     "definition": "Product moment correlation across systems; also Spearman and Kendall computed but only Pearson reported; 95% CI by bootstrap resampling",
+     "unit": "r",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human coverage score (SEE)",
+     "definition": "Judges compare a manual summary unit (EDU or sentence) with the candidate; overall score is the average content coverage over units of the manual summary; judges used only one manual summary",
+     "unit": "proportion",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLEU-style n-gram precision (conceptual)",
+    "normalized pairwise LCS (MEAD)"
+   ],
+   "protocol": "18 data points per measure per task (2 single/multi x 3 CASE/STEM/STOP x 3 correlations); critical Pearson r at 95% is 0.632 with 8 df, 0.576 (10), 0.532 (12), 0.497 (14), 0.468 (16)"
+  },
+  "availability": {
+   "code": "http://www.isi.edu/~cyl/ROUGE",
+   "weights": null,
+   "data": "DUC data via NIST"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Under DUC 2002 100-word single-document summarisation, every ROUGE variant correlates very highly with human coverage scores.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2002, 14 systems, 295 summaries judged per system, ROUGE v1.2.1, Pearson vs SEE coverage, 2 refs, CASE",
+   "note": null,
+   "where": "Sec 6, Table 1",
+   "quote": "All ROUGE measures achieved very good correlation with human judgments in the DUC 2002 data."
+  },
+  {
+   "claim": "ROUGE-2 Pearson correlation with human judgments, DUC 2001 100-word single-doc.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.84",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2001, 12 systems, 149 summaries per system, 1 reference, CASE",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row R-2, DUC 2001 1 REF CASE"
+  },
+  {
+   "claim": "ROUGE-L Pearson correlation, DUC 2001 100-word single-doc.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.83",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2001, 12 systems, 1 reference, CASE",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row R-L, DUC 2001 1 REF CASE"
+  },
+  {
+   "claim": "ROUGE-1 on DUC 2001 single-doc is weaker (0.76) than ROUGE-2 (0.84), 1 reference CASE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.76",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2001 100-word single-doc, 1 ref, CASE",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row R-1, DUC 2001 1 REF CASE"
+  },
+  {
+   "claim": "On DUC 2003 10-word single-doc summaries, ROUGE-L reaches 0.97 and ROUGE-1 0.96 (1 ref, CASE), while ROUGE-2 drops to 0.75.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.97",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2003 very short summaries, 14 systems, 624 summaries per system, 1 ref, CASE",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row R-L, column CASE 1 REF"
+  },
+  {
+   "claim": "ROUGE-N with N>1 performs significantly worse than other measures on very short summaries; ROUGE-8 and ROUGE-9 fall to 0.00 with stopwords removed.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2003 10 words, STOP set, 1 ref",
+   "note": "Table 2 row R-8 and R-9, STOP 1 REF column prints 0.00",
+   "where": "Sec 6, Table 2",
+   "quote": "ROUGE-N with N > 1 performed significantly worse than all other measures"
+  },
+  {
+   "claim": "Multiple references did not improve correlation on the 624-sample DUC 2003 very short task.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2003 10 words",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Due to the large number of samples (624) in this data set, using multiple references did not improve correlations."
+  },
+  {
+   "claim": "Multi-document correlations rarely reach high 90s except for long summaries; ROUGE-L and ROUGE-W do poorly on 100-word multi-doc.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2001-2003 100-word multi-document, about 30 samples (summaries) per system",
+   "note": null,
+   "where": "Sec 6, Table 3",
+   "quote": "ROUGE-L and ROUGE-W did not work well in this set of data."
+  },
+  {
+   "claim": "Stopword removal lifts ROUGE-1 on DUC 2001 100-word multi-doc from 0.48 to 0.86 (1 ref).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson r",
+   "value": "0.86",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC 2001 100 words multi-doc, 1 ref, CASE vs STOP",
+   "note": "CASE value 0.48",
+   "where": "Table 3",
+   "table": "Table 3 (A1), row R-1, 1 REF CASE vs STOP"
+  },
+  {
+   "claim": "Stopword exclusion usually improved correlation and multiple references increased it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Across DUC 2001-2003 tasks",
+   "note": null,
+   "where": "Sec 7",
+   "quote": "exclusion of  stopwords usually improved corre-"
+  },
+  {
+   "claim": "Skip-bigram example: with beta=1 ROUGE-S gives S2 0.5, S3 0.167, S4 0.333 against reference S1.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sentences S1-S4, 'police killed the gunman'",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "S2’s ROUGE-S score is 0.5, S3 is 0.167, and"
+  },
+  {
+   "claim": "ROUGE-W with f(k)=k^2 scores consecutive-match candidate Y1 at 0.571 and Y2 at 0.286.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "X=[A B C D E F G], Y1=[A B C D H I K], Y2=[A H B K C I D]",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "ROUGE-W scores for sequences Y1 and Y2 are 0.571"
+  },
+  {
+   "claim": "ROUGE-L example: S2 scores 0.75 and S3 0.5 (beta=1) though both have the same ROUGE-2.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reference S1 'police killed the gunman'",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "S2 has a score of 3/4 = 0.75 and"
+  },
+  {
+   "claim": "Manual DUC evaluation of summaries on a large scale would require over 3,000 hours of human effort.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC (Over and Yen, 2003)",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "would require over 3,000 hours of human efforts"
+  }
+ ],
+ "limits": [
+  "Correlations are system-level over only 6-18 systems; multi-document tasks have about 30 samples per system, which the author says destabilises correlation estimates",
+  "Only Pearson reported; Spearman and Kendall said to track it closely but not shown",
+  "Human judges used one manual summary even when multiple were available",
+  "Multi-document correlations rarely reach high 90s; achieving them is stated an open problem",
+  "Surface overlap: ROUGE-L counts only one LCS (S4 ties S3), ROUGE-S gives zero for reversed sentence (S5)",
+  "Evaluated on extractive-era news summarisation systems of 2001-2003, not abstractive/LLM output (dated)",
+  "Recall-oriented: with beta very large only recall is used, so length is not penalised in the DUC setting (inferred from the beta setting)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ROUGE",
+   "definition": "Recall-Oriented Understudy for Gisting Evaluation",
+   "where": "Abstract"
+  },
+  {
+   "term": "ROUGE-N",
+   "definition": "n-gram recall between a candidate summary and a set of reference summaries",
+   "where": "Sec 2"
+  },
+  {
+   "term": "Skip-bigram",
+   "definition": "any pair of words in their sentence order, allowing for arbitrary gaps",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BLEU (Papineni et al., 2001)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "ROUGE-N is the recall counterpart of precision-based BLEU",
+   "quote": null
+  },
+  {
+   "work": "Lin and Hovy 2003, Automatic evaluation of summaries using n-gram co-occurrence statistics",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Showed BLEU-like n-gram statistics can evaluate summaries",
+   "quote": null
+  },
+  {
+   "work": "Saggion et al. 2002",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Content-based similarity (cosine, unit overlap, LCS) without human correlation",
+   "quote": null
+  },
+  {
+   "work": "Radev et al. 2002 (MEAD normalized pairwise LCS)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Shown to be an F-measure with beta=1",
+   "quote": null
+  },
+  {
+   "work": "Melamed 1995 (LCSR); Melamed et al. 2003",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "LCS and unigram F-measure precedents",
+   "quote": null
+  },
+  {
+   "work": "Lin and Och 2004 (ROUGE-L,W,S for MT)",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Separate study of the same measures for machine translation",
+   "quote": null
+  },
+  {
+   "work": "DUC 2001-2003 data (Over and Yen 2003)",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Human judgments and system outputs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Pearson's correlations of 17 ROUGE measure scores vs. human judgments for the DUC 2001 and 2002 100 words single document summarization tasks",
+   "page": 5,
+   "why": "Shows ROUGE-2/L/W/S high on single-document"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Pearson's correlations ... DUC 2003 very short summary task",
+   "page": 5,
+   "why": "Shows ROUGE-N collapse for N>1 on 10-word summaries"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Pearson's correlations ... multi-document summarization tasks",
+   "page": 7,
+   "why": "Shows weaker multi-doc correlation and stopword effect"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2, Eq 1 (garbled in text)",
+   "snippet": "ROUGE-N = sum_{S in RefSummaries} sum_{gram_n in S} Count_match(gram_n) / sum_{S in RefSummaries} sum_{gram_n in S} Count(gram_n)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.1 Eq 2-4",
+   "snippet": "R_lcs = LCS(X,Y)/m ; P_lcs = LCS(X,Y)/n ; F_lcs = (1+b^2) R P / (R + b^2 P)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and table columns are garbled by PDF extraction; table cells located by position, column order inferred from table headers",
+  "Venue not printed in the text (ACL 2004 workshop per task brief)",
+  "No embedded instructions found"
+ ]
+}

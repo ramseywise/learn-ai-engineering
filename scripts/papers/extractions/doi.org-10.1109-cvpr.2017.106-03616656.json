@@ -1,0 +1,535 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1109/cvpr.2017.106",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lin-2017-feature-pyramid-networks-object-detection.pdf",
+ "bib": {
+  "title": "Feature Pyramid Networks for Object Detection",
+  "authors": [
+   "Tsung-Yi Lin",
+   "Piotr Dollár",
+   "Ross Girshick",
+   "Kaiming He",
+   "Bharath Hariharan",
+   "Serge Belongie"
+  ],
+  "first_author": "Lin",
+  "year": 2017,
+  "venue": "CVPR 2017 (arXiv:1612.03144v2)",
+  "arxiv": "1612.03144",
+  "doi": "10.1109/cvpr.2017.106"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49809,
+  "chars_total": 49809,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a ConvNet's own multi-scale pyramidal feature hierarchy be turned into a feature pyramid that is semantically strong at every scale, replacing featurized image pyramids at marginal extra cost?",
+ "hypothesis": "Combining low-resolution semantically strong features with high-resolution semantically weak features via a top-down pathway and lateral connections gives strong semantics at all levels and improves multi-scale detection, especially of small objects.",
+ "contributions": [
+  "FPN: top-down pathway with lateral connections builds a feature pyramid with rich semantics at all levels from a single input scale",
+  "Applied to RPN and Fast/Faster R-CNN with minimal changes, giving state-of-the-art single-model COCO results",
+  "Extension to mask proposals (DeepMask/SharpMask style) that beats image-pyramid methods in AR and speed"
+ ],
+ "method": {
+  "summary": "A backbone ResNet's last-block outputs C2-C5 (strides 4,8,16,32) are combined with a top-down path (2x nearest-neighbour upsampling + 1x1 lateral conv + element-wise add, then 3x3 conv) into P2-P5 (plus P6 by stride-2 subsampling for RPN), all with 256 channels. Shared-weight heads are attached to every level in RPN and Fast R-CNN; RoIs are assigned to levels by k=floor(k0+log2(sqrt(wh)/224)), k0=4.",
+  "task": "object detection, box proposals and instance-segment proposals on COCO",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "COCO detection (80 categories)",
+    "role": "both",
+    "size": "80k train + 35k val subset (trainval35k) for training; 5k val (minival) for ablations",
+    "split": "train trainval35k; ablate on minival; final on test-std/test-dev (no disclosed labels)",
+    "source": "Lin et al. 2014 COCO",
+    "preprocessing": "shorter image side resized to 800 px (single scale, no scale jitter in mask experiment)"
+   },
+   {
+    "name": "ImageNet1k classification",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "backbones pre-trained, then fine-tuned on COCO"
+   },
+   {
+    "name": "COCO train / first 5k val images (mask proposals)",
+    "role": "both",
+    "size": "first 5k COCO val images for evaluation",
+    "split": "train on train set, evaluate on first 5k val",
+    "source": "COCO",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "FPN + ResNet-50/101 (RPN, Fast R-CNN, Faster R-CNN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet backbone, FPN d=256, no non-linearities in extra layers; RPN head 3x3 conv + two sibling 1x1 convs; Fast R-CNN head RoI pool 7x7 + two 1,024-d fc (ReLU) + cls/box layers",
+    "init_from": "ImageNet1k pre-trained ResNet-50/101; fc head layers randomly initialised",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "256 channels",
+    "heads": null,
+    "context": null,
+    "other": {
+     "anchors": "areas {32^2,64^2,128^2,256^2,512^2} on {P2..P6}, ratios {1:2,1:1,2:1}, 15 anchors total",
+     "anchor_labels": "positive: highest IoU for a GT box or IoU>0.7; negative: IoU<0.3",
+     "roi_train_test": "2000 RoIs per image for training, 1000 for testing"
+    }
+   },
+   {
+    "name": "FPN mask proposal model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "FPN P2-P6 with d=128; 5x5 MLP (5x5 kernel, 512 outputs, sibling fc to 14x14 mask + 1 score) plus 7x7 MLP for half octaves",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "128 channels",
+    "heads": null,
+    "context": null,
+    "other": {
+     "mask_scale_map": "{32,64,128,256,512} px -> {P2..P6}, 25% padding"
+    }
+   },
+   {
+    "name": "Single-scale baselines (C4 conv5-head, C5 2fc-head)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Faster R-CNN/RPN on a single feature map",
+    "init_from": "ImageNet ResNet-50",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "RPN: object/non-object classification + box regression; Fast R-CNN: classification + box regression; masks: mask loss weighted 10x over score loss",
+   "optimizer": "synchronized SGD, momentum 0.9",
+   "lr": "0.02 (RPN, Fast/Faster R-CNN); 0.03 (mask proposals)",
+   "lr_schedule": "RPN: 0.02 for first 30k mini-batches then 0.002 for next 10k; Fast R-CNN: 0.02 for first 60k then 0.002 for next 20k; masks: 0.03 for 80k, divided by 10 after 60k; ResNet-101 leaderboard model: 2x mini-batches at each lr",
+   "warmup": null,
+   "batch_size": "8 GPUs x 2 images; RPN 256 anchors/image; Fast R-CNN 512 RoIs/image; masks 2048 examples (128 x 16 images), pos:neg 1:3",
+   "steps": "RPN 40k mini-batches (30k+10k); Fast R-CNN 80k (60k+20k); masks 80k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8 GPUs (synchronized SGD); inference timed on one NVIDIA M40",
+   "compute": null,
+   "wall_clock": "RPN with FPN about 8 hours on COCO; Fast R-CNN with FPN about 10 hours on COCO (8 GPUs); feature sharing raises train time 1.5x",
+   "seeds": null,
+   "other": {
+    "framework": "reimplementation of py-faster-rcnn in Caffe2",
+    "rpn_anchors": "anchors outside the image included in training for all RPN experiments, unlike Faster R-CNN",
+    "sharing_heads": "head parameters shared across levels; unshared evaluated with similar accuracy"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single input scale, single model; no seeds or repeats reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "proposals_test": "1000 per image (Faster R-CNN; 300 in He et al.)",
+    "mask_inference": "masks at 1000 highest-scoring locations, no NMS or post-processing"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AR (AR100, AR1k; ARs/m/l)",
+     "definition": "COCO-style Average Recall at 100 or 1000 proposals per image, by object size",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP, AP@0.5, APs/m/l",
+     "definition": "COCO-style Average Precision; PASCAL-style AP at single IoU 0.5; by object size",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "inference time",
+     "definition": "seconds per image on one NVIDIA M40",
+     "unit": "s",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "RPN/Faster R-CNN on C4 (conv5 head) and C5 (2fc head)",
+    "He et al. ResNet-50 Faster R-CNN",
+    "G-RMI, AttractioNet, Faster R-CNN+++, Multipath, ION",
+    "DeepMask, SharpMask, InstanceFCN"
+   ],
+   "protocol": "Ablations on minival with ResNet-50 and shared hyperparameters; final on test-dev/test-std; single run each, no variance reported."
+  },
+  "availability": {
+   "code": "'Code will be made publicly available' (not given in paper)",
+   "weights": null,
+   "data": "COCO public; ResNet weights at github.com/kaiminghe/deep-residual-networks"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr_schedule",
+    "quote": "The learning rate is 0.02 for the ﬁrst 30k mini-batches and 0.002 for the next 10k.",
+    "where": "Sec 5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "FPN in Faster R-CNN (ResNet-101) beats all single-model COCO 2016/2015 winners on test-dev AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 36.2,
+   "unit": "AP points",
+   "baseline_value": 35.7,
+   "n": null,
+   "setup": "COCO test-dev, ResNet-101, single model, single image scale; baseline AttractioNet",
+   "quote": null,
+   "table": "Table 4, row ours Faster R-CNN on FPN, column test-dev AP; baseline AttractioNet 35.7",
+   "note": "Text says +0.5 AP over existing best (36.2 vs 35.7); G-RMI row prints a single 34.7 whose column is unclear in the extracted text",
+   "where": "Table 4"
+  },
+  {
+   "claim": "FPN raises AP@0.5 on test-dev",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP@0.5",
+   "value": 59.1,
+   "unit": "points",
+   "baseline_value": 55.7,
+   "n": null,
+   "setup": "COCO test-dev, ResNet-101; baseline Faster R-CNN+++",
+   "quote": "3.4 points of AP@0.5 (59.1 vs. 55.7)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.3"
+  },
+  {
+   "claim": "FPN gives +8.0 AR1k in RPN over single-scale C4 baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "AR1k",
+   "value": 56.3,
+   "unit": "points",
+   "baseline_value": 48.3,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, RPN",
+   "quote": "Placing FPN in RPN improves AR1k to 56.3 (Table 1",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1.1, Table 1(c) vs (a)"
+  },
+  {
+   "claim": "Small-object AR1k in RPN improves by 12.9 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "ARs1k",
+   "value": 44.9,
+   "unit": "points",
+   "baseline_value": 32.0,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, RPN",
+   "quote": "is boosted by a large margin of 12.9 points",
+   "table": "Table 1, rows (c) FPN and (a) baseline on conv4, column AR1k_s",
+   "note": null,
+   "where": "Sec 5.1.1"
+  },
+  {
+   "claim": "Faster R-CNN with FPN beats reproduced strong ResNet-50 baseline by 2.3 AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 33.9,
+   "unit": "AP points",
+   "baseline_value": 31.6,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, Faster R-CNN, no feature sharing",
+   "quote": "is better than this strong baseline by 2.3 points AP and 3.8 points AP@0.5",
+   "table": "Table 3, row (c) FPN vs (a) baseline on conv4, column AP",
+   "note": null,
+   "where": "Sec 5.2.2"
+  },
+  {
+   "claim": "Versus He et al.'s published ResNet-50 baseline, FPN improves AP by 7.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 33.9,
+   "unit": "AP points",
+   "baseline_value": 26.3,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, Faster R-CNN; gap partly due to 800px images, 512 RoIs, 5 anchor scales, 1000 test proposals in the authors' own baselines",
+   "quote": "improves AP by 7.6 points and AP@0.5 by 9.6 points",
+   "table": "Table 3, row (*) baseline from He et al., column AP",
+   "note": null,
+   "where": "Sec 5.2.2"
+  },
+  {
+   "claim": "Removing the top-down pathway collapses Fast R-CNN AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 24.9,
+   "unit": "AP points",
+   "baseline_value": 33.9,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, Fast R-CNN on fixed FPN-RPN proposals; full FPN is 33.9",
+   "quote": null,
+   "table": "Table 2, row (d) bottom-up pyramid, column AP",
+   "note": null,
+   "where": "Table 2(d)"
+  },
+  {
+   "claim": "Removing lateral connections costs about 2.6 AP in Fast R-CNN and 10 AR1k in RPN",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 31.3,
+   "unit": "AP points",
+   "baseline_value": 33.9,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, Fast R-CNN fixed proposals",
+   "quote": "FPN has an AR1k score 10 points higher than Table 1(e)",
+   "table": "Table 2, row (e) top-down pyramid w/o lateral, column AP",
+   "note": null,
+   "where": "Sec 5.1.1, Table 2(e)"
+  },
+  {
+   "claim": "Using only finest level P2 is slightly worse than full pyramid in Fast R-CNN",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 33.4,
+   "unit": "AP points",
+   "baseline_value": 33.9,
+   "n": null,
+   "setup": "COCO minival, ResNet-50, trained on trainval35k, shorter side 800 px, Fast R-CNN",
+   "quote": "Its result (33.4 AP) is marginally",
+   "table": null,
+   "note": "In RPN, P2 alone gives AR1k 51.3 vs 56.3 with 750k anchors",
+   "where": "Sec 5.2.1"
+  },
+  {
+   "claim": "FPN Faster R-CNN inference time with ResNet-50 vs single-scale baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": 0.148,
+   "unit": "s/image",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "single NVIDIA M40, feature sharing; baseline is single-scale ResNet-50 Table 3(a)",
+   "quote": "inference time of 0.148 seconds",
+   "table": null,
+   "note": "0.172 s for ResNet-101; text says runtimes updated from earlier version",
+   "where": "Sec 5.2.2"
+  },
+  {
+   "claim": "Feature sharing gives a small accuracy gain",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 34.3,
+   "unit": "AP points",
+   "baseline_value": 33.9,
+   "n": null,
+   "setup": "minival, ResNet-50, shared vs not shared features",
+   "quote": null,
+   "table": "Table 5, row yes, column ResNet-50 AP",
+   "note": "Sharing raises train time 1.5x",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Longer training for ResNet-101 raises minival AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": 35.6,
+   "unit": "AP points",
+   "baseline_value": 35.0,
+   "n": null,
+   "setup": "minival, ResNet-101, 2x mini-batches at each lr in Fast R-CNN step, no feature sharing",
+   "quote": "This increases AP on minival to 35.6",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2.3"
+  },
+  {
+   "claim": "FPN mask proposals (dual MLP, longest schedule) beat DeepMask/SharpMask in AR and run faster",
+   "kind": "measured",
+   "source": null,
+   "metric": "AR",
+   "value": 48.1,
+   "unit": "points",
+   "baseline_value": 39.8,
+   "n": null,
+   "setup": "first 5k COCO val, 1000 proposals, ResNet-50; baseline SharpMask",
+   "quote": "doubling the training iterations increases AR to 48.1",
+   "table": "Table 6, row + 2x train schedule vs SharpMask, column AR",
+   "note": "Text claims outperforming by over 8.3 AR; runtime 0.25 s vs 0.77 s",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Single-scale-input FPN has 6 FPS",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed",
+   "value": 6,
+   "unit": "FPS",
+   "baseline_value": null,
+   "n": null,
+   "setup": "abstract claim, GPU",
+   "quote": "our method can run at 6 FPS on a GPU",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  }
+ ],
+ "limits": [
+  "Single run per configuration; no variance, seeds or significance tests reported.",
+  "Authors concede ResNet-101 model was not sufficiently trained at default schedule; feature-sharing version of the submitted model not evaluated due to limited time.",
+  "Does not use iterative regression, hard negative mining, context modeling or stronger augmentation; stated as complementary, untested.",
+  "Only simple connection block tried; multi-layer residual blocks gave marginally better results but were not adopted.",
+  "Why the top-down pathway helps is conjectured (semantic gaps), not tested.",
+  "The COCO state-of-the-art claims are dated; code release is promised, not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Feature Pyramid Network (FPN)",
+   "definition": "A top-down architecture with lateral connections for building high-level semantic feature maps at all scales",
+   "where": "Abstract"
+  },
+  {
+   "term": "featurized image pyramid",
+   "definition": "Feature pyramids built upon image pyramids; features computed on each image scale independently",
+   "where": "Sec 1, Fig 1(a)"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Faster R-CNN (Ren et al.)",
+   "year": 2015,
+   "arxiv": "1506.01497",
+   "relation": "extends",
+   "note": "RPN and detector adapted with FPN",
+   "quote": null
+  },
+  {
+   "work": "Fast R-CNN (Girshick)",
+   "year": 2015,
+   "arxiv": "1504.08083",
+   "relation": "extends",
+   "note": "RoI pooling detector run on pyramid",
+   "quote": null
+  },
+  {
+   "work": "Deep residual learning (He et al.)",
+   "year": 2016,
+   "arxiv": "1512.03385",
+   "relation": "uses-method",
+   "note": "ResNet-50/101 backbones and C4 baseline",
+   "quote": null
+  },
+  {
+   "work": "SSD (Liu et al.)",
+   "year": 2016,
+   "arxiv": "1512.02325",
+   "relation": "baseline",
+   "note": "earlier use of ConvNet feature hierarchy as pyramid",
+   "quote": null
+  },
+  {
+   "work": "DeepMask / SharpMask (Pinheiro et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "mask proposal framework adapted",
+   "quote": null
+  },
+  {
+   "work": "Microsoft COCO (Lin et al.)",
+   "year": 2014,
+   "arxiv": "1405.0312",
+   "relation": "uses-data",
+   "note": "benchmark",
+   "quote": null
+  },
+  {
+   "work": "ImageNet LSVRC (Russakovsky et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "backbone pretraining",
+   "quote": null
+  },
+  {
+   "work": "U-Net, SharpMask, Recombinator, Stacked Hourglass",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "top-down/skip architectures that predict at the finest level only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Using an image pyramid to build a feature pyramid... (d) Our proposed Feature Pyramid Network (FPN) is fast like (b) and (c), but more accurate.",
+   "page": 1,
+   "why": "Four pyramid designs side by side"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Top: a top-down architecture with skip connections, predictions on finest level. Bottom: our model, predictions at all levels.",
+   "page": 2,
+   "why": "Distinguishes FPN from U-Net-style skip nets"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "A building block illustrating the lateral connection and the top-down pathway, merged by addition.",
+   "page": 3,
+   "why": "The core block: 2x up, 1x1 conv, add"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "FPN for object segment proposals.",
+   "page": 8,
+   "why": "Mask extension"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1, p4",
+   "snippet": "k = ⌊k0 + log2(√(wh)/224)⌋",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Table 4 text extraction scrambles column alignment; G-RMI row shows only 34.7 (AP column in source).",
+  "No embedded instructions found."
+ ]
+}

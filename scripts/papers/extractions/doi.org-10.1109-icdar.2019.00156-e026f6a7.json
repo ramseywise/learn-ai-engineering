@@ -1,0 +1,464 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1109/icdar.2019.00156",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/mishra-2019-ocr-vqa.pdf",
+ "bib": {
+  "title": "OCR-VQA: Visual Question Answering by Reading Text in Images",
+  "authors": [
+   "Anand Mishra",
+   "Shashank Shekhar",
+   "Ajeet Kumar Singh",
+   "Anirban Chakraborty"
+  ],
+  "first_author": "Mishra",
+  "year": 2019,
+  "venue": "ICDAR 2019",
+  "arxiv": null,
+  "doi": "10.1109/icdar.2019.00156"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25833,
+  "chars_total": 25833,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a VQA system answer questions about book covers by reading the text in the image with OCR?",
+ "hypothesis": null,
+ "contributions": [
+  "Introduce the task of VQA by reading text in images (OCR-VQA)",
+  "Introduce OCR-VQA-200K, the first large-scale dataset for it",
+  "Baseline combining OCR and VQA components"
+ ],
+ "method": {
+  "summary": "Dataset of 207,572 book-cover images with about 1M template/paraphrased QA pairs derived from cover metadata. Baseline detects up to 5 text blocks, OCRs them, tags entities, and feeds VGG-16, BLSTM question, word2vec and block features to a 51-way softmax classifier.",
+  "task": "visual question answering requiring reading text (book covers)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "OCR-VQA-200K",
+    "role": "both",
+    "size": "207,572 images; 1,002,146 QA pairs",
+    "split": "80/10/10 images train/validation/test (text says 'train, test, and validation respectively', order inconsistent); approx 800K/100K/100K QA pairs",
+    "source": "Images and metadata (author, title, genre) from Iwana et al. 2016 book cover dataset; questions from templates plus human paraphrase",
+    "preprocessing": "Template questions on title, author, genre, year, edition, yes/no genre; annotators paraphrase; one of template or paraphrase chosen at random per image"
+   }
+  ],
+  "models": [
+   {
+    "name": "BLOCK+CNN+W2V baseline",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BLSTM question (300-d) + VGG-16 fc (4096-d) + mean word2vec of OCR text (300-d) + block features (35-d) -> concat 4731-d -> 2 FC layers of 1024 -> softmax over 51 outputs",
+    "init_from": "VGG-16 pretrained CNN features",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 FC x 1024",
+    "hidden": 1024,
+    "heads": null,
+    "context": null,
+    "other": {
+     "outputs": "5 block index + 32 genre + 2 yes/no + 5 edition + 7 year = 51",
+     "text_blocks": "max 5 largest, 5-d vector each (index, top-left, bottom-right xy); NER tag 2-d per block",
+     "OCR": "TextSpotter (Gupta et al. 2016) chosen over Tesseract and CRNN",
+     "detectors compared": "Tesseract segmentation with Otsu, EAST, VGG text detector + X-Y cut",
+     "NER": "spaCy for person and year"
+    }
+   }
+  ],
+  "training": {
+   "objective": "categorical cross-entropy",
+   "optimizer": "RMSprop",
+   "lr": "0.01",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "maximum 30",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Only the feed-forward network is trained; OCR and VGG are fixed"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over 51-way softmax; title/author answers are returned as OCR text of the predicted block index (inferred from block-index output and look-up table)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "not defined beyond the name; per question type in Table IV",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "OCR recall",
+     "definition": "fraction of correctly recognized words in author name and book title on validation set, optionally with minimum edit distance correction against a lexicon of all titles and authors",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLOCK only",
+    "CNN only",
+    "BLOCK+CNN",
+    "OCR+NER without block features (authorship only)"
+   ],
+   "protocol": "Single run; no seeds or significance test stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://ocr-vqa.github.io/"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best baseline variant reaches 48.3% overall accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use; BLOCK+CNN+W2V",
+   "note": null,
+   "where": null,
+   "table": "Table III, row BLOCK+CNN+W2V, column accuracy"
+  },
+  {
+   "claim": "Block features alone give 42.0% accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 42.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use; BLOCK only",
+   "note": null,
+   "where": null,
+   "table": "Table III, row BLOCK, column accuracy"
+  },
+  {
+   "claim": "CNN features alone give 14.3% accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 14.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use; CNN only",
+   "note": null,
+   "where": null,
+   "table": "Table III, row CNN, column accuracy"
+  },
+  {
+   "claim": "Adding CNN to BLOCK gives 41.5%, slightly below BLOCK alone",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 41.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use; BLOCK+CNN",
+   "note": null,
+   "where": null,
+   "table": "Table III, row BLOCK+CNN, column accuracy"
+  },
+  {
+   "claim": "Binary questions are easiest at 58.2%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row Binary"
+  },
+  {
+   "claim": "Book title questions 48.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 48.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row book title"
+  },
+  {
+   "claim": "Author name questions 42.9%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 42.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row author name"
+  },
+  {
+   "claim": "Genre questions are hardest at 22.0%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 22.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row book genre"
+  },
+  {
+   "claim": "Year questions 46.2%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 46.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row Year"
+  },
+  {
+   "claim": "Edition questions 42.5%",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 42.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use",
+   "note": null,
+   "where": null,
+   "table": "Table IV, row Edition"
+  },
+  {
+   "claim": "OCR+NER without block features gets 39.5% on authorship questions vs 42.9% with block features",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 39.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K test-style evaluation of the authors' baseline (VGG-16 + BLSTM + OCR block features); paper does not say which split Tables III-IV use; authorship questions only",
+   "note": null,
+   "where": "Sec V-A",
+   "quote": "This baseline yields 39.5%"
+  },
+  {
+   "claim": "TextSpotter recall of book titles with edit-distance correction is 0.83 vs Tesseract 0.43 and CRNN 0.50",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 0.83,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation set; title words; lexicon of all titles and authors in the set (lexicon includes the answers)",
+   "note": null,
+   "where": null,
+   "table": "Table II, row Textspotter, column Recall (book title) With ED"
+  },
+  {
+   "claim": "TextSpotter title recall without correction is 0.53",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 0.53,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation set",
+   "note": null,
+   "where": null,
+   "table": "Table II, row Textspotter, column Recall (book title) Without"
+  },
+  {
+   "claim": "TextSpotter author recall with ED is 0.77",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 0.77,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Validation set",
+   "note": null,
+   "where": null,
+   "table": "Table II, row Textspotter, column Recall (author name) With ED"
+  },
+  {
+   "claim": "Dataset has 207,572 images and 1,002,146 QA pairs, 32 genres, 4.83 questions per image",
+   "kind": "measured",
+   "source": null,
+   "metric": "images",
+   "value": "207,572",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K",
+   "note": "Abstract says more than 1 million QA pairs",
+   "where": null,
+   "quote": "This dataset comprises of 207,572 images of book covers"
+  },
+  {
+   "claim": "320,794 unique answers; average question 6.46 words, answer 3.31 words",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique answers",
+   "value": "320,794",
+   "unit": "answers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OCR-VQA-200K",
+   "note": null,
+   "where": null,
+   "quote": "320,794"
+  }
+ ],
+ "limits": [
+  "Task is book covers only; authors plan to extend to scene text and born-digital images",
+  "Answers derive from metadata, so title/author correctness depends on metadata matching cover text; 'NULL' answers appear (Fig 4d)",
+  "Baseline is a 51-way classifier; title and author answered by block index lookup, not free-form generation",
+  "Lexicon-based edit-distance correction uses a lexicon of all titles and authors in the set, which inflates Table II",
+  "Split description lists test and validation in swapped order; Tables III-IV do not state the split",
+  "No seeds, variance or significance tests; accuracy undefined for multi-answer matching",
+  "Authors concede Scene-text VQA (ICDAR 2019 RRC) and TextVQA appeared after original submission; accuracy low from font/scale/layout variation, paraphrase and genre"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Judging a book by its cover (Iwana et al.)",
+   "year": 2016,
+   "arxiv": "1610.09204",
+   "relation": "uses-data",
+   "note": "Source of cover images and metadata",
+   "quote": null
+  },
+  {
+   "work": "VQA: Visual Question Answering (Antol et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Task definition",
+   "quote": null
+  },
+  {
+   "work": "Making the V in VQA matter (Goyal et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "VQA v2",
+   "quote": null
+  },
+  {
+   "work": "Synthetic data for text localisation in natural images (Gupta et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VGG text detector and TextSpotter OCR used",
+   "quote": null
+  },
+  {
+   "work": "CRNN (Shi et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "OCR option compared",
+   "quote": null
+  },
+  {
+   "work": "EAST (Zhou et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Text detector option",
+   "quote": null
+  },
+  {
+   "work": "Very deep convolutional networks (Simonyan, Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "VGG-16 image features",
+   "quote": null
+  },
+  {
+   "work": "Towards VQA models that can read (Singh et al., TextVQA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Concurrent work, noted in footnote 1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "We designed a baseline approach for the novel task of answering visual questions by reading text in images.",
+   "page": 4,
+   "why": "Shows the OCR-block-NER-VQA pipeline"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "A selection of images and question-ground truth answer pairs from OCR-VQA-200K dataset.",
+   "page": 3,
+   "why": "Shows question types and paraphrases"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Some sample results of our best performing method (BLOCK+CNN+W2V)",
+   "page": 5,
+   "why": "Success and failure cases (fancy fonts, clutter)"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Split sentence lists '80%, 10% and 10% of images respectively for train, test, and validation', inconsistent with 'train, validation and test'",
+  "'yer or no' typo; no embedded instructions found"
+ ]
+}

@@ -1,0 +1,682 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1145/2939672.2939778",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ribeiro-2016-why-should-i-trust-you.pdf",
+ "bib": {
+  "title": "\"Why Should I Trust You?\" Explaining the Predictions of Any Classifier",
+  "authors": [
+   "Marco Tulio Ribeiro",
+   "Sameer Singh",
+   "Carlos Guestrin"
+  ],
+  "first_author": "Ribeiro",
+  "year": 2016,
+  "venue": "KDD 2016, San Francisco",
+  "arxiv": "1602.04938",
+  "doi": "10.1145/2939672.2939778"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 59375,
+  "chars_total": 59375,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can the prediction of any black-box classifier be explained faithfully and interpretably so that users can decide whether to trust a prediction or a model?",
+ "hypothesis": "Local, interpretable, model-agnostic explanations (plus a diverse set of representative ones) help users assess trust, choose between models and improve untrustworthy classifiers better than accuracy alone or baseline explainers.",
+ "contributions": [
+  "LIME, an algorithm that can explain the predictions of any classifier or regressor in a faithful way, by approximating it locally with an interpretable model.",
+  "SP-LIME, a method that selects a set of representative instances with explanations to address the \"trusting the model\" problem, via submodular optimization.",
+  "Comprehensive evaluation with simulated and human subjects, measuring the impact of explanations on trust and associated tasks."
+ ],
+ "method": {
+  "summary": "LIME perturbs an instance in an interpretable binary representation (words present/absent, super-pixels on/off), labels perturbations with the black-box f, weights them by an exponential proximity kernel, and fits a K-sparse linear model (K-Lasso then least squares). SP-LIME greedily picks B instances whose explanations cover the most important features. Evaluated with simulated users on sentiment data and with Mechanical Turk and student subjects on 20 newsgroups and a husky/wolf image task.",
+  "task": "post-hoc explanation of classifier predictions (text and image); trust assessment, model selection, feature engineering",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Amazon product reviews, books",
+    "role": "eval",
+    "size": "2000 instances",
+    "split": "1600 train / 400 test",
+    "source": "Blitzer et al. 2007",
+    "preprocessing": "bag of words features; word2vec average for RF"
+   },
+   {
+    "name": "Amazon product reviews, DVDs",
+    "role": "eval",
+    "size": "2000 instances",
+    "split": "1600 train / 400 test",
+    "source": "Blitzer et al. 2007",
+    "preprocessing": null
+   },
+   {
+    "name": "20 newsgroups (Christianity vs Atheism subset)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "20 newsgroups",
+    "preprocessing": "headers present in original; 'cleaned' version has non-generalising features manually removed"
+   },
+   {
+    "name": "religion dataset",
+    "role": "eval",
+    "size": "819 webpages in each class",
+    "split": null,
+    "source": "Atheism and Christianity websites downloaded from DMOZ directory and human curated lists",
+    "preprocessing": null
+   },
+   {
+    "name": "Husky vs Wolf images",
+    "role": "both",
+    "size": "20 training images, 60 additional images",
+    "split": "train 20 hand-selected (wolves all with snow background); 60 test",
+    "source": null,
+    "preprocessing": "features: first max-pooling layer of Google's pre-trained Inception"
+   }
+  ],
+  "models": [
+   {
+    "name": "LIME (sparse linear explainer)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "K-sparse linear model over binary interpretable representation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "kernel": "pi_x(z)=exp(-D(x,z)^2/sigma^2); D cosine for text, L2 for images",
+     "loss": "locally weighted square loss",
+     "K": "10 in simulated experiments; K=10 for Inception super-pixel example",
+     "feature selection": "K-Lasso via regularization path then least squares",
+     "N": "15,000 samples in simulated experiments; 5000 in the timing example"
+    }
+   },
+   {
+    "name": "SP-LIME",
+    "role": "proposed",
+    "params": null,
+    "architecture": "greedy weighted-coverage maximisation, 1-1/e approximation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "budget B": "6 in human model-choice study; 10 in feature-engineering study",
+     "importance": "I_j = sqrt(sum_i |W_ij|) for text"
+    }
+   },
+   {
+    "name": "Decision tree, logistic regression (L2), nearest neighbours, SVM RBF, random forest (1000 trees, avg word2vec)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "scikit-learn default parameters unless noted",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "parzen",
+    "role": "baseline",
+    "params": null,
+    "architecture": "global Parzen-window approximation, top-K absolute gradients",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "greedy",
+    "role": "baseline",
+    "params": null,
+    "architecture": "greedily remove features contributing most to predicted class until prediction changes or K features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Google Inception",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "pre-trained CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "N=15,000 perturbations per explanation (simulated experiments); trust experiment averaged over 100 runs; model-selection simulation 800 runs; 100 MTurk users per setting; feature engineering 10 initial subjects x 5 users per later round, 250 final classifiers; husky/wolf 27 subjects",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "K": "10",
+    "N": "15,000 (simulated); 5000 in timing example",
+    "sigma": "hyper-parameters for parzen and LIME set by cross validation; value not given",
+    "untrustworthy feature fraction": "25% of features randomly marked untrustworthy",
+    "noisy features": "10 artificial features appear in 10% of examples in one class and 20% in the other on train/val; 10% each class on test",
+    "classifier pairs": "random forests of 30 trees trained until validation accuracy within 0.1% but test accuracy differs by at least 5%",
+    "superpixel algorithm": "any standard algorithm; not named"
+   },
+   "other": {
+    "timing": "explaining random forests with 1000 trees, N=5000, scikit-learn on a laptop: under 3 seconds; Inception image prediction around 10 minutes"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Recall on gold features",
+     "definition": "fraction of the (at most 10) gold features of an interpretable classifier recovered by the explanation, averaged over test instances",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1 of trustworthiness",
+     "definition": "F1 on trustworthy predictions of a simulated user versus an oracle that marks a prediction untrustworthy if it changes when untrustworthy features are removed",
+     "unit": "F1 (%)",
+     "higher_is_better": true
+    },
+    {
+     "name": "% correct choice",
+     "definition": "share of runs/users choosing the classifier with higher real-world (held-out/religion) accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Real world accuracy",
+     "definition": "accuracy on the religion dataset of classifiers retrained after subjects delete words",
+     "unit": "accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random",
+    "parzen",
+    "greedy",
+    "random pick (RP) vs submodular pick (SP)"
+   ],
+   "protocol": "Simulated users: averages over 100 runs (trust) and 800 runs (model selection), trust results significant at p = 0.01 (test not named). Human: Mechanical Turk workers (non-experts), graduate students with at least one ML course for husky/wolf, 3 independent evaluators with majority vote."
+  },
+  "availability": {
+   "code": "https://github.com/marcotcr/lime-experiments",
+   "weights": null,
+   "data": "https://github.com/marcotcr/lime-experiments (stated for code and data)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LIME recovers more than 90% of the gold features of interpretable classifiers, far above parzen and greedy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": ">90",
+   "unit": "% recall",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sparse LR and decision tree (max 10 features per instance), books and DVDs, K=10, all test instances",
+   "quote": "LIME consistently provides > 90% recall for both classifiers on both datasets",
+   "table": null,
+   "note": null,
+   "where": "5.2, Figs 6-7"
+  },
+  {
+   "claim": "Books, decision tree: LIME recall 97.0 vs parzen 78.9, greedy 37.0, random 20.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 97.0,
+   "unit": "% recall",
+   "baseline_value": 78.9,
+   "n": null,
+   "setup": "Books dataset, decision tree",
+   "quote": null,
+   "table": "Fig 6(b), column LIME; values 20.6, 78.9, 37.0, 97.0",
+   "note": null,
+   "where": "Fig 6"
+  },
+  {
+   "claim": "Books, sparse LR: LIME recall 92.1 vs parzen 72.8, greedy 64.3, random 17.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 92.1,
+   "unit": "% recall",
+   "baseline_value": 72.8,
+   "n": null,
+   "setup": "Books dataset, sparse logistic regression",
+   "quote": null,
+   "table": "Fig 6(a), column LIME; values 17.4, 72.8, 64.3, 92.1",
+   "note": null,
+   "where": "Fig 6"
+  },
+  {
+   "claim": "DVDs: LIME recall 90.2 (sparse LR) and 97.8 (decision tree).",
+   "kind": "measured",
+   "source": null,
+   "metric": "recall",
+   "value": 90.2,
+   "unit": "% recall",
+   "baseline_value": 63.4,
+   "n": null,
+   "setup": "DVDs dataset, sparse LR",
+   "quote": null,
+   "table": "Fig 7(a) LIME 90.2; Fig 7(b) LIME 97.8",
+   "note": "Baseline 63.4 is greedy on sparse LR; parzen 60.8",
+   "where": "Fig 7"
+  },
+  {
+   "claim": "Simulated trust in individual predictions: LIME F1 96.6 on books LR vs parzen 84.0, greedy 53.7, random 14.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 of trustworthiness",
+   "value": 96.6,
+   "unit": "F1 (%)",
+   "baseline_value": 84.0,
+   "n": null,
+   "setup": "Books, logistic regression; 25% of features untrustworthy, 100 runs, K=10",
+   "quote": null,
+   "table": "Table 1, row LIME, column Books LR",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LIME F1 across classifiers and datasets ranges 91.8 to 96.7; parzen 81.7 to 94.3, greedy 45.0 to 58.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 of trustworthiness",
+   "value": 91.8,
+   "unit": "F1 (%)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Lowest LIME cell: DVDs nearest neighbours; highest 96.7 books SVM",
+   "quote": null,
+   "table": "Table 1, row LIME, column DVDs NN",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LIME dominates the other explainers in the trust experiment, significant at p = 0.01.",
+   "kind": "measured",
+   "source": null,
+   "metric": "p-value",
+   "value": 0.01,
+   "unit": "p",
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 8 classifier-dataset cells of Table 1",
+   "quote": "all results are signiﬁcant at p = 0.01",
+   "table": null,
+   "note": null,
+   "where": "5.3"
+  },
+  {
+   "claim": "Human subjects (MTurk) choosing the better classifier: SP-LIME reaches 89.0% correct, versus 68.0% for RP-greedy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% correct choice",
+   "value": 89.0,
+   "unit": "% correct",
+   "baseline_value": 68.0,
+   "n": 100,
+   "setup": "SVM trained on original vs cleaned 20 newsgroups; K=6, B=6; 100 users per setting",
+   "quote": null,
+   "table": "Fig 9, bars (68.0, 75.0, 80.0, 89.0); assignment of values to bars read from figure order, not stated in text",
+   "note": "Fig 9 labels both pick methods 'Random Pick (RP)' and 'Submodular Pick (RP)'. Per-bar mapping not printed in text.",
+   "where": "Fig 9"
+  },
+  {
+   "claim": "The original 20 newsgroups SVM scores 94.0% held-out but 57.3% on the religion dataset; the cleaned version scores 88.6% and 69.0%, so accuracy alone selects the worse classifier.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 57.3,
+   "unit": "% accuracy",
+   "baseline_value": 69.0,
+   "n": null,
+   "setup": "Religion dataset (819 pages per class); original SVM",
+   "quote": "The original classiﬁer achieves an accuracy score of 57.3% on the religion dataset, while the “cleaned” classiﬁer achieves a score of 69.0%.",
+   "table": null,
+   "note": null,
+   "where": "6.2"
+  },
+  {
+   "claim": "Held-out accuracy of the SVM on Christianity vs Atheism is 94% yet its explanations show it uses irrelevant words.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVM RBF on unigrams, subset of 20 newsgroups",
+   "quote": "Although this classiﬁer achieves 94% held-out accuracy",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "The word 'Posting' appears in 22% of training examples, 99% of them in class Atheism.",
+   "kind": "measured",
+   "source": null,
+   "metric": "frequency",
+   "value": 22,
+   "unit": "% of training examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 newsgroups Christianity vs Atheism training set",
+   "quote": "The word “Posting” appears in 22% of examples in the training set, 99% of them in the class “Atheism”.",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Non-experts remove features based on explanations in under 11 minutes total, improving real-world accuracy; SP-LIME beats RP-LIME.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": 3.6,
+   "unit": "minutes per round",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Worse 20 newsgroups SVM, B=10, K=10, 3 rounds, 10 initial subjects then 5 users per branch (250 classifiers)",
+   "quote": "Each subject took an average of 3.6 minutes per round",
+   "table": null,
+   "note": "Accuracy per round is only in Fig 10 (not extractable as text).",
+   "where": "6.3, Fig 10"
+  },
+  {
+   "claim": "SP-selected explanations led to about 200 words removed per path versus 157 for RP.",
+   "kind": "measured",
+   "source": null,
+   "metric": "words removed",
+   "value": 200,
+   "unit": "words removed per path",
+   "baseline_value": 157,
+   "n": null,
+   "setup": "Feature engineering study",
+   "quote": "Each path had on average 200 words removed with SP,",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "Of ~200 words selected under SP, 174 were chosen by at least half of users and 68 by all users.",
+   "kind": "measured",
+   "source": null,
+   "metric": "agreement",
+   "value": 174,
+   "unit": "words",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Feature engineering study, SP-LIME",
+   "quote": "out of an average of 200 words selected with SP, 174 were",
+   "table": null,
+   "note": null,
+   "where": "6.3"
+  },
+  {
+   "claim": "Husky vs Wolf: students trusting the bad model fell from 10 of 27 to 3 of 27 after seeing explanations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "subjects trusting",
+   "value": 3,
+   "unit": "of 27 subjects",
+   "baseline_value": 10,
+   "n": 27,
+   "setup": "Logistic regression on 20 training images, snow-biased; 27 grad students",
+   "quote": "Trusted the bad model 10 out of 27 3 out of 27",
+   "table": "Table 2, row Trusted the bad model, columns Before/After",
+   "note": "Quote not usable; table cells.",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Husky vs Wolf: subjects naming snow as a potential feature rose from 12 of 27 to 25 of 27.",
+   "kind": "measured",
+   "source": null,
+   "metric": "subjects naming snow",
+   "value": 25,
+   "unit": "of 27 subjects",
+   "baseline_value": 12,
+   "n": 27,
+   "setup": "Same study",
+   "quote": "Snow as a potential feature 12 out of 27 25 out of 27",
+   "table": "Table 2, row Snow as a potential feature, columns Before/After",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Explaining a random forest of 1000 trees with N=5000 takes under 3 seconds on a laptop; an Inception image prediction takes around 10 minutes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "explanation time",
+   "value": 3,
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "scikit-learn, laptop, no GPU or parallelisation",
+   "quote": "takes under 3 seconds without any",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "Greedy submodular maximisation of coverage gives a constant-factor 1-1/e approximation to the NP-hard pick problem.",
+   "kind": "claim",
+   "source": null,
+   "metric": "approximation guarantee",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Weighted coverage function c(V,W,I), Eq 3-4",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "4"
+  }
+ ],
+ "limits": [
+  "Faithfulness is only checked on interpretable models whose gold features are known (sparse LR, decision trees, <=10 features); no check on black boxes is reported.",
+  "Trust experiments simulate users by randomly marking 25% of features untrustworthy and by injected noise features, so results are artificial.",
+  "Husky vs Wolf study is small (27 graduate students) and the classifier was trained to be bad on 20 hand-picked images; authors concede 'our sample size is small'.",
+  "Pick step for images is not solved (future work).",
+  "Sparse linear G may not give a faithful explanation if the model is highly non-linear locally; sepia-toned example shows interpretable representations can be too weak.",
+  "K is fixed (10 or 6), choice of kernel width and superpixel algorithm not specified; theoretical sample-size properties unexplored; Inception explanation takes about 10 minutes per prediction.",
+  "Human results compare against greedy, not against other published explainers; significance test not named."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "trusting a prediction",
+   "definition": "whether a user trusts an individual prediction sufficiently to take some action based on it",
+   "where": "1"
+  },
+  {
+   "term": "trusting a model",
+   "definition": "whether the user trusts a model to behave in reasonable ways if deployed",
+   "where": "1"
+  },
+  {
+   "term": "local fidelity",
+   "definition": "explanation must correspond to how the model behaves in the vicinity of the instance being predicted",
+   "where": "2"
+  },
+  {
+   "term": "interpretable representation",
+   "definition": "x' in {0,1}^d' binary vector of presence of words or super-pixels, distinct from model features",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Baehrens et al., How to explain individual classification decisions",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "parzen baseline, gradient explanations",
+   "quote": null
+  },
+  {
+   "work": "Strumbelj and Kononenko, game-theory explanation of individual classifications",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "perturbation of inputs for explanations, specific contribution model",
+   "quote": null
+  },
+  {
+   "work": "Martens and Provost, Explaining data-driven document classifications",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "greedy removal baseline",
+   "quote": null
+  },
+  {
+   "work": "Krause and Golovin, Submodular function maximization",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "greedy 1-1/e guarantee for SP",
+   "quote": null
+  },
+  {
+   "work": "Efron et al., Least angle regression",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Lasso regularization path in K-LASSO",
+   "quote": null
+  },
+  {
+   "work": "Groce et al., You are the only possible oracle",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "their subjects missed the 20 newsgroups problems",
+   "quote": null
+  },
+  {
+   "work": "Kaufman et al., Leakage in data mining",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "data leakage definition",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al., Going deeper with convolutions (Inception)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "image classifier explained",
+   "quote": null
+  },
+  {
+   "work": "Blitzer et al., sentiment domain adaptation",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "books and DVDs reviews",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al., word2vec",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "averaged embeddings for RF",
+   "quote": null
+  },
+  {
+   "work": "Kulesza et al., EluciDebug",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "human-in-the-loop but for Naive Bayes only",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Toy example to present intuition for LIME.",
+   "page": 4,
+   "why": "Shows local weighted linear fit to a nonlinear boundary"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Explaining individual predictions (flu example).",
+   "page": 2,
+   "why": "Pipeline overview"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Explaining individual predictions of competing classifiers Christianity vs Atheism.",
+   "page": 2,
+   "why": "Shows accuracy misleading model choice"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Explaining an image classification prediction made by Google's Inception neural network.",
+   "page": 5,
+   "why": "Super-pixel explanations"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Raw data and explanation of a bad model's prediction in the Husky vs Wolf task.",
+   "page": 9,
+   "why": "Snow-detector reveal"
+  }
+ ],
+ "code": [
+  {
+   "where": "p4 Eq 1",
+   "snippet": "xi(x) = argmin_{g in G} L(f, g, pi_x) + Omega(g)",
+   "verbatim": false
+  },
+  {
+   "where": "p4 Eq 2",
+   "snippet": "L(f,g,pi_x) = sum_{z,z' in Z} pi_x(z) (f(z) - g(z'))^2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text extraction interleaves figure axis labels; Fig 9 bar labels both read 'Random Pick (RP)' and 'Submodular Pick (RP)', so per-bar mapping is inferred from caption order."
+ ]
+}

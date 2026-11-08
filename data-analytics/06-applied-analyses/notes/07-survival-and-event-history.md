@@ -311,7 +311,7 @@ Note that `lifelines` offers `check_assumptions` on `CoxPHFitter`. The page on t
 
 ## A survival model is a logistic regression on person-periods
 
-Every 30-day stretch of every subscriber is one row, with `cancel` equal to 1 in the month it happened. That makes a table ready for the [logistic regression of the statistics pillar](../../02-probability-and-statistics/notes/06-regression-and-glms.md): the outcome is "cancelled this month, given still here", which is a hazard. The model is called **discrete-time hazard**, and each person's successive rows multiply back into a survival curve.
+Every 30-day stretch of every subscriber is one row, with `cancel` equal to 1 in the month it happened. That makes a table ready for the [logistic regression of the statistics pillar](../../02-probability-and-statistics/notes/06b-logistic-regression-and-poisson-glms.md#logistic-regression): the outcome is "cancelled this month, given still here", which is a hazard. The model is called **discrete-time hazard**, and each person's successive rows multiply back into a survival curve.
 
 Smoothing the hazard over tenure is where this model earns its place. The book fits the same idea to a trial life table with 47 monthly rows, treating the monthly deaths as independent binomials and putting a cubic-linear spline in tenure, with a knot at month 11, on the logit; the hazard view separates the two arms where the survival curves did not (*Computer Age*, ch. 9, Fig. 9.2). Both arms peak at about month 5 and then decline slowly, and after the first year the chemotherapy-only hazard is about 2.5 times the combination arm's, with intervals that do not overlap at months 15 and 30.
 

@@ -1,0 +1,523 @@
+{
+ "schema": 1,
+ "key": "1703.01365",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sundararajan-2017-axiomatic-attribution-deep-networks.pdf",
+ "bib": {
+  "title": "Axiomatic Attribution for Deep Networks",
+  "authors": [
+   "Mukund Sundararajan",
+   "Ankur Taly",
+   "Qiqi Yan"
+  ],
+  "first_author": "Sundararajan",
+  "year": 2017,
+  "venue": "ICML 2017 (PMLR 70)",
+  "arxiv": "1703.01365",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 47435,
+  "chars_total": 47435,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "theory",
+ "question": "Which axioms should a feature-attribution method for deep networks satisfy, and what method follows from them?",
+ "hypothesis": "Methods that fail Sensitivity or Implementation Invariance are fundamentally flawed; a path-integral of gradients satisfies both.",
+ "contributions": [
+  "Two axioms: Sensitivity and Implementation Invariance",
+  "Integrated Gradients method",
+  "Uniqueness among path methods via symmetry preservation",
+  "Applications to image, text, NMT and chemistry models"
+ ],
+ "method": {
+  "summary": "Integrated gradients: path integral of gradients from a baseline x' to the input x along a straight line, approximated by a Riemann sum with m steps. Applied without retraining to existing networks.",
+  "task": "feature attribution for deep networks",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiTableQuestions",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Pasupat & Liang 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Retinal fundus images (DR)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gulshan et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GoogleNet",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Inception CNN, ImageNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Diabetic retinopathy network",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Gulshan et al. 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Question classifier",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Kim 2014 text CNN; trained by authors on WikiTableQuestions, no training details given",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GNMT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "LSTM NMT (Wu et al. 2016)",
+    "init_from": null,
+    "tokenizer": "wordpieces",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "W1N2/W2N2 graph convolution",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Kearnes et al. 2016",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "deterministic; one attribution per input",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "steps_m_images_text": "20 to 300",
+    "steps_m_nmt": "100 to 1000",
+    "baseline_images": "black image (all pixel intensities zero)",
+    "baseline_text": "all-zero embedding vector",
+    "baseline_nmt": "zero embeddings of all tokens except start and end markers",
+    "baseline_chemistry": "zeroed atom and atom-pair feature vectors",
+    "target_output": "highest-scoring class (object recognition)",
+    "path": "straight line"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Completeness check",
+     "definition": "sum of attributions approximately equals F(x)-F(x')",
+     "unit": "difference",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "gradients*input",
+    "DeepLift",
+    "LRP",
+    "DeConvNets",
+    "Guided back-propagation",
+    "Shapley-Shubik",
+    "LIME (Ribeiro 2016)"
+   ],
+   "protocol": "Qualitative visual inspection; authors state every empirical evaluation technique they considered cannot separate data, model and attribution artifacts, so they argue axiomatically."
+  },
+  "availability": {
+   "code": "https://github.com/ankurtaly/Attributions (more examples)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Gradients violate Sensitivity: f(x)=1-ReLU(1-x) goes from 0 to 1 between baseline 0 and input 2 yet gradient attribution is 0.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "gradient attribution",
+   "value": "0",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "One-variable one-ReLU network, baseline x=0, input x=2",
+   "quote": "the gradient method gives attribution of 0 to x",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Integrated gradients attributions sum to F(x)-F(x'), the Completeness axiom (Proposition 1).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "F differentiable almost everywhere, straight-line path",
+   "quote": null,
+   "table": null,
+   "note": "Proved by fundamental theorem of calculus; no empirical number",
+   "where": "Sec 3, Prop 1"
+  },
+  {
+   "claim": "20 to 300 Riemann steps approximate the integral to within 5% on their image/text models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "approximation error",
+   "value": "within 5%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Steps m in Eq 3; developers should check that attributions sum to F(x)-F(x') and raise m if not",
+   "quote": "In practice, we find that somewhere between 20 and 300 steps are enough to approximate the integral (within 5%)",
+   "table": null,
+   "note": "PDF text uses ligature for 'find'; see quote check",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "The NMT model needs 100-1000 steps because the network is highly nonlinear.",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps m",
+   "value": "100-1000",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSTM-based GNMT (Wu et al., 2016), baseline zeroed embeddings except start/end markers",
+   "quote": "We use 100 −1000 steps (cf. Section 5) in the integrated",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.4"
+  },
+  {
+   "claim": "Integrated gradients needs 20 to 300 network calls, versus n calls per path (and n! paths) for Shapley-Shubik.",
+   "kind": "claim",
+   "source": null,
+   "metric": "calls to network",
+   "value": "20 to 300",
+   "unit": "calls",
+   "baseline_value": "n = 10000 calls per path for a 100X100 image",
+   "n": null,
+   "setup": "Object recognition network with 100X100 input",
+   "quote": "In contrast, integrated gradients is able to operate with 20",
+   "table": null,
+   "note": "Quote ends at line break; continues 'to 300 calls.'",
+   "where": "Sec 4.2 Remark 5"
+  },
+  {
+   "claim": "In the molecule shown, atom-pairs with a bond contribute 46% of the prediction score cumulatively; all other pairs -3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of prediction score",
+   "value": "46%",
+   "unit": "%",
+   "baseline_value": "-3% for non-bonded pairs",
+   "n": 1,
+   "setup": "One molecule, W2N2 graph-convolution net (Kearnes et al., 2016), task PCBA-58432, baseline zeroed atom/pair features",
+   "quote": "cumulatively contribute to 46% of the prediction score, while",
+   "table": null,
+   "note": "Single example, not an aggregate",
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "Integrated gradients exposed a W1N2 architecture bug: atoms with the same type and bond counts received identical attribution because features were not fully convolved.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "W1N2 network of Kearnes et al. 2016",
+   "quote": null,
+   "table": null,
+   "note": "Qualitative",
+   "where": "Sec 6.5"
+  },
+  {
+   "claim": "DeepLift and LRP give attributions (2,-1) on network g but (1.5,-0.5) on the functionally equivalent f; integrated gradients gives (1.5,-0.5) for both.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 7, input x1=3, x2=1, reference x1=x2=0",
+   "quote": null,
+   "table": "Figure 7, rows DeepLift and LRP, networks f and g",
+   "note": "Figure text in extraction; values 1.5, -0.5, 2, -1",
+   "where": "App B, Fig 7"
+  },
+  {
+   "claim": "On min(x1,x2) with baseline (0,0) and input (1,3), integrated gradients gives all credit to x1 while Shapley-Shubik gives 1/2 each.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Remark 5",
+   "quote": "whereas Shapley-Shubik assigns attri-",
+   "table": null,
+   "note": "Number 1/2 is in the quote continuation",
+   "where": "Sec 4.2 Remark 5"
+  },
+  {
+   "claim": "Integrated gradients is the unique symmetry-preserving path method; path methods are the only ones satisfying Implementation Invariance, Sensitivity(b), Linearity and Completeness.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 1 (proof App A); Proposition 2 from Friedman 2004",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation of attribution quality; authors say empirical evaluation cannot separate model vs method errors (Sec 4).",
+  "Does not address interactions between input features or the logic employed by the network (Sec 8).",
+  "Result depends on baseline choice; baseline should have near-zero score and convey absence of signal (Sec 5).",
+  "All-zero text embedding is not a valid input; justified only by small norms of unimportant words.",
+  "Integrated gradients is not the unique method satisfying the axioms; averaging over paths (Shapley-Shubik) also does.",
+  "Step counts, network sizes and training details of applications are not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Sensitivity(a)",
+   "definition": "for every input and baseline that differ in one feature but have different predictions then the differing feature should be given a non-zero attribution",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "Implementation Invariance",
+   "definition": "the attributions are always identical for two functionally equivalent networks",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "Completeness",
+   "definition": "the attributions add up to the difference between the output of F at the input x and the baseline x'",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Symmetry-Preserving",
+   "definition": "symmetric variables with identical input and baseline values receive identical attributions",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Friedman 2004, Paths and consistency in additive cost sharing",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Proposition 2 about path methods is from here",
+   "quote": null
+  },
+  {
+   "work": "Aumann & Shapley 1974, Values of Non-Atomic Games",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "IG corresponds to Aumann-Shapley cost sharing",
+   "quote": null
+  },
+  {
+   "work": "DeepLift (Shrikumar et al.)",
+   "year": 2016,
+   "arxiv": "1704.02685",
+   "relation": "contradicts",
+   "note": "Shown to break Implementation Invariance",
+   "quote": null
+  },
+  {
+   "work": "LRP (Binder et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Breaks Implementation Invariance",
+   "quote": null
+  },
+  {
+   "work": "Guided back-propagation (Springenberg et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Breaks Sensitivity",
+   "quote": null
+  },
+  {
+   "work": "Deconvolutional networks (Zeiler & Fergus)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "Breaks Sensitivity",
+   "quote": null
+  },
+  {
+   "work": "Simonyan et al. saliency maps",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "gradients*input",
+   "quote": null
+  },
+  {
+   "work": "LIME (Ribeiro et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "No sensitivity guarantee",
+   "quote": null
+  },
+  {
+   "work": "Lundberg & Lee, unified interpretation",
+   "year": 2016,
+   "arxiv": "1611.07478",
+   "relation": "related",
+   "note": "Shapley-style attribution, averaged paths",
+   "quote": null
+  },
+  {
+   "work": "GoogleNet, Szegedy et al.",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Object recognition model",
+   "quote": null
+  },
+  {
+   "work": "GNMT, Wu et al.",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "evaluates",
+   "note": "Translation model",
+   "quote": null
+  },
+  {
+   "work": "Kearnes et al., molecular graph convolutions",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Chemistry model",
+   "quote": null
+  },
+  {
+   "work": "Kim 2014, CNN for sentence classification",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Question classifier architecture",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Three paths between a baseline (r1, r2) and an input (s1, s2)",
+   "page": 4,
+   "why": "Shows path methods and the straight-line choice"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Comparing integrated gradients with gradients at the image",
+   "page": 6,
+   "why": "Visual contrast between IG and gradients*image; image xref 201 (page 6, 2499x1250)"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Attributions from question classification model",
+   "page": 7,
+   "why": "Token-level highlights; trigger phrases"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Attributions from a language translation model",
+   "page": 7,
+   "why": "Attribution as alignment"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Attributions for two functionally equivalent networks",
+   "page": 10,
+   "why": "Concrete counterexample table for implementation invariance"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3, Eq 1",
+   "snippet": "IntegratedGrads_i(x) ::= (x_i - x'_i) × ∫_{α=0}^{1} ∂F(x' + α×(x - x'))/∂x_i dα",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 5, Eq 3",
+   "snippet": "IntegratedGrads^approx_i(x) ::= (x_i - x'_i) × Σ_{k=1}^{m} ∂F(x' + k/m × (x - x'))/∂x_i × 1/m",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction has ligatures (e.g. fi) and line-broken equations; equations in code are reconstructed.",
+  "Fig 2 is a single raster image on page 6 (xref 201); Figs 4-7 images on pages 7, 8, 10: xrefs 222/228 (p7), 233/234 (p8), 309/310 (p10)."
+ ]
+}

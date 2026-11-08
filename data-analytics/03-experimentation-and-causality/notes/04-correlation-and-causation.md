@@ -7,6 +7,7 @@ sources:
   - https://mixtape.scunning.com/
   - https://doi.org/10.1126/science.187.4175.398 (Bickel, Hammel and O'Connell, Science, 1975; not held)
   - Reinhart, Statistics Done Wrong (No Starch, 2015) (ch. 8, Model Abuse)
+  - McElreath, Statistical Rethinking (CRC Press, 2nd ed.) (ch. 10, Berkeley admissions)
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
   - "https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)"
@@ -275,6 +276,11 @@ severe        0.3      0.500
 Treatment is better for mild patients and for severe patients, and worse overall, because treatment went mostly to severe cases. Arithmetic can't say which table to trust; only the causal story can. Severity affects both who was treated and who recovered, so it is a confounder and you stratify. If the subgroup had been something the treatment changed, the pooled table would be the right one. That was the deeplink case in [the metrics chapter](02-metrics-and-kpi-design.md).
 
 The classic real case is graduate admissions at Berkeley in 1973. Women were admitted less often overall, but when [Bickel, Hammel and O'Connell (Science, 1975)](https://doi.org/10.1126/science.187.4175.398) looked department by department they found little sign of bias against women, because women had applied more often to departments that were harder to get into. Reinhart's account of the same case gives the margins: of 12,763 applications, 44% of men and 35% of women were accepted, yet of 101 departments only 4 showed a significant bias against women and 6 against men (*Statistics Done Wrong*, ch. 8; as he reports it, and he adds that the often-told lawsuit never happened).
+
+McElreath refits the same data in its six-department extract (12 rows, 4,526 applications; a narrower slice than Reinhart's 101 departments) and shows the reversal as a regression coefficient. With gender alone the male coefficient is +0.61 on the log-odds scale, odds multiplied by 1.84, a male advantage of about 14% in admission probability. Add a separate intercept for each department and it falls to -0.10 (SD 0.08, 89% interval -0.23 to 0.03), odds about 0.90. The department intercepts run from 0.68 down to -2.62, which is the whole story: women applied to the departments that admit few. Only departments C and E show women below men. Department-only and department-plus-gender models tie on WAIC (5200.9 against 5201.4), both far below the gender-only 5954.9, so gender adds nothing once department is in. The point is that the pooled posterior looked clean and never hinted at the problem: "inspecting the posterior distribution alone would never have revealed that fact" (*Statistical Rethinking*, ch. 10). The cause came from outside the data table, from asking where applicants went. The same model is fitted in code, with the posterior-validation plot, in [the Bayesian machine learning note](../../04-bayesian-analysis/notes/06-bayesian-machine-learning.md).
+
+![Pooled model: predicted admission rates for men and women against the observed rates in each of the six departments](../../sources/images/statistical-rethinking-fig10-5.png)
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 10.5*
 
 His second case has the numbers in one table. In a 1986 non-randomised review of kidney-stone surgery, percutaneous nephrolithotomy had the better overall success rate, 83% against 78% for open surgery, and the worse rate in both size groups:
 

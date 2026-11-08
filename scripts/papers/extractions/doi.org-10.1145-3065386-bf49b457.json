@@ -1,0 +1,553 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1145/3065386",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/krizhevsky-2017-imagenet-classification-deep-convolutional-neural.pdf",
+ "bib": {
+  "title": "ImageNet Classification with Deep Convolutional Neural Networks",
+  "authors": [
+   "Alex Krizhevsky",
+   "Ilya Sutskever",
+   "Geoffrey E. Hinton"
+  ],
+  "first_author": "Krizhevsky",
+  "year": 2017,
+  "venue": "Communications of the ACM (reprint of NeurIPS 2012); the PDF text is the 2012 NeurIPS layout",
+  "arxiv": null,
+  "doi": "10.1145/3065386"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35340,
+  "chars_total": 35340,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a large, deep convolutional network trained end to end on GPUs with supervised learning classify ImageNet far better than hand-engineered pipelines?",
+ "hypothesis": "Larger/deeper CNNs, with enough labelled data and techniques against overfitting, keep improving with faster GPUs and bigger datasets.",
+ "contributions": [
+  "One of the largest CNNs to date, best results reported on ILSVRC-2010 and ILSVRC-2012",
+  "Highly optimized GPU implementation of 2D convolution and training ops, released publicly",
+  "Novel features (ReLU, two-GPU split, local response normalization, overlapping pooling) that improve performance and cut training time",
+  "Effective overfitting prevention (data augmentation, dropout)"
+ ],
+ "method": {
+  "summary": "Eight-layer CNN (5 conv, 3 fully connected, 1000-way softmax) with ReLUs, local response normalization, overlapping max-pooling, trained by SGD with momentum on two GTX 580 GPUs; dropout in the first two FC layers and two forms of data augmentation limit overfitting.",
+  "task": "1000-class image classification (ImageNet ILSVRC)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ILSVRC-2010",
+    "role": "both",
+    "size": "~1.2M train, 50,000 val, 150,000 test images; ~1000 images in each of 1000 categories",
+    "split": "official train/val/test; test labels available",
+    "source": "ImageNet subset; labelled via Amazon Mechanical Turk",
+    "preprocessing": "Rescale shorter side to 256, centre-crop 256x256, subtract training-set mean per pixel; random 224x224 crops + horizontal flips; PCA RGB colour jitter (alpha sd 0.1)"
+   },
+   {
+    "name": "ILSVRC-2012",
+    "role": "both",
+    "size": "same sizes as ILSVRC-2010 (1.2M train, 50,000 val, 150,000 test)",
+    "split": "test labels not public; val and test error used interchangeably (differ by under 0.1%)",
+    "source": "ImageNet subset",
+    "preprocessing": "as above"
+   },
+   {
+    "name": "ImageNet Fall 2011 release",
+    "role": "pretrain",
+    "size": "15M images, 22K categories",
+    "split": null,
+    "source": "ImageNet",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet Fall 2009",
+    "role": "both",
+    "size": "8.9M images, 10,184 categories",
+    "split": "half train, half test (own split)",
+    "source": "ImageNet",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky 2009",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "AlexNet CNN",
+    "role": "proposed",
+    "params": "60 million (650,000 neurons)",
+    "architecture": "5 conv + 3 FC layers, ReLU everywhere, LRN after conv1/conv2, overlapping max-pool (s=2,z=3) after LRN and conv5, 1000-way softmax; split across 2 GPUs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8 learned layers",
+    "hidden": "FC layers 4096 neurons each",
+    "heads": null,
+    "context": "224x224x3 input (150,528 dims)",
+    "other": {
+     "conv1": "96 kernels 11x11x3, stride 4",
+     "conv2": "256 kernels 5x5x48",
+     "conv3": "384 kernels 3x3x256",
+     "conv4": "384 kernels 3x3x192",
+     "conv5": "256 kernels 3x3x192",
+     "neurons_per_layer": "253,440-186,624-64,896-64,896-43,264-4096-4096-1000",
+     "LRN": "k=2, n=5, alpha=1e-4, beta=0.75"
+    }
+   }
+  ],
+  "training": {
+   "objective": "multinomial logistic regression (maximize mean log-probability of the correct label)",
+   "optimizer": "SGD, momentum 0.9",
+   "lr": "0.01 initial, same for all layers",
+   "lr_schedule": "divide by 10 when validation error stops improving; reduced three times before termination (manual)",
+   "warmup": null,
+   "batch_size": "128 examples",
+   "steps": null,
+   "epochs": "roughly 90 cycles through the training set",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0005",
+   "dropout": "p=0.5 on the first two fully-connected layers; test time use all neurons with outputs x0.5",
+   "regularisation": "dropout, weight decay, data augmentation (random crops/flips: 2048x set; PCA colour jitter)",
+   "hardware": "2x NVIDIA GTX 580 3GB GPUs",
+   "compute": null,
+   "wall_clock": "five to six days",
+   "seeds": null,
+   "other": {
+    "init": "weights zero-mean Gaussian sd 0.01; biases 1 in conv2, conv4, conv5 and FC hidden layers, 0 elsewhere",
+    "update_rule": "v_{i+1}=0.9 v_i - 0.0005 eps w_i - eps <dL/dw>; w_{i+1}=w_i+v_{i+1}",
+    "dropout_cost": "roughly doubles iterations required to converge",
+    "unsupervised_pretraining": "not used"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Test: 10 patches (4 corners + centre, plus flips), softmax outputs averaged",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "ensembles": "5 CNNs averaged; 7 CNNs (5 + 2 pretrained on Fall 2011) averaged"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 error",
+     "definition": "fraction of test images whose correct label is not the model's top prediction",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-5 error",
+     "definition": "fraction of test images for which the correct label is not among the five labels considered most probable",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Sparse coding (ILSVRC-2010 winner)",
+    "SIFT + Fisher Vectors",
+    "ILSVRC-2012 second-best (FVs)"
+   ],
+   "protocol": "Single runs; no seeds or significance tests reported; ILSVRC-2012 val/test used interchangeably"
+  },
+  "availability": {
+   "code": "http://code.google.com/p/cuda-convnet/ (GPU conv code and parameter files)",
+   "weights": null,
+   "data": "ImageNet / ILSVRC public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.dropout",
+    "quote": "setting to zero the output of each hidden neuron with probability 0.5",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Single CNN beats prior ILSVRC-2010 state of the art on top-1 error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 37.5,
+   "unit": "%",
+   "baseline_value": 45.7,
+   "n": null,
+   "setup": "ILSVRC-2010 test set, 1.2M training images, single CNN, 60M params, 10-patch averaging",
+   "quote": "top-1 and top-5 error rates of 37.5%",
+   "table": null,
+   "note": "Baseline 45.7% is best published SIFT+FVs; competition best 47.1%.",
+   "where": "Abstract / Table 1"
+  },
+  {
+   "claim": "Single CNN top-5 error on ILSVRC-2010 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": 17.0,
+   "unit": "%",
+   "baseline_value": 25.7,
+   "n": null,
+   "setup": "ILSVRC-2010 test set, 1.2M training images, single CNN, 60M params, 10-patch averaging",
+   "quote": "Our network achieves top-1 and top-5\ntest set error rates of 37.5% and 17.0%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "Averaged 7-CNN ensemble wins ILSVRC-2012 with 15.3% top-5 test error vs 26.2% for the runner-up.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 test error",
+   "value": 15.3,
+   "unit": "%",
+   "baseline_value": 26.2,
+   "n": null,
+   "setup": "ILSVRC-2012 test; 5 CNNs plus 2 CNNs pretrained on ImageNet Fall 2011",
+   "quote": "achieved a winning top-5 test error rate of 15.3%",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "A single CNN reaches 18.2% top-5 on ILSVRC-2012 validation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 val error",
+   "value": 18.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2012 validation, one CNN",
+   "quote": "The CNN described in this paper achieves\na top-5 error rate of 18.2%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6 / Table 2"
+  },
+  {
+   "claim": "ReLU network reaches 25% training error on CIFAR-10 six times faster than tanh.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 6,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "4-layer CNN, CIFAR-10, no regularization, learning rates tuned per network",
+   "quote": "reaches a 25%\ntraining error rate on CIFAR-10 six times faster than an equivalent network with\ntanh neurons",
+   "table": null,
+   "note": "Magnitude varies with architecture; 'several times faster' in general.",
+   "where": "Fig 1 caption (Sec 3.1)"
+  },
+  {
+   "claim": "Dropout (p=0.5, first two FC layers) is needed to prevent substantial overfitting but roughly doubles iterations to converge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "convergence cost",
+   "value": 2,
+   "unit": "x iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fully-connected layers 1 and 2, ImageNet",
+   "quote": "Dropout roughly doubles the number of iterations required to converge.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Weight decay of 0.0005 reduces training error, not merely a regularizer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "weight decay",
+   "value": 0.0005,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SGD momentum 0.9, batch 128",
+   "quote": "weight decay of 0.0005",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Two-GPU split lowers top-1 error by 1.7 points vs a one-GPU net with half the kernels per conv layer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error reduction",
+   "value": 1.7,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2010; comparison biased in favour of one-GPU net (see footnote 2)",
+   "quote": "reduces our top-1\nand top-5 error rates by 1.7% and 1.2%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Local response normalization lowers top-1 error by 1.4 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error reduction",
+   "value": 1.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2010",
+   "quote": "reduces our top-1 and top-5 error rates by 1.4% and 1.2%",
+   "table": null,
+   "note": "CIFAR-10: 13% without, 11% with normalization (4-layer CNN).",
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Overlapping pooling (s=2,z=3) lowers top-1 error by 0.4 points vs s=2,z=2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error reduction",
+   "value": 0.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC-2010",
+   "quote": "reduces the top-1 and top-5 error rates by 0.4% and 0.3%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Random-crop/flip augmentation enlarges the training set by a factor of 2048.",
+   "kind": "measured",
+   "source": null,
+   "metric": "augmentation factor",
+   "value": 2048,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "224x224 crops of 256x256 images plus reflections",
+   "quote": "increases the size of our\ntraining set by a factor of 2048",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "PCA colour augmentation reduces top-1 error by over 1 point.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error reduction",
+   "value": 1,
+   "unit": "points (over)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ILSVRC",
+   "quote": "This scheme reduces the top-1 error rate by over 1%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Removing any middle conv layer costs about 2% top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 loss",
+   "value": 2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation of single conv layers",
+   "quote": "removing any of the middle layers results in a loss of about 2% for the top-1 performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "Training takes five to six days on two GTX 580 3GB GPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "5-6",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "~90 epochs, 1.2M images",
+   "quote": "Our network takes between ﬁve\nand six days to train on two GTX 580 3GB GPUs.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Network has 60M parameters; each conv layer holds no more than 1% of parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": 60,
+   "unit": "million",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AlexNet",
+   "quote": "Our neural network architecture has 60 million parameters.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Without 10-patch averaging, ILSVRC-2010 error is 39.0% top-1 and 18.3% top-5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": 39.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Single centre patch",
+   "quote": "are 39.0% and\n18.3%",
+   "table": null,
+   "note": null,
+   "where": "Footnote 5, Sec 6"
+  }
+ ],
+ "limits": [
+  "No ablation table for dropout or ReLU on ImageNet itself: ReLU speed claim is on CIFAR-10 with a 4-layer net; dropout benefit is stated qualitatively ('substantial overfitting' without it) with no number.",
+  "Hyperparameters were hand-tuned (LR schedule manual, LRN constants on validation); single runs, no seeds or variance.",
+  "Authors expect unsupervised pre-training would help; not tested.",
+  "Tied to 2012 hardware (3GB GPUs, model split across two); the two-GPU comparison is biased toward the one-GPU net.",
+  "Dated: LRN and the two-GPU column split later dropped; dropout 'recently-introduced' (cited as 2012 arXiv)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ReLU",
+   "definition": "Rectified Linear Unit: neuron with non-saturating f(x) = max(0, x)",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "dropout",
+   "definition": "setting to zero the output of each hidden neuron with probability 0.5",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Hinton et al., Improving neural networks by preventing co-adaptation of feature detectors",
+   "year": 2012,
+   "arxiv": "1207.0580",
+   "relation": "uses-method",
+   "note": "dropout",
+   "quote": null
+  },
+  {
+   "work": "Nair and Hinton, Rectified linear units improve restricted Boltzmann machines",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ReLU naming and use",
+   "quote": null
+  },
+  {
+   "work": "Jarrett et al., What is the best multi-stage architecture for object recognition?",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "|tanh| nonlinearity, local contrast normalization precedent",
+   "quote": null
+  },
+  {
+   "work": "Ciresan et al., Multi-column deep neural networks",
+   "year": 2012,
+   "arxiv": "1202.2745",
+   "relation": "related",
+   "note": "columnar CNN similar to two-GPU scheme",
+   "quote": null
+  },
+  {
+   "work": "Ciresan et al., High-performance neural networks for visual object classification",
+   "year": 2011,
+   "arxiv": "1102.0183",
+   "relation": "related",
+   "note": "GPU-trained CNNs, augmentation",
+   "quote": null
+  },
+  {
+   "work": "LeCun et al., Handwritten digit recognition with a back-propagation network",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "CNN lineage",
+   "quote": null
+  },
+  {
+   "work": "Deng et al., ImageNet",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "Sanchez and Perronnin, High-dimensional signature compression",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SIFT+FVs, 45.7/25.7",
+   "quote": null
+  },
+  {
+   "work": "Berg, Deng, Fei-Fei, ILSVRC 2010",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "sparse coding, 47.1/28.2",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A four-layer convolutional neural network with ReLUs (solid line) reaches a 25% training error rate on CIFAR-10 six times faster than an equivalent network with tanh neurons (dashed line).",
+   "page": 3,
+   "why": "Shows ReLU training speedup directly"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "An illustration of the architecture of our CNN, explicitly showing the delineation of responsibilities between the two GPUs.",
+   "page": 5,
+   "why": "Layer sizes and two-GPU split at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "96 convolutional kernels of size 11x11x3 learned by the first convolutional layer on the 224x224x3 input images.",
+   "page": 6,
+   "why": "Learned Gabor-like and colour filters"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "(Left) Eight ILSVRC-2010 test images and the five labels considered most probable by our model. (Right) Five test images and the six training images nearest in last-hidden-layer feature space.",
+   "page": 8,
+   "why": "Qualitative predictions and feature-space retrieval"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 5",
+   "snippet": "v_{i+1} := 0.9*v_i - 0.0005*eps*w_i - eps*<dL/dw|w_i>_Di ; w_{i+1} := w_i + v_{i+1}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "The PDF text is the 2012 NeurIPS manuscript layout (9 pages, no CACM retrospective), though filed under the CACM 2017 DOI.",
+  "Text uses ligature characters (fi, fl) and wrapped lines; quotes spanning lines contain newlines."
+ ]
+}

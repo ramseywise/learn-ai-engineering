@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - ../practice/serving_encoders_vlm_lab.py (generated text and invoices, M4 Pro, 24 GB)
   - https://arxiv.org/abs/2311.03285
+  - https://arxiv.org/abs/2010.05680
   - https://raw.githubusercontent.com/huggingface/text-embeddings-inference/main/README.md
   - https://docs.vllm.ai/en/latest/models/pooling_models/
   - https://sbert.net/docs/sentence_transformer/usage/efficiency.html
@@ -77,6 +78,11 @@ Our real run used the encoder's own tokenizer:
 Sorting gave 2.8 to 4.5× across the four runs. A token budget without sorting ranged from 0.7 to 1.3×, so we saw no reliable gain, and with sorting its gain wasn't stable either. What a budget gives you is a ceiling: no batch can exceed 2,048 tokens, where a sorted batch of 32 can reach 8,192. That's a memory guarantee, and it's why [TEI](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/main/README.md), Hugging Face's embedding server, has `max_batch_tokens` (default 16,384).
 
 Sorting has a limit online, since you can only sort what's waiting. That's why a backfill, embedding a whole catalogue offline, gets all of this gain, while a live queue gets only part of it. Our data is generated and heavily skewed on purpose, so a corpus of even lengths would gain far less. Measure your own padding share first, because it's one line of code.
+
+Sorting is only half of the fix, because the batches also have to be cut. [arXiv:2010.05680](https://arxiv.org/abs/2010.05680) (Fang et al., PPoPP 2021) sorts the queue by length and then chooses the cut points by dynamic programming, over a table of measured latency per (sequence length, batch size). For five requests of length 17, 18, 52, 63 and 77, one batch of five takes **20.62 ms** and three batches take **15.24 ms**, which is **35%** more responses per second. Fewer, bigger batches are not automatically better. On a BERT classifier on one RTX 2060 with Tensor Cores on and request lengths 5–500, padding all waiting requests together (**98** responses/s) was worse than no batching (**120**), and the dynamic-programming cut reached **144**. Sorting also moves latency around: on lengths 2–100 its average latency was higher than naive batching's at 237 and 323 requests/s (about 10.9 vs 10.1 ms and 15.4 vs 12.4 ms) and tied at 99, and the paper attributes that to long requests being delayed. At 5–500 it had the lowest latency. The cost table needs a warm-up pass over every length and batch size, and the measurements use PyTorch 1.5 and one consumer GPU, so take the shape of the result, not the numbers.
+
+![Five requests of different length served as one padded batch of five (left, 20.62 ms) or as three length-grouped batches (right, 15.24 ms)](../sources/images/fang-2021-turbotransformers-fig8.png)
+*Image Source: Fang et al., [TurboTransformers: An Efficient GPU Serving System For Transformer Models](https://arxiv.org/abs/2010.05680) (2021), Fig. 8*
 
 ### How long to wait for a batch
 

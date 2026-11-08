@@ -1,0 +1,751 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.3115/v1/d14-1162",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/pennington-2014-glove.pdf",
+ "bib": {
+  "title": "GloVe: Global Vectors for Word Representation",
+  "authors": [
+   "Jeffrey Pennington",
+   "Richard Socher",
+   "Christopher D. Manning"
+  ],
+  "first_author": "Pennington",
+  "year": 2014,
+  "venue": "EMNLP 2014",
+  "arxiv": null,
+  "doi": "10.3115/v1/d14-1162"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 46220,
+  "chars_total": 46220,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "What model properties make vector arithmetic capture word regularities, and can a model trained on global co-occurrence counts match or beat local context-window methods?",
+ "hypothesis": "Ratios of co-occurrence probabilities, not raw probabilities, are the right starting point for word vector learning, so a global log-bilinear weighted least squares model should combine count-based efficiency with prediction-based linear substructure.",
+ "contributions": [
+  "Derivation of a global log-bilinear regression objective from co-occurrence probability ratios",
+  "A weighted least squares model (GloVe) trained only on nonzero entries of the word-word co-occurrence matrix",
+  "Analogy, similarity and NER results above baselines; released code and vectors"
+ ],
+ "method": {
+  "summary": "Builds a word-word co-occurrence matrix X from a tokenised, lowercased corpus (distance-weighted 1/d), then fits word and context vectors by weighted least squares on log X_ij with AdaGrad over nonzero entries. The final vector is W + W~. Evaluated on word analogy, five similarity sets and CoNLL-2003 NER.",
+  "task": "unsupervised word representation learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia 2010",
+    "role": "pretrain",
+    "size": "1B tokens",
+    "split": null,
+    "source": "2010 Wikipedia dump",
+    "preprocessing": "Stanford tokenizer, lowercased, 400,000 most frequent words"
+   },
+   {
+    "name": "Wikipedia 2014",
+    "role": "pretrain",
+    "size": "1.6B tokens",
+    "split": null,
+    "source": "2014 Wikipedia dump",
+    "preprocessing": "same"
+   },
+   {
+    "name": "Gigaword 5",
+    "role": "pretrain",
+    "size": "4.3B tokens",
+    "split": null,
+    "source": null,
+    "preprocessing": "same"
+   },
+   {
+    "name": "Gigaword5 + Wikipedia2014",
+    "role": "pretrain",
+    "size": "6B tokens",
+    "split": null,
+    "source": null,
+    "preprocessing": "same"
+   },
+   {
+    "name": "Common Crawl",
+    "role": "pretrain",
+    "size": "42B tokens",
+    "split": null,
+    "source": "web data",
+    "preprocessing": "same but vocabulary of about 2 million words"
+   },
+   {
+    "name": "Common Crawl (large)",
+    "role": "pretrain",
+    "size": "840B tokens",
+    "split": null,
+    "source": "web data",
+    "preprocessing": "not lowercased; results not directly comparable; only reported as scalability demonstration, no numbers given"
+   },
+   {
+    "name": "Word analogy (Mikolov et al. 2013a)",
+    "role": "eval",
+    "size": "19,544 questions",
+    "split": "semantic and syntactic subsets",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "WordSim-353, MC, RG, SCWS, RW",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CoNLL-2003 English NER",
+    "role": "both",
+    "size": "437,905 discrete features generated on the training set",
+    "split": "train on CoNLL-03 train; test on CoNLL-03 dev/test, ACE Phase 2 + ACE-2003, MUC7 Formal Run",
+    "source": "Reuters newswire; four types PER LOC ORG MISC",
+    "preprocessing": "BIO2, preprocessing of Wang and Manning 2013"
+   }
+  ],
+  "models": [
+   {
+    "name": "GloVe",
+    "role": "proposed",
+    "params": null,
+    "architecture": "log-bilinear weighted least squares on co-occurrence; two vector sets W and W~ plus biases",
+    "init_from": null,
+    "tokenizer": "Stanford tokenizer, lowercased",
+    "vocab": "400,000 (about 2 million for Common Crawl)",
+    "layers": null,
+    "hidden": "50 (NER), 100, 300 (analogy and similarity); dimensions varied 0-600 in Fig 2",
+    "heads": null,
+    "context": "10 words left and 10 right unless noted",
+    "other": {
+     "xmax": "100",
+     "alpha": "3/4",
+     "pair weight": "1/d for words d apart",
+     "final vectors": "W + W~"
+    }
+   },
+   {
+    "name": "word2vec SG and CBOW (SG dagger, CBOW dagger)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "skip-gram / CBOW",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "400,000",
+    "layers": null,
+    "hidden": "300",
+    "heads": null,
+    "context": "window 10",
+    "other": {
+     "negative samples": "10 (5 for NER CBOW)",
+     "corpus": "6B"
+    }
+   },
+   {
+    "name": "SVD, SVD-S, SVD-L",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SVD of truncated X (top 10,000 columns); of X, sqrt(X), log(1+X)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HPCA, ivLBL, vLBL, HSMN, CW, CBOW*",
+    "role": "baseline",
+    "params": null,
+    "architecture": "published models",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "context": null,
+    "other": {
+     "note": "HPCA, HSMN, CW use public vectors; ivLBL/vLBL numbers from Mnih et al. 2013; SG/CBOW numbers from Mikolov et al. 2013a,b"
+    }
+   }
+  ],
+  "training": {
+   "objective": "J = sum_ij f(X_ij)(w_i^T w~_j + b_i + b~_j - log X_ij)^2, f(x)=(x/xmax)^alpha if x<xmax else 1",
+   "optimizer": "AdaGrad, stochastic sampling of nonzero elements of X",
+   "lr": "0.05 (initial)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "50 iterations for vectors under 300 dims, 100 otherwise",
+   "tokens": "1B to 42B (840B in a side run)",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "dual 2.1GHz Intel Xeon E5-2658, 32 cores",
+   "compute": null,
+   "wall_clock": "about 85 minutes to build X (6B tokens, single thread); 14 minutes per iteration (300d, 32 cores)",
+   "seeds": null,
+   "other": {
+    "init": "random (W and W~ differ only by random init when X symmetric)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "analogy": "answer d maximising cosine similarity to w_b - w_a + w_c; exact match only",
+    "similarity": "normalise each feature across vocabulary then cosine; Spearman correlation with human judgments",
+    "NER": "CRF (CRFjoin of Wang and Manning 2013), 50d vectors of a five-word context as continuous features, L-BFGS stopping after 25 iterations without dev improvement"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "analogy accuracy",
+     "definition": "exact match, semantic/syntactic/total",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman rank correlation",
+     "definition": "cosine vs human similarity",
+     "unit": "x100",
+     "higher_is_better": true
+    },
+    {
+     "name": "NER F1",
+     "definition": "entity F1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SVD, SVD-S, SVD-L",
+    "HPCA",
+    "ivLBL, vLBL",
+    "word2vec SG and CBOW",
+    "HSMN",
+    "CW",
+    "Discrete (no vectors)"
+   ],
+   "protocol": "single runs, no significance tests stated; word2vec comparison matches vector size, window, corpus, vocab, training time"
+  },
+  "availability": {
+   "code": "http://nlp.stanford.edu/projects/glove/",
+   "weights": "http://nlp.stanford.edu/projects/glove/",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "initial learning rate of",
+    "where": "4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GloVe 300d on 42B tokens gets 75.0% total analogy accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75.0,
+   "unit": "%",
+   "baseline_value": "SVD-L 49.2 on same corpus",
+   "n": null,
+   "setup": "19,544-question analogy set; Common Crawl 42B, 300d, window 10, 400k vocab",
+   "quote": null,
+   "table": "Table 2, row GloVe 300 42B, column Tot.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GloVe 300d 42B semantic analogy accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Crawl 42B, 300d, window 10, 400k vocab",
+   "quote": null,
+   "table": "Table 2, row GloVe 300 42B, column Sem.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GloVe 300d 42B syntactic analogy accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 69.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Crawl 42B, 300d, window 10, 400k vocab",
+   "quote": null,
+   "table": "Table 2, row GloVe 300 42B, column Syn.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the same 6B corpus, GloVe 300d beats word2vec skip-gram and CBOW on total analogy accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71.7,
+   "unit": "%",
+   "baseline_value": "SG 69.1, CBOW 65.7",
+   "n": null,
+   "setup": "Wikipedia 2014 + Gigaword 5, 6B tokens, 300d, window 10; SG dagger and CBOW dagger trained with word2vec, 10 negative samples",
+   "quote": null,
+   "table": "Table 2, row GloVe 300 6B, column Tot.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "GloVe 100d on 1.6B tokens beats ivLBL 100d and HPCA",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 60.3,
+   "unit": "%",
+   "baseline_value": "ivLBL 53.2, HPCA 10.8",
+   "n": null,
+   "setup": "Wikipedia 2014, 100d",
+   "quote": null,
+   "table": "Table 2, row GloVe 100 1.6B, column Tot.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Plain SVD of counts is very poor on analogies at 300d, 6B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 7.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVD on truncated X (top 10,000 columns), 6B tokens",
+   "quote": null,
+   "table": "Table 2, row SVD 300 6B, column Tot.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "SVD-L got worse when the corpus grew from 6B to 42B on total analogy accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49.2,
+   "unit": "%",
+   "baseline_value": "SVD-L 60.1 on 6B",
+   "n": null,
+   "setup": "SVD-L 300d, 42B tokens",
+   "quote": null,
+   "table": "Table 2, row SVD-L 300 42B, column Tot.",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Spearman correlation on WordSim-353, GloVe 42B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75.9,
+   "unit": "x100",
+   "baseline_value": "CBOW* 100B 68.4",
+   "n": null,
+   "setup": "300d, 42B tokens",
+   "quote": null,
+   "table": "Table 3, row GloVe 42B, column WS353",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Spearman correlation on RW (rare words), GloVe 42B",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 47.8,
+   "unit": "x100",
+   "baseline_value": "CBOW* 100B 45.5",
+   "n": null,
+   "setup": "300d, 42B tokens",
+   "quote": null,
+   "table": "Table 3, row GloVe 42B, column RW",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "GloVe 6B similarity scores are mixed against word2vec SG: WS353",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 65.8,
+   "unit": "x100",
+   "baseline_value": "SG dagger 62.8",
+   "n": null,
+   "setup": "300d, 6B tokens",
+   "quote": null,
+   "table": "Table 3, row GloVe 6B, column WS353",
+   "note": "GloVe is lower than SG dagger on SCWS: 53.9 vs 58.1",
+   "where": "Table 3"
+  },
+  {
+   "claim": "GloVe 50d NER F1 on CoNLL dev",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 93.2,
+   "unit": "F1",
+   "baseline_value": "Discrete 91.0",
+   "n": null,
+   "setup": "CRF with 50d vectors, CoNLL-03 train",
+   "quote": null,
+   "table": "Table 4, row GloVe, column Dev",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GloVe 50d NER F1 on MUC7",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 82.2,
+   "unit": "F1",
+   "baseline_value": "Discrete 73.4, CBOW 81.1",
+   "n": null,
+   "setup": "CRF with 50d vectors",
+   "quote": null,
+   "table": "Table 4, row GloVe, column MUC7",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "GloVe 50d NER F1 on CoNLL test is slightly below HPCA",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.3,
+   "unit": "F1",
+   "baseline_value": "HPCA 88.7",
+   "n": null,
+   "setup": "CRF with 50d vectors",
+   "quote": null,
+   "table": "Table 4, row GloVe, column Test",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Co-occurrence probability ratio for ice/steam with solid is large, with gas small, with water and fashion near 1",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.9,
+   "unit": "ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 billion token corpus; k = solid",
+   "quote": null,
+   "table": "Table 1, row P(k|ice)/P(k|steam), column k = solid",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Typical word co-occurrences fit a power law in pair frequency rank with alpha 1.25, giving |X| = O(|C|^0.8)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.25,
+   "unit": "exponent",
+   "baseline_value": null,
+   "n": null,
+   "setup": "corpora studied in the paper",
+   "quote": "For the corpora studied in this article, we observe that Xi j is well-modeled by Eqn. (17) with α =",
+   "table": null,
+   "note": "Quote truncated at the equation because the value follows a line break",
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Zero entries account for 75-95% of the co-occurrence matrix X",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "75-95",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "depends on vocabulary size and corpus",
+   "quote": "yet even just the zero entries account for 75–95% of the data in X",
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  },
+  {
+   "claim": "Populating X takes about 85 minutes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "85",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single thread, dual 2.1GHz Xeon E5-2658, 10-word symmetric window, 400k vocab, 6B tokens",
+   "quote": "takes about 85 minutes",
+   "table": null,
+   "note": null,
+   "where": "Section 4.6"
+  },
+  {
+   "claim": "One 300d training iteration takes 14 minutes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32 cores, 6B tokens, 400k vocab",
+   "quote": "a single iteration takes 14 minutes",
+   "table": null,
+   "note": null,
+   "where": "Section 4.6"
+  },
+  {
+   "claim": "Analogy gains diminish beyond about 200 dimensions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "200",
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6B corpus, window 10, Fig 2a",
+   "quote": "diminishing returns for vec-",
+   "table": null,
+   "note": "Read from text, see Fig 2a",
+   "where": "Section 4.4"
+  },
+  {
+   "claim": "At equal training time GloVe beats word2vec; word2vec accuracy falls when negative samples exceed about 10",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "300d, 6B, 400k vocab, window 10, Fig 4",
+   "quote": "GloVe consistently outperforms",
+   "table": null,
+   "note": null,
+   "where": "Section 4.7"
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests; single runs.",
+  "word2vec comparison holds unspecified parameters at defaults, admitted as a simplification to relax in a more thorough analysis.",
+  "Choice alpha=3/4 has only empirical motivation.",
+  "Semantic analogy accuracy drops on Gigaword vs Wikipedia; authors attribute it to the city/country-heavy analogy set, untested.",
+  "840B-token run reported without numbers and not comparable (cased).",
+  "Static word-level vectors, one vector per word, no OOV or subword handling; 2014 baselines only; analogy evaluation has since been criticised (not in paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "symmetric / asymmetric context",
+   "definition": "A context window that extends to the left and right of a target word will be called symmetric, and one which extends only to the left will be called asymmetric.",
+   "where": "Section 4.4"
+  },
+  {
+   "term": "GloVe",
+   "definition": "Global Vectors, because the global corpus statistics are captured directly by the model.",
+   "where": "Section 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Efficient Estimation of Word Representations in Vector Space (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": "1301.3781",
+   "relation": "baseline",
+   "note": "skip-gram and CBOW; also the analogy task and fractional power scaling",
+   "quote": null
+  },
+  {
+   "work": "Distributed representations of words and phrases (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "negative sampling results",
+   "quote": null
+  },
+  {
+   "work": "Linguistic regularities in continuous space word representations (Mikolov et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "analogy task",
+   "quote": null
+  },
+  {
+   "work": "Latent semantic analysis (Deerwester et al.)",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "global matrix factorisation family",
+   "quote": null
+  },
+  {
+   "work": "HAL (Lund and Burgess)",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "term-term count matrices",
+   "quote": null
+  },
+  {
+   "work": "COALS (Rohde et al.)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "normalised co-occurrence",
+   "quote": null
+  },
+  {
+   "work": "Hellinger PCA (Lebret and Collobert)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "HPCA vectors",
+   "quote": null
+  },
+  {
+   "work": "Mnih and Kavukcuoglu, vLBL and ivLBL",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "log-bilinear window models",
+   "quote": null
+  },
+  {
+   "work": "Levy, Goldberg, Ramat-Gan, explicit PPMI embeddings",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "3COSMUL analogy metric",
+   "quote": null
+  },
+  {
+   "work": "Baroni et al. Dont count, predict!",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "argues prediction models better; GloVe argues the two are not fundamentally different",
+   "quote": null
+  },
+  {
+   "work": "Collobert and Weston",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CW vectors for NER",
+   "quote": null
+  },
+  {
+   "work": "Huang et al. HSMN",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "NER and SCWS",
+   "quote": null
+  },
+  {
+   "work": "Wang and Manning, nonlinear architecture in sequence labelling",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CRF NER setup",
+   "quote": null
+  },
+  {
+   "work": "CoNLL-2003 shared task (Tjong Kim Sang, De Meulder)",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "NER data",
+   "quote": null
+  },
+  {
+   "work": "AdaGrad (Duchi et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "Co-occurrence probabilities for target words ice and steam with selected context words from a 6 billion token corpus.",
+   "page": 3,
+   "why": "Motivates ratios of probabilities over raw probabilities."
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Weighting function f with alpha = 3/4.",
+   "page": 4,
+   "why": "Shows the saturating weight on co-occurrence counts."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Accuracy on the analogy task as function of vector size and window size/type.",
+   "page": 7,
+   "why": "Dimension and window effects, semantic vs syntactic."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Accuracy on the analogy task for 300-dimensional vectors trained on different corpora.",
+   "page": 9,
+   "why": "Corpus size effect."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Overall accuracy on the word analogy task as a function of training time.",
+   "page": 10,
+   "why": "GloVe vs word2vec at equal training time."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqn 8-9",
+   "snippet": "J = sum_{i,j=1}^V f(X_ij) (w_i^T w~_j + b_i + b~_j - log X_ij)^2 ; f(x) = (x/xmax)^alpha if x < xmax else 1",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations in cached text are broken across lines; quotes for them were avoided.",
+  "Page numbers in figures are PDF pages inferred from the printed page markers (1532 = page 1)."
+ ]
+}

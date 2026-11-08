@@ -24,7 +24,7 @@ Start from the problem, then pick the family. Each row names the note and headin
 | Predict a class | Logistic and linear SVM, kNN, naive Bayes, tree, kernel SVM, MLP | Linear for high-dimensional, sparse, large data. kNN for small data and a baseline. Naive Bayes for very fast text baselines. A tree to explain a model to people | Note 02, "Which model, when" |
 | Either, on a table | Random forest, gradient boosting | The forest is the first serious model. Boosting is for the last points of accuracy | Note 06, "Rules of thumb". Note 07 |
 | A rare event | Boosting plus a threshold from costs | Tune the threshold and leave the data alone, on the data tested there | Note 10, "Imbalance: what each remedy does" |
-| Predict a count | Poisson, negative binomial | Loss, metric and baseline only. The model is in [DA 02/06](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Note 11, "Counts" |
+| Predict a count | Poisson, negative binomial | Loss, metric and baseline only. The model is in [DA 02/06](../../data-analytics/02-probability-and-statistics/notes/06b-logistic-regression-and-poisson-glms.md) | Note 11, "Counts" |
 | Fewer columns, or a picture | PCA, NMF, t-SNE | t-SNE is for visualisation only | Note 05 |
 | Find groups | k-means, agglomerative, DBSCAN, Gaussian mixture | Numeric columns | Note 05, "Comparing and evaluating" |
 | Find groups in mixed columns | FAMD, MCA, Gower with PAM, k-prototypes, latent class | Depends on the column types, missing values and whether "no groups" must be a possible answer | Note 05b, "Which to reach for" |

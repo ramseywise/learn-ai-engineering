@@ -1,0 +1,448 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2147880316",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lafferty-2001-conditional-random-fields.pdf",
+ "bib": {
+  "title": "Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data",
+  "authors": [
+   "John Lafferty",
+   "Andrew McCallum",
+   "Fernando Pereira"
+  ],
+  "first_author": "Lafferty",
+  "year": 2001,
+  "venue": "ICML 2001 (venue not printed in the text; year and venue from the ledger request)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 37854,
+  "chars_total": 37854,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a discriminative sequence model with a single globally normalised exponential model avoid the label bias problem of MEMMs while keeping their ability to use arbitrary observation features?",
+ "hypothesis": "CRFs solve label bias and are more robust than MEMMs and HMMs when the true data has higher-order dependencies than the model.",
+ "contributions": [
+  "Introduce conditional random fields, a framework for segmenting and labeling sequences",
+  "Show the label bias problem of MEMMs and other per-state normalised models",
+  "Two iterative scaling algorithms (S and T) for parameter estimation, with a convergence sketch",
+  "Experiments on synthetic data and Penn treebank POS tagging comparing HMM, MEMM, CRF"
+ ],
+ "method": {
+  "summary": "Chain-structured CRFs define p(y|x) as one exponential model normalised by Z(x) over whole label sequences, trained by maximum likelihood with improved iterative scaling variants using forward-backward. Compared with HMMs and MEMMs of identical state structure on synthetic HMM-generated data and POS tagging.",
+  "task": "sequence labeling (POS tagging, synthetic label-bias and mixed-order tasks)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Label-bias synthetic (noisy rib/rob network)",
+    "role": "both",
+    "size": "2,000 training and 500 test samples",
+    "split": "typical run",
+    "source": "generated from an HMM encoding Figure 1; each state emits its symbol with probability 29/32 and any other symbol with 1/32",
+    "preprocessing": null
+   },
+   {
+    "name": "Mixed-order synthetic HMMs",
+    "role": "both",
+    "size": "1,000 sequences of length 25 per randomly generated model",
+    "split": "sample used for training and testing (split not stated)",
+    "source": "randomly chosen mixed first/second-order HMMs, 5 labels a-e, 26 observation values A-Z, sparse tables (at most 2 or 3 nonzero entries)",
+    "preprocessing": null
+   },
+   {
+    "name": "Penn treebank",
+    "role": "both",
+    "size": "1.1 million words",
+    "split": "50%-50% train-test (other splits qualitatively similar)",
+    "source": "Penn treebank POS tagging, 45 tags",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CRF",
+    "role": "proposed",
+    "params": null,
+    "architecture": "chain CRF with features f_k on edges and g_k on vertices",
+    "init_from": "all-zero parameters; CRF+ initialised from converged MEMM+ parameters",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "MEMM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "per-state exponential models over next states",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HMM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "first-order HMM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise conditional log-likelihood O(theta)=sum_i log p_theta(y_i|x_i)",
+   "optimizer": "improved iterative scaling: Algorithm S (slack feature) and Algorithm T (per-T(x) counters, Newton roots)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "synthetic mixed-order: CRF about 500 iterations, MEMM about 100; POS: MEMM+ about 100 iterations, CRF+ 1,000 iterations (from MEMM init), CRF from uniform not converged after 2,000",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "25 (mixed-order synthetic)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "500 MHz Pentium PC",
+   "compute": "about 0.2 seconds per CRF iteration (mixed-order synthetic)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "convergence": "stopped at stabilisation / convergence of iterative scaling; criterion not given",
+    "POS features": "tag-word mu_{y,x} and tag-tag lambda_{y',y}; spelling features: begins with number or upper case, contains hyphen, suffixes -ing -ogy -ed -s -ly -ion -tion -ity -ies"
+   }
+  },
+  "inference": {
+   "decoding": "Viterbi (forward-backward decoding gave no significant change)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "synthetic: several runs, one error rate per test set; POS: one run per model",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "error rate",
+     "definition": "synthetic: test-set label error; POS: per-word error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "oov error",
+     "definition": "per-word error on out-of-vocabulary words not seen in training",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "HMM",
+    "MEMM"
+   ],
+   "protocol": "single runs; no significance tests, seeds or confidence intervals stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On label-bias data the CRF error is 4.6% against 42% for the MEMM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error",
+   "value": "4.6%",
+   "unit": "%",
+   "baseline_value": "42%",
+   "n": null,
+   "setup": "Noisy rib/rob HMM data, 2,000 train and 500 test samples, same topology, identity-of-symbol features, typical run",
+   "quote": "the CRF error is 4.6% while the MEMM error is 42%,",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Plain POS tagging: CRF has the lowest error of the three without spelling features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error",
+   "value": "5.55%",
+   "unit": "%",
+   "baseline_value": "HMM 5.69%, MEMM 6.37%",
+   "n": null,
+   "setup": "Penn treebank POS tagging, 45 tags, first-order models, trained on 50% of the 1.1 million word corpus, 50-50 train-test split, oov rate 5.45%",
+   "quote": null,
+   "table": "Fig 4 table, row CRF, column error",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Plain POS tagging oov error: HMM 45.99%, CRF 48.05%, MEMM 54.61%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "oov error",
+   "value": "48.05%",
+   "unit": "%",
+   "baseline_value": "HMM 45.99%, MEMM 54.61%",
+   "n": null,
+   "setup": "Penn treebank POS tagging, 45 tags, first-order models, trained on 50% of the 1.1 million word corpus, 50-50 train-test split, oov rate 5.45%",
+   "quote": null,
+   "table": "Fig 4 table, row CRF, column oov error",
+   "note": "HMM beats CRF on oov error without spelling features",
+   "where": "Fig 4"
+  },
+  {
+   "claim": "With spelling features CRF+ reaches 4.27% error versus 4.81% for MEMM+.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error",
+   "value": "4.27%",
+   "unit": "%",
+   "baseline_value": "MEMM+ 4.81%",
+   "n": null,
+   "setup": "Penn treebank POS tagging, 45 tags, first-order models, trained on 50% of the 1.1 million word corpus, 50-50 train-test split, oov rate 5.45%, with spelling features",
+   "quote": null,
+   "table": "Fig 4 table, row CRF+, column error",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "With spelling features CRF+ oov error is 23.76% versus 26.99% for MEMM+.",
+   "kind": "measured",
+   "source": null,
+   "metric": "oov error",
+   "value": "23.76%",
+   "unit": "%",
+   "baseline_value": "MEMM+ 26.99%",
+   "n": null,
+   "setup": "Penn treebank POS tagging, 45 tags, first-order models, trained on 50% of the 1.1 million word corpus, 50-50 train-test split, oov rate 5.45%, with spelling features",
+   "quote": null,
+   "table": "Fig 4 table, row CRF+, column oov error",
+   "note": null,
+   "where": "Fig 4"
+  },
+  {
+   "claim": "Spelling features cut overall error by around 25% for MEMM and CRF.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative error reduction",
+   "value": "25%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same POS setup, MEMM and CRF with orthographic features",
+   "quote": "rate reduced by around 25%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "On mixed-order synthetic data the CRF usually beats the MEMM by 10%-20% relative error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative error",
+   "value": "10%–20%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Random mixed first/second-order HMMs, 5 labels, 26 observations, 1,000 sequences of length 25; first-order models trained; points with alpha<0.01 are exceptions",
+   "quote": "often by a wide margin of 10%–20%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 3"
+  },
+  {
+   "claim": "CRF training from uniform start had not converged after 2,000 iterations, while CRF+ initialised from MEMM+ converged in 1,000.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations to convergence",
+   "value": "1,000 iterations",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "POS tagging with spelling features",
+   "quote": "which converged in 1,000 iter-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "CRF training on synthetic data takes about 500 iterations versus about 100 for the MEMM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations to stabilise",
+   "value": "500 iterations",
+   "unit": "iterations",
+   "baseline_value": "MEMM about 100",
+   "n": null,
+   "setup": "Mixed-order synthetic data, Algorithm S",
+   "quote": "typically taking approximately 500 iterations",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "MEMMs earlier reported as doubling precision relative to HMMs on a FAQ segmentation task.",
+   "kind": "reported",
+   "source": "McCallum, Freitag, Pereira 2000",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FAQ segmentation task, MEMMs vs HMMs, as reported by McCallum et al. 2000",
+   "quote": null,
+   "table": null,
+   "note": "No numeric value; claim only",
+   "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Main stated limitation: slow convergence of training relative to MEMMs and HMMs.",
+  "Convergence proof is only sketched; full proof deferred.",
+  "No learning rate, regularisation, seeds or significance tests; single runs on POS; no held-out dev set.",
+  "Synthetic experiments do not test the extra representational power of CRFs over HMMs (Fig 3 caption).",
+  "Without spelling features the HMM beats the CRF on oov error (45.99% vs 48.05%).",
+  "Only chain-structured CRFs and a first-order model are tested; tree-structured CRFs, feature induction and boosting-style training left to future work.",
+  "Iterative scaling has been superseded by gradient methods such as L-BFGS (from general knowledge, not stated in the paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "label bias problem",
+   "definition": "the transitions leaving a given state compete only against each other, rather than against all other transitions in the model",
+   "where": "Sec 1"
+  },
+  {
+   "term": "conditional random field",
+   "definition": "(X, Y) such that, conditioned on X, the Y_v obey the Markov property with respect to the graph G",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Maximum entropy Markov models for information extraction and segmentation (McCallum, Freitag, Pereira)",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "main baseline; CRF fixes its label bias",
+   "quote": null
+  },
+  {
+   "work": "Inducing features of random fields (Della Pietra, Della Pietra, Lafferty)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "improved iterative scaling basis",
+   "quote": null
+  },
+  {
+   "work": "Bottou, Une approche theorique de l'apprentissage connexionniste",
+   "year": 1991,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "label bias, conservation of score mass",
+   "quote": null
+  },
+  {
+   "work": "Darroch & Ratcliff, Generalized iterative scaling",
+   "year": 1972,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Algorithm S related",
+   "quote": null
+  },
+  {
+   "work": "Penn treebank",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "POS tagging data",
+   "quote": null
+  },
+  {
+   "work": "Ratnaparkhi, maximum entropy POS model",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "local conditional model with label bias",
+   "quote": null
+  },
+  {
+   "work": "Collins, Schapire, Singer, Logistic regression, AdaBoost, Bregman distances",
+   "year": 2000,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative training suggested",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Label bias example, after (Bottou, 1991).",
+   "page": 2,
+   "why": "rib/rob automaton showing single-successor states ignoring observations"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Graphical structures of simple HMMs (left), MEMMs (center), and the chain-structured case of CRFs (right) for sequences.",
+   "page": 4,
+   "why": "shows directed vs undirected dependence on X at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Plots of 2x2 error rates for HMMs, CRFs, and MEMMs on randomly generated synthetic data sets",
+   "page": 6,
+   "why": "scatter of CRF vs MEMM vs HMM error"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Per-word error rates for POS tagging on the Penn treebank",
+   "page": 7,
+   "why": "the results table"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3, eq 1",
+   "snippet": "p_theta(y|x) ∝ exp( sum_{e in E,k} lambda_k f_k(e, y|e, x) + sum_{v in V,k} mu_k g_k(v, y|v, x) )",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3",
+   "snippet": "Z_theta(x) = (M_1(x) M_2(x) ... M_{n+1}(x))_{start,stop}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text has ligature glyphs and figure-axis debris; Fig 4 table is flattened to one cell per line.",
+  "Venue/year are not printed in the PDF text; taken from the task statement.",
+  "Code field equations are paraphrased, not verbatim, from garbled math."
+ ]
+}

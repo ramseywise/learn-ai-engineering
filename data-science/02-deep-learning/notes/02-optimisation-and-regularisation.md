@@ -5,6 +5,7 @@ sources:
   - https://www.coursera.org/specializations/deep-learning
   - Buduma, Fundamentals of Deep Learning (O'Reilly, 2017)
   - James et al., An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 10
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 18
   - https://proceedings.mlr.press/v9/glorot10a.html
   - https://arxiv.org/abs/1502.01852
   - https://jmlr.org/papers/v15/srivastava14a.html
@@ -323,6 +324,8 @@ Your **Regularization** notebook uses data from a French football goalkeeper, de
 | Dropout | Mask $D = (\text{rand} < p_{keep})$; $A \mathrel{*}= D / p_{keep}$ (inverted dropout); same mask in backward; **off at test time** | 93% / 95% |
 
 Dropout comes from Srivastava et al., who frame it as training an exponential family of thinned networks that share weights ([JMLR 2014](https://jmlr.org/papers/v15/srivastava14a.html)). To make overfitting visible on digits I took 300 training rows and replaced the labels of 30% with random ones. A wide network has the capacity to memorise those flips:
+
+Dropout has an exact statistical reading in the linear case. Zero each predictor with probability $\phi$ and scale the survivors by $1/(1-\phi)$, and the expected least-squares score equation gives $\hat\beta = \left(X^\top X + \tfrac{\phi}{1-\phi} D\right)^{-1} X^\top y$ with $D = \mathrm{diag}(\lVert x_j\rVert^2)$, a generalised ridge regression that is plain ridge once the variables are standardised. Adding i.i.d. noise to the inputs gives ridge too, so input distortion (shifted, tinted or noised copies of each image) is also a ridge-like penalty; with a nonlinear activation the identity holds only approximately (*Computer Age*, ch. 18, notes). The book's CIFAR-100 network raises the dropout rate with depth, 0.05 in layers 5 and 6, 0.10 in layers 8 and 9, 0.25 on the 2,000-unit dense layer and 0.5 on the output layer, and also bounds the L2 norm of every node's incoming weights at one; it says dropout works better in the deeper, denser layers (*Computer Age*, ch. 18).
 
 Buduma's ch. 2 adds two details. Max-norm clips each neuron's incoming weight vector to a radius $c$ (typically 3 or 4) after each step, and dropout there is *inverted*: survivors are divided by the keep probability $p$ in training so that $E[\text{output}] = p\cdot x/p = x$ and no rescaling is needed at test time (*Fundamentals of Deep Learning*, ch. 2). Its $p$ is the keep probability, the reverse of PyTorch's. It also gives a decision rule for the three-way split: training error that stalls means rethink the architecture, validation error that stalls while training improves means regularise, and a poor test score means more data.
 

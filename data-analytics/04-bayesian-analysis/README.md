@@ -48,7 +48,7 @@ Read 1 to 5 in order (1b follows 1 and can wait until after 2). Chapter 6 needs 
 | Chapter | Why |
 |---|---|
 | [DS 03/03 Topic models and summarization](../../data-science/03-nlp/notes/03-topic-models-and-summarization.md) | LDA is Bayesian inference with conjugate priors |
-| [GA 05/01 RL foundations](../../generative-ai/05-RL/notes/01-rl-foundations.md) | Bandits lead into contextual bandits and RL |
+| [GA 05/01c Bandits](../../generative-ai/05-RL/notes/01c-bandit-algorithms.md) | Bandits lead into regret bounds, contextual bandits and RL ([01 RL foundations](../../generative-ai/05-RL/notes/01-rl-foundations.md)) |
 | [AIE 04/08 Self-improving loops](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md) | A Bayesian bandit shifts live traffic between candidates |
 | [DS 05/03 Two-tower and evaluation](../../data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | Segment effects read with partial pooling (the pointer back from that chapter is still to come) |
 

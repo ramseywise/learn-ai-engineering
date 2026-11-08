@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # was: own coursework
 sources:
+  - McElreath, Statistical Rethinking (CRC Press, 2nd ed.) (ch. 15, Horoscopes)
   - ../practice/AB-Bayes/AB_Testing_with_Python.ipynb
   - ../../02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb
   - https://www.kaggle.com/datasets/zhangluyuan/ab-testing (ab_data.csv, not included)
@@ -392,6 +393,8 @@ harmful     [=====]   |           |
 Larkspur's interval of [+0.34, +0.95] sits in the second row. The lift is real, and it may or may not clear the bar. "Significant, ship it" would have skipped a real conversation about whether a lift near 0.34 pays for the work. The fourth row is the one that gets misreported. "No significant difference" there means you could not rule out a worthwhile effect, and teams regularly report it as "no effect". Kohavi and colleagues warn that "does not hurt" launches can actually be negative and merely underpowered, and that a migration where you want to retain the null needs a power calculation of its own.
 
 A good report reads: "Treatment converts at 5.58% against 4.93%, a lift of +0.64 points, 95% CI [+0.34, +0.95], p < 0.001. Sample ratio check passes (p = 0.33)."
+
+Write the analysis down before the data arrive. McElreath's closing advice is to pre-plan the research together with the statistical analysis, document it as a mock analysis you would not be ashamed to show a colleague, register it publicly, collect the data, then analyse as planned; a change of plan is fine if it is documented and justified, and the data and scripts go online rather than "on request" (*Statistical Rethinking*, ch. 15). For a test, the mock analysis is the primary metric, the unit of randomisation, the sample size from the power calculation, the stopping rule, the guardrails and the segments you will look at, written in the experiment ticket before launch. It is what makes "it worked on iOS" a hypothesis for the next test instead of a result, and it is the cheapest defence against the segment and metric fishing in the pitfalls table.
 
 ## What calibration looks like
 

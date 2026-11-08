@@ -1,0 +1,637 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.57702/zp44cu3g",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/krizhevsky-2024-learning-multiple-layers-features-tiny.pdf",
+ "bib": {
+  "title": "Learning Multiple Layers of Features from Tiny Images",
+  "authors": [
+   "Alex Krizhevsky"
+  ],
+  "first_author": "Krizhevsky",
+  "year": 2009,
+  "venue": "Technical report, University of Toronto (dated April 8, 2009)",
+  "arxiv": null,
+  "doi": "10.57702/zp44cu3g"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 83238,
+  "chars_total": 83238,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a multi-layer generative model (RBM/DBN) learn meaningful features from the 80 million tiny images, and do pre-trained features improve object recognition on a new reliably labelled subset (CIFAR-10/100)?",
+ "hypothesis": "Features learned by RBMs on a large unlabeled set of tiny images are more useful to a classifier than raw pixels (stated in the introduction).",
+ "contributions": [
+  "Training of Gaussian-Bernoulli RBMs and a second-layer RBM on 32x32 colour images that learn edge-like filters",
+  "Two reliably labelled datasets: CIFAR-10 (6000 images x 10 classes) and CIFAR-100 (600 images x 100 classes, 20 superclasses)",
+  "Object recognition experiments showing RBM pre-training helps",
+  "A distributed CD-1 algorithm for training RBMs across machines and cores"
+ ],
+ "method": {
+  "summary": "Gaussian-Bernoulli RBMs are trained with contrastive divergence (CD-1) on about 2 million whitened or unwhitened 32x32 tiny images, with the 1000 least significant principal components deleted. Their features feed multinomial logistic regression or initialise one-hidden-layer backprop nets, evaluated on CIFAR-10. A separate chapter describes and benchmarks a distributed CD-1 algorithm.",
+  "task": "unsupervised feature learning on natural images, then CIFAR-10 object classification; plus dataset creation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "80 million tiny images (Torralba, Fergus, Freeman 2008)",
+    "role": "pretrain",
+    "size": "80 million 32x32 colour images over 79000 search terms; about 2 million used for most unsupervised experiments",
+    "split": null,
+    "source": "Web search (Google, Flickr, Altavista) for every non-abstract WordNet noun, about the first 3000 results per term; duplicates and mostly-white images removed",
+    "preprocessing": "ZCA whitening (Appendix A) in some runs; deletion of the 1000 least significant principal components (2072 directions remain)"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "inferred: 60000 images (6000 in each of 10 classes)",
+    "split": "inferred: 50000 train; training set is 5000 randomly selected images per class; the remainder is test (inferred: 10000)",
+    "source": "Students paid hourly to filter mislabeled tiny images; every label verified by the author; duplicates removed by L2 norm with a liberal threshold. Funded by the Canadian Institute for Advanced Research",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-100",
+    "role": "eval",
+    "size": "inferred: 600 images in each of 100 classes (60000 total); 20 superclasses of 5 classes",
+    "split": null,
+    "source": "Same methodology as CIFAR-10; classes mutually exclusive with CIFAR-10",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Gaussian-Bernoulli RBM, 10000 hidden units, unwhitened input",
+    "role": "proposed",
+    "params": "inferred: about 10.24M weights (3072 x 10000)",
+    "architecture": "RBM with Gaussian visible units (fixed std 69) and binary hidden units",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer",
+    "hidden": "10000",
+    "heads": null,
+    "context": null,
+    "other": {
+     "visible_units": "inferred: 32x32x3 pixels",
+     "visible_std": "69 (measured average pixel std of the preprocessed data)"
+    }
+   },
+   {
+    "name": "Gaussian-Bernoulli RBM, 10000 hidden units, whitened input",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above, visible variance set to 1",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer",
+    "hidden": "10000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RBM with 8192 hidden units learning visible std",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Gaussian-Bernoulli RBM, per-pixel visible std learned",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer",
+    "hidden": "8192",
+    "heads": null,
+    "context": null,
+    "other": {
+     "visible_std": "fell from 69 to about 30; std of the stds 0.42"
+    }
+   },
+   {
+    "name": "Second-layer binary-to-binary RBM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "binary RBM on the 10000 hidden activation probabilities of the unwhitened first-layer RBM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2nd hidden layer",
+    "hidden": "10000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "26 patch RBMs merged into one big RBM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "26 independent RBMs of 300 hidden units on 8x8 patches (25 patches plus one subsampled whole image), merged into one RBM of 7800 hidden units on 32x32 images",
+    "init_from": "weights of the patch RBMs; absent weights set to 0; visible bias set to average of small RBMs",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden layer",
+    "hidden": "7800",
+    "heads": null,
+    "context": null,
+    "other": {
+     "subsampled_patch_weights": "each weight duplicated 16 times and divided by 16"
+    }
+   },
+   {
+    "name": "Backprop net initialised from RBM (one hidden layer of logistic units)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "1 hidden layer of 10000 logistic units, softmax (multinomial logistic) output",
+    "init_from": "first-layer weights from the RBM on unwhitened pixels; hidden-to-output weights from the logistic regression on RBM features",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden",
+    "hidden": "10000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Randomly initialised backprop nets (1000 and 10000 hidden units)",
+    "role": "baseline",
+    "params": "the 10000-unit model: roughly 2x10^8 parameters per footnote 3 (attached to the two-layer RBM net, text ambiguous)",
+    "architecture": "1 hidden logistic layer, logistic regression output",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden",
+    "hidden": "1000 / 10000",
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise average log probability of training cases under the RBM, approximated with Contrastive Divergence (CD-1 used almost exclusively); updates dw_ij = eps_w (E_data[v_i h_j] - E_model[v_i h_j]); reconstruction error (squared difference) as the monitored measure; backprop with logistic regression output for the classifiers",
+   "optimizer": "gradient ascent with CD-1; momentum and weight decay implemented (no values given)",
+   "lr": "not given; learning rate of the visible std is 100 to 1000 times smaller than the weight learning rate",
+   "lr_schedule": "not given (a learning rate increase is mentioned between epochs 1 and 2 in Fig 2.10)",
+   "warmup": null,
+   "batch_size": "8000 images per batch in the distributed algorithm (weight sync after each); minibatch 100 or 1000 in speed tests",
+   "steps": null,
+   "epochs": "patch RBMs trained 20 epochs before merging (read from Fig 2.10 and text); no other counts",
+   "tokens": null,
+   "seq_len": null,
+   "precision": "single precision floats in practice (distributed code); double compared",
+   "weight_decay": "implemented, value not given",
+   "dropout": null,
+   "regularisation": "deletion of the 1000 least significant principal components; whitening; weight decay",
+   "hardware": "machines with two dual-core Intel Xeon 3GHz CPUs, Intel MKL, TCP sockets between machines, pthreads within a machine; network 105 MB/s, latency 0.091 ms",
+   "compute": null,
+   "wall_clock": "not given for the image RBMs; for the 8000x20000 benchmark RBM, several minutes per 8000-example batch at best",
+   "seeds": null,
+   "other": {
+    "ordering": "greedy layer-wise: lower layers fixed while the next is trained",
+    "image_rbm_sizes": "initial attempt 8000 hidden units on 2M whitened images; 10000 hidden units later"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single test-set evaluation per model, no repeats stated; most probable class is the prediction",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Percent correct on CIFAR-10 test set",
+     "definition": "fraction of test images whose most probable class under the model equals the label",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Reconstruction error",
+     "definition": "squared difference (v - v')^2 between data and its one-step reconstruction",
+     "unit": "squared pixel units",
+     "higher_is_better": false
+    },
+    {
+     "name": "Speedup factor and training time",
+     "definition": "time to train 8000 random examples on an 8000 visible x 20000 hidden RBM versus one thread on one machine",
+     "unit": "x, seconds",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Logistic regression on raw whitened pixels",
+    "Logistic regression on raw unwhitened pixels",
+    "Randomly initialised backprop nets with 1000 and 10000 hidden units"
+   ],
+   "protocol": "Single run per model on the CIFAR-10 test set; accuracy appears only in a bar chart (Fig 3.1) with no variance, seeds or hyperparameter search details. Hyperparameters of the last model not tuned much (footnote 3)."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "CIFAR-10/100 described; no URL printed in the text"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics[0] values",
+    "quote": "Our results are summarized in Figure 3.13.",
+    "where": "Sec 3.2; the text prints 'Figure 3.13' where Figure 3.1 is meant"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best CIFAR-10 test accuracy comes from a one-hidden-layer net initialised from RBM features (e); value is printed only on the Fig 3.1 bar chart, not in the text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test set, 10000-unit RBM on unwhitened pixels, fine-tuned; bar label 64.84% read from Fig 3.1",
+   "note": "Bar labels read from Fig 3.1 (image on PDF page 36): a raw whitened 37.32, b raw unwhitened 41.13, c RBM(whi) 59.61, d RBM(unw) 63.78, e RBM(unw)+finetune 64.84, f 1000 backprop 49.78, g 10000 backprop 51.53, h 2-layer RBM LR 56.62, i 2-layer RBM + finetune top 62.20, j 2-layer RBM + finetune both 60.34 (percent correct).",
+   "where": "Sec 3.2, p34 Fig 3.1",
+   "quote": "The neural net that was initialized with RBM features achieved the best result, just slightly improving on the logistic regression model trained on RBM features."
+  },
+  {
+   "claim": "RBM features are far more useful than raw pixels for classification; logistic regression on raw pixels reaches 37.32% (whitened) and 41.13% (unwhitened) versus 63.78% on unwhitened RBM features, per Fig 3.1 bar labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test set, multinomial logistic regression; values read from Fig 3.1 only",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "We found that the RBM features were far more useful in the classication task than the raw pixels."
+  },
+  {
+   "claim": "Features from an RBM trained on unwhitened data beat those from an RBM trained on whitened data (63.78% vs 59.61% per Fig 3.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, logistic regression on 10000 RBM features",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "Furthermore, features from an RBM trained on unwhitened data outperformed those from an RBM trained on whitened data."
+  },
+  {
+   "claim": "Features from an RBM on raw pixels beat a randomly initialised net of the same size (63.78% vs 51.53% for 10000 hidden units per Fig 3.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "The gure also makes clear that, for the purpose of classication, the features learned by an RBM trained on the raw pixels are superior to the features learned by a randomly-initialized neural net."
+  },
+  {
+   "claim": "A second RBM layer and a two-hidden-layer net gave no improvement over one layer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10; Fig 3.1 shows h 56.62%, i 62.20%, j 60.34% against d 63.78% and e 64.84%",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "However, two hidden layers did not give us any improvement over one."
+  },
+  {
+   "claim": "RBM-initialised nets need many fewer epochs to train than randomly initialised nets of the same size, ignoring the cost of the 2-million-image RBM pretraining.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, one hidden layer",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "We should also mention that the neural nets initialized from RBM features take many fewer epochs to train than the equivalently-sized randomly-initialized nets"
+  },
+  {
+   "claim": "Training an RBM on 32x32 whitened images only succeeded after previous failures: 8000 hidden units on whitened 2M images gave meaningless filters, deleting 1000 least significant components did not help, but 26 patch RBMs with 300 hidden units each learned edge filters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2 million tiny images, Gaussian-Bernoulli RBM",
+   "note": null,
+   "where": "Sec 2.3-2.5",
+   "quote": "We trained 26 independent RBMs with 300 hidden units on each of these patches"
+  },
+  {
+   "claim": "A 10000-hidden-unit RBM trained directly on 2 million whitened 32x32 images learned edge-like filters once training was parallelised.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "2M whitened images, CD-1",
+   "note": null,
+   "where": "Sec 2.6",
+   "quote": "With this new, faster training algorithm we were quickly able to train an RBM with 10000 hidden units on the 32 × 32 whitened images."
+  },
+  {
+   "claim": "Average pixel standard deviation of the preprocessed unwhitened data is 69, used as the fixed visible std.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "69",
+   "unit": "pixel std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2M tiny images, 1000 smallest principal components deleted",
+   "note": null,
+   "where": "Sec 2.6",
+   "quote": "We measured the average standard deviation of the pixels in this dataset to be 69, so we set the standard deviation of the visible units of the RBM to 69 as well."
+  },
+  {
+   "claim": "Learning visible standard deviations lowered them from 69 to about 30 and greatly improved reconstruction error but made filters noisier; learning rate for std must be 100 to 1000 times below the weight learning rate.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "30",
+   "unit": "pixel std",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8192-hidden RBM, unwhitened 2M images",
+   "note": null,
+   "where": "Sec 2.7",
+   "quote": "over the course of training the standard deviations came down to about 30 from an initial value of 69"
+  },
+  {
+   "claim": "On unwhitened data all filters first pass through a point-filter stage before edge filters form, which can look like finished learning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "10000-hidden RBM on unwhitened data",
+   "note": null,
+   "where": "Sec 2.6",
+   "quote": "the point lters eventually evaporate and in their place form all kinds of edge lters"
+  },
+  {
+   "claim": "Total data sent by all machines scales linearly: 48*(K-1) MB per 8000-example batch for the binary 8000x20000 RBM.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "48",
+   "unit": "MB per (K-1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binary visible units, K machines, 8000 visible, 20000 hidden, batch 8000; Gaussian single precision 296/888/2072 MB and double 552/1656/3864 MB for 2/4/8 machines",
+   "note": null,
+   "where": "Sec 4.4.1, Table 4.1",
+   "quote": "Thus the total amount of data sent (equivalently, received) by all machines is 48 · (K −1) MB.",
+   "table": "Table 4.1, row Data sent (MB) (binary visibles), column 8 = 336"
+  },
+  {
+   "claim": "Doubling the number of machines very nearly doubles speed for binary RBMs; Gaussian visible RBMs scale slightly worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "8000 visible x 20000 hidden RBM, random data, minibatch 100 or 1000, Fig 4.6 and 4.7",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "It shows that doubling the number of machines very nearly doubles the performance in all cases."
+  },
+  {
+   "claim": "Single precision is nearly 3x faster than double initially and about 2x faster after much parallelisation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3x then 2x",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same benchmark RBM",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "Single precision is much faster initially (nearly 3x) but winds up about 2x faster after much parallelization."
+  },
+  {
+   "claim": "Weight synchronisation after each 8000-image batch keeps weights within 10^-9 at single precision, and takes at most four seconds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Distributed Gaussian-visible RBM",
+   "note": null,
+   "where": "Sec 4.3, 4.4",
+   "quote": "We execute the weight synchronization step after training on each batch of 8000 images. This proved sucient to keep the weights synchronized to within 10−9 at single precision."
+  },
+  {
+   "claim": "Parallelising an MNIST RBM (784 visible, 392 hidden) stopped paying after the second machine.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Binarised MNIST",
+   "note": null,
+   "where": "Sec 4.4.1",
+   "quote": "the benets of parallelization disappeared after we added the second machine."
+  },
+  {
+   "claim": "The tiny images dataset holds 80 million images at 32x32 across 79000 search terms.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "80 million",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset description",
+   "note": null,
+   "where": "Sec 1.2.1",
+   "quote": "In total, the dataset contains 80 million colour images downscaled to 32 × 32 and spread out across 79000 search terms."
+  },
+  {
+   "claim": "CIFAR-10 has 6000 images in each of 10 classes, 5000 per class in training; CIFAR-100 has 600 per class over 100 classes in 20 superclasses.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6000",
+   "unit": "images per class",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset construction",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "The labeled subset we collected consists of ten classes of objects with 6000 images in each class."
+  }
+ ],
+ "limits": [
+  "Classification accuracies appear only as bar-chart labels in Fig 3.1; no table, variance, seeds or repeated runs.",
+  "Experiments use CIFAR-10 only because CIFAR-100 was just completed (Sec 3.1).",
+  "Training hyperparameters (learning rates, epochs, momentum, weight decay, schedule) are largely unstated; compute and wall-clock for the image RBMs are not given.",
+  "Reconstruction error is conceded to be a poor measure of distribution fit (Sec 1.4.4); log-likelihood is intractable.",
+  "Largest net (about 2x10^8 parameters) overfit and was not tuned (footnote 3).",
+  "Parallelisation benchmarks use random data, not real images; one-thread and multi-thread baselines used different code versions.",
+  "Method is dated: RBM/DBN pretraining was later replaced by supervised convnets; the ledger year 2024 is wrong (the report is dated April 8, 2009)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ZCA whitening",
+   "definition": "W = (XX^T)^(-1/2): rotates to principal components, divides by the square root of variance, rotates back, giving unit variance and no correlation",
+   "where": "Appendix A"
+  },
+  {
+   "term": "CD-N",
+   "definition": "Contrastive Divergence algorithm that samples the hidden units N + 1 times",
+   "where": "Sec 1.4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Torralba, Fergus, Freeman: 80 million tiny images",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of the unlabeled images and noisy labels",
+   "quote": null
+  },
+  {
+   "work": "Hinton, Salakhutdinov: Reducing the dimensionality of data with neural networks",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "RBM pretraining then fine-tuning of nets",
+   "quote": null
+  },
+  {
+   "work": "Hinton: Training Products of Experts by Minimizing Contrastive Divergence",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CD training",
+   "quote": null
+  },
+  {
+   "work": "Bengio et al.: Greedy Layer-Wise Training of Deep Networks",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Gaussian visible RBMs and greedy layers",
+   "quote": null
+  },
+  {
+   "work": "Salakhutdinov, Murray: On the Quantitative Analysis of Deep Belief Networks",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "layer-wise bound argument",
+   "quote": null
+  },
+  {
+   "work": "Serre et al.: Robust Object Recognition with Cortex-Like Mechanisms",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "related",
+   "note": "finding that extra layers did not help is 'in line with' this",
+   "quote": null
+  },
+  {
+   "work": "Tieleman: Training RBMs using approximations to the likelihood gradient (PCD)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "distributed algorithm applies to PCD too",
+   "quote": null
+  },
+  {
+   "work": "Fergus (pers. comm.) and Le Roux (pers. comm.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier unsuccessful attempts to train such models on tiny images",
+   "quote": null
+  },
+  {
+   "work": "WordNet (Miller 1995)",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "search terms and hyponym-based label collection",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.1",
+   "caption": "Classification performance on the test set of the various methods tested.",
+   "page": "printed 34 (PDF 36, image xref 166)",
+   "why": "only place the CIFAR-10 accuracies appear (37.32 to 64.84%)"
+  },
+  {
+   "figure": "Fig 3.2",
+   "caption": "Confusion matrix for logistic regression on 10000 RBM features trained on unwhitened data.",
+   "page": "printed 35 (PDF 37, image xref 167)",
+   "why": "shows animals confused with animals, cat vs dog"
+  },
+  {
+   "figure": "Fig 2.13",
+   "caption": "A sample of the filters learned by an RBM with 10000 hidden units trained on 2 million 32x32 unwhitened images.",
+   "page": "PDF 31",
+   "why": "edge filters learned"
+  },
+  {
+   "figure": "Table 4.1",
+   "caption": "Total amount of data sent by the RBMs discussed in the text.",
+   "page": "printed 46",
+   "why": "communication scaling"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1.4 / Sec 1.4.1",
+   "snippet": "Delta w_ij = eps_w (E_data[v_i h_j] - E_model[v_i h_j])",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text refers to 'Figure 3.13' meaning Fig 3.1.",
+  "Accuracy numbers exist only in the Fig 3.1 image, so results carry them in notes, not as checked values.",
+  "Ledger year 2024 is wrong; report is April 2009.",
+  "Footnote 3 sits ambiguously between models (h) and (i)/(j); the 2x10^8 parameter claim could attach to the 10000-unit net."
+ ]
+}

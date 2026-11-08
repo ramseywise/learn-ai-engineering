@@ -1,0 +1,454 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1109/iccvw.2013.77",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/krause-2013-3d-object-representations-fine-grained.pdf",
+ "bib": {
+  "title": "3D Object Representations for Fine-Grained Categorization",
+  "authors": [
+   "Jonathan Krause",
+   "Michael Stark",
+   "Jia Deng",
+   "Li Fei-Fei"
+  ],
+  "first_author": "Krause",
+  "year": 2013,
+  "venue": "2013 IEEE International Conference on Computer Vision Workshops (ICCVW)",
+  "arxiv": null,
+  "doi": "10.1109/ICCVW.2013.77"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42219,
+  "chars_total": 42219,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Does lifting 2D object representations (SPM, BubbleBank) to 3D object space improve fine-grained car categorization, and what dataset tests it?",
+ "hypothesis": "Distinctive features of a fine-grained category are most naturally represented in 3D object space, so 3D representations should beat 2D ones and generalise across viewpoints.",
+ "contributions": [
+  "Lift SPM and BubbleBank to 3D in both appearance and location",
+  "New dataset of 207 fine-grained categories (BMW-10 and car-197)",
+  "Ultra-wide baseline matching with the 3D representation",
+  "First 3D reconstruction of a fine-grained category"
+ ],
+ "method": {
+  "summary": "Estimate rough 3D geometry of a car by matching to 41 CAD models with HOG one-vs-all linear SVMs over 1,008 viewpoint/coarse-category combinations, then pool RootSIFT features on rectified patches in 3D object space (SPM-3D, BB-3D) and classify with one-vs-all linear SVMs. Also introduces the BMW-10 and car-197 datasets.",
+  "task": "fine-grained car classification; ultra-wide baseline matching; 3D reconstruction",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "car-197",
+    "role": "eval",
+    "size": "16,185 images, 197 car models",
+    "split": null,
+    "source": "Class list crawled from a car website (cars made since 1990), deduplicated by perceptual hashing, 197 sampled; candidate images from Flickr, Google, Bing, deduplicated; verified on Amazon Mechanical Turk with Get Another Label (GAL) worker-quality model; AMT bounding boxes; final dedup on cropped boxes. Licence not stated.",
+    "preprocessing": "Cropped to bounding box, max dimension scaled to 300 pixels"
+   },
+   {
+    "name": "BMW-10",
+    "role": "eval",
+    "size": "512 images, 10 BMW sedan models",
+    "split": null,
+    "source": "Hand-collected by the authors",
+    "preprocessing": "Cropped, max dimension 300 px; flipped variant doubles training images"
+   },
+   {
+    "name": "car-types",
+    "role": "eval",
+    "size": "14 car classes",
+    "split": null,
+    "source": "Stark et al. BMVC 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "3D Object Classes (Savarese & Fei-Fei 2007)",
+    "role": "eval",
+    "size": "134 image pairs",
+    "split": null,
+    "source": "Existing dataset",
+    "preprocessing": null
+   },
+   {
+    "name": "Synthetic CAD renders",
+    "role": "train",
+    "size": "59,040 images",
+    "split": null,
+    "source": "41 CAD models of cars rendered at 36 azimuths, 4 elevations, 10 random backgrounds",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SPM-3D / BB-3D (SPM-3D-G, SPM-3D-L, BB-3D-G, BB-3D-L)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "hand-engineered features (RootSIFT, LLC coding or bubble responses) with 3D pooling and linear SVM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "inferred: SPM codebook 4096",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "SPM codebook": "4096; 1x1, 2x2, 4x4 pyramid",
+     "bubbles": "10k small-scale, 20k large-scale",
+     "power scaling": "16",
+     "hypotheses": "3 viewpoint/coarse-category hypotheses x 3 CAD models each",
+     "coarse categories": "sedan, SUV, coupe, convertible, pickup, hatchback, station wagon"
+    }
+   },
+   {
+    "name": "SPM (LLC), BB, HOG, KDES, PB(mvDPM), structDPM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "2D representations",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "one-vs-all L2-regularized L2-loss linear SVM",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "C chosen from 1e-6..1e10 by 25-fold cross-validation (small-scale); constant C=1e10 (large-scale)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "training images randomly sampled and fixed across methods in the amount-of-data experiment; number of seeds not stated",
+   "other": {
+    "geometry classifiers": "HOG + one-vs-all linear SVM, 1,008 viewpoint/coarse-category classes"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "top N (3) viewpoint/coarse-category hypotheses max-pooled",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "classification accuracy",
+     "definition": "fraction of test images correctly classified",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ultra-wide baseline accuracy",
+     "definition": "fraction of fundamental matrices whose Sampson error vs ground-truth correspondences is under 20 pixels",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "HOG",
+    "PB(mvDPM)",
+    "structDPM",
+    "KDES",
+    "SPM (LLC)",
+    "BB",
+    "SIFT",
+    "local parts (Zia)",
+    "3D shape (Zia)",
+    "3D2PM"
+   ],
+   "protocol": "Train/test split sizes for car-197 and BMW-10 are not stated in the main paper (implementation remainder is in supplementary material, not in this PDF). Single reported number per cell, no variance."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "to be made publicly available upon publication (no URL given)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.car-197.split",
+    "quote": "leaving the remainder for supplementary material",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "The new dataset has 207 fine-grained categories: BMW-10 (10 classes) and car-197 (197 classes).",
+   "kind": "measured",
+   "source": null,
+   "metric": "classes",
+   "value": "207",
+   "unit": "categories",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset introduction",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "a new dataset of 207 ﬁne-grained categories"
+  },
+  {
+   "claim": "car-197 contains 16,185 images across 197 car models.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "16,185",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "car-197, collected from Flickr, Google, Bing; AMT-verified",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "a large set of 197 car models (16,185"
+  },
+  {
+   "claim": "BMW-10 contains 512 hand-collected images of 10 BMW sedans.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "512",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BMW-10, hand-collected by the authors",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "10 BMW sedans (512 images)"
+  },
+  {
+   "claim": "On car-197, plain SPM (LLC) is best single method at 69.5%, beating BB-3D-G.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "69.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "car-197, 197 classes; 4096 codebook; one-vs-all linear SVM, C=1e10",
+   "note": null,
+   "where": "Table 2",
+   "quote": "SPM performs remarkably well with the increased",
+   "table": "Table 2 top, column SPM [30]"
+  },
+  {
+   "claim": "On car-197, BB-3D-G reaches 67.6%, BB 63.6%, SPM-3D-L 65.6%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "67.6",
+   "unit": "% accuracy",
+   "baseline_value": "63.6",
+   "n": null,
+   "setup": "car-197, 20k bubbles for BB/BB-3D",
+   "note": "Text: BB-3D-G beats BB by 4% and SPM-3D-L by 2%.",
+   "where": "Table 2",
+   "table": "Table 2 top, column BB-3D-G (ours)"
+  },
+  {
+   "claim": "Stacking all four representations on car-197 gives 75.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "75.5",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "car-197, stacked SPM + SPM-3D-L + BB + BB-3D-G",
+   "note": null,
+   "where": "Table 2 / Sec 5.1",
+   "table": "Table 2 top, column Stacked"
+  },
+  {
+   "claim": "On car-types (14 classes), BB-3D-G reaches 94.5%, 1% above structDPM (93.5%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "94.5",
+   "unit": "% accuracy",
+   "baseline_value": "93.5",
+   "n": null,
+   "setup": "car-types of Stark et al. 2012, 14 classes",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "BB-3D-G (94.5%) outperforms the best reported prior result of structDPM (93.5%) by 1%"
+  },
+  {
+   "claim": "On BMW-10, BB-3D-G reaches 66.1% vs BB 58.7% (HOG 28.3%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "66.1",
+   "unit": "% accuracy",
+   "baseline_value": "58.7",
+   "n": null,
+   "setup": "BMW-10, 10 classes, no flipping; 10k bubbles; C by 25-fold CV",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "BB-3D-G (66.1%) improves over BB by 7.4%"
+  },
+  {
+   "claim": "With flipped training images on BMW-10, BB-3D-G reaches 76.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "classification accuracy",
+   "value": "76.0",
+   "unit": "% accuracy",
+   "baseline_value": "69.3",
+   "n": null,
+   "setup": "BMW-10 (flipped): training set doubled with mirrored images",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "BB-3D-G (76.0%) outperforms"
+  },
+  {
+   "claim": "Ultra-wide baseline matching: BB-3D-M averages 25.8% (Av.1) vs SIFT 0.5% and local parts 22%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Av.1",
+   "value": "25.8",
+   "unit": "% fundamental matrices under 20 px Sampson error",
+   "baseline_value": "22",
+   "n": null,
+   "setup": "134 image pairs of 3D Object Classes; protocol of Zia et al.",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "BB-3D-M (25.8%)"
+  },
+  {
+   "claim": "3D CAD training renders total 59,040 synthetic images (41 CAD models x 36 azimuths x 4 elevations x 10 backgrounds).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "59,040",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Geometry classifiers for pose/coarse category",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "for a total of 59,040 synthetic images"
+  }
+ ],
+ "limits": [
+  "No train/test split sizes for car-197 or BMW-10 appear in the paper; implementation details and the class list are in supplementary material not in the PDF.",
+  "car-197 is 197 classes here; the 3D representation lost to plain 2D SPM on car-197 (69.5% vs 67.6%), which the authors attribute to underrepresentation of coarse categories such as large pickups in the CAD models.",
+  "Rigid objects only (cars); needs CAD models per coarse category.",
+  "Reconstruction result is qualitative and incomplete, with spurious points in textureless regions.",
+  "Hand-engineered pre-deep-learning features; accuracies are not comparable to later CNN results.",
+  "Single run per cell with no variance reported."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Fine-grained crowdsourcing for fine-grained recognition (Deng, Krause, Fei-Fei)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "BubbleBank, lifted to 3D",
+   "quote": null
+  },
+  {
+   "work": "LLC / spatial pyramid matching (Wang et al. 2010; Lazebnik et al. 2006)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SPM base",
+   "quote": null
+  },
+  {
+   "work": "Fine-grained categorization for 3D scene understanding (Stark et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "car-types dataset and PB(mvDPM)/structDPM baselines",
+   "quote": null
+  },
+  {
+   "work": "Birdlets (Farrell et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest prior 3D fine-grained work",
+   "quote": null
+  },
+  {
+   "work": "Revisiting 3D geometric models (Zia et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ultra-wide baseline protocol",
+   "quote": null
+  },
+  {
+   "work": "3D2PM (Pepik et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "reference result",
+   "quote": null
+  },
+  {
+   "work": "Get Another Label (Ipeirotis et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "worker quality modelling",
+   "quote": null
+  },
+  {
+   "work": "3D Object Classes (Savarese & Fei-Fei)",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "wide-baseline eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "One image each of 196 of the 197 classes in car-197 and each of the 10 classes in BMW-10.",
+   "page": 4,
+   "why": "Shows dataset diversity"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "(a) Comparison to state-of-the-art on car-types [27]. (b) In-depth analysis on our BMW-10 dataset.",
+   "page": 5,
+   "why": "Main baselines"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Top: Results on car-197. Bottom: Ultra-wide baseline matching results on 3D Object Classes [26].",
+   "page": 6,
+   "why": "Large-scale baseline numbers"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Text states 'one image each of 196 of the 197 classes' in Fig 3 caption (one class missing from figure).",
+  "Sec 5.1 lists car-types categories as 'sedans, hatchbacks, sedans, SUVs, convertibles' (duplicate as printed).",
+  "Some per-cell Table 1/2 values are listed in column order by the PDF text extractor; mapping inferred from column headers and body text."
+ ]
+}

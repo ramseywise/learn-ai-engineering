@@ -512,7 +512,7 @@ A zero-inflated Poisson mixes two processes: a zero comes from not working (prob
 
 Over-dispersed counts get a mixture too. A beta-binomial gives each row its own probability from a Beta distribution with mean pbar and concentration theta. On the Berkeley data without department, the book has theta 2.77 (sd 0.96) and our re-run gives pbar 0.41 and theta 2.77 (sd 0.95), a close reproduction. WAIC is unsafe with these models (he falls back on DIC), and an Exponential(1) prior on theta samples better than a half-Cauchy at the same inference.
 
-GLM mechanics, the link-function table and the Poisson offset belong with [regression and GLMs](../../02-probability-and-statistics/notes/06-regression-and-glms.md); the multilevel versions of these models are in [chapter 7](07-multilevel-models-and-partial-pooling.md) and [7b](07b-varying-slopes-measurement-error-and-missing-data.md).
+GLM mechanics, the link-function table and the Poisson offset belong with [regression and GLMs](../../02-probability-and-statistics/notes/06b-logistic-regression-and-poisson-glms.md); the multilevel versions of these models are in [chapter 7](07-multilevel-models-and-partial-pooling.md) and [7b](07b-varying-slopes-measurement-error-and-missing-data.md).
 
 ## Overfitting and information criteria
 

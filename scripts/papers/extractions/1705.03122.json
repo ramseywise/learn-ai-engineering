@@ -1,0 +1,708 @@
+{
+ "schema": 1,
+ "key": "1705.03122",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/gehring-2017-convolutional-sequence-sequence-learning.pdf",
+ "bib": {
+  "title": "Convolutional Sequence to Sequence Learning",
+  "authors": [
+   "Jonas Gehring",
+   "Michael Auli",
+   "David Grangier",
+   "Denis Yarats",
+   "Yann N. Dauphin"
+  ],
+  "first_author": "Gehring",
+  "year": 2017,
+  "venue": "ICML 2017 (arXiv v3 25 Jul 2017)",
+  "arxiv": "1705.03122",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 57415,
+  "chars_total": 57415,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a sequence to sequence model built entirely from convolutions match or beat deep recurrent (LSTM/GRU) models on large translation benchmarks while being much faster?",
+ "hypothesis": "Convolutions with GLUs, residual connections and per-layer attention can outperform recurrent seq2seq with easier optimisation and parallel computation over all positions.",
+ "contributions": [
+  "First fully convolutional seq2seq architecture (encoder and decoder) with GLUs, residual connections and position embeddings",
+  "Multi-step attention: a separate attention module in every decoder layer",
+  "Variance-preserving normalisation (scaling by sqrt(0.5), m*sqrt(1/m)) and GLU/dropout-aware weight initialisation",
+  "New state of the art on WMT'16 En-Ro, and beating GNMT on WMT'14 En-De and En-Fr at roughly an order of magnitude faster generation"
+ ],
+ "method": {
+  "summary": "Encoder and decoder are stacks of 1-D convolution blocks with GLU non-linearity and residual connections; word plus absolute position embeddings feed in; each decoder layer has dot-product attention over encoder outputs plus input embeddings. Trained with token-level likelihood on WMT translation and Gigaword summarization.",
+  "task": "machine translation (En-Ro, En-De, En-Fr) and abstractive sentence summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'16 English-Romanian",
+    "role": "both",
+    "size": "2.8M sentence pairs (sentences >175 words removed)",
+    "split": "eval on newstest2016; 0.5-1% of train as validation",
+    "source": "Sennrich et al. 2016b data plus back-translated data",
+    "preprocessing": "Sennrich et al. scripts; word vocab 200K source / 80K target, or joint BPE 40K"
+   },
+   {
+    "name": "WMT'14 English-German",
+    "role": "both",
+    "size": "4.5M sentence pairs",
+    "split": "test newstest2014; length-norm tuned on newstest2015; 0.5-1% validation",
+    "source": "Luong et al. 2015 setup",
+    "preprocessing": "40K BPE sub-word types"
+   },
+   {
+    "name": "WMT'14 English-French",
+    "role": "both",
+    "size": "35.5M sentence pairs (from 36M; >175 words and length ratio >1.5 removed)",
+    "split": "test newstest2014; speed eval on dev newstest2012+2013 (6003 sentences)",
+    "source": "WMT'14 full training set",
+    "preprocessing": "40K BPE source and target"
+   },
+   {
+    "name": "Gigaword",
+    "role": "train",
+    "size": "3.8M training examples, 190K validation",
+    "split": "eval on DUC-2004 (500 article-title pairs) and a 2000-pair Gigaword test set",
+    "source": "Graff et al. 2003; preprocessing of Rush et al. 2015",
+    "preprocessing": "30K word vocab source and target; outputs required to be at least 14 words"
+   }
+  ],
+  "models": [
+   {
+    "name": "ConvS2S En-Ro",
+    "role": "proposed",
+    "params": null,
+    "architecture": "fully convolutional seq2seq, GLU, residual, multi-step attention",
+    "init_from": null,
+    "tokenizer": "BPE 40K or word",
+    "vocab": "BPE 40K; word 200K src/80K tgt",
+    "layers": "20 encoder + 20 decoder",
+    "hidden": "512 throughout",
+    "heads": null,
+    "context": null,
+    "other": {
+     "kernel_width": 3
+    }
+   },
+   {
+    "name": "ConvS2S En-De",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "40K BPE",
+    "layers": "15 encoder + 15 decoder",
+    "hidden": "512 in first ten layers, 768 in next three, final two layers 2048 units (linear, width 1)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "kernel_width": 3,
+     "batch_size": 48
+    }
+   },
+   {
+    "name": "ConvS2S En-Fr",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": "40K BPE",
+    "layers": "15 encoder + 15 decoder",
+    "hidden": "512 first five layers, 768 next four, 1024 next three, final two layers 2048 and 4096 (linear, width 1)",
+    "heads": null,
+    "context": "effective context size of only 25 words",
+    "other": {
+     "kernel_width": 3
+    }
+   },
+   {
+    "name": "ConvS2S summarization",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "30K words",
+    "layers": "6 encoder + 6 decoder",
+    "hidden": "256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_size": 128
+    }
+   },
+   {
+    "name": "ConvS2S ablation model",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same",
+    "init_from": null,
+    "tokenizer": "word",
+    "vocab": "target 160K words with vocabulary selection (~20K avg per batch)",
+    "layers": "13 encoder (kernel 3) + 5 decoder (kernel 5)",
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GNMT (Wu et al. 2016)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "8-layer encoder and 8-layer decoder LSTM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8+8",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Sennrich et al. 2016b GRU",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GRU attention seq2seq (Bahdanau), BPE 90K",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ByteNet, Luong LSTM, Zhou, Shazeer MoE, Ha hypernetworks, Shen RNN, WFE",
+    "role": "baseline",
+    "params": null,
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "token-level likelihood (cross-entropy)",
+   "optimizer": "Nesterov accelerated gradient, momentum 0.99, gradient renormalised when norm exceeds 0.1",
+   "lr": "0.25",
+   "lr_schedule": "when validation perplexity stops improving, reduce lr by an order of magnitude after each epoch until below 1e-4",
+   "warmup": null,
+   "batch_size": "64 sentences unless stated (48 En-De, 32 per worker x 8 GPUs En-Fr, 128 summarisation); capped by max words per batch with splitting",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "sentences longer than 175 words removed",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "dropout on embeddings, decoder output and input to conv blocks (retain probability p; rate value not stated); weight normalisation on all layers except lookup tables",
+   "hardware": "single Nvidia M40 GPU; En-Fr on up to 8 GPUs synchronously with NCCL",
+   "compute": "En-Ro 6-7.5 days on 1 GPU; En-De 18.5 days on 1 GPU; En-Fr about 37 days on 8 GPUs; summarisation one night on 1 GPU",
+   "wall_clock": null,
+   "seeds": "three runs differing only in initial random seed, averaged",
+   "other": {
+    "init": "embeddings normal mean 0 std 0.1; layers before GLU N(0,sqrt(4p/n_l)), others N(0,sqrt(p/n_l)); biases zero",
+    "residual scaling": "multiply sum of input and output by sqrt(0.5)",
+    "attention scaling": "conditional input scaled by m*sqrt(1/m)",
+    "encoder gradient": "scaled by number of attention mechanisms (source embeddings excluded)",
+    "framework": "Torch",
+    "gradient normalisation": "by number of non-padding tokens per mini-batch"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam width 5; log-likelihood divided by length |y| (En-De: |y|^alpha with alpha tuned on newstest2015, value not stated)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "average over three runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "unknown_word_replacement": "word-based models only: replace UNK by dictionary translation (fast_align most-frequent alignment) of source word with max attention averaged over layers, else copy",
+    "speed_batch": "up to 128 sentences of equal length; unchanged convolution states copied (shifted) not recomputed",
+    "ensembles": "8 models (and 10 for En-De)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "case-sensitive tokenized BLEU (multi-bleu.perl); detokenized (mteval-v13a) for En-Ro",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-1/2/L",
+     "definition": "recall-based on DUC-2004; F1 on Gigaword",
+     "unit": "ROUGE",
+     "higher_is_better": true
+    },
+    {
+     "name": "generation time",
+     "definition": "seconds to translate 6003-sentence En-Fr dev set",
+     "unit": "s",
+     "higher_is_better": false
+    },
+    {
+     "name": "validation perplexity",
+     "definition": "PPL on validation set",
+     "unit": "PPL",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Sennrich et al. 2016b GRU",
+    "Luong et al. 2015 LSTM",
+    "ByteNet",
+    "GNMT (word, word pieces, +RL)",
+    "Zhou et al. 2016",
+    "Shen et al. 2016 RNN MLE/MRT",
+    "Suzuki & Nagata 2017 WFE"
+   ],
+   "protocol": "mean of three seeds; ablations on En-De before unknown word replacement; GNMT numbers quoted from Wu et al."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/fairseq",
+   "weights": "source code and models available at fairseq (footnote 1)",
+   "data": "public WMT and Gigaword"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a learning rate of 0.25 and once the validation perplexity stops improving, we reduce the learning rate by an order of magnitude after each epoch until it falls below 10−4.",
+    "where": "Section 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ConvS2S beats the WMT'16 winning En-Ro system by 1.9 BLEU with BPE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 30.02,
+   "unit": "BLEU",
+   "baseline_value": 28.1,
+   "n": null,
+   "setup": "WMT'16 En-Ro newstest2016, ConvS2S BPE 40K, 20+20 layers, detokenized BLEU",
+   "note": null,
+   "where": "Table 1, Sec 5.1",
+   "table": "Table 1, row ConvS2S (BPE 40K), WMT'16 English-Romanian"
+  },
+  {
+   "claim": "ConvS2S beats GNMT word-piece LSTM on En-De by 0.5 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.16,
+   "unit": "BLEU",
+   "baseline_value": 24.61,
+   "n": null,
+   "setup": "WMT'14 En-De newstest2014, 15+15 layers, BPE 40K, avg of runs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row ConvS2S (BPE 40K), WMT'14 English-German"
+  },
+  {
+   "claim": "ConvS2S beats likelihood-trained GNMT on En-Fr by 1.6 BLEU on average, and its RL model by 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 40.51,
+   "unit": "BLEU",
+   "baseline_value": 38.95,
+   "n": null,
+   "setup": "WMT'14 En-Fr newstest2014, 15+15 layers, BPE 40K, 8 GPUs ~37 days",
+   "note": "GNMT RL baseline is 39.92; 40.51 vs 38.95 is +1.56, text says 1.6",
+   "where": "Table 1, Sec 5.1",
+   "table": "Table 1, row ConvS2S (BPE 40K), WMT'14 English-French"
+  },
+  {
+   "claim": "Ensemble of eight ConvS2S models beats GNMT+RL on En-Fr.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 41.44,
+   "unit": "BLEU",
+   "baseline_value": 41.16,
+   "n": null,
+   "setup": "WMT'14 En-Fr, 8 likelihood-trained models",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ConvS2S, WMT'14 English-French"
+  },
+  {
+   "claim": "Ensemble of eight ConvS2S models on En-De.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 26.43,
+   "unit": "BLEU",
+   "baseline_value": 26.3,
+   "n": null,
+   "setup": "WMT'14 En-De, 8 models",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ConvS2S, WMT'14 English-German"
+  },
+  {
+   "claim": "On a K40 GPU ConvS2S generates En-Fr dev translations 9.3 times faster than GNMT on K80 with 2.25 higher BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed ratio vs GNMT K80 (3,028 s vs 327 s)",
+   "value": 9.3,
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-Fr dev (newstest2012+2013, 6003 sentences), greedy b=1, batches up to 128",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "show that our model can generate translations on a K40 GPU at 9.3 times the speed and 2.25 higher BLEU"
+  },
+  {
+   "claim": "On a GTX-1080ti ConvS2S is 21.3 times faster than GNMT on K80.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 21.3,
+   "unit": "x speed-up",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same as above",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "on a GTX-1080ti card the speed is 21.3 times faster"
+  },
+  {
+   "claim": "Per CPU core ConvS2S is 17 times faster than GNMT at better BLEU (48 vs 88 cores).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 17,
+   "unit": "x per core",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-Fr dev, CPU",
+   "note": null,
+   "where": "Sec 5.3",
+   "quote": "On a per CPU core basis, our model is 17 times faster at a better BLEU."
+  },
+  {
+   "claim": "Removing both source and target position embeddings costs only 0.5 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 21.2,
+   "unit": "BLEU",
+   "baseline_value": 21.7,
+   "n": null,
+   "setup": "WMT'14 En-De ablation model, newstest2014, avg of 3 runs, vs 21.7 with positions",
+   "note": null,
+   "where": "Table 4, Sec 5.4",
+   "table": "Table 4, row -source & target position, column BLEU"
+  },
+  {
+   "claim": "Attention in all five decoder layers gives best validation PPL; attention in only layer 5 is worst (20.24 BLEU).",
+   "kind": "measured",
+   "source": null,
+   "metric": "PPL",
+   "value": 6.65,
+   "unit": "PPL",
+   "baseline_value": 7.15,
+   "n": null,
+   "setup": "WMT'14 En-De ablation model",
+   "note": "baseline is attention in layer 1 only (PPL 7.15, BLEU 21.26)",
+   "where": "Table 5",
+   "table": "Table 5, row 1,2,3,4,5, column PPL"
+  },
+  {
+   "claim": "Attention in all five decoder layers is only about 4% slower to train than attention in one layer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3624,
+   "unit": "target words/s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "single GPU, 5 decoder layers with attention, vs 3772 words/s with one attention layer",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "Training with attention in all ﬁve decoder layers processes 3624 target words per second on average on a single GPU, compared to 3772 words per second for attention in a single layer."
+  },
+  {
+   "claim": "Narrow kernels with many encoder layers beat wider kernels: kernel 3 with 13 encoder layers gives best BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 21.63,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-De ablation model",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row kernel width 3, column 13 layers"
+  },
+  {
+   "claim": "Encoder accuracy keeps increasing up to about 9 layers while two-layer decoders already perform well.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-De ablation, Figure 2",
+   "note": null,
+   "where": "Sec 5.6",
+   "quote": "Decoder setups with two layers already perform well whereas for the encoder accuracy keeps increasing steadily with more layers until up to 9 layers when accuracy starts to plateau."
+  },
+  {
+   "claim": "On DUC-2004 ConvS2S gets ROUGE-1 recall 30.44, above RNN MLE 24.92 and near RNN MRT 30.41; trained in one night.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 (R)",
+   "value": 30.44,
+   "unit": "ROUGE-1 recall",
+   "baseline_value": 24.92,
+   "n": null,
+   "setup": "Gigaword training, DUC-2004 test, 6+6 layers, hidden 256",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ConvS2S, column RG-1 (R)"
+  },
+  {
+   "claim": "Best single En-Fr run reaches 40.70 BLEU versus Shazeer et al. MoE at 40.56.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 40.7,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-Fr best single run",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "Shazeer et al. (2016) compares at 40.56 BLEU to our best single run of 40.70 BLEU."
+  },
+  {
+   "claim": "Shazeer et al. sparse MoE LSTM reaches 26.03 BLEU on En-De single run versus ConvS2S best run 25.39.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25.39,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 En-De best single run",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "LSTM sparse mixtures have shown strong accuracy at 26.03 BLEU for a single run (Shazeer et al., 2016) which compares to 25.39 BLEU for our best run."
+  }
+ ],
+ "limits": [
+  "Speed comparison to GNMT is against numbers quoted from Wu et al. on different hardware (K80, 88-core CPU, TPU); authors note CPU speeds are not directly comparable and TPU not measured.",
+  "Training is expensive: 18.5 days single GPU for En-De, about 37 days on 8 GPUs for En-Fr.",
+  "Effective context of the En-Fr model is only 25 words; fixed receptive field and position embeddings impose a maximum sentence length.",
+  "Best single runs of mixture-of-experts LSTM (Shazeer) exceed ConvS2S best runs on En-De; ensemble results and RL not applied.",
+  "Variance scaling assumptions (equal variance of summands, uniform attention) are stated not to always hold.",
+  "Dropout rate, number of epochs, length-norm alpha and parameter counts are not stated.",
+  "Summarisation does not beat the best specialised RNN models.",
+  "Superseded by Transformer (Vaswani et al. 2017) shortly after; this paper uses no self-attention (inferred: not mentioned)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "multi-step attention",
+   "definition": "a separate attention mechanism for each decoder layer, so attention has multiple hops per time step",
+   "where": "Sec 3.3"
+  },
+  {
+   "term": "gated linear unit (GLU)",
+   "definition": "v([A B]) = A (x) sigmoid(B)",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language modeling with gated linear units",
+   "year": 2016,
+   "arxiv": "1612.08083",
+   "relation": "uses-method",
+   "note": "GLU non-linearity",
+   "quote": null
+  },
+  {
+   "work": "Deep Residual Learning for Image Recognition",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "residual connections",
+   "quote": null
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "extends",
+   "note": "attention mechanism",
+   "quote": null
+  },
+  {
+   "work": "Effective approaches to attention-based NMT (Luong)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "four-layer LSTM; also En-De data setup",
+   "quote": null
+  },
+  {
+   "work": "Google's Neural Machine Translation System",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "baseline",
+   "note": "main comparison, GNMT",
+   "quote": null
+  },
+  {
+   "work": "Neural Machine Translation in Linear Time (ByteNet)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "convolutional char-level model without attention",
+   "quote": null
+  },
+  {
+   "work": "A Convolutional Encoder Model for NMT",
+   "year": 2016,
+   "arxiv": "1611.02344",
+   "relation": "extends",
+   "note": "partially convolutional predecessor with recurrent decoder",
+   "quote": null
+  },
+  {
+   "work": "Edinburgh NMT systems for WMT 16 (Sennrich)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "En-Ro baseline and data",
+   "quote": null
+  },
+  {
+   "work": "Neural MT of rare words with subword units (BPE)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "BPE vocabulary",
+   "quote": null
+  },
+  {
+   "work": "Weight normalization (Salimans & Kingma)",
+   "year": 2016,
+   "arxiv": "1602.07868",
+   "relation": "uses-method",
+   "note": "used on all layers",
+   "quote": null
+  },
+  {
+   "work": "Key-value memory networks (Miller)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "analogy for attention using z+e",
+   "quote": null
+  },
+  {
+   "work": "End-to-end Memory Networks (Sukhbaatar)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "multiple attention hops",
+   "quote": null
+  },
+  {
+   "work": "Outrageously large neural networks (Shazeer)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MoE LSTM comparison",
+   "quote": null
+  },
+  {
+   "work": "Shen et al. 2016 headline generation",
+   "year": 2016,
+   "arxiv": "1604.01904",
+   "relation": "baseline",
+   "note": "summarization baselines",
+   "quote": null
+  },
+  {
+   "work": "Gigaword (Graff) / Rush et al. 2015",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "summarization data",
+   "quote": null
+  },
+  {
+   "work": "WMT'14/'16 translation data",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "En-Ro, En-De, En-Fr",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of batching during training.",
+   "page": 3,
+   "why": "Shows the whole architecture: encoder, per-layer dot-product attention, GLU, computed in parallel for all target words"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Encoder and decoder with different number of layers.",
+   "page": 8,
+   "why": "BLEU versus depth; encoder benefits from depth, decoder plateaus at two layers"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Attention scores for different decoder layers for a sentence translated from English to German. 8 decoder layers, 80k BPE.",
+   "page": 15,
+   "why": "Shows different layers attend to different parts of the source"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2",
+   "snippet": "v([A B]) = A ⊗ σ(B)",
+   "verbatim": true
+  },
+  {
+   "where": "Sec 3.3 eq 2",
+   "snippet": "c_i^l = sum_j a_ij^l (z_j^u + e_j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and Table 1 caption typos ('comapred') come from the PDF text; no embedded instructions found.",
+  "Table 3 row for GNMT TPU etc. is quoted from Wu et al., not measured."
+ ]
+}

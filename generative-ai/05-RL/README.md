@@ -28,6 +28,7 @@ New to RL? Start at 00. It assumes no notation and no data-science pillar. If yo
 | 00 | [RL in plain language](notes/00-rl-in-plain-language.md) | Agent, reward, exploration, value and policy in plain words with small runnable examples; why this matters for LLMs |
 | 01 | [RL foundations](notes/01-rl-foundations.md) | MDP tuple; return and Bellman; policy gradients to the PPO clip; maximum entropy; exploration; how RL maps onto LLMs |
 | 01b | [Algorithm families, TD and DQN](notes/01b-algorithm-families-td-and-dqn.md) | Read after the Bellman section of 01, before its policy gradients. Value, policy and actor-critic families; Dyna and planning; Monte Carlo and importance sampling; TD, SARSA, n-step and GAE; DQN and offline RL |
+| 01c | [Bandits: regret, confidence bounds and Exp3](notes/01c-bandit-algorithms.md) | Read after the exploration paragraph of 01. Regret; explore-then-commit, UCB, KL-UCB, MOSS; Exp3; lower bounds; contextual and linear bandits |
 | 02 | [RLHF pipeline](notes/02-rlhf-pipeline.md) | SFT and SFT in practice; reward-model training; PPO with a KL penalty |
 | 12 | [RLHF failure modes](notes/12-rlhf-failure-modes.md) | Read after 02. Reward hacking; overoptimization and the reverse KL; alignment tax; a toy of the whole failure |
 | 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO, GRPO and GSPO; the decision framework |
@@ -70,7 +71,7 @@ Chapters 12 and 13 sit where the table puts them; they were split out of 02 and 
 05-RL/
 ├── README.md
 ├── references.md           every source, mapped to notes; open gaps
-├── notes/                  00–13, read in order (01b follows 01)
+├── notes/                  00–13, read in order (01b and 01c follow 01)
 ├── slides/                 deck.yaml and rl-and-alignment.pptx
 ├── practice/
 │   └── 01-q-learning-treasure-hunt/   tabular Q-learning lab (offline, numpy)

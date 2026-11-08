@@ -15,7 +15,7 @@ The errors that reach a decision are rarely exotic. A mean is quoted over a colu
 
 ## The story
 
-Larkspur, a fictional online plant shop, hands you twenty thousand users and asks about the average customer. You look first and find that the average customer does not exist ([1](notes/01-descriptive-statistics-and-eda.md)). You learn the rules for reasoning about data you do not have, including the base-rate rule that makes the fraud filter wrong nine times in ten ([2](notes/02-probability-foundations.md)), then the shapes that recur and why the Central Limit Theorem takes tens of thousands of users to earn its keep on revenue ([3](notes/03-distributions-and-sampling.md)). You report numbers with intervals, by formula and by bootstrap ([4](notes/04-estimation.md)), turn intervals into decisions and watch twenty tests produce a false discovery ([5](notes/05-hypothesis-testing.md)), and finally see that a t-test was a regression all along, which lets you add covariates, fix standard errors and model conversions and counts ([6](notes/06-regression-and-glms.md)). You then step back and ask what a model claims about the process behind the rows, and find that a better fit is not always a better answer ([7](notes/07-data-generating-process.md)). When the same stores come back week after week, you compare each with itself, and a discount that looked harmful turns out to help ([8](notes/08-panel-data-and-fixed-effects.md)). The new checkout you have been testing then goes to a proper experiment in pillar 03.
+Larkspur, a fictional online plant shop, hands you twenty thousand users and asks about the average customer. You look first and find that the average customer does not exist ([1](notes/01-descriptive-statistics-and-eda.md)). You learn the rules for reasoning about data you do not have, including the base-rate rule that makes the fraud filter wrong nine times in ten ([2](notes/02-probability-foundations.md)), then the shapes that recur and why the Central Limit Theorem takes tens of thousands of users to earn its keep on revenue ([3](notes/03-distributions-and-sampling.md)). You report numbers with intervals, by formula and by bootstrap ([4](notes/04-estimation.md)), turn intervals into decisions and watch twenty tests produce a false discovery ([5](notes/05-hypothesis-testing.md)), and finally see that a t-test was a regression all along, which lets you add covariates, fix standard errors and model conversions and counts ([6](notes/06-regression-and-glms.md), [6b](notes/06b-logistic-regression-and-poisson-glms.md)). You then step back and ask what a model claims about the process behind the rows, and find that a better fit is not always a better answer ([7](notes/07-data-generating-process.md)). When the same stores come back week after week, you compare each with itself, and a discount that looked harmful turns out to help ([8](notes/08-panel-data-and-fixed-effects.md)). The new checkout you have been testing then goes to a proper experiment in pillar 03.
 
 ---
 
@@ -28,7 +28,8 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 | 3 | [Distributions and Sampling](notes/03-distributions-and-sampling.md) | Name the distribution behind a metric, and know when LLN and CLT fail you |
 | 4 | [Estimation](notes/04-estimation.md) | Fit by maximum likelihood, read a confidence interval, bootstrap, plan sample size |
 | 5 | [Hypothesis Testing](notes/05-hypothesis-testing.md) | Pick a test, read a p-value correctly, and correct for many comparisons |
-| 6 | [Regression and GLMs](notes/06-regression-and-glms.md) | Read OLS output, check it, cluster its errors, and fit logistic and Poisson models |
+| 6 | [Regression and GLMs](notes/06-regression-and-glms.md) | Read OLS output, check it, cluster its errors, and choose variables without fooling yourself |
+| 6b | [Logistic regression and Poisson GLMs](notes/06b-logistic-regression-and-poisson-glms.md) | Fit and read logistic, Poisson and ordered-logit models, use an offset for exposure, and spot separation and overdispersion |
 | 7 | [The data generating process](notes/07-data-generating-process.md) | State the process you believe, compare specifications with a known truth, separate explaining from predicting, and ask how the rows got in |
 | 8 | [Panel data and fixed effects](notes/08-panel-data-and-fixed-effects.md) | Separate within from between variation, fit two-way fixed effects, read an event study, and say what these cannot fix |
 
@@ -80,7 +81,7 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 - Twenty tests of nothing have a 64% chance of a false positive. Name one primary question in advance.
 - At low power, significant estimates are inflated. Do not forecast from them.
 
-**Regression** ([6](notes/06-regression-and-glms.md))
+**Regression** ([6](notes/06-regression-and-glms.md), [6b](notes/06b-logistic-regression-and-poisson-glms.md))
 - Add pre-period covariates to experiments. They shrink the standard error and bias nothing.
 - Cluster at the level of randomisation. Use robust SEs on money.
 - Report marginal effects rather than odds ratios, and check dispersion on every Poisson fit.

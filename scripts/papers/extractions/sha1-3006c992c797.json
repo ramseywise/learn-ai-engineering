@@ -1,0 +1,248 @@
+{
+ "schema": 1,
+ "key": "sha1:3006c992c797",
+ "pdf": "generative-ai/05-RL/sources/bandit-algorithms/ch21-optimal-design-least-squares-estimators.pdf",
+ "bib": {
+  "title": "Optimal Design for Least Squares Estimators (Chapter 21, Bandit Algorithms)",
+  "authors": [
+   "Tor Lattimore",
+   "Csaba Szepesvári"
+  ],
+  "first_author": "Lattimore",
+  "year": 2020,
+  "venue": "Bandit Algorithms (Cambridge University Press), ch. 21",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 11034,
+  "chars_total": 11034,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should exploratory actions be chosen so that least-squares confidence intervals are uniformly small over an action set?",
+ "hypothesis": null,
+ "contributions": [
+  "Kiefer-Wolfowitz theorem: G-optimal and D-optimal designs coincide, minimum g = d, core set of at most d(d+1)/2 points",
+  "Recipe turning a design into an explicit exploration schedule with confidence width epsilon",
+  "Frank-Wolfe (Fedorov/Wynn) algorithm for approximate designs on finite action sets"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Choosing each action a in the design's support n_a times gives confidence width at most epsilon for every a in A with probability 1-delta.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite or compact action set A in R^d spanning R^d, 1-subgaussian noise, unregularised least squares on a fixed exploratory sequence",
+   "quote": "Then, choosing each action a ∈Supp(π) exactly na times ensures that",
+   "table": null,
+   "note": null,
+   "where": "p2 (book p268), Eq. 21.3"
+  },
+  {
+   "claim": "Total exploration length needed for confidence width epsilon is bounded by |Supp(pi)| + 2g(pi)/eps^2 log(1/delta).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite or compact action set A in R^d spanning R^d, 1-subgaussian noise, unregularised least squares on a fixed exploratory sequence",
+   "quote": "the total number of actions required to ensure a conﬁdence width",
+   "table": null,
+   "note": null,
+   "where": "p2 (book p268)"
+  },
+  {
+   "claim": "The minimum of g over designs equals the dimension d, attained by a design supported on at most d(d+1)/2 points.",
+   "kind": "claim",
+   "source": null,
+   "metric": "core set size bound",
+   "value": "d(d + 1)/2",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite or compact action set A in R^d spanning R^d, 1-subgaussian noise, unregularised least squares on a fixed exploratory sequence; A compact",
+   "quote": "there exists a minimiser π∗of g such that | Supp(π∗)| ≤d(d + 1)/2.",
+   "table": null,
+   "note": null,
+   "where": "p2 (book p268), Thm 21.1"
+  },
+  {
+   "claim": "An approximate design with g(pi) <= (1+eps) g(pi*) raises the regret of bandit algorithms only by a factor (1+eps)^(1/2).",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Applications to linear bandits (Ch. 22)",
+   "quote": "will increase the regret of our",
+   "table": null,
+   "note": null,
+   "where": "p4 (book p270), Note 2"
+  },
+  {
+   "claim": "Frank-Wolfe from a uniform start reaches g <= (1+eps)g* in O(d log log|A| + d/eps) iterations.",
+   "kind": "claim",
+   "source": null,
+   "metric": "iterations",
+   "value": "O(d log log |A| + d/ε)",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite A, pi_0 uniform over A",
+   "quote": "then the number of",
+   "table": null,
+   "note": null,
+   "where": "p4-5 (book p271), Note 3"
+  },
+  {
+   "claim": "With a more sophisticated initialisation, O(d log log d) Frank-Wolfe iterations give g <= 2g* with a core set of size O(d log log d).",
+   "kind": "claim",
+   "source": null,
+   "metric": "iterations",
+   "value": "O(d log log d)",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finite A, special initialisation (Todd 2016 ch. 3)",
+   "quote": "iterations is guaranteed to produce a design with g(π) ≤2g(π∗) and a core set",
+   "table": null,
+   "note": null,
+   "where": "p5 (book p271), Note 3"
+  }
+ ],
+ "limits": [
+  "Exploration-design only: the chapter does not give a bandit algorithm or regret bound itself (see Ch. 22).",
+  "Exact optimal integer allocation is 'likely an intractable exercise in integer programming'; the n_a rule is a rounding-up approximation.",
+  "Algorithms for infinite action sets are 'much heavier and less practical'; no practical method given.",
+  "Estimator is unregularised and requires the chosen actions to span R^d; actions are fixed, not adaptive.",
+  "No experiments; Exercise 21.7 asks the reader to implement Frank-Wolfe."
+ ],
+ "practices": [
+  "Use a G-optimal (equivalently D-optimal) design as a non-adaptive exploration schedule when the action set is finite (p2, Eq. 21.3).",
+  "Settle for an approximate design with g <= (1+eps)g*; exactness is not needed (Note 2).",
+  "Compute the design with Frank-Wolfe/Wynn updates, using rank-one updates of V(pi)^-1 for speed (Note 3, Ex. 21.7).",
+  "Pick the Frank-Wolfe step size by exact line search gamma_k = (d||a_k||^2 - 1)/(d(||a_k||^2 - 1)) (Eq. 21.8, as printed in text)."
+ ],
+ "terms": [
+  {
+   "term": "design",
+   "definition": "a distribution pi on A with V(pi)=sum pi(a) a a^T and g(pi)=max_a ||a||^2_{V(pi)^-1}",
+   "where": "p1-2"
+  },
+  {
+   "term": "G-optimal design",
+   "definition": "a design that minimises g; G stands for 'globally optimal'",
+   "where": "p2, p4 Note 1"
+  },
+  {
+   "term": "D-optimal design",
+   "definition": "a design that maximises f(pi)=log det V(pi); D is for determinant",
+   "where": "p2, p4 Note 1"
+  },
+  {
+   "term": "core set",
+   "definition": "Supp(pi), the support of the design",
+   "where": "p2"
+  },
+  {
+   "term": "MVEE / John's ellipsoid",
+   "definition": "minimum volume enclosing ellipsoid; D-optimal design is the centred MVEE of A, equivalently the MVEE of the symmetrised set",
+   "where": "p5 Note 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kiefer and Wolfowitz 1960",
+   "year": 1960,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "source of the equivalence theorem",
+   "quote": null
+  },
+  {
+   "work": "Fedorov 1972 / Wynn 1970",
+   "year": 1972,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Frank-Wolfe style design algorithm",
+   "quote": null
+  },
+  {
+   "work": "Frank and Wolfe 1956",
+   "year": 1956,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "original algorithm",
+   "quote": null
+  },
+  {
+   "work": "Silvey and Sibson 1972",
+   "year": 1972,
+   "arxiv": null,
+   "relation": "related",
+   "note": "D-optimal/MVEE duality",
+   "quote": null
+  },
+  {
+   "work": "Todd 2016",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "book on minimum volume ellipsoids",
+   "quote": null
+  },
+  {
+   "work": "Hazan et al. 2016",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "approximate designs for infinite sets",
+   "quote": null
+  },
+  {
+   "work": "Bandit Algorithms Ch. 20 (confidence for least squares)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "uses Eq. 20.2",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 21.1",
+   "caption": "The minimum volume centered ellipsoid containing a point cloud. The points on the boundary are the core set. The ellipse is E = {x : ||x||^2_{V(pi)^-1} = d}, where pi is an optimal design.",
+   "page": 4,
+   "why": "Shows geometrically why a few boundary points (core set) suffice to cover all actions"
+  }
+ ],
+ "code": [
+  {
+   "where": "p4 Eq. 21.7-21.8",
+   "snippet": "pi_{k+1}(a) = (1-gamma_k) pi_k(a) + gamma_k I{a_k = a}, a_k = argmax_a ||a||^2_{V(pi_k)^-1}",
+   "verbatim": false
+  },
+  {
+   "where": "p2 Eq. 21.3",
+   "snippet": "n_a = ceil(2 pi(a) g(pi) / eps^2 * log(1/delta))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text is math-heavy and flattened by extraction; equations reconstructed from fragments. Eq. 21.8 step size as printed may lose parentheses. The ceiling in Eq 21.3 is inferred from the n bound, not visible in text.",
+  "No embedded instructions found."
+ ]
+}

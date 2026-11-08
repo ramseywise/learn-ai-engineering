@@ -180,6 +180,26 @@ parts:
           Safety has the same trap. TrustLLM scored models on jailbreaks they should refuse and on prompts
           that only sound harmful, and Llama2-7b looked strong on the first while refusing 49 percent of
           the second.
+      - layout: table
+        level: deep
+        kicker: Public benchmarks
+        title: Public benchmarks keep their answers out of training in five ways
+        header: [Tactic, Benchmark, How]
+        widths: [3, 3, 7]
+        rows:
+          - [Unique answers, GAIA, "Answers need several sources combined, some from attachments that are not on the web"]
+          - [Parameterized templates, "AndroidWorld, τ²-bench", "Fresh values every run, so a memorized action sequence will not replay"]
+          - [Temporal freshness, SWE-bench-Live, "Keep adding tasks created after the training cutoff"]
+          - [Canaries, "BIG-bench, Terminal-Bench", "A unique GUID in the data; if a model can produce it, the set has leaked"]
+          - [Closed test set, "HLE, SHADE-Arena", "Keep some of it unpublished; SHADE-Arena published 5 of its 17 environments"]
+        takeaway: "A public benchmark protects its answers by design, because a canary only catches leaks and a public set cannot be both open and closed."
+        recall: "Name three tactics a public benchmark uses against memorization."
+        source: notes/03b-splits-contamination-and-public-benchmarks.md
+        notes: >-
+          Contamination is why a public score can overstate what you will see on your own traffic. Each tactic
+          trades something. Canaries detect a leak but prevent nothing, and Terminal-Bench's authors call theirs
+          largely a symbolic safeguard because every task is public. Templates and freshness change the rows
+          instead of hiding them.
       - layout: code
         kicker: Worked example
         title: One row of the golden set, in full
@@ -357,6 +377,27 @@ parts:
           feedback, as we will see. The fixes are mostly cheap, like running both orders.
           Where a score will not work, pairwise votes can become a ranking through Elo, as long as a win holds
           in both orders, but a ranking cannot monitor production.
+      - layout: table
+        level: deep
+        kicker: Pairwise ranking
+        title: Elo depends on vote order, Bradley–Terry does not
+        lead: "Li's offline simulator: 3,000 battles between eight models with known skills, 10% ties. Elo (K = 4) run on five shuffles of the same battles."
+        header: [Model, True skill, Bradley–Terry, Elo min, Elo max]
+        widths: [4, 2, 2, 2, 2]
+        rows:
+          - [gpt-4, "1250", "1116", "1114", "1133"]
+          - [claude-3-opus, "1225", "1114", "1100", "1110"]
+          - [gemini-1.5-pro, "1180", "1058", "1051", "1068"]
+          - [mixtral-8x7b, "1075", "974", "955", "988"]
+          - [vicuna-13b, "935", "876", "862", "887"]
+        takeaway: "Use Elo for a live leaderboard and a Bradley–Terry fit with bootstrap intervals for any ranking you publish or gate on."
+        recall: "Why does Elo give different ratings for the same votes, and what do you publish instead?"
+        source: notes/05b-pairwise-ranking-elo-and-bradley-terry.md
+        notes: >-
+          Both methods recover the true order and the gaps between models. The absolute level differs because
+          each anchors its own mean. The point is the Elo spread: up to 34 points from vote order alone at K = 4,
+          and 148 points at K = 32, enough to swap the top two. With an LLM judge doing the voting, swap the
+          order on every pair and count a win only if it holds both ways.
       - layout: steps
         kicker: The gate to the gate
         title: Calibrate a judge before it gates anything
@@ -549,6 +590,25 @@ parts:
           A plain retry with rising temperature matched an elaborate agent at under half the cost, and it beat
           another at about a fiftieth. None of the original papers made cost a headline metric. So log tokens,
           steps, latency and cost per success on every trial, since pass rates miss efficiency regressions.
+      - layout: table
+        level: deep
+        kicker: Agent environments
+        title: An agent environment has five parts, and each can be wrong alone
+        header: [Part, Holds, Gets it wrong when]
+        widths: [3, 5, 6]
+        rows:
+          - [Dataset, "Initial state, goal, optional reference solution", "The goal is ambiguous"]
+          - [Environment state, "Mutable records: orders, balances, files", "It breaks business rules or cannot reset to the same start"]
+          - [Tools, "Atomic operations: look up order, modify booking", "They are so high-level they skip the planning you meant to test"]
+          - [Rubric, "Binary, continuous or multi-dimensional score", "The score does not match the criterion"]
+          - [Interaction protocol, "Who acts when: single-shot, multi-turn, simulated user", "The user model is unrealistic"]
+        takeaway: "Reset state for every trial, keep trials isolated, and check the task before the agent when it fails every time."
+        recall: "What do you check first when a task fails every trial across several model versions?"
+        source: notes/06c-agent-suites-and-environment-hygiene.md
+        notes: >-
+          On BrowseComp, 21 of the 118 questions that Deep Research never solved had a bad reference answer, so a
+          0% task is suspect. Also keep the answer out of reach: reference answers, grader code and hidden tests
+          belong where the agent's tools cannot read them.
       - layout: flow
         kicker: Grounded answers
         title: Score each RAG stage on its own

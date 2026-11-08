@@ -1,4 +1,4 @@
-# RL & Alignment lecture deck. Covers notes 00-13 (01b included).
+# RL & Alignment lecture deck. Covers notes 00-13 (01b and 01c included).
 # Build: make slides PILLAR=generative-ai/05-RL STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a treasure-hunt agent told only a score. The same question follows it into language
@@ -70,6 +70,41 @@ parts:
         notes: >-
           This is a program from the on-ramp chapter and these are its real results. A low-scoring agent with epsilon zero
           looks like a failed algorithm, when it may only be a machine that never tried the good option.
+
+      - layout: table
+        level: deep
+        title: Regret says how much not knowing costs
+        recall: How fast does regret grow for explore-then-commit, UCB, MOSS and Exp3?
+        header: [Policy, Regret bound, Needs]
+        widths: [2, 4, 3]
+        rows:
+          - [Explore-then-commit, "Δ + (4/Δ)(1 + log(nΔ²/4)) with the commit tuned to the gap", "The gap Δ"]
+          - [UCB, "3ΣΔ + Σ 16 log n/Δ; gap-free 8√(nk log n)", "The horizon n"]
+          - [MOSS, "39√(kn) + ΣΔ, no log factor", "The horizon n"]
+          - [Exp3, "√(2nk log k) in expectation, heavy-tailed", "Rewards in [0,1], any adversary"]
+          - ["Floor, any policy", "(1/27)√((k−1)n) on some Gaussian instance", "Nothing beats it in the worst case"]
+        highlight: [4]
+        takeaway: With fixed gaps regret grows like log n, in the worst case like √n, and no policy beats √n on every instance.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          Regret is the reward lost against always pulling the best arm. The bounds assume k arms, horizon n and
+          1-subgaussian rewards. Lattimore and Szepesvari, chapters 6 to 15.
+
+      - layout: image
+        level: deep
+        title: Linear structure keeps regret flat as the arms multiply
+        recall: Why does LinUCB beat UCB when there are many arms?
+        image: ../sources/images/bandit-algorithms-fig19-1.png
+        caption: UCB and LinUCB regret against the number of arms, d = 5, n = 5,000 (Lattimore and Szepesvari, 2020, Fig. 19.1)
+        bullets:
+          - "**UCB** treats each arm alone, so regret climbs to about 4,000 at 1,000 arms."
+          - "**LinUCB** shares a ridge estimate across arms and stays under 500."
+          - "**The price:** the model must be right, and UCB wins on the two-armed problem."
+        takeaway: LinUCB's regret depends on the feature dimension rather than the number of arms, provided the linear model holds.
+        source: notes/01c-bandit-algorithms.md
+        notes: >-
+          The regret bound is O(d sqrt(n) log(nL)). Use it for recommendation and routing, where arms outnumber the
+          rounds you can afford.
 
       - layout: table
         title: Three ways to estimate how good a state is

@@ -1,0 +1,444 @@
+{
+ "schema": 1,
+ "key": "sha1:d7da009f4579",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/papineni-2001-bleu.pdf",
+ "bib": {
+  "title": "BLEU: a Method for Automatic Evaluation of Machine Translation",
+  "authors": [
+   "Kishore Papineni",
+   "Salim Roukos",
+   "Todd Ward",
+   "Wei-Jing Zhu"
+  ],
+  "first_author": "Papineni",
+  "year": 2002,
+  "venue": "Proceedings of the 40th Annual Meeting of the Association for Computational Linguistics (ACL), Philadelphia, pp. 311-318",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 27953,
+  "chars_total": 27953,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a quick, cheap, language-independent automatic metric based on n-gram overlap with reference translations rank machine translation systems the way human judges do?",
+ "hypothesis": "The closer a machine translation is to professional human reference translations, the better it is, so a numerical closeness metric averaged over a corpus should correlate highly with human judgment.",
+ "contributions": [
+  "BLEU: geometric mean of clipped (modified) n-gram precisions times a corpus-level brevity penalty",
+  "Evidence that BLEU ranks 5 systems (3 MT, 2 human) in the same order as monolingual and bilingual human judges (r=0.99, 0.96)"
+ ],
+ "method": {
+  "summary": "Defines BLEU as the geometric mean of modified n-gram precisions (n up to 4, uniform weights) times an exponential brevity penalty computed over the whole corpus. Scores 3 commercial MT systems and 2 human translators on a 500-sentence Chinese-English news set against 2 references, tests differences with paired t-tests on 20 blocks, and regresses mean human ratings on BLEU.",
+  "task": "automatic evaluation of machine translation (Chinese to English)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Chinese-English news test corpus",
+    "role": "eval",
+    "size": "about 500 sentences (40 general news stories); 4 reference translations per sentence available",
+    "split": "20 blocks of 25 sentences for variance; Fig 1 used 127 source sentences with 4 references",
+    "source": "not stated",
+    "preprocessing": "case folding only"
+   },
+   {
+    "name": "Human judgment subset",
+    "role": "eval",
+    "size": "250 source-translation pairs (5 translations of a random subset of the 500 sentences)",
+    "split": null,
+    "source": "10 monolingual native English judges, 10 bilingual native Chinese judges, none professional translators",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "S1, S2, S3",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "three commercial MT systems (unnamed)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "H1, H2",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "human translators: H1 lacks native proficiency in both Chinese and English; H2 is a native English speaker",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one output per system per sentence; 20 blocks of 25 sentences used for variance",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "N": "4",
+    "weights w_n": "uniform, 1/N",
+    "normalisation": "case folding only",
+    "brevity penalty": "BP = 1 if c > r, else exp(1 - r/c); r = sum of best-match (closest) reference lengths per candidate sentence, c = total candidate length",
+    "clipping": "Count_clip = min(Count, Max Ref Count)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "BP * exp(sum_{n=1..N} w_n log p_n), p_n = corpus-level clipped n-gram precision",
+     "unit": "score in 0 to 1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human rating",
+     "definition": "each translation rated 1 (very bad) to 5 (very good); monolingual judges rate readability and fluency only",
+     "unit": "1-5 mean opinion score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson-style correlation coefficient of linear regression of human score on BLEU",
+     "definition": "5 systems, BLEU over two references",
+     "unit": "correlation coefficient",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "modified n-gram precision alone (Figs 1-2)",
+    "arithmetic mean instead of geometric mean (reported slightly weaker)"
+   ],
+   "protocol": "Paired t-test between adjacent systems on 20 blocks of 25 sentences; paired t-tests (95% CI) on per-judge rating differences between adjacent systems; single-reference simulation picks one of 4 references at random per story."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.N",
+    "quote": "In our baseline, we use N = 4 and uniform weights",
+    "where": "Sec 2.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BLEU of monolingual-judge ratings correlates at 0.99 with BLEU over two references across the 5 systems",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": 0.99,
+   "unit": "correlation coefficient",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "5 systems (S1-S3, H1, H2), BLEU against 2 references, monolingual group means; regression in Fig 5",
+   "quote": "The high correlation coefﬁcient of 0.99 indicates",
+   "table": "",
+   "note": "Only 5 points; the correlation is across systems, not sentences",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Correlation with bilingual-judge ratings is 0.96",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": 0.96,
+   "unit": "correlation coefficient",
+   "baseline_value": null,
+   "n": 5,
+   "setup": "Same 5 systems, bilingual group means, Fig 6",
+   "quote": "The correlation coefﬁcient is 0.96.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "BLEU scores of the 5 systems against 2 references: S3 is 0.0930, S2 0.0829, S1 0.0527, H1 0.1934, H2 0.2571",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 0.093,
+   "unit": "BLEU (0-1)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 sentences, 2 references, Chinese-English; S3 shown",
+   "quote": "",
+   "table": "Table 1, column S3",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Human H2 scores 0.2571 BLEU against two references",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 0.2571,
+   "unit": "BLEU (0-1)",
+   "baseline_value": null,
+   "n": 500,
+   "setup": "500 sentences, 2 references",
+   "quote": "a human translator scored 0.3468 against four references and",
+   "table": "",
+   "note": "Same value printed in Table 1 (H2 column)",
+   "where": "Sec 3"
+  },
+  {
+   "claim": "The same human scores 0.3468 with four references, so BLEU rises with the number of references and is not comparable across reference counts",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 0.3468,
+   "unit": "BLEU (0-1)",
+   "baseline_value": 0.2571,
+   "n": null,
+   "setup": "Human translator, about 500 sentences (40 news stories), 4 references vs 0.2571 with 2",
+   "quote": "a human translator scored 0.3468 against four references and",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "S2 vs S3 difference is statistically significant despite scores being close (t=3.4)",
+   "kind": "measured",
+   "source": null,
+   "metric": "paired t-statistic",
+   "value": 3.4,
+   "unit": "t",
+   "baseline_value": null,
+   "n": 20,
+   "setup": "20 blocks of 25 sentences; S3 vs S2",
+   "quote": "",
+   "table": "Table 2, row t, column S3",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Paired t of 1.7 or above is treated as 95% significant",
+   "kind": "measured",
+   "source": null,
+   "metric": "t threshold",
+   "value": 1.7,
+   "unit": "t",
+   "baseline_value": null,
+   "n": null,
+   "setup": "paired t-statistic over 20 blocks",
+   "quote": "Since a paired t-statistic of 1.7 or above is 95%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Monolingual judges rate S2 better than S1 by a mean opinion difference of 0.326 on the 5-point scale",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rating difference",
+   "value": 0.326,
+   "unit": "points on 1-5 scale",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 monolingual judges, 250 pairs, paired t-test, 95% level",
+   "quote": "by a mean opinion score difference of 0.326 on the 5-point scale",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "S3 is judged better than S2 by 0.114",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean rating difference",
+   "value": 0.114,
+   "unit": "points on 1-5 scale",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monolingual group, significant at 95%",
+   "quote": "(by 0.114)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Modified unigram precision for the degenerate candidate 'the the the ...' is 2/7 although standard unigram precision is 7/7",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "modified unigram precision",
+   "value": "2/7",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 2, two references",
+   "quote": "Modified Unigram Precision = 2/7.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Good candidate in Example 1 gets modified unigram precision 17/18 vs 8/14 for the bad one",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "modified unigram precision",
+   "value": "17/18",
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example 1, three references",
+   "quote": "Candidate 1 achieves a modiﬁed unigram precision of 17/18",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Using a single randomly chosen reference per story preserves the system rank order",
+   "kind": "measured",
+   "source": null,
+   "metric": "rank order",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "40 stories, one of 4 references picked at random per story",
+   "quote": "The systems maintain the same rank order as with multiple references.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Best correlation with monolingual human judgments at max n-gram order 4; 3 and 5 comparable",
+   "kind": "measured",
+   "source": null,
+   "metric": "max n-gram order",
+   "value": 4,
+   "unit": "n",
+   "baseline_value": null,
+   "n": null,
+   "setup": "monolingual judgments",
+   "quote": "we obtain the best correlation with mono-",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1.3"
+  }
+ ],
+ "limits": [
+  "Sentence-level scores often differ from human judgment; BLEU only claimed valid averaged over a test corpus (footnote 4).",
+  "Validated on 5 systems (3 MT, 2 human) of one language pair (Chinese-English) and one 500-sentence set; correlations rest on n=5 points. A cited companion study covers Arabic, Chinese, French, Spanish.",
+  "Score depends on number of references, so scores with different reference counts are not comparable.",
+  "Geometric mean is harsh if any modified precision is zero; authors assume this is rare for corpora of reasonable size and N<=4.",
+  "No recall term; no handling of synonyms or concepts. Only case folding as normalisation, tokenisation not specified.",
+  "Judges were non-professionals; the bilingual group could not separate H1 from H2. Authors state summarization and other NLG 'could' be adapted, untested."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "modified n-gram precision",
+   "definition": "clip each candidate n-gram count by its maximum count in any single reference, sum, and divide by the total number of candidate n-grams",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "brevity penalty",
+   "definition": "multiplicative factor, a decaying exponential in r/c, computed over the whole corpus",
+   "where": "Sec 2.2.2"
+  },
+  {
+   "term": "best match length",
+   "definition": "the reference sentence length closest to the candidate length",
+   "where": "Sec 2.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "word error rate metric from speech recognition",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closeness metric is fashioned after WER, modified for multiple references",
+   "quote": null
+  },
+  {
+   "work": "Papineni, Roukos, Ward, Henderson, Reeder 2002, Corpus-based comprehensive and diagnostic MT evaluation",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "companion study of correlation on four languages",
+   "quote": null
+  },
+  {
+   "work": "Hovy 1999; White and O'Connell 1994",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "human MT evaluation (adequacy, fidelity, fluency)",
+   "quote": null
+  },
+  {
+   "work": "Reeder 2001",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "related",
+   "note": "catalog of MT evaluation techniques",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 1",
+   "caption": "BLEU on 500 sentences",
+   "page": 3,
+   "why": "Five scores in one row; shows human H2 only 0.2571 so BLEU is not 0 to 1 intuitive"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Paired t-statistics on 20 blocks",
+   "page": 3,
+   "why": "Significance of adjacent-system differences"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "BLEU predicts Monolingual Judgments",
+   "page": 4,
+   "why": "Regression scatter r=0.99; best single validity picture (chart, would need redrawing)"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "BLEU vs Bilingual and Monolingual Judgments",
+   "page": 5,
+   "why": "Normalised overlay of BLEU and human scores"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "BP = 1 if c > r; e^(1 - r/c) if c <= r.  BLEU = BP * exp( sum_{n=1}^{N} w_n log p_n ),  N=4, w_n=1/N",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.1.1",
+   "snippet": "p_n = sum_{C in Candidates} sum_{n-gram in C} Count_clip(n-gram) / sum_{C' in Candidates} sum_{n-gram' in C'} Count(n-gram')",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures 1-7 are vector charts with no data in the text layer; numbers in them are not extractable. Table 1 and 2 cells are split across lines in the text layer.",
+  "No embedded instructions found."
+ ]
+}

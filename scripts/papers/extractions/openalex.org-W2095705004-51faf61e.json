@@ -1,0 +1,671 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2095705004",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/srivastava-2014-dropout.pdf",
+ "bib": {
+  "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
+  "authors": [
+   "Nitish Srivastava",
+   "Geoffrey Hinton",
+   "Alex Krizhevsky",
+   "Ilya Sutskever",
+   "Ruslan Salakhutdinov"
+  ],
+  "first_author": "Srivastava",
+  "year": 2014,
+  "venue": "Journal of Machine Learning Research 15 (2014) 1929-1958",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78412,
+  "chars_total": 78412,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can randomly dropping units during training prevent overfitting and approximate averaging an exponential number of networks cheaply?",
+ "hypothesis": "Dropout prevents co-adaptation of hidden units, and a single net with weights scaled by p at test time approximates the average of the thinned nets.",
+ "contributions": [
+  "Dropout: randomly drop units during training, scale weights by p at test time",
+  "Evidence of gains across vision, speech, text and computational biology",
+  "Dropout RBMs",
+  "Analysis of marginalised dropout (linear regression equals a form of ridge regression)",
+  "Practical guide for hyperparameters"
+ ],
+ "method": {
+  "summary": "Each training case uses a thinned network sampled by Bernoulli(p) masks on units; trained with SGD, max-norm, high momentum. Test uses the unthinned net with outgoing weights multiplied by p. Evaluated on MNIST, SVHN, CIFAR-10/100, ImageNet, TIMIT, Reuters-RCV1, Alternative Splicing.",
+  "task": "supervised classification regularisation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "60K train / 10K test",
+    "split": "10,000 train images held out for validation, then merged for final training",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": "~600K train / 26K test",
+    "split": "6000 validation (400/class standard + 200/class extra); not merged back",
+    "source": "Netzer et al. 2011",
+    "preprocessing": "RGB normalised to zero mean unit variance"
+   },
+   {
+    "name": "CIFAR-10/100",
+    "role": "both",
+    "size": "50,000 train / 10,000 test",
+    "split": "5,000 validation then merged",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "global contrast normalisation per channel then ZCA whitening"
+   },
+   {
+    "name": "ImageNet ILSVRC-2012",
+    "role": "both",
+    "size": "1.2M train / 150K test",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "TIMIT",
+    "role": "both",
+    "size": "1.1M frames train / 58K frames test",
+    "split": "core test set",
+    "source": null,
+    "preprocessing": "Kaldi log-filter banks, monophone forced alignment, 21-frame windows, mean/variance normalised"
+   },
+   {
+    "name": "Reuters-RCV1 subset",
+    "role": "both",
+    "size": "402,738 articles, 2000-word vocab, 50 classes",
+    "split": "equal-sized train and test",
+    "source": null,
+    "preprocessing": "bag of words"
+   },
+   {
+    "name": "Alternative Splicing",
+    "role": "both",
+    "size": "2932 train / 733 test; 3665 cassette exons, 1014 features",
+    "split": "5 folds as Xiong et al. 2011",
+    "source": "Xiong et al. 2011",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Dropout feed-forward nets (MNIST)",
+    "role": "proposed",
+    "params": "over 65 million (2x8192 net)",
+    "architecture": "MLP, ReLU/logistic/maxout; 2-4 layers of 1024-8192 units",
+    "init_from": "random, or RBM/DBN/DBM pretraining (weights scaled by 1/p)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2-4 hidden",
+    "hidden": "1024-8192",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Dropout convnet (SVHN, CIFAR)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "3 conv (96, 128 and 256 filters, 5x5, stride 1) each + 3x3 max-pool stride 2, then 2 FC of 2048, ReLU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "3 conv + 2 FC",
+    "hidden": "2048",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ImageNet convnet",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Krizhevsky et al. 2012; details not given here",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "supervised classification loss under random unit dropout; RBM variant uses CD-1",
+   "optimizer": "SGD with momentum",
+   "lr": "10-100x the no-dropout optimum (guide); TIMIT 0.1, 0.01 for DBN finetuning",
+   "lr_schedule": "large decaying; TIMIT eps0(1+t/T)^-1",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "1 million weight updates (MNIST)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "L2 weight decay found useful",
+   "dropout": "p=0.5 hidden, 0.8 input (MNIST); SVHN/CIFAR p=(0.9,0.75,0.75,0.5,0.5,0.5); TIMIT 0.8 input / 0.5 hidden; splicing 0.5 hidden / 0.7 input",
+   "regularisation": "max-norm ||w||2<=c: c=2 MNIST, c=4 SVHN/TIMIT, typical 3-4",
+   "hardware": "GPU (cudamat, cuda-convnet)",
+   "compute": null,
+   "wall_clock": "2-3x longer than standard net",
+   "seeds": "10 seeds for Table 10; otherwise not stated",
+   "other": {
+    "momentum": "final 0.95 (guide: 0.95-0.99)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "weight scaling by p at test time; Monte-Carlo k sampled nets compared up to k~120",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test error",
+     "definition": "classification error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-5 error",
+     "definition": "correct label not among 5 most probable",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "phone error rate",
+     "definition": "TIMIT core test",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Code Quality",
+     "definition": "sum of p log(q/pbar) over examples, tissues, states (negative KL, higher better)",
+     "unit": "bits",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "standard NN",
+    "SVM",
+    "DBN/DBM finetuning",
+    "maxout",
+    "stochastic pooling",
+    "L2/L1/KL-sparsity/max-norm",
+    "Bayesian NN"
+   ],
+   "protocol": "Hyperparameters tuned on validation set; single reported runs for most tables (seeds not stated)"
+  },
+  "availability": {
+   "code": "http://www.cs.toronto.edu/~nitish/dropout",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Dropout lowers permutation-invariant MNIST error from 1.60% (standard net) to 1.35% with logistic units.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.35",
+   "unit": "% test error",
+   "baseline_value": "1.60",
+   "n": null,
+   "setup": "MNIST, 3x1024 logistic net, p=0.5 hidden, 0.8 input",
+   "note": null,
+   "where": "6.1.1",
+   "quote": "With dropout the error reduces to 1.35%."
+  },
+  {
+   "claim": "Dropout with ReLU and max-norm gets 1.06% on MNIST (3x1024).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.06",
+   "unit": "% test error",
+   "baseline_value": "1.25 (dropout, no max-norm)",
+   "n": null,
+   "setup": "MNIST, 3 layers 1024 ReLU, dropout + max-norm",
+   "note": null,
+   "where": "6.1.1",
+   "quote": "Adding max-norm regularization again reduces it to 1.06%."
+  },
+  {
+   "claim": "A 2x8192 dropout net with over 65M parameters trained on 60,000 images reaches 0.95% without early stopping.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "0.95",
+   "unit": "% test error",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, 2 layers 8192 ReLU, dropout + max-norm",
+   "note": null,
+   "where": "6.1.1",
+   "quote": "A neural net with 2 layers and 8192 units per layer gets down to 0.95% error."
+  },
+  {
+   "claim": "DBM-pretrained dropout-finetuned net reaches 0.79% on permutation-invariant MNIST.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "0.79",
+   "unit": "% test error",
+   "baseline_value": "0.96 (DBM + finetuning)",
+   "n": null,
+   "setup": "MNIST, DBM 500-500-2000, dropout finetuning",
+   "note": null,
+   "where": "6.1.1",
+   "quote": "DBM—pretrained dropout nets achieve a test error of 0.79%"
+  },
+  {
+   "claim": "Dropout on SVHN convnet: 3.95% -> 3.02% (dropout in FC layers) -> 2.55% (dropout in all layers).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "2.55",
+   "unit": "% test error",
+   "baseline_value": "3.95",
+   "n": null,
+   "setup": "SVHN, 3 conv + 2 FC (2048) ReLU, p=(0.9,0.75,0.75,0.5,0.5,0.5), max-norm c=4",
+   "note": null,
+   "where": "6.1.2",
+   "quote": "Adding dropout to the convolutional layers as well further reduces the error to 2.55%."
+  },
+  {
+   "claim": "CIFAR-10 error drops from 15.60 (hand-tuned convnet) to 12.61 with dropout in every layer; CIFAR-100 from 43.48 to 37.20.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "12.61",
+   "unit": "% test error",
+   "baseline_value": "15.60",
+   "n": null,
+   "setup": "CIFAR-10, no data augmentation, convnet as SVHN",
+   "note": "CIFAR-100: 43.48% -> 37.20%",
+   "where": "6.1.3",
+   "quote": "and adding dropout in every layer further reduces the error to 12.61%."
+  },
+  {
+   "claim": "Dropout convnet won ILSVRC-2012 with about 16% top-5 test error versus about 26% for standard vision features.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "16.4",
+   "unit": "% top-5 test error",
+   "baseline_value": "26.2",
+   "n": null,
+   "setup": "ILSVRC-2012, average of 5 convnets + dropout (Krizhevsky et al. 2012)",
+   "note": "Text says 'about 16%' and 'about 26%'",
+   "where": "6.1.4",
+   "table": "Table 6, row Avg of 5 Conv Nets + dropout, column Top-5 (test)"
+  },
+  {
+   "claim": "ILSVRC-2010 convnet with dropout: 37.5 top-1 / 17.0 top-5, versus 45.7 / 25.7 for SIFT+Fisher vectors.",
+   "kind": "reported",
+   "source": "Krizhevsky et al. 2012",
+   "metric": "top-1 error",
+   "value": "37.5",
+   "unit": "% top-1 test error",
+   "baseline_value": "45.7",
+   "n": null,
+   "setup": "ILSVRC-2010 test set",
+   "note": null,
+   "where": "6.1.4",
+   "table": "Table 5, row Conv Net + dropout, column Top-1"
+  },
+  {
+   "claim": "TIMIT phone error rate: 6-layer net 23.4% -> 21.8% with dropout; pretrained nets 22.7% -> 19.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "PER",
+   "value": "21.8",
+   "unit": "% phone error rate",
+   "baseline_value": "23.4",
+   "n": null,
+   "setup": "TIMIT core test set, 21 log-filterbank frames, p=0.8 input 0.5 hidden, max-norm c=4",
+   "note": null,
+   "where": "6.2",
+   "quote": "A 6-layer net gives a phone error rate of 23.4%. Dropout further improves it to 21.8%."
+  },
+  {
+   "claim": "Reuters-RCV1 gain is small: 31.05% -> 29.62%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error",
+   "value": "29.62",
+   "unit": "% error",
+   "baseline_value": "31.05",
+   "n": null,
+   "setup": "Reuters RCV1 subset, 402,738 docs, 2000-word bag of words, 50 classes",
+   "note": null,
+   "where": "6.3",
+   "quote": "Adding dropout reduced the error to 29.62%."
+  },
+  {
+   "claim": "On small alternative splicing data, dropout net scores 567 bits Code Quality, beating non-Bayesian baselines but below the Bayesian NN at 623.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Code Quality",
+   "value": "567",
+   "unit": "bits Code Quality",
+   "baseline_value": "440 (NN early stopping)",
+   "n": null,
+   "setup": "Alternative Splicing, 2932 train/733 test, 2x1024 dropout net, 5 folds",
+   "note": null,
+   "where": "6.4",
+   "table": "Table 8, row Neural Network with dropout, column Code Quality (bits)"
+  },
+  {
+   "claim": "On MNIST 784-1024-1024-2048-10 ReLU, dropout+max-norm gives 1.05% versus 1.62% for L2 alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.05",
+   "unit": "% test error",
+   "baseline_value": "1.62",
+   "n": null,
+   "setup": "MNIST, hyperparameters from validation set",
+   "note": "Table 2 prints 1.06 for a similar dropout+max-norm net",
+   "where": "6.5",
+   "table": "Table 9, row Dropout + Max-norm, column Test Classification error %"
+  },
+  {
+   "claim": "Hidden-unit activation mean falls from about 2.0 to about 0.7 with dropout (sparser representations) in a 256-unit ReLU autoencoder.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean activation",
+   "value": "0.7",
+   "unit": "mean activation",
+   "baseline_value": "2.0",
+   "n": null,
+   "setup": "MNIST autoencoder, one hidden layer 256 ReLU, p=0.5",
+   "note": null,
+   "where": "7.2",
+   "quote": "The overall mean activation of hidden units is close to 2.0 for the autoencoder without dropout but drops to around 0.7 when dropout is used."
+  },
+  {
+   "claim": "Test error is flat for 0.4 <= p <= 0.8 with fixed n; default p=0.5 is near optimal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "optimal p",
+   "value": "0.5",
+   "unit": "retain probability p",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST, 784-2048-2048-2048-10, no input dropout",
+   "note": null,
+   "where": "7.3",
+   "quote": "It becomes flat when 0.4 ≤p ≤0.8"
+  },
+  {
+   "claim": "With pn fixed, error at p=0.1 falls from 2.7% to 1.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.7",
+   "unit": "% test error",
+   "baseline_value": "2.7",
+   "n": null,
+   "setup": "MNIST, pn=256 first two layers, 512 last",
+   "note": null,
+   "where": "7.3",
+   "quote": "for p = 0.1 it fell from 2.7% to 1.7%"
+  },
+  {
+   "claim": "Dropout gives no gain at 100 or 500 training examples; benefit rises then declines with data size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST subsets 100-50K, 784-1024-1024-2048-10, p=0.5/0.8",
+   "note": null,
+   "where": "7.4",
+   "quote": "for extremely small data sets (100, 500) dropout does not give any improvements."
+  },
+  {
+   "claim": "Monte-Carlo averaging matches weight scaling at about k=50 samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "k to match",
+   "value": "50",
+   "unit": "samples k",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST",
+   "note": null,
+   "where": "7.5",
+   "quote": "It can be seen that around k = 50, the Monte-Carlo method becomes as good as the approximate method."
+  },
+  {
+   "claim": "Dropout training takes 2-3 times longer than standard training of the same architecture.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2-3",
+   "unit": "x training time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement",
+   "note": null,
+   "where": "11",
+   "quote": "A dropout network typically takes 2-3 times longer to train than a standard neural network of the same ar-"
+  },
+  {
+   "claim": "Marginalised dropout in linear regression equals ridge regression with Gamma=(diag(X^T X))^(1/2) in expectation.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear regression, retain prob p",
+   "note": null,
+   "where": "9.1",
+   "quote": "dropout with linear regression is equivalent, in expectation, to ridge regression with a particular form for Γ."
+  },
+  {
+   "claim": "Gaussian multiplicative noise (sigma=sqrt((1-p)/p)) is slightly better: MNIST 0.95 vs 1.08 Bernoulli.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "0.95",
+   "unit": "% test error",
+   "baseline_value": "1.08",
+   "n": null,
+   "setup": "MNIST 2x1024, 10 seeds",
+   "note": "CIFAR-10 12.5 vs 12.6; authors call it preliminary",
+   "where": "10",
+   "table": "Table 10, row MNIST, column Gaussian dropout"
+  },
+  {
+   "claim": "Heuristics: use at least n/p hidden units, 10-100x learning rate, momentum 0.95-0.99, max-norm c of 3 to 4.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Practical guide",
+   "note": null,
+   "where": "Appendix A",
+   "quote": "a good dropout net should have at least n/p units."
+  }
+ ],
+ "limits": [
+  "Dropout increases training time 2-3x because gradient updates are noisy.",
+  "Bayesian neural nets beat dropout on the small splicing data (623 vs 567 bits).",
+  "Gain is small on large datasets such as Reuters, and nil at 100-500 MNIST examples.",
+  "Marginalised-dropout equivalence is derived only for linear regression; no closed form for deep nets.",
+  "Batch size, seeds and compute are mostly not stated; MNIST-scale MLPs and convnets only, no transformers or attention.",
+  "Gaussian dropout comparison is described as preliminary."
+ ],
+ "practices": [
+  "Use p=0.5 for hidden units and about 0.8 for real-valued inputs (A.4)",
+  "Make the layer at least n/p units (A.1)",
+  "Raise learning rate 10-100x and momentum to 0.95-0.99 (A.2)",
+  "Pair dropout with max-norm c of 3-4 (A.3)",
+  "Scale pretrained weights by 1/p before dropout finetuning and use smaller learning rates (5.2)",
+  "Inverted dropout: multiply retained activations by 1/p in training, leave test weights unchanged (10)"
+ ],
+ "terms": [
+  {
+   "term": "thinned network",
+   "definition": "The units that survived dropout (Figure 1b)",
+   "where": "1"
+  },
+  {
+   "term": "max-norm regularization",
+   "definition": "constraining the norm of the incoming weight vector at each hidden unit to be upper bounded by a fixed constant c",
+   "where": "5.1"
+  },
+  {
+   "term": "co-adaptation",
+   "definition": "units changing so they fix up the mistakes of other units",
+   "where": "7.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Denoising autoencoders (Vincent et al.)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "noise on inputs; dropout applies to hidden layers",
+   "quote": null
+  },
+  {
+   "work": "ImageNet classification with deep convolutional neural networks (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ILSVRC results",
+   "quote": null
+  },
+  {
+   "work": "Maxout networks (Goodfellow et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "0.94 MNIST, 2.47 SVHN, 11.68 CIFAR-10",
+   "quote": null
+  },
+  {
+   "work": "Fast dropout training (Wang and Manning)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "marginalising dropout",
+   "quote": null
+  },
+  {
+   "work": "Dropout training as adaptive regularization (Wager et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Bayesian prediction of tissue-regulated splicing (Xiong et al.)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "splicing data and Bayesian NN baseline",
+   "quote": null
+  },
+  {
+   "work": "Livnat et al. sex, mixability, modularity",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "related",
+   "note": "evolutionary motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Dropout Neural Net Model. Left: standard net. Right: thinned net, crossed units dropped.",
+   "page": 2,
+   "why": "Shows what a thinned network is"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Training: unit present with probability p, weights w. Test: always present, weights pw.",
+   "page": 3,
+   "why": "Weight-scaling rule at test time"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of basic operations of a standard and dropout network.",
+   "page": 4,
+   "why": "Bernoulli mask r*y per layer"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Test error for different architectures with and without dropout.",
+   "page": 9,
+   "why": "Two separate clusters of curves"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Features learned on MNIST by 256-ReLU autoencoders, without and with dropout p=0.5.",
+   "page": 15,
+   "why": "Visual evidence of co-adaptation breaking"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Effect of changing dropout rates on MNIST.",
+   "page": 17,
+   "why": "Flat optimum p in 0.4-0.8"
+  },
+  {
+   "figure": "Fig 11",
+   "caption": "Monte-Carlo model averaging vs. weight scaling.",
+   "page": 18,
+   "why": "k~50 samples to match weight scaling"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 4",
+   "snippet": "r(l)_j ~ Bernoulli(p); y~(l) = r(l) * y(l); z(l+1)_i = w(l+1)_i y~(l) + b(l+1)_i; y(l+1)_i = f(z(l+1)_i). Test: W_test = p W",
+   "verbatim": false
+  },
+  {
+   "where": "Section 9.1",
+   "snippet": "minimize_w ||y - pXw||^2 + p(1-p)||Gamma w||^2, Gamma = (diag(X^T X))^(1/2)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction loses math layout (equations scrambled); figure pages came from figures.py captions, not images.",
+  "No embedded instructions found."
+ ]
+}

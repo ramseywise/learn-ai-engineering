@@ -1,0 +1,422 @@
+{
+ "schema": 1,
+ "key": "https://openalex.org/W2131462252",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mnih-2008-scalable-hierarchical-distributed-language-model.pdf",
+ "bib": {
+  "title": "A Scalable Hierarchical Distributed Language Model",
+  "authors": [
+   "Andriy Mnih",
+   "Geoffrey Hinton"
+  ],
+  "first_author": "Mnih",
+  "year": 2008,
+  "venue": "NeurIPS 2008 (Advances in Neural Information Processing Systems 21)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 32755,
+  "chars_total": 32755,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a hierarchical (binary-tree softmax) neural language model with automatically built word trees match or beat non-hierarchical neural and n-gram models while training orders of magnitude faster?",
+ "hypothesis": "A carefully constructed, data-driven word hierarchy (with words allowed multiple codes) lets a hierarchical log-bilinear model outperform the non-hierarchical LBL and n-gram models.",
+ "contributions": [
+  "Hierarchical log-bilinear model (HLBL) using diagonal context matrices and a single predicted vector per prediction",
+  "Simple feature-based algorithm (bootstrapped, recursive 2-Gaussian mixture) to build word trees from data",
+  "Support for multiple codes per word (overcomplete trees)"
+ ],
+ "method": {
+  "summary": "HLBL replaces the LBL softmax with a product of binary logistic decisions along a path in a word tree, each node having its own feature vector. Trees are built by training an HLBL on a random tree, averaging each word's predicted feature vectors over its contexts, then recursively clustering with 2-component Gaussian mixtures (EM, 10 steps).",
+  "task": "statistical language modelling (next-word prediction), perplexity",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "APNews",
+    "role": "both",
+    "size": "14M words train, 1M validation, 1M test; vocab 17964",
+    "split": "14M/1M/1M",
+    "source": "Associated Press news stories 1995-1996, used earlier in Bengio et al. 2003 and Mnih & Hinton 2007",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "HLBL",
+    "role": "proposed",
+    "params": null,
+    "architecture": "hierarchical log-bilinear; diagonal context weight matrices, node feature vectors, logistic node decisions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "17964",
+    "layers": "inferred: one linear hidden layer (LBL)",
+    "hidden": "100-dim feature vectors (25/50/75/100 in Table 2)",
+    "heads": null,
+    "context": "5 words",
+    "other": {
+     "trees": "T1-T7 (Table 1), non-leaf nodes 17963 to 121980"
+    }
+   },
+   {
+    "name": "LBL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "non-hierarchical log-bilinear",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "17964",
+    "layers": null,
+    "hidden": "100",
+    "heads": null,
+    "context": "5 words",
+    "other": {
+     "source": "scores from Mnih & Hinton 2007, timing from authors' implementation"
+    }
+   },
+   {
+    "name": "KN3 / KN5",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Kneser-Ney n-gram",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "3-gram / 5-gram",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise (L2-penalised) log-likelihood",
+   "optimizer": "stochastic gradient ascent",
+   "lr": "1e-3, then 3e-5 after validation perplexity first rises",
+   "lr_schedule": "two-stage: train at 10^-3 until validation perplexity increases, drop to 3x10^-5 and resume until it increases again",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "context size 5",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "small L2 penalty on all parameters (value not stated); early stopping on validation perplexity",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "4 to 32 min per epoch for HLBL; 6420 min per epoch for LBL",
+   "seeds": null,
+   "other": {
+    "init": "Gaussian of small variance (not specified); tree-node biases set to match word base rates",
+    "tree_building": "EM 10 steps, spherical covariances, tree built in a few minutes for ~18000 words with 100-dim vectors"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; tree construction is randomised, one tree per algorithm generated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "epsilon": "0.25 and 0.4 for ADAPTIVE(eps)",
+    "overcomplete": "2x and 4x trees via root joining multiple ADAPTIVE(0.4) trees"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "test perplexity",
+     "definition": "perplexity on 1M-word test set",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "minutes per epoch",
+     "definition": "training time per epoch",
+     "unit": "minutes",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "unigram (602.0)",
+    "LBL",
+    "KN3",
+    "KN5",
+    "random-tree HLBL"
+   ],
+   "protocol": "single runs; no seeds, variances or significance tests reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A 2x overcomplete ADAPTIVE(0.4) HLBL beats the non-hierarchical LBL (117.0) and both KN n-grams.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 115.7,
+   "unit": "perplexity",
+   "baseline_value": "117.0",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HLBL T6 ADAPTIVE(0.4) x 2, column Perplexity"
+  },
+  {
+   "claim": "A 4x overcomplete tree gives the best perplexity, 112.1, at 32 min/epoch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 112.1,
+   "unit": "perplexity",
+   "baseline_value": "117.0 (LBL)",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HLBL T7 ADAPTIVE(0.4) x 4, column Perplexity"
+  },
+  {
+   "claim": "The slowest HLBL is over 200 times faster per epoch than LBL (6420 vs 32 min).",
+   "kind": "measured",
+   "source": null,
+   "metric": "minutes per epoch",
+   "value": 32,
+   "unit": "minutes per epoch",
+   "baseline_value": "6420",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "Indeed, the slowest of our HLBL models is over 200 times faster than the LBL model."
+  },
+  {
+   "claim": "Random-tree HLBL gets 151.2 perplexity vs 131.3 for the BALANCED data-driven tree, same speed (4 min/epoch).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 131.3,
+   "unit": "perplexity",
+   "baseline_value": "151.2",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HLBL T2 BALANCED, column Perplexity"
+  },
+  {
+   "claim": "ADAPTIVE (unbalanced) tree improves over BALANCED at same cost.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 127.0,
+   "unit": "perplexity",
+   "baseline_value": "131.3",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row HLBL T3 ADAPTIVE, column Perplexity"
+  },
+  {
+   "claim": "KN5 and KN3 n-gram perplexities (from Mnih & Hinton 2007).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 123.2,
+   "unit": "perplexity",
+   "baseline_value": "129.8 (KN3)",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row KN5, column Perplexity"
+  },
+  {
+   "claim": "Non-random tree reduces perplexity by 19.9 at 100 dims (151.2 to 131.3), and by 29.2 at 25 dims.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity reduction",
+   "value": 19.9,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5 (dims varied 25-100)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 100, column Reduction in perplexity"
+  },
+  {
+   "claim": "Unigram model perplexity; random-tree HLBL beats it by a large margin.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test perplexity",
+   "value": 602.0,
+   "unit": "perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "they outperform the unigram model which achieved the perplexity of 602.0 by a very large margin"
+  },
+  {
+   "claim": "Mean code length grows with overcompleteness (14.2 random to 143.2 for 4x), raising cost and parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean code length",
+   "value": 143.2,
+   "unit": "binary decisions",
+   "baseline_value": "14.2",
+   "n": null,
+   "setup": "APNews (14M word train, 1M val, 1M test, vocab 17964), 100-dim features, context 5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row T7 ADAPTIVE(0.4) x 4, column Mean code length"
+  },
+  {
+   "claim": "Tree-building took only a few minutes for a vocabulary of nearly 18000 words with 100-dim vectors.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "feature-based algorithm, EM 10 steps",
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "Words with most codes were infrequent, hard-to-cluster words, not multi-sense words.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "inspection of ADAPTIVE trees",
+   "note": null,
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "One dataset (APNews, 14M words), single runs, no variance or significance tests",
+  "Batch size, L2 strength, init variance, hardware, epochs and code not stated",
+  "Multiple codes replicate rare words, not multi-sense words (authors concede)",
+  "Overcomplete trees add parameters and cost linearly (32 min/epoch for 4x); comparison to LBL uses LBL/KN scores from an earlier paper",
+  "Authors propose but do not test periodic tree rebuilding during training"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "code",
+   "definition": "binary string of decisions that specifies the path from root to a word's leaf",
+   "where": "Sec 4"
+  },
+  {
+   "term": "overcomplete tree",
+   "definition": "tree in which each word occurs more than once, built by joining multiple generated trees under one root",
+   "where": "Sec 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Morin and Bengio, Hierarchical probabilistic neural network language model",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "hierarchical NPLM using WordNet tree; this paper replaces tree construction and implements multiple codes",
+   "quote": null
+  },
+  {
+   "work": "Mnih and Hinton, Three new graphical models for statistical language modelling",
+   "year": 2007,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LBL model is the foundation; LBL/KN scores taken from it",
+   "quote": null
+  },
+  {
+   "work": "Bengio et al., A neural probabilistic language model",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "NPLM; APNews dataset used there",
+   "quote": null
+  },
+  {
+   "work": "Bengio and Senecal, Quick training by importance sampling",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative speed-up that leaves testing expensive",
+   "quote": null
+  },
+  {
+   "work": "Brown et al., Class-based n-gram models",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "related",
+   "note": "word clustering",
+   "quote": null
+  },
+  {
+   "work": "McMahon and Smith, automatically generated word hierarchies",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "related",
+   "note": "top-down clustering, cubic cost",
+   "quote": null
+  },
+  {
+   "work": "Pereira, Tishby, Lee, Distributional clustering of English words",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "rejected for multi-word contexts",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 3",
+   "caption": "Test set perplexity results for the hierarchical LBL models.",
+   "page": 7,
+   "why": "perplexity vs minutes per epoch across trees, LBL and KN"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Trees of words generated by the feature-based algorithm.",
+   "page": 6,
+   "why": "code length and node counts for T1-T7"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-5, p.3-4",
+   "snippet": "r_hat = sum_i C_i r_{w_i};  P(w)=sum_{d in D(w)} prod_i P(d_i|q_i,w_{1:n-1});  P(d_i=1|q_i,.)=sigma(r_hat^T q_i + b_i)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No figures in the paper (tables only); no figure candidates",
+  "Scan text is clean; no embedded instructions"
+ ]
+}

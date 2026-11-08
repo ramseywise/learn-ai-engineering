@@ -168,7 +168,7 @@ Normal(0, 10)              slope      9.6   P(y=1 at largest x) 0.991752
 Cauchy(0, 2.5)             slope      3.6   P(y=1 at largest x) 0.859439
 ```
 
-The flat fit stops at a slope of 100 only because the optimiser gives up, and it claims certainty at the edge of the data. [Chapter 6 of the statistics pillar](../../02-probability-and-statistics/notes/06-regression-and-glms.md) showed the same failure as an enormous coefficient with an absurd standard error. Each prior gives a finite answer and each encodes a different belief: Normal(0, 100) still claims certainty, Normal(0, 10) gives 99%, and Gelman's default gives 86% from six observations, which is about what six observations are worth.
+The flat fit stops at a slope of 100 only because the optimiser gives up, and it claims certainty at the edge of the data. [Chapter 6 of the statistics pillar](../../02-probability-and-statistics/notes/06b-logistic-regression-and-poisson-glms.md#separation) showed the same failure as an enormous coefficient with an absurd standard error. Each prior gives a finite answer and each encodes a different belief: Normal(0, 100) still claims certainty, Normal(0, 10) gives 99%, and Gelman's default gives 86% from six observations, which is about what six observations are worth.
 
 ## The prior washes out
 

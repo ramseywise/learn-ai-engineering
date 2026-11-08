@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/1201.0490
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6-7
   - McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 13
+  - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016), ch. 4
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -322,6 +323,13 @@ GridSearchCV(pipe, grid, cv=5).fit(texts_train, y_train)
 ```
 
 The book's best setting is `ngram_range=(1, 3)` with `C=100` at 0.91 CV accuracy, up from 0.89, and its heat map shows bigrams carry most of the gain and trigrams little (*Introduction to ML with Python*, ch. 7, "Bag-of-words with more than one word"). All figures are one dataset, one classifier and two-decimal scores, so the 0.88 against 0.89 differences between `min_df`, stopwords and tf-idf are not distinguishable. The chapter also notes that cross-validating on pre-vectorised data is safe only because plain `CountVectorizer` learns no statistics beyond the vocabulary; tf-idf does, so use a pipeline. Lemmatisation, topic models and embeddings are covered in the [NLP pillar](../../03-nlp/README.md).
+
+The same point is the organising idea of Sarkar's text-classification blueprint: normalisation and feature extraction are one shared path that training documents and new documents both go through, so that the model sees consistent inputs. The book is explicit that a fitted extractor (its TF-IDF or word-vector builder) is built once on the training documents and then reused on the documents to predict, not rebuilt from them (*Text Analytics with Python*, ch. 4, Fig. 4-2). In scikit-learn that is `fit` on the training split and `transform` afterwards, which a pipeline enforces.
+
+![Blueprint for a text classifier: training and prediction rows share the same text-normalisation and feature-extraction boxes, with the trained classification model carried from the training row into the prediction row](../../sources/images/sarkar-text-analytics-fig4-2.png)
+*Image Source: Sarkar, *Text Analytics with Python* (Apress, 2016), Fig. 4-2*
+
+What the features were worth is in the book's 20 Newsgroups run: about 18,000 posts in 20 classes, a 33% test split with `random_state=42`, normalised text, default hyperparameters, one run, weighted-average scores. Accuracy was 0.67 for multinomial naive Bayes and 0.61 for a linear SVM (hinge-loss SGD) on counts, 0.72 and 0.77 on TF-IDF, and for the SVM only 0.55 on averaged word2vec vectors and 0.53 on TF-IDF-weighted averages (*Text Analytics with Python*, ch. 4). So TF-IDF beat raw counts for both classifiers and beat averaged embeddings by 22 points here, but there is no repeat or tuning, so read the ranking as one split, not a law. The text says a 30% test split where the code uses 33%.
 
 ---
 

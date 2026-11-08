@@ -5,7 +5,7 @@ cleaned: 2026-11-01
 sources:
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–4, 13"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1, 3, 7)
-  - "Lattimore & Szepesvári, \"Bandit Algorithms\" (Cambridge University Press, 2020), ch. 1, 4, 6–13, 15–19"
+  - "Lattimore & Szepesvári, \"Bandit Algorithms\" (Cambridge University Press, 2020), ch. 7"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
@@ -14,9 +14,6 @@ sources:
   - https://arxiv.org/abs/2503.06072 (post-training survey, notation and taxonomy)
   - https://arxiv.org/abs/2402.03300
   - https://arxiv.org/abs/2503.14476 (DAPO)
-  - https://arxiv.org/abs/1003.0146
-  - https://arxiv.org/abs/1802.09127
-  - https://arxiv.org/abs/1508.03326
   - https://arxiv.org/abs/2512.16144 (INTELLECT-3)
   - https://arxiv.org/abs/2602.15763 (GLM-5)
   - https://arxiv.org/abs/2112.09332 (WebGPT)
@@ -32,7 +29,7 @@ sources:
 
 The treasure-hunt lab from [00](00-rl-in-plain-language.md) needs about 10,000 games to win a puzzle with an 11-move answer, and yet the same family of ideas now trains models that reason and write code. This chapter is the bridge. It puts precise notation on agent, reward, policy and value, then follows one thread from the Q-learning table in that lab to the PPO clip used on language models, and stops to explain why each step was needed. Every piece is tied to the place LLM RL uses it.
 
-**Where the rest went.** Multi-agent RL and RL in RAG now live in [11](11-multi-agent-and-rag-rl.md#multi-agent-rl-marl); imitation learning, hierarchy, problem design and scaling live in [10](10-engineering-rl-systems.md#learning-from-experts-imitation-and-inverse-rl).
+**Where the rest went.** Bandit regret, Exp3 and contextual bandits live in [1c](01c-bandit-algorithms.md); multi-agent RL and RL in RAG now live in [11](11-multi-agent-and-rag-rl.md#multi-agent-rl-marl); imitation learning, hierarchy, problem design and scaling live in [10](10-engineering-rl-systems.md#learning-from-experts-imitation-and-inverse-rl).
 
 **For RLHF pipeline depth** (SFT → reward model → PPO, Bradley-Terry, reward hacking):
 see [02 — RLHF pipeline](02-rlhf-pipeline.md)
@@ -370,29 +367,12 @@ immediate reward) or **explore** new actions that might yield higher rewards in 
 run? Strategies:
 - **ε-greedy:** With probability ε, take a random action; otherwise exploit. Murphy notes it explores every action with probability at least ε/|A| forever, so it is suboptimal unless ε is annealed to 0 (*RL: A Comprehensive Overview*, ch. 1, Sec. 1.3.5). Boltzmann selection is smoother: with τ = 1, estimated rewards of 4.90 and 5.10 give about 0.45 and 0.55, where ε-greedy would give a hard 0.05/0.95 split (his Table 1.2, with ε = 0.1 and two actions; the Boltzmann values check against exp(R̂/τ))
 - **UCB (Upper Confidence Bound):** Choose actions with high uncertainty to reduce
-  uncertainty faster. Guarantees are in the regret block below (*Bandit Algorithms*, ch. 7)
+  uncertainty faster. Guarantees are in [1c](01c-bandit-algorithms.md#stochastic-bandits-and-regret) (*Bandit Algorithms*, ch. 7)
 - **Entropy regularization (SAC; optional in PPO):** Add an entropy bonus to the objective to
   encourage diverse action distributions. The PPO paper includes one for its Atari runs and
   turns it off for continuous control ([arXiv:1707.06347](https://arxiv.org/abs/1707.06347)).
   GRPO as published has no entropy term; its only regularizer is the KL penalty to the
   reference model ([arXiv:2402.03300](https://arxiv.org/abs/2402.03300)).
-
-- **Measured on the 10-armed testbed** (2,000 random problems, rewards N(q*, 1), 1,000 steps): greedy gets about 1 reward per step against 1.54 possible; ε = 0.1 never exceeds 91% optimal actions; optimistic initial values (Q₁ = +5, α = 0.1) start worse than ε-greedy and end better, but only help stationary problems; UCB with c = 2 beats ε = 0.1 after the first k steps (`A = argmax[Q(a) + c·√(ln t / N(a))]`); a gradient bandit with a baseline is unaffected when every mean shifts by +4, and without the baseline degrades. The gradient bandit's expected update equals the gradient of expected reward, so it is stochastic gradient ascent and the direct ancestor of REINFORCE below, with the baseline only reducing variance. Across a parameter sweep from 1/128 to 4, every method traces an inverted U, and UCB comes out best on this problem (*RL: An Introduction*, ch. 2). Exact Bayesian lookahead over 1,000 two-action steps has 2^2000 leaves, which is why Thompson sampling is used instead.
-- **Regret and the noisy TV (Murphy, ch. 7).** Regret measures return lost against the best policy in hindsight. For a tabular episodic MDP with horizon H, S states, A actions and T steps, the optimal minimax regret is O(√(HSAT)) (*RL: A Comprehensive Overview*, ch. 7, Sec. 7.1). Exact Bayes-optimal planning merges identical belief states, yet a bandit with n arms and horizon h still has O(h^2n) of them (about 10^12 for the two-arm, 1,000-step case above), and Gittins indices solve only the infinite-horizon discounted, context-free case (Sec. 7.2.1). Posterior sampling is the cheap alternative: sample one model from the posterior each episode and act greedily on it. Prompting an LLM to do this worked on 3-state RiverSwim and failed at 4 states (as reported, Sec. 7.2.2). Rewarding raw prediction error as intrinsic motivation invites the *noisy TV* problem, an agent that stares at unpredictable noise, while information gain, ICM or a KL reward avoid it (Sec. 7.4).
-- **Regret guarantees (Lattimore & Szepesvári).** Regret is R_n = nμ* − E[ΣX_t], which equals Σ_i Δ_i·E[T_i(n)], the gap times the expected pull count of each arm (*Bandit Algorithms*, ch. 4, Lemma 4.5). Bounds below assume k arms, horizon n and 1-subgaussian rewards unless stated.
-  - *Explore-then-commit* on two arms with gap Δ, tuned to Δ: R_n ≤ min{nΔ, Δ + (4/Δ)(1 + max{0, log(nΔ²/4)})}. A commit time chosen from n alone gives only O(n^(2/3)) (ch. 6, Eq. 6.6, Exercise 6.5).
-  - *UCB* with confidence δ = 1/n²: R_n ≤ 3ΣΔ_i + Σ 16 log n/Δ_i, and gap-free 8√(nk log n) + 3ΣΔ_i. It needs n in advance (ch. 7). The anytime variant: limsup R_n/log n ≤ Σ 2/Δ_i (ch. 8). MOSS drops the log factor, 39√(kn) + ΣΔ_i (ch. 9, Thm 9.1). For Bernoulli rewards KL-UCB has limsup R_n/log n ≤ ΣΔ_i/d(μ_i, μ*) and is never worse than UCB, since d ≥ 2Δ² (ch. 10, Thm 10.6).
-  - *Adversarial rewards in [0,1]:* Exp3 ([Auer, Cesa-Bianchi, Freund & Schapire, SIAM J. Comput. 2002](https://doi.org/10.1137/s0097539701398375), from FOCS 1995) draws arms from exponential weights mixed with γ/K uniform exploration and feeds back x/p for the pulled arm, an unbiased estimate of every arm's reward. For any γ its regret against the best single arm is ≤ (e−1)γG_max + K ln K/γ, which is ≤ 2.63√(gK ln K) when γ is tuned to a known g ≥ G_max (Thm 3.1, Cor. 3.2). The book's η-form gets R_n ≤ √(2nk log k) in expectation, yet its regret is heavy-tailed: some bandit has P(regret ≥ n/4) > 1/131 (ch. 11, Thm 11.2, Note 1). Auer et al. give no such tail bound for Exp3, and Exp3.P adds a confidence bonus to get one with probability 1−δ, but only for a known T. Their lower bound for any algorithm is (1/20)·min{√(KT), T}, leaving a √(ln K) gap they call open (Thm 5.1). Exp4 over N experts pays K ln N/γ, so the cost is logarithmic in N (Thm 7.1). The paper has no experiments. Exp3-IX biases the estimator upward, so with probability 1−δ the regret is O(√(nk log(k/δ))) (ch. 12). In the book's k = 5, n = 10⁴ run its *expected* regret is higher than Exp3's (Fig. 12.1).
-  - *Floors.* Any policy has some Gaussian instance with R_n ≥ (1/27)√((k−1)n) once n ≥ k−1 (ch. 15, Thm 15.2, sketched in ch. 13). A policy consistent on an unstructured class has liminf R_n/log n ≥ Σ Δ_i/d_inf; for unit-variance Gaussians that is Σ 2/Δ_i, so the UCB asymptotics above are tight (ch. 16, Thm 16.2 and Table 16.1; the 2/Δ form is our substitution). Beating that line on one instance costs regret elsewhere (Fig. 16.1). Expected regret ≤ B√((k−1)n) also forces a tail: some Gaussian instance has regret ≥ ¼·min{n, (1/B)·√((k−1)n)·log(1/(4δ))} with probability ≥ δ (ch. 17, Thm 17.1).
-
-![Regret against difficulty for several policies. A horizontal line marks the minimax floor of order √n, and a rising line marks the instance-optimal floor. An over-specialised policy sits at n almost everywhere and dips far below the instance line on one instance.](../sources/images/bandit-algorithms-fig16-1.png)
-*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 16.1. Schematic.*
-
-![Pseudo-code box for Exp3: initialise weights to 1, set p_i as a mix of normalised weights and gamma over K, draw an arm, observe a reward in [0,1], set the estimate to x over p for the pulled arm and zero otherwise, then multiply the weight by exp of gamma times the estimate over K.](../sources/images/auer-2002-exp3-fig1.png)
-*Image Source: Auer et al., [The Nonstochastic Multiarmed Bandit Problem](https://doi.org/10.1137/s0097539701398375) (SIAM J. Comput., 2002), Fig. 1*
-
-![Regret of Exp3 (dotted) and Exp3-IX (solid) against the gap Δ on a 5-armed Bernoulli bandit with n = 10,000. Both curves peak near Δ = 0.1, at about 258 for Exp3 and 302 for Exp3-IX, and fall to about 215 and 221 at Δ = 0.5.](../sources/images/bandit-algorithms-fig12-1.png)
-*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 12.1.*
 
 - **Softmax (Boltzmann) selection:** sample actions with probability ∝ `exp(Q/τ)`. Unlike
   ε-greedy, which explores uniformly, it explores in proportion to how promising each action
@@ -414,31 +394,8 @@ and by reshaping the reward. Before reaching for them, try a denser reward, a de
 simpler problem. Exploration needs prior knowledge, which is precisely what a pretrained LLM
 brings.
 
-**Contextual bandits** are the one-step case: observe a context, pick an action, get a
-reward, with no state carried forward. It is the right model for recommendation, routing and
-prompt or model selection. See [Bayesian bandits](../../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md#bayesian-bandits-thompson-sampling) in data
-analytics for the case with no context, and for Thompson sampling. Two results anchor it:
+**Regret and bandits.** The guarantees live in [1c](01c-bandit-algorithms.md): regret and the 10-armed testbed, explore-then-commit, UCB, KL-UCB and MOSS, Exp3 for adversarial rewards, the lower bounds, and contextual and linear bandits (LinUCB, Thompson sampling with neural nets). The one idea to carry on from here is that regret grows only logarithmically in n when the gaps are fixed, and as √n in the worst case, so exploration has to be spent early and in proportion to uncertainty. A contextual bandit is the one-step case with a context and no carried state; it is the right model for recommendation, routing and prompt or model selection.
 
-- **LinUCB** ([arXiv:1003.0146](https://arxiv.org/abs/1003.0146), Li et al., 2010) fits a
-  ridge regression per arm and picks the arm with the highest upper confidence bound. On over
-  33M events from the Yahoo! front-page news module it got a 12.5% click lift over a
-  context-free bandit. The paper's other lasting contribution is **replay evaluation**: a
-  bandit policy can be scored offline, without bias, on logs collected under a uniformly
-  random policy.
-- **Thompson sampling with neural nets** ([arXiv:1802.09127](https://arxiv.org/abs/1802.09127),
-  Riquelme et al., 2018) benchmarked approximate Bayesian deep nets as posteriors. Many methods
-  that work in supervised learning did poorly here because their uncertainty estimates converge
-  too slowly for online decisions. The robust choice was **NeuralLinear**: a network learns a
-  representation, and an exact Bayesian linear regression on its last layer supplies the
-  uncertainty.
-
-- **Linear and expert-advised bandits (Lattimore & Szepesvári).** With a known feature map and 1-subgaussian noise, LinUCB keeps a ridge estimate and a confidence ellipsoid. If θ* stays inside it with probability 1−δ, the regret is at most √(8·n·β_n·log(det V_n/det V_0)) (ch. 19, Thm 19.2), which is O(d√n·log(nL)) for δ = 1/n (Cor. 19.3). In the book's d = 5, n = 5,000 sphere run LinUCB's regret stays under 500 as the arm count k grows to 1,000, while UCB's climbs to about 4,000 (Fig. 19.1). For adversarial contexts, Exp4 over M experts gets √(2nk log M), with oblivious experts and known n. A finite policy class Φ gives √(2nk log|Φ|), against 2√(nk|C|log k) for one Exp3 per context (ch. 18, Thm 18.1).
-
-![Expected regret of UCB (solid) and LinUCB (dotted). Left: a 2-armed Gaussian bandit, n = 1,000, against the gap, where UCB is lower. Right: a linear bandit with d = 5, n = 5,000 against the number of arms k, where LinUCB stays under 500 and UCB climbs to about 4,000.](../sources/images/bandit-algorithms-fig19-1.png)
-*Image Source: Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge University Press, 2020), Fig. 19.1.*
-
-Zhou's survey ([arXiv:1508.03326](https://arxiv.org/abs/1508.03326)) covers the wider family:
-stochastic vs adversarial rewards, and UCB vs Thompson variants.
 
 ### RL applied to LLMs
 
@@ -527,4 +484,4 @@ The RLHF pipeline (SFT → reward model → PPO) and preference optimization alg
 
 ## Next
 
-[01b — Algorithm families, TD and DQN](01b-algorithm-families-td-and-dqn.md) is the value-based half that this note's Bellman section leads into (read it before the policy gradients if TD or off-policy learning is new). [02 — RLHF pipeline](02-rlhf-pipeline.md) applies the policy-gradient half of this note to language models. [05-RL README](../README.md) has the full reading order, and [03-agentic-foundations](../../03-agentic-foundations/README.md) covers the agents (ReAct, Reflexion) these methods train. The depth notes on algorithms and on Constitutional AI are [03](03-preference-optimization.md) and [04](04-constitutional-ai.md).
+[01c — Bandits](01c-bandit-algorithms.md) holds the regret guarantees behind the exploration paragraph above. [01b — Algorithm families, TD and DQN](01b-algorithm-families-td-and-dqn.md) is the value-based half that this note's Bellman section leads into (read it before the policy gradients if TD or off-policy learning is new). [02 — RLHF pipeline](02-rlhf-pipeline.md) applies the policy-gradient half of this note to language models. [05-RL README](../README.md) has the full reading order, and [03-agentic-foundations](../../03-agentic-foundations/README.md) covers the agents (ReAct, Reflexion) these methods train. The depth notes on algorithms and on Constitutional AI are [03](03-preference-optimization.md) and [04](04-constitutional-ai.md).

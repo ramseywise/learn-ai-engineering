@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.1214/aos/1013203451
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
   - Bruce and Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017), ch. 6
+  - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 17
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -95,6 +96,8 @@ Reading the plot, a single tree has test error of about 0.255, bagging about 0.2
 
 The same out-of-bag estimate drives R's `randomForest` printout. With 500 trees on the loan-default data, a forest on two predictors (a 3,000-row sample) reports OOB error 38.53%, and a forest on all columns (46,272 rows, balanced classes) reports 34.38%, with class errors of 0.348 for paid off and 0.339 for default. The two runs differ in rows and predictors, so the 4-point gap is not one variable's effect (*Practical Statistics*, ch. 6).
 
+Two further points from the statisticians' account of the same method (*Computer Age*, ch. 17). The OOB error is cross-validation at no extra cost: each row is predicted by averaging only the trees whose bootstrap sample missed it, and once the number of trees is about three times the number the forest needs to stabilise, the OOB error is equivalent to leave-one-out CV. The number of trees is therefore not a tuning parameter, only a stability one: enough for the estimate to settle, and too many cannot overfit. The classic `m` choices are $\sqrt{p}$ or $p/3$; on the 57-feature spam data a forest with $m=7$ beats bagging ($m=57$), and both beat a single tree (9.3% test error) and the lasso (7.1% linear, 5.7% with interactions). A small $m$ also spreads variable importance across correlated predictors instead of crowning one, the same sharing that ridge does for coefficients (the importance plots are in [note 08](08-model-interpretability.md)).
+
 | Parameter | Effect | Default advice |
 |---|---|---|
 | `n_estimators` | More trees: smoother, more stable; diminishing returns | As many as time and memory allow (100–500) |
@@ -140,6 +143,18 @@ lr 0.01                   train 0.988  test 0.958
 | `n_iter_no_change`, `validation_fraction` | Early stopping |
 
 **The tuning recipe:** fix `n_estimators` by time budget, then search `learning_rate` and `max_depth`; or use a low learning rate with early stopping on a validation set.
+
+**What the depth buys.** Boosting with stumps ($d=1$) fits an additive model, adaptively: it selects variables and how much to spend on each. Depth $d=2$ fits a two-way interaction model, and in general depth $d=k$ gives a $(k-1)$th-order interaction model, so interaction order is a more natural way to think of tree size than depth. On the ALS progression data (1,197 training rows, 369 predictors, 625 test rows, shrinkage 0.02) stumps are worst and $d=4$ is about best; reading the plot, $d=7$ bottoms out near 200 trees at about 0.256 and then climbs towards 0.263 by 500, while $d=1$ and $d=2$ are still near 0.261 and 0.260 (*Computer Age*, ch. 17, Fig. 17.8, one split).
+
+![Test mean-squared error against the number of boosted trees on the ALS data for depths 1, 2, 4 and 7 at shrinkage 0.02: depth 1 is highest, depth 4 lowest, depth 7 starts rising after about 200 trees](../../sources/images/casi-fig17-8.png)
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 17.8*
+
+**What shrinkage buys.** Shrinkage sets the rate at which boosting fits and so overfits. On a subset of the ALS data with $d=3$, a rate of 0.5 drives training error to about 0.015 while validation error bottoms out near 0.27 within the first 20 trees or so and then climbs to about 0.455 by 250 trees; a rate of 0.02 trains more slowly (about 0.18 at 250 trees) but its validation error keeps falling to about 0.23, the dotted line. The smoother fit also takes much longer to overfit, so it is less sensitive to where you stop (*Computer Age*, ch. 17, Fig. 17.10). The caption calls 0.02 "25 times smaller" than 0.5, which is right (0.5 / 0.02); the chapter's running text says "20 times", a slip, so use 25.
+
+![Training (dashed) and validation (solid) error against the number of boosted trees at shrinkage 0.5 (red) and 0.02 (blue): the red validation curve rises while its training error falls, the blue validation curve falls to a lower floor](../../sources/images/casi-fig17-10.png)
+*Image Source: Efron and Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 17.10*
+
+**Boosting against a forest, and trimming the ensemble.** Boosting slightly beat a random forest on both the ALS and spam data, but at the price of cross-validating three parameters (rounds, depth, shrinkage), whereas the forest is almost automatic; on spam a McNemar test finds boosting and the forest not significantly different, and both better than bagging. `gbm` grows each tree on a 50% subsample by default, which acts like bagging. AdaBoost, the original boosting algorithm for $\pm 1$ labels, reweights misclassified points so the classifier just fitted has weighted error 0.5; it turns out to be forward-stagewise fitting of the exponential loss, whose left tail punishes confident mistakes far harder than the logistic loss, and on spam it matches binomial gradient boosting. Because shrunken trees are similar, a non-negative lasso over the trees can pick and reweight a subset: on the ALS data it matched the depth-2 boosted model with about a third of the trees, though choosing the number to keep is critical (*Computer Age*, ch. 17, Fig. 17.13).
 
 Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you. [Note 09](09-training-and-tuning.md#early-stopping-is-regularisation-too) explains why stopping acts as regularisation.
 

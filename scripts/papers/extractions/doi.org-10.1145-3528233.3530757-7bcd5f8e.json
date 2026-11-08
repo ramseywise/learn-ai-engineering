@@ -1,0 +1,594 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1145/3528233.3530757",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/saharia-2022-palette.pdf",
+ "bib": {
+  "title": "Palette: Image-to-Image Diffusion Models",
+  "authors": [
+   "Chitwan Saharia",
+   "William Chan",
+   "Huiwen Chang",
+   "Chris A Lee",
+   "Jonathan Ho",
+   "Tim Salimans",
+   "David J Fleet",
+   "Mohammad Norouzi"
+  ],
+  "first_author": "Saharia",
+  "year": 2022,
+  "venue": "ACM SIGGRAPH 2022 (Vancouver)",
+  "arxiv": "2111.05826",
+  "doi": "10.1145/3528233.3530757"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 79491,
+  "chars_total": 79491,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can one simple conditional diffusion model handle diverse image-to-image translation tasks (colorization, inpainting, uncropping, JPEG restoration) without task-specific tuning and beat GAN and regression baselines?",
+ "hypothesis": "Conditional diffusion models with no task-specific architecture, hyper-parameters or auxiliary loss are a general framework that rivals GANs for image manipulation.",
+ "contributions": [
+  "Palette, a unified conditional diffusion framework for four image-to-image tasks",
+  "Ablation of L1 vs L2 denoising loss on sample diversity and of self-attention in the U-Net",
+  "A standardized ImageNet (ctest10k) and Places2 (places10k) evaluation protocol with human 2AFC and FID, IS, CA, PD",
+  "A multi-task generalist model that matches or beats specialists in most cases"
+ ],
+ "method": {
+  "summary": "A 256x256 class-conditional ADM-style U-Net with class conditioning removed and the source image concatenated to the noisy target, trained with the epsilon-prediction L2 loss. Inpainting/uncropping fill the masked region with Gaussian noise (no mask channel), compute loss only on masked pixels and keep unmasked pixels fixed at inference.",
+  "task": "image-to-image translation: colorization, inpainting, uncropping, JPEG restoration",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": "colorization: first 5000 val images eval, next 5000 as FID reference (Table 1); ctest10k (10,000 val images) benchmark; FID reference full 50k val",
+    "source": "Deng et al. 2009",
+    "preprocessing": "Colorization: random largest square crop resized to 256x256. Inpainting: random 256x256 crops plus resized largest square crops; eval on 256x256 center crops."
+   },
+   {
+    "name": "Places2",
+    "role": "both",
+    "size": null,
+    "split": "places10k: 10,950-image class-balanced val subset, 30 per class of 365; FID reference 36.5k val images",
+    "source": "Zhou et al. 2017",
+    "preprocessing": "Inpainting Palette (I+P) trained on uniform mix of ImageNet and Places2; uncropping trained on combined Places2 and ImageNet"
+   }
+  ],
+  "models": [
+   {
+    "name": "Palette",
+    "role": "proposed",
+    "params": "552M (global self-attention, Table 5)",
+    "architecture": "U-Net based on 256x256 class-conditional model of Dhariwal and Nichol 2021, no class conditioning, source image concatenated",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "global_attention_resolutions": "32x32, 16x16, 8x8",
+     "image_size": "256x256 RGB for all tasks"
+    }
+   },
+   {
+    "name": "Regression baseline",
+    "role": "baseline",
+    "params": null,
+    "architecture": "identical architecture, L2 regression",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DeepFillv2, HiFill, Co-ModGAN, Photoshop Content-aware Fill, Boundless, InfinityGAN, Pix2Pix, PixColor, ColTran",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GAN / task-specific",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "epsilon prediction, L_simple with Lp norm, L2 used unless stated (p=2)",
+   "optimizer": "Adam",
+   "lr": "1e-4 fixed",
+   "lr_schedule": "fixed after warmup",
+   "warmup": "10k linear steps",
+   "batch_size": "1024 (512 for the Table 5 architecture ablation)",
+   "steps": "1M (500K for Table 5 ablation)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "EMA 0.9999",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "noise_schedule_train": "linear (1e-6, 0.01), 2000 time-steps",
+    "alpha_conditioning": "yes, per Chen 2021a / Saharia 2021",
+    "checkpoint": "final at 1M steps, no overfitting seen",
+    "uncrop_mask": "50% of image; one side (random) or all four sides, uniform choice",
+    "jpeg_qf": "trained on QF 5-30, sampled with probability proportional to exp(-Q/10)",
+    "colour_space": "RGB"
+   }
+  },
+  "inference": {
+   "decoding": "ancestral DDPM sampling, 1000 refinement steps",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 samples shown for diversity figures; counts for metrics not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "noise_schedule_inference": "linear (1e-4, 0.09)",
+    "refinement_steps": "1000",
+    "sampling_speed": "0.8 s/image on TPUv4 for 1000 test images"
+   },
+   "other": {
+    "inpainting": "unmasked pixels kept; only masked prediction used",
+    "baseline_context": "HiFill and Co-ModGAN evaluated on 512x512 center crops (4x more context)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance; reference = full val set (50k ImageNet, 36.5k Places2)",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception Score",
+     "definition": "IS of Salimans et al. 2017",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Classification Accuracy",
+     "definition": "top-1 of a pre-trained classifier",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perceptual Distance",
+     "definition": "Euclidean distance in InceptionV1 pool_3 feature space against original",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Fool rate",
+     "definition": "% of raters who pick model output over natural image in 2AFC 'Which image would you guess is from a camera?'; ideal 50%",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Diversity",
+     "definition": "pairwise multi-scale SSIM (lower=more diverse) and LPIPS between consecutive samples (higher=more diverse)",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Pix2Pix",
+    "PixColor",
+    "ColTran",
+    "DeepFillv2",
+    "HiFill",
+    "Co-ModGAN",
+    "Photoshop Content-aware Fill",
+    "Boundless",
+    "InfinityGAN",
+    "L2 Regression"
+   ],
+   "protocol": "2AFC with 100 images split into Set-I and Set-II, 50 subjects each, 3 or 5 s display; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "project page https://diffusion-palette.github.io/ named; model outputs and masks at https://bit.ly/eval-pix2pix",
+   "weights": null,
+   "data": "ctest10k, places10k subsets; outputs and inpainting masks released"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.Classification Accuracy",
+    "quote": "Classification Accuracy of a pre-trained ResNet-50",
+    "where": "Abstract; Appendix C.5 says EfficientNet-B0 instead"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Palette inpainting beats DeepFillv2 on ImageNet FID for 20-30% free-form masks",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "5.2",
+   "unit": null,
+   "baseline_value": "9.4",
+   "n": null,
+   "setup": "ImageNet val, 256x256 center crops, Palette (I+P) vs DeepFillv2; FID vs 50k val reference",
+   "note": null,
+   "where": "Table 2, p5",
+   "table": "Table 2, 20-30% free form, rows DeepFillv2 and Palette, column ImageNet FID"
+  },
+  {
+   "claim": "Palette inpainting with 128x128 center mask: ImageNet FID 6.6 vs DeepFillv2 18.0",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "6.6",
+   "unit": null,
+   "baseline_value": "18.0",
+   "n": null,
+   "setup": "ImageNet, 256x256 center crop, 128x128 center mask",
+   "note": null,
+   "where": "Table 2, p5",
+   "table": "Table 2, 128x128 center, rows DeepFillv2 and Palette, column ImageNet FID"
+  },
+  {
+   "claim": "Palette FID for 20-30% free-form masks is near the FID of the original images",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "5.2",
+   "unit": null,
+   "baseline_value": "5.1",
+   "n": null,
+   "setup": "Original images FID 5.1 on ImageNet",
+   "note": "Quote is the line-wrapped sentence start; Table 2 gives original images FID 5.1.",
+   "where": "Sec 5.2",
+   "quote": "Importantly, like the colorization task above, the FID scores for Palette outputs in the case of 20-30% free-"
+  },
+  {
+   "claim": "Inpainting uses no mask channel: masked region filled with Gaussian noise, loss only on masked pixels",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Palette inpainting training",
+   "note": null,
+   "where": "Sec 5.2",
+   "quote": "we do not pass a binary inpainting mask to the models. Instead,"
+  },
+  {
+   "claim": "Free-form mask sampled with 60% probability and 1-5 rectangular masks (10-40% of area) with 40%",
+   "kind": "measured",
+   "source": null,
+   "metric": "free-form mask probability",
+   "value": "60%",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inpainting training masks, free-form from Yu et al. 2019 Algorithm 1",
+   "note": null,
+   "where": "App B",
+   "quote": "We randomly sample a free-form mask with 60% probability, and rectangu-"
+  },
+  {
+   "claim": "Uncropping: Palette FID 5.8 vs Boundless 18.7 on ImageNet ctest10k",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "5.8",
+   "unit": null,
+   "baseline_value": "18.7",
+   "n": null,
+   "setup": "Right-half extension, masked area 50%",
+   "note": null,
+   "where": "Table 3, p5",
+   "table": "Table 3, rows Boundless and Palette, column ImageNet FID"
+  },
+  {
+   "claim": "Uncropping human fool rate is 40% for Palette vs 25% Boundless and 15% InfinityGAN",
+   "kind": "measured",
+   "source": null,
+   "metric": "fool rate",
+   "value": "40%",
+   "unit": "%",
+   "baseline_value": "25% Boundless, 15% InfinityGAN",
+   "n": null,
+   "setup": "Places2 2AFC, 'Which image would you guess is from a camera?', 3 or 5 s display, 50 raters per set",
+   "quote": "On human evaluation, Palette has a 40% fool rate, compared to 25% and 15% for Boundless",
+   "note": "Fig C.2 per-run Palette values 38.1%-44.8%, Boundless 17.0%-24.6%, InfinityGAN 8.6%-18.2%; text rounds.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Panorama via repeated uncropping remained realistic after 8 repeated applications",
+   "kind": "measured",
+   "source": null,
+   "metric": "repeated uncrop applications",
+   "value": "8",
+   "unit": "applications",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2: central 256x256 extended left and right in 128 px steps to 256x2304",
+   "quote": "after 8 repeated applications of uncrop",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "JPEG QF=5: Palette FID 8.3 vs regression 29.0, gap widens as QF falls",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-5K",
+   "value": "8.3",
+   "unit": null,
+   "baseline_value": "29.0",
+   "n": null,
+   "setup": "ImageNet, identical U-Net regression baseline",
+   "note": null,
+   "where": "Table 4, p6",
+   "table": "Table 4, QF 5, rows Regression and Palette, column FID-5K"
+  },
+  {
+   "claim": "Colorization: Palette FID-5K 15.78 vs ColTran 19.37",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-5K",
+   "value": "15.78",
+   "unit": null,
+   "baseline_value": "19.37",
+   "n": null,
+   "setup": "ImageNet val first 5000 images; reference next 5000",
+   "note": null,
+   "where": "Table 1, p5",
+   "table": "Table 1, rows Coltran and Palette, column FID-5K"
+  },
+  {
+   "claim": "Colorization fool rate 47.80% Palette vs 36.55% ColTran",
+   "kind": "measured",
+   "source": null,
+   "metric": "fool rate",
+   "value": "47.80%",
+   "unit": null,
+   "baseline_value": "36.55%",
+   "n": null,
+   "setup": "100 images, 2AFC",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows Palette and Coltran, column Fool rate"
+  },
+  {
+   "claim": "L2 loss gives more sample diversity than L1 at similar FID (inpainting LPIPS 0.13 vs 0.11)",
+   "kind": "measured",
+   "source": null,
+   "metric": "LPIPS diversity",
+   "value": "0.13",
+   "unit": null,
+   "baseline_value": "0.11",
+   "n": null,
+   "setup": "Palette, inpainting and colorization; LPIPS between consecutive samples, higher=more diverse",
+   "note": "Colorization LPIPS 0.15 (L2) vs 0.09 (L1); FID equal 3.6/3.4.",
+   "where": "Table 6, p7",
+   "table": "Table 6, inpainting LPIPS, rows Diffusion L2 and Diffusion L1"
+  },
+  {
+   "claim": "Global self-attention beats fully convolutional alternatives for inpainting",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "7.4",
+   "unit": null,
+   "baseline_value": "8.0 (dilated conv, 624M params)",
+   "n": null,
+   "setup": "FID, 500K steps, batch 512",
+   "note": "Local self-attention is worse at FID 9.4; More ResNet blocks 8.1.",
+   "where": "Table 5, p6",
+   "table": "Table 5, row Global Self-Attention column FID"
+  },
+  {
+   "claim": "Sampling takes 0.8 s/image on a TPUv4 for 1000 test images, slower than GANs, with 1000 refinement steps",
+   "kind": "measured",
+   "source": null,
+   "metric": "sampling time",
+   "value": "0.8",
+   "unit": "s/image",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Palette, 256x256",
+   "note": null,
+   "where": "Sec 5.5",
+   "quote": "for 1000 test images, Palette requires 0.8 sec./image on a TPUv4"
+  },
+  {
+   "claim": "Re-purposed unconditional diffusion model (imputation, Song et al. 2021) does not inpaint well vs conditional Palette",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same architecture, data, steps; qualitative Fig 9/C.7",
+   "note": "Qualitative only, no number.",
+   "where": "Sec 5.7, Fig 9",
+   "quote": "the re-purposed unconditional model does not perform well"
+  },
+  {
+   "claim": "Multi-task Palette inpainting FID 6.8 vs task-specific 6.6",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "6.8",
+   "unit": null,
+   "baseline_value": "6.6",
+   "n": null,
+   "setup": "128x128 center mask, ImageNet, same training steps",
+   "note": null,
+   "where": "Table 7, p8",
+   "table": "Table 7, Inpainting, rows Palette (Task-specific) and Palette (Multi-task), column FID"
+  },
+  {
+   "claim": "Multi-task Palette JPEG QF=5 FID 7.0 beats task-specific 8.3",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": "7.0",
+   "unit": null,
+   "baseline_value": "8.3",
+   "n": null,
+   "setup": "Trained jointly on JPEG, inpainting, colorization",
+   "note": null,
+   "where": "Table 7, p8",
+   "table": "Table 7, JPEG Restoration QF=5, row Palette (Multi-task), column FID"
+  }
+ ],
+ "limits": [
+  "Slow: 1000 refinement steps, much slower than GANs; step-reduction techniques left to future work (App D)",
+  "Group-norm and self-attention prevent generalising to arbitrary input resolutions; all work is 256x256",
+  "Implicit biases not studied; no deployment guidance",
+  "No comparison of diversity with diversity-promoting GAN inpainting; multi-task model trained for same steps as specialists and may be undertrained",
+  "Uses a binary-mask-free noise fill, so no user-facing mask softness or text conditioning; no text prompts at all (pre text-guided era)",
+  "Inconsistent: abstract and Sec 4 say ResNet-50 classifier, App C.5 says EfficientNet-B0; text rounds uncropping fool rate to 40/25/15"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "fool rate",
+   "definition": "the percentage of human raters who select model outputs over natural images",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SR3 (Saharia et al. 2021)",
+   "year": 2021,
+   "arxiv": "2104.07636",
+   "relation": "extends",
+   "note": "source-image concatenation conditioning and alpha conditioning",
+   "quote": null
+  },
+  {
+   "work": "Diffusion Models Beat GANs (Dhariwal and Nichol 2021)",
+   "year": 2021,
+   "arxiv": "2105.05233",
+   "relation": "uses-method",
+   "note": "256x256 class-conditional U-Net base",
+   "quote": null
+  },
+  {
+   "work": "DDPM (Ho et al. 2020)",
+   "year": 2020,
+   "arxiv": "2006.11239",
+   "relation": "uses-method",
+   "note": "L_simple objective",
+   "quote": null
+  },
+  {
+   "work": "WaveGrad (Chen et al. 2021a)",
+   "year": 2021,
+   "arxiv": "2009.00713",
+   "relation": "uses-method",
+   "note": "L1 loss and alpha conditioning",
+   "quote": null
+  },
+  {
+   "work": "Song et al. 2021 score SDE",
+   "year": 2021,
+   "arxiv": "2011.13456",
+   "relation": "baseline",
+   "note": "unconditional-model imputation for inpainting",
+   "quote": null
+  },
+  {
+   "work": "Pix2Pix (Isola et al. 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "inspiration and colorization baseline",
+   "quote": null
+  },
+  {
+   "work": "DeepFillv2 (Yu et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "inpainting baseline; mask algorithm reused",
+   "quote": null
+  },
+  {
+   "work": "Boundless (Teterwak 2019); InfinityGAN (Lin 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "uncropping baselines",
+   "quote": null
+  },
+  {
+   "work": "ImageNet; Places2",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Image-to-image diffusion models are able to generate high-fidelity output across tasks without task-specific customization or auxiliary loss.",
+   "page": 1,
+   "why": "Input/output pairs across all four tasks"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Given the central 256x256 pixels, we extrapolate to the left and right in steps of 128 pixels (2x8 applications of 50% Palette uncropping), to generate the final 256x2304 panorama.",
+   "page": 2,
+   "why": "Shows outpainting by repeated 50% uncropping"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison of inpainting methods on object removal.",
+   "page": 6,
+   "why": "Side-by-side with Photoshop, DeepFillv2, HiFill, Co-ModGAN"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Palette diversity for inpainting, colorization, and uncropping.",
+   "page": 8,
+   "why": "Several valid outputs per input"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Comparison of conditional and unconditional diffusion models for inpainting.",
+   "page": 8,
+   "why": "Conditional vs imputation inpainting"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1 / Eq 7, Sec 3 and App A",
+   "snippet": "E(x,y) E_eps E_gamma || f_theta(x, sqrt(gamma) y + sqrt(1-gamma) eps, gamma) - eps ||_p^p",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text layer mangles equations; DOI printed in the PDF is a placeholder (10.1145/8888888.7777777)",
+  "No embedded instructions found"
+ ]
+}

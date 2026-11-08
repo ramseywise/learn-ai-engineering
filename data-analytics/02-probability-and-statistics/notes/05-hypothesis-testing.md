@@ -446,4 +446,4 @@ Reinhart's closing chapters collect the field evidence, all of it reported from 
 
 ## Next
 
-[Chapter 6: Regression and GLMs](06-regression-and-glms.md) shows that the t-test is a regression, and carries you through OLS, diagnostics, robust and clustered standard errors, and logistic and Poisson GLMs.
+[Chapter 6: Regression and GLMs](06-regression-and-glms.md) (with [6b](06b-logistic-regression-and-poisson-glms.md)) shows that the t-test is a regression, and carries you through OLS, diagnostics, robust and clustered standard errors, and logistic and Poisson GLMs.

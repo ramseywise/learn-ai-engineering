@@ -119,7 +119,7 @@ mu 3.519 (true 3.6), sigma 1.140 (true 1.1)
 implied mean order 64.59, sample mean 59.59
 ```
 
-The parameters are recovered well, and the model's implied mean order sits within 10% of the sample mean. The gap matters: the fitted mean relies on the assumption that the tail really is lognormal, and the sample mean makes no such assumption but rests on the few largest values. Maximum likelihood is the backbone of [GLMs](06-regression-and-glms.md), and adding a prior to it gives [the MAP estimate of the Bayesian pillar](../../04-bayesian-analysis/notes/01-bayesian-inference.md).
+The parameters are recovered well, and the model's implied mean order sits within 10% of the sample mean. The gap matters: the fitted mean relies on the assumption that the tail really is lognormal, and the sample mean makes no such assumption but rests on the few largest values. Maximum likelihood is the backbone of [GLMs](06b-logistic-regression-and-poisson-glms.md), and adding a prior to it gives [the MAP estimate of the Bayesian pillar](../../04-bayesian-analysis/notes/01-bayesian-inference.md).
 
 ## Standard errors and confidence intervals
 

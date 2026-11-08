@@ -52,7 +52,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - Include **negative and boundary cases**, or "does it more often" looks like an improvement.
 - A gate scores only rows that are **eligible** for it. Version the dataset; keep a held-out split.
 
-**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [15](notes/15-calibration-against-human-labels.md))
+**Graders** ([04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [05b](notes/05b-pairwise-ranking-elo-and-bradley-terry.md), [15](notes/15-calibration-against-human-labels.md))
 - **Code first.** A judge only where code can't check it.
 - **One judge, one criterion, binary verdict**, critique before verdict, a `CANNOT_GRADE` escape.
 - **An uncalibrated judge never gates a release.** Calibrate against 100–200 human labels; report TPR and TNR.
@@ -151,7 +151,8 @@ Note 15 and the multi-turn section of note 06 share [practice/conversation_scori
 **Grading**
 
 4. [Graders](notes/04-graders.md) — code, model and human graders; layering; the grader interface; grader states; combining scores; binary vs. scales.
-5. [LLM as judge](notes/05-llm-as-judge.md) — judge shapes, prompt structure, decomposition, known biases, pairwise ranking with Elo and Bradley–Terry, judge cost.
+5. [LLM as judge](notes/05-llm-as-judge.md) — judge shapes, prompt structure, decomposition, known biases, judge cost.
+   - 5b. [Pairwise ranking: Elo and Bradley–Terry](notes/05b-pairwise-ranking-elo-and-bradley-terry.md) — pairwise ranking with Elo and Bradley–Terry, the Arena caveats.
 
 Read straight after 05:
 
@@ -184,7 +185,7 @@ Read straight after 05:
 
 DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06b-components-trials-and-cost.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
 
-Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-llm-as-judge.md#worked-example-online-elo-vs-a-bradleyterry-fit). The full runnable lab is upstream at [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard): run `pip install -r requirements.txt && python quickstart.py`, offline, with no API key.
+Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05b](notes/05b-pairwise-ranking-elo-and-bradley-terry.md#worked-example-online-elo-vs-a-bradleyterry-fit). The full runnable lab is upstream at [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard): run `pip install -r requirements.txt && python quickstart.py`, offline, with no API key.
 
 ### Copy-ready snippets
 
