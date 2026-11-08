@@ -38,6 +38,9 @@ Fregly's host checklist (*AISPE*, ch. 3), with the condition each number was mea
 | **IRQ affinity** | Route NIC and GPU interrupts to cores near the device, away from the serving threads | Interrupt storms on a busy core delay launches | — |
 | **Allocator** | jemalloc or tcmalloc for the host process | glibc malloc fragments under many threads | — |
 
+![Eight GPUs split across two NUMA nodes, with remote access over the interconnect](../sources/images/ai-systems-performance-engineering-fig3-4.png)
+*Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 3-4*
+
 On Grace Blackwell the NUMA story changes shape but does not go away. Each Grace CPU is close to its own two GPUs, and two superchips are separate NUMA nodes.
 
 A practical inference corollary: **tokenization, detokenization and request batching are CPU work.** A serving process starved of cores (or bound to the wrong socket) shows up as gaps between decode steps, not as slow kernels.

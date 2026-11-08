@@ -138,6 +138,12 @@ ignore_index loss 11.6498 == loss on graded positions only 11.6498
 
 The last token graded is the end-of-text marker, which is how the model learns to stop. Without it, you get a model that answers and then carries on writing. The prompt positions cost nothing here because the gradient only comes from the graded ones.
 
+![Batching steps](../sources/images/build-a-large-language-model-from-scratch-fig7-6.png)
+*Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 7-6*
+
+![Masking instruction tokens](../sources/images/build-a-large-language-model-from-scratch-fig7-13.png)
+*Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 7-13*
+
 Classification fine-tuning has a different change: you swap the head. This is the entire difference between a language model and a two-class ticket classifier, with the sizes printed:
 
 ```python
@@ -169,6 +175,9 @@ language model, all trainable:   91,370,496
 new head only:                        1,538
 head plus last block:             7,089,410
 ```
+
+![Replacing the output layer with a two-unit classification head](../sources/images/build-a-large-language-model-from-scratch-fig6-9.png)
+*Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 6-9*
 
 Which of these routes you choose follows from what you are teaching:
 

@@ -30,6 +30,7 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 | 01 | [Tokens and embeddings](notes/01-tokens-and-embeddings.md) | Next-token prediction, BPE tokens and cost, embeddings, a worked example with a learned position table and RoPE |
 | 01b | [Position encodings and context extension](notes/01b-position-encodings-and-context-extension.md) | Learned, sinusoidal, relative, RoPE, ALiBi and no-position schemes, running past the training length (interpolation, NTK, YaRN), copying failures |
 | 02 | [Attention and the transformer block](notes/02-attention-and-the-transformer-block.md) | Scaled dot-product, causal and multi-head attention, the block and GPT stack |
+| 02b | [What trained attention does](notes/02b-what-trained-attention-does.md) | Attention weights as explanation, probes and attribution, image patches as tokens, attention sinks |
 | 03 | [Architectures, scale and the model zoo](notes/03-scale-and-the-model-zoo.md) | Encoder and decoder, reading a model's size, scaling laws, mixture of experts |
 | 03b | [Beyond the transformer](notes/03b-beyond-the-transformer.md) | RWKV, state-space models and Mamba, linear attention, hybrids, block and masked diffusion |
 | 04 | [Decoding and inference behaviour](notes/04-decoding-and-inference-behaviour.md) | Prefill and decode, KV cache, temperature, top-k and top-p, test-time compute, structured output |

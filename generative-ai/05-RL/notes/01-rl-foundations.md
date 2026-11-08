@@ -132,6 +132,12 @@ make it greedier against that evaluation, repeat.
 
 Two worked examples make the table concrete. In a 5×5 gridworld with γ = 0.9, off-grid moves costing −1, and a square A that pays +10 and teleports the agent, the equiprobable random policy values A at only 8.8, below its immediate reward (B's +5 is worth 5.3), because the destination square is worth less than the one it left; values near the bottom edge go negative from bumping the wall. The optimal values rise to 24.4 for A, computed from the Bellman optimality equation (*RL: An Introduction*, ch. 3, Figs 3.2 and 3.5). In a 4×4 gridworld with −1 per step and a random policy, iterative policy evaluation yields greedy policies that are already optimal after three sweeps, so full evaluation is wasted work, and truncating it to one sweep gives **value iteration** (*RL: An Introduction*, ch. 4, Fig. 4.1 and Example 4.1). DP needs a known model and is polynomial in states and actions; direct policy search is exponential. Even so, one sweep of backgammon's more than 10^20 states at a million updates per second would take over a thousand years, which is why everything after DP samples instead (*RL: An Introduction*, ch. 4).
 
+![Gridworld with special states A and B (left) and the state-value function of the equiprobable random policy (right)](../sources/images/sutton-barto-rl-fig3-2.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018), Fig. 3.2*
+
+![Iterative policy evaluation on a 4x4 gridworld: value estimates for the random policy and the greedy policy at each iteration k](../sources/images/sutton-barto-rl-fig4-1.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018), Fig. 4.1*
+
 Two facts from a short tutorial summary of RL ([arXiv:2301.01379](https://arxiv.org/abs/2301.01379) (Ahilan, 2023-01, preprint)) explain why the table's methods differ beyond bias and variance. Repeated Bellman expectation backups converge because the backup is a γ-contraction in the infinity norm, which needs γ < 1 in an infinite-horizon problem. And on a fixed batch of experience, Monte Carlo converges to the value that minimises squared error on the observed returns, while TD(0) converges to the value of the maximum-likelihood Markov model of that data, so the two can disagree. The paper is a proof-sketch summary of Sutton and Barto and Silver's course, with no experiments, and stops before PPO.
 
 ### Algorithm families, temporal difference and DQN
@@ -181,7 +187,7 @@ The textbook shows the same gap on its short corridor (reward −1 per step, ide
 Once the policy is decent, plain REINFORCE keeps making large updates that knock it about; the
 baseline version settles. That is what "variance reduction" means in the papers. GRPO's
 `(r_i − mean(r)) / std(r)` over a group of completions for the same prompt is this baseline
-computed empirically instead of learned ([03](03-preference-optimization.md)).
+computed empirically instead of learned ([03](03b-grpo-and-gspo.md)).
 
 **REINFORCE comes back once the policy is pretrained.** The variance case against REINFORCE was
 built on agents trained from random or weak initializations. Ahmadian et al.
@@ -362,6 +368,9 @@ the bridge between the value and policy families (*Reinforcement Learning*, ch. 
 > solutions. Its clip-higher fix raises only the upper clip bound, which leaves room to raise the
 > probability of unlikely tokens ([arXiv:2503.14476](https://arxiv.org/abs/2503.14476); the
 > fix is listed in [05](05-post-training-for-agents.md)).
+
+![DAPO: AIME accuracy and generation entropy with and without clip-higher](../sources/images/yu-dapo-fig2.png)
+*Image Source: Yu et al., [DAPO: An Open-Source LLM Reinforcement Learning System at Scale](https://arxiv.org/abs/2503.14476) (2025), Fig. 2*
 
 ### Exploration vs. exploitation
 

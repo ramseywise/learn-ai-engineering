@@ -36,7 +36,7 @@ such a space.
 estimates value (how good the state is), providing a lower-variance signal for updating
 the actor. PPO ([arXiv:1707.06347](https://arxiv.org/abs/1707.06347)) became the default
 actor-critic algorithm for deep RL and for RLHF. For LLM reasoning with verifiable rewards,
-critic-free GRPO has largely taken over ([03](03-preference-optimization.md)).
+critic-free GRPO has largely taken over ([03](03b-grpo-and-gspo.md)).
 
 **Model-free vs. model-based:** Model-free agents learn purely from experience.
 Model-based agents learn the transition function P(s'|s,a) and use it for planning —
@@ -68,6 +68,9 @@ on BSuite exploration against 0.68 for Bootstrapped DQN. In Minecraft all 10 run
 within 100M steps with no human data, while no PPO, IMPALA or Rainbow run did. That is a claim about
 runs: only 0.4% of episodes at the 100M budget got a diamond, on a setup the authors modified and with a protocol they
 set themselves. Every domain is a simulator or a game, and none of its experiments involve LLMs.
+
+![Fraction of agents that discover iron ingot, iron pickaxe and diamond in Minecraft against 100M environment steps, for Dreamer, IMPALA, Rainbow and PPO. All four reach the iron ingot; only Dreamer reaches the diamond, which it does in every run by about 75M steps.](../sources/images/hafner-dreamerv3-fig5.png)
+*Image Source: Hafner et al., [Mastering Diverse Domains through World Models](https://arxiv.org/abs/2301.04104) (2023), Fig. 5*
 
 **On-policy vs. off-policy.** An *on-policy* method learns about the policy that is
 generating the data (SARSA, REINFORCE, A2C, PPO). An *off-policy* method learns about one
@@ -158,6 +161,9 @@ will actually run. That is the same argument LLM RL makes for on-policy rollouts
 
 **Why TD, and what it converges to.** On a 5-state random walk (start in the middle, +1 only on the right exit, undiscounted, V initialised to 0.5, RMS error over 100 runs) TD(0) was consistently better than constant-α Monte Carlo across step sizes (Ex. 6.2). On a fixed batch the two reach different answers. With eight episodes (`A,0,B,0` once; `B,1` six times; `B,0` once) both give V(B) = 3/4, but Monte Carlo gives V(A) = 0 because the one episode through A earned 0, while TD(0) gives V(A) = 3/4 because it learns that A leads to B. TD finds the value that is exactly right for the maximum-likelihood model of the data. Computing that directly costs about n² memory and n³ steps for n states, and TD approximates it in order-n memory (Exs 6.3–6.4). The MC error is also a sum of TD errors, `G_t − V(S_t) = Σ γ^(k−t) δ_k`, exactly when V is fixed (Eq. 6.6). The book notes that nobody has proved TD learns faster than Monte Carlo.
 
+![RMS error averaged over states against walks, for batch TD(0) and constant-alpha Monte Carlo on the random walk. TD falls to about 0.035 by 100 walks and MC to about 0.05, with TD lower throughout.](../sources/images/sutton-barto-rl-fig6-2.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018), Fig. 6.2*
+
 **Expected SARSA and the maximisation bias.** Expected SARSA replaces the sampled next action with its expectation under the policy, `r + γ Σ_a π(a|s')·Q(s',a)`. It removes the variance from sampling `a'`, and with a greedy target policy it is exactly Q-learning. On cliff walking (ε = 0.1) it kept SARSA's lead over Q-learning across a wide range of step sizes (Fig. 6.3: interim over 100 episodes and 50,000 runs, asymptotic over 100,000 episodes and 10 runs). The `max` in Q-learning's target causes overestimation. In a two-state MDP where every action after the left move has reward N(−0.1, 1), ε-greedy Q-learning took left about 5% more often than optimal even at the asymptote (ε = 0.1, α = 0.1, γ = 1). **Double Q-learning** keeps two tables, picks the argmax with one and scores it with the other, and was essentially unaffected (10,000 runs). It doubles memory and leaves per-step compute unchanged (Ex. 6.7, Fig. 6.5; *RL: An Introduction*, ch. 6).
 
 **n-step returns and eligibility traces.** One step is the low-variance, high-bias extreme;
@@ -172,6 +178,9 @@ applied to TD errors:
 ```
 
 Sutton and Barto's n-step chapter supplies the justification. The worst-state error of the expected n-step return is at most γⁿ times the worst-state error of the current estimate, which is why n-step TD converges. On a 19-state random walk (values start at 0, RMS error over the first 10 episodes, 100 repetitions, n swept against α) "methods with an intermediate value of n worked best", better than both one-step TD and Monte Carlo. The curves exist only in Fig. 7.2, so there is no number to quote. In a gridworld with one reward, 10-step SARSA strengthens the last ten actions on the path after one episode, where one-step SARSA strengthens only the last (Fig. 7.4). The costs are an n-step delay before each update and more memory. The λ-return is the geometric average `G^λ = (1−λ) Σ_n λ^(n−1) G_{t:t+n}`, whose weights are positive and sum to 1, and its backward-view form is the trace `z_t = γλ·z_{t−1} + ∇v`, `w ← w + α·δ_t·z_t`. That is TD(λ): it updates every step and works on continuing tasks. The chapter never mentions advantage estimation, so it supports GAE only through this machinery. Across a random walk, cart-pole, Mountain Car and Puddle World, "an intermediate mixture appears to be the best choice", and λ = 1 is often the poorest even though its asymptotic error bound is loosest at λ = 0 (plots only, reported from earlier papers). With a neural network, traces roughly double memory and compute per step (*RL: An Introduction*, ch. 12).
+
+![RMS error of n-step TD on a 19-state random walk, averaged over the first 10 episodes, against step size alpha for n from 1 to 512. Each n has a U-shaped curve; the lowest minimum, about 0.27, is at n of 4, with n of 2 and 8 close behind and n of 1 near 0.35.](../sources/images/sutton-barto-rl-fig7-2.png)
+*Image Source: Sutton and Barto, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018), Fig. 7.2*
 
 Off-policy n-step learning inherits the importance-sampling variance described above, which forces small step sizes. Two remedies: a **control variate**, `G = ρ(R + γG') + (1 − ρ)V`, which leaves the estimate unchanged when ρ = 0 instead of dragging the target to zero, and the **tree-backup** return, which weights each branch by the target policy's probability and needs no importance ratio. Tree-backup's caveat is that when the two policies differ a lot, bootstrapping may span only a few steps even if n is large. Q(σ) interpolates between SARSA (σ = 1) and tree-backup (σ = 0), and the authors present it as new and unevaluated (*RL: An Introduction*, ch. 7).
 

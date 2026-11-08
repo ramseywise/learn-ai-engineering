@@ -138,7 +138,7 @@ recipes often start.
   23.0% for GPT-4-turbo at pass@64. The 52.0% headline is cumulative across all runs, not
   a single sample budget
   ([arXiv:2405.14333](https://arxiv.org/abs/2405.14333) (Xin et al., 2024-05, preprint)).
-  V2 continues this work with RL ([03 GRPO](03-preference-optimization.md)).
+  V2 continues this work with RL ([03b GRPO](03b-grpo-and-gspo.md)).
 
 **Enough RL can absorb a hand-built search.** OpenAI compared the two on IOI 2024
 ([arXiv:2502.06807](https://arxiv.org/abs/2502.06807) (OpenAI, 2025-02, preprint)).

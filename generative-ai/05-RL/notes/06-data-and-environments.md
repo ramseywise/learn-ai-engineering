@@ -123,6 +123,9 @@ Later papers scaled the recipe and found where it stops paying:
   tuned on 1,836 tasks and gained 9.4% on average over PaLM 540B. Most of that came from the
   first 282 tasks. Fine-tuning cost 0.2% of pretraining compute. Tuning without
   chain-of-thought examples **degraded** CoT reasoning; nine CoT datasets in the mix kept it.
+
+  ![Normalized average accuracy on held-out tasks for Flan-PaLM. Left, against model size (8B, 62B, 540B) for 9, 89, 282 and 1,836 finetuning tasks and no finetuning. Right, against the number of finetuning tasks: each size gains most by 282 tasks and is nearly flat from 282 to 1,836 (540B from about 57 to 58 percent).](../sources/images/chung-flan-palm-fig4.png)
+  *Image Source: Chung et al., [Scaling Instruction-Finetuned Language Models](https://arxiv.org/abs/2210.11416) (2022), Fig. 4*
 - **Mix the prompt formats.** The Flan Collection ([arXiv:2301.13688](https://arxiv.org/abs/2301.13688) (Longpre et al., ICML 2023))
   ablated the recipe on T5-XL (3B). Training on zero-shot, few-shot and CoT templates
   together improved all three settings; adding just 10% few-shot templates lifted zero-shot

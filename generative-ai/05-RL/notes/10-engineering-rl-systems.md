@@ -210,6 +210,9 @@ is covered in
 Because the trainer and the serving engine are separate programs, their log-probs ([defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) can disagree,
 which is the mismatch the reports below correct for.
 
+![Parallel sampling in vLLM. Two samples share the prompt's physical KV blocks (blocks 7 and 1). When sample A1 must write its next token into the shared last block, a copy-on-write step allocates a new physical block (block 3) and the reference count of block 1 drops from 2 to 1.](../sources/images/kwon-vllm-fig8.png)
+*Image Source: Kwon et al., [Efficient Memory Management for Large Language Model Serving with PagedAttention](https://arxiv.org/abs/2309.06180) (2023), Fig. 8*
+
 **Evolution strategies are the extreme of the actor–learner split.** ES perturbs the weights,
 scores each perturbed copy and averages the perturbations weighted by score. Workers exchange only
 scalar fitnesses, and no gradient flows through the model. Salimans et al. (2017) scaled it this way
@@ -395,7 +398,7 @@ Winder's book predates LLM RL. The foundations hold; the defaults have moved:
 | Most state-of-the-art algorithms are off-policy (ch. 1) | PPO and GRPO are on-policy; replay buffers are rare |
 | SAC beats PPO; entropy bonuses drive exploration (ch. 7) | Discrete tokens, KL to a reference model; entropy *collapse* is the problem |
 | Behavior cloning overfits and is unpopular (ch. 8) | Pretraining plus SFT is behavior cloning, and it comes first |
-| A learned critic (A2C, PPO) is the standard baseline (ch. 5–6) | GRPO and RLOO drop the critic and use group statistics ([03](03-preference-optimization.md), and the REINFORCE paragraph in [01](01-rl-foundations.md#policy-gradients-from-reinforce-to-the-ppo-clip)) |
+| A learned critic (A2C, PPO) is the standard baseline (ch. 5–6) | GRPO and RLOO drop the critic and use group statistics ([03b](03b-grpo-and-gspo.md), and the REINFORCE paragraph in [01](01-rl-foundations.md#policy-gradients-from-reinforce-to-the-ppo-clip)) |
 | Rewards are shaped by hand or learned by IRL (ch. 8–9) | Learned reward models (RLHF) or verifiable checkers (RLVR) |
 | Tabula rasa agents are sample-inefficient (ch. 11) | A pretrained prior makes exploration targeted: in [05](05-post-training-for-agents.md)'s treasure hunt, Q-learning needs ~10,000 episodes and an LLM agent wins on the first try |
 | Offline learning is the field's biggest open challenge (ch. 11) | Partly solved for preferences (DPO); online RL is still preferred for reasoning |

@@ -60,6 +60,9 @@ cleaned: 2026-11-01
 
 Base GPT-3 could continue any text and would not reliably answer a question. InstructGPT, a smaller model trained with a reward made from human rankings, was preferred by the labelers. The gap between those two is this chapter, and it is also where "the reward is the product" stopped being a metaphor: the reward model is a learned stand-in for human judgment, and PPO will exploit every flaw in it. Read this as three stages and one failure mode.
 
+![Win rate against the 175B SFT model against model size (1.3B, 6B, 175B). PPO-ptx rises from about 0.53 to 0.66 and PPO from about 0.52 to 0.63; SFT goes from 0.35 to 0.50, prompted GPT from 0.23 to 0.41 and plain GPT from 0.14 to 0.24. The 1.3B PPO models sit above the 175B GPT-3 baselines.](../sources/images/ouyang-instructgpt-fig1.png)
+*Image Source: Ouyang et al., [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155) (2022), Fig. 1*
+
 ---
 
 ## What it is
@@ -492,6 +495,9 @@ Training the same 1.5B scorer also on pairs of merged consecutive steps (HRM) ro
 to 0.80 ([arXiv:2503.13551](https://arxiv.org/abs/2503.13551) (Wang et al., 2025-03, preprint); the
 test set is about 90 problems with no error bars). The agent version of the trade-off is in
 [07](07-reward-design-and-tool-calling.md#reward-design-for-multi-turn-agents).
+
+![Percent of MATH problems solved against the number of sampled solutions per problem (10 to 1,860, log scale). The process-supervised reward model climbs from about 68 to 78, the outcome-supervised model plateaus near 72, and majority voting plateaus near 70; the gap to the PRM widens as N grows.](../sources/images/lightman-verify-step-by-step-fig3.png)
+*Image Source: Lightman et al., [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050) (2023), Fig. 3*
 
 Two identities from Xiao and Zhu make "dense" precise. A process reward model is a step classifier, and a
 path's reward is the sum of its step log-probabilities, `r(x, y) = Σ_k log Pr(correct | x, y≤k)`, which

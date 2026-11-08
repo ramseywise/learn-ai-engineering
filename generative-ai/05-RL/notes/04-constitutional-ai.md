@@ -269,6 +269,9 @@ Helpful-only SFT model
   Claude (harmless + helpful)
 ```
 
+![Constitutional AI pipeline. A helpful RLHF model answers red-team prompts, then critiques and revises its answers to give the SL-CAI model; SL-CAI samples answer pairs, a feedback model labels them against the constitution to train a preference model, and RLAIF training with that model yields the final RL-CAI model.](../sources/images/bai-constitutional-ai-fig1.png)
+*Image Source: Bai et al., [Constitutional AI: Harmlessness from AI Feedback](https://arxiv.org/abs/2212.08073) (2022), Fig. 1*
+
 ---
 
 ## RLAIF — standalone and comparisons
@@ -322,6 +325,9 @@ produced "assistant-brained" models: overly cautious, refusing legitimate reques
 adding excessive caveats. Constitutional AI addresses this by training a *separate*
 helpful-only model first, then applying harmlessness training on top — rather than
 mixing helpfulness and harmlessness labels in the same RM training set.
+
+![Harmlessness Elo against helpfulness Elo for 52B RL runs. Helpful-only and helpful-plus-harmless RLHF runs trace a trade-off curve (harmlessness falls or stalls as helpfulness rises); the constitutional RL runs, with and without chain of thought, sit beyond that curve as a Pareto improvement.](../sources/images/bai-constitutional-ai-fig2.png)
+*Image Source: Bai et al., [Constitutional AI: Harmlessness from AI Feedback](https://arxiv.org/abs/2212.08073) (2022), Fig. 2*
 
 ---
 

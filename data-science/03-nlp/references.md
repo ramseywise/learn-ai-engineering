@@ -24,6 +24,7 @@ cleaned: 2026-11-01
 
 | Paper | Why read it | PDF | Maps to |
 |---|---|---|---|
+| Loper & Bird, [*NLTK: The Natural Language Toolkit*](https://arxiv.org/abs/cs/0205028) (ACL 2002 Workshop on Effective Tools and Methodologies for Teaching NLP and CL; arXiv 2002 ⚑) | Where the toolkit behind this pillar's preprocessing code began: a teaching toolkit ranked by ease of use, consistency, extensibility, documentation, simplicity and modularity, with efficiency listed as a non-requirement; used in one Penn graduate course (five assignments, two exams, a project). No evaluation beyond that anecdote | [PDF](../sources/loper-2002-nltk.pdf) | [01](notes/01-text-representation.md) |
 | ★ Mikolov, Chen, Corrado and Dean, *Efficient Estimation of Word Representations in Vector Space* ([arXiv:1301.3781](https://arxiv.org/abs/1301.3781), 2013) ⚑ | Skip-gram and CBOW, and the analogy test | web only | [04](notes/04-embeddings-and-similarity.md) |
 | Mikolov, Sutskever, Chen, Corrado and Dean, *Distributed Representations of Words and Phrases and their Compositionality* ([arXiv:1310.4546](https://arxiv.org/abs/1310.4546), NIPS 2013) | Negative sampling and subsampling, which made it practical | web only | [04](notes/04-embeddings-and-similarity.md) |
 | Pennington, Socher and Manning, [*GloVe*](https://aclanthology.org/D14-1162/) (EMNLP 2014) | Global co-occurrence counts, and the source of the vectors used in note 04 | web only | [04](notes/04-embeddings-and-similarity.md) |

@@ -8,6 +8,7 @@ sources:
   - ../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb
   - Sarkar, Text Analytics with Python, 1st ed. (Apress, 2016)
   - Bird, Klein and Loper, Natural Language Processing with Python (O'Reilly, 2009), https://www.nltk.org/book/
+  - https://arxiv.org/abs/cs/0205028
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - ../practice/intro-to-nlp/nltk/text_preprocessing_nltk.ipynb
   - ../practice/intro-to-nlp/tensorFlow/text-processing/
@@ -58,7 +59,7 @@ median words per description: 55
 
 ## The preprocessing pipeline
 
-Sarkar's chapter 3 (*Text Analytics with Python*, 2nd ed.) and the condensed NLP course notebooks build the same chain. Not every step helps every task. For sentiment, removing "not" destroys the signal, and for neural models less preprocessing is usually better, because the model can learn what a step would have thrown away.
+Sarkar's chapter 3 (*Text Analytics with Python*, 2nd ed.) and the condensed NLP course notebooks build the same chain. NLTK, which supplies most of the tools in the table below, began as a classroom toolkit: its authors ranked ease of use, consistency, extensibility, documentation, simplicity and modularity first and listed efficiency among the things it was not for ([arXiv:cs/0205028](https://arxiv.org/abs/cs/0205028) (Loper & Bird, ACL 2002 Workshop on Effective Tools and Methodologies for Teaching NLP and CL)). They report it only from one Penn graduate course (five assignments, two exams, a final project) with no scores, so it explains why the code reads clearly, not how fast it runs. Not every step helps every task. For sentiment, removing "not" destroys the signal, and for neural models less preprocessing is usually better, because the model can learn what a step would have thrown away.
 
 | Step | Tool | Example | Skip when |
 |---|---|---|---|

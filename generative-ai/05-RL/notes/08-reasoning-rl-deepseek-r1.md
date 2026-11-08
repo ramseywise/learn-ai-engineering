@@ -51,7 +51,7 @@ cleaned: 2026-11-01
 
 In early 2025 a lab showed a model learning to reason by being told only whether its final answer was right. Nobody labeled the reasoning, and yet long traces with self-correction appeared. It looked like RL had created a new skill out of nothing, and the field split over whether that was true. Did RL create the skill, or did it find something the base model could already do and make it common? The answer changes how you budget, and this chapter walks through the evidence.
 
-> **Pillar:** [05-RL](../README.md). **Presumes:** [03](03-preference-optimization.md#grpo--group-relative-policy-optimization).
+> **Pillar:** [05-RL](../README.md). **Presumes:** [03](03b-grpo-and-gspo.md#grpo--group-relative-policy-optimization).
 
 ---
 
@@ -275,6 +275,9 @@ long CoT.
     problems. The gain flattens after about six "Wait"s, when the model starts to loop.
   - Selection mattered more than size. 1,000 random traces scored 36.7%. The full 59K pool
     scored 53.3% (95% CI against s1K: −13% to +20%) for 56× the GPU hours.
+
+    ![s1-32B accuracy against average thinking tokens. MATH500 rises from about 64 to 93 percent, AIME24 from about 0 to 57 percent, and GPQA Diamond from about 38 to 60 percent as thinking time grows.](../sources/images/muennighoff-s1-fig1.png)
+    *Image Source: Muennighoff et al., [s1: Simple test-time scaling](https://arxiv.org/abs/2501.19393) (2025), Fig. 1*
 - **LIMO** ([arXiv:2502.03387](https://arxiv.org/abs/2502.03387) (Ye et al., COLM 2025)) took
   the same base from 16.5% to 63.3% AIME24 with about 800 traces from R1-class models. **The
   same 800 examples on Qwen1.5-32B-Chat gave 9.2%.** The knowledge has to be there from
@@ -466,7 +469,7 @@ Process supervision still tells the model only *where* it went wrong, not what t
 distillation gives a full next-token distribution at every student token and minimises
 `Σ_i KL(Pr_student(·|x, y_<i) ‖ Pr_teacher(·|x, y_<i))` over the student's own samples (Eq. 6.29;
 token-level because the step-level KL over multi-token steps is intractable). Case studies and cost are in
-[07](07-reward-design-and-tool-calling.md#dense-signals-on-policy-distillation-and-self-distillation).
+[07](07b-rl-for-tool-calling-and-dense-signals.md#dense-signals-on-policy-distillation-and-self-distillation).
 
 On scale, the chapter reports that RL compute against reasoning performance follows an S-shaped curve
 (citing Khatri et al., 2025, and Tan et al., 2026, neither read here, and giving no numbers). A larger or
@@ -478,7 +481,7 @@ improve how fast you reach it. That fits the base-model-first reading above.
 - **Reading pass@1 alone.** It can't tell whether RL created a skill or sharpened one. Plot pass@k against k.
 - **Assuming long traces mean reasoning.** Length can grow while accuracy doesn't. Check length against correctness.
 - **Using the 2025 cheap recipes off-domain.** Most were measured on Qwen2.5 and on math. Ask what the baseline was, and whether it ran on a second model family.
-- **Trusting answer-only checkers on hard problems.** Lucky answers and bad proofs can pass. Reward quality is capped by checker quality ([03](03-preference-optimization.md#grpo--group-relative-policy-optimization)).
+- **Trusting answer-only checkers on hard problems.** Lucky answers and bad proofs can pass. Reward quality is capped by checker quality ([03](03b-grpo-and-gspo.md#grpo--group-relative-policy-optimization)).
 
 ## Try it
 

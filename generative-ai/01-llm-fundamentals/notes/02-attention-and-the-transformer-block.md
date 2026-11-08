@@ -9,7 +9,6 @@ sources:
   - https://arxiv.org/abs/2403.08295
   - https://arxiv.org/abs/2309.16609
   - https://arxiv.org/abs/2412.15115
-  - https://arxiv.org/abs/2309.16588
   - https://arxiv.org/abs/1608.05859
   - https://arxiv.org/abs/2002.05202
   - https://arxiv.org/abs/1409.3215
@@ -24,28 +23,14 @@ sources:
   - https://arxiv.org/abs/2311.01906
   - https://arxiv.org/abs/1606.08415
   - https://arxiv.org/abs/1906.04341
-  - https://arxiv.org/abs/1902.10186
-  - https://arxiv.org/abs/2104.05904
-  - https://arxiv.org/abs/2504.02732
-  - https://arxiv.org/abs/2603.05498
-  - https://arxiv.org/abs/2608.10296
   - https://arxiv.org/abs/1904.10509
   - https://arxiv.org/abs/2004.05150
   - https://arxiv.org/abs/2307.02486
-  - https://arxiv.org/abs/2308.16898
   - https://arxiv.org/abs/2507.19595
-  - https://arxiv.org/abs/2010.11929
-  - https://arxiv.org/abs/2307.06304
-  - https://arxiv.org/abs/2104.14294
-  - https://arxiv.org/abs/2111.07832
   - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
   - https://jmlr.org/papers/v15/srivastava14a.html
   - https://doi.org/10.1145/3065386
   - https://arxiv.org/abs/1705.03122
-  - https://aclanthology.org/P11-1015/
-  - https://arxiv.org/abs/1703.01365
-  - https://arxiv.org/abs/1602.04938
-  - https://arxiv.org/abs/1912.01991
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -61,6 +46,9 @@ Take the ticket from the last chapter and add a sentence: `The refund for order 
 ## Attention
 
 Self-attention lets every token build its representation from every other token it can see ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), Vaswani et al., 2017). Each token is projected into a **query**, a **key** and a **value**.
+
+![Transformer encoder-decoder architecture](../sources/images/vaswani-transformer-fig1.png)
+*Image Source: Vaswani et al., [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (2017), Fig. 1*
 
 ### Matrix products, transpose and rank
 
@@ -121,6 +109,9 @@ Three refinements make it a language-model layer (*LLMs from Scratch*, ch. 3 bui
 ![Two 6×6 attention-weight matrices for "Your journey starts with one step": the left one is full, the right one has every entry above the diagonal greyed out and each row renormalized to sum to 1](../sources/images/build-a-large-language-model-from-scratch-fig3-19.png)
 *Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 3-19*
 
+![AlexNet's architecture drawn across two GPUs: five convolutional layers (kernel sizes 11, 5, 3, 3, 3), max pooling after the first, second and fifth, then two dense layers of 2,048 units per GPU and a 1,000-way output](../sources/images/krizhevsky-alexnet-fig2.png)
+*Image Source: Krizhevsky et al., [ImageNet Classification with Deep Convolutional Neural Networks](https://doi.org/10.1145/3065386) (2017), Fig. 2*
+
 
 ![A standard network beside the same network after dropout](../sources/images/srivastava-dropout-fig1.png)
 *Image Source: Srivastava et al., [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](https://jmlr.org/papers/v15/srivastava14a.html) (2014), Fig. 1*
@@ -167,36 +158,19 @@ On the same task their model scored 26.75 BLEU, against 17.82 for a fixed-vector
 ![ConvS2S: gated convolutions plus attention between English encoder and German decoder](../sources/images/gehring-convs2s-fig1.png)
 *Image Source: Gehring et al., [Convolutional Sequence to Sequence Learning](https://arxiv.org/abs/1705.03122) (2017), Fig. 1*
 
-The weights are easy to plot, and the plots are easy to over-read. Jain & Wallace trained BiLSTM classifiers with Bahdanau-style attention on ten datasets, including SST, IMDB, 20 Newsgroups, MIMIC and SNLI. IMDB is 50,000 polarized movie reviews (7 or more stars out of 10 is positive, 4 or fewer negative, neutral ones dropped), split 25,000 for training and 25,000 for test. A weighted bag of words was nearly as good there as the learned word vectors of its authors: 88.23 against 87.44 for a linear SVM on 50-d learned vectors, and 88.89 for vectors plus bag of words, where the vector model also used 50,000 extra unlabeled reviews ([ACL 2011](https://aclanthology.org/P11-1015/) (Maas et al., ACL 2011)). The rank correlation (Kendall τ) between attention weights and gradient-based word importance averaged between 0.08 (20 Newsgroups) and 0.47 (MIMIC diabetes) across datasets. Gradients and leave-one-out importance agreed with each other more than either agreed with attention. For many inputs they could also find a different attention distribution, close to the maximum Jensen–Shannon distance of 0.69, that moved the prediction by less than 0.01 ([arXiv:1902.10186](https://arxiv.org/abs/1902.10186) (Jain & Wallace, NAACL 2019)). The weak agreement is partly the BiLSTM's doing: with a plain averaging encoder under the attention, τ rose to 0.48–0.84 (SST 0.69, against 0.40 with the BiLSTM). They tested no transformers, the adversarial weights may be ones the model would never produce, and gradients are not ground truth either. Two post-hoc methods give the explanation a definition instead of reading it off the weights. Plain gradients fail a basic test: in a one-ReLU network f(x) = 1 − ReLU(1 − x), the output rises from 0 to 1 between baseline 0 and input 2, yet the gradient at the input is 0. Integrated gradients sums the gradients along a straight path from a baseline to the input, and the attributions then add up to F(x) − F(baseline), which is a check you can run: if they do not, take more steps. The authors found 20 to 300 steps enough on their image and text models and 100 to 1,000 on a translation LSTM, and the result depends on the baseline (all-zero embeddings for text). They report no quantitative test of attribution quality ([arXiv:1703.01365](https://arxiv.org/abs/1703.01365) (Sundararajan et al., ICML 2017)). LIME perturbs the input (words removed, image segments switched off), labels the perturbations with the model, and fits a sparse linear model weighted by closeness to the original. It recovered more than 90% of the true features of sparse logistic-regression and decision-tree classifiers on book and DVD reviews, with at most 10 features each, which is a check on interpretable models only, not on a black box ([arXiv:1602.04938](https://arxiv.org/abs/1602.04938) (Ribeiro et al., KDD 2016)). Probes have their own noise. DirectProbe found that the same two-layer MLP probe, retrained from a different random initialization, varied by up to 7.88 accuracy points (BERT-large, preposition supersense roles); a linear probe varied by under 1 point.
+![Four attention alignment matrices for English to French translation](../sources/images/bahdanau-nmt-alignment-fig3.png)
+*Image Source: Bahdanau et al., [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) (2014), Fig. 3*
 
-It instead clusters the representations by label without training a classifier. The distance between the closest clusters tracked the best probe accuracy layer by layer ([arXiv:2104.05904](https://arxiv.org/abs/2104.05904) (Zhou & Srikumar, NAACL 2021)). There is also a theory of why trained attention looks so peaked. Tarzanagh et al. studied a single attention layer with a fixed linear head. Gradient descent sends the attention weights' norm to infinity, and their direction converges to a hard-margin SVM that separates one "optimal" token per input from the rest, so the softmax ends up selecting a single token. Gradient descent is proven to reach that global solution only under extra conditions. Otherwise it can lock onto a "locally optimal" token instead, and in random trials it reached the global one more often as the dimension grew. With separate key and query matrices, as in real models, the limit is the low-rank, nuclear-norm version of that SVM. That limit is proven for the regularization path and only observed for gradient descent. With a small nonlinear head instead of a linear one, attention keeps several tokens rather than one. Every experiment is synthetic, with dimensions in the tens ([arXiv:2308.16898](https://arxiv.org/abs/2308.16898) (Tarzanagh et al., 2023-08, preprint)).
-
-Images became transformer input by treating patches as tokens. ViT cuts an image into 16×16 patches, projects each one linearly to the model width, prepends a learned [class] token and adds learned 1D position embeddings. Everything after that is a standard transformer encoder ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929) (Dosovitskiy et al., ICLR 2021)). When trained on ImageNet alone without strong regularization, ViT came in a few points below ResNets of similar size, because it lacks the convolution's built-in assumptions about locality. The ranking flipped as pretraining data grew. On subsets of Google's in-house JFT, ViT-B/32 lost to a ResNet50 on a 5-shot ImageNet probe at 9M images and beat it from 90M up. ViT-H/14, pretrained on JFT-300M, reached 88.55% ImageNet top-1 for 2.5k TPUv3 core-days, against 87.54% and 9.9k for the BiT-L ResNet. The kind of position embedding barely mattered.
-
-In a 5-shot probe, the 1D, 2D and relative variants all scored about 0.64, while a model with no positions scored 0.614. NaViT carried language-model example packing over to images. Patches from several images, each at its native aspect ratio, share one sequence, with attention masked so that each image attends only to itself. Position embeddings are factorized into separate x and y parts, and a random fraction of each image's tokens is dropped ([arXiv:2307.06304](https://arxiv.org/abs/2307.06304) (Dehghani et al., NeurIPS 2023)). Native resolution is possible, but pretraining resized each image to a randomly sampled pixel count, which is what kept padding below 2% of tokens. NaViT matched the best ViT with 4× less pretraining compute. The factorized positions also held up better than ViT's 1D ones at resolutions not seen in training. Its pretraining data (JFT-4B and WebLI) is in-house as well.
-
-Large transformers also put tokens to uses nobody designed. Darcet et al. studied vision transformers, where the tokens are image patches ([arXiv:2309.16588](https://arxiv.org/abs/2309.16588) (Darcet et al., 2023-09)). In DINOv2 ViT-g, about 2% of patch tokens, almost all on plain background, ended up with roughly 10× the norm of the rest. Linear probes showed these tokens had dropped their own patch's content and position and held image-wide information instead. In effect, the model was using them as scratch space. They appeared only in ViT-L and larger, and only after about a third of training. The fix was to append four learned "register" tokens that carry no input and are thrown away at the output. That removed the outliers and lifted DINOv2 ViT-L's ADE20k segmentation from 46.6 to 47.9 mIoU, with ImageNet linear-probe accuracy at 84.3 before and 84.8 after. Those are single training runs.
-
-DINOv2 descends from DINO, which trains a ViT without labels by self-distillation ([arXiv:2104.14294](https://arxiv.org/abs/2104.14294) (Caron et al., ICCV 2021)). A student network sees small and large crops of an image and learns to match a teacher's output on the large crops. The teacher is an exponential moving average of the student. Centering and sharpening the teacher's output stop both networks from collapsing to a constant: removing either one sends the KL divergence between them to zero, and removing the momentum collapses k-NN accuracy to 0.1%. ViT-S/16 reached 77.0% ImageNet linear-probe accuracy, against 79.8% for the same network trained end to end with labels. PIRL is an earlier contrastive route to unlabeled features. It makes the representation of an image similar to that of its jigsaw-shuffled version, instead of making it predict the shuffle. A ResNet-50 trained for 800 epochs on the 1.28M unlabeled ImageNet-1k images reached 63.6% top-1 in a linear probe, against 59.0% for the same setup without the invariance term. Fine-tuned in Faster R-CNN on VOC07+12 it beat supervised ImageNet pretraining on AP (54.0) and AP75 (59.7), though not on AP50 on the smaller VOC07 set (73.4 against 74.5). These are single runs, and the paper's Table 5 lists 62.2 for the same Jigsaw model ([arXiv:1912.01991](https://arxiv.org/abs/1912.01991) (Misra & van der Maaten, CVPR 2020)).
-
-![PIRL: image and jigsaw copy share an encoder and are matched against a memory bank](../sources/images/misra-pirl-fig3.png)
-*Image Source: Misra & van der Maaten, [Self-Supervised Learning of Pretext-Invariant Representations](https://arxiv.org/abs/1912.01991) (2020), Fig. 3*
-
-Its [class]-token attention maps outlined objects better than a supervised model's did (Jaccard 45.9 against 27.3), though MoCo-v2, BYOL and SwAV maps scored as well (46.3–47.8), so this is a property of self-supervised ViTs, not of DINO alone. iBOT added BERT-style masked patch prediction, with the teacher's patch outputs as targets in place of a fixed image tokenizer ([arXiv:2111.07832](https://arxiv.org/abs/2111.07832) (Zhou et al., ICLR 2022)). Its ViT-B/16 reached 79.5% linear-probe and 84.0% fine-tuned accuracy. In a 300-epoch ViT-S ablation, masked prediction on its own gave only 29.8% on a linear probe (BEiT, with a fixed tokenizer, gave 23.5%) and also fine-tuned worst (79.4%, against 80.6% for DINO). The [class]-level DINO loss is what makes the frozen features usable. iBOT costs 25% more memory than DINO (both with multi-crop) and did no better at retrieval.
-
-Language models have their own version of Darcet's outliers. Many heads put most of their weight on the first token, an **attention sink**. Clark et al. saw it first in BERT. More than half of the attention in layers 6–10 went to the [SEP] token, and from layer 5 on the loss barely changed when that attention changed, so those heads were using [SEP] as a no-op ([arXiv:1906.04341](https://arxiv.org/abs/1906.04341) (Clark et al., BlackboxNLP 2019)). Barbero et al. found the same no-op on ⟨bos⟩ in Llama 3.1: averaged over 170 prompts, 45.97% of heads put more than 80% of their attention on it at 8B, and 78.29% at 405B.
-
-They argue that it is how a deep stack avoids over-mixing, where tokens blur into one another layer after layer. Gemma 7B, run without its ⟨bos⟩ token, fell from 82.57 to 0.00 on RULER at 4,096 tokens and from 80.61 to 27.35 on HellaSwag ([arXiv:2504.02732](https://arxiv.org/abs/2504.02732) (Barbero et al., COLM 2025)). That drop says more about ⟨bos⟩ than about sinks. In their own 120M-parameter runs, a model trained without a fixed ⟨bos⟩ made whatever token came first the sink (65% sink rate either way), and only a model that always saw ⟨bos⟩ in training lost its sink and broke when it was removed (validation loss 2.69 to 7.56). Sun et al. traced how the sink is built.
-
-One or two early feed-forward blocks (layer 2's in Llama 2 7B) act as a quadratic amplifier and put huge values, in the thousands, into a few channels of the first token, whatever that token is (99.65% of Llama 2's vocabulary). The residual stream carries those values until a late block cancels them. Before attention, RMSNorm turns them into a sparse, near-constant key that every query can find. In 7B models trained from scratch, conditional gating of the attention output cut the share of sink heads from 46.0% to 4.5% at the same [perplexity](06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity) (10.0 against 10.1), and sandwich norm cut the spike from 3,818 to 520 while 44.7% of heads stayed sinks. So the two phenomena co-occur because of pre-norm, but either can be removed without the other.
-
-Sun et al. also tie sinks to short contexts rather than long ones: computing the training loss only on positions 2,048–4,096 left 1.2% sink heads ([arXiv:2603.05498](https://arxiv.org/abs/2603.05498) (Sun et al., 2026-03, preprint)). Barbero et al. varied the training context window itself, from 128 to 2,048 tokens with the loss on every position, and saw sinks grow with it (almost none at 128), so the two results are not in direct conflict. Sinks may still be worth keeping. Across 26 OlmPool models of about 7B, extended to 64K, more attention mass on the first 100 tokens went with better long-context scores (R² = 0.38), and models with QK norm had weaker sinks ([arXiv:2608.10296](https://arxiv.org/abs/2608.10296) (Bertsch et al., COLM 2026)).
+The weights are easy to plot, and the plots are easy to over-read; what trained heads actually do (probes, attribution methods, image patches as tokens, attention sinks) is in [chapter 02b](02b-what-trained-attention-does.md).
 
 Attention cost grows with the square of sequence length. *Building AI Agents* (ch. 3) puts it as 4,096 tokens costing 64× the attention compute of 512, which is (4,096 / 512)². The parameter count does not grow with context; only compute and the cache of keys and values do (next section).
 
 The first fix was to stop every token from attending to every earlier one. The Sparse Transformer splits attention into two fixed patterns, so any token reaches any earlier one in two steps, at O(n√n) cost instead of O(n²) ([arXiv:1904.10509](https://arxiv.org/abs/1904.10509) (Child et al., 2019, preprint)). On enwik8 with a 12,288-byte context, a 95M-parameter model reached 0.99 bits per byte, matching a 277M Transformer-XL. Dense attention scored 1.00 but took 1.31 s per training step, against 0.55. The pattern has to suit the data: the strided pattern built for images managed only 1.13 on text. Every test was density modelling of text, images or audio, with no downstream tasks. Longformer combines a sliding window of local attention, dilated windows in the upper layers and a few chosen tokens that attend globally, at a cost linear in length ([arXiv:2004.05150](https://arxiv.org/abs/2004.05150) (Beltagy et al., 2020, preprint)). Continued from RoBERTa-base to 4,096 tokens, it beat RoBERTa on WikiHop (75.0 against 72.4 on dev) and Hyperpartisan (94.8 against 87.4).
 
 Its ablations show where the gain comes from. Configured like RoBERTa, with 512 tokens and full attention, it scored 71.7, so the extra pretraining was not the cause. Dropping the global attention and its projections cost 8.3 points. Its custom kernel saved memory but was not faster than full attention. LongNet mixes dilated windows of growing size and spacing, and its title claims a billion tokens ([arXiv:2307.02486](https://arxiv.org/abs/2307.02486) (Ding et al., 2023, preprint)). The billion is a forward-pass timing test. The language models were base-size (12 layers, 768 wide), trained on source code (The Stack) at up to 32K tokens, where LongNet's perplexity was 3.01 against 3.64 for a Sparse Transformer. The paper reports no downstream or recall tests. All three cut compute, not memory: a survey of efficient attention points out that sparse attention still stores the full KV cache ([arXiv:2507.19595](https://arxiv.org/abs/2507.19595) (Sun et al., 2025, preprint)).
+
+![Full, sliding window, dilated and global attention patterns](../sources/images/beltagy-longformer-fig2.png)
+*Image Source: Beltagy et al., [Longformer](https://arxiv.org/abs/2004.05150) (2020), Fig. 2*
 
 ---
 
@@ -232,6 +206,9 @@ That took an initial α tuned to model width, and once compiled it ran no faster
 
 ![Diagram of a transformer: token and positional embeddings feed N transformer blocks, each with four attention matrices (Q, K, V, O) and two larger MLP matrices (FF1, FF2), followed by an output layer; a legend gives each matrix's shape in terms of d_model, d_ff, vocab size V and context C](../sources/images/huyen-ai-engineering-fig2-6.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 2-6*
+
+![Gradients with and without shortcut connections](../sources/images/build-a-large-language-model-from-scratch-fig4-12.png)
+*Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 4-12*
 
 Huyen's figure makes a second point visible: no matrix inside the block has a dimension that depends on how many tokens you feed in. The only context-sized matrix is the learned position table (`C × d_model`), and rotary models do not have one. Context length changes compute and memory, not the parameter count (*AI Engineering*, ch. 2). *Building AI Agents* (ch. 3) says the weight matrices "can grow in size with context length", which is wrong for the same reason.
 

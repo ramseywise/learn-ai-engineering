@@ -280,6 +280,9 @@ position table parameters: 128
 
 With tokens alone, the two orderings hand attention the same set of vectors, so nothing downstream could tell them apart. Adding a position vector changes each token's own vector, and now the sets differ. The two tables also show where parameters go: the token table is far larger than the position table, and it scales with the vocabulary.
 
+![Input pipeline: text, tokens, token IDs, token plus positional embeddings](../sources/images/build-a-large-language-model-from-scratch-fig2-19.png)
+*Image Source: Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), Fig. 2-19*
+
 **Step 3: why RoPE works past the table.** The table above has an entry for 16 positions and nothing for the 17th. RoPE has no table. It rotates each query and key by an angle proportional to its position, so a query–key score depends only on the *offset* between them:
 
 ```python

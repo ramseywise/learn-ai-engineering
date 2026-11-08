@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "key": "cs/0205028",
- "pdf": "generative-ai/01-llm-fundamentals/sources/loper-2002-nltk.pdf",
+ "pdf": "data-science/sources/loper-2002-nltk.pdf",
  "bib": {
   "title": "NLTK: The Natural Language Toolkit",
   "authors": [
@@ -10,7 +10,7 @@
   ],
   "first_author": "Loper",
   "year": 2002,
-  "venue": "preprint",
+  "venue": "preprint (arXiv cs.CL, 17 May 2002); the PDF text prints no venue line, but its acknowledgments thank 'the workshop organizers' and the reference list cites the 'ACL Workshop on Effective Tools and Methodologies for Teaching NLP and CL'",
   "arxiv": "cs/0205028",
   "doi": null
  },
@@ -23,16 +23,17 @@
   "skipped": null
  },
  "type": "system",
- "question": "How can the practical programming component of an introductory computational linguistics course be organised without teaching several languages or building infrastructure?",
- "hypothesis": "A single Python toolkit built as courseware, with consistent simple modules, documentation and graphical demos, serves assignments, class demonstrations and projects better than a mix of languages.",
+ "question": "How can a computational linguistics course get one coherent, teachable programming framework instead of a mix of languages and toolkits?",
+ "hypothesis": "A Python toolkit designed as courseware (simple, modular, documented) lets students build and modify real NLP components from the outset.",
  "contributions": [
-  "NLTK: open source Python modules, tutorials and problem sets for symbolic and statistical NLP, interfaced to annotated corpora",
+  "NLTK: open source modules, tutorials and problem sets for teaching computational linguistics",
   "Explicit design requirements and non-requirements",
-  "Use in a graduate course (CIS-530, University of Pennsylvania)"
+  "Example assignments, class demonstrations and projects",
+  "Use in one graduate course (CIS-530) at the University of Pennsylvania"
  ],
  "method": {
-  "summary": "Describes a Python toolkit of independent modules (token, tree, probability, parsers, taggers, fsa, classifiers, visualization, type checking) with tutorials, auto-generated reference docs and technical reports. Evaluated informally by use in one course.",
-  "task": "computational linguistics courseware",
+  "summary": "NLTK is a collection of independent Python modules (token, tree, probability, parsers, taggers, fsa, classifiers, visualization, type checking) with tutorials, auto-generated reference docs and technical reports. It was used as the basis of assignments and projects in CIS-530. Evaluation is qualitative course experience only.",
+  "task": "teaching computational linguistics with a software toolkit",
   "trains": false,
   "datasets": [
    {
@@ -44,31 +45,60 @@
     "preprocessing": null
    }
   ],
-  "models": [],
+  "models": [
+   {
+    "name": "NLTK classifier.naivebayes",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Naive Bayes text classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NLTK classifier.maxent",
+    "role": "proposed",
+    "params": null,
+    "architecture": "maximum entropy text classifier, trained with Generalized Iterative Scaling or Improved Iterative Scaling",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
   "training": null,
   "inference": {
    "decoding": null,
    "temperature": null,
    "top_p": null,
    "max_tokens": null,
-   "samples": "none: one course offering, qualitative report",
+   "samples": "none; one course offering, no repeated runs",
    "prompting": null,
    "retrieval": null,
-   "parameters": {},
+   "parameters": {
+    "student_chunk_rule_threshold": "tag sequences occurring in a noun phrase more than 50% of the time (one student cascade)"
+   },
    "other": {
-    "naive_bayes_and_maxent": "maxent trained by Generalized Iterative Scaling or Improved Iterative Scaling; no settings given",
-    "type_checking": "can be turned off with no performance penalty"
+    "classifier.feature": "standard feature encoding so students compare classifiers on identical feature sets",
+    "classifier.featureselection": "standard interface for choosing relevant features"
    }
   },
   "eval": {
    "metrics": [],
-   "baselines": [
-    "multi-language course setups (Prolog, Perl, finite-state toolkit)"
-   ],
-   "protocol": "qualitative instructor and student experience; course had five assignments, two exams and a final project"
+   "baselines": [],
+   "protocol": "Qualitative instructor and student feedback in CIS-530: five assignments, two exams, a final project. No scores, no cohort size, no control."
   },
   "availability": {
-   "code": "http://nltk.sf.net/ (open source)",
+   "code": "http://nltk.sf.net/ (open source license)",
    "weights": null,
    "data": "course materials at http://www.cis.upenn.edu/~cis530/"
   },
@@ -77,22 +107,37 @@
  },
  "results": [
   {
-   "claim": "The course required five assignments, two exams and a final project built on NLTK.",
+   "claim": "The course using NLTK required five assignments, two exams and a final project.",
    "kind": "measured",
    "source": null,
    "metric": "course structure",
-   "value": null,
+   "value": "five assignments, two exams, one final project",
    "unit": null,
    "baseline_value": null,
    "n": null,
-   "setup": "CIS-530, graduate introductory computational linguistics, University of Pennsylvania, one semester",
-   "quote": "Students were required to complete ﬁve assign- ments, two exams, and a ﬁnal project.",
+   "setup": "CIS-530, introductory computational linguistics, graduate level, University of Pennsylvania, one semester",
+   "quote": "Stu- dents were required to complete ﬁve assign- ments, two exams, and a ﬁnal project.",
    "table": null,
    "note": null,
    "where": "Sec 7"
   },
   {
-   "claim": "Authors report a very positive experience; students valued documentation, home use and intuitive interfaces (no quantitative data).",
+   "claim": "Student-built chunk cascade grouped any tag sequence that appeared in a noun phrase more than 50% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "chunk inclusion threshold",
+   "value": "50%",
+   "unit": "% of noun-phrase occurrences",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLTK rechunkparser base-noun-phrase chunking assignment, one student's brute-force statistical approach, no accuracy reported",
+   "quote": "They then constructed chunks from any sequence of tags that occurred in a noun phrase more than 50% of the time.",
+   "table": null,
+   "note": "The PDF text breaks lines mid-sentence; the quote is normalised.",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Authors report a positive experience, but give no quantitative outcome; difficulties were finding large clean corpora and shipping unfinished modules during the semester.",
    "kind": "claim",
    "source": null,
    "metric": null,
@@ -100,22 +145,7 @@
    "unit": null,
    "baseline_value": null,
    "n": null,
-   "setup": "same course, informal feedback",
-   "quote": null,
-   "table": null,
-   "note": null,
-   "where": "Sec 7"
-  },
-  {
-   "claim": "Difficulties: finding large clean corpora, and NLTK modules finished only one or two weeks before use, forcing repeated downloads.",
-   "kind": "claim",
-   "source": null,
-   "metric": null,
-   "value": null,
-   "unit": null,
-   "baseline_value": null,
-   "n": null,
-   "setup": "same course",
+   "setup": "CIS-530, qualitative",
    "quote": null,
    "table": null,
    "note": null,
@@ -123,60 +153,75 @@
   }
  ],
  "limits": [
-  "No quantitative evaluation, no control group, single course offering; feedback is informal.",
-  "Toolkit was under active development during the course; module list is from 2002 (HMMs, language modelling, TAG listed as future work).",
-  "Not comprehensive or optimised by design (stated non-requirements).",
-  "Corpora for assignments were a stated gap."
+  "Evaluation is anecdotal: no cohort size, no scores, no comparison with other toolkits or teaching approaches.",
+  "Authors concede large clean corpora were hard to find and modules were finished only one or two weeks before students used them.",
+  "Toolkit is explicitly not comprehensive or optimised for speed (Sec 3.2).",
+  "Text classification covers only Naive Bayes and maximum entropy; HMMs, language modelling and TAG were future work. Dated: 2002 Python and Tk toolkit, no word embeddings or neural models.",
+  "The text-representation content relevant to a note is thin: classifier.feature encoding and the token module are named but not described in detail."
  ],
  "practices": [],
- "terms": [],
+ "terms": [
+  {
+   "term": "chart parsing",
+   "definition": "a flexible parsing algorithm that uses a data structure called a chart to record hypotheses about syntactic constituents",
+   "where": "Sec 6.2"
+  }
+ ],
  "lineage": [
   {
-   "work": "Computer programming for everybody",
+   "work": "Python (van Rossum, Computer programming for everybody)",
    "year": 1999,
    "arxiv": null,
-   "relation": "related",
-   "note": "van Rossum, cited for Python's learnability",
+   "relation": "uses-method",
+   "note": "chosen implementation language",
    "quote": null
   },
   {
-   "work": "Epydoc",
+   "work": "Tkinter (Lundh, An introduction to tkinter)",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "GUI library for visualization modules",
+   "quote": null
+  },
+  {
+   "work": "Epydoc (Loper)",
    "year": 2002,
    "arxiv": null,
    "relation": "uses-method",
-   "note": "Loper 2002, generates reference docs from docstrings",
+   "note": "reference docs extracted from docstrings",
    "quote": null
   },
   {
-   "work": "GATE as an environment for teaching NLP",
+   "work": "GATE (Bontcheva et al.)",
    "year": 2002,
    "arxiv": null,
    "relation": "related",
-   "note": "Bontcheva et al. 2002, alternative toolkit",
+   "note": "another toolkit used for teaching",
    "quote": null
   },
   {
-   "work": "Statistical language modeling using the CMU-Cambridge Toolkit",
-   "year": 1997,
-   "arxiv": null,
-   "relation": "related",
-   "note": "Clarkson and Rosenfeld",
-   "quote": null
-  },
-  {
-   "work": "Creating annotation tools with the annotation graph toolkit",
+   "work": "Annotation Graph Toolkit (Maeda, Bird, Ma, Lee)",
    "year": 2002,
    "arxiv": "cs/0204005",
    "relation": "related",
-   "note": "Maeda, Bird et al.",
+   "note": "toolkit by the same second author",
    "quote": null
   },
   {
-   "work": "The MaxEnt project",
+   "work": "CMU-Cambridge Statistical Language Modeling Toolkit (Clarkson and Rosenfeld)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "research toolkit with teaching uses",
+   "quote": null
+  },
+  {
+   "work": "Maxent package (Baldridge, Morton, Bierner)",
    "year": 2002,
    "arxiv": null,
    "relation": "related",
-   "note": "Baldridge et al.",
+   "note": "max-ent toolkit",
    "quote": null
   }
  ],
@@ -184,19 +229,20 @@
   {
    "figure": "Fig 1",
    "caption": "Chart Parsing Tool",
-   "page": 6,
-   "why": "Screenshot of the interactive chart parser: chart, sentence and partial tree panes"
+   "page": 4,
+   "why": "Screenshot of the interactive chart parser display (chart, sentence, partial tree); a figure for NLTK's teaching tools, not text representation."
   }
  ],
  "code": [
   {
    "where": "Sec 6.1",
-   "snippet": "cascade = [ ChunkRule('<NN.*>') ... ] (chunk rule types ChunkRule, ChinkRule, SplitRule, MergeRule, UnChunkRule)",
+   "snippet": "ChunkRule('<NN.*>')  # builds chunks from sequences of consecutive nouns",
    "verbatim": false
   }
  ],
  "problems": [
-  "Text cache page numbering: Figure 1 caption reported on p6 by figures.py; PDF text has no page markers.",
-  "No embedded instructions found."
+  "No embedded instructions found.",
+  "The PDF prints no venue; ACL 2002 workshop is inferred only from the reference list and acknowledgments. The ledger's 'ACL 2004 poster' is not supported by this text.",
+  "Figure 1 image content not inspected; page number assumed (text order places it after Sec 6.2)."
  ]
 }

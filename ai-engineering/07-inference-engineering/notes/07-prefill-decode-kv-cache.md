@@ -172,6 +172,9 @@ Block-sparse attention cuts prefill compute, not cache size. MoBA scores key blo
 
 DeepSeek's NSA makes the sparsity trainable and keeps it at decode, where MoBA does not. It combines compressed-block, selected-block and sliding-window branches over a GQA cache. A 27B MoE pretrained with it on 260B tokens matched or beat full attention on general, LongBench and reasoning evals. At 64K context it measured 9.0× faster forward and 6.0× faster backward passes. Its 11.6× decode figure is an *expected* speedup, computed from the KV tokens loaded per step (5,632 vs 65,536), not a timed run ([arXiv:2502.11089](https://arxiv.org/abs/2502.11089) (Yuan et al., ACL 2025)). The far end of the spectrum has no growing cache at all. RWKV runs as an RNN at inference, with constant memory per token, and matched transformers of similar size up to 14B. The cost is that everything must pass through one fixed-size state, so the model cannot look back at the prompt, and its results depend more on how the prompt is ordered ([arXiv:2305.13048](https://arxiv.org/abs/2305.13048) (Peng et al., Findings of EMNLP 2023)).
 
+![Cumulative generation time: transformers grow quadratically, RWKV linearly](../sources/images/peng-2023-rwkv-fig7.png)
+*Image Source: Peng et al., [RWKV](https://arxiv.org/abs/2305.13048) (EMNLP Findings 2023), Fig. 7*
+
 ![NSA: compressed, selected and sliding-window branches with their attention masks](../sources/images/yuan-2025-native-sparse-attention-fig2.png)
 *Image Source: Yuan et al., [Native Sparse Attention](https://arxiv.org/abs/2502.11089) (2025), Fig. 2*
 

@@ -255,6 +255,9 @@ QA sets, against 0.304 for one-shot RAG and 0.348 for rejection-sampling fine-tu
 search loop. Without the mask the average fell to 0.343. GRPO converged faster but its reward
 collapsed in some runs, while PPO stayed stable.
 
+![Search-R1 training curves. (a) Train reward for PPO and GRPO: GRPO rises faster but collapses to near zero around step 240, while PPO stays stable to step 500. (b) Base against instruct model. (c) Response length falls, then rises as reward climbs. (d) Valid search calls rise as training proceeds.](../sources/images/jin-search-r1-fig2.png)
+*Image Source: Jin et al., [Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning](https://arxiv.org/abs/2503.09516) (2025), Fig. 2*
+
 **Dr. Zero** ([arXiv:2601.07055](https://arxiv.org/abs/2601.07055) (Yue et al., 2026-07, preprint)) removes the question set too. A proposer and a solver start from the same Qwen2.5 search agent. The proposer reads a seed document and writes a question, and its reward peaks when exactly one of the solver's n attempts is right. Its advantages are standardised within groups of equal hop count, which needs 6 rollouts per prompt against 20 for nested GRPO. **At 3B the seven-benchmark exact-match average was 0.326 against 0.327 for supervised Search-R1; at 7B it was 0.372 against 0.384**, with Search-R1 ahead on MuSiQue and Bamboogle. Table 1 is single greedy runs with an E5 retriever over Wikipedia; the appendix adds multi-run means with standard deviations. Gains stop after two or three iterations (7B fell to 0.360 at the third). The cheaper advantage trails nested GRPO on Bamboogle (0.200 vs 0.272 at 3B) and slightly on HotpotQA and MuSiQue, though its 3B average is higher (0.326 vs 0.320).
 
 ### Pattern 2 — RL module for specific sub-task
