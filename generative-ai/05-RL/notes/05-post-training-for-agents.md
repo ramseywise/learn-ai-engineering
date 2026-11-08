@@ -5,6 +5,7 @@ sources:
   - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
   - https://arxiv.org/abs/2610.01509 (Sharpening Tax, base vs post-trained pass@k on agentic tasks)
   - https://arxiv.org/abs/2507.08794 (LLM-judge verifiers fooled by content-free answers)
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 6)
   - https://arxiv.org/abs/2404.00282 (survey of LLM-enhanced RL)
   - https://arxiv.org/abs/2504.00698 (Command A, expert merging)
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 8
@@ -254,6 +255,14 @@ generator row is ZeroSearch ([arXiv:2505.04588](https://arxiv.org/abs/2505.04588
 *Dated:* the book ends by saying its later LLM agents involve "no training" because training an LLM
 is too hard. That was a fair 2024 default for application teams, but agentic RL (ART, rLLM,
 veRL, in [07](07-reward-design-and-tool-calling.md)) has since made training the agent loop itself routine.
+
+
+**Multi-turn RL, as Murphy lays it out.** A single-turn LLM task is a contextual bandit with one sparse reward at the end-of-sequence token and a per-token KL penalty to the reference. An agent loop is a longer-horizon MDP, and he gives three fixes (*RL: A Comprehensive Overview*, ch. 6, Sec. 6.2.5). RAGEN's StarPO loop trains think-then-act trajectories with REINFORCE-style updates, which he says does not work well on long horizons for two reasons: the context grows every turn and the return has high variance. Turn-level training answers both by truncating the history to a fixed window and learning a critic so that GAE gives a signal before the episode ends, with actor and critic warm-started from an instruction-tuned model (Fig. 6.3). Invalid actions, such as a malformed tool call, can be handled by truncating the rollout there, restarting from the failing state, or resampling the action and continuing. ReBN replaces the critic with a GRPO-like normalization of returns.
+
+![Standard multi-turn PPO keeps the whole context and discounts every token; turn-level training truncates to a window, skips state tokens in the loss and uses a separate step discount.](../sources/images/murphy-rl-fig6-3.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 6.3, from Chen et al. (2025), used with permission*
+
+His one measured example is small. On GuessTheNumber-v0-easy (numbers 1–10, at most 4 turns, reward 1 for success, −0.1 for a format error), Qwen3-4B-Instruct-2507 trained with ReBN for 20 steps of 32 episodes each (LoRA rank 8, learning rate 4e-5, γ = 0.9, about 20 minutes) went from 0.8 to 1.0 average reward, and action tokens per step fell from about 900 to about 500. It is one run on a toy game with no seeds, so read it as a demonstration of the loop, not evidence about the method. The same walkthrough averages the loss over transitions, not tokens, to avoid favoring long thinking traces.
 
 ---
 

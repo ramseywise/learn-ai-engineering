@@ -11,6 +11,7 @@ sources:
   - https://catboost.ai/docs/
   - https://arxiv.org/abs/1603.02754
   - https://arxiv.org/abs/2207.08815
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -230,6 +231,8 @@ On this table the whole search moves AUC by under 0.003, about the size of the s
 | 4 | Minimum leaf size (`min_child_samples`) | 5 to 200 | Stops small noisy leaves; matters on small data |
 | 5 | Row and column sampling | 0.5 to 1.0 | Decorrelates trees and speeds fitting. In XGBoost's paper, `colsample=0.5` over 500 trees cut time per tree on both datasets, lowered AUC on Higgs-1M (0.8304 to 0.8245) and raised NDCG@10 on Yahoo LTRC (0.7892 to 0.7913), so the effect on quality depends on the data |
 | 6 | L1 and L2 on leaf weights | 0 to 10 on a log scale | Usually the smallest effect |
+
+ISLP's textbook version of the recipe agrees on its shape: a small shrinkage such as 0.01 or 0.001, rounds chosen by cross-validation, and shallow trees, where depth 1 (stumps) gives an additive model with no interactions and often works well; on its 15-class gene-expression data (349 patients, 500 genes) depth 1 slightly beat depth 2, and both beat a random forest, but with a standard error near 0.02 the gaps are not significant (*ISLP*, ch. 8).
 
 Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don't report the score it finds as the final one: reserve a test set, or use [nested CV](04-model-evaluation.md#nested-cross-validation).
 

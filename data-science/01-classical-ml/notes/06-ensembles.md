@@ -7,6 +7,7 @@ sources:
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - https://doi.org/10.1023/a:1010933404324
   - https://doi.org/10.1214/aos/1013203451
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 8
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -84,7 +85,12 @@ tree   train 1.000  test 0.881
 forest train 1.000  test 0.972  oob 0.962
 ```
 
-The forest is ahead of a single tree with no tuning, and the out-of-bag score, which needs no separate validation set, is a fair estimate of the test score.
+The forest is ahead of a single tree with no tuning, and the out-of-bag score, which needs no separate validation set, is usually a fair estimate of the test score. "Usually" is doing work: each bagged tree sees about two-thirds of the rows, so every row is out-of-bag for about a third of the trees, and the OOB error approximates leave-one-out CV when there are enough trees (*ISLP*, ch. 8). On ISLP's Heart data (303 patients, 13 predictors) the OOB error comes out well below the test error, and the authors put the gap down to chance:
+
+![Test and out-of-bag error against the number of trees for bagging and a random forest on the Heart data: the curves flatten by about 100 trees and the OOB curves sit below the test curves](../../sources/images/islp-fig8-8.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 8.8*
+
+Reading the plot, a single tree has test error of about 0.255, bagging about 0.245 and a forest with $m=\sqrt{p}$ (4 of 13 predictors) about 0.222, while the OOB errors are about 0.17 to 0.19. Two lessons: the error stops improving by roughly 100 trees and more trees do not overfit, and a small test set (about 90 patients, judging by the 0.011 steps in the error curve) makes either estimate a coarse one (*ISLP*, ch. 8, Fig. 8.8, one split).
 
 | Parameter | Effect | Default advice |
 |---|---|---|
@@ -243,6 +249,9 @@ XGBoost, LightGBM and CatBoost run most tabular production boosting. All three e
 | Don't use tree ensembles on sparse text features | Linear models win there |
 
 M&G's breast-cancer run (569 rows, one split, `random_state=0`, no tuning) shows the order (*Introduction to ML with Python*, ch. 2, "Ensembles of Decision Trees"). A 100-tree forest scores 0.972 test, with train 1.000. Default gradient boosting (100 trees, depth 3, rate 0.1) overfits to train 1.000 and test 0.958. Cutting `max_depth` to 1 gives 0.972 test; cutting `learning_rate` to 0.01 gives 0.965. Depth helped more than rate. With about 143 test rows, 0.01 is one or two rows, so read this as a method order and not a ranking. They also advise a boosting depth of five or less.
+
+ISLP's regression run says the same thing about method order and also shows how little a feature-subset default matters on one split. On Boston housing (70/30 split, `medv`), a depth-3 pruned tree has test MSE 28.07, bagging with all 12 predictors 14.63 (100 trees) and 14.61 (500 trees), a forest with `max_features=6` 20.04, and boosting 14.48 (5,000 trees, learning rate 0.001, depth 3) against 14.50 at a learning rate of 0.2, so the forest is worse than plain bagging on this split. Its pruned Carseats classification tree gets 72.0% test accuracy against 73.5% unpruned, again one 50/50 split. Treat these as an order of magnitude (a tree roughly twice as bad as an ensemble) and not as a ranking among ensembles (*ISLP*, ch. 8, lab). The chapter's other point is the family tree: bagging and forests average independent deep trees, boosting grows small trees sequentially on residuals, and BART (Bayesian additive regression trees, default 200 trees and 1,000 iterations after 100 burn-in) sits between them, with a small train-test gap that boosting loses as its test error climbs after a few hundred iterations on Heart.
+
 
 ---
 

@@ -633,7 +633,7 @@ own authors agreed with each other only about 60% of the time on 4-way choices (
 They suggest asking labelers to *name a problem* instead of ranking, since two people who disagree on
 the worst flaw may still agree that a flaw exists. Practitioner data engineering for both SFT and
 preference sets (dedup, decontamination, synthetic data, how many examples) is in
-[06](06-data-and-environments.md#data-engineering-for-post-training).
+[06](06b-dataset-engineering-for-post-training.md#data-engineering-for-post-training).
 
 ---
 

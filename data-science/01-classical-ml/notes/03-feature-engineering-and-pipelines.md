@@ -6,6 +6,7 @@ sources:
   - ../practice/intro-to-ml-in-python/06-algorithm-chains-and-pipelines.ipynb
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - https://arxiv.org/abs/1201.0490
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6-7
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -172,6 +173,14 @@ M&G see a stronger version of the same pattern on Boston housing: 13 MinMax-scal
 | Binning | Linear models on low-dim data | Loses within-bin information |
 | Interactions | Linear models where effects combine | Feature count grows quadratically |
 | Polynomials | Smooth non-linear trends | Extreme values at the edges with high degree; overfitting |
+| Splines | Smooth non-linear trends without edge blow-up | Knot placement and degrees of freedom to choose |
+
+**Splines are the safer polynomial.** A global polynomial of high degree is a bad way to buy flexibility, because one wiggle anywhere moves the whole curve. A regression spline fits low-degree pieces joined at knots, constrained to be continuous with continuous first and second derivatives; a cubic spline with $K$ knots costs $K+4$ degrees of freedom, and a natural spline adds the constraint that the fit is linear beyond the boundary knots, which tames the tails. On ISLP's Wage data (males in the central Atlantic region, wage in thousands of dollars on age), a natural cubic spline with 15 degrees of freedom stays sensible at ages above 70 where a degree-15 polynomial swings wildly (*ISLP*, ch. 7, Fig. 7.7).
+
+![A natural cubic spline and a degree-15 polynomial fitted to wage against age: the polynomial oscillates and collapses at the right-hand edge, the spline stays smooth](../../sources/images/islp-fig7-7.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 7.7*
+
+Ask for degrees of freedom and let the library place the knots at quantiles of the feature: `df=4` puts three interior knots at the 25th, 50th and 75th percentiles of age (33.75, 42 and 51), and ten-fold CV on the same data finds about 3 df enough for a natural spline and about 4 for a cubic one, with a straight line (1 df) inadequate (*ISLP*, ch. 7). Treat the number of degrees of freedom as a hyperparameter inside the pipeline. The same chapter's other devices are a smoothing spline (a roughness penalty replaces knots, effective df falls from $n$ to 2 as $\lambda$ grows; LOOCV chose 6.8 effective df here) and local regression, which the authors warn degrades once there are more than three or four predictors. For several features, a generalised additive model fits $y = \beta_0 + f_1(x_1) + \dots + f_p(x_p)$, one smooth shape per feature, so each effect stays readable but interactions must be added by hand (*ISLP*, ch. 7).
 
 ---
 
@@ -247,6 +256,8 @@ RFE to 40        0.986 real features kept: 29
 ```
 
 Every selector beats keeping the noise, and each kept most of the 30 real features. The book's split (breast cancer plus 50 noise columns, 80 features, 284 training rows, `test_size=.5`, logistic regression) gives 0.930 with everything, 0.940 univariate (50% of features kept) and 0.951 for model-based and RFE (forest of 100 trees, 40 features kept; *Introduction to ML with Python*, ch. 4, "Automatic feature selection"), so the order among selectors moves with the split and only the gain over no selection is stable. Selection only pays off when you suspect many features are noise; with a regularised model on clean data it rarely helps.
+
+The classical, model-aware version of the same idea is subset selection for linear models. Searching every subset costs $2^p$ fits (1,048,576 at $p=20$), forward stepwise costs $1 + p(p+1)/2$ (211 at $p=20$), and exhaustive search is infeasible beyond roughly $p=40$. Forward and best-subset choices can differ even at small size: on ISLP's Credit data they agree up to three predictors and diverge at four. The training error always falls as variables are added, so the size is chosen by an estimate of test error, and the criteria disagree: on Credit, $C_p$ picks six variables, adjusted $R^2$ seven and BIC four, because BIC's penalty $\log(n)\,d\,\hat\sigma^2$ exceeds $C_p$'s $2d\hat\sigma^2$ once $n>7$. Validation and 10-fold CV both pick six there, and the one-standard-error rule (the smallest model within one standard error of the best) picks three (*ISLP*, ch. 6, Credit data, 10 predictors). The criteria need an estimate of the noise variance, so they are not usable when $p \ge n$; there only a held-out or cross-validated error is honest (*ISLP*, ch. 6).
 
 Feature selection is a fitted step. Selecting on all data and then cross-validating is the leakage bug below.
 

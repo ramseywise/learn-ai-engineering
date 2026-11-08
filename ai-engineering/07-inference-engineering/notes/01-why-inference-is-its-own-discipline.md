@@ -3,6 +3,7 @@ origin: book-condensed
 sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 1"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns (Packt, 2026), ch. 2"
   - https://arxiv.org/abs/2401.09670
   - https://arxiv.org/abs/2204.02311
   - https://arxiv.org/abs/2211.05102
@@ -77,7 +78,7 @@ Huyen separates **online** APIs (latency matters; a user is waiting) from **batc
 
 Total latency = TTFT + TPOT × output tokens. Two systems with the same total can feel very different. Huyen sets a floor from human reading speed: a very fast reader takes about **120 ms per token**, so a TPOT around 120 ms (**6–8 tokens/s**) is enough for streamed chat. Faster than that only matters when a machine reads the output, as in agents, tool calls and chained calls.
 
-Report **percentiles, not means**. Huyen's example: a set of TTFTs with one 3,000 ms outlier averages 390 ms, which describes no real request. Use p50, p90, p95 and p99, and watch the tail. For agents the tail compounds, because a task that makes ten calls hits the p90 of a single call far more often than one call does.
+Report **percentiles, not means**. Huyen's example: a set of TTFTs with one 3,000 ms outlier averages 390 ms, which describes no real request. Use p50, p90, p95 and p99, and watch the tail. For agents the tail compounds, because a task that makes ten calls hits the p90 of a single call far more often than one call does. The other agent-specific lever is the number of model turns. Each tool call that returns to the model for a reasoning step pays a fresh TTFT, so the book's advice is to feed one tool's output straight into the next, or have the model plan several calls in one pass (*Agentic Architectural Patterns*, ch. 2). Illustration, not the book's number: six dependent tool calls at 400 ms TTFT each spend 2.4 s before any output token, and three of them planned together cut that to 1.2 s.
 
 The script below uses ten TTFTs I made up to match Huyen's description, since the book's example gives only the outlier and the mean. It also prices the agent case and shows two requests with the same total latency.
 

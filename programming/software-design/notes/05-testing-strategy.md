@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - "Titus Winters, Tom Manshreck, Hyrum Wright (eds.), Software Engineering at Google, chapters 11 to 14 (free online edition) — https://abseil.io/resources/swe-book/html/ch11.html"
+  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 9 (a unit test of a private method) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
   - "Martin Fowler, Test Pyramid — https://martinfowler.com/bliki/TestPyramid.html"
   - "Ham Vocke, The Practical Test Pyramid (contract tests section) — https://martinfowler.com/articles/practical-test-pyramid.html"
   - "Martin Fowler, Mocks Aren't Stubs — https://martinfowler.com/articles/mocksArentStubs.html"
@@ -24,6 +25,8 @@ cleaned: 2026-11-02
 Fowler gives a good [test of sufficiency](https://martinfowler.com/bliki/TestCoverage.html): you have enough tests if bugs rarely escape to production and you're rarely hesitant to change code for fear of causing them. You have too many if you could remove some and still meet that bar, and one sign is a simple code change that demands long changes to the tests.
 
 Two properties make a test worth keeping, and they pull against what looks like diligence. It should fail when behaviour breaks, and it should stay quiet when behaviour doesn't. [Software Engineering at Google](https://abseil.io/resources/swe-book/html/ch12.html) (SWE from here) calls a test that fails on an unrelated change *brittle*, and its advice follows from that: call the code through its public API, as a user would, and test behaviours rather than methods.
+
+One book in the ML literature goes the other way on private methods. Wilson isolates a method, `_generate_boundaries`, so that it can be tested alone, and the test calls it directly (*Machine Learning Engineering in Action*, ch. 9, Listing 9.4). It asks a distribution object for the 1% and 99% points of a standard normal and asserts equality with `-2.3263478740408408` and `2.3263478740408408`. His reasoning is sound: split out of a long script, the step can be checked on its own, and a failure points at it instead of at the module. SWE's rule would still ask whether some public entry point can reach the same behaviour, since a test of a protected name breaks when the helper is renamed or merged. Two practical points. The values are exact float equality; on SciPy 1.18.1 `norm.ppf(0.99)` does equal that literal, but `pytest.approx` states the intent and survives a library change. And the listing is one function from one analysis class, not evidence about how many private-method tests a code base can carry.
 
 ## Size, scope and the pyramid
 

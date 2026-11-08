@@ -1,0 +1,448 @@
+{
+ "schema": 1,
+ "key": "sha1:8899736ac504",
+ "pdf": "data-science/sources/text-analytics-with-python/ch06-text-similarity-clustering.pdf",
+ "bib": {
+  "title": "Text Similarity and Clustering (Chapter 6, Text Analytics with Python)",
+  "authors": [
+   "Dipanjan Sarkar"
+  ],
+  "first_author": "Sarkar",
+  "year": 2016,
+  "venue": "Apress (Text Analytics with Python, 1st ed.)",
+  "arxiv": null,
+  "doi": "10.1007/978-1-4842-2388-8_6"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 124383,
+  "chars_total": 124383,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can text similarity be measured between terms and documents, and how can documents be clustered without labels?",
+ "hypothesis": null,
+ "contributions": [
+  "Hand-built term distances (Hamming, Manhattan, Euclidean, Levenshtein, cosine)",
+  "Document similarity and ranking by cosine, Hellinger-Bhattacharya and Okapi BM25 on a toy corpus",
+  "K-means, affinity propagation and Ward clustering of 100 IMDb movie synopses with MDS visualisation"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Cosine similarity on TF-IDF vectors ranks 'The dog is smarter than the fox' as a perfect match for 'The fox is definitely smarter than the dog', because order is ignored.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "1.0",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 6 toy corpus: 9 index documents, 3 query documents, normalize_corpus(lemmatize=True), TF-IDF unigrams (min_df=0.0, max_df=1.0); query 1",
+   "quote": "Doc num: 8 Similarity Score: 1.0",
+   "table": null,
+   "note": null,
+   "where": "p.288 (book), PDF p.24"
+  },
+  {
+   "claim": "Cosine similarity for the Java/Python query: nearest corpus doc scores 0.837.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "0.837",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 6 toy corpus: 9 index documents, 3 query documents, normalize_corpus(lemmatize=True), TF-IDF unigrams (min_df=0.0, max_df=1.0); query 2",
+   "quote": "Doc num: 5 Similarity Score: 0.837",
+   "table": null,
+   "note": null,
+   "where": "book p.287"
+  },
+  {
+   "claim": "Query 'I love to relax under the beautiful blue sky!' gets 0.72 with 'The sky is blue' (two of three query terms match).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "0.72",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 6 toy corpus: 9 index documents, 3 query documents, normalize_corpus(lemmatize=True), TF-IDF unigrams (min_df=0.0, max_df=1.0); query 3",
+   "quote": "we get a 0.72 or 72 percent similarity score",
+   "table": null,
+   "note": null,
+   "where": "book p.289"
+  },
+  {
+   "claim": "Hellinger-Bhattacharya distance on TF-IDF vectors gives 0.0 for the perfect match and 0.96 for the second animal doc; for the Java query its second hit is doc 4 (0.766), where cosine and BM25 return doc 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HB distance",
+   "value": "0.96",
+   "unit": "distance (lower is more similar)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 6 toy corpus: 9 index documents, 3 query documents, normalize_corpus(lemmatize=True), TF-IDF unigrams (min_df=0.0, max_df=1.0); query 1 second hit",
+   "quote": "Doc num: 7 Distance Score: 0.96",
+   "table": null,
+   "note": "Rank order differs from cosine/BM25 for query 2 (doc 4 at 0.766 versus doc 6); the chapter says results are 'quite similar'.",
+   "where": "book p.291"
+  },
+  {
+   "claim": "BM25 (k1=1.5, b=0.75) on bag-of-words counts returns the same top document for query 1 with score 7.334.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BM25 score",
+   "value": "7.334",
+   "unit": "score (higher is more relevant)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Toy corpus, BM25 with k1=1.5, b=0.75, query terms binarised, idf = 1+log((1+C)/(1+df)), unigram counts",
+   "quote": "Doc num: 8 BM25 Score: 7.334",
+   "table": null,
+   "note": null,
+   "where": "book p.295"
+  },
+  {
+   "claim": "BM25 free parameters used: k1 set to 1.5; b usually 0.75; k1 usually in [1.2, 2.0].",
+   "kind": "measured",
+   "source": null,
+   "metric": "k1",
+   "value": "1.5",
+   "unit": "parameter",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BM25 implementation in this chapter",
+   "quote": "We will be taking the value of k1 to be 1.5 in our implementation.",
+   "table": null,
+   "note": "Text gives idf as 1+log(C/(1+df)) but the code uses total_docs=1+len(corpus), i.e. log((1+C)/(1+df)).",
+   "where": "book p.293"
+  },
+  {
+   "claim": "Hamming distance 'Believe' vs 'bargain' is 6; 'beleive' is 2; 'Elephant' raises ValueError because lengths differ (8 vs 7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hamming distance",
+   "value": "6",
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Term similarity: root term 'Believe' vs 'beleive', 'bargain', 'Elephant' (case ignored); character-code vectors",
+   "quote": "Hamming distance between root: Believe and term: bargain is 6",
+   "table": null,
+   "note": null,
+   "where": "book p.275"
+  },
+  {
+   "claim": "Euclidean distance on character-code vectors: 'Believe' vs 'bargain' is 17.94 (vs 5.66 for 'beleive').",
+   "kind": "measured",
+   "source": null,
+   "metric": "Euclidean distance",
+   "value": "17.94",
+   "unit": "distance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Term similarity: root term 'Believe' vs 'beleive', 'bargain', 'Elephant' (case ignored); character-code vectors",
+   "quote": "Euclidean distance between root: Believe and term: bargain is 17.94",
+   "table": null,
+   "note": null,
+   "where": "book p.278"
+  },
+  {
+   "claim": "Levenshtein distance handles unequal lengths: 'Believe' vs 'Elephant' is 7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Levenshtein edit distance",
+   "value": "7",
+   "unit": "edits",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Term similarity: root term 'Believe' vs 'beleive', 'bargain', 'Elephant' (case ignored)",
+   "quote": "Levenshtein edit distance is 7",
+   "table": null,
+   "note": "Prose on p.283 says the distances to 'bargain' and 'Elephant' are 6, but the printed output for Elephant is 7.",
+   "where": "book p.282"
+  },
+  {
+   "claim": "Bag-of-characters cosine similarity: 'Believe' vs 'bargain' 0.18 and vs 'Elephant' 0.61, and 1.0 for 'beleive' since order is ignored.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity",
+   "value": "0.61",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Term similarity: root term 'Believe' vs 'beleive', 'bargain', 'Elephant' (case ignored); bag-of-characters vectors over 12 unique characters",
+   "quote": "Cosine similarity  is 0.61",
+   "table": null,
+   "note": null,
+   "where": "book p.285"
+  },
+  {
+   "claim": "Movie synopsis TF-IDF matrix has 100 rows and 307 features after min_df=0.24, max_df=0.85, ngram_range (1,2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "feature matrix shape",
+   "value": "(100, 307)",
+   "unit": "docs x features",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 IMDb top movies, normalize_corpus(lemmatize=True, only_text_chars=True), TF-IDF",
+   "quote": "(100, 307)",
+   "table": null,
+   "note": null,
+   "where": "book p.300"
+  },
+  {
+   "claim": "K-means with k=5 on the 100 movies yields cluster sizes 29, 5, 21, 15, 30.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cluster sizes",
+   "value": "[(0, 29), (1, 5), (2, 21), (3, 15), (4, 30)]",
+   "unit": "movies",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KMeans(n_clusters=5, max_iter=10000) on the 307-d TF-IDF matrix",
+   "quote": "[(0, 29), (1, 5), (2, 21), (3, 15), (4, 30)]",
+   "table": null,
+   "note": "Text says labels run 'from 0 to 5'; five clusters are 0-4.",
+   "where": "book p.302"
+  },
+  {
+   "claim": "Affinity propagation, with no k given, finds 17 clusters of 2 to 12 movies each on the same 100 movies.",
+   "kind": "measured",
+   "source": null,
+   "metric": "number of clusters",
+   "value": "17",
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AffinityPropagation() default settings on cosine-like similarity (X * X.T) of TF-IDF features",
+   "quote": "Total Clusters: 17",
+   "table": null,
+   "note": null,
+   "where": "book p.309"
+  },
+  {
+   "claim": "Ward agglomerative clustering on cosine distance gives a dendrogram with three main colour groups subdivided further.",
+   "kind": "measured",
+   "source": null,
+   "metric": "main clusters in dendrogram",
+   "value": "3",
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "scipy ward() on 1 - cosine_similarity of the 100x307 matrix",
+   "quote": "indicate that there are three main clusters, which further get subdivided into more",
+   "table": null,
+   "note": null,
+   "where": "book p.317"
+  },
+  {
+   "claim": "KL-divergence is not a metric because it is asymmetric (violates symmetry), though useful for comparing distributions.",
+   "kind": "claim",
+   "source": null,
+   "metric": "metric properties",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Definition of a distance metric: non-negativity, identity, symmetry, triangle inequality",
+   "quote": "is a distance measure that violates the third property, where this measure is asymmetric",
+   "table": null,
+   "note": null,
+   "where": "book p.268"
+  },
+  {
+   "claim": "Authors cite an elastic.co blog that BM25 performs much better than Lucene's default similarity.",
+   "kind": "reported",
+   "source": "elastic.co blog 'found-bm-vs-lucene-default-similarity'",
+   "metric": "BM25 vs Lucene default",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web claim, no data shown",
+   "quote": "which tells that the performance of BM25 is much better",
+   "table": null,
+   "note": null,
+   "where": "book p.296"
+  }
+ ],
+ "limits": [
+  "Toy corpus of 9 documents and 3 queries; no relevance judgements, so metrics are compared only by eye.",
+  "Clustering quality is not scored (no silhouette or purity); the author leaves 'which is better' to the reader.",
+  "Code is Python 2 era (print statements, scipy itemfreq, html_parser.unescape, DataFrame.ix) and has dated.",
+  "Cosine/BM25 are bag-of-words and ignore order and synonyms; semantic similarity (embeddings) is not covered.",
+  "Author concedes k-means needs k in advance and can hit local minima; AP is computationally heavy; no production BM25 in nltk/scikit-learn at the time."
+ ],
+ "practices": [
+  "Check a distance against the four metric conditions (non-negative, zero iff identical, symmetric, triangle inequality) before using it as a metric (p.267-268).",
+  "Use cosine on TF-IDF vectors for documents because it ignores length and order (p.289).",
+  "Prefer sklearn cosine_similarity, gensim hellinger() and gensim.matutils.cossim over hand-written versions for large corpora (p.289, p.292).",
+  "Use Levenshtein (not Hamming/Manhattan/Euclidean) when terms have unequal length (p.282).",
+  "Set min_df and max_df to drop terms in almost all documents before clustering (p.270).",
+  "Initialise k-means with kmeans++ and run multiple restarts to avoid local minima (p.302).",
+  "Choose k with the elbow method or silhouette coefficient (p.308).",
+  "Reduce dimensionality with MDS on a cosine distance matrix to visualise clusters in 2-D (p.304).",
+  "Build topic models per cluster to label clusters better than centroid keywords (p.313)."
+ ],
+ "terms": [
+  {
+   "term": "distance metric",
+   "definition": "A measure d satisfying non-negativity, d(x,y)=0 iff x=y, symmetry and the triangle inequality",
+   "where": "p.267"
+  },
+  {
+   "term": "lexical similarity",
+   "definition": "Similarity from the syntax, structure and content of the text",
+   "where": "p.271"
+  },
+  {
+   "term": "semantic similarity",
+   "definition": "Similarity from the meaning and context of the documents",
+   "where": "p.271"
+  },
+  {
+   "term": "Okapi BM25",
+   "definition": "A bag-of-words document ranking framework based on probabilistic relevancy, with parameters k1 and b",
+   "where": "p.292"
+  },
+  {
+   "term": "Hellinger-Bhattacharya distance",
+   "definition": "Euclidean norm of the difference of the square roots of two vectors divided by sqrt(2); an f-divergence",
+   "where": "p.289"
+  },
+  {
+   "term": "inertia",
+   "definition": "Within-cluster sum-of-squares that k-means minimises",
+   "where": "p.301"
+  },
+  {
+   "term": "affinity propagation",
+   "definition": "Clustering by message passing (responsibility and availability) between data points, yielding exemplars, with no preset k",
+   "where": "p.308"
+  },
+  {
+   "term": "Ward's method",
+   "definition": "Linkage criterion that merges the pair of clusters giving the least increase in within-cluster variance",
+   "where": "p.315"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Huang, Similarity Measures for Text Document Clustering",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for distance-metric conditions",
+   "quote": null
+  },
+  {
+   "work": "Wagner and Fischer, The String-to-String Correction Problem",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Wagner-Fischer dynamic programme for Levenshtein",
+   "quote": null
+  },
+  {
+   "work": "Robertson and Jones, Okapi BM25",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Probabilistic relevancy framework",
+   "quote": null
+  },
+  {
+   "work": "Brandon Rose, document_cluster repo (IMDb top 100 movie data)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of movie synopses and visualisation pointers",
+   "quote": null
+  },
+  {
+   "work": "Ward, minimum variance method",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Linkage for hierarchical clustering",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6-1",
+   "caption": "Levenshtein edit distance matrix between terms",
+   "page": 15,
+   "why": "Shows the DP table cell by cell"
+  },
+  {
+   "figure": "Fig 6-2",
+   "caption": "Cosine similarity representations for term vectors",
+   "page": 19,
+   "why": "Angle-based similarity at a glance"
+  },
+  {
+   "figure": "Fig 6-3",
+   "caption": "Sample cluster analysis results (courtesy: scikit-learn)",
+   "page": 33,
+   "why": "Shows what clustering returns and overlapping clusters"
+  },
+  {
+   "figure": "Fig 6-4",
+   "caption": "Visualizing the output of K-means clustering on IMDb movie data",
+   "page": 43,
+   "why": "MDS 2-D plot of the 5 clusters"
+  },
+  {
+   "figure": "Fig 6-5",
+   "caption": "Visualizing the output of Affinity Propagation clustering on IMDb movie data",
+   "page": 49,
+   "why": "17 clusters vs 5"
+  },
+  {
+   "figure": "Fig 6-6",
+   "caption": "Agglomerative hierarchical clustering representation",
+   "page": 50,
+   "why": "Explains dendrogram construction"
+  },
+  {
+   "figure": "Fig 6-7",
+   "caption": "Ward's clustering dendrogram on our IMDb movie data",
+   "page": 52,
+   "why": "Readable hierarchy over 100 films"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.281 Levenshtein two-row DP",
+   "snippet": "dv[j + 1] = min(dv[j] + 1, du[j + 1] + 1, du[j] + cost)",
+   "verbatim": true
+  },
+  {
+   "where": "p.290 Hellinger",
+   "snippet": "np.sqrt(0.5 * np.sum(np.square(np.sqrt(doc_features) - np.sqrt(corpus_features)), axis=1))",
+   "verbatim": false
+  },
+  {
+   "where": "p.315 Ward on cosine distance",
+   "snippet": "cosine_distance = 1 - cosine_similarity(feature_matrix)\nlinkage_matrix = ward(cosine_distance)",
+   "verbatim": true
+  },
+  {
+   "where": "p.304 MDS plot",
+   "snippet": "mds = MDS(n_components=2, dissimilarity=\"precomputed\", random_state=1)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Equations are garbled in extraction (one symbol per line); formulas read from surrounding prose.",
+  "No section map was produced beyond one entry.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,368 @@
+{
+ "schema": 1,
+ "key": "sha1:0997e8e64705",
+ "pdf": "data-analytics/sources/statistical-rethinking/ch11-monsters-mixtures.pdf",
+ "bib": {
+  "title": "Statistical Rethinking, 1st edition, Chapter 11: Monsters and Mixtures",
+  "authors": [
+   "Richard McElreath"
+  ],
+  "first_author": "McElreath",
+  "year": null,
+  "venue": "book (CRC Press), chapter 11, book pp.331-353",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 61255,
+  "chars_total": 61255,
+  "engine": "pymupdf",
+  "skipped": "Endnotes 147-153 are not in the PDF (24 pages end at the practice problems), so cited works are unnamed."
+ },
+ "type": "book-chapter",
+ "question": "How do you build likelihoods and links for ordered categorical outcomes, zero-inflated counts and over-dispersed counts by combining simpler GLM components?",
+ "hypothesis": null,
+ "contributions": [
+  "Ordered logit with cumulative link (Trolley data)",
+  "Zero-inflated Poisson mixture (monks)",
+  "Continuous mixtures for over-dispersion: beta-binomial and gamma-Poisson"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The Trolley data has 12 columns and 9930 rows from 331 individuals; the outcome is an integer 1-7 rating of moral permissibility.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "9930",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trolley data (rethinking package): 9930 rows, 331 individuals, response 1-7 permissibility; quadratic approximation (map), priors Normal(0,10)",
+   "quote": "There are 12 columns and 9930 rows, comprising data for 331 unique individuals.",
+   "table": null,
+   "note": null,
+   "where": "p.333"
+  },
+  {
+   "claim": "K ordered categories need only K-1 intercepts; 7 responses need 6.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6",
+   "unit": "intercepts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ordered logit, 7 response values",
+   "quote": "So for K = 7 possible response values, we only need K −1 = 6 intercepts.",
+   "table": null,
+   "note": null,
+   "where": "p.335"
+  },
+  {
+   "claim": "Intercept-only ordered logit m11.1 recovers cutpoint a1 = -1.92 (SD 0.03); logistic(coef) equals the empirical cumulative proportions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-1.92",
+   "unit": "log-cumulative-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trolley data (rethinking package): 9930 rows, 331 individuals, response 1-7 permissibility; quadratic approximation (map), priors Normal(0,10); start a1..a6 = -2,-1,0,1,2,2.5",
+   "quote": null,
+   "table": "R code 11.6, row a1, column Mean",
+   "note": "a2..a6 = -1.27 -0.72 0.25 0.89 1.77. Stan version m11.1stan (2 chains) gives the same, n_eff 1012-2000, Rhat 1. Empirical log-cumulative-odds 1-6: -1.9160912 -1.2666056 -0.7186340 0.2477857 0.8898637 1.7693809.",
+   "where": "p.336"
+  },
+  {
+   "claim": "Subtracting 0.5 from every cutpoint of m11.1 raises the expected response from 4.199294 to 4.72974, showing why phi is subtracted from the intercepts.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "expected response",
+   "value": "4.72974",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "m11.1 MAP cutpoints, dordlogit on 1:7",
+   "quote": "[1] 4.72974",
+   "table": null,
+   "note": null,
+   "where": "p.338"
+  },
+  {
+   "claim": "In additive model m11.2 all three slopes are negative; bC is -0.96 (bA -0.71, bI -0.72).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.96",
+   "unit": "log-cumulative-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trolley data (rethinking package): 9930 rows, 331 individuals, response 1-7 permissibility; quadratic approximation (map), priors Normal(0,10); phi = bA*action + bI*intention + bC*contact",
+   "quote": null,
+   "table": "R code 11.15 coeftab, row bC, column m11.2",
+   "note": null,
+   "where": "p.339"
+  },
+  {
+   "claim": "Interaction model m11.3: contact x intention slope bCI is -1.27, the largest estimated effect (bA -0.47, bI -0.28, bC -0.33, bAI -0.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-1.27",
+   "unit": "log-cumulative-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trolley data (rethinking package): 9930 rows, 331 individuals, response 1-7 permissibility; quadratic approximation (map), priors Normal(0,10); phi adds bAI*action*intention + bCI*contact*intention",
+   "quote": "the largest estimated effect in the model.",
+   "table": "R code 11.15 coeftab, row bCI, column m11.3",
+   "note": null,
+   "where": "p.339-342"
+  },
+  {
+   "claim": "WAIC: m11.3 36929.4, m11.2 37090.3, m11.1 37854.7; m11.3 dominates with dWAIC 160.8 over m11.2 (dSE 25.80).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dWAIC",
+   "value": "160.8",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Trolley data (rethinking package): 9930 rows, 331 individuals, response 1-7 permissibility; quadratic approximation (map), priors Normal(0,10); compare()",
+   "quote": null,
+   "table": "R code 11.16, row m11.2, column dWAIC",
+   "note": null,
+   "where": "p.340"
+  },
+  {
+   "claim": "Zero-inflated Poisson likelihood of a zero is p + (1-p)exp(-lambda).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Derivation, monks example",
+   "quote": "= p + (1 −p) exp(−λ)",
+   "table": null,
+   "note": null,
+   "where": "p.343"
+  },
+  {
+   "claim": "Simulated monks (N=365 days, prob_drink=0.2, rate_work=1) recovered a drink probability 0.1994078 and work rate 1.051271.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.1994078",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulation; ZIPoisson fit m11.4 by map, ap~Normal(0,1), al~Normal(0,10)",
+   "quote": "[1] 0.1994078",
+   "table": null,
+   "note": "Printed slip: precis(m11.4) shows ap -1.23 (SD 0.29), al 0.06, but the text computes logistic(-1.39) and exp(0.05); the printed outputs match -1.39 and 0.05, not the table.",
+   "where": "p.345-346"
+  },
+  {
+   "claim": "Beta-binomial fit to UCBadmit ignoring department (m11.5): theta posterior mean 2.77 (SD 0.96, 89% 1.26-4.15), a = -0.38.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.77",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit (12 rows), map2stan, iter=4000, warmup=1000, 2 chains, a~Normal(0,2), theta~Exponential(1) in code",
+   "quote": null,
+   "table": "R code 11.27, row theta, column Mean",
+   "note": "Math form in text says alpha~Normal(0,10), theta~HalfCauchy(0,1); code uses dnorm(0,2), dexp(1). n_eff 3343 and 2999, Rhat 1.",
+   "where": "p.348"
+  },
+  {
+   "claim": "Implied average admission probability in m11.5 has median about 0.40, 95% interval 0.27-0.54.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.3988572",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m11.5, quantile of logistic(post$a)",
+   "quote": "0.2728234 0.3988572 0.5425554",
+   "table": null,
+   "note": null,
+   "where": "p.348"
+  },
+  {
+   "claim": "Do not use WAIC with beta-binomial or gamma-Poisson models unless sure; fall back on DIC.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Advice s11.3.3",
+   "quote": "You should not use WAIC with these models, however, unless you are very sure of what you are doing.",
+   "table": null,
+   "note": null,
+   "where": "p.351"
+  },
+  {
+   "claim": "Half-Cauchy prior for theta is poorly efficient; an exponential prior samples better without changing inference.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Advice s11.3.1",
+   "quote": "it is often the case that θ is poorly identified.",
+   "table": null,
+   "note": null,
+   "where": "p.350"
+  }
+ ],
+ "limits": [
+  "Fits use quadratic approximation (map) or map2stan with rethinking 1st-edition syntax; WAIC is advised against for beta-binomial/gamma-Poisson.",
+  "Gamma-Poisson gets no worked example; over-dispersion is deferred to multilevel models (Ch. 12).",
+  "Trolley priors Normal(0,10) are safe only because of large data (9930 rows).",
+  "The ZIPoisson example is a simulation with one year of data (N=365) and intercept-only models."
+ ],
+ "practices": [
+  "Validate a new hybrid model by simulating dummy data and recovering the data-generating process (p.331).",
+  "Transform the model to fit the measurement, not the measurement to fit the model (p.331).",
+  "Add predictors to ordered logit on the cumulative logit scale and subtract phi from each cutpoint so positive beta raises the mean response (p.338).",
+  "Start cutpoints in the right order; ordering matters, exact values do not (p.336).",
+  "Plot ordered-logit predictions as cumulative probability curves per response across a predictor, looping over posterior samples (p.340-341).",
+  "Put different predictors in the two linear models of a ZIPoisson as hypothesis dictates (p.344).",
+  "Compute likelihoods on the log scale (dzipois vs dzip) (p.346).",
+  "Use an exponential prior and a start value for beta-binomial theta; use constraints for positivity (p.348).",
+  "Prefer multilevel models over beta-binomial/gamma-Poisson for over-dispersion in practice (p.347).",
+  "Pass a list of models to ensemble if WAIC is not decisive (p.340).",
+  "For zero-inflated fishing counts use a Poisson offset from hours (11H6, p.353)."
+ ],
+ "terms": [
+  {
+   "term": "cumulative link",
+   "definition": "The cumulative probability of a value is the probability of that value or any smaller value; linking a linear model to it guarantees outcome ordering.",
+   "where": "p.332"
+  },
+  {
+   "term": "log-cumulative-odds",
+   "definition": "log Pr(y<=k)/(1-Pr(y<=k)) = alpha_k; the cumulative analog of the logit link.",
+   "where": "p.334-335"
+  },
+  {
+   "term": "mixture model",
+   "definition": "A mixture model uses more than one simple probability distribution to model a mixture of causes; in effect more than one likelihood for the same outcome.",
+   "where": "p.342"
+  },
+  {
+   "term": "over-dispersion",
+   "definition": "Observed variance exceeds that implied by the model's parameters after conditioning on all predictors, implying an omitted variable.",
+   "where": "p.346"
+  },
+  {
+   "term": "beta-binomial",
+   "definition": "Each binomial count has its own probability of success drawn from a beta distribution with mean pbar and shape theta.",
+   "where": "p.347"
+  },
+  {
+   "term": "gamma-Poisson (negative binomial)",
+   "definition": "Each Poisson count has its own rate drawn from a gamma distribution with mean mu and scale theta.",
+   "where": "p.350"
+  },
+  {
+   "term": "continuous mixture",
+   "definition": "Each count has its own independent continuous-distributed parameter; the likelihood averages over it: integral g(y|n,p) h(p|pbar,theta) dp.",
+   "where": "p.351"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Earlier chapters of the book (Ch. 10 Poisson GLMs, UCBadmit, WAIC)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Builds on GLMs of earlier chapters",
+   "quote": null
+  },
+  {
+   "work": "Trolley problem experiments by philosophers (action, intention, contact principles)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Endnote 148 not in PDF; authors not named",
+   "quote": null
+  },
+  {
+   "work": "Hurricanes paper 'Female hurricanes are deadlier than male hurricanes' (2014)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Used in practice 11H1-11H4, criticized by statisticians",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 11.1",
+   "caption": "Re-describing a discrete distribution using log-cumulative-odds",
+   "page": "book p.334 / PDF p.4",
+   "why": "Histogram to cumulative proportion to log-cumulative-odds in three panels."
+  },
+  {
+   "figure": "Fig 11.2",
+   "caption": "Cumulative probability and ordered likelihood",
+   "page": "book p.336 / PDF p.6",
+   "why": "Shows likelihood as the difference of cumulative steps."
+  },
+  {
+   "figure": "Fig 11.3",
+   "caption": "Posterior predictions of the ordered categorical model with interactions, m11.3",
+   "page": "book p.342 / PDF p.12",
+   "why": "Triptych of response boundaries vs intention; shows the contact x intention effect."
+  },
+  {
+   "figure": "Fig 11.4",
+   "caption": "Left: Structure of the zero-inflated likelihood calculation. Right: Frequency distribution of zero-inflated observations",
+   "page": "book p.344 / PDF p.14",
+   "why": "Tree of drink/work and where the zeros come from."
+  },
+  {
+   "figure": "Fig 11.5",
+   "caption": "Left: Posterior distribution of beta distributions for m11.5. Right: Posterior validation check for m11.5",
+   "page": "book p.349 / PDF p.19",
+   "why": "A distribution of distributions and wide predictive intervals for over-dispersion."
+  }
+ ],
+ "code": [
+  {
+   "where": "R code 11.5, p.336",
+   "snippet": "m11.1 <- map(\nalist(\nresponse ~ dordlogit( phi , c(a1,a2,a3,a4,a5,a6) ),\nphi <- 0,\nc(a1,a2,a3,a4,a5,a6) ~ dnorm(0,10)\n) ,\ndata=d ,\nstart=list(a1=-2,a2=-1,a3=0,a4=1,a5=2,a6=2.5) )",
+   "verbatim": true
+  },
+  {
+   "where": "R code 11.24, p.346",
+   "snippet": "dzip <- function( x , p , lambda , log=TRUE ) {\nll <- ifelse(\nx==0 ,\np + (1-p)*exp(-lambda) ,\n(1-p)*dpois(x,lambda,FALSE)\n)\nif ( log==TRUE ) ll <- log(ll)\nreturn(ll)\n}",
+   "verbatim": true
+  },
+  {
+   "where": "R code 11.20, p.345",
+   "snippet": "prob_drink <- 0.2\nrate_work <- 1\nN <- 365\ndrink <- rbinom( N , 1 , prob_drink )\ny <- (1-drink)*rpois( N , rate_work )",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No endnotes in the PDF.",
+  "Slip p.345-346: precis(m11.4) prints ap -1.23, al 0.06, but text computes logistic(-1.39) and exp(0.05).",
+  "Slip p.346: Overthinking box says 'm12.12' where m11.4 is meant.",
+  "Slip p.348: model math says alpha~Normal(0,10), theta~HalfCauchy(0,1); code uses dnorm(0,2), dexp(1).",
+  "Text calls theta a 'scale' parameter for the beta (shape) and gamma distributions."
+ ]
+}

@@ -6,6 +6,7 @@ sources:
   - ../practice/ng-machine-learning/ex5/ex5.ipynb
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - https://doi.org/10.1186/1471-2105-7-91
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 5-6
   - https://doi.org/10.1145/1143844.1143874
   - https://arxiv.org/abs/1706.04599
   - https://arxiv.org/abs/2106.07998
@@ -55,6 +56,13 @@ What CV buys:
 - More data is used for training: 80% per model at `cv=5` vs 75% for the default split.
 
 What it doesn't do: return a model. `cross_val_score` evaluates a *procedure*; refit on all the data for the final model.
+
+**How many folds, and what CV is good for.** ISLP's advice is $k=5$ or 10, because leave-one-out has the least bias but averages $n$ highly correlated fits and so has high variance, while a single validation split is both noisy and trained on less data (*ISLP*, ch. 5). The noise is concrete: on the Auto data (392 cars, `mpg` on polynomials of `horsepower`, one 196/196 split) the linear, quadratic and cubic validation MSEs are 23.62, 18.76 and 18.80 at one seed and 20.76, 16.95 and 16.97 at another, so the level moves by about three MSE units with the split while the ranking holds. Leave-one-out and 10-fold agree closely there (degree 1 to 5: 24.23, 19.25, 19.34, 19.42, 19.03 against 24.21, 19.19, 19.28, 19.48, 19.14), and for least squares leave-one-out is free, since $\mathrm{CV}_{(n)} = \frac1n\sum_i\big((y_i-\hat y_i)/(1-h_i)\big)^2$ needs one fit and the leverages $h_i$ (*ISLP*, ch. 5, lab).
+
+![Training, test and 10-fold CV error for logistic regression with polynomial terms (left) and KNN (right) on simulated two-class data](../../sources/images/islp-fig5-8.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 5.8*
+
+The figure shows what to trust CV for. The training error (blue) keeps falling with flexibility, the true test error (brown) is U-shaped, and the 10-fold CV curve (black) tracks the test curve's shape and puts its minimum within a step of the true one: for the polynomial logistic fits CV picks order 4 where the test minimum is at order 3, and the true test error is about the same for orders 3 to 6 (0.201, 0.197, 0.160, 0.162 for orders 1 to 4, against a Bayes error of 0.133). Read the plot and the CV curve sits below the test curve in both panels, so use it to choose the hyperparameter, not to quote the level (*ISLP*, ch. 5, simulated data, one run).
 
 ### Splitters
 
@@ -365,7 +373,7 @@ default 0.5 precision 0.725 recall 0.584
 tuned 0.61 precision 0.783 recall 0.484
 ```
 
-Accuracy says the model is about nine points better than always answering "low earner". AUC and AP say the ranking is strong. The threshold lines say what that means for a decision: holding the flagged group to about 80% precision costs about a tenth of recall, and the validation target of 0.80 came out at 0.783 on test, because a threshold picked on one sample is itself an estimate. See [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap) in data analytics for putting an interval on an estimate like this one.
+Accuracy says the model is about nine points better than always answering "low earner". AUC and AP say the ranking is strong. The threshold lines say what that means for a decision: holding the flagged group to about 80% precision costs about a tenth of recall, and the validation target of 0.80 came out at 0.783 on test, because a threshold picked on one sample is itself an estimate. See [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap) in data analytics for putting an interval on an estimate like this one. ISLP's check of the idea: for a statistic with no formula, 1,000 bootstrap resamples of one 100-pair data set give a standard error of 0.087, against 0.083 from 1,000 fresh simulated data sets (*ISLP*, ch. 5). The bootstrap also tests a model's own assumptions: for a linear fit to the curved Auto relationship its slope standard error is 0.0074 against the formula's 0.006, and the two agree once the quadratic term is in.
 
 | Curve | Axes | Use when |
 |---|---|---|
@@ -529,6 +537,13 @@ print(sizes, train_scores.mean(axis=1).round(2), val_scores.mean(axis=1).round(2
 ```
 
 [Training and tuning](09-training-and-tuning.md#reading-performance-during-training) reads these curves on the adult census, with more rows and then with more training on the x-axis.
+
+**When the features outnumber the rows, training scores stop meaning anything.** ISLP adds pure-noise features to a 20-row least-squares fit one at a time: $R^2$ climbs to 1 and training MSE falls to 0, while the test MSE explodes by orders of magnitude (the plot's axis is logarithmic).
+
+![R squared rising to 1, training MSE falling to 0 and test MSE exploding as unrelated features are added to a 20-observation least-squares fit](../../sources/images/islp-fig6-23.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 6.23*
+
+With $p \ge n$ a perfect fit is guaranteed whatever the features contain, so report a held-out or cross-validated error only, never training error, $R^2$ or in-sample p-values (*ISLP*, ch. 6, simulated, $n=20$, one run). A lasso with 20 true signals and $n=100$ sees its test MSE nearly double as $p$ grows from 20 to 2,000, so adding features is not free even when the penalty is tuned.
 
 ---
 

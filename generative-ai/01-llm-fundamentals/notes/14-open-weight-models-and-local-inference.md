@@ -8,6 +8,7 @@ sources:
   - https://github.com/ggml-org/llama.cpp
   - https://github.com/ollama/ollama
   - "Iusztin and Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns (Packt, 2026), ch. 2"
   - https://arxiv.org/abs/1810.03993
   - https://arxiv.org/abs/2208.07339
   - https://arxiv.org/abs/2302.13971
@@ -232,6 +233,8 @@ llama-server -m models/7B/ggml-model.gguf -c 2048     # listens on 127.0.0.1:993
 ## When does local beat the API?
 
 Usually for a reason other than price. The strongest cases are data that may not leave your network, a need to fine-tune weights or inspect internals, a requirement to work offline, and pinning a model forever. For price, do the arithmetic with your own volume. API prices below are Anthropic's list prices for two Claude models as of October 2026. The server cost is an **assumption** to replace with your own quote.
+
+*Agentic Architectural Patterns* (ch. 2) adds a third option beside the API and the server: running a small quantized model on the device itself, which removes the network call and works offline but caps the model at what the device can hold. It also says the easiest models to self-host are quantized ones such as GGUF, while full FP16 weights need H100 or A100-class GPUs, a qualitative claim without sizes ([serving at scale](../../../ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md#where-the-model-runs) compares the three places).
 
 The usual non-price trade-off is control against operations. Hosted models need no infrastructure of your own, while self-hosted open models keep data inside your environment and put the compute and upkeep on you (*GenAI and LLMs for Dummies*, ch. 3). The same primer adds that open models carry risks from training data that is often not public, from unpatched tooling around them (orchestration frameworks, vector databases) and from uneven community quality (ch. 5). It lists BERT with "open-source LLMs" alongside Llama 2 and Falcon; BERT is an encoder-only model, not a generative LLM ([chapter 03](03-scale-and-the-model-zoo.md)).
 

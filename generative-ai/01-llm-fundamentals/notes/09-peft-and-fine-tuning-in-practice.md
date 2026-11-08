@@ -6,6 +6,7 @@ sources:
   - https://arxiv.org/abs/2312.12148
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 1, 5–8"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1–2"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns (Packt, 2026), ch. 2–3"
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 2–3"
   - https://arxiv.org/abs/2312.11805
   - https://arxiv.org/abs/2403.03507
@@ -70,7 +71,7 @@ W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 ```
 
 - Only `A` and `B` are trained. On GPT-3 175B the paper reports 10,000× fewer trainable parameters and 3× less GPU memory than full fine-tuning, with comparable quality.
-- The update can be merged into `W` after training, so inference costs nothing extra; or kept separate so one base model serves many adapters.
+- The update can be merged into `W` after training, so inference costs nothing extra; or kept separate so one base model serves many adapters. That is the case for PEFT in an agent system with many specialised roles: one stored base, one small adapter per role, swapped per request (*Agentic Architectural Patterns*, ch. 2–3), where a fully fine-tuned copy per role would multiply storage and serving cost.
 - What LoRA is *not*: *Prompt Engineering for GenAI* (ch. 2) calls it "low-rank approximations" that make the network run on consumer hardware. LoRA is low-rank *adaptation*. It shrinks the number of *trainable* parameters during fine-tuning; it does not make the model smaller or faster at inference. Shrinking the model is quantization, pruning or distillation (below).
 - **QLoRA** ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) keeps the frozen base in 4-bit and trains LoRA adapters on top, which brings 65B-parameter fine-tuning onto a single 48 GB GPU. Three tricks make it fit: a 4-bit NormalFloat data type, quantizing the quantization constants themselves (about 3 GB saved at 65B), and paged optimizers that absorb memory spikes. Its Guanaco models reached 99.3% of ChatGPT's score on the Vicuna benchmark after 24 hours on one GPU. The authors themselves warn that those chatbot benchmarks are not trustworthy, so read the number as "close", not "equal".
 - **GaLore** ([arXiv:2403.03507](https://arxiv.org/abs/2403.03507) (Zhao et al., 2024-03)) targets optimizer memory instead of the trainable-parameter count. It projects each gradient into a low-rank subspace, cutting optimizer-state memory by up to 65.5%. That is enough to pre-train LLaMA-7B on a 24 GB consumer GPU. Unlike LoRA it updates all the weights, so it also works for pre-training. Its 8-bit 7B run on C4 reached a validation perplexity of 14.65 after 150K steps, a single run.
@@ -155,6 +156,8 @@ Quantization for *serving* (int8/int4 weights, KV-cache compression) is an infer
 | Missing or stale facts | Retrieval | Almost never; fine-tuning is a poor fact store |
 | Task needs a skill the model lacks | Decompose the task; use a stronger model | You have thousands of good examples. Phoenix & Taylor's rule of thumb (*Prompt Engineering for GenAI*, ch. 1) is that fine-tuning starts to beat prompting somewhere in the low thousands of examples |
 | Cost or latency | Smaller model plus a good prompt | Distil a large model's outputs into a small one |
+
+*Agentic Architectural Patterns* (ch. 3) lays the same choice out as a spectrum of how deep the change goes: in-context learning changes no weights and lasts one prompt (its example is three few-shot review-to-JSON demonstrations steering a feature-sentiment extractor); PEFT trains a small set of weights; full fine-tuning (FFT) changes all of them and may reach the highest ceiling at a very high cost. Its comparison table says PEFT needs less data, forgets less and iterates faster, while FFT suits the deepest specialisation. Treat those as design claims, not findings: the chapter runs no experiment and gives no figures, so "forgets less" is asserted, and its in-context example lists the tripod twice (wobbly, cheap) despite its own one-entry-per-feature demonstrations. It also separates unsupervised fine-tuning (continued pretraining on unlabeled domain text, for vocabulary and style) from SFT on input-output pairs (for tasks, instruction following and format; [chapter 07](07-sft-and-instruction-tuning.md)).
 
 The ladder is the same one an introductory vendor primer lists for adapting a model: prompt engineering, in-context learning, retrieval, fine-tuning, then RLHF (*GenAI and LLMs for Dummies*, ch. 3). Two of its definitions are wrong, though. It says in-context learning means "training a language model with a data set" aligned to the domain, but in-context learning updates no weights: the examples sit in the prompt and are gone after the call. It also calls RLHF "ongoing" fine-tuning "in near real time"; RLHF is an offline stage run on a fixed batch of human preference labels ([chapter 08](08-preference-optimisation-overview.md)). Its fine-tuning recipe (pick a pretrained model, gather task examples, evaluate) is correct but leaves out the hard part, which is the data.
 

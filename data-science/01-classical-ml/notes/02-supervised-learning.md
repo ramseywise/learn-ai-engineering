@@ -3,7 +3,7 @@ origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
-  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 1-4, 6, 9, 10
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 2-4, 6, 9, 10
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://www.coursera.org/specializations/machine-learning-introduction
   - ../practice/ng-machine-learning/ex1/ex1.ipynb

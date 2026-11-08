@@ -5,6 +5,7 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 9"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 2, 8, 10"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns (Packt, 2026), ch. 2"
   - https://www.usenix.org/conference/osdi22/presentation/yu
   - https://arxiv.org/abs/2309.06180
   - https://arxiv.org/abs/2305.05176
@@ -48,6 +49,18 @@ The async shape is the Handbook's answer to spikes. In its example, traffic jump
 **Latency buys throughput.** The Handbook's arithmetic: a server that processes 20 requests in 100 ms delivers 200 RPS. Batching 60 requests into 200 ms delivers 300 RPS. Each request waits twice as long and the fleet serves 50% more. Google's often-quoted 2016 finding that 53% of mobile users abandon a page that takes over 3 s is the reminder that the trade has a limit.
 
 **Streaming transport.** The Handbook says LLM services "often use WebSockets" to stream tokens. In practice, the OpenAI, Anthropic and Gemini APIs, TGI and vLLM's OpenAI-compatible server all stream over **server-sent events (SSE)**, one-way over plain HTTP. The Handbook itself notes that TGI uses SSE. WebSockets appear where the channel is two-way (voice, realtime APIs).
+
+### Where the model runs
+
+The three shapes above say when work happens. A second axis says where the model sits, and *Agentic Architectural Patterns* (ch. 2) names three places for an agent's reasoning core:
+
+| Place | Gains | Costs | The book's fit |
+|---|---|---|---|
+| **Cloud API** | No hardware to run; the largest models; built-in monitoring | Network latency; prompts leave your boundary; per-token bill grows with volume; no control of the serving stack | Prototypes, or when the biggest current model is the point |
+| **Self-hosted** (on-premises or private cloud, served with vLLM or Triton) | Data stays inside; can be co-located with the agent for fewer network hops; you choose the stack | MLOps expertise, GPUs, and scaling and security are yours | Data sensitivity, regulation, very low latency, often a smaller fine-tuned model |
+| **Edge** (on the device) | No network call; works offline; data never leaves the device | Model size capped by the device, so small, quantized or pruned models | Phones, robots, in-car and industrial sensors |
+
+The chapter gives no measurements for any of this. It is a decision aid and no more. Its only memory-side claim is qualitative: quantized files such as GGUF are the easiest to self-host, because full FP16 weights need H100 or A100-class GPUs. [08c](08c-quantization-and-low-precision.md) and [the memory arithmetic in the LLM-fundamentals pillar](../../../generative-ai/01-llm-fundamentals/notes/14-open-weight-models-and-local-inference.md#will-it-fit-memory-measured) supply the numbers. Its worked picks match the shapes: an overnight document-summarising agent cares about throughput and cost, so batch serving, while a trading agent that needs sub-second answers on sensitive data points to a co-located self-hosted model.
 
 ### Monolith or microservice
 

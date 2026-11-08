@@ -8,6 +8,7 @@ sources:
   - "Danilo Sato, Parallel Change (2014) — https://martinfowler.com/bliki/ParallelChange.html"
   - "Martin Fowler, Branch by Abstraction (2014) — https://martinfowler.com/bliki/BranchByAbstraction.html"
   - "Martin Fowler, Strangler Fig (2024) — https://martinfowler.com/bliki/StranglerFigApplication.html"
+  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 4 (experimental code) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
   - "Kim, Zimmermann, Nagappan, A Field Study of Refactoring Challenges and Benefits, FSE 2012 — https://doi.org/10.1145/2393596.2393655"
 concepts: [refactoring, characterization-testing, preparatory-refactoring, split-phase, replace-conditional, parallel-change, branch-by-abstraction, strangler-fig]
 confidence: high
@@ -54,6 +55,8 @@ A simple decision test before starting:
 | Can I tell if I broke it? | Write characterization tests first, or leave it |
 | Can I do it in steps that each leave the system working? | Find smaller steps, or call it a rewrite and plan it as one |
 | Can I stop halfway and still be better off? | It's probably too big for now |
+
+A related rule comes from machine-learning practice. Wilson tells teams that experimental code should be "a little janky": scripted, commented out and "nigh-untestable", and that "under no circumstances should experimental code be expanded upon for the final solution" (*Machine Learning Engineering in Action*, ch. 4). It is a rewrite, not a refactor, and the decision test above gives the same answer: you cannot tell whether you broke an experiment that never had tests, and no sequence of safe steps leads from a notebook script to a tested module. Keep the experiment as the reference for behaviour, and write the production version beside it. The advice is the author's experience on project timelines, not a measured result.
 
 ## Characterization tests: pin what it does, not what it should do
 

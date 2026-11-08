@@ -6,6 +6,7 @@ sources:
   - "Arpaci-Dusseau, Operating Systems: Three Easy Pieces, TLB and beyond-physical-memory chapters — https://pages.cs.wisc.edu/~remzi/OSTEP/"
   - "CPython 3.14.7, Include/cpython/longintrepr.h and Objects/longobject.c — https://github.com/python/cpython/blob/v3.14.7/Objects/longobject.c"
   - "Python docs: Floating-point arithmetic, math, sys, functions, array, decimal, fractions, mmap — https://docs.python.org/3.14/tutorial/floatingpoint.html"
+  - "Jake VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 2 — chapter PDF in data-analytics/sources/python-data-science-handbook/"
   - "NumPy docs: numpy.sum — https://numpy.org/doc/stable/reference/generated/numpy.sum.html"
 concepts: [math-strings, floating-point, ieee-754, ulp, cancellation, kahan-summation, fp16, bf16, fp8, mantissa-exponent-split, loss-scaling, log-sum-exp, stable-softmax, big-integers, karatsuba, twos-complement, cache-hierarchy, locality, virtual-memory, page-faults, boxing]
 confidence: high
@@ -690,6 +691,16 @@ The loop column is the surprise: **NumPy is the slowest way to loop**, at 33 ns 
 The `sum` column is the win: 0.1 ns per item for `numpy.sum`, because it doesn't box anything and runs along adjacent memory. That's 19 times faster than the C-level builtin `sum` over the list, and 80 times faster than a Python loop. This is the [cost-model lesson from chapter 1](01-cost-models-and-big-o.md#how-to-optimise-the-order-that-works): big-O is equal in all of these, and the ratio between the best and worst is more than 300.
 
 So the rule of thumb is that speed comes from getting the whole operation out of the Python loop, and memory comes from getting rid of the objects. Vectorising is really about layout. The same reasoning explains [why column stores are fast](../../../data-engineering/01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) and much of [what GPUs want](../../../ai-engineering/07-inference-engineering/notes/02-the-hardware.md).
+
+### Broadcasting: stretching without copying
+
+Broadcasting is how a vectorised operation lines up arrays of different shapes. VanderPlas gives three rules (*Python Data Science Handbook*, ch. 2): pad the shorter shape with 1s on the left, stretch any dimension of size 1 to match the other array, and raise an error if two sizes still disagree and neither is 1. A `(3, 2)` array plus a `(3,)` array fails the third rule (`operands could not be broadcast together with shapes (3,2) (3,)`); add `[:, np.newaxis]` to the vector and it works.
+
+![Three broadcasting cases: a scalar added to a vector, a vector added to a matrix, and a column added to a row](../../sources/images/vanderplas-python-data-science-handbook-fig2-4.png)
+
+*Image Source: VanderPlas, *Python Data Science Handbook* (O'Reilly, 2016), Fig. 2-4*
+
+The stretched operand is not copied; NumPy reuses the same memory with a stride of 0. The result is a real array, and an intermediate can be far larger than the inputs. His all-pairs distance, `np.sum((X[:, None, :] - X[None, :, :]) ** 2, axis=-1)`, builds an `(N, N, d)` array of differences. I measured it with NumPy 2.5.4 on one laptop, N = 2,000 points and d = 64: the input is 1,000 KiB and the intermediate is 1,953 MiB. At N = 10,000 it would be 47.7 GiB, against 0.75 GiB for the `(N, N)` answer. The expansion `|a|^2 + |b|^2 - 2 a.b` computed the same distances in 3.7 ms against 191 ms (largest difference 4e-14), but it subtracts nearly equal numbers, so [cancellation](#subtraction-is-where-precision-goes) can bite on close points. For the K nearest, `np.argpartition(dist_sq, K + 1, axis=1)` finds them without a full sort (26 ms against 134 ms for `argsort` here, with the same neighbour sets) but returns them unordered. Each point is its own nearest neighbour, which is why the book asks for K + 1. A Python double loop over 300 points took 247 ms against 4.9 ms for broadcasting plus `argpartition`. These are single-machine timings, not benchmarks.
 
 ## Pitfalls
 

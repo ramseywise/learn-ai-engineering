@@ -1,0 +1,556 @@
+{
+ "schema": 1,
+ "key": "sha1:b16613735d79",
+ "pdf": "data-analytics/sources/statistical-rethinking/ch12-multilevel-models.pdf",
+ "bib": {
+  "title": "12 Multilevel Models (Statistical Rethinking, first edition, ch. 12)",
+  "authors": [
+   "Richard McElreath"
+  ],
+  "first_author": "McElreath",
+  "year": 2016,
+  "venue": "book chapter, Statistical Rethinking (CRC Press), pp. 355-386",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 86336,
+  "chars_total": 86336,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should repeated or clustered observations be modelled so that information is shared across clusters without forgetting (complete pooling) or ignoring (no pooling) it?",
+ "hypothesis": "Varying intercepts with an adaptively learned prior give better cluster estimates than fixed per-cluster intercepts, because they trade off underfitting and overfitting.",
+ "contributions": [
+  "Introduces varying intercepts, hyperparameters and adaptive regularisation on the reed frog tadpole data",
+  "Simulation showing partial pooling beats no pooling, most for small clusters",
+  "Cross-classified model (actor and block) on chimpanzee data",
+  "Posterior prediction for same clusters, new clusters, and over-dispersion"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The multilevel tadpole model m12.2 has about 38 effective parameters against 50 actual ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pWAIC",
+   "value": "38.0",
+   "unit": "pWAIC",
+   "baseline_value": "49.4",
+   "n": 48,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC); m12.2 iter=4000 chains=4",
+   "quote": null,
+   "table": "Table 12.4 compare output, row m12.2, column pWAIC",
+   "note": null,
+   "where": "p360, code 12.4"
+  },
+  {
+   "claim": "WAIC of multilevel m12.2 beats the fixed-intercept m12.1 by 13.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dWAIC",
+   "value": "13.1",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC)",
+   "quote": null,
+   "table": "compare(m12.1,m12.2), row m12.1, column dWAIC",
+   "note": "dSE is 6.54",
+   "where": "p360, code 12.4"
+  },
+  {
+   "claim": "The estimated sd among tanks, sigma, is about 1.6, so the learned prior is fairly strong.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean sigma",
+   "value": "1.6",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC)",
+   "quote": "Check the mean of sigma with precis or coef and you’ll see it’s around 1.6.",
+   "table": null,
+   "note": null,
+   "where": "p360"
+  },
+  {
+   "claim": "Multilevel model has 12 fewer effective than actual parameters because the prior shrinks intercepts to alpha.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "12",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC)",
+   "quote": "There are 12 fewer effective parameters than actual parameters",
+   "table": null,
+   "note": null,
+   "where": "p360"
+  },
+  {
+   "claim": "Estimated population median survival in the tank population is about 0.8, not the empirical mean.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.8",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC); Fig 12.1",
+   "quote": "The horizontal dashed line at about 0.8 is the estimated median survival proportion in the population",
+   "table": null,
+   "note": null,
+   "where": "p362"
+  },
+  {
+   "claim": "Shrinkage is stronger for small tanks and for tanks whose empirical proportion lies farther from the global mean; in every tank the multilevel estimate is closer to the mean than the raw proportion.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reed frog tadpole data (data(reedfrogs)), 48 tanks, binomial survival, fit with map2stan (Stan HMC); tank sizes 10, 25, 35 tadpoles (Fig 12.1)",
+   "quote": "Varying intercepts for the smaller tanks, with smaller sample sizes, shrink more.",
+   "table": null,
+   "note": null,
+   "where": "p362"
+  },
+  {
+   "claim": "Partial pooling beats no pooling on average in every pond-size group; the gap grows as ponds get smaller (Fig 12.3, read qualitatively, no numeric error values given).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated ponds: alpha=1.4, sigma=1.5, 60 ponds, 15 each with n=5,10,25,35, one chain iter=1e4 warmup=1000 (m12.3), error = abs(estimate - true probability)",
+   "quote": "the partial pooling estimates are better on average, especially in smaller ponds.",
+   "table": null,
+   "note": null,
+   "where": "p369"
+  },
+  {
+   "claim": "No-pooling errors can exceed 20% in some small ponds.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20",
+   "unit": "% off",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated ponds: alpha=1.4, sigma=1.5, 60 ponds, 15 each with n=5,10,25,35, one chain iter=1e4 warmup=1000 (m12.3), error = abs(estimate - true probability)",
+   "quote": "more than 20% off in some cases",
+   "table": null,
+   "note": null,
+   "where": "p369"
+  },
+  {
+   "claim": "Posterior of m12.3 recovers sigma at 1.59 (sd 0.22) against the true 1.5, and a at 1.13 (sd 0.23) against the true 1.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "sigma posterior mean",
+   "value": "1.59",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated ponds: alpha=1.4, sigma=1.5, 60 ponds, 15 each with n=5,10,25,35, one chain iter=1e4 warmup=1000 (m12.3), error = abs(estimate - true probability); one simulated data set",
+   "quote": null,
+   "table": "precis(m12.3), row sigma, column Mean; row a, column Mean 1.13",
+   "note": "The true alpha is 1.4; the estimate is about 1.2 sd below it in this one draw. Chapter does not comment.",
+   "where": "p368, code 12.14"
+  },
+  {
+   "claim": "Exceptions exist: no-pooling can win for ponds with extreme survival probabilities, because few ponds are that extreme.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated ponds: alpha=1.4, sigma=1.5, 60 ponds, 15 each with n=5,10,25,35, one chain iter=1e4 warmup=1000 (m12.3), error = abs(estimate - true probability)",
+   "quote": "But sometimes outliers really are outliers.",
+   "table": null,
+   "note": null,
+   "where": "p370"
+  },
+  {
+   "claim": "Adding block varying intercepts (m12.5) adds 7 parameters but only about 2.5 effective parameters (pWAIC 10.5 vs 8.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "pWAIC m12.5",
+   "value": "10.5",
+   "unit": "pWAIC",
+   "baseline_value": "8.1",
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan; m12.4 actor only, m12.5 actor+block; m12.5 warmup=1000 iter=6000 chains=4 (20,000 samples)",
+   "quote": null,
+   "table": "compare(m12.4,m12.5), row m12.5, column pWAIC",
+   "note": null,
+   "where": "p375, code 12.26"
+  },
+  {
+   "claim": "WAIC difference between m12.4 and m12.5 is 1.2 with dSE 1.94, so the models are indistinguishable.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dWAIC",
+   "value": "1.2",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan",
+   "quote": "the difference in WAIC between these models is small, only 1.2.",
+   "table": null,
+   "note": "dSE 1.94; WAIC 531.5 (m12.4, weight 0.65) vs 532.7 (m12.5, weight 0.35)",
+   "where": "p375, code 12.26"
+  },
+  {
+   "claim": "Estimated variation among actors (sigma_actor 2.25, sd 0.90) far exceeds among blocks (sigma_block 0.22, sd 0.18).",
+   "kind": "measured",
+   "source": null,
+   "metric": "sigma_actor posterior mean",
+   "value": "2.25",
+   "unit": "log-odds",
+   "baseline_value": "0.22",
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan; m12.5",
+   "quote": null,
+   "table": "precis(m12.5), row sigma_actor, column Mean; row sigma_block Mean 0.22",
+   "note": null,
+   "where": "p374, code 12.24"
+  },
+  {
+   "claim": "Actor 2 has a very large intercept in m12.5 (a_actor[2] = 4.14, sd 1.59), i.e. strong left-lever preference.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.14",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan; m12.5",
+   "quote": null,
+   "table": "precis(m12.5), row a_actor[2], column Mean",
+   "note": null,
+   "where": "p374"
+  },
+  {
+   "claim": "Total per-actor intercepts a + a_actor in m12.4 are -0.71, 4.59, -1.02, -1.02, -0.71, 0.23, 1.76.",
+   "kind": "measured",
+   "source": null,
+   "metric": "total intercept actor 2",
+   "value": "4.59",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan; m12.4",
+   "quote": null,
+   "table": "code 12.22 output, second entry",
+   "note": "Printed output row: -0.71 4.59 -1.02 -1.02 -0.71 0.23 1.76",
+   "where": "p372, code 12.22"
+  },
+  {
+   "claim": "Three divergent iterations appeared when fitting m12.5; the author says they are safe to ignore at this stage and defers to the next chapter.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3",
+   "unit": "divergent iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan; m12.5",
+   "quote": "There were 3 divergent iterations during sampling.",
+   "table": null,
+   "note": null,
+   "where": "p373-374"
+  },
+  {
+   "claim": "n_eff varies widely in m12.5 because sigma_block spends time near its minimum of zero (n_eff 2079 for sigma_block).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2079",
+   "unit": "n_eff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzee lever-pull data (data(chimpanzees)), 7 actors, 6 blocks, binomial, map2stan",
+   "quote": null,
+   "table": "precis(m12.5), row sigma_block, column n_eff",
+   "note": null,
+   "where": "p374"
+  },
+  {
+   "claim": "Over-dispersed Poisson Kline model m12.6 uses 13 parameters for 10 societies but has about 5 effective parameters by WAIC.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "effective parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kline oceanic tools, 10 societies, varying intercept per society, iter=4000 chains=3",
+   "quote": "the effective number of parameters is about 5, not 13",
+   "table": null,
+   "note": null,
+   "where": "p383"
+  },
+  {
+   "claim": "HMC can handle tens of thousands of varying effect parameters, slowly.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "general statement",
+   "quote": "It can easily handle tens of thousands of varying effect parameters.",
+   "table": null,
+   "note": null,
+   "where": "p376"
+  },
+  {
+   "claim": "Exponential(1) prior is advised over half-Cauchy for variance components when there are few clusters (e.g. 5) or floor/ceiling effects.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overthinking box",
+   "quote": "if you only have 5 clusters, then that’s something like trying to estimate a variance with 5 data points",
+   "table": null,
+   "note": null,
+   "where": "p363-364"
+  },
+  {
+   "claim": "Café robot example: prior mean 5 min, sd 1, first observation 4 min (illustration only).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Introductory thought experiment",
+   "quote": "After ordering a cup of coffee at the first café, the robot observes a waiting time of 4 minutes.",
+   "table": null,
+   "note": null,
+   "where": "p355"
+  }
+ ],
+ "limits": [
+  "Frequentist-free but software-specific: all code uses rethinking 1st edition map2stan, which has been superseded (ulam in later editions).",
+  "Simulation uses one parameter setting (alpha=1.4, sigma=1.5, 60 ponds) and a single draw; Fig 12.3 gives no numeric errors.",
+  "Divergent iterations are flagged and deferred to chapter 13 (non-centred parameterisation).",
+  "Half-Cauchy sigma priors may be problematic with few clusters or floor/ceiling effects; the author suggests Exponential(1).",
+  "MAP/quadratic approximation cannot fit multilevel models; needs MCMC.",
+  "Gaussian population of varying effects is a convention/entropy choice; practice 12M3 explores Cauchy."
+ ],
+ "practices": [
+  "Make multilevel regression the default; start multilevel and drop it if unnecessary (p356).",
+  "Learn the prior for cluster intercepts from the data: alpha_cluster ~ Normal(alpha, sigma) with hyperpriors (p358-359).",
+  "Fit multilevel models with MCMC (map2stan), not map (p359, Overthinking p360).",
+  "Use Exponential(1) instead of half-Cauchy for sigma when few clusters or ceiling/floor effects (p363-364).",
+  "Simulate data from the model with known parameters to check recovery and to compare estimators (p365-368).",
+  "Use as.integer for binomial size variables passed to Stan (p366-367).",
+  "Put the grand mean in the linear model and give varying intercepts mean zero; one mean per linear model only (p371-373).",
+  "Give each cluster type its own sigma; use sigma as a crude measure of cluster relevance (p373, 376).",
+  "Use contiguous integer cluster indices (p386, 12H1).",
+  "Do not expect posterior predictions to match raw data after shrinkage (p376-377).",
+  "For new clusters, simulate intercepts from Normal(0, sigma) per posterior sample; show both average-actor and marginal predictions (p378-381).",
+  "When two models have near-identical WAIC with dSE larger than the difference, retain and report both (p376).",
+  "Use a varying intercept per observation to handle over-dispersion in Poisson/binomial models (p363, 382).",
+  "Check multiple chains, n_eff and Rhat (p372, 374)."
+ ],
+ "terms": [
+  {
+   "term": "anterograde amnesia (models)",
+   "definition": "models forget everything about previous clusters as they move between them; the parameters are independent",
+   "where": "p355"
+  },
+  {
+   "term": "varying intercepts",
+   "definition": "the simplest kind of varying effects: a unique intercept per cluster with an adaptively learned common prior",
+   "where": "p358"
+  },
+  {
+   "term": "hyperparameters",
+   "definition": "parameters for parameters; their priors are hyperpriors",
+   "where": "p359"
+  },
+  {
+   "term": "complete pooling",
+   "definition": "assumes the population of clusters is invariant: one common intercept; equivalent to zero variation among clusters",
+   "where": "p364"
+  },
+  {
+   "term": "no pooling",
+   "definition": "each cluster tells nothing about any other; equivalent to assuming infinite variation among clusters",
+   "where": "p365"
+  },
+  {
+   "term": "partial pooling",
+   "definition": "an adaptive regularizing prior producing estimates less underfit than the grand mean and less overfit than no pooling",
+   "where": "p365"
+  },
+  {
+   "term": "shrinkage",
+   "definition": "estimates pulled towards the population mean as a result of regularization",
+   "where": "p362"
+  },
+  {
+   "term": "cross-classified model",
+   "definition": "clusters not nested (actors not nested within blocks); hierarchical when nested; specification is typically the same",
+   "where": "p371"
+  },
+  {
+   "term": "focus",
+   "definition": "which level of the model a parameter makes direct predictions for",
+   "where": "p381-382"
+  },
+  {
+   "term": "marginal of actor",
+   "definition": "predictions that average over uncertainty among actors",
+   "where": "p380"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Statistical Rethinking ch. 6 (underfitting/overfitting, regularization)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "adaptive regularization reframes Ch 6 trade-off",
+   "quote": null
+  },
+  {
+   "work": "Statistical Rethinking ch. 10 (chimpanzees m10.4, Oceanic Kline societies)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "data reused for multilevel versions",
+   "quote": null
+  },
+  {
+   "work": "Statistical Rethinking ch. 11 (beta-binomial, gamma-Poisson over-dispersion; Trolley data)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "varying intercepts as alternative to over-dispersion models",
+   "quote": null
+  },
+  {
+   "work": "Stan / rethinking map2stan",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "HMC sampler used for all multilevel fits",
+   "quote": null
+  },
+  {
+   "work": "Bangladesh Fertility Survey 1988",
+   "year": 1988,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "practice problem 12H1, 1934 women, 60 districts",
+   "quote": null
+  },
+  {
+   "work": "Reed frog tadpole mortality experiments (footnote 156, not printed in extracted text)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "reedfrogs data; citation text absent from PDF",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 12.1",
+   "caption": "Empirical proportions of survivors in each tadpole tank vs multilevel estimates; dashed line is overall average",
+   "page": "book 361 / PDF 7",
+   "why": "shows shrinkage varying with tank size and distance from the mean"
+  },
+  {
+   "figure": "Fig 12.2",
+   "caption": "The inferred population of survival across tanks. Left: 100 Gaussian distributions of log-odds; Right: 8000 simulated tank probabilities",
+   "page": "book 363 / PDF 9",
+   "why": "propagates uncertainty in alpha and sigma into the population"
+  },
+  {
+   "figure": "Fig 12.3",
+   "caption": "Error of no-pooling and partial pooling estimates, for the simulated tadpole ponds",
+   "page": "book 369 / PDF 15",
+   "why": "core evidence that partial pooling wins, most in small ponds"
+  },
+  {
+   "figure": "Fig 12.4",
+   "caption": "Left: posterior means and 89% HDI for m12.5. Right: posterior of sigma by actor and block",
+   "page": "book 375 / PDF 21",
+   "why": "shows actor variation dwarfs block variation"
+  },
+  {
+   "figure": "Fig 12.5",
+   "caption": "Posterior predictive distributions for chimpanzees varying-intercept model m12.4: average actor, marginal of actor, 50 simulated actors",
+   "page": "book 380 / PDF 26",
+   "why": "distinguishes average-cluster vs new-cluster predictions"
+  },
+  {
+   "figure": "Fig 12.6",
+   "caption": "Posterior predictions for the over-dispersed Poisson island model m12.6; 67/89/97% intervals",
+   "page": "book 384 / PDF 30",
+   "why": "over-dispersion widens the prediction envelope"
+  }
+ ],
+ "code": [
+  {
+   "where": "p359, code 12.3",
+   "snippet": "m12.2 <- map2stan(\n alist(\n surv ~ dbinom( density , p ) ,\n logit(p) <- a_tank[tank] ,\n a_tank[tank] ~ dnorm( a , sigma ) ,\n a ~ dnorm(0,1) ,\n sigma ~ dcauchy(0,1)\n ), data=d , iter=4000 , chains=4 )",
+   "verbatim": true
+  },
+  {
+   "where": "p363-364 Overthinking",
+   "snippet": "sigma ~ Exponential(1)  (dexp(1) in R code) in place of HalfCauchy(0,1)",
+   "verbatim": false
+  },
+  {
+   "where": "p367, code 12.8-12.11",
+   "snippet": "a_pond <- rnorm( nponds , mean=a , sd=sigma )\ndsim$si <- rbinom( nponds , prob=logistic(dsim$true_a) , size=dsim$ni )",
+   "verbatim": true
+  },
+  {
+   "where": "p373, code 12.23",
+   "snippet": "logit(p) <- a + a_actor[actor] + a_block[block_id] + (bp + bpc*condition)*prosoc_left,\na_actor[actor] ~ dnorm( 0 , sigma_actor ),\na_block[block_id] ~ dnorm( 0 , sigma_block ),",
+   "verbatim": true
+  },
+  {
+   "where": "p379, code 12.35-12.36",
+   "snippet": "a_actor_sims <- rnorm(7000,0,post$sigma_actor)\na_actor_sims <- matrix(a_actor_sims,1000,7)\nlink.m12.4 <- link( m12.4 , n=1000 , data=d.pred , replace=list(a_actor=a_actor_sims) )",
+   "verbatim": true
+  },
+  {
+   "where": "p383, code 12.39",
+   "snippet": "log(mu) <- a + a_society[society] + bp*logpop,\na_society[society] ~ dnorm(0,sigma_society),",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Printing slip p386 12H1: 'By the year 200, a typical Bengali woman' (should be 2000).",
+  "Text says 'sort of 100 Gaussian ... 100 first samples', fine. Fig 12.1 caption says 35-tadpole large tanks; page 362 text agrees. No contradiction.",
+  "Code 12.35 draws rnorm(7000,0,post$sigma_actor) with 8000-long sigma vector: recycled to 7000, while link uses n=1000; works but pairing of sigma and intercept samples is by recycling.",
+  "m12.5 code uses 'bpc' while m12.4 uses 'bpC'; harmless naming difference.",
+  "Section/table map from extract.py was empty (book chapter); nothing garbled. Text extraction otherwise clean; figure axes appear as stray numbers.",
+  "No embedded instructions found.",
+  "Footnote/endnote text (156 etc.) is not in the PDF, so the reed frog source citation is unrecorded."
+ ]
+}

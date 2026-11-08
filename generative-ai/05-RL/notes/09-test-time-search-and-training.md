@@ -118,7 +118,7 @@ After 4.9 million self-play games in about 3 days it reached Elo 4,308, against 
 
 **Search and training feed each other.** Search trajectories are rollouts, so rLLM can treat
 each tree node as a step and train the policy to search better. Search can also generate
-SFT data (keep the best leaf), which is how [distillation](06-data-and-environments.md#data-engineering-for-post-training)
+SFT data (keep the best leaf), which is how [distillation](06b-dataset-engineering-for-post-training.md#data-engineering-for-post-training)
 recipes often start.
 - **rStar-Math** runs this loop for four rounds. MCTS writes step-by-step math solutions
   whose steps are Python code, and any step whose code fails is dropped. Each step's

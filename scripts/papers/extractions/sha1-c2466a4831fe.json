@@ -1,0 +1,266 @@
+{
+ "schema": 1,
+ "key": "sha1:c2466a4831fe",
+ "pdf": "data-science/sources/text-analytics-with-python/ch07-semantic-sentiment-analysis.pdf",
+ "bib": {
+  "title": "Text Analytics with Python, Chapter 7: Semantic and Sentiment Analysis",
+  "authors": ["Dipanjan Sarkar"],
+  "first_author": "Sarkar",
+  "year": 2016,
+  "venue": "Apress, 1st ed. (book chapter; DOI 10.1007/978-1-4842-2388-8_7)",
+  "arxiv": null,
+  "doi": "10.1007/978-1-4842-2388-8_7"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 136948,
+  "chars_total": 136948,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "Can we analyze and understand the meaning and sentiment behind a body of text, using WordNet, word sense disambiguation, NER, logic, supervised classifiers and sentiment lexicons?",
+ "hypothesis": null,
+ "contributions": [
+  "WordNet synsets and lexical relations explored through NLTK",
+  "Lesk word sense disambiguation, NLTK and Stanford NER on one Wikipedia paragraph, propositional and first-order logic with theorem provers",
+  "Sentiment on 50,000 IMDb reviews: one SVM against SentiWordNet, VADER and Pattern lexicons, with mood and modality"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "WordNet holds over 155,000 words in more than 117,000 synsets.",
+   "kind": "reported",
+   "source": "Princeton WordNet (wordnet.princeton.edu)",
+   "metric": "words",
+   "value": "155,000",
+   "unit": "words",
+   "setup": "WordNet database as described by the book (version not stated)",
+   "quote": "The WordNet database consists of over 155,000 words, represented in more than",
+   "note": "Companion quote: 117,000 synsets, and contains over 206,000 word-sense pairs.",
+   "where": "p4"
+  },
+  {
+   "claim": "WordNet's tree.n.01 has 180 direct hyponyms.",
+   "kind": "measured",
+   "metric": "hyponym count",
+   "value": "180",
+   "unit": "synsets",
+   "setup": "nltk wordnet, wn.synsets('tree')[0].hyponyms()",
+   "quote": "Total Hyponyms: 180",
+   "where": "p8"
+  },
+  {
+   "claim": "Path similarity ranks lion and tiger as the closest pair of five animal and plant synsets, at 0.33.",
+   "kind": "measured",
+   "metric": "path_similarity lion/tiger",
+   "value": "0.33",
+   "unit": "score in [0, 1]",
+   "setup": "synsets tree.n.01, lion.n.01, tiger.n.02, cat.n.01, dog.n.01; shortest is-a path; tree against others 0.07 to 0.13",
+   "quote": "value of 0.33, followed by their semantic similarity with",
+   "note": "Companion: cat 0.25 with lion and tiger, dog 0.17 with lion and tiger, cat/dog 0.20.",
+   "where": "p12"
+  },
+  {
+   "claim": "Lesk picks the right sense for fruit (two sentences) and lead (metal, actor, verb) in the book's examples.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "setup": "nltk.wsd.lesk with word_tokenize(sentence.lower()) and a POS argument; five hand-picked sentences, all shown correct, no failure case reported",
+   "quote": null,
+   "note": "Only successes are shown; no accuracy figure.",
+   "where": "p12-13"
+  },
+  {
+   "claim": "On one Wikipedia paragraph about Bayern Munich, Stanford NER (3-class CRF) gave 9 entities with no misclassification, the NLTK chunker gave 14 rows with several errors; the author says this does not make the Stanford tagger better in general.",
+   "kind": "measured",
+   "metric": null,
+   "value": null,
+   "setup": "one paragraph of about 110 words; nltk.ne_chunk against StanfordNERTagger english.all.3class.distsim.crf.ser.gz (stanford-ner-2014-08-27); judged by eye, no gold labels",
+   "quote": null,
+   "note": "NLTK chunker labelled Bayern as PERSON, Munich as ORGANIZATION, and Overall as GPE.",
+   "where": "p15-17"
+  },
+  {
+   "claim": "The book's IMDb sentiment set is 50,000 reviews, split 35,000 train and 15,000 test.",
+   "kind": "measured",
+   "metric": "split",
+   "value": "35,000",
+   "unit": "reviews (train)",
+   "setup": "IMDb reviews (Maas et al.) pooled into movie_reviews.csv; first 35,000 rows train, remaining 15,000 test (7510 positive, 7490 negative); eight fixed sample reviews from the test set",
+   "quote": "We have taken a total of 35,000 reviews out of the 50,000 to be our training dataset",
+   "where": "p33"
+  },
+  {
+   "claim": "The SVM trained on TF-IDF unigrams reaches 89% accuracy and 0.89 F1 on the 15,000 test reviews, the best of the four models.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "0.89",
+   "unit": "fraction",
+   "setup": "normalize_corpus(lemmatize=True, only_text_chars=True); TfidfVectorizer unigrams, min_df=0.0, max_df=1.0; SGDClassifier(loss='hinge', n_iter=200); test 15,000 reviews",
+   "quote": "We have an average sentiment prediction accuracy of 89 percent, which is really good if",
+   "note": "Precision 0.88, recall 0.90, F1 0.89 for positive class; confusion matrix actual positive 6770/740, actual negative 912/6578.",
+   "where": "p37"
+  },
+  {
+   "claim": "SentiWordNet (first synset per POS-tagged token, sum pos minus neg over token count, threshold 0) reaches only 59% accuracy because it labels most negative reviews positive.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "0.59",
+   "unit": "fraction",
+   "setup": "same 15,000 test reviews, no training; positive recall 0.92 but negative recall 0.26",
+   "quote": "Accuracy: 0.59",
+   "note": "Text says 'around 60%' accuracy and F1 of 70%; F1 0.70 is for the positive class only, the weighted average is 0.55.",
+   "where": "p46"
+  },
+  {
+   "claim": "SentiWordNet misclassified 5510 of 7490 negative reviews as positive.",
+   "kind": "measured",
+   "metric": "false positives",
+   "value": "5510",
+   "unit": "reviews of 7490",
+   "setup": "SentiWordNet on the 15,000 test reviews",
+   "quote": "positive, but we incorrectly classify 5510/7490 negative movie reviews as",
+   "note": "The author suggests relaxing the threshold from 0 to 0.1 or higher.",
+   "where": "p46"
+  },
+  {
+   "claim": "The VADER lexicon at threshold 0.1 reaches about 70% accuracy and F1 near 75%.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "0.7",
+   "unit": "fraction",
+   "setup": "nltk SentimentIntensityAnalyzer, compound >= 0.1 is positive, 15,000 test reviews; negative recall 0.54 (4080 of 7490)",
+   "quote": "around 70 percent and an F1-score close to 75 percent, which is definitely better than our",
+   "note": "Table prints Accuracy 0.7 and positive-class F1 0.74.",
+   "where": "p51"
+  },
+  {
+   "claim": "The Pattern lexicon at threshold 0.1 is the best unsupervised model at 77% accuracy and 77% F1, with balanced classes.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": "0.77",
+   "unit": "fraction",
+   "setup": "pattern.en sentiment() polarity >= 0.1 is positive, 15,000 test reviews; confusion matrix positive 5958/1552, negative 1924/5566",
+   "quote": "accuracy of 77 percent and an average F1-score of 77 percent for this model. Although",
+   "where": "p53"
+  },
+  {
+   "claim": "Ordering of the four models on the test set: SVM 0.89 > Pattern 0.77 > VADER 0.70 > SentiWordNet 0.59; lexicons have high recall and low precision on the positive class.",
+   "kind": "measured",
+   "metric": "accuracy",
+   "value": null,
+   "setup": "Figure 7-3 bar chart and table (image, values not in the text layer); the text says the SVM is best and Pattern best among lexicons",
+   "quote": null,
+   "note": "Figure values read from the four separate result blocks, not the figure.",
+   "where": "p57"
+  },
+  {
+   "claim": "On the eight sample reviews the lexicons and the SVM disagree with the full-test ranking: SentiWordNet got 8 of 8 right while the SVM and VADER got 6 of 8 and Pattern 7 of 8.",
+   "kind": "measured",
+   "metric": "sample reviews correct",
+   "value": null,
+   "setup": "eight fixed test reviews (indices 100, 5817, 7626, 7356, 1008, 7155, 3533, 13010); counts derived by reading the printed predictions",
+   "quote": null,
+   "note": "The author says 'we were able to predict the sentiment correctly for all our sampled reviews as compared to the supervised learning technique', then SentiWordNet scores 59% on the full set, which shows eight samples mislead.",
+   "where": "p38-p45"
+  },
+  {
+   "claim": "AFINN-111 has 2477 words and phrases; Bing Liu's lexicon has over 6800 words (about 2000+ positive, 4800+ negative).",
+   "kind": "reported",
+   "source": "Nielsen, A New ANEW; Jindal and Liu",
+   "metric": "lexicon size",
+   "value": "2477",
+   "unit": "words and phrases",
+   "setup": "AFINN-111",
+   "quote": "known as AFINN-111, consists of a total of 2477 words",
+   "where": "p41"
+  },
+  {
+   "claim": "VADER keeps 7500 of over 9000 candidate features, rated -4 to +4 by ten independent raters, keeping non-zero mean and standard deviation under 2.5.",
+   "kind": "reported",
+   "source": "Hutto and Gilbert, VADER",
+   "metric": "lexicon size",
+   "value": "7500",
+   "unit": "lexical features",
+   "setup": "VADER lexicon as described by the book",
+   "quote": "which it was further curated to 7500 lexical features in this lexicon with proper validated",
+   "where": "p48"
+  },
+  {
+   "claim": "A threshold of 0.1 on the VADER compound score and the Pattern polarity was chosen by trying values on the test data, not on a held-out set.",
+   "kind": "claim",
+   "metric": "threshold",
+   "value": "0.1",
+   "unit": "score",
+   "setup": "VADER and Pattern on IMDb test reviews",
+   "quote": "A threshold of 0.1",
+   "note": "Text for VADER: 'seemed to work best on an average'; for Pattern 'based on several experiments and recommendations from the official documentation'. The selecting data is not named.",
+   "where": "p48, p50"
+  },
+  {
+   "claim": "Pattern's modality score runs 0 to 1; above 0.5 is factual with high certainty, below 0.5 is wishes and hopes; mood returns indicative, imperative, conditional or subjunctive.",
+   "kind": "claim",
+   "metric": null,
+   "value": null,
+   "setup": "pattern.en mood() and modality() on eight reviews; 'I hope this group...' gave subjunctive and -0.25, 'Add this little gem...' gave imperative and 1.0",
+   "quote": "a whole. This value is a number that ranges between 0 and 1. Values > 0.5 indicate",
+   "where": "p48-49, p54-55"
+  }
+ ],
+ "limits": [
+  "No uncertainty, seeds or repeated runs for any sentiment number; one split of one dataset.",
+  "The 35,000/15,000 split is the first 35,000 rows of a pooled 50,000 file; the original IMDb 25k/25k split is not used, and row order is not described.",
+  "Lexicon thresholds were chosen on the test data, so lexicon scores are optimistic.",
+  "The NER comparison is one paragraph judged by eye with no gold labels; Lesk is shown only on examples it gets right.",
+  "The author concedes that sentiment labels overlap and warns against chasing a perfect model.",
+  "Dated: Python 2 code (print statements, HTMLParser), SGDClassifier n_iter (now max_iter), Stanford NER 2014 jar via Java, no neural or transformer models, WordNet 3.0-era NLTK."
+ ],
+ "practices": [
+  "Reuse the text-classification workflow of Chapter 4 (normalize, vectorize with the training vectorizer, fit, predict, evaluate) for sentiment (Supervised ML section).",
+  "Report accuracy, precision, recall, F1, the confusion matrix and the per-class report together, not one or two metrics (Comparing Model Performances).",
+  "Do not assume the best model here is best elsewhere: it depends on the data (Comparing Model Performances).",
+  "Use lexicons when no labelled data exists (Unsupervised Lexicon-based Techniques).",
+  "Tune the sentiment threshold, for example raise SentiWordNet's from 0 to 0.1 or higher, when predictions skew to one class (SentiWordNet section).",
+  "Train your own NER tagger on a tagged corpus matched to your text rather than assuming a stock tagger fits (Named Entity Recognition)."
+ ],
+ "terms": [
+  {"term": "synset", "definition": "a set or collection of synonyms that are interchangeable and revolve around a specific concept", "where": "p3"},
+  {"term": "entailment", "definition": "an event or action that logically involves or is associated with some other action or event", "where": "p6"},
+  {"term": "word sense disambiguation", "definition": "Identifying the correct sense or semantics of a word based on its usage", "where": "p12"},
+  {"term": "Lesk algorithm", "definition": "return the synset with the maximum number of overlapping words between the context sentence and the different definitions from each synset", "where": "p12"},
+  {"term": "named entity recognition", "definition": "identify and segment named entities and classify them under predefined classes (entity chunking/extraction)", "where": "p14"},
+  {"term": "sentiment analysis", "definition": "the process of using NLP, lexical resources, linguistics and ML to extract subjective and opinion related information and compute the polarity expressed by a text document", "where": "p29"},
+  {"term": "modality", "definition": "the degree of certainty expressed by the text as a whole, a number between 0 and 1", "where": "p48"},
+  {"term": "mood", "definition": "INDICATIVE, IMPERATIVE, CONDITIONAL or SUBJUNCTIVE as returned by pattern's mood()", "where": "p48"}
+ ],
+ "lineage": [
+  {"work": "WordNet (Miller, Princeton)", "year": 1985, "arxiv": null, "relation": "uses-data", "note": "lexical database and synsets via nltk", "quote": null},
+  {"work": "Lesk algorithm (M. E. Lesk)", "year": 1986, "arxiv": null, "relation": "uses-method", "note": "dictionary-overlap word sense disambiguation", "quote": null},
+  {"work": "Stanford NER (CRF tagger, stanford-ner-2014-08-27)", "year": 2014, "arxiv": null, "relation": "evaluates", "note": "3-class CRF tagger compared with nltk ne_chunk", "quote": null},
+  {"work": "Maas et al., Learning Word Vectors for Sentiment Analysis (IMDb)", "year": 2011, "arxiv": null, "relation": "uses-data", "note": "50,000 reviews, positive over six stars, negative under five", "quote": null},
+  {"work": "Nielsen, A New ANEW (AFINN-111)", "year": 2011, "arxiv": null, "relation": "evaluates", "note": "lexicon described, afinn wrapper example", "quote": null},
+  {"work": "Jindal and Liu, Identifying Comparative Sentences in Text Documents (Bing Liu lexicon)", "year": null, "arxiv": null, "relation": "related", "note": "lexicon described, not run", "quote": null},
+  {"work": "Wilson, Wiebe and Hoffmann, Recognizing Contextual Polarity in Phrase-Level Sentiment Analysis (MPQA)", "year": 2005, "arxiv": null, "relation": "related", "note": "subjectivity lexicon described, not run", "quote": null},
+  {"work": "SentiWordNet", "year": null, "arxiv": null, "relation": "evaluates", "note": "59% accuracy on the test set", "quote": null},
+  {"work": "Hutto and Gilbert, VADER", "year": 2014, "arxiv": null, "relation": "evaluates", "note": "70% accuracy on the test set", "quote": null},
+  {"work": "CLiPS pattern", "year": null, "arxiv": null, "relation": "evaluates", "note": "77% accuracy; mood and modality", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 7-1", "caption": "Common named entities with examples", "page": 14, "why": "Table of NER classes (PERSON, ORGANIZATION, GPE, LOCATION, FACILITY and so on) with examples; resolves the GPE/LOCATION overlap."},
+  {"figure": "Fig 7-2", "caption": "Different types of mood and their examples (figure courtesy of CLiPS pattern)", "page": 48, "why": "Table of the four moods with usage and examples."},
+  {"figure": "Fig 7-3", "caption": "Comparison of sentiment analysis model performances", "page": 57, "why": "One table and bar chart of accuracy, precision, recall and F1 for SVM, SentiWordNet, VADER and Pattern."}
+ ],
+ "code": [
+  {"where": "p11", "snippet": "similarities.append([round(entity.path_similarity(compared_entity), 2) for compared_entity in entities])", "verbatim": true},
+  {"where": "p35", "snippet": "svm = SGDClassifier(loss='hinge', n_iter=200)", "verbatim": true},
+  {"where": "p43", "snippet": "final_score = pos_score - neg_score\nnorm_final_score = round(float(final_score) / token_count, 2)\nfinal_sentiment = 'positive' if norm_final_score >= 0 else 'negative'", "verbatim": true},
+  {"where": "p48", "snippet": "scores = analyzer.polarity_scores(review)\nagg_score = scores['compound']\nfinal_sentiment = 'positive' if agg_score >= threshold else 'negative'", "verbatim": true},
+  {"where": "p26", "snippet": "rule = read_expr('all x. all y. (jumps_over(x, y) -> -jumps_over(y, x))')", "verbatim": true}
+ ],
+ "problems": [
+  "Figure 7-3 values are an image and not in the text layer; the page numbers in this file are PDF page numbers from the text cache and figure captions, with a few code and quote page labels estimated from the book's printed page numbers (chapter starts printed p319, PDF p1).",
+  "The text layer breaks long lines and inserts double spaces, so quotes are short single-line fragments."
+ ]
+}

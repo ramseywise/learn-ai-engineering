@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020)"
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 5)
   - https://arxiv.org/abs/2112.09332
   - https://arxiv.org/abs/2503.09516
   - https://arxiv.org/abs/2503.23513
@@ -141,6 +142,13 @@ agent value functions that sum (or combine) to give the global Q-value.
 - **Nash-Q:** Generalizes Q-learning to Nash equilibria in zero-sum games
 - **Self-play:** Agents are trained against copies of themselves — used for games
   (AlphaGo, AlphaStar) and increasingly for LLM red-teaming
+
+**Equilibria are a vocabulary, not a goal.** Murphy's chapter (after Albrecht et al.) makes the point with two payoff tables (*RL: A Comprehensive Overview*, ch. 5, Sec. 5.2). In Prisoner's Dilemma the only Nash equilibrium (defect, defect) returns (−3, −3), worse than the (−1, −1) of cooperating, which is not an equilibrium. In Chicken (stay/leave, payoffs 0,0 / 7,2 / 2,7 / 6,6) the mixed Nash equilibrium returns 4.66 to each agent, and a *correlated* equilibrium, where a coordinator picks (L,L), (S,L) or (L,S) with probability 1/3 each, returns 5 because it never recommends the crash (S,S). Fig. 5.4 plots every joint policy: the mixed equilibrium sits inside the Pareto frontier, and the only welfare- and fairness-optimal point, (6,6), is not an equilibrium at all. Two limits follow for MARL training: equilibria can be many and differ in value, and an ε-Nash equilibrium can be far from a true one (his 2×2 example with ε = 1 admits two very different outcomes). Self-play converges to Nash only for perfect-information zero-sum games and can cycle otherwise. His own LLM red-team self-play example (Sec. 6.2.5.4) scores both sides with a frozen reward model.
+
+![Chicken: the discretized joint-return space with Pareto-optimal points and the deterministic and mixed Nash equilibria; the mixed equilibrium is interior.](../sources/images/murphy-rl-fig5-4.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 5.4, from Albrecht et al. (2024), used with permission*
+
+He also reports (from Rudolph et al., 2025, which I have not read) that PPO's weak showing on two-player zero-sum games was an untuned entropy penalty (they needed roughly 0.05–2.0, against 0–0.01 in single-agent PPO), and that tuned PPO and magnetic mirror descent reached the lowest exploitability among five deep methods on small imperfect-information games. His "policy gradient hypothesis" is the same claim. The chapter gives LLM-agent MARL only a three-sentence pointer and has nothing on RAG.
 
 ### MARL challenges
 

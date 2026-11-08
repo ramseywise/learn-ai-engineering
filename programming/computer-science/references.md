@@ -38,6 +38,7 @@ These weren't read either, so nothing here rests on them. Where a chapter mentio
 | Jeff Erickson, [*Algorithms*](https://jeffe.cs.illinois.edu/teaching/algorithms/) | Parts: recursion trees, divide and conquer, the remark on randomised quicksort, backtracking, dynamic programming as smart recursion, the greedy scheduling exchange argument, whatever-first search, topological sort, Dijkstra | 01, 03 |
 | Lehman, Leighton, Meyer, [*Mathematics for Computer Science*](https://courses.csail.mit.edu/6.042/spring18/mcs.pdf), the MIT 6.042 text | §14.1 on sums, §14.7 on asymptotic notation, §22.4 on recurrences | 01 |
 | Ulrich Drepper, [*What Every Programmer Should Know About Memory*](https://www.akkadia.org/drepper/cpumemory.pdf), 2007 | Parts: the cache sections and their measurement method | 04 |
+| ★ Jake VanderPlas, *Python Data Science Handbook* (O'Reilly, 2016, first edition, inferred from the library versions in its output), ch. 2. Chapter PDF in [data-analytics/sources/python-data-science-handbook/](../../data-analytics/sources/python-data-science-handbook/) | Broadcasting rules and Fig. 2-4, and all-pairs distance by broadcasting plus `argpartition`. Folded in as: ch. 2 → [04](notes/04-numbers-and-memory.md#broadcasting-stretching-without-copying). Notes cite it as `(*Python Data Science Handbook*, ch. 2)` | 04 |
 
 ## Core papers
 

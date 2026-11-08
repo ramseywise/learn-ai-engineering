@@ -4,6 +4,7 @@ sources:
   - "Martin Fowler, Code Smell (2006) — https://martinfowler.com/bliki/CodeSmell.html"
   - "John Ousterhout and Robert C. Martin, A Philosophy of Software Design vs Clean Code (2024-25) — https://github.com/johnousterhout/aposd-vs-clean-code"
   - "Sjøberg, Yamashita, Anda, Mockus, Dybå, Quantifying the Effect of Code Smells on Maintenance Effort, IEEE TSE 39(8), 2013 — https://doi.org/10.1109/TSE.2012.89"
+  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), chapters 4 and 10 (smells; ratio of feature code to model code) — chapter PDFs in data-engineering/sources/ml-engineering-in-action/"
   - "PEP 8, Style Guide for Python Code — https://peps.python.org/pep-0008/"
   - "Google Python Style Guide — https://google.github.io/styleguide/pyguide.html"
   - "Ruff rule C901 (complex-structure) — https://docs.astral.sh/ruff/rules/complex-structure/"
@@ -228,6 +229,20 @@ calls: 0 total: 0.7201
 ```
 
 The second call found nothing, yet still reported the same total. No line in `report`'s body looks wrong on its own.
+
+### Smells that show up in ML code
+
+Wilson's list of "nontoxic" smells in ML code bases (*Machine Learning Engineering in Action*, ch. 10, Table 10.1) mostly repeats the table above under ML names: too many parameters (a function taking `df, name, source, fitting, metric, score, value, rename, outliers, train, valid`), literals such as `profit = 0.72 * revenue`, comments that explain tangled code, and variable reuse (`pred` rebound from one model's predictions to another's, with a parquet write in between). The ones worth adding are specific to data work.
+
+| Smell | Why it bites in ML code |
+|---|---|
+| Copied boilerplate: feature-engineering code defined separately for training, test and inference | Wilson calls it shotgun surgery. A change made in two of the three places gives a model features at serving time that differ from the ones it trained on, with no error |
+| Default hyperparameters (`km = KMeans(); km.fit(train)`) | Defaults are rarely tuned, and an untuned model outside rapid prototyping is a sign nobody chose the setting |
+| Wildcard imports (`from scipy import *`) and mixed styles (`import numpy as np` beside `from numpy import add`) | Names collide across libraries, and a reader cannot tell where `add` came from |
+| SQL as one chain of joins with no CTEs, or with no indentation or capitalisation | One dependency chain means adding or dropping a column can take hours to trace |
+| Constant recasting (`age = int(age)` repeated) | Types do not change between lines; cast once, where the data enters |
+
+Swallowed exceptions are on his list of the five "deadly" problems and have an example in [errors and context managers](../../python/03-language-for-engineers/notes/04-errors-and-context-managers.md#blind-catches-hide-wrong-input). One more of his heuristics is a smell by his own account: "for the vast majority of ML solutions, the ratio of feature engineering code to model code should always be > 4x" (ch. 4). It is an experienced author's rule of thumb. The book gives no data or setup behind the 4, so use it as a prompt to look at where the code's effort went, not as a threshold. All of this is practitioner judgement, so the caution in the next section applies to every row.
 
 ## What the evidence says
 

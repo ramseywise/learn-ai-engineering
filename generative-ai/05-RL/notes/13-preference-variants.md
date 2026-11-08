@@ -275,4 +275,4 @@ point to the wrong step.
 
 ## Next
 
-Back to the sequence: [04 — Constitutional AI](04-constitutional-ai.md) keeps the optimizer and changes where preference labels come from. [06](06-data-and-environments.md#data-engineering-for-post-training) covers building the pairs these losses consume, and [03](03-preference-optimization.md#decision-framework) has the framework for choosing among them. Papers are indexed in [references.md](../references.md#core-papers).
+Back to the sequence: [04 — Constitutional AI](04-constitutional-ai.md) keeps the optimizer and changes where preference labels come from. [06](06b-dataset-engineering-for-post-training.md#data-engineering-for-post-training) covers building the pairs these losses consume, and [03](03-preference-optimization.md#decision-framework) has the framework for choosing among them. Papers are indexed in [references.md](../references.md#core-papers).

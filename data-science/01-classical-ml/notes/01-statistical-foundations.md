@@ -47,6 +47,8 @@ The rest of this note is about that last sentence. [The data generating process]
 | Regression | $y$ is a real number | [02](02-supervised-learning.md) |
 | Generalisation | Performance on data not used to fit | [04](04-model-evaluation.md) |
 
+ISLP opens with three data sets that map onto the table. Wage (3,000 men in the central Atlantic region) is regression, where the wage rises with age until about 60 and then falls. Smarket (daily S&P 500 direction from the previous five days' returns) is classification with a faint signal: the previous-day return looks almost the same on up and down days, yet QDA fitted on 2001 to 2004 called 2005 correctly about 60% of the time. NCI60 (6,830 gene measurements on 64 cancer cell lines) is unsupervised with $p \gg n$, where two principal components already suggest at least four clusters among the 14 cancer types, although the labels were not used for the plot (*ISLP*, ch. 1).
+
 Two questions come before any model, and Müller & Guido open with them (*Introduction to ML with Python*, ch. 1, "Knowing your task and knowing your data"):
 
 - What question am I answering, and is the data I have able to answer it?

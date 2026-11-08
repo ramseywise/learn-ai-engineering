@@ -16,6 +16,7 @@ sources:
   - https://doi.org/10.5555/1283383.1283494
   - https://arxiv.org/abs/1802.03426
   - https://doi.org/10.1371/journal.pcbi.1011288
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 12
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -83,6 +84,8 @@ The 2-D projection of breast cancer separates benign and malignant well, so even
 ### Eigenfaces: PCA as feature extraction
 
 On Labeled Faces in the Wild (3,023 images of 62 people, 87×65 px = 5,655 pixels; M&G keep at most 50 images per person, leaving 2,063), a 1-nearest-neighbour classifier on raw pixels scores 26.6% on a stratified split with `random_state=0`. After `PCA(n_components=100, whiten=True)` fitted on the training rows it scores 35.7%, against about 1.6% for chance over 62 people (*Introduction to ML with Python*, ch. 3, "Principal component analysis"). Distances between principal-component vectors are a better measure of face similarity than distances between pixels. Reconstructing a face from 10, 50, 100, 500 components shows coarse-to-fine detail.
+
+Scaling changes what PCA finds, not only how well. On ISLP's USArrests (50 US states, four variables with very different variances: Assault 6,945, UrbanPop 209.5, Rape 87.7, Murder 19.0), unscaled PCA puts almost all of PC1 on Assault, simply because it has the largest variance. Standardised to sd 1, PC1 explains 62.0% of the variance with roughly equal weight on the three crime variables (0.54, 0.58, 0.54) and 0.28 on urban population, PC2 explains 24.7% (87% together) and loads 0.87 on urban population, and the scree plot has its elbow after PC2 (*ISLP*, ch. 12). Each component is defined only up to sign, so compare loadings by magnitude, as the check above does.
 
 ### From scratch: Ng ex7
 
@@ -216,7 +219,7 @@ print(X7.shape, C.round(2).tolist(), np.bincount(idx))
 
 Ex7 then compresses a 128×128 bird photo by clustering its pixels' RGB values into 16 colours: each pixel stores a 4-bit index instead of 24 bits. That is **vector quantisation**: k-means as a decomposition where each point is represented by one component (its centre). M&G show that with many clusters (more than the input dimensions), k-means can be used as a feature expansion: 10 cluster distances make `two_moons` linearly separable.
 
-**Failure cases.** k-means assumes clusters are round, of similar size and similar density, because it only uses distance to the centre. It fails on stretched clusters, clusters of different density and non-convex shapes (`two_moons`). Results depend on initialisation, hence `n_init`.
+**Failure cases.** k-means assumes clusters are round, of similar size and similar density, because it only uses distance to the centre. It fails on stretched clusters, clusters of different density and non-convex shapes (`two_moons`). Results depend on initialisation, hence `n_init`: the objective has many local optima, and ISLP's six random starts on 150 simulated 2-D points with $K=3$ end at objective values of 235.8 (four of the six), 310.9 and 320.9. Its lab gets inertia 78.06 with `n_init=1` against 75.04 with `n_init=20` on 50 points, and the authors recommend 20 or 50 starts with a fixed `random_state` (*ISLP*, ch. 12).
 
 [Segmentation and RFM](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) puts k-means to work on a retailer's customers and asks whether its segments beat hand-drawn rules. [States and sequences](../../../data-analytics/06-applied-analyses/notes/08-states-and-sequences.md#clustering-into-journey-types) clusters customers by the order of what they did. There the input is a distance matrix and not a table of coordinates, so k-means is out and hierarchical clustering takes over.
 
@@ -246,6 +249,13 @@ print(linkage_array[-3:, 2].round(1))         # the last three merge distances
 ```text
 [ 12.4  51.2 144.9]
 ```
+
+A dendrogram is read on the vertical axis only. Two leaves that sit next to each other horizontally need not be similar, since the tree can be flipped at every fusion ($2^{n-1}$ orderings); closeness is the height at which two observations first join.
+
+![A complete-linkage dendrogram of nine points next to the points themselves: observation 9 joins the group of 2, 8, 5 and 7 at one height even though it is drawn next to 2](../../sources/images/islp-fig12-12.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 12.12*
+
+In the figure observation 9 looks close to 2 but fuses with 2, 8, 5 and 7 at the same height (about 1.8), and the scatter on the right confirms it is no nearer to 2 than to the others (*ISLP*, ch. 12, nine points, Euclidean distance, complete linkage). The same chapter prefers average or complete linkage to single (more balanced trees), warns that centroid linkage can invert, uses correlation rather than Euclidean distance when the shape of a profile matters more than its volume (shoppers' purchases), and shows that standardising each variable changes which shoppers cluster. It also says clustering is not robust: re-clustering after dropping a random subset of observations often changes the result, so vary the scaling and linkage and cluster subsets before believing a partition (*ISLP*, ch. 12).
 
 Sarkar uses the same Ward dendrogram to cluster movies by their descriptions in [NLP topic models](../../03-nlp/notes/03-topic-models-and-summarization.md).
 

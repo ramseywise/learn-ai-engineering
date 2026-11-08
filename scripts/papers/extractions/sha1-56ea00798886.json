@@ -1,0 +1,464 @@
+{
+ "schema": 1,
+ "key": "sha1:56ea00798886",
+ "pdf": "data-science/sources/text-analytics-with-python/ch04-text-classification.pdf",
+ "bib": {
+  "title": "Text Analytics with Python, Chapter 4: Text Classification",
+  "authors": [
+   "Dipanjan Sarkar"
+  ],
+  "first_author": "Sarkar",
+  "year": 2016,
+  "venue": "Apress (book chapter, 1st ed.)",
+  "arxiv": null,
+  "doi": "10.1007/978-1-4842-2388-8_4"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 116294,
+  "chars_total": 116294,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How is text classification formulated as supervised ML, and how do you build and evaluate a multi-class text classifier end to end with BoW, TF-IDF and word2vec features?",
+ "hypothesis": null,
+ "contributions": [
+  "Formal definition of text classification and the train/predict blueprint",
+  "From-scratch BoW, TF-IDF and (TF-IDF weighted) averaged word2vec feature extractors",
+  "Multinomial NB and SVM overview; accuracy/precision/recall/F1 worked example",
+  "20-class 20 Newsgroups case study with six models and error analysis"
+ ],
+ "method": {
+  "summary": "Book chapter with a 20 Newsgroups case study: normalise, extract BoW/TF-IDF/averaged-word2vec features, fit MultinomialNB and hinge-loss SGD SVM, evaluate on a 33% test split.",
+  "task": "20-class topic classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "20 Newsgroups",
+    "role": "both",
+    "size": "around 18,000 posts, 20 classes",
+    "split": "test_size=0.33, random_state=42 (text says 30 percent)",
+    "source": "sklearn fetch_20newsgroups(subset='all', shuffle=True, remove headers/footers/quotes)",
+    "preprocessing": "drop empty docs; expand contractions, POS-aware lemmatise, strip punctuation, remove NLTK stopwords"
+   }
+  ],
+  "models": [
+   {
+    "name": "MultinomialNB",
+    "role": "proposed",
+    "params": null,
+    "architecture": "naive Bayes",
+    "init_from": null,
+    "tokenizer": "nltk.word_tokenize",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "alpha": "inferred: 1, sklearn default; none given"
+    }
+   },
+   {
+    "name": "SGDClassifier(loss='hinge', n_iter=100) (linear SVM)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "linear SVM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gensim Word2Vec",
+    "role": "base",
+    "params": null,
+    "architecture": "word2vec",
+    "init_from": "trained on normalised training split",
+    "tokenizer": null,
+    "vocab": "min_count=30",
+    "layers": null,
+    "hidden": "size=500",
+    "heads": null,
+    "context": "window=100",
+    "other": {
+     "sample": "1e-3"
+    }
+   }
+  ],
+  "training": {
+   "objective": "hinge loss (SVM); NB MAP",
+   "optimizer": "SGD (SVM)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "n_iter=100",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "random_state=42 for the split only",
+   "other": {}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "(TP+TN)/all",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "precision, recall, F1",
+     "definition": "sklearn average='weighted'",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "MNB vs SVM; BoW vs TF-IDF vs averaged word2vec vs TF-IDF weighted word2vec"
+   ],
+   "protocol": "single split, no CV, no tuning"
+  },
+  "availability": {
+   "code": "normalization.py, feature_extractors.py, feature_extraction_demo.py in chapter code files",
+   "weights": null,
+   "data": "sklearn download"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "SVM (SGDClassifier hinge) on TF-IDF features is the best of six models on 20 Newsgroups",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 77,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; SGDClassifier(loss='hinge', n_iter=100); TfidfVectorizer min_df=1 l2 smooth_idf",
+   "note": null,
+   "where": "p.211",
+   "quote": "the SVM-based model built using TF-IDF features yielded the best results of 77"
+  },
+  {
+   "claim": "Multinomial NB on TF-IDF features reaches 0.72 accuracy and 0.70 weighted F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.72,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; MultinomialNB default (alpha=1)",
+   "note": null,
+   "where": "p.209-210",
+   "table": "p.209-210, MNB with tfidf features, Accuracy: 0.72 (Precision 0.78, Recall 0.72, F1 0.7)"
+  },
+  {
+   "claim": "Multinomial NB on bag-of-words counts reaches 0.67 accuracy, below its TF-IDF result",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.67,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; MultinomialNB default",
+   "note": null,
+   "where": "p.209",
+   "table": "p.209, MNB with bag of words features, Accuracy: 0.67 (Precision 0.72, Recall 0.67, F1 0.65)"
+  },
+  {
+   "claim": "SVM on bag-of-words counts reaches 0.61 accuracy, 0.62 weighted F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.61,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; SGDClassifier hinge n_iter=100",
+   "note": "F1 (0.62) exceeds accuracy (0.61); printed as such.",
+   "where": "p.209",
+   "table": "p.209, SVM with bag of words features, Accuracy: 0.61 (Precision 0.66, Recall 0.61, F1 0.62)"
+  },
+  {
+   "claim": "SVM on averaged word2vec features reaches 0.55 accuracy, 22 points below SVM on TF-IDF",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.55,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; word2vec trained on the normalised train split, size=500, window=100, min_count=30, sample=1e-3; SGDClassifier hinge",
+   "note": null,
+   "where": "p.210",
+   "table": "p.210, SVM with averaged word vector features, Accuracy: 0.55 (F1 0.52)"
+  },
+  {
+   "claim": "SVM on TF-IDF-weighted averaged word2vec reaches 0.53 accuracy, no better than plain averaging",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.53,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; same word2vec as above",
+   "note": null,
+   "where": "p.210",
+   "table": "p.210, SVM with tfidf weighted averaged word vector features, Accuracy: 0.53 (Precision 0.55, Recall 0.53, F1 0.52)"
+  },
+  {
+   "claim": "Worked metric example on 20 spam/ham emails: TP=5, FP=6, FN=5, TN=4 gives accuracy 0.45, precision 0.45, recall 0.5",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.45,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 emails, 10 spam 10 ham, spam positive; classifier predicted 11 spam, 9 ham",
+   "note": null,
+   "where": "p.202",
+   "quote": "Accuracy: 0.45"
+  },
+  {
+   "claim": "Worked example F1: sklearn prints 0.48 but hand computation from rounded precision/recall prints 0.47",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "F1",
+   "value": 0.48,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 20-email example",
+   "note": "Manually computed F1 score: 0.47 (uses rounded precision 0.45 and recall 0.5); the book does not comment on the gap.",
+   "where": "p.204",
+   "quote": "F1 score: 0.48"
+  },
+  {
+   "claim": "Errors fall between related classes: alt.atheism to soc.religion.christian, talk.politics.misc to talk.politics.guns, talk.religion.misc to soc.religion.christian",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 Newsgroups via fetch_20newsgroups(subset='all', remove headers/footers/quotes), empty docs dropped, train_test_split(test_size=0.33, random_state=42), text normalised (contractions, lemmatisation, special chars, stopwords); default hyperparameters, single run, weighted-average P/R/F1; SVM + TF-IDF confusion matrix (Fig 4-6)",
+   "note": null,
+   "where": "p.211",
+   "quote": "the misclassified categories are not vastly different from the actual correct category"
+  },
+  {
+   "claim": "Book states ensemble methods (random forests, gradient boosting) often perform poorly on text because they overfit; no experiment given",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "asserted in the classification algorithms section, not tested",
+   "note": null,
+   "where": "p.195",
+   "quote": "because they are very prone to overfitting"
+  }
+ ],
+ "limits": [
+  "Hyperparameter tuning is explicitly not done: 'the models we will be building work well with default hyperparameter configurations'.",
+  "Single train/test split, no cross-validation, no seeds or variance, no timing; only MNB and SGD hinge SVM compared (no logistic regression, trees or boosting experiments).",
+  "Code is Python 2 (print statements), sklearn.cross_validation, gensim size=, SGDClassifier n_iter, pattern.en: dated.",
+  "Text says test set is 30 percent and passes test_data_proportion=0.3, but prepare_datasets ignores it and uses test_size=0.33.",
+  "word2vec trained on the training split only with size=500, window=100, min_count=30; no pretrained vectors or contextual models.",
+  "No justification for dense features losing beyond reporting the numbers."
+ ],
+ "practices": [
+  "Remove headers, footers and quotes from 20 Newsgroups so the model does not overfit to email addresses or headers (p.204).",
+  "Apply identical normalisation and feature extraction in training and prediction; fit the vectoriser on training data only and reuse it on new documents (p.173, p.181).",
+  "Never tune against the holdout test set; tune on validation or cross-validation (p.194).",
+  "Inspect misclassified documents and the confusion matrix, then adjust feature extraction (p.211-214).",
+  "Multinomial NB takes non-negative features: counts or TF-IDF both work (p.196).",
+  "Be careful with random forests and gradient boosting on text (p.195)."
+ ],
+ "terms": [
+  {
+   "term": "text classification",
+   "definition": "the process of assigning text documents into one or more classes or categories, assuming that we have a predefined set of classes",
+   "where": "p.168"
+  },
+  {
+   "term": "content-based classification",
+   "definition": "priorities or weights are given to specific subjects or topics in the text content that would help determine the class of the document",
+   "where": "p.169"
+  },
+  {
+   "term": "request-based classification",
+   "definition": "influenced by user requests and is targeted towards specific user groups and audiences",
+   "where": "p.169"
+  },
+  {
+   "term": "binary / multi-class / multi-label",
+   "definition": "two classes; more than two classes with one prediction each; more than one predicted class per data point",
+   "where": "p.172"
+  },
+  {
+   "term": "Vector Space Model",
+   "definition": "a mathematical and algebraic model for transforming and representing text documents as numeric vectors of specific terms that form the vector dimensions",
+   "where": "p.178"
+  },
+  {
+   "term": "idf (as implemented)",
+   "definition": "idf(t) = 1 + log(C / (1 + df(t))) style smoothing with an imaginary document containing every term; tfidf rows L2-normalised",
+   "where": "p.182"
+  },
+  {
+   "term": "averaged word vector",
+   "definition": "sum of in-vocabulary word vectors divided by the number of matched words",
+   "where": "p.189"
+  },
+  {
+   "term": "TF-IDF weighted averaged word vector",
+   "definition": "each matched word vector weighted by its TF-IDF, summed, and divided by the sum of the weights",
+   "where": "p.191"
+  },
+  {
+   "term": "Laplace / Lidstone smoothing",
+   "definition": "alpha=1 is Laplace smoothing and alpha<1 is Lidstone smoothing for multinomial NB",
+   "where": "p.197"
+  },
+  {
+   "term": "hinge loss",
+   "definition": "max(0, 1 - y_i(w.x_i + b)); gives soft-margin SVM; used by sklearn SVC, LinearSVC, SGDClassifier(loss='hinge')",
+   "where": "p.198"
+  },
+  {
+   "term": "accuracy, precision, recall, F1",
+   "definition": "(TP+TN)/(TP+FP+FN+TN); TP/(TP+FP); TP/(TP+FN); 2PR/(P+R)",
+   "where": "p.202-204"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "word2vec (Google, 2013)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "averaged word vectors via gensim",
+   "quote": null
+  },
+  {
+   "work": "scikit-learn (CountVectorizer, TfidfVectorizer, MultinomialNB, SGDClassifier)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "all models and vectorisers",
+   "quote": null
+  },
+  {
+   "work": "20 Newsgroups",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "~18,000 posts, 20 topics via scikit-learn",
+   "quote": null
+  },
+  {
+   "work": "Sarkar, Text Analytics with Python ch. 3",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "reuses normalisation and contractions.py",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4-1",
+   "caption": "Conceptual overview of text classification",
+   "page": "book p.169 (PDF p.3)",
+   "why": "documents into a black box and out into classes"
+  },
+  {
+   "figure": "Fig 4-2",
+   "caption": "Blueprint for building an automated text classification system",
+   "page": "book p.173 (PDF p.7)",
+   "why": "training vs prediction paths sharing normalisation and feature extraction; best candidate"
+  },
+  {
+   "figure": "Fig 4-3",
+   "caption": "Two-class SVM depicting hyperplane and support vectors (courtesy: Wikipedia)",
+   "page": "book p.197 (PDF p.31)",
+   "why": "max-margin intuition"
+  },
+  {
+   "figure": "Fig 4-4",
+   "caption": "Multi-class SVM on three classes (courtesy: scikit-learn.org)",
+   "page": "book p.199 (PDF p.33)",
+   "why": "one-vs-rest on iris"
+  },
+  {
+   "figure": "Fig 4-5",
+   "caption": "A confusion matrix from a two-class classification problem",
+   "page": "book p.201 (PDF p.35)",
+   "why": "TP/FP/FN/TN layout"
+  },
+  {
+   "figure": "Fig 4-6",
+   "caption": "20-class confusion matrix for our SVM based model",
+   "page": "book p.211 (PDF p.45)",
+   "why": "shows religion and politics clusters confusing each other"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.190",
+   "snippet": "def average_word_vectors(words, model, vocabulary, num_features):\n    feature_vector = np.zeros((num_features,),dtype=\"float64\")\n    nwords = 0.\n    for word in words:\n        if word in vocabulary:\n            nwords = nwords + 1.\n            feature_vector = np.add(feature_vector, model[word])\n    if nwords:\n        feature_vector = np.divide(feature_vector, nwords)\n    return feature_vector",
+   "verbatim": true
+  },
+  {
+   "where": "p.208",
+   "snippet": "mnb = MultinomialNB()\nsvm = SGDClassifier(loss='hinge', n_iter=100)",
+   "verbatim": true
+  },
+  {
+   "where": "p.182",
+   "snippet": "idf(t) = 1 + log(C / (1 + df(t))), then L2 row normalisation; TfidfTransformer(norm='l2', smooth_idf=True, use_idf=True)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations garbled by PDF extraction (symbols on separate lines); read from surrounding prose.",
+  "Figure content (confusion matrix values) is image-only and not extracted.",
+  "No embedded instructions found."
+ ]
+}
