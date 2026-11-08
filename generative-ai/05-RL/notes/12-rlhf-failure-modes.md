@@ -1,6 +1,8 @@
 ---
 origin: web-authored
 sources:
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 16–17"
+  - "Murphy, \"Reinforcement Learning: A Comprehensive Overview\" (arXiv 2412.05265, 2024, preprint), ch. 1"
   - https://arxiv.org/abs/2307.15217 (Casper et al., open problems of RLHF)
   - https://arxiv.org/abs/2510.05024 (Inoculation prompting)
   - https://arxiv.org/abs/2309.14525 (LLaVA-RLHF, Fact-RLHF)
@@ -98,6 +100,12 @@ misgeneralize, because many reward functions fit the same finite data. And it is
 That includes confident wrong answers and sycophancy, because evaluators can be misled. Better data
 and bigger RMs shrink the gap without closing it, so plan detection and other safety layers around
 the hacks the policy will find.
+
+**The classical version of the problem.** Sutton and Barto's last chapters say the same thing before RLHF existed. Success "strongly depends on how well the reward signal frames the goal of the application's designer", and agents "can discover unexpected ways to make their environments deliver reward, some of which might be undesirable, or even dangerous" (*RL: An Introduction*, ch. 17, Sec. 17.4). They name hard and soft constraints, risk-sensitive policies and multiple objectives as mitigations (Sec. 17.6). The chapters have no experiments and predate LLMs, so treat what follows as framing, not evidence. Four points carry over:
+- **Well-meant extra rewards change behaviour.** "Augmenting the reward signal with well-intentioned supplemental rewards may lead the agent to behave differently from what is intended." The book's alternative puts the hint in the value function's initial value, `v̂(s,w) = wᵀx(s) + v₀(s)`, which Wiewiora (2003) showed equivalent to potential-based shaping (Ng et al., 1999). Murphy states the same result: `F = γΦ(s') − Φ(s)` leaves the optimal policy unchanged, while naive shaping can move it. His example is a soccer agent rewarded for ball contact that learns to toggle touching and untouching (*RL: A Comprehensive Overview*, ch. 1, Sec. 1.3.6.5). Both separate this from Skinner-style shaping, which changes the task as learning proceeds.
+- **Behaviour does not identify the reward.** A policy can be optimal for many reward signals, and every policy is optimal for a constant reward, so inverse RL cannot recover the designer's reward exactly (ch. 17, Sec. 17.4). The same ambiguity is Casper et al.'s point about reward models fitting finite labels.
+- **A learner with no grounding can get worse with practice.** Samuel's checkers program had no reward and no terminal grounding, so a constant value function satisfied its update, and self-play could degrade it. He reset the weight of largest magnitude to zero to prevent that (ch. 16, Sec. 16.2).
+- **Safety is needed during learning, not only at convergence.** "We will not know how closely the agent will fulfill our desire until its learning is complete" (ch. 17, Sec. 17.6), which is the case for a reward model scored only after the policy has already been optimised against it.
 
 **Inoculation prompting** is a cheap mitigation once you know which hack to expect. Write the
 exploit into the *training* prompt, for example "your code should only work on the provided test

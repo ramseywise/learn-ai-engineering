@@ -10,7 +10,7 @@ sources:
   - "Chang et al. 2026, MemCollab — https://arxiv.org/abs/2603.23234"
   - "Quek et al. 2026, MEMO: Memory as a Model — https://arxiv.org/abs/2605.15156"
   - "Qiao et al. 2026, Memory Intelligence Agent — https://arxiv.org/abs/2604.04503"
-  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 5"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 5, 11"
   - "Li et al. 2026, OCR-Memory — https://arxiv.org/abs/2604.26622"
   - "Xiao et al. 2026, Zero-Mem — https://arxiv.org/abs/2607.29377"
   - "Yu et al. 2026, Recuris — https://arxiv.org/abs/2608.24876"
@@ -89,6 +89,34 @@ Everything above stores text and reads it back. MEMO trains it into a model inst
 
 
 ---
+
+## Closing the loop: planner, scorer and the way it goes wrong
+
+Everything above learns by editing a store. The other route is a training loop around the agent. *Agentic Architectural Patterns* (ch. 11) names its stages Generate, Evaluate, Learn, Deploy: a planner produces candidate plans, a scorer ranks them, SFT or DPO pipelines tune a model on the ranking, and the new model ships. Its **co-evolution** variant tunes both sides in turn: the improved planner generates harder examples, those become new synthetic preference pairs, and the scorer is tuned on them with DPO, so the scorer does not stay easier than the planner.
+
+![Co-evolution cycle: planner v1 and scorer v1 produce and rate outputs, the planner is tuned, it generates harder examples, and the scorer is tuned on the resulting preference pairs](../sources/images/agentic-architectural-patterns-fig11-5.png)
+
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 11-5*
+
+Two things in the chapter are worth keeping, and one is a warning. The first is how it builds a preference pair: hold the source document fixed and change one variable (a good context against a degraded one), so that "chosen" and "rejected" differ only in the thing you want the model to learn. The second is a step-level metric for workflows, STEPScore, which scores a generated step list against a golden one on coverage and order. The book's prose describes recall and precision plus an out-of-order penalty; its code is a set-based F1, which ignores order, with 0.1 subtracted per mismatched position. A version that follows the code:
+
+```python
+def step_score(gen, gold, penalty=0.1):
+    g, r = set(gen), set(gold)
+    hit = len(g & r)
+    p = hit / len(g) if g else 0.0
+    rc = hit / len(r) if r else 0.0
+    f1 = 2 * p * rc / (p + rc) if p + rc else 0.0
+    misplaced = sum(a != b for a, b in zip(gen, gold))
+    return max(0.0, f1 - penalty * misplaced)
+
+gold = ["validate", "credit", "risk", "compliance", "decide"]
+# identical -> 1.0; two steps swapped -> 0.8; one middle step missing -> 0.69
+```
+
+The 0.69 shows the code's flaw: dropping a middle step shifts every later step, so a coverage error is also charged as an order error twice. The penalty of 0.1 is the authors' choice, not a calibrated value.
+
+The warning is the chapter's own failure list. Two models that grade and train each other can diverge or collude, so it asks for an external anchor (human review or a golden set) and for retraining in batches, not per output. It also concedes that synthetic data amplifies the generator's bias and that DPO can overfit and worsen hallucination. It offers no measurement that the loop improves anything: the one multiplier it gives, that a learning loop's training tokens "can easily reach 10x-100x" those of inference, is an uncited assertion. The code and prose also disagree in several places: the planner-scorer code scores by `len(solution)` over fixed slogans with no feedback step, the DPO snippet tunes a planner although the text says DPO trains the scorer, and the chapter says DPO avoids RL while its orchestrator calls `tune_planner_with_rl`. Treat it as vocabulary for the loop, and use the papers above for evidence.
 
 ## Building an experience store
 

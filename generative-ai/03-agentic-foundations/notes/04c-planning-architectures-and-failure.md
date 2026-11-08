@@ -12,7 +12,7 @@ sources:
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4, 11"
-  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 3, 5, 6, 7"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 3, 5, 6, 7, 13, 14"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
   - "Huang et al. 2024, Understanding the planning of LLM agents: A survey — https://arxiv.org/abs/2402.02716"
   - "Yao et al. 2023, Tree of Thoughts — https://arxiv.org/abs/2305.10601"
@@ -240,6 +240,12 @@ Lakshmanan and Hapke add that "the computational cost of coordination increases 
 | Give reviewers a rubric | Generic critique adds little |
 | Prefer shared state to chatter for facts | One block edit beats N messages |
 | Start with one agent | Most failures are coordination failures |
+
+The same book's two loan chapters run that split on one workflow. The single agent has four function tools (validate documents, credit check, assess risk, check compliance) and one prompt. The multi-agent version gives each tool to its own specialist agent, wrapped as an AgentTool under a supervisor (*Agentic Architectural Patterns*, ch. 13, 14). Its argument for the split is isolation, maintainability and a smaller prompt per agent, and its practical advice is sound: pass a strict schema between agents, tell the orchestrator which state fields to forward, and keep delegation shallow because each layer adds a full model round trip. It supplies no comparison. Both builds run on mock tools and a single logged run per applicant (810 approved; 680 denied by a policy check on risk score 8), nothing is measured for latency, cost or accuracy, and the resilience claim is argued, not run. The chapters also label the same system with different maturity levels in different paragraphs.
+
+![Two architectures for the same loan workflow: a supervisor over four specialist agents, each with an external system, against one agent with four tools](../sources/images/agentic-architectural-patterns-fig14-2.png)
+
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 14-2*
 
 Arsanjani and Bustos answer the verification group with patterns, not data. *Instruction fidelity auditing* puts a separate auditor agent after a risky handoff: it compares the worker's output with the original instruction and returns PASS or FAIL with a reason, so a failure reverts instead of propagating. Their example is a discount agent that applies a 15% welcome offer without checking that it is the customer's first order, and the auditor catches it. *Persistent instruction anchoring* re-inserts a tagged constraint (`PERSISTENT_GOAL: [NO_FORWARD_LOOKING_STATEMENTS]`) at every handoff, on the argument that instructions get lost in the middle of long contexts, though the chapter cites no evidence for that. Auditing is reactive and costs latency, so audit high-risk handoffs only. The authors advise running two or three of their four explainability patterns together, with shared memory as the truth layer, anchoring as the reminder and auditing as the external gate. Their code stubs every model call and the audit is a string match, so this is vocabulary and not evidence (*Agentic Architectural Patterns*, ch. 6).
 

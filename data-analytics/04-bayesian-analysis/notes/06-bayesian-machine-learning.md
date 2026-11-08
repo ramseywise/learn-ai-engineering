@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
   - https://doi.org/10.1111/j.2517-6161.1977.tb01600.x
   - https://arxiv.org/abs/1312.6114
+  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 6
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -457,6 +458,45 @@ random search, mean of 5 runs:         [0.1233 0.1193 0.1164 0.112 ]
 The GP's best log loss beats the random-search average at each checkpoint, by 0.01 or so. That comparison is one Bayesian optimisation run against five random runs, on a dataset where each evaluation takes about a second, so it shows the shape of the method rather than measuring its advantage. The case for Bayesian optimisation grows as each fit gets more expensive. If a fit takes a second, random search with more fits is often simpler.
 
 The final project combines both: train a VAE on faces, then use Bayesian optimisation over its latent space, with a human rating each generated face, to converge on a target face (darkest hair, widest smile, a specific person) in a few dozen evaluations.
+
+## Overfitting and information criteria
+
+Everything above fits a model and asks how well it explains the data it saw. McElreath's chapter on overfitting makes the point that this question has the wrong answer built in: fit to the sample improves with every parameter. Polynomials of degree 1 to 6 fitted to brain volume against body mass for seven hominin species reach R^2 of 0.49 at degree 1, 0.99 at degree 5 and 1.00 at degree 6, where seven parameters pass through seven points and the curve predicts a negative brain size near 58 kg (*Statistical Rethinking*, ch. 6).
+
+Deviance, minus twice the log-likelihood, makes the same point on held-out data. This is the chapter's simulation, re-run: y ~ Normal(mu, 1) with mu = 0.15 x1 - 0.4 x2, so the true model has three parameters; models with one to five parameters are fitted by least squares to a training sample and scored on a fresh one of the same size.
+
+```python
+def dev(y, mu):                       # -2 * log-likelihood, sigma fixed at 1
+    return (np.log(2 * np.pi) + (y - mu) ** 2).sum()
+
+def one_run(n, k, rng):
+    X = rng.normal(size=(2 * n, 4))
+    y = 0.15 * X[:, 0] - 0.4 * X[:, 1] + rng.normal(size=2 * n)
+    A = np.c_[np.ones(2 * n), X[:, :k - 1]]           # intercept + first k-1 predictors
+    b = np.linalg.lstsq(A[:n], y[:n], rcond=None)[0]
+    return dev(y[:n], A[:n] @ b), dev(y[n:], A[n:] @ b)   # train, test
+```
+
+```text
+N=20   params=1  train 59.3  test 61.5  gap 2.2
+N=20   params=2  train 57.5  test 62.3  gap 4.8
+N=20   params=3  train 53.7  test 60.3  gap 6.6
+N=20   params=4  train 52.8  test 61.9  gap 9.1
+N=20   params=5  train 51.8  test 63.9  gap 12.1
+N=100  params=1  train 300.3  test 303.0  gap 2.7
+N=100  params=3  train 280.9  test 286.9  gap 6.0
+N=100  params=5  train 279.1  test 289.3  gap 10.2
+```
+
+(5,000 runs per row; the book used 10,000 and prints slightly different gaps, 2, 4.1, 5.3, 7.6, 9.7 at N = 20.) Training deviance falls with every parameter, and test deviance is lowest at three, the true model. At N = 20 the two-parameter model is worse out of sample than the one-parameter one. The gap between test and train is close to twice the number of parameters, which is the idea behind AIC = D_train + 2p. AIC is reliable only with flat priors, a near-Gaussian posterior and N much larger than the parameter count. Regularising priors break the first condition, which is why [chapter 3](03-priors-and-bandits.md) pairs them with a different criterion.
+
+![Training and test deviance against number of parameters at N = 20 and N = 100](../sources/images/statistical-rethinking-fig6-7.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 6.7*
+
+WAIC is the criterion that needs no Gaussian assumption. It is computed pointwise from the posterior draws: WAIC = -2(lppd - pWAIC), where lppd sums over observations the log of the average likelihood across draws, and pWAIC sums over observations the variance across draws of the log-likelihood. In the book's simulation with Normal(0, 100) and Normal(0, 0.5) priors on the slopes, DIC and WAIC land within about 1 deviance point of the true average test deviance in most settings, WAIC the closer. The same book's own caveats apply: the criteria assume test data come from the process that made the training data, WAIC is hard to define for dependent data such as time series, and none of them is consistent for picking the true model.
+
+Read a comparison by its difference and that difference's standard error, not by the ranking. On the primate milk data, with models fitted to the 17 species with complete cases, the model with neocortex and log body mass has WAIC -15.0 and an Akaike weight of 0.93, against -8.3 for the intercept-only model. The difference is 6.7 with a standard error of 7.26, and the chapter's own simulation of that difference puts the chance the ranking reverses at 0.18. A weight is the probability the model predicts best, conditional on the set compared. Averaging predictions across models, not parameters, barely moves the mean but widens the interval enough to include a zero slope for neocortex. The criteria answer a predictive question only: In a simulated plant experiment, the model that includes a post-treatment variable (fungus) fits better and still hides a treatment slope of 1.07 behind an estimate of -0.27 (*Statistical Rethinking*, ch. 5). The python route is `az.compare` on `InferenceData` objects that carry `log_likelihood`.
 
 ## Pitfalls
 

@@ -291,6 +291,8 @@ flowchart LR
 
 [Wilson's *Machine Learning Engineering in Action* (Manning, 2022)](https://www.manning.com/books/machine-learning-engineering-in-action) gives the case in terms of consistency, reusability and testability. His cautionary tale is about silos: a data scientist working alone, without shared features, leaked the label through a production table of earlier predictions. The interview study adds a virtue that is easy to miss. Several of the engineers valued feature stores less for serving than for debugging, because they could retrieve the historical versions of a feature when a prediction went wrong ([Shankar et al., 2022](https://arxiv.org/abs/2209.09125)). In that study's terms, it is a versioning tool as much as a serving tool.
 
+Wilson's ch. 15 and ch. 16 sharpen two points on the same ground (author's experience, no measurements). First, skew has a quieter form than a wrong function: a feature added in offline training but absent online is either imputed, which lowers its variance and can leave the model worse than before, or left null, which can break the deployment so that every prediction falls to the fallback (ch. 15). Second, in the Databricks feature store his listings use, `fs.log_model(..., training_set=...)` stores the feature lookups with the model, so batch scoring with `fs.score_batch` rebuilds the features from the same definitions without new code (ch. 16). Wherever your store lets the model carry its lookups, use it.
+
 ## Feast from end to end
 
 [Feast](https://docs.feast.dev/) is the open source option, and it runs locally on a Parquet file and SQLite, so nothing here needs a cluster. The local setup is two files. The YAML says where things live and the Python declares the feature view.
@@ -429,6 +431,8 @@ The course material has no feature store. The "who owns feature engineering code
 - **Trusting a TTL to protect serving.** Check the behaviour of your own store and version. Here an online read returned two-year-old values.
 - **Unknown categories turning into zeros.** The vectoriser raises no error. Monitor the share of unknown categories at serving, since it is a skew alarm that costs almost nothing.
 - **Letting materialisation run without monitoring.** It is a pipeline; when it dies, the service keeps serving yesterday's numbers.
+- **Not knowing a source's refresh rate.** In ch. 14's fictional paywall model, training assumed 5-second session chunks while the lake was fed by a periodic dump every 15 minutes, so every user got the same prediction and the site was disrupted for a day. Catalogue each source table's ingestion mechanism, update frequency, history type and owner before training (*ML Engineering in Action*, ch. 14).
+- **Cleaning data inside the training code.** Repairs made in the model repository get copied, or missed, at inference. Fix quality at the source so every consumer gets the repair (*ML Engineering in Action*, ch. 14).
 - **Adopting a store for one model.** You then run a registry, an online database and a sync job to solve a problem that one SQL query solves.
 
 ## Try it

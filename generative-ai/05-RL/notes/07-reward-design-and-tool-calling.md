@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 16–17"
   - Bojie Li, "AI Agents in Depth" (2026), ch. 8, https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md
   - "Koenigstein, \"AI Agents: The Definitive Guide\" (O'Reilly, 2026)"
   - Albada, "Building Applications with AI Agents" (O'Reilly, 2025)
@@ -57,6 +58,8 @@ A support agent solves a ticket on turn nine. Which turn earned the credit, the 
 
 The general checklist for shaping a reward (and how agents hack it) is in
 [10](10-engineering-rl-systems.md#engineering-an-rl-problem). Multi-turn adds **credit assignment**. Was it the question in turn 2 or the explanation in turn 7 that solved the ticket? It also adds **partial observability**.
+
+Older RL shows the same trade. In thermal soaring, a terminal altitude reward failed and a per-step reward from vertical wind velocity and acceleration worked (*RL: An Introduction*, ch. 16, Sec. 16.8, reported from Reddy et al., 2016). Chapter 17 advises putting hints in the value initialisation instead of adding subgoal rewards ([12](12-rlhf-failure-modes.md#reward-hacking)).
 
 **Density.**
 

@@ -1,0 +1,284 @@
+{
+ "schema": 1,
+ "key": "sha1:d79024892b06",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch15-agent-frameworks-multi-agent-loan-processing.pdf",
+ "bib": {
+  "title": "Agent Frameworks - Use Case: A Multi-Agent System for Loan Processing with CrewAI and LangGraph (Chapter 15, Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": [
+   "Arsanjani",
+   "Bustos"
+  ],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt (book chapter, pp. 472-507)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 70845,
+  "chars_total": 70845,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do Google ADK, CrewAI and LangGraph differ in abstraction, control flow and state, and which should be chosen for a loan-processing multi-agent system?",
+ "hypothesis": "LangGraph's explicit state machine gives more robust error handling than CrewAI's hierarchical crew for this workflow.",
+ "contributions": [
+  "Three-framework comparison (Tables 15.1, 15.2)",
+  "Loan-processing reimplementation in CrewAI and LangGraph (ADK version left to Ch 13)",
+  "Selection guidance, observability and responsible-AI scenarios",
+  "Mapping of frameworks to the GenAI Maturity Model (Table 15.3)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The CrewAI version runs Gemini at temperature 0.0 to minimise variance in tool use and JSON output; the author concedes this does not guarantee determinism.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "temperature",
+   "value": 0.0,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CrewAI LLM(model='gemini/gemini-2.5-flash'); the LangGraph LLM (ChatGoogleGenerativeAI gemini-2.5-flash) sets no temperature",
+   "quote": "temperature=0.0 significantly reduces variance, it does not guarantee 100% deterministic behavior",
+   "table": null,
+   "note": null,
+   "where": "p.486"
+  },
+  {
+   "claim": "LangGraph routes straight to a rejection node when validation fails, so credit and risk calls are skipped; the chapter calls this an efficiency gain but gives no latency, cost or call-count measurement.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Loan example, invalid document document_invalid_456 (income missing); no run output printed",
+   "quote": "unnecessary API costs and latency by",
+   "table": null,
+   "note": "Asserted, not measured. CrewAI side is hedged with 'potentially performing unnecessary actions' (p.488).",
+   "where": "p.497"
+  },
+  {
+   "claim": "CrewAI hierarchical run on the invalid document: later tasks still run after validation fails.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CrewAI hierarchical process, manager_agent, context-linked tasks; no output shown",
+   "quote": "the intermediate steps (credit check, risk assessment) are still executed",
+   "table": null,
+   "note": "Described, no logged run shown.",
+   "where": "p.488"
+  },
+  {
+   "claim": "The LangGraph risk node maps an LLM answer to a score with a fixed table: LOW 3, MEDIUM 6, HIGH 9, UNKNOWN 10.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 9,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "node_assess_risk; compliance tool rejects risk_score >= 8, so HIGH always rejects",
+   "quote": "score_map = {\"LOW\": 3, \"MEDIUM\": 6, \"HIGH\": 9, \"UNKNOWN\": 10}",
+   "table": null,
+   "note": "Numbers are the author's choice, not calibrated. Different from the CrewAI rule-based scorer.",
+   "where": "p.493"
+  },
+  {
+   "claim": "The rule-based risk tool adds +4 below credit 650, +2 below 720, +5 if loan-to-income > 0.8, +2 if > 0.5, from base 1, capped at 10; compliance rejects risk >= 8.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 650,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CalculateRiskScoreTool and CheckLendingComplianceTool, CrewAI path only; thresholds labelled a simplified heuristic",
+   "quote": "if credit_score < 650: risk_score += 4",
+   "table": null,
+   "note": "Invented thresholds; the LangGraph graph never calls this tool.",
+   "where": "p.481"
+  },
+  {
+   "claim": "Mock credit bureau returns 810 for CUST-12345 and 620 for CUST-55555.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 810,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mock data in QueryCreditBureauAPITool",
+   "quote": "\"CUST-12345\": 810,  # Happy Path",
+   "table": null,
+   "note": null,
+   "where": "p.481"
+  },
+  {
+   "claim": "The chapter says its framework comparison is illustrative and the patterns generalise; it recommends avoiding lock-in via stable tool contracts and explicit state schemas.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Advice, no evidence",
+   "quote": "a critical long-term strategy is to avoid framework lock-in",
+   "table": null,
+   "note": null,
+   "where": "p.500"
+  }
+ ],
+ "limits": [
+  "No run output is printed; claims about CrewAI continuing after validation failure and about LangGraph saving cost or latency are unmeasured.",
+  "The two implementations are not equivalent: CrewAI scores risk with a rule-based tool, LangGraph scores it with an LLM node (the calculate_risk_score tool is unused there), so the comparison mixes framework and logic.",
+  "No framework versions are given; ADK is not reimplemented here; framework feature claims (CrewAI hallucination guardrail 0-10, Test CLI, crew.train, Patronus; LangSmith with CrewAI) are unsourced and have likely dated.",
+  "All data is mock (two documents, four customer ids); no evaluation, accuracy or fairness result is reported.",
+  "Code lives in a notebook in the Packt GitHub repo (Chapter_15); the chapter prints excerpts only."
+ ],
+ "practices": [
+  "Return tool outputs as JSON strings with a fixed success/error contract so downstream agents handle errors deterministically (p.482).",
+  "Set temperature 0.0 for orchestration and tool-calling agents, knowing it is not fully deterministic (p.486).",
+  "Normalise currency and locale upstream in a dedicated node rather than parsing income inside the risk tool (p.483).",
+  "Use a proxy tool that calls an external risk engine or ML endpoint instead of hardcoded heuristics (p.483).",
+  "Use structured output (Pydantic schema) instead of substring-parsing LLM answers (p.494).",
+  "Add fail-fast conditional edges that route to a terminal rejection node on an error key (pp.495, 499).",
+  "Design around stable interfaces (tool contracts, explicit state schemas) to avoid framework lock-in (p.500).",
+  "Choose CrewAI for fast role-based prototypes, LangGraph for cycles, explicit state, HITL, ADK for Google-Cloud production with OpenTelemetry (pp.500-501).",
+  "Trace with LangSmith or Cloud Trace to give auditors the data, tool outputs and LLM reasoning for each denial (p.499)."
+ ],
+ "terms": [
+  {
+   "term": "CrewAI Process",
+   "definition": "The workflow a crew follows: sequential or hierarchical (a manager agent delegates tasks)",
+   "where": "p.474"
+  },
+  {
+   "term": "StateGraph / State / Nodes / Edges / Conditional edges",
+   "definition": "LangGraph workflow object holding a TypedDict state, node functions that return state updates, and edges (including conditional) choosing the next node",
+   "where": "p.474"
+  },
+  {
+   "term": "Workflow agents (ADK)",
+   "definition": "Scaffolding for defining sequential, looping, or parallel tasks alongside autonomous reasoning",
+   "where": "p.476"
+  },
+  {
+   "term": "Callbacks (ADK)",
+   "definition": "Middleware for active filtering, PII detection, and HITL control; intercept input/output before or after LLM calls",
+   "where": "pp.476, 478"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Agentic Architectural Patterns for Building Multi-Agent Systems, Chapters 13 and 14 (loan processing in ADK)",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Chapter 15 reimplements the Ch 13 loan agent in CrewAI and LangGraph",
+   "quote": null
+  },
+  {
+   "work": "Google Agent Development Kit (ADK)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Described, not re-run",
+   "quote": null
+  },
+  {
+   "work": "CrewAI (Moura)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Hierarchical process implementation",
+   "quote": null
+  },
+  {
+   "work": "LangGraph / LangChain",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "State machine implementation",
+   "quote": null
+  },
+  {
+   "work": "Agent-to-Agent (A2A) protocol",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "ADK native interoperability",
+   "quote": null
+  },
+  {
+   "work": "GenAI Maturity Model (Ch 1 of the same book)",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Table 15.3 maps frameworks to levels",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 15.1",
+   "caption": "Agentic frameworks comparison",
+   "page": 477,
+   "why": "Supporter, launch date, philosophy per framework; dates unsourced"
+  },
+  {
+   "figure": "Table 15.2",
+   "caption": "Comparison between the ADK, CrewAI, and LangGraph frameworks",
+   "page": 478,
+   "why": "Core abstraction, control flow, state, callbacks and best-for in one grid"
+  },
+  {
+   "figure": "Table 15.3",
+   "caption": "Approaching frameworks according to the organization's maturity level",
+   "page": 505,
+   "why": "Spans pp.501-505; maps maturity levels 1-6 to framework features"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.486 (CrewAI LLM)",
+   "snippet": "llm = LLM(model='gemini/gemini-2.5-flash', api_key=os.getenv(\"GOOGLE_API_KEY\"), temperature=0.0)",
+   "verbatim": false
+  },
+  {
+   "where": "pp.488 (Crew)",
+   "snippet": "loan_crew = Crew(agents=[doc_specialist, credit_analyst, risk_assessor, compliance_officer], tasks=[task_validate, task_credit, task_risk, task_compliance, task_report], process=Process.hierarchical, manager_agent=manager, verbose=True)",
+   "verbatim": false
+  },
+  {
+   "where": "p.495-496 (fail-fast edge)",
+   "snippet": "def decide_after_validation(state): return \"reject\" if state.get(\"error\") else \"continue\"",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Prose vs code: chapter says every framework uses the LLM as reasoning engine, but the LangGraph graph calls the LLM in one node only (assess_risk); the other nodes call tools directly.",
+  "Prose vs code: LangGraph is called 'deterministic' (p.476) yet its risk node is LLM-based, with default temperature (none set), unlike CrewAI at 0.0.",
+  "Code bug: node_assess_risk tests 'LOW' in text.upper() first, so words such as 'below' or 'allow' make a HIGH answer parse as LOW (p.492-493).",
+  "Code bug: node_compile_rejection's compliance branch tests 'compliance' in the error text, but compliance errors read 'Policy violation: ...', so the branch never fires and the generic message is used (p.494).",
+  "Code bug: income parser keeps digits only, so the prose example '$60k/month' parses as 60*12=720 (p.480); comments claim it handles this.",
+  "Code vs prose: CrewAI compliance backstory names tool `CheckLendingCompliance` but the tool's name is 'Check Lending Compliance' (p.485 vs 481).",
+  "Code comment says manager 'assigned below' but manager_agent is set in the same Crew call (p.488).",
+  "Maturity levels inconsistent: Table 15.3 puts single-agent at Level 5 and multi-agent at Level 6; text says frameworks enable 'Levels 4 and 5' (pp.501, 505) and the summary says Level 5 and 6 (p.506), then 'Level 4 and Level 5' (p.506).",
+  "Mislabelled bullets: 'Explicit state graph visualization scenario' text describes golden-dataset fairness testing, and the 'getUserBalance vs getLoanStatus' example names tools that do not exist in the loan example (pp.498-499).",
+  "Claim that CrewAI is part of the LangChain ecosystem and integrates natively with LangSmith is asserted without support (p.498).",
+  "Invented numbers (no source, no calibration): mock scores 810/620, risk weights 4/2/5/2, thresholds 650/720/0.8/0.5, compliance cutoff 8, score_map 3/6/9/10, recursion_limit 10, CrewAI guardrail 0-10, launch dates in Table 15.1.",
+  "No figures in the PDF (only a QR image on the last page); figures.py returned no captions. Text-layer bullets are dropped, so list markers appear as stray bullets.",
+  "No embedded instructions found."
+ ]
+}

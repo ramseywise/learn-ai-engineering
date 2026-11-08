@@ -5,6 +5,7 @@ sources:
   - http://proceedings.mlr.press/v22/kaufmann12/kaufmann12.pdf (Kaufmann et al., Bayes-UCB, AISTATS 2012)
   - https://doi.org/10.1214/08-aoas191 (Gelman et al., AOAS, 2008)
   - McElreath, Statistical Rethinking (draft of November 2015)
+  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 4 to 6
   - https://arxiv.org/abs/0901.4011
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 3, 4 and 7)
   - https://doi.org/10.1016/0196-8858(85)90002-8
@@ -257,6 +258,26 @@ Draws exactly 0: 0 of 24000
 ```
 
 Lasso and the MAP agree on which coefficients vanish and are close on the rest, though not exact, because a gradient optimiser is working on a kink in the surface. The last two lines make BMH's point: lasso's sparsity comes from the geometry of the L1 penalty at the MAP, not from a prior belief in sparsity. The posterior mean under the same prior is not sparse, and not one of the 24,000 draws is exactly zero. If you want a Bayesian to say "this coefficient is zero", the Laplace prior is not doing it.
+
+### Priors as imagined data, and what regularising buys out of sample
+
+McElreath gives a way to read a Gaussian prior's strength: a Normal(mu, sd) prior on a mean is worth about n = 1/sd^2 observations of the outcome. On adult heights (!Kung census, n = 352), Normal(178, 0.1) equals 100 observed heights and Normal(178, 20) equals 0.0025 of one (*Statistical Rethinking*, ch. 4). The narrow prior wins: the posterior for mu stays at 177.86, against 154.61 under the weak prior, and sigma, whose prior did not change, jumps from 7.73 to 24.52 to absorb the misfit. A prior on one parameter moves the others, so sensitivity checks have to refit the whole model. With a sensible prior, the posterior over a regression line tightens as data arrive: 20 lines sampled from the posterior of the height-on-weight fit fan out at N = 10 and nearly coincide at N = 352, where the slope is 0.90 cm per kg (sd 0.04).
+
+![Twenty regression lines sampled from the posterior at N = 10, 50, 150 and 352](../sources/images/statistical-rethinking-fig4-5.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 4.5*
+
+The out-of-sample case for tight priors comes from a simulation in chapter 6. The outcome is Normal(mu, 1) with mu = 0.15 x1 - 0.4 x2, so the true model has three parameters, and models with one to five parameters are fitted to 10,000 simulated training sets and scored on fresh data from the same process. Training deviance falls with every added parameter. Test deviance is lowest at three. Normal(0, 1) on a standardised slope puts only 5% of its mass beyond 2 sd; tightening to Normal(0, 0.5) and Normal(0, 0.2) makes training deviance worse and test deviance better for the over-parameterised models. At N = 20 with Normal(0, 0.2), the four- and five-parameter models are barely worse than the true three-parameter one, and at N = 100 the data overwhelm even Normal(0, 0.2) (*Statistical Rethinking*, ch. 6). That is the ridge result from above, measured on held-out data: regularisation is the prior, and its value depends on N. McElreath calls multilevel models "adaptive regularisation", because they learn the prior's strength from the data ([chapter 7](07-multilevel-models-and-partial-pooling.md)).
+
+![Training and test deviance by number of parameters under three regularising priors](../sources/images/statistical-rethinking-fig6-9.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 6.9*
+
+The opposite problem is two near-duplicate predictors. In a simulation (N = 100, leg lengths of one person with noise sd 0.02, priors Normal(2, 10) on each leg's slope), the two slopes come out at -0.43 (sd 2.18) and 2.48 (sd 2.19), uninterpretable on their own, while their sum is 2.05, the slope the one-leg model recovers with sd 0.07. For milk fat and lactose across 29 primate species (r = -0.94), the joint model roughly doubles both standard deviations. In McElreath's sweep (100 flat-prior fits per correlation) the slope's sd rises from about 0.001 at zero correlation to about 0.007 at 0.99, most of it past 0.9, and he notes flat priors exaggerate this and informative ones slow it (*Statistical Rethinking*, ch. 5). A posterior is always proper, so "weakly identified" is the right phrase. A wide posterior is the model answering the question you asked.
+
+![Posterior sd of a slope against its predictor's correlation with another predictor](../sources/images/statistical-rethinking-fig5-10.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 5.10*
 
 ## The winner's curse: shrinkage as a prior on experiments
 

@@ -1,0 +1,274 @@
+{
+ "schema": 1,
+ "key": "sha1:4821fefe1845",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch14-use-case-multi-agent-system-loan.pdf",
+ "bib": {
+  "title": "Chapter 14: Use Case: A Multi-Agent System for Loan Processing (in Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": [
+   "Ali Arsanjani",
+   "Juan Pablo Bustos"
+  ],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt Publishing (book chapter, pp. 449-470)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 48962,
+  "chars_total": 48962,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How does a monolithic Level 3 single-agent loan processor evolve into a Level 4 hierarchical multi-agent system, and which patterns does that use?",
+ "hypothesis": "Promoting tools to single-purpose specialist agents under a supervisor fixes the monolith's cognitive overload, single point of failure and lack of specialisation.",
+ "contributions": [
+  "Refactor of the Chapter 13 loan agent into an FCoT supervisor plus four AgentTool-wrapped LlmAgent specialists (google-adk).",
+  "Two annotated logs (happy path, denied path).",
+  "Mapping of the code to Supervisor, Agent Delegates to Agent, FCoT, Fault Tolerance and Isolation, Modularity, Observability, Explainability and Audit Trail patterns, and to Agentic AI Levels 3-6."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "In the happy-path log the credit check returns a score of 810 and the loan is approved.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit score",
+   "value": "810",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scenario 1 (happy path), simulated tools, one logged run, Gemini via google-adk; applicant CUST-12345, USD 5000/month, loan 50000",
+   "quote": "credit check came back with a solid score - 810",
+   "table": null,
+   "note": null,
+   "where": "p.461"
+  },
+  {
+   "claim": "In the happy-path log the risk assessor returns a risk score of 6, called acceptable; scale and threshold are never defined.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "risk score",
+   "value": "6",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scenario 1 (happy path), simulated tools, one logged run, Gemini via google-adk; applicant CUST-12345, USD 5000/month, loan 50000",
+   "quote": "risk assessment gave us a risk score of 6, which falls within acceptable",
+   "table": null,
+   "note": null,
+   "where": "p.461"
+  },
+  {
+   "claim": "In the denied-path log the risk score is 8 and compliance rejects it as too high.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "risk score",
+   "value": "8",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scenario 2 (denied path), simulated tools, one logged run; applicant CUST-55555, USD 1000/month, loan 1000000",
+   "quote": "Policy violation: Risk score of 8 is too high for approval.",
+   "table": null,
+   "note": null,
+   "where": "p.462"
+  },
+  {
+   "claim": "In the denied-path log the credit score is 680, and that scenario is rejected on risk score, not on credit score.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit score",
+   "value": "680",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Scenario 2 (denied path), simulated tools, one logged run; applicant CUST-55555, USD 1000/month, loan 1000000",
+   "quote": "the credit check showed a score of",
+   "table": null,
+   "note": "'680' appears across a page break: 'a score of' (p.462) then '680...' (p.463); verbatim text in cache line 522-528 reads 'a score of 680'.",
+   "where": "p.462-463"
+  },
+  {
+   "claim": "Stated rule: a credit score below 600 is flagged immediately as a high-risk failure; the function body is elided and no scenario exercises it (680 and 810 are both above).",
+   "kind": "claim",
+   "source": null,
+   "metric": "credit score threshold",
+   "value": "600",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Specialist tool business logic, code elided",
+   "quote": "immediately flagging a credit score below 600 as a high-risk failure condition",
+   "table": null,
+   "note": null,
+   "where": "p.452"
+  },
+  {
+   "claim": "Rate limit shown in code: 15 calls per 60 s, 5 retry attempts, exponential wait multiplier 2 (min 4, max 30), retry only on rate-limit errors.",
+   "kind": "claim",
+   "source": null,
+   "metric": "calls per minute",
+   "value": "15",
+   "unit": "calls/min",
+   "baseline_value": null,
+   "n": null,
+   "setup": "@limits(calls=15, period=60) with tenacity retry; prose calls 15 'e.g., 15 calls per minute'",
+   "quote": "@limits(calls=15, period=60)",
+   "table": null,
+   "note": null,
+   "where": "p.456"
+  },
+  {
+   "claim": "Thinking budget configured at 1024 with include_thoughts=True; prose then says the demo relies on default settings.",
+   "kind": "claim",
+   "source": null,
+   "metric": "thinking_budget",
+   "value": "1024",
+   "unit": "tokens (unit not stated)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ThinkingConfig in guardrails listing",
+   "quote": "thinking_budget=1024",
+   "table": null,
+   "note": "Prose p.456: 'we rely on the default settings'; the listing sets 1024. How thinking_config reaches the agent is not shown.",
+   "where": "p.456"
+  },
+  {
+   "claim": "Recommended specialist temperature 0.0, creative roles 0.7; not set in the shown code.",
+   "kind": "claim",
+   "source": null,
+   "metric": "temperature",
+   "value": "0.0",
+   "unit": "unitless",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Design note, GenerateContentConfig",
+   "quote": "Set to 0.0 for specialist agents",
+   "table": null,
+   "note": null,
+   "where": "p.455"
+  }
+ ],
+ "limits": [
+  "No measurement: no accuracy, latency, token cost, failure rate or comparison with the Chapter 13 monolith; claims of resilience and maintainability are asserted, not tested.",
+  "Only two single runs (approved, denied); no tool-failure or sub-agent-error scenario is run, so the fault-isolation and Reflect/Resolve/Escalate policy is untested here.",
+  "All tool bodies are elided ('# ... function definition from the notebook ...') and tools are simulated; every score, threshold and applicant is invented.",
+  "Logs are excerpted with ellipses and the 'Iteration 1/2' labels are the author's; risk scale and approval threshold are not given.",
+  "Chapter itself warns of nested latency and token cost per delegation layer, but gives no figures.",
+  "Orchestrator uses contextual state (context window) not a structured state dict; relies on prompt to forward correct fields."
+ ],
+ "practices": [
+  "Use the hierarchical Supervisor/Orchestrator topology for regulated workflows needing auditability (p.450).",
+  "Give each specialist one tool and a narrow instruction that states its required input, to form a data contract (p.454).",
+  "Enforce strict input/output schemas (e.g., Pydantic) in production rather than bare type hints (p.452).",
+  "Assign lightweight models (Flash) to simple specialists and stronger ones (Pro) to policy-heavy ones, accepting some behavioural variation (p.454).",
+  "Avoid deep delegation chains: each layer adds a full LLM round trip (p.455).",
+  "Set temperature 0.0 for analytical specialists, cap max_output_tokens, configure safety_settings via GenerateContentConfig (p.455).",
+  "Wrap runs in rate limiting plus exponential-backoff retry on 429 errors (p.456).",
+  "Instruct the orchestrator explicitly which fields to extract and forward between agents (p.457).",
+  "Log thoughts, tool calls and outputs separately for observability (p.459)."
+ ],
+ "terms": [
+  {
+   "term": "Supervisor (Orchestrator) architecture",
+   "definition": "a manager agent plans, delegates sub-tasks to specialists, monitors progress and synthesizes the result",
+   "where": "p.450-451"
+  },
+  {
+   "term": "Agent Delegates to Agent",
+   "definition": "the supervisor delegates work to another autonomous agent; ADK AgentTool encapsulates an agent behind a tool interface",
+   "where": "p.451"
+  },
+  {
+   "term": "FCoT",
+   "definition": "adaptive recursive RECAP -> REASON -> VERIFY loop for planning and synthesis (expansion of FCoT not given in this chapter)",
+   "where": "p.466"
+  },
+  {
+   "term": "Contextual state",
+   "definition": "state is the accumulated history of JSON outputs from specialists, held in the context window",
+   "where": "p.457"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chapter 13 single-agent loan processor (same book)",
+   "year": 2026,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "monolithic Level 3 FCoT agent that this chapter refactors",
+   "quote": null
+  },
+  {
+   "work": "Google ADK (google-adk) AgentTool, LlmAgent, FunctionTool, Runner",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation framework",
+   "quote": null
+  },
+  {
+   "work": "Agent-to-Agent (A2A) protocol",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "cited as Linux Foundation standard for future levels",
+   "quote": null
+  },
+  {
+   "work": "Gemini models (gemini-3-flash named)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model behind specialists",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 14.1",
+   "caption": "A simplified model of a hierarchical agent architecture",
+   "page": "book p.451 (PDF p.3)",
+   "why": "supervisor-over-specialists structure"
+  },
+  {
+   "figure": "Figure 14.2",
+   "caption": "Contrasting monolithic with multi-agent architectures",
+   "page": "book p.452 (PDF p.4)",
+   "why": "side-by-side of the Ch13 monolith and Ch14 design"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.452-453",
+   "snippet": "validation_tool = FunctionTool(func=validate_document_fields)  # also credit_tool, risk_tool, compliance_tool",
+   "verbatim": true
+  },
+  {
+   "where": "p.455",
+   "snippet": "validator_agent_tool = AgentTool(agent=document_validation_agent)",
+   "verbatim": true
+  },
+  {
+   "where": "p.456",
+   "snippet": "@sleep_and_retry\n@limits(calls=15, period=60)\n@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=2, min=4, max=30), retry=retry_if_exception(is_rate_limit_error))\ndef start_agent_run(runner, user_id, session_id, content):",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Prose and code disagree: Level-3 section says the monolith is 'the quintessential Level 5 system' (p.467) though headed Level 3 and called Level 3 elsewhere.",
+  "Level 4 called 'the summit' / 'highest level' (p.467, p.469) yet Levels 5 and 6 are described on p.468.",
+  "Prose says 'we rely on the default settings' (p.456) right after code setting thinking_budget=1024; temperature 0.0 advised but not in shown code.",
+  "start_agent_run (retry/throttle runner) is defined but call_agent calls runner.run directly, so the guardrail is not shown in use.",
+  "Heterogeneous-model advice (Flash vs Pro) but only gemini-3-flash for document_validator is shown; other three agents elided.",
+  "Runner is built with agent=agent while the orchestrator variable is never shown being created.",
+  "Contextual-state note example uses status 'valid' and CUST-123, the log shows 'validated' and CUST-12345.",
+  "Denied-path applicant submits one document (drivers_license.pdf) yet the log says 'the documents looked good'.",
+  "Page numbers: footers give book pages 450-470; extraction pages are shifted (Fig 14.1 on book p.451 = PDF p3).",
+  "No embedded instructions found; last page is a promo for a newsletter."
+ ]
+}

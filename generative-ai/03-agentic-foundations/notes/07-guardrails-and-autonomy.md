@@ -5,7 +5,7 @@ sources:
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
-  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 2, 3, 5, 6, 7, 8, 10"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 16"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -193,6 +193,14 @@ Raieli and Iuculano judge that no agent is beyond Level 1. Mitchell et al. (2025
 
 
 The same book orders organizational capability as a seven-rung ladder, which is a different axis from the autonomy levels above: level 0 data preparation, 1 model choice and prompting, 2 retrieval, 3 tuning (parameter-efficient or full), 4 grounding with citations and evaluation, 5 a single agent, 6 multiple agents (*Agentic Architectural Patterns*, ch. 1). Its claim is that agents sit on top of the lower rungs, so a team with no evaluation or grounding is not ready for a loop. It is the authors' framework, not measured.
+
+The book's roadmap chapter collapses that ladder into three tiers for rollout: basic (one process, synchronous, hard-coded orchestration, in-memory state, a watchdog timeout, an agent-calls-human step, retries and audit logging), intermediate (containers, a message bus, shared memory, a registry, auto-healing) and advanced (a self-improvement loop). Its two rules are sound even though no data backs them: start every new workflow at the basic tier as a minimum viable agent, and move up only when scale, fault isolation or team speed demands it (*Agentic Architectural Patterns*, ch. 12). The advanced tier needs its own brakes: canary promotion against a control group, trust decay for agents whose scores drift, and offline benchmarks plus periodic human review of synthetic training data, because two models that grade each other can collude (ch. 11). Auto-healing needs a maximum retry count and exponential backoff, or it hides a fault behind a retry storm. The closing chapter adds the blast-radius argument: a retrieval system that errs gives a bad answer, while an agent that acts can delete the wrong database, so give it a draft tool but no submit tool and pause for a human before anything irreversible (ch. 16, whose "80% less drafting time" and "ahead of 90% of practitioners" lines are unsupported).
+
+![Level 3 self-improving ecosystem: logs and outputs from the agent swarm and message bus feed an MLOps tuning pipeline with a synthetic data generator, which returns improved logic and updated models](../sources/images/agentic-architectural-patterns-fig12-3.png)
+
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 12-3*
+
+The loan-processing chapters show a failure that the table of controls above warns about. The single-agent build writes "FCoT RECURSIVE LOOP (N = 3)" and success criteria (95% accuracy, 100% policy compliance, under 5 minutes) into the prompt, and the authors themselves say "N=3 is not a Python parameter": only `thinking_budget=1024` is enforced. The prompt also names a RAG verifier, a human-in-the-loop agent and a no-PII-in-logs rule that the code does not implement, and the compliance tool ignores the risk level and always returns "pass" (ch. 13). A requirement stated only in the prompt is a request. All numbers in the loan chapters are invented (mock scores 450, 810, 680; a 740 or 600 cut-off), and no failure scenario is run (ch. 13, 14).
 
 ---
 

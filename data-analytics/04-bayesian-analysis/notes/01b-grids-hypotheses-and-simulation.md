@@ -3,6 +3,7 @@ origin: synthesis  # companion to 01-bayesian-inference.md, which is near the ch
 sources:
   - Downey, Think Bayes (Green Tea Press, 2012; first edition), https://greenteapress.com/wp/think-bayes/ (ch. 9 to 15)
   - Downey, Think Stats (Green Tea Press, 2nd ed.), https://greenteapress.com/wp/think-stats-2e/ (ch. 8)
+  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 2 and 3
 confidence: high
 cleaned: 2026-11-08
 ---
@@ -178,6 +179,56 @@ The book prints the unbiased multiplier as 2N/(N−1); setting the mean error (1
 
 ---
 
+## One parameter: grid, quadratic approximation, then samples
+
+The one-parameter case is where the whole workflow fits on a page. McElreath's globe toss: 6 water in 9 tosses, flat prior (*Statistical Rethinking*, ch. 2). A grid of 20 points is already usable and little changes after the first 100; the cost is 100^2 = 10,000 evaluations for two parameters at 100 values each. The quadratic approximation replaces the posterior by a Gaussian at its mode, here mean 0.67 and sd 0.16, and at n = 9 it is visibly wrong: it puts mass at p = 1, which the data rule out. The same water fraction at n = 18 and n = 36 closes the gap (see the figure), which is why classical procedures are nervous at small N. McElreath adds that the rate of improvement varies by model, and for some it stays poor with thousands of observations. He also calls the "30 observations" rule a superstition: a posterior is valid at any N, and the price of small N is dependence on the prior.
+
+![Quadratic approximation against the exact Beta posterior at n = 9, 18 and 36 tosses](../sources/images/statistical-rethinking-fig2-8.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 2.8*
+
+Once a grid posterior exists, stop integrating and sample from it (*Statistical Rethinking*, ch. 3). Every summary becomes counting:
+
+```python
+import numpy as np
+from scipy import stats
+
+g = np.linspace(0, 1, 1000)
+post = stats.binom.pmf(6, 9, g); post /= post.sum()          # 6 water in 9, flat prior
+rng = np.random.default_rng(0)
+s = rng.choice(g, size=100_000, p=post)
+print((s < 0.5).mean(), np.percentile(s, [10, 90]))           # mass below .5; middle 80%
+
+q = stats.binom.pmf(3, 3, g); q /= q.sum()                    # 3 water in 3 tosses
+s3 = rng.choice(g, size=100_000, p=q)
+lo, hi = np.percentile(s3, [25, 75])                          # 50% percentile interval
+ss = np.sort(s3); k = len(ss) // 2; i = (ss[k:] - ss[:-k]).argmin()   # narrowest 50%: HPDI
+print((lo, hi), (ss[i], ss[i + k]))
+```
+
+```text
+0.174 [0.446 0.812]
+(0.708, 0.931) (0.839, 0.999)
+```
+
+The grid itself gives 0.172 below 0.5; the book prints 0.1718746 for the grid and 0.1726 for 10,000 samples, so the sampling noise is in the third decimal. The middle 80% runs from 0.446 to 0.812. With 3 of 3 water the posterior is piled against p = 1, and the two 50% intervals disagree: the percentile interval (0.71 to 0.93, width 0.22) excludes the mode, and the highest-posterior-density interval (0.84 to 1.00, width 0.16) contains it. McElreath's advice is that if the choice of interval changes the inference, plot the whole posterior; with the 6-of-9 posterior the two are nearly identical. He also prefers nested 67, 89 and 97% intervals to 95%, which he calls a convention with no defence.
+
+![50% percentile interval and 50% HPDI for 3 water in 3 tosses](../sources/images/statistical-rethinking-fig3-3.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 3.3*
+
+A point estimate is a loss-function decision. Expected absolute loss for the 3-of-3 posterior is minimised at the median (0.84) and expected quadratic loss at the mean (0.80); the maximum a posteriori value is 1.0. Reporting the decision of p = 0.5 costs 0.313 in expected absolute loss. [Chapter 5](05-loss-functions-and-decisions.md) takes this up properly.
+
+Samples also do the predictive step. Draw `rng.binomial(9, s)` for each sampled p and the counts follow the posterior predictive distribution. Plugging in one value understates the spread: at the plug-in p = 0.67, 6 of 9 has probability 0.273, but the posterior predictive gives it 0.20, because the uncertainty about p spreads the counts out.
+
+![Sampling distributions at ten values of p combined into a posterior predictive distribution](../sources/images/statistical-rethinking-fig3-6.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 3.6*
+
+Check the model against more than one feature of the data. McElreath's toss sequence W L W W W L W L W has 6 water, which sits in the middle of the predictions, but 6 switches between water and land in 9 tosses is more than most simulated sequences produce. Each toss was modelled as independent, and the data hint at negative serial correlation. The count was the wrong summary to check. The same chapter's base-rate example is worth keeping as a drill: a test with 0.95 sensitivity and a 1% false-positive rate on a condition with prevalence 0.001 gives Pr(condition given positive) = 0.087, which is 95 true cases among 95 + 999 = 1,094 positives in 100,000 people. Counting people is easier than applying the formula.
+
+---
+
 ## Pitfalls
 
 | Symptom | Cause | Fix |
@@ -187,6 +238,8 @@ The book prints the unbiased multiplier as 2N/(N−1); setting the mean error (1
 | "Weak evidence" read as "no effect" | A factor near 1 is equally compatible with both | Report posterior odds and a Jeffreys-style label with the setup |
 | Posterior depends on the grid's upper bound | Prior range quietly sets the answer | Re-run with a larger bound and compare tails |
 | Underflow on a few thousand data points | Multiplying densities | Work in log-likelihood, or use a summary statistic |
+| 50% intervals that disagree on a skewed posterior | Percentile interval leaves out the mode | Plot the whole posterior; report the HPDI or say which interval |
+| Predictions that look too tight | One plug-in p, not the posterior | Simulate with a sampled p per draw |
 | Simulated posterior with no sensitivity check | One growth model, one correlation | Vary the serial correlation or growth model and report the range |
 
 ## Try it

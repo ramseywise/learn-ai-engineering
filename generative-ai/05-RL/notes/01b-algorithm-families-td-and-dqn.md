@@ -2,7 +2,8 @@
 origin: curated  # split from 01-rl-foundations.md (2026-11-08) so each part stays under the chapter length cap
 confidence: medium
 sources:
-  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–12"
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–12, 14–15"
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1–2)
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/1312.5602
   - https://arxiv.org/abs/1707.06347
@@ -77,6 +78,8 @@ usually by importance sampling (*Reinforcement Learning*, ch. 1, 3 and 6).
 > LLM RL in 2025–26 is mostly on-policy: PPO and GRPO sample fresh completions from the current
 > policy at every step. Winder's case for off-policy learning was exploration. A pretrained
 > prior already makes on-policy samples informative, which removes much of that argument.
+
+Murphy's overview (*RL: A Comprehensive Overview*, ch. 1, Table 1.1) arranges the same families by what is learned and whether the method is on- or off-policy: SARSA, REINFORCE, A2C and TRPO/PPO on-policy; Q-learning, DDPG and SAC off-policy. It calls value-based RL approximate dynamic programming. Two of its worked numbers are worth keeping. With γ = 0.99, a terminal reward of 1.0 reached in 15 steps is worth 0.99¹⁵ = 0.86, and in 17 steps 0.84, so discounting prices delay even at γ near 1. Setting γ = 1 − 1/T gives an effective horizon of about T steps: at 0.1 s per step, γ = 0.95 corresponds to 2 seconds. His Eq. 1.35 as printed drops the learning rate from the Q-learning update (a probable typo).
 
 ## Monte Carlo control and importance sampling
 
@@ -162,6 +165,13 @@ Sutton and Barto's n-step chapter supplies the justification. The worst-state er
 
 Off-policy n-step learning inherits the importance-sampling variance described above, which forces small step sizes. Two remedies: a **control variate**, `G = ρ(R + γG') + (1 − ρ)V`, which leaves the estimate unchanged when ρ = 0 instead of dragging the target to zero, and the **tree-backup** return, which weights each branch by the target policy's probability and needs no importance ratio. Tree-backup's caveat is that when the two policies differ a lot, bootstrapping may span only a few steps even if n is large. Q(σ) interpolates between SARSA (σ = 1) and tree-backup (σ = 0), and the authors present it as new and unevaluated (*RL: An Introduction*, ch. 7).
 
+**The same δ in animals.** The textbook's psychology chapter shows that δ is older than the algorithm. The Rescorla–Wagner model of classical conditioning changes an association by `α·(R − v̂)`, an error-correction rule, which is why a second stimulus added to an already-predicted reward is blocked: no error is left to learn from. The real-time TD model with γ = 0 reduces to it. Bootstrapping also explains second-order conditioning, because the `γv̂(S') − v̂(S)` term is treated like a reward (*RL: An Introduction*, ch. 14, Sec. 14.2). Chapter 15 reports the neural counterpart as a hypothesis: phasic dopamine activity matches δ, not the reward. The worked case is tabular TD(0) on one trial with a separate internal stimulus per time step, γ ≈ 1 and V initialised at zero. δ first equals the reward, moves back to the earliest predictor as learning completes, is zero at a fully predicted reward, and goes negative if the reward is omitted:
+
+![TD error and value over a trial: early in learning delta peaks at the reward, after learning it peaks at the earliest predictor, and with the reward omitted it dips below zero at the usual reward time.](../sources/images/sutton-barto-rl-fig15-4.png)
+*Image Source: Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 2018), Fig. 15.4*
+
+The chapter lists where the model misfits (when a reward arrives early, dopamine cells do not dip at the omitted time) and says the authors are not neuroscientists. It also shows that an actor-critic network's two parts differ only in their eligibility trace: `∇v̂` for the critic and `∇ln π` for the actor, both driven by the same δ (ch. 15, Sec. 15.8). For LLM RL the carry-over is plain: a fully predicted reward carries no learning signal. That is the baseline and advantage idea, with the critic or the group mean playing the part of the prediction.
+
 ## Function approximation and the deadly triad
 
 Everything above kept one number per state. With a parameterised value `v̂(s, w)` the update is `w ← w + α·[target − v̂(S,w)]·∇v̂(S,w)`. A Monte Carlo target is an unbiased sample of the true value, so this is true gradient descent. A bootstrapped target (TD, n-step) depends on `w` itself, and the update ignores that dependence, which is why these are called **semi-gradient** methods (*RL: An Introduction*, ch. 9, Sec. 9.3). Linear semi-gradient TD(0) still converges on-policy to the TD fixed point, whose value error is at most 1/(1−γ) times the best achievable (a result reported from Tsitsiklis and Van Roy, 1997). The same chapter warns that off the on-policy distribution "bootstrapping methods using function approximation may actually diverge to infinity" (ch. 9). On a 1000-state random walk with 10 aggregated groups, gradient Monte Carlo needed 100,000 episodes (α = 2·10⁻⁵) to settle, and TD(0) settled at a worse asymptote than Monte Carlo while n-step TD learned faster (100 runs, 20 groups of 50 states; ch. 9, Exs 9.1–9.2). The step size to start from is `α = (τ·E[xᵀx])⁻¹` for a trace of τ updates, not the 1/t schedule of the tabular case.
@@ -194,6 +204,11 @@ outliers. The `max` in the target overestimates values whenever estimates are no
 Q-learning** picks the action with one network and scores it with the other (*RL: An Introduction*, ch. 6, Ex. 6.7). Rainbow
 combines that with prioritized replay, dueling (V + A) heads, n-step targets, noisy-net
 exploration and distributional returns.
+
+![Percentage of left actions from state A under Q-learning and double Q-learning; Q-learning starts near 50 percent, peaks near 95 percent, and decays slowly toward the 5 percent optimum, while double Q-learning stays lower.](../sources/images/murphy-rl-fig2-8.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 2.8, reproduced from Sutton & Barto Fig. 6.5 with permission*
+
+Maximization bias in one picture: state B has many actions whose rewards are drawn from N(−0.1, 1.0), so going left from A is worth −0.1 and is wrong, yet Q-learning with ε = 0.1 picks left most of the time early on because the max over noisy estimates is positive. The curve is averaged over 10,000 runs (Murphy, ch. 2, Sec. 2.5.3). Murphy's survey also lists Rainbow's six parts as double DQN, prioritized replay, C51, n-step with n = 3, dueling and noisy nets, and says each adds diminishing returns (read from his Fig. 2.9; no ablation numbers are printed). On the Atari-100k benchmark, which uses 26 of the 46 ALE games, the best method as of 2024, BBF, ranks its tricks by importance: a larger residual network, a higher update-to-data ratio, periodic soft resets, then n-step annealing (n from 10 to 3, γ from 0.97 to 0.997) (Schwarzer et al., 2023, as reported by Murphy). Target networks can be a periodic copy or an EMA of the weights (ρ ≈ 0.999). Murphy also reports Gallici et al. (2024) proving that off-policy nonlinear TD converges when the final-layer weights are bounded, the penultimate layer is wide and the critic input is norm-bounded (LayerNorm or RMSNorm), a modern answer to the deadly triad. His chapter only names distributional RL (C51, IQN) and defers it to a later section, so don't cite it for those methods.
 
 **Offline (batch) RL** learns from a fixed log with no further interaction. Winder trains a
 DQN agent on the replay buffer of another DQN agent on CartPole, with no environment access.

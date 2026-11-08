@@ -188,6 +188,51 @@ def create_kinesis_client():
 
 `lambda_function.py` shrinks to reading environment variables, calling `model.init(...)` once at cold start, and delegating. The three seams (model location, callbacks, endpoint URL) are what make each kind of test possible.
 
+### Where to cut, what to fix, how much to build
+
+Wilson's ch. 9 to 14 are about code, and every claim in them is experience with no measurements. They are worth a place here for three rules.
+
+**Cut where you can test.** He splits a monolithic script (his hypothetical is about 1,500 lines) by asking "how can I test this block?" and not "what looks nice?" (*ML Engineering in Action*, ch. 9). Wrapping code in functions does not reduce its complexity, only how complicated it is to read, debug and test, and his script and class versions give the same results at the same runtime. His private-method test uses the standard normal's quantiles at 0.01 and 0.99, ±2.3263478740408408, so the expected values can be derived without running the model. Choose test oracles you can derive.
+
+![Design of a class from testability needs](../../sources/images/ml-engineering-in-action-fig9-6.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 9.6*
+
+**Fix what fails in production first.** In ch. 10 he ranks smells by what they do to a project (his Fig. 10.1): naming, syntax and spaghetti structure are annoying but rarely kill it, while blind `try/except`, overused global mutable state and deep nesting cause the production failures that get a project cancelled.
+
+![Five common code issues against project outcome](../../sources/images/ml-engineering-in-action-fig10-1.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 10.1*
+
+His examples are small enough to check. A blind `except: pass` around a division over 100 numbers, with a string passed in place of the divisor, returns an empty list and no error. Catching only the specific exception (a division by zero in his data) drops just the failing element and returns 99 results. The final version logs the exception and its inputs, substitutes a value, and compares input and output lengths, raising a custom error on a mismatch. He estimates proper handling costs "about 30 extra minutes" against days of searching, which is his estimate. A mutable default argument leaks state between calls:
+
+```python
+def add_feature(name, feature_collection=None):
+    collection = feature_collection if feature_collection else list()  # not `=[]` in the signature
+    collection.append(name)
+    return collection
+```
+
+With `feature_collection=[]` in the signature, a second call returns both calls' elements, which in his story built two models with identical six-column inputs. He also flags feature-engineering code "defined in three separate places" for training, test and inference, which is the skew source in [the feature stores chapter](01-feature-stores.md). Nested conditionals for combining model scores grow with his formula `5**levels * 2 + factorial(levels)`, which gives 821,570 lines for 8 models at 5 buckets. The fix is a computed mapping: bucket each score and sum (*ML Engineering in Action*, ch. 10).
+
+**Build the least that works, and only then optimise.** Ch. 13 phases the work: an imperative prototype, then wrapping repeats in functions and externalising constants, then modules and runtime tuning, and warns against abstracting early.
+
+![Phased development to avoid refactoring](../../sources/images/ml-engineering-in-action-fig13-2.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 13.2*
+
+He matches tooling to scale: pandas rather than Spark ML for thousands of rows, a Flask app in Docker rather than Kubernetes at a few requests per minute. Before a custom framework or wrapper, he asks for at least 16 human hours a week to maintain it and a speed-up of at least twice the time spent building it, both his rules of thumb. His premature-optimisation story is a Scala/Spark test-data generator tuned part by part: it took 2 h 54 min for 50 million rows because a sequence type with linear-time access was used where an indexed one was needed, and a simpler rewrite did it in about 15 minutes (hardware not stated). His own success rate repairing tightly coupled script-style Spark jobs after an upstream change, before predictions lapsed, was "just under 40%", an anecdote (*ML Engineering in Action*, ch. 13).
+
+### Monitor the whole life cycle
+
+Ch. 14 asks what a team should watch and answers "everything", seven things (author's list): generated features, model metrics per run, prediction distributions, attribution, response-time SLA, feature usefulness, and the source features. The source feed is best watched by the data engineers who own it.
+
+![Parts of an ML project that need monitoring](../../sources/images/ml-engineering-in-action-fig14-10.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 14.10*
+
+His minimal feature check stores training-time mean, median, standard deviation, min and max in a versioned table per training run, then compares recent serving values daily. His Listing 14.1 alerts when the recent mean falls below the training minimum or above the training maximum, or the standard deviation leaves 0.5x to 2x of training; in his toy series the recent mean of 31.8 sat below a training minimum of 121.9. He admits he does not tune these thresholds. Without monitoring, he estimates a team of 14 would lose two to three investigations a week, each a full workday plus another to retrain (*ML Engineering in Action*, ch. 14). The same chapter's simplicity ladder (heuristics, then a linear model or tree, then ensembles, then deep or custom models) repeats the rung rule in [the framing note](06-ml-system-framing-to-monitoring.md).
+
 ### Unit tests with pytest
 
 ```python
@@ -576,6 +621,8 @@ Course paths are as they stood at [upstream commit `e34bf8f`](https://github.com
 - **Mocking everything.** Unit tests with mocks miss packaging, env-var and wiring bugs. That is what the integration test is for.
 - **Tests that hit real AWS.** They are slow and expensive and can touch production. Use seams and LocalStack.
 - **Copying 2022 configuration.** Pins, `::set-output` and long-lived keys have all aged. Update them on purpose.
+- **Swallowing exceptions.** A blind `except: pass` turns a failure into an empty result. Catch the specific exception, log it, and check that output length equals input length.
+- **Building a framework before the second project.** Custom wrappers and abstractions at project start become the maintenance burden (*ML Engineering in Action*, ch. 13).
 - **Deploying "latest".** The most recent run is not the approved one. Promotion should be a deliberate action.
 - **Treating a self-assessed level as evidence.** Use it for planning, and do not quote it as a measure of quality.
 

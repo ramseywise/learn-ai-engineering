@@ -364,6 +364,26 @@ aws kinesis get-records --shard-iterator $SHARD_ITERATOR
 
 Then push the image to ECR and point a Lambda at it with a Kinesis trigger. The best-practices module turns this setup into Terraform, in [the maturity chapter](05-mlops-maturity-and-best-practices.md). Stream delivery here is at least once, so a retried batch can repeat a prediction; the [semantics chapter](../../04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) explains why, and consumers should treat `ride_id` as an idempotency key.
 
+## Matching the shape to volume and recency
+
+Wilson's ch. 16 turns the choice into a grid of how soon predictions are used against how many are needed, with a rough cost tier on each answer (author's experience; the volume cut-offs and cost tiers are unsourced heuristics):
+
+![Serving architecture by usage pattern and prediction volume](../../sources/images/ml-engineering-in-action-fig16-10.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 16.10*
+
+Reading it: when predictions are used hours to weeks later, a scheduled batch covers low and moderate volume, and streaming microbatch takes over above about 100,000 per hour. When they are needed immediately, a single REST microservice covers low volume, elastic REST covers moderate volume and edge or elastic REST the top tier at the highest cost. Three of his further points are worth keeping. A lightweight Flask-style service is, in his experience, good for "a few dozen requests per second", so it suits internal ad hoc use and not low-latency, high-volume or customer-facing work. A streaming microbatch job on Spark Structured Streaming is cheaper than a REST fleet when the service level is relaxed, from half a second to hours, and traffic is bursty or very large. And for bulk delivery to an outside customer, he gates egress at a fixed time (his example is 9:00 a.m.) and moves feature generation into the feature store's ETL. In his illustration, ungated weekly volumes between 8 and 832.9 GB pushed delivery anywhere from 9:07 a.m. to 4:32 p.m., with a worst-week prediction time of 7 hours 18 minutes. The hotel-deals failure above is his: precomputed predictions covered fewer than 5% of sessions, so 95% of page views fell back to the default, and the A/B test showed no change in bookings (*ML Engineering in Action*, ch. 16).
+
+## Fallbacks and cold start
+
+A model always returns a number, so something outside it has to decide when the number is not fit to use. Wilson's ch. 15 anecdote is a regression controlling a spin chuck that was asked to run at 15,000 RPM against a normal 2,800 once it saw inputs outside its tested range. His rule is that every model has a fallback for output that breaks business rules, and that the fallback is tested as often as the model is. He lists failure modes to cover: an out-of-range regression value, a classifier that predicts one class only, a missed latency target, and a failure detector that itself returns nothing.
+
+![Cold-start routing: a rule decides whether the model or a heuristic answers](../../sources/images/ml-engineering-in-action-fig15-7.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 15.7*
+
+The same switch handles cold start. In his hypothetical, a user with fewer than three past appointments gets a rule-based answer, such as regional popularity or an expert-curated list, and everyone else gets the model. The default should be fast, simple to change and relevant enough that the user does not notice, and "relevant" is defined by the business and its experts, not the data science team. Before release he ranks the checks: experts reviewing other users' predictions beat dogfooding, which beats a data scientist testing on their own account (employee accounts are unrepresentative, and people judge their own profile harder). All of this is the author's experience with no measurements (*ML Engineering in Action*, ch. 15).
+
 ## Rolling out a new model
 
 A model that won the [gate](02-experiment-tracking-and-model-registry.md#the-gate-passive-retraining) has won on old data. Rollout is how it meets current traffic without risking all of it. [Shankar and colleagues' interviewees](https://arxiv.org/abs/2209.09125) used between one and four stages, in the order of test, canary, shadow and A/B, tied wherever possible to a product metric.
@@ -435,6 +455,7 @@ Course paths are as they stood at [upstream commit `e34bf8f`](https://github.com
 - **Precomputing without measuring key coverage.** You will find out in the A/B test, as the hotel-deals team did.
 - **Random canary per request.** One user sees two models, and the comparison is polluted. Hash a stable key.
 - **Measuring the model and calling it latency.** Features, network and serialisation are usually larger.
+- **No fallback for out-of-range output.** The model will still return a number. Decide in advance what is served when the number breaks a business rule.
 - **No input validation.** A model always returns a number. A schema at the boundary is the cheapest guard you can write.
 - **Assuming exactly-once from a stream.** Retries repeat predictions. Make the consumer idempotent.
 

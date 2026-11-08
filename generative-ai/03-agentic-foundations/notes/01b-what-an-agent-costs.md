@@ -5,7 +5,7 @@ sources:
   - "Yang et al. 2026, Toward Efficient Agents: A Survey of Memory, Tool Use, and Planning — https://arxiv.org/abs/2601.14192"
   - "Xing et al. 2026, Critique of Agent Model — https://arxiv.org/abs/2606.23991"
   - "Zhao & Zhao 2026, Runtime-Independent Persistent Agents — https://arxiv.org/abs/2609.00546"
-  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 2"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 2, 11"
 confidence: medium
 cleaned: 2026-11-06
 ---
@@ -128,6 +128,8 @@ The survey sorts the levers by where they cut cost. The table keeps the ones wit
 | Fewer agents, sparser messages | Coordination tokens | Diversity, where it helped | [04b](04b-when-more-agents-pay.md) |
 
 *Agentic Architectural Patterns* (ch. 2) adds two serving-side levers that the survey does not cover. First, split the work by role: a larger model orchestrates and delegates sub-tasks to smaller specialised models or plain tools, so the flagship price is paid only where the reasoning needs it. Its two worked examples are a research assistant that reads dozens of papers (large model, large context, higher cost accepted) and a smart-home controller that only maps a short voice command to an API call (a small distilled model, minimal cost per task). Second, cut round trips: if one tool's output can feed the next tool directly, skip the intermediate reasoning step, or let the model plan several tool calls in a single pass instead of deciding, calling and waiting one call at a time. The chapter also notes that a fast model does not help if the tools are slow. These are the authors' design guidance. The chapter gives no measured savings for either.
+
+A learning loop has its own bill. *Agentic Architectural Patterns* (ch. 11) puts a **cost circuit breaker** around it: a monitor compares token spend with a budget and throttles or blocks the next job. Its prose says a breaker trips at 90% of a $50 per-job allowance. Its code (rate $0.002 per 1,000 tokens, invented) holds a $50 monthly budget and blocks only once spend exceeds 100%, so there is no 90% warning. With $7 already spent, a job that logs $10 and then $40 more takes the total to $57 and blocks the next job after the overspend, not before it. A breaker that checks after the call limits the next call only; to cap one run you need the check before each call. The chapter's return-on-investment example (a refund agent saving "$45,000 in December", from an assumed $0.50 per agent ticket against $12.00 per human ticket) is invented, and its ROI code never computes a saving, only a ratio of satisfaction to success rate over two days.
 
 The survey's rule for judging any of these is the one this chapter uses: first check the agent is still effective, then compare cost at matched quality, or quality at a matched budget. It notes that most papers don't report that cleanly.
 

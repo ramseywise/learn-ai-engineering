@@ -20,7 +20,7 @@ Models fail differently from services. A crashed service throws errors. A stale 
 
 The vocabulary varies across sources, and the distinction matters more than the names. [Gama and colleagues' survey (ACM Computing Surveys, 2014)](http://eprints.bournemouth.ac.uk/22491/) defines drift as a change in the joint distribution $p(X, y)$ and separates two cases. **Real concept drift** changes $p(y \mid X)$: the same inputs now mean something else, whether or not the inputs have moved. **Virtual drift** changes $p(X)$ and leaves $p(y \mid X)$ alone. Only changes that affect the decision need any adaptation. [Imbalance, errors and drift](../../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves) in data science simulates these shifts on a credit model and measures what each one does to it.
 
-[Wilson's *Machine Learning Engineering in Action* (Manning, 2022)](https://www.manning.com/books/machine-learning-engineering-in-action) gives a practitioner's table, which maps well onto what you can actually monitor:
+[Wilson's *Machine Learning Engineering in Action* (Manning, 2022)](https://www.manning.com/books/machine-learning-engineering-in-action) names six kinds of drift (*ML Engineering in Action*, ch. 12), which map well onto what you can actually monitor:
 
 | Drift | What moved | Taxi example | Seen without labels? |
 |---|---|---|---|
@@ -31,7 +31,9 @@ The vocabulary varies across sources, and the distinction matters more than the 
 | Reality | The world changes suddenly | A lockdown | Partly |
 | Feedback | The model's output changes its own future data | A route suggestion moves the traffic | Partly |
 
-Two more cases need naming, since drift is often blamed for them. **A broken feed** is not drift at all. Wilson's example is a temperature feed that switched from Fahrenheit to Celsius, and the same thing happens in our taxi data when miles become kilometres. And [the patterns Gama lists](http://eprints.bournemouth.ac.uk/22491/) are worth knowing, as they lead to different responses: sudden, incremental, gradual and reoccurring, with a single outlier not counting as drift at all.
+Wilson's usage is looser than the table's, and the difference is worth knowing before you read him. In ch. 12 his "label drift" is a shift in the distribution of the model's predictions (his Fig. 12.2 compares the training-time prediction histogram with week 8), and his "prediction drift" is a business effect that shows only in attribution measurement: coupon downloads rise while purchases plateau. The table above uses the standard senses (target moved, output moved). His examples are fictional ice-cream-coupon scenarios, so none of this is measured.
+
+Two more cases need naming, since drift is often blamed for them. **A broken feed** is not drift at all. Wilson's example is a temperature feed that switched from Fahrenheit to Celsius (*ML Engineering in Action*, ch. 12): in his fictional coupon model, retrained passively each month with no monitoring, a 20% revenue lift in the test group became a 300% loss before anyone looked at the features. He also notes that a tree model buckets out-of-range inputs into its outermost leaves while a linear model extrapolates, so the same broken feed does different damage to different model families. And the same thing happens in our taxi data when miles become kilometres. And [the patterns Gama lists](http://eprints.bournemouth.ac.uk/22491/) are worth knowing, as they lead to different responses: sudden, incremental, gradual and reoccurring, with a single outlier not counting as drift at all.
 
 The interview study ranks these by how often they actually bite, and its order surprises people. In [Shankar and colleagues' interviews (2022)](https://arxiv.org/abs/2209.09125), feedback delays came first, then "unnatural" drift, meaning missing or corrupt data, then natural drift, about which those engineers were relatively relaxed since they retrain often. So fix your pipeline before you buy a drift detector.
 
@@ -376,6 +378,28 @@ loan default                         8760.0 h   3,942,000 predictions
 
 The rate of 450 an hour is invented for scale, but the shape is real. For a taxi model, performance monitoring works. For a loan model it is a retrospective, and you must rely on input and prediction monitors, which we have just seen can mislead in both directions, plus proxies. The interviews say delays often go unaccounted for: one engineer's labels took at least two weeks, and this was the most frequent failure mode the group described.
 
+## Business impact, not only loss
+
+Everything above watches inputs or error. A model can hold its error and still stop paying for itself, and the reverse. Wilson's ch. 11 makes the case for keeping a business metric next to the loss for the life of the project: an optimised loss need not translate into the target metric, and the features never capture all the causes of the outcome (his Fig. 11.9), so model-side correlations cannot show impact. Only a controlled comparison can. His table pairs each use case with both kinds of metric (fraud, churn, sales forecast, sentiment, coupons). Everything in this chapter's source is his practice on simulated coupon data, with no real deployment behind it, so read the rules as advice.
+
+- **Stratify before assigning.** He scores customers on recency, frequency and monetary value in 5 quantile buckets each, which gives 125 cells, and collapses them with marketing experts into 3 meta-groups used as strata. Random assignment alone can put 90% of the best customers in the control arm and make the model look bad.
+- **Fix the evaluation rules before release.** A daily readout of test minus control swings with noise: his cartoon has day 1 at +$20,765, day 7 at -7%, and the project turned off by day 14.
+- **Check the shape of the data first.** Revenue per customer can be half-Cauchy, which breaks t-tests. He uses Mann-Whitney U for non-stationary or non-normal series, Tukey HSD to compare many groups pairwise, and Fisher's exact or chi-square for happen/not-happen events. His simulated high-value cohort, first 150 days, comes out at "~97% certainty" that the arms differ, which is his wording for 1 minus the p-value.
+- **Scale the monitoring to the stakes.** Internal tooling can live on standard ML metrics. A departmental helper wants occasional ad hoc drift checks. A decision-critical internal model needs drift detection, with attribution a good idea. A customer-facing model needs attribution, drift and bias detection.
+
+Time to a conclusive answer is a sample-size calculation, done before release. These are per-group sizes for a two-sided two-sample t-test at power 0.8, from `statsmodels.stats.power.tt_ind_solve_power` as in his Listing 11.1. I recomputed them, and they match his figure.
+
+| Standardised effect | 0.01 | 0.05 | 0.1 | 0.2 | 0.5 |
+|---|---|---|---|---|---|
+| alpha 0.2 | 90,057 | 3,603 | 901 | 226 | 36 |
+| alpha 0.01 | 233,581 | 9,345 | 2,337 | 586 | 95 |
+
+![Sample size against effect size at two alpha values, log scale](../../sources/images/ml-engineering-in-action-fig11-10.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 11.10. The printed legend says alpha=0.001, but the plotted counts are those of alpha=0.01, which is also what the callout and code use.*
+
+A 1% lift needs six figures of samples and a 50% lift needs dozens, which is his point: if the model barely moves the metric, you will not be able to prove it. The [A/B-testing note](../../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) covers the same calculation from the statistics side.
+
 ## What to do about it: retraining policy
 
 Gama separates blind adaptation, which retrains on a schedule, from informed adaptation, which waits for a trigger. Blind forgets at a constant speed whether or not anything has changed; informed reacts only after a signal. Compare them on both shapes of change, with a simple rule: retrain when the month's error is 20% worse than the first quarter's.
@@ -429,9 +453,17 @@ gradual change
 
 On a sudden change, the trigger matches monthly retraining on mean error with 2 trainings instead of 13 (the counts include the first fit). On a gradual change, it lags, since drift has to accumulate to 20% before anything happens, and monthly wins by 2.42 to 2.71. Note also the worst month under the sudden change: 4.67 for monthly, 4.64 for triggered. No policy avoids the first month after a sudden change, because each one only learns about it from that month's labels. This is why fallback and rollback belong in the plan.
 
-So which? The evidence in this chapter's sources favours starting blind. Wilson advises passive retraining, and active only when passive fails, as active systems are more complex. The interviews report cadence running from every few hours to every few months, set without any scientific procedure; one team's daily schedule simply reflected practice, and another's matched its 3 to 4 hour training time. This argues for a schedule you can defend by experiment, not for a clever trigger. Whichever you choose, a retrain goes through the [gate](02-experiment-tracking-and-model-registry.md#the-gate-passive-retraining), because a triggered retrain on bad data is a machine for shipping incidents.
+So which? The evidence in this chapter's sources favours starting blind. Wilson advises passive retraining, and active only when passive fails, as active systems are more complex (*ML Engineering in Action*, ch. 12 and ch. 16). The interviews report cadence running from every few hours to every few months, set without any scientific procedure; one team's daily schedule simply reflected practice, and another's matched its 3 to 4 hour training time. This argues for a schedule you can defend by experiment, not for a clever trigger. Whichever you choose, a retrain goes through the [gate](02-experiment-tracking-and-model-registry.md#the-gate-passive-retraining), because a triggered retrain on bad data is a machine for shipping incidents.
 
 Also remember that anything fitted is a model too. An interviewee's phrase was that any function summarising the data needs refitting, including histogram buckets and vocabularies. Our reference window for PSI ages in the same way.
+
+Wilson draws the two policies side by side (author's design advice, not tested):
+
+![Passive and active retraining flowcharts](../../sources/images/ml-engineering-in-action-fig12-6.png)
+
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 12.6*
+
+Passive retraining trains on a sliding window or all data on a schedule, evaluates old and new models on the same fresh holdout, and keeps the winner. He adds that it must itself be watched: a run of retrains where nothing beats production signals a large concept drift. Active retraining measures the prediction distribution and post-hoc quality at an interval and retrains when statistical-process-control rules or static thresholds trip. In ch. 16 his hypothetical is a next-hour weather forecaster whose truth arrives an hour late, retrained when its 48-hour accuracy falls below 70%, and he calls active retraining expensive because it needs monitoring, merged late labels and tuned thresholds. His rough retraining periodicities, from his own work and marked approximate (Table 12.2): recommendation hourly or daily, sales forecasting daily or weekly, customer lifetime value weekly, churn and transport demand monthly, fraud biweekly, image labelling two to six months, equipment failure semiannually or annually. When drift is found he lists four responses: retrain and compare, repair an obvious ETL fault and then retrain, revisit feature engineering, or stop the model at once if its negative business impact is statistically significant.
 
 ## Pitfalls
 
@@ -439,6 +471,7 @@ Also remember that anything fitted is a model too. An interviewee's phrase was t
 - **Reading a small p-value as a large shift.** On big windows everything is significant. Report a magnitude too.
 - **Copying PSI thresholds.** Calibrate on historical windows; small windows are noisy.
 - **Monitoring only inputs.** Concept drift leaves inputs alone. Get labels or proxies.
+- **A fixed decision threshold on a shifting score.** Wilson's example sends a coupon only above 90%. When the score distribution shifts, nearly everyone clears the bar while holdout loss looks fine. Monitor the share above the threshold.
 - **Retraining on every alert.** If the feed is broken, you teach the model the bug. Check the pipeline first.
 - **A frozen reference window.** After a successful retrain, the reference must move with the training set.
 - **Ignoring seasonality.** Monday differs from Saturday. Compare with a matching window, or weekly patterns will look like drift. A reoccurring concept is not a new one.

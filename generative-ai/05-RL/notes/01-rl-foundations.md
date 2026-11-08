@@ -4,6 +4,7 @@ confidence: medium
 cleaned: 2026-11-01
 sources:
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–4, 13"
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1, 3)
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
@@ -243,6 +244,13 @@ simpler but β is hard to tune (*Reinforcement Learning*, ch. 6). RLHF keeps tha
 against the frozen reference model rather than the previous iterate
 ([02](02-rlhf-pipeline.md); why the penalty is *reverse* KL: [12](12-rlhf-failure-modes.md#overoptimization)).
 
+Murphy derives where the trust region comes from (*RL: A Comprehensive Overview*, ch. 3, Sec. 3.3). The new policy's return is bounded below by a surrogate minus a penalty proportional to the total-variation distance between old and new policies, scaled by 2γC/(1−γ)². A KL bound δ implies a TV bound through δ = ε²/2, so maximising the surrogate under a KL limit improves the policy monotonically in theory. TRPO expands the surrogate to first order and the KL to second order, steps along the natural gradient `F⁻¹g` with size √(2δ/vᵀFv), solves for it by conjugate gradient and backtracks until the constraint holds. The step is measured in KL, not parameter distance, because the same shift in a Gaussian's mean matters far more when its variance is small:
+
+![Two pairs of Gaussians whose means differ by the same amount: with a small shared variance the two curves overlap little, with a large shared variance they overlap a lot.](../sources/images/murphy-rl-fig3-1.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 3.1 (reproduced from Honkela et al.)*
+
+The Fisher matrix F is the local KL metric, so it rescales each parameter by how much it moves the distribution. For off-policy actors, V-trace truncation at c = 1 and ρ = 1 worked best in IMPALA, one agent playing 57 Atari games (as reported in ch. 3, Sec. 3.4). The chapter runs no experiments and has no LLM method (no GRPO, DPO or KL-to-reference penalty). Its control-as-inference section shows that a KL-regularised objective with a uniform prior is maximum-entropy RL, the setting of SAC. Swapping in a reference-policy prior gives the RLHF objective form; that link is this note's, not the chapter's.
+
 **The PPO clip** replaces the trust region with a clipped surrogate:
 
 ```
@@ -359,7 +367,7 @@ the bridge between the value and policy families (*Reinforcement Learning*, ch. 
 A fundamental tension: should the agent **exploit** the best action it knows (maximize
 immediate reward) or **explore** new actions that might yield higher rewards in the long
 run? Strategies:
-- **ε-greedy:** With probability ε, take a random action; otherwise exploit
+- **ε-greedy:** With probability ε, take a random action; otherwise exploit. Murphy notes it explores every action with probability at least ε/|A| forever, so it is suboptimal unless ε is annealed to 0 (*RL: A Comprehensive Overview*, ch. 1, Sec. 1.3.5). Boltzmann selection is smoother: with τ = 1, estimated rewards of 4.90 and 5.10 give about 0.45 and 0.55, where ε-greedy would give a hard 0.05/0.95 split (his Table 1.2, with ε = 0.1 and two actions; the Boltzmann values check against exp(R̂/τ))
 - **UCB (Upper Confidence Bound):** Choose actions with high uncertainty to reduce
   uncertainty faster
 - **Entropy regularization (SAC; optional in PPO):** Add an entropy bonus to the objective to

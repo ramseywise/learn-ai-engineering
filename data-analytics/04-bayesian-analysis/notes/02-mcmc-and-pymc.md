@@ -8,6 +8,7 @@ sources:
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 10)
   - https://www.pymc.io/
   - ../practice/BayesianML/week_4/
+  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 8
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -395,6 +396,32 @@ Divergences fall from 88 to 2, and τ's ESS rises from 64 to over 2,000. The two
 | When it will not converge | reconsider the model |
 
 > **The Folk Theorem of Statistical Computing, as BMH ch. 3 states it: "If you are having computational problems, probably your model is wrong."**
+
+### Flat priors with two observations
+
+McElreath's sick-chain example is two observations, y = -1 and 1, a Normal likelihood and no priors (*Statistical Rethinking*, ch. 8). Every value of the mean is equally plausible a priori, so the chain must now and then visit absurd ones, and two data points cannot pull it back. His run gives a posterior mean for the mean of 21,583,691, 7 effective samples and R-hat 1.36. The same model in PyMC, re-run with two chains of 2,000 draws:
+
+```python
+y = np.array([-1.0, 1.0])
+with pm.Model():
+    a = pm.Flat("alpha"); s = pm.HalfFlat("sigma")                  # flat: the sick chain
+    # a = pm.Normal("alpha", 1, 10); s = pm.HalfCauchy("sigma", 1)  # weak: the fix
+    pm.Normal("y", a, s, observed=y)
+    idata = pm.sample(2000, tune=1000, chains=2, random_seed=3)
+```
+
+| Priors | alpha mean | alpha ess_bulk | alpha r_hat | Divergences |
+|---|---|---|---|---|
+| Flat | 1.8e8 | 8 | 1.29 | 678 |
+| Normal(1, 10), HalfCauchy(0, 1) | 0 (sd 1.8) | 861 | 1.00 | 1 |
+
+The book's weak-prior fit gives a mean of -0.01 with 1,121 effective samples. The fix costs one line, and the prior is washed out where there is data: the weak-prior posterior for alpha is centred on the sample mean, not on the prior's centre of 1. McElreath's second case is a non-identifiable model, mu = a1 + a2 with flat priors, where only the sum is constrained: a1 wanders to about -1,195 with R-hat 2.83 and 1 effective sample, and Normal(0, 10) priors repair it (1,223 effective samples). Two things to take from the pictures: the healthy chains in the bottom row overlap into a caterpillar, and the sick ones drift and spike. R-hat is a warning, never a certificate, since a value of 1.00 can come from an invalid chain.
+
+![Trace plots of a sick chain under flat priors and healthy chains under weak priors](../sources/images/statistical-rethinking-fig8-5.png)
+
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 8.5*
+
+Two further numbers from the chapter. About 200 effective samples is enough for a posterior mean, with roughly an order of magnitude more for a variance when the posterior is near Gaussian. On the ruggedness-and-GDP regression (170 nations, interaction slope), HMC and the quadratic approximation agree (0.40 against 0.39), because that posterior is almost multivariate Gaussian, and four parallel chains raised the effective sample size about fourfold over one. The chapter predates divergences and bulk and tail ESS, so use the diagnostics table above, not its R-hat alone.
 
 ## PyMC3 to current PyMC
 

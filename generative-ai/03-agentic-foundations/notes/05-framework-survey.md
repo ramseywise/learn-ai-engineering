@@ -8,7 +8,7 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 7"
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 1"
-  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 4"
+  - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 4, 15"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4"
   - "Chen et al. 2024, Internet of Agents — https://arxiv.org/abs/2407.07061"
   - "Li et al. 2024, More Agents Is All You Need — https://arxiv.org/abs/2402.05120"
@@ -379,6 +379,10 @@ Internet of Agents ([arXiv:2407.07061](https://arxiv.org/abs/2407.07061) (Chen e
 The repo's MLflow script logs runs and scores answers with built-in LLM judges (`answer_relevance`, `faithfulness`) plus a custom judge built with `make_genai_metric` (a privacy check). Evaluation proper lives in [06-observability](../../06-observability/README.md) and [ai-engineering 06 — eval](../../08-eval/README.md).
 
 ---
+
+## The same workflow in CrewAI and LangGraph
+
+*Agentic Architectural Patterns* (ch. 15) rebuilds its loan workflow in CrewAI (a hierarchical crew under a manager agent) and LangGraph (nodes, shared state, conditional edges). Its one substantive point is the control flow. With an invalid document, a LangGraph conditional edge such as `"reject" if state.get("error") else "continue"` stops the run before the credit and risk steps, while the hierarchical crew leaves that decision to the manager, so it can still spend calls on later steps. The claim is asserted: no run output, cost or latency is printed. The comparison is also confounded. The CrewAI side scores risk with a rule-based tool (credit under 650 adds 4, cutoff 8, all invented), while the LangGraph side asks the model and maps LOW, MEDIUM, HIGH, UNKNOWN to 3, 6, 9, 10, with no temperature set against 0.0 on CrewAI. By the book's own code, the parser tests `"LOW" in text.upper()` first, so a HIGH answer that contains "below" is scored LOW, and the compliance branch tests the wrong error string and never fires. Its framework-lock-in advice is the portable part: stable tool contracts (JSON with `status` and `data`, or `error`), explicit state schemas, and orchestration written as patterns.
 
 ## Composing patterns (book ch 10)
 

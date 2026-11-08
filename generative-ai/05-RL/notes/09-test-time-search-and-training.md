@@ -12,6 +12,7 @@ sources:
   - https://arxiv.org/abs/2502.06807
   - https://arxiv.org/abs/2411.07279
   - https://arxiv.org/abs/2601.16175
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 8, 16, 17"
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -100,6 +101,19 @@ The book's demo runs Sakana's open-source TreeQuest for 5 steps (`tq.ABMCTSA()`,
 grades it, so the demo shows the mechanics, not a gain. The search is only as good as its
 scorer. Use a real verifier (tests, a checker) whenever you have one. A self-judge brings
 back the false-positive problem from Zhao et al.
+
+**Where the search comes from.** A rollout algorithm estimates q_π(s,a) at the current state by averaging simulated returns under a fixed rollout policy, then acts greedily. Its aim is to improve on the rollout policy (the policy improvement theorem), not to find an optimum, and the estimates are discarded after the move. Parallel trials, truncated rollouts closed by a stored evaluation function, and pruning make it cheap (*RL: An Introduction*, ch. 8, Sec. 8.10). Best-of-N with a verifier is this idea for a one-step choice. MCTS keeps a tree for the duration of the move, and each iteration has four steps: **selection** (a tree policy, ε-greedy or UCB, walks to a leaf), **expansion** (add a child), **simulation** (a cheap rollout policy plays to the end of the episode) and **backup** (the return updates the edges on the path only). The move played is the child with the largest value or the most visits (ch. 8, Sec. 8.11). The book says MCTS took computer Go from weak amateur in 2005 to 6 dan or better in 2015, without naming a source experiment.
+
+The case studies in chapter 16 show what a learned value adds. All numbers there are reported from other groups' work.
+- **TD-Gammon** learned afterstate values by self-play TD(λ), with 198 inputs, 40 hidden units and reward only for a win. It matched the best earlier programs after about 300,000 games. The branching factor of about 400 rules out conventional deep search, and two- and three-ply search over the learned value changed move choice without changing training. Trajectory sampling cut live error 4× to 6× at 5 to 10 s per move.
+- **Watson's Daily-Double wagering** used a value learned in simulated games against three opponent models. The simulated win rate was 61% with a heuristic, 64% with the learned value and 67% with live in-category confidence. Endgame bets used Monte-Carlo rollouts instead of the network, which improved play but was too slow to use for every decision in live time.
+- **AlphaGo** mixed a value net with rollouts at the leaf, `v(s) = (1−η)·v_θ(s) + η·G`. η = 0.5 worked best, and the value net alone beat rollouts alone. One reversal is worth remembering. The supervised policy expanded the tree better against humans than the RL policy did, while the value derived from the RL policy beat the one from the supervised policy. The authors' reason is that the RL policy is "tuned to respond to optimal moves rather than to the broader set of moves characteristic of human play".
+- **AlphaGo Zero** put search inside training. Each move ran 1,600 MCTS iterations (about 0.4 s). The network's policy head was trained toward the visit-based move probabilities π, and its value head toward the game's winner z.
+
+![AlphaGo Zero self-play: MCTS produces move probabilities pi at each position and the winner z labels the game; a two-headed network is trained to predict pi and z and then guides the next round of search.](../sources/images/sutton-barto-rl-fig16-7.png)
+*Image Source: Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 2018), Fig. 16.7, from Silver et al. (2017)*
+
+After 4.9 million self-play games in about 3 days it reached Elo 4,308, against 3,144 and 3,739 for the versions that beat Fan Hui and Lee Sedol, and won 100 of 100 against the Lee Sedol version. A supervised network trained on about 30 million positions from 160,000 human games started ahead and fell behind after a day. The book's summary is that "MCTS may therefore be viewed as a powerful policy improvement operator": search gives better targets than the network alone, distillation moves them in, and the next search starts from a stronger network. rStar-Math below is the LLM version. One caution from chapter 17: learning a model from data and then planning with it is still rare. Planning works best where the model is known, as in Go and chess (ch. 17, Sec. 17.5).
 
 **Search and training feed each other.** Search trajectories are rollouts, so rLLM can treat
 each tree node as a step and train the policy to search better. Search can also generate

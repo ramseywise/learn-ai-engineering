@@ -1,0 +1,221 @@
+{
+ "schema": 1,
+ "key": "sha1:1c3baf08bfb0",
+ "pdf": "generative-ai/03-agentic-foundations/sources/agentic-architectural-patterns/ch13-use-case-single-agent-loan-processing.pdf",
+ "bib": {
+  "title": "Use Case: A Single Agent for Loan Processing (Chapter 13, Agentic Architectural Patterns for Building Multi-Agent Systems)",
+  "authors": ["Arsanjani", "Bustos"],
+  "first_author": "Arsanjani",
+  "year": 2026,
+  "venue": "Packt (book chapter, pp. 423-448)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 53887,
+  "chars_total": 53887,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you build a complete loan-origination pipeline as one monolithic tool-using agent with an FCoT prompt, and where does that design strain?",
+ "hypothesis": null,
+ "contributions": [
+  "A single Google ADK LlmAgent with four mock tools and a Fractal Chain-of-Thought (instruction contract plus recursive loop) prompt",
+  "Two test runs (Borrower-789 approve path, Borrower-400 deny path) shown as agent logs",
+  "A list of strains of the single-agent design (fault isolation, maintainability, scaling) motivating Chapter 14"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The prompt sets a thinking budget of 1024 tokens in code; the prompt text, not code, defines the three-iteration loop (N = 3).",
+   "kind": "claim",
+   "source": null,
+   "metric": "thinking_budget",
+   "value": "1024",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ThinkingConfig(include_thoughts=True, thinking_budget=1024) passed to BuiltInPlanner; model gemini-3-flash on Google ADK.",
+   "quote": "While the Python code (thinking_budget=1024) sets the resource limits (how many tokens it can use),",
+   "table": null,
+   "note": null,
+   "where": "p.433 (Pattern insight: cognitive control versus code control)"
+  },
+  {
+   "claim": "N=3 in the FCoT loop is a semantic instruction to the LLM, not a parameter of the planner.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prompt line 'FCoT RECURSIVE LOOP (N = 3)': planning, execution, verification and explainability iterations.",
+   "quote": "N=3 is not a Python parameter",
+   "table": null,
+   "note": null,
+   "where": "p.433"
+  },
+  {
+   "claim": "Borrower-400 (mock score 450) is assessed high risk and denied, yet the compliance tool still runs.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "credit_score",
+   "value": "450",
+   "unit": "score",
+   "baseline_value": null,
+   "n": 1,
+   "setup": "One run, loan amount $350,000, mock tools; score hard-coded for borrower_id == 'Borrower-400'. Single log shown, no repeats, no accuracy measurement.",
+   "quote": "It successfully ingested data from the\nrun_credit_check tool, reasoned that a score of 450 constituted high risk, and correctly denied the loan.",
+   "table": null,
+   "note": "Tool code returns int 450; the printed tool output shows the string '450'.",
+   "where": "p.443"
+  },
+  {
+   "claim": "assess_risk labels any credit score above 740 low risk and everything else high; loan_amount is accepted but ignored; no medium level exists.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "risk threshold",
+   "value": "740",
+   "unit": "credit score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mock tool in the notebook code.",
+   "quote": "if credit_score > 740:",
+   "table": null,
+   "note": "Prose (p.429) says assess_risk returns 'low, medium, or high' and uses 'the credit score and loan amount'; the code returns only low or high and never reads loan_amount.",
+   "where": "pp.429-431 (Tool 3)"
+  },
+  {
+   "claim": "Mock credit scores for every borrower except Borrower-400 are drawn uniformly from 750-850.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "mock credit score range",
+   "value": "750-850",
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "run_credit_check mock; random.randint(750, 850), so the happy path is always low risk.",
+   "quote": "score = random.randint(750, 850) # Simulate a good credit score",
+   "table": null,
+   "note": null,
+   "where": "p.430"
+  },
+  {
+   "claim": "The prompt's success criteria (95% accuracy, 100% policy compliance, 90% explainability coverage, 5 min latency) are text for the model, not enforced or measured.",
+   "kind": "claim",
+   "source": null,
+   "metric": "Accuracy vs gold truth",
+   "value": ">= 95%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inside the instruction contract of agent_instructions; the chapter calls them semantic guardrails; no evaluation harness is run.",
+   "quote": "Accuracy ≥ 95% vs gold truth (financial data).",
+   "table": null,
+   "note": "Also 'Policy compliance = 100%', 'Explainability coverage ≥ 90%', 'Latency < 5 min end-to-end'. Tool sleeps sum to 5.5 s (1+2+1.5+1).",
+   "where": "p.432-433"
+  },
+  {
+   "claim": "Free-tier quota error handler assumes about 20 requests per day.",
+   "kind": "claim",
+   "source": null,
+   "metric": "free tier requests/day",
+   "value": "20",
+   "unit": "requests/day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "String in call_agent error handling for Gemini API quota (RESOURCE_EXHAUSTED / 429).",
+   "quote": "You have hit the hard cap (approx. 20 requests/day).",
+   "table": null,
+   "note": "Time-dated vendor limit.",
+   "where": "p.438"
+  },
+  {
+   "claim": "The authors say the single agent is a single point of failure: a failed credit API call halts the entire run, because the design has no retry.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argued from design, not tested; proposed fix is a CreditCheckAgent with retry and exponential backoff plus orchestrator fallback or human-in-the-loop.",
+   "quote": "the entire agent's execution would halt with an\nunhandled error",
+   "table": null,
+   "note": null,
+   "where": "p.444"
+  },
+  {
+   "claim": "Expanding the workflow to 10-15 steps would risk 'lost in the middle' failure in one prompt.",
+   "kind": "claim",
+   "source": null,
+   "metric": "workflow steps",
+   "value": "10 or 15",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical expansion with FraudDetection, CollateralValuation, InsuranceVerification stages; not run.",
+   "quote": "If we needed to expand our workflow to 10 or 15 steps",
+   "table": null,
+   "note": "Same sentence calls the current workflow a 'four-step process'; Table 13.1 lists five stages and the agent has four tools.",
+   "where": "p.446"
+  }
+ ],
+ "limits": [
+  "No quantitative evaluation: two single-run logs on mock tools, no repeats, no accuracy, latency or cost numbers.",
+  "All tools are mocks (time.sleep delay, hard-coded rules); the compliance tool always returns pass regardless of input, so the compliance claim is untested.",
+  "Happy-path log is elided ('[... log continues ...]'); the shown final response does not itself state 'Approved', although the prose says it did.",
+  "Prose says the FCoT output includes an explainability_report in a final JSON; no such JSON or SHAP tool appears in the code or logs.",
+  "The prompt references a RAG verifier, PoF ledger, retrieval sources and a Human-in-the-Loop agent that do not exist in the build.",
+  "start_agent_run (retry and throttling) is called in call_agent but never defined in the printed code.",
+  "Level labels are inconsistent: 'Level 3' for the build, 'Level 5 implementation' and 'Moving from Level 5 to 6' in the roadmap heading, 'Level 4' as the target, then 'A Level 5 multi-agent system' for the orchestrator.",
+  "The model variable is 'gemini-3flash' (unused) while LlmAgent uses 'gemini-3-flash'.",
+  "Model ids and the free-tier cap are dated vendor details."
+ ],
+ "practices": [
+  "Put mission, deliverables and guardrails in an immutable instruction contract and re-echo it each loop iteration to counter goal drift (p.425-426).",
+  "Structure reasoning as plan, execute, verify iterations with a VERIFY step against the contract in each (pp.432-435).",
+  "Enable include_thoughts and log thoughts, tool calls and tool outputs for observability (pp.435-437).",
+  "Treat prompt success criteria as semantic guardrails; pair with an external harness such as DeepEval or Ragas in production (p.433).",
+  "Keep tool function signatures stable and swap mock bodies for real wrappers, possibly via MCP (p.429).",
+  "Use strongly typed Pydantic outputs as data contracts between agents (p.431).",
+  "Still run the compliance tool on the denial path (p.443).",
+  "Isolate faults by wrapping external calls in a specialist agent with retry and exponential backoff; escalate to human or backup tool on failure (pp.444-445).",
+  "Split by concern into specialist agents with short prompts owned by separate teams (p.445)."
+ ],
+ "terms": [
+  {"term": "Fractal Chain-of-Thought (FCoT)", "definition": "an approach built from an instruction contract and a recursive loop that enforces a rigid, self-correcting structure on reasoning", "where": "pp.425-426"},
+  {"term": "Instruction contract (IC)", "definition": "the agent's immutable source of truth: mission, exact deliverables, and safety and compliance guardrails it must never violate", "where": "p.426"},
+  {"term": "Recursive loop", "definition": "the active thinking process: cycles of planning, executing, and verifying work against the IC", "where": "p.426"},
+  {"term": "Goal drift", "definition": "the agent gradually deviates from its original objective as the task progresses", "where": "p.425"},
+  {"term": "Toolbelt", "definition": "a collection of functions the agent can call, wrapped in ADK FunctionTool", "where": "p.426"},
+  {"term": "Semantic guardrails", "definition": "criteria stated in the prompt for the model's reasoning, not enforced by Python assertions", "where": "p.433"}
+ ],
+ "lineage": [
+  {"work": "Google Agent Development Kit (ADK)", "year": null, "arxiv": null, "relation": "uses-method", "note": "LlmAgent, BuiltInPlanner, FunctionTool, Runner, InMemorySessionService", "quote": null},
+  {"work": "Gemini (gemini-3-flash)", "year": null, "arxiv": null, "relation": "evaluates", "note": "the only model used", "quote": null},
+  {"work": "Model Context Protocol", "year": null, "arxiv": null, "relation": "related", "note": "named as the production route for tool wrappers", "quote": null},
+  {"work": "SHAP (SHapley Additive exPlanations)", "year": null, "arxiv": null, "relation": "related", "note": "explained only as a concept; no citation printed", "quote": null},
+  {"work": "Lost in the middle phenomenon", "year": null, "arxiv": null, "relation": "related", "note": "named, not cited", "quote": null},
+  {"work": "DeepEval and Ragas", "year": null, "arxiv": null, "relation": "related", "note": "suggested external evaluation harnesses", "quote": null},
+  {"work": "Earlier chapters of the same book: Agentic AI Levels and maturity model", "year": 2026, "arxiv": null, "relation": "extends", "note": "chapter applies the levels and patterns (Planner, Tool use, Guardrails, HITL, Supervisor)", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 13.1", "caption": "Architectural diagram of the monolithic loan processing agent (printed 'Figure 13: 1' in the caption tool)", "page": "book p.427 (PDF p.5)", "why": "Shows the FCoT core, state management and toolbelt around one agent"},
+  {"figure": "Table 13.1", "caption": "Stages of a loan origination workflow", "page": "book pp.424-425 (PDF p.2-3)", "why": "Five stages (intake, credit check, risk, compliance, decision) with automation challenge for each; the code implements only four as tools"}
+ ],
+ "code": [
+  {"where": "p.435-436 (Agent Initialization)", "snippet": "thinking_config = ThinkingConfig(include_thoughts=True, thinking_budget=1024)\nplanner = BuiltInPlanner(thinking_config=thinking_config)\nagent = LlmAgent(model=\"gemini-3-flash\", name=\"LoanProcessingAgent\", instruction=agent_instructions, planner=planner, tools=loan_processing_tools)", "verbatim": false},
+  {"where": "p.430 (Tool 1)", "snippet": "validate_document_tool = FunctionTool(func=validate_document)", "verbatim": true}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Text layer loses indentation and bullets; code reconstructed by reading.",
+  "Figure 13.1 image content not inspected, only the caption.",
+  "Code snippet in 'code' list first entry is condensed, so verbatim is false."
+ ]
+}
