@@ -1,0 +1,613 @@
+{
+ "schema": 1,
+ "key": "2303.07678",
+ "pdf": "generative-ai/02-rag-retrieval/sources/wang-2023-query2doc.pdf",
+ "bib": {
+  "title": "Query2doc: Query Expansion with Large Language Models",
+  "authors": [
+   "Liang Wang",
+   "Nan Yang",
+   "Furu Wei"
+  ],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 9414-9423",
+  "arxiv": "2303.07678",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38557,
+  "chars_total": 38557,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can few-shot prompted LLM-generated pseudo-documents expand short queries to improve sparse and dense retrieval without fine-tuning the LLM?",
+ "hypothesis": "LLMs memorize web-scale knowledge, so their generated pseudo-documents contain relevant terms that disambiguate the query and bridge the lexical gap.",
+ "contributions": [
+  "query2doc: query expansion by few-shot prompting LLMs for pseudo-documents, concatenated with the query",
+  "Gains for BM25 (3% to 15%) without fine-tuning and for dense retrievers in-domain and out-of-domain",
+  "Release of all text-davinci-003 generations for MS-MARCO"
+ ],
+ "method": {
+  "summary": "Prompt an LLM with an instruction and 4 random MS-MARCO (query, passage) pairs to write a passage for the query, then form q+ by repeating the query 5 times plus the passage (BM25) or query [SEP] passage (dense). Dense retrievers are retrained with expanded queries (DPR with contrastive loss; SimLM/E5 with KL distillation plus contrastive loss).",
+  "task": "ad-hoc passage retrieval with query expansion",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MS-MARCO passage ranking",
+    "role": "both",
+    "size": null,
+    "split": "train for dense retrievers and few-shot examples; dev for eval",
+    "source": "Campos et al. 2016",
+    "preprocessing": "pseudo-documents generated for training queries too (most of the ~550k API calls)"
+   },
+   {
+    "name": "TREC DL 2019 and 2020",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Craswell et al. 2020a,b",
+    "preprocessing": null
+   },
+   {
+    "name": "BEIR: DBpedia, NFCorpus, Scifact, Trec-Covid, Touche2020",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot",
+    "source": "Thakur et al. 2021",
+    "preprocessing": "few-shot examples from MS-MARCO train"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003",
+    "role": "proposed",
+    "params": "175B",
+    "architecture": "GPT-3 family LLM (query expander)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "babbage / curie / davinci-001 / GPT-4",
+    "role": "evaluated",
+    "params": "1.3B / 6.7B / 175B / not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DPR (BERT-base)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "bi-encoder",
+    "init_from": "BERT-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SimLM / E5-base",
+    "role": "retriever",
+    "params": null,
+    "architecture": "bi-encoder with KD",
+    "init_from": "intfloat/simlm-base-msmarco; intfloat/e5-base-unsupervised",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pooling": "[CLS] for SimLM, mean pooling for E5"
+    }
+   }
+  ],
+  "training": {
+   "objective": "contrastive loss with BM25 hard negatives (DPR); KL(p_ce, p_stu) + alpha * contrastive (distillation)",
+   "optimizer": null,
+   "lr": "2e-5 (DPR); 3e-5 (w/ distillation)",
+   "lr_schedule": null,
+   "warmup": "1000 steps",
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "3 (DPR); 6 (w/ distillation)",
+   "tokens": null,
+   "seq_len": "query 144, passage 144",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 GPUs (type not stated)",
+   "compute": "training and evaluation of a dense retriever under 10 hours",
+   "wall_clock": "less than 10 hours",
+   "seeds": null,
+   "other": {
+    "alpha": "0.2 (distillation)",
+    "negatives_depth": "1000 (DPR), 200 (distill)",
+    "num_negatives": "15 (DPR), 23 (distill)",
+    "fig2_ablation": "fine-tune 40 epochs or 18k steps, whichever first",
+    "teacher": "cross-encoder scores released by SimLM authors"
+   }
+  },
+  "inference": {
+   "decoding": "sampling, at most 128 tokens",
+   "temperature": "1",
+   "top_p": "inferred: Appendix C mentions top-p sampling but gives no value",
+   "max_tokens": "128",
+   "samples": "1 pseudo-document per query; 3 random runs for Table 10 variance",
+   "prompting": "instruction + k=4 random MS-MARCO train pairs, resampled per API call",
+   "retrieval": "BM25 and RM3 via Pyserini defaults; top 100 for latency",
+   "parameters": {
+    "k": "4",
+    "n_query_repeats": "5 (not tuned per dataset)",
+    "dense_concat": "query [SEP] pseudo-doc"
+   },
+   "other": {
+    "gpt4_system_message": "You are asked to write a passage that answers the given query. Do not ask the user for further clarification."
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MRR@10",
+     "definition": "mean reciprocal rank at 10",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "R@k (k=50,1k)",
+     "definition": "recall at k",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "nDCG@10",
+     "definition": "normalised DCG at 10",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "BM25+RM3",
+    "docT5query",
+    "ANCE",
+    "HyDE",
+    "DPR",
+    "RocketQAv2",
+    "AR2",
+    "SimLM",
+    "E5-base+KD"
+   ],
+   "protocol": "Main results single run; 3-run mean/std for sparse retrieval in Table 10; no significance test stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://huggingface.co/datasets/intfloat/query2doc_msmarco (all text-davinci-003 generations)"
+  },
+  "prompts": [
+   {
+    "purpose": "pseudo-document generation",
+    "text": "Write a passage that answers the given query:\nQuery: {example query}\nPassage: {example passage}\n(x4)\nQuery: {query}\nPassage:",
+    "where": "Fig 1 / Table 11 (full text with 4 examples, p10)"
+   },
+   {
+    "purpose": "GPT-4 self-verification rewrite",
+    "text": "You are asked to rewrite the passage that potentially answers the given query. You should only correct the factual errors in the passage, do not ask for clarification or make unnecessary changes.\nQuery: {{query}}\n# Begin of passage\n{{passage}}\n# End of passage",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BM25 + query2doc lifts nDCG@10 on TREC DL 2019 by 15.0 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "66.2",
+   "unit": "nDCG@10 (as printed, +15.0)",
+   "baseline_value": "51.2 (own reproduction)",
+   "n": null,
+   "setup": "MS-MARCO passage ranking / TREC DL, BM25 (Pyserini default) with 4-shot text-davinci-003 pseudo-documents, query repeated n=5 times",
+   "note": null,
+   "where": "Table 1, p3",
+   "table": "Table 1, row BM25 + query2doc, column TREC DL 19"
+  },
+  {
+   "claim": "BM25 + query2doc lifts nDCG@10 on TREC DL 2020 by 15.2 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "62.9",
+   "unit": "nDCG@10 (+15.2)",
+   "baseline_value": "47.7 (own reproduction)",
+   "n": null,
+   "setup": "MS-MARCO passage ranking / TREC DL, BM25 (Pyserini default) with 4-shot text-davinci-003 pseudo-documents, query repeated n=5 times",
+   "note": null,
+   "where": "Table 1, p3",
+   "table": "Table 1, row BM25 + query2doc, column TREC DL 20"
+  },
+  {
+   "claim": "On MS-MARCO dev, BM25 + query2doc MRR@10 rises from 18.4 to 21.4",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "21.4",
+   "unit": "MRR@10 (+3.0)",
+   "baseline_value": "18.4",
+   "n": null,
+   "setup": "MS-MARCO passage ranking / TREC DL, BM25 (Pyserini default) with 4-shot text-davinci-003 pseudo-documents, query repeated n=5 times",
+   "note": "docT5query (fine-tuned) reaches 27.7 on the dev set, higher than query2doc",
+   "where": "Table 1, p3",
+   "table": "Table 1, row BM25 + query2doc, column MS MARCO dev MRR@10"
+  },
+  {
+   "claim": "Classic RM3 query expansion does not help on MS-MARCO dev MRR@10 (15.8 vs 18.4 for BM25)",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "15.8",
+   "unit": "MRR@10",
+   "baseline_value": "18.4",
+   "n": null,
+   "setup": "BM25 + RM3, Pyserini default",
+   "note": null,
+   "where": "Table 1, p3",
+   "table": "Table 1, row BM25 + RM3, column MS MARCO dev MRR@10"
+  },
+  {
+   "claim": "DPR (BERT-base, BM25 hard negatives) gains 4.0 and 3.0 nDCG@10 on TREC DL 19/20 with query2doc",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "68.7",
+   "unit": "nDCG@10 (+4.0 DL19); DL20 67.1 (+3.0)",
+   "baseline_value": "64.7 (DL19), 64.1 (DL20)",
+   "n": null,
+   "setup": "DPR trained with query2doc expanded queries, [SEP] concatenation, no distillation",
+   "note": null,
+   "where": "Table 1, p3",
+   "table": "Table 1, row DPR + query2doc, columns TREC DL 19 and TREC DL 20"
+  },
+  {
+   "claim": "Gain shrinks for distilled retrievers: SimLM MRR@10 41.1 -> 41.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "41.5",
+   "unit": "MRR@10 (+0.4)",
+   "baseline_value": "41.1",
+   "n": null,
+   "setup": "SimLM with cross-encoder KD plus query2doc, MS-MARCO dev",
+   "note": null,
+   "where": "Table 1, p3",
+   "quote": "However, the gain brought by query2doc tends to diminish when using intermediate pre-training or knowledge distil-",
+   "table": "Table 1, row SimLM + query2doc, column MS MARCO dev MRR@10"
+  },
+  {
+   "claim": "E5-base+KD with query2doc: MRR@10 40.7 -> 41.5; DL20 nDCG@10 70.7 -> 72.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR@10",
+   "value": "41.5",
+   "unit": "MRR@10 (+0.8)",
+   "baseline_value": "40.7",
+   "n": null,
+   "setup": "E5 base with KD, MS-MARCO dev",
+   "note": null,
+   "where": "Table 1, p3",
+   "table": "Table 1, row E5base + KD + query2doc, column MS MARCO dev MRR@10"
+  },
+  {
+   "claim": "Zero-shot BEIR is mixed: BM25 + query2doc gains on DBpedia (+5.7) and Trec-Covid (+6.6)",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "37.0",
+   "unit": "nDCG@10 DBpedia (+5.7); Trec-Covid 72.2 (+6.6)",
+   "baseline_value": "31.3 (DBpedia), 65.6 (Trec-Covid)",
+   "n": null,
+   "setup": "5 BEIR datasets; in-context examples from MS-MARCO train",
+   "note": null,
+   "where": "Table 2, p4",
+   "table": "Table 2, row BM25 + query2doc"
+  },
+  {
+   "claim": "SimLM + query2doc loses on Scifact (-2.9) and NFCorpus (-0.6) zero-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "59.5",
+   "unit": "nDCG@10 Scifact (-2.9); NFCorpus 32.1 (-0.6)",
+   "baseline_value": "62.4 (Scifact), 32.7 (NFCorpus)",
+   "n": null,
+   "setup": "BEIR zero-shot, SimLM released checkpoint",
+   "note": null,
+   "where": "Table 2, p4",
+   "table": "Table 2, row SimLM + query2doc, columns Scifact and NFCorpus"
+  },
+  {
+   "claim": "LLM scale matters: 1.3B babbage gives DL19 52.0, 175B davinci-003 gives 66.2",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "52.0",
+   "unit": "nDCG@10 TREC DL19 for babbage; davinci-003 66.2",
+   "baseline_value": "51.2 (BM25)",
+   "n": null,
+   "setup": "BM25 + pseudo-docs from different LLMs",
+   "note": null,
+   "where": "Table 3, p4",
+   "table": "Table 3, rows w/ babbage and w/ davinci-003, column TREC 19"
+  },
+  {
+   "claim": "GPT-4 pseudo-docs give best BM25 results (DL19 69.2, DL20 64.5)",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "69.2",
+   "unit": "nDCG@10 TREC DL19; DL20 64.5",
+   "baseline_value": "66.2 (davinci-003)",
+   "n": null,
+   "setup": "GPT-4 with system message forbidding clarification; not in main experiments due to quota",
+   "note": null,
+   "where": "Table 3, p4",
+   "table": "Table 3, row w/ gpt-4, columns TREC 19 and TREC 20"
+  },
+  {
+   "claim": "Query alone 51.2 and pseudo-doc alone 48.7 are both far below the concatenation 66.2 (DL19); pseudo-doc alone is worse than query alone",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "48.7",
+   "unit": "nDCG@10 TREC DL19 pseudo-doc only (DL20 44.5)",
+   "baseline_value": "51.2 query only; 66.2 concatenation",
+   "n": null,
+   "setup": "BM25 ablation of how to use pseudo-docs (HyDE-style pseudo-doc only)",
+   "note": null,
+   "where": "Table 4, p4",
+   "table": "Table 4, row w/ pseudo-doc only"
+  },
+  {
+   "claim": "DPR + query2doc beats DPR by about 1% across 1% to 100% of labeled data",
+   "kind": "measured",
+   "source": null,
+   "metric": "MRR",
+   "value": "1",
+   "unit": "% approx",
+   "baseline_value": "n/a",
+   "n": null,
+   "setup": "MS-MARCO dev, DPR fine-tuned with 1,10,30,50,100% labeled data; 21.4 vs 22.7 at 1%, 33.7 vs 35.1 at 100%",
+   "note": "Per-point values read from Fig 2 data labels",
+   "where": "Fig 2, p4",
+   "quote": "outperforms the DPR baseline by approximately\n1%, regardless of the amount of data used for ﬁne-"
+  },
+  {
+   "claim": "Latency: BM25 index search 16ms vs 177ms with query2doc, plus >2000ms for the LLM call",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "177",
+   "unit": "ms index search",
+   "baseline_value": "16",
+   "n": null,
+   "setup": "top 100 results for MS-MARCO dev queries, single thread, averaged",
+   "note": null,
+   "where": "Table 6, p6",
+   "table": "Table 6, row + query2doc, column Index search"
+  },
+  {
+   "claim": "Run-to-run variance over 3 runs: DL19 64.8 +/-1.14, DL20 60.9 +/-1.63",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "64.8",
+   "unit": "nDCG@10 mean (DL19); DL20 60.9",
+   "baseline_value": "66.2 (single run, Table 1)",
+   "n": null,
+   "setup": "3 random runs; randomness from few-shot example selection and LLM sampling",
+   "note": "Averaged DL19 64.8 is below the 66.2 in Table 1",
+   "where": "Table 10, p9",
+   "table": "Table 10, row Average and Std dev."
+  },
+  {
+   "claim": "GPT-4 self-verification rewrite gives no gain (DL19 68.6, DL20 64.8)",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": "68.6",
+   "unit": "nDCG@10 DL19; DL20 64.8",
+   "baseline_value": "69.2 (DL19), 64.5 (DL20)",
+   "n": null,
+   "setup": "GPT-4 asked to correct factual errors in own pseudo-docs",
+   "note": null,
+   "where": "Table 8, p8",
+   "table": "Table 8, row + iterative prompt"
+  },
+  {
+   "claim": "About 550k API calls cost nearly 5k dollars",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost",
+   "value": "5000",
+   "unit": "USD approx",
+   "baseline_value": "n/a",
+   "n": null,
+   "setup": "Mostly used to generate pseudo-docs for training queries",
+   "note": null,
+   "where": "Appendix A, p8",
+   "quote": "we make about 550k API calls to OpenAI’s service,\nwhich costs nearly 5k dollars."
+  }
+ ],
+ "limits": [
+  "Latency: LLM call >2000ms and inverted-index search 177ms vs 16ms; authors state real deployment must account for this",
+  "LLM generations contain factual errors (Monk theme song year 2002 vs 2003); GPT-4 self-correction changed little",
+  "Zero-shot BEIR gains are mixed; losses on NFCorpus and Scifact for SimLM, Scifact for E5, attributed to distribution mismatch",
+  "Gains diminish for distilled strong retrievers",
+  "GPT-4 not used in main experiments due to quota; text-davinci-003 is a deprecated closed model",
+  "Top-p value, optimizer, GPU type not stated; few-shot examples random, not similarity-selected (left to future work)",
+  "Table 1 BM25 DL19/20 baselines are own reproductions (marked *)",
+  "Single-run main results; 3-run std is 1.1 to 1.6 points on DL19/20"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "HyDE (Gao et al.)",
+   "year": 2022,
+   "arxiv": "2212.10496",
+   "relation": "baseline",
+   "note": "zero-shot, uses pseudo-doc embeddings only; Table 4 shows pseudo-doc alone is weaker than concatenation",
+   "quote": null
+  },
+  {
+   "work": "Pseudo-relevance feedback / RM3 (Lavrenko and Croft 2001; Lv and Zhai 2009)",
+   "year": 2001,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "classic query expansion",
+   "quote": null
+  },
+  {
+   "work": "doc2query / docT5query (Nogueira et al.)",
+   "year": 2019,
+   "arxiv": "1904.08375",
+   "relation": "baseline",
+   "note": "document expansion, needs fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "DPR (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dense retriever expanded",
+   "quote": null
+  },
+  {
+   "work": "SimLM (Wang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "strong dense retriever with hyperparameters reused",
+   "quote": null
+  },
+  {
+   "work": "E5 (Wang et al.)",
+   "year": 2022,
+   "arxiv": "2212.03533",
+   "relation": "uses-method",
+   "note": "dense retriever",
+   "quote": null
+  },
+  {
+   "work": "MS-MARCO",
+   "year": 2016,
+   "arxiv": "1611.09268",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "TREC DL 2019/2020",
+   "year": 2020,
+   "arxiv": "2003.07820",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "BEIR (Thakur et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "5 low-resource datasets",
+   "quote": null
+  },
+  {
+   "work": "RECITE (Sun et al.) and GENREAD (Yu et al.)",
+   "year": 2022,
+   "arxiv": "2210.01296",
+   "relation": "related",
+   "note": "LLMs as context generators",
+   "quote": null
+  },
+  {
+   "work": "Press et al. (iterative prompting)",
+   "year": 2022,
+   "arxiv": "2210.03350",
+   "relation": "related",
+   "note": "basis of Appendix B self-verify",
+   "quote": null
+  },
+  {
+   "work": "Liu et al. contextual clue sampling",
+   "year": 2022,
+   "arxiv": "2210.07093",
+   "relation": "related",
+   "note": "fine-tuned generator for query expansion",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of query2doc few-shot prompting. We omit some in-context examples for space reasons.",
+   "page": 2,
+   "why": "prompt layout and example output"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "MRR on MS-MARCO dev set w.r.t the percentage of labeled data used for fine-tuning.",
+   "page": 4,
+   "why": "constant ~1 point gain at all supervision sizes"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Main results on the MS-MARCO passage ranking and TREC datasets.",
+   "page": 3,
+   "why": "all headline numbers"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p2",
+   "snippet": "q+ = concat({q} x n, d')",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 2, p2",
+   "snippet": "q+ = concat(q, [SEP], d')",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 4, p2",
+   "snippet": "min D_KL(p_ce, p_stu) + alpha L_cont",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found."
+ ]
+}

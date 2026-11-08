@@ -1,0 +1,682 @@
+{
+ "schema": 1,
+ "key": "2212.13138",
+ "pdf": "generative-ai/08-eval/sources/singhal-2023-large-language-models-encode-clinical.pdf",
+ "bib": {
+  "title": "Large language models encode clinical knowledge",
+  "authors": [
+   "Karan Singhal",
+   "Shekoofeh Azizi",
+   "Tao Tu",
+   "S. Sara Mahdavi",
+   "Jason Wei",
+   "Hyung Won Chung",
+   "Nathan Scales",
+   "Ajay Tanwani",
+   "Heather Cole-Lewis",
+   "Stephen Pfohl",
+   "Perry Payne",
+   "Martin Seneviratne",
+   "Paul Gamble",
+   "Chris Kelly",
+   "Abubakr Babiker",
+   "Nathanael Schärli",
+   "Aakanksha Chowdhery",
+   "Philip Mansfield",
+   "Dina Demner-Fushman",
+   "Blaise Agüera y Arcas",
+   "Dale Webster",
+   "Greg S. Corrado",
+   "Yossi Matias",
+   "Katherine Chou",
+   "Juraj Gottweis",
+   "Nenad Tomasev",
+   "Yun Liu",
+   "Alvin Rajkomar",
+   "Joelle Barral",
+   "Christopher Semturs",
+   "Alan Karthikesalingam",
+   "Vivek Natarajan"
+  ],
+  "first_author": "Singhal",
+  "year": 2023,
+  "venue": "Nature 620, 172-180",
+  "arxiv": "2212.13138",
+  "doi": "10.1038/s41586-023-06291-2"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 110604,
+  "chars_total": 110604,
+  "engine": "pymupdf",
+  "skipped": "Supplementary Information (hyperparameters, prompts, per-size tables) is not in the PDF; Extended Data tables/figures are images with only captions in text."
+ },
+ "type": "empirical",
+ "question": "Can LLMs (PaLM, Flan-PaLM) answer medical questions well, and how should answers be evaluated beyond multiple-choice accuracy?",
+ "hypothesis": "Scale, instruction tuning and a small amount of in-domain instruction prompt tuning will improve medical QA and close the gap to clinicians on safety-relevant axes.",
+ "contributions": [
+  "MultiMedQA benchmark: 6 existing datasets plus new HealthSearchQA (3,173 questions)",
+  "Pilot human evaluation framework (clinician and lay axes)",
+  "SOTA on MedQA, MedMCQA, PubMedQA, MMLU clinical topics with Flan-PaLM 540B",
+  "Instruction prompt tuning and the resulting Med-PaLM"
+ ],
+ "method": {
+  "summary": "Evaluate PaLM and Flan-PaLM (8B/62B/540B) on MultiMedQA with few-shot, CoT and self-consistency prompting, then align Flan-PaLM 540B to consumer medical QA by learning a soft prompt (instruction prompt tuning) on 65 clinician exemplars to produce Med-PaLM. Long-form answers are rated by clinicians and lay users.",
+  "task": "medical question answering (multiple-choice and long-form)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MedQA (USMLE)",
+    "role": "eval",
+    "size": "dev 11,450 / test 1,273 questions",
+    "split": "test, 4 options (5-option also reported)",
+    "source": "Jin et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MedMCQA",
+    "role": "eval",
+    "size": "over 194,000 questions; dev about 187,000 / test 6,100",
+    "split": "development-test",
+    "source": "Indian medical entrance exams (AIIMS/NEET)",
+    "preprocessing": null
+   },
+   {
+    "name": "PubMedQA",
+    "role": "eval",
+    "size": "1,000 expert-labelled; dev 500 / test 500",
+    "split": "test",
+    "source": "PubMed abstracts, yes/no/maybe",
+    "preprocessing": null
+   },
+   {
+    "name": "MMLU clinical topics",
+    "role": "eval",
+    "size": "test: anatomy 135, clinical knowledge 265, college medicine 173, medical genetics 100, professional medicine 272, college biology 144",
+    "split": "test",
+    "source": "Hendrycks et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "LiveQA (TREC 2017)",
+    "role": "both",
+    "size": "dev 634 / test 104",
+    "split": "questions sampled for human eval and prompt-tuning exemplars",
+    "source": "NLM consumer questions",
+    "preprocessing": null
+   },
+   {
+    "name": "MedicationQA",
+    "role": "both",
+    "size": "test 674",
+    "split": "as LiveQA",
+    "source": "consumer medication questions",
+    "preprocessing": null
+   },
+   {
+    "name": "HealthSearchQA",
+    "role": "both",
+    "size": "3,173 questions",
+    "split": "100 random questions used in human eval; exemplars disjoint",
+    "source": "search-engine suggested questions from seed conditions and symptoms; released with paper",
+    "preprocessing": null
+   },
+   {
+    "name": "Instruction prompt tuning exemplars",
+    "role": "train",
+    "size": "65 examples",
+    "split": "sampled from HealthSearchQA, MedicationQA, LiveQA; answers by 5 clinicians, filtered",
+    "source": "clinician-written",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLM",
+    "role": "baseline",
+    "params": "8B, 62B, 540B",
+    "architecture": "densely-activated decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining": "780 billion tokens, exactly one epoch; 540B on 6,144 TPUv4 chips"
+    }
+   },
+   {
+    "name": "Flan-PaLM",
+    "role": "proposed",
+    "params": "8B, 62B, 540B",
+    "architecture": "instruction-tuned PaLM",
+    "init_from": "PaLM",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Med-PaLM",
+    "role": "proposed",
+    "params": "540B (frozen) plus soft prompt",
+    "architecture": "Flan-PaLM 540B with learned soft prompt prefix",
+    "init_from": "Flan-PaLM 540B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "soft_prompt": "p x e matrix; p and hyperparameters in Supplementary section 2 (not in PDF)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "negative log-likelihood on 65 exemplars; only soft prompt (p x e matrix, random init) trained, LLM frozen; soft prompt is prefix before hard task prompt",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "hyperparameters deferred to Supplementary Information section 2"
+   }
+  },
+  "inference": {
+   "decoding": "temperature sampling for self-consistency; majority/plurality vote",
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "self-consistency 11 CoT decodes per question; selective prediction used 41 decodes; reporting summary says MedQA experiments repeated independently three times",
+   "prompting": "Dataset-specific few-shot prompts written with clinicians; typically 5 input-output examples for consumer QA, 3 or fewer for PubMedQA; CoT prompts clinician-crafted (Supplementary sections 11, 12)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "multiple-choice accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "clinician axes",
+     "definition": "consensus alignment, incorrect/missing content, harm extent and likelihood (AHRQ-inspired), bias, comprehension/retrieval/reasoning evidence",
+     "unit": "% of answers",
+     "higher_is_better": null
+    },
+    {
+     "name": "lay user",
+     "definition": "helpfulness and addresses intent",
+     "unit": "% of answers",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PubMedGPT 2.7B",
+    "DRAGON",
+    "Galactica",
+    "BioGPT",
+    "PaLM",
+    "Gopher",
+    "Chinchilla",
+    "BLOOM",
+    "OPT",
+    "clinician-written answers"
+   ],
+   "protocol": "140 questions (100 HealthSearchQA, 20 LiveQA, 20 MedicationQA); answers from Flan-PaLM, Med-PaLM, clinicians, source blinded; 9 clinicians (USA, UK, India), 5 lay raters (India), one rater per answer; non-parametric bootstrap, 1,000 replicas, 95% percentile interval"
+  },
+  "availability": {
+   "code": "not released (safety implications)",
+   "weights": "not released",
+   "data": "MultiMedQA incl. HealthSearchQA released as supplementary file"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Flan-PaLM 540B reaches 67.6% on MedQA (4 options), above the prior SOTA PubMedGPT 2.7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "67.6",
+   "unit": "%",
+   "baseline_value": "50.3",
+   "n": null,
+   "setup": "Flan-PaLM 540B, few-shot/CoT/self-consistency prompting, MultiMedQA multiple-choice test sets; MedQA USMLE 4-option test (1,273 questions)",
+   "quote": "our Flan-PaLM 540B model achieved a multiple-choice ques-",
+   "table": null,
+   "note": "Abstract says 'more than 17%'; text says 17.3% over PubMedGPT and 20.1% over DRAGON (47.5).",
+   "where": "p.174"
+  },
+  {
+   "claim": "Flan-PaLM 540B scores 62.0% on the harder 5-option MedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "62.0",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 540B, few-shot/CoT/self-consistency prompting, MultiMedQA multiple-choice test sets; MedQA 5 options",
+   "quote": "our model obtained an accu-",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Flan-PaLM 540B reaches 57.6% on MedMCQA dev-test, above Galactica.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "57.6",
+   "unit": "%",
+   "baseline_value": "52.9",
+   "n": null,
+   "setup": "Flan-PaLM 540B, few-shot/CoT/self-consistency prompting, MultiMedQA multiple-choice test sets; MedMCQA development-test",
+   "quote": "Flan-PaLM 540B reached a performance of 57.6% on",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Flan-PaLM 540B reaches 79.0% on PubMedQA, 0.8 above BioGPT; single-rater human is 78.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "79.0",
+   "unit": "%",
+   "baseline_value": "78.2",
+   "n": null,
+   "setup": "Flan-PaLM 540B, few-shot/CoT/self-consistency prompting, MultiMedQA multiple-choice test sets; PubMedQA",
+   "quote": "our model achieved an accuracy",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Flan-PaLM 540B gets 83.8% on MMLU professional medicine and 80.4% on clinical knowledge.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "83.8",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 540B, few-shot/CoT/self-consistency prompting, MultiMedQA multiple-choice test sets; MMLU professional medicine subset (clinical knowledge 80.4)",
+   "quote": "Flan-PaLM 540B achieved a state-of-the-art accuracy of 83.8%",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Self-consistency (11 CoT decodes) improves MedQA by more than 7% over few-shot, but drops PubMedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "7",
+   "unit": "% (more than)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 540B, 11 decodes, temperature 0.7",
+   "quote": "we observed an improvement of more than 7% with self-consistency",
+   "table": null,
+   "note": null,
+   "where": "p.175"
+  },
+  {
+   "claim": "CoT prompting gave no improvement over standard few-shot on MedQA, MedMCQA, PubMedQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 540B",
+   "quote": "We did not observe improvements using COT over the standard few-shot prompting strategy",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Scaling PaLM and Flan-PaLM from 8B to 540B gives about 2x accuracy; Flan-PaLM 540B beats 62B by >14% and 8B by >24%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative accuracy",
+   "value": "2",
+   "unit": "x (approx)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM / Flan-PaLM 8B, 62B, 540B; MedQA, MedMCQA, PubMedQA",
+   "quote": "We observed an improvement of approximately 2× in performance when scaling the model from 8B to 540B",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Instruction tuning: 8B Flan-PaLM beats 8B PaLM on PubMedQA by over 30%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gain",
+   "value": "30",
+   "unit": "% (over)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "few-shot prompted, PubMedQA",
+   "quote": "8B Flan-PaLM model outperformed the baseline PaLM model by over 30%",
+   "table": null,
+   "note": null,
+   "where": "p.174"
+  },
+  {
+   "claim": "Selective prediction: deferring 45% of MedQA questions by self-consistency agreement raises accuracy on the rest to 82.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "82.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Flan-PaLM 540B, CoT + self-consistency with 41 decodes, MedQA; deferring fraction 0.45",
+   "quote": "reach-",
+   "table": null,
+   "note": "Quote is the hyphenated line; sentence: 'ing an accuracy of up to 82.5% at a deferring fraction of 0.45 (Fig. 3)'.",
+   "where": "p.175"
+  },
+  {
+   "claim": "Clinicians judged 61.9% of Flan-PaLM long answers aligned with scientific consensus vs 92.6% Med-PaLM and 92.9% clinicians.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aligned with consensus",
+   "value": "92.6",
+   "unit": "%",
+   "baseline_value": "61.9",
+   "n": null,
+   "setup": "140 consumer questions (100 HealthSearchQA, 20 LiveQA, 20 MedicationQA); 9 clinician raters, one rating per answer; Med-PaLM 540B",
+   "quote": "92.6% of Med-PaLM answers were judged to be in accordance",
+   "table": null,
+   "note": null,
+   "where": "p.175"
+  },
+  {
+   "claim": "Potentially harmful answers fell from 29.7% (Flan-PaLM) to 5.9% (Med-PaLM); clinicians 5.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "possible harm",
+   "value": "5.9",
+   "unit": "%",
+   "baseline_value": "29.7",
+   "n": null,
+   "setup": "same 140-question human evaluation; Med-PaLM 540B",
+   "quote": "this number fell to 5.9% for Med-PaLM",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  },
+  {
+   "claim": "Med-PaLM answers contained inappropriate or incorrect content in 18.7%, worse than Flan-PaLM (16.1%) and clinicians (1.4%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "incorrect content",
+   "value": "18.7",
+   "unit": "%",
+   "baseline_value": "16.1",
+   "n": null,
+   "setup": "same 140-question human evaluation",
+   "quote": "with 18.7% of the Med-PaLM answers judged to contain inappropriate",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  },
+  {
+   "claim": "Omission of important information fell from 47.6% (Flan-PaLM) to 15.3% (Med-PaLM); clinicians 11.1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "missing content",
+   "value": "15.3",
+   "unit": "%",
+   "baseline_value": "47.6",
+   "n": null,
+   "setup": "same 140-question human evaluation",
+   "quote": "Med-PaLM omitted important information in 15.3%",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  },
+  {
+   "claim": "Bias (answer inapplicable to a demographic) in 7.9% of Flan-PaLM answers vs 0.8% Med-PaLM; clinicians 1.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "possible bias",
+   "value": "0.8",
+   "unit": "%",
+   "baseline_value": "7.9",
+   "n": null,
+   "setup": "same 140-question human evaluation; yes/no single question",
+   "quote": "this number decreased to 0.8% for Med-PaLM",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  },
+  {
+   "claim": "Lay raters found 60.6% of Flan-PaLM answers helpful vs 80.3% Med-PaLM and 91.1% clinicians.",
+   "kind": "measured",
+   "source": null,
+   "metric": "helpful",
+   "value": "80.3",
+   "unit": "%",
+   "baseline_value": "60.6",
+   "n": null,
+   "setup": "5 lay raters in India, same 140 questions, one rater per answer",
+   "quote": "this increased to 80.3% for Med-PaLM answers",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  },
+  {
+   "claim": "Evidence of correct knowledge retrieval: clinicians 97.8%, Flan-PaLM 76.3%, Med-PaLM 95.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correct retrieval",
+   "value": "95.4",
+   "unit": "%",
+   "baseline_value": "76.3",
+   "n": null,
+   "setup": "same 140-question human evaluation",
+   "quote": "the instruction prompt-tuned Med-PaLM model scored 95.4%",
+   "table": null,
+   "note": null,
+   "where": "p.177"
+  }
+ ],
+ "limits": [
+  "Single rater per answer and only 140 questions in human evaluation",
+  "Rating axes pilot, subjective; harm scale (AHRQ) not validated for this context",
+  "Bias evaluation is narrow; most questions neutrally framed",
+  "English only; multiple-choice easier than real clinical workflows",
+  "Models may reflect past scientific consensus",
+  "Effect of instruction prompt tuning on multiple-choice accuracy not fully analysed (preliminary only, Extended Data Table 5)",
+  "Possible memorisation of datasets; overlap analysis in Supplement found minimal overlap",
+  "Med-PaLM answers had more incorrect content than Flan-PaLM (18.7% vs 16.1%)",
+  "Model weights and code not released; Med-PaLM not reproducible; hyperparameters only in Supplement",
+  "Clinician-authored exemplar and prompts from small panels"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "instruction prompt tuning",
+   "definition": "learning a soft prompt that is used as an initial prefix shared across multiple medical datasets, followed by the task-specific human-engineered prompt",
+   "where": "Methods"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLM: scaling language modeling with pathways",
+   "year": 2022,
+   "arxiv": "2204.02311",
+   "relation": "extends",
+   "note": "base model family",
+   "quote": null
+  },
+  {
+   "work": "Scaling instruction-finetuned language models (Flan-PaLM)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "extends",
+   "note": "instruction-tuned base",
+   "quote": null
+  },
+  {
+   "work": "The power of scale for parameter-efficient prompt tuning",
+   "year": 2021,
+   "arxiv": "2104.08691",
+   "relation": "uses-method",
+   "note": "soft prompt tuning basis for instruction prompt tuning",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought prompting",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "uses-method",
+   "note": "CoT prompting",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency improves chain of thought reasoning",
+   "year": 2022,
+   "arxiv": "2203.11171",
+   "relation": "uses-method",
+   "note": "11-decode voting",
+   "quote": null
+  },
+  {
+   "work": "CHARD (Feng et al.)",
+   "year": 2022,
+   "arxiv": "2210.04191",
+   "relation": "extends",
+   "note": "inspired comprehension/retrieval/reasoning rating",
+   "quote": null
+  },
+  {
+   "work": "MedQA (Jin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "USMLE-style",
+   "quote": null
+  },
+  {
+   "work": "MedMCQA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "PubMedQA",
+   "year": 2019,
+   "arxiv": "1909.06146",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Measuring massive multitask language understanding",
+   "year": 2020,
+   "arxiv": "2009.03300",
+   "relation": "uses-data",
+   "note": "MMLU clinical subsets",
+   "quote": null
+  },
+  {
+   "work": "Galactica",
+   "year": 2022,
+   "arxiv": "2211.09085",
+   "relation": "baseline",
+   "note": "MedMCQA SOTA 52.9",
+   "quote": null
+  },
+  {
+   "work": "BioGPT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "PubMedQA SOTA 78.2",
+   "quote": null
+  },
+  {
+   "work": "PubMedGPT 2.7B",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "MedQA SOTA 50.3",
+   "quote": null
+  },
+  {
+   "work": "Liévin et al., Can LLMs reason about medical questions?",
+   "year": 2022,
+   "arxiv": "2207.08143",
+   "relation": "related",
+   "note": "closest precedent, GPT-3.5",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig. 4",
+   "caption": "Clinician evaluation of answers (consensus, incorrect content, omission, harm extent/likelihood, bias) for Flan-PaLM, Med-PaLM, clinicians",
+   "page": 176,
+   "why": "Shows the multi-axis human evaluation and the gains and the one regression (incorrect content) in one view"
+  },
+  {
+   "figure": "Fig. 2",
+   "caption": "Comparison of our method and prior state of the art",
+   "page": 174,
+   "why": "Headline benchmark gains vs SOTA"
+  },
+  {
+   "figure": "Fig. 3",
+   "caption": "Selective prediction analysis",
+   "page": 175,
+   "why": "Accuracy vs deferring fraction using self-consistency agreement"
+  },
+  {
+   "figure": "Extended Data Fig. 1",
+   "caption": "Instruction prompt tuning for Med-PaLM",
+   "page": null,
+   "why": "Shows soft prompt prefix before hard prompt"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Supplementary Information (hyperparameters, prompts, ablation tables) is not in the PDF, so prompts and training details are null.",
+  "Extended Data tables are images; their numbers are not in the text.",
+  "Reporting summary text is font-garbled; legible fragment says MedQA experiments were repeated independently three times and that no sample size calculation was done for human evaluation (shifted-character decode, treat as unconfirmed)."
+ ]
+}

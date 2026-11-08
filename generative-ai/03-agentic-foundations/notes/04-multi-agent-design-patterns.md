@@ -17,6 +17,8 @@ sources:
   - https://arxiv.org/abs/2310.01798
   - https://arxiv.org/abs/2502.16111
   - "Ke et al. 2025, A Survey of Frontiers in LLM Reasoning — https://arxiv.org/abs/2504.09037"
+  - "Li et al. 2023, CAMEL: Communicative Agents for Mind Exploration of Large Language Model Society — https://arxiv.org/abs/2303.17760"
+  - "Park et al. 2022, Social Simulacra: Creating Populated Prototypes for Social Computing Systems — https://arxiv.org/abs/2208.04024"
 confidence: high
 cleaned: 2026-11-01
   - Nair et al. 2023, DERA: Enhancing Large Language Model Completions with Dialog-Enabled Resolving Agents — https://arxiv.org/abs/2303.17071
@@ -92,6 +94,11 @@ chat_result.chat_history, chat_result.cost, chat_result.summary
 *Figure: two-agent conversation (AutoGen course, L1).*
 
 Every multi-agent system needs two stop conditions: a turn cap (`max_turns`) and a semantic one (`is_termination_msg`). Without the cap, two polite agents thank each other forever.
+
+Two papers show what the two-agent conversation is good for. CAMEL role-plays it with no human in the loop: a task-specifier turns a rough idea and two roles into a concrete task, then an AI user gives instructions and an AI assistant carries them out, both gpt-3.5-turbo under "inception" system prompts, until the user emits `<CAMEL_TASK_DONE>` ([arXiv:2303.17760](https://arxiv.org/abs/2303.17760) (Li et al., NeurIPS 2023)). On 100 AI Society tasks, 453 human responses preferred the role-played solution to a single gpt-3.5-turbo answer 76.3% of the time (single-shot won 10.4%), GPT-4 as judge 73.0%, and **removing the protocol and alignment lines from the inception prompt flipped the GPT-4 verdict to 25.0% against 75.0% for the original**. The caveats are the usual ones: GPT-4 summarised each conversation before judging, the role-play uses many more calls than one answer, and judges may favour longer text. The transcripts were also training data: LLaMA-7B fine-tuned on them reached HumanEval pass@1 of 14.0 against 10.5 for the base model.
+
+Social Simulacra uses many personas to test a design before it ships ([arXiv:2208.04024](https://arxiv.org/abs/2208.04024) (Park et al., UIST 2022)). Ten seed personas are expanded to 1,000, and GPT-3 writes posts and replies for a draft community from its goal, rules and each persona. In a test on 50 unseen subreddits, participants mistook the generated thread for the real one in 41% of pairs (chance is 50%), and dropping the community description cut that to 21%. All 16 designers found something unexpected, and all but one revised their design. The authors say it cannot predict outcomes, and it is text-only, English and Reddit-only.
+
 
 ---
 

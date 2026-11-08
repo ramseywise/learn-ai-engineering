@@ -1,0 +1,343 @@
+{
+ "schema": 1,
+ "key": "1912.06670",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/ardila-2019-common-voice.pdf",
+ "bib": {
+  "title": "Common Voice: A Massively-Multilingual Speech Corpus",
+  "authors": [
+   "Rosana Ardila",
+   "Megan Branson",
+   "Kelly Davis",
+   "Michael Henretty",
+   "Michael Kohler",
+   "Josh Meyer",
+   "Reuben Morais",
+   "Lindsay Saunders",
+   "Francis M. Tyers",
+   "Gregor Weber"
+  ],
+  "first_author": "Ardila",
+  "year": 2019,
+  "venue": "preprint (arXiv:1912.06670v2, 5 Mar 2020)",
+  "arxiv": "1912.06670",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 21308,
+  "chars_total": 21308,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a crowdsourced, permissively licensed, multilingual speech corpus be built, and does it support end-to-end ASR research in low-resource languages?",
+ "hypothesis": "Transferring layers from a pre-trained English DeepSpeech model improves character error rate on target languages.",
+ "contributions": [
+  "Common Voice: crowdsourced multilingual speech corpus released under CC0",
+  "Recording and validation pipeline using contributor votes",
+  "Speaker-disjoint splits sized by statistical power analysis",
+  "Transfer-learning ASR experiments on 12 languages with DeepSpeech"
+ ],
+ "method": {
+  "summary": "Contributors read prompted sentences; other contributors vote clips valid or invalid. Speaker-disjoint train/dev/test splits are made. DeepSpeech v0.3.0 is fine-tuned from an English model with 0 to 5 layers copied, per target language, and scored by CER.",
+  "task": "multilingual end-to-end ASR (corpus construction plus transfer-learning experiment)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Common Voice (June 12, 2019 release, Table 1)",
+    "role": "pretrain",
+    "size": "2,508 total hours, 2,019 validated hours, 58,250 voices, 29 released languages (38 collecting)",
+    "split": "official train/dev/test per language",
+    "source": "Mozilla crowdsourcing, CC0",
+    "preprocessing": "mono 16-bit MP3, 48 kHz; only clips with 2 first up-votes are valid; repeated sentences removed from train/dev/test"
+   },
+   {
+    "name": "Common Voice internal Feb 2019 version, 10 languages (Table 2)",
+    "role": "both",
+    "size": "e.g. German 65,745 train / 7,982 dev / 7,897 test clips; Slovenian 728 / 110 / 213",
+    "split": "as close as possible to 80% train, 10% dev, 10% test; one speaker in one split only",
+    "source": "internal multilingual version of Common Voice, Feb 2019",
+    "preprocessing": "splits do not match official releases"
+   }
+  ],
+  "models": [
+   {
+    "name": "Mozilla DeepSpeech v0.3.0",
+    "role": "proposed",
+    "params": null,
+    "architecture": "6-layer unidirectional CTC model: 3 fully connected, 1 LSTM, 2 fully connected",
+    "init_from": "pre-trained English DeepSpeech (0 to 5 layers copied; none = from scratch)",
+    "tokenizer": "characters",
+    "vocab": "target-language alphabet plus CTC blank",
+    "layers": "6",
+    "hidden": "2,048",
+    "heads": null,
+    "context": "19 spliced frames (9 past + 1 + 9 future) x 26 MFCC = 494-dim input",
+    "other": {
+     "activation": "clipped ReLU",
+     "new layers init": "Xavier"
+    }
+   }
+  ],
+  "training": {
+   "objective": "CTC loss",
+   "optimizer": "ADAM",
+   "lr": "0.0001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "24 train, 48 dev",
+   "steps": null,
+   "epochs": "early stopping, no fixed count",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "20%",
+   "regularisation": "early stopping on dev loss: triggers if dev loss rises over 5 sequential epochs, or fails to improve by more than mean loss threshold 0.5 over 5 epochs with window std < 0.5",
+   "hardware": "single GPU (type not stated)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "Adam other hyperparameters": "deferred to DeepSpeech v0.3.0 source, not in paper"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per language and layer setting; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Character Error Rate (CER)",
+     "definition": "Levenshtein distance of characters between ground-truth transcript and decoding result, on test set",
+     "unit": "% CER",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "DeepSpeech trained from scratch on target-language data (0 layers copied)"
+   ],
+   "protocol": "Test-set CER per language for 0-5 transferred layers; improvement averaged over 12 languages with std (Fig 5). No significance test, single run."
+  },
+  "availability": {
+   "code": "CorporaCreator (bucketing) and common-voice-wiki-scraper on GitHub; DeepSpeech v0.3.0",
+   "weights": null,
+   "data": "https://voice.mozilla.org/en/datasets, CC0"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "eval.metrics",
+    "quote": "We report Character Error Rate as opposed to Word Error",
+    "where": "footnote 12"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Corpus scale: hours collected across languages and participants.",
+   "kind": "measured",
+   "source": null,
+   "metric": "hours collected",
+   "value": "2,500",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": "over 50,000 individuals",
+   "setup": "As of Nov 2019, all languages",
+   "quote": "Over 50,000 individuals have participated so far, resulting in 2,500 hours of collected audio.",
+   "table": null,
+   "note": "Table 1 totals: 2,508 hours, 2,019 validated, 58,250 voices",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Mean CER improvement from English transfer across 12 target languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER improvement",
+   "value": "5.99 ± 5.48",
+   "unit": "CER points",
+   "baseline_value": null,
+   "n": 12,
+   "setup": "DeepSpeech v0.3.0, transfer from English, 12 languages, best layer count (abstract); Feb 2019 internal splits",
+   "quote": "we ﬁnd an average Character Error Rate improvement of 5.99 ± 5.48 for twelve target",
+   "table": null,
+   "note": "The std is almost as large as the mean; the abstract does not say which layer count.",
+   "where": "Abstract"
+  },
+  {
+   "claim": "Copying four layers from English gave the best final model on most languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "layers",
+   "value": "4",
+   "unit": "layers copied",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 and Fig 5",
+   "quote": "we observe a trend in which four layers copied from pre-trained En-",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  },
+  {
+   "claim": "Chuvash CER falls most with 4 layers copied versus scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": "27.21",
+   "unit": "% CER",
+   "baseline_value": "48.1",
+   "n": null,
+   "setup": "Chuvash (1,023 train clips, 5 train speakers), 4 layers copied vs none",
+   "quote": null,
+   "table": "Table 3, row cv, column 4 (27.21) versus column None (48.1)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Slovenian CER with 4 layers versus scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": "15.35",
+   "unit": "% CER",
+   "baseline_value": "23.35",
+   "n": null,
+   "setup": "Slovenian (728 train clips), 4 layers vs none",
+   "quote": null,
+   "table": "Table 3, row sl, column 4 (15.35) versus column None (23.35)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Transfer gives almost no gain for German, the largest language.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CER",
+   "value": "43.60",
+   "unit": "% CER",
+   "baseline_value": "43.76",
+   "n": null,
+   "setup": "German (65,745 train clips), best (3 layers) vs scratch",
+   "quote": null,
+   "table": "Table 3, row de, column 3 (43.60) versus column None (43.76)",
+   "note": "German and French CER stays about 43 for all layer counts; unexplained in paper",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Test and dev set sizes chosen for 99% confidence and 1% margin of error relative to training set size.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Voice splits",
+   "quote": null,
+   "table": null,
+   "note": "Paper states: confidence level of 99% with a margin of error of 1% relative to the number of clips in the training set.",
+   "where": "Section 3"
+  },
+  {
+   "claim": "Splits are speaker-disjoint so train speakers are not seen at test time, which would skew results.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Common Voice splits",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Section 3"
+  }
+ ],
+ "limits": [
+  "CER chosen over WER as more language-agnostic; WER can be misleading for languages without whitespace words (footnote 12).",
+  "Experiments use an internal Feb 2019 version, and splits do not match official releases.",
+  "Some train sets have very few speakers (e.g. Tatar 3, Slovenian 3), a hard speaker-generalisation case.",
+  "Single run per setting, no seeds or significance tests; large std in the headline gain.",
+  "Only DeepSpeech v0.3.0 (2014 style) and CER; no WER, no noise/accent or demographic breakdown, no language-model decoding stated.",
+  "Validation is crowdsourced with 2 votes; early voting bugs gave clips with more than 3 votes (majority rule).",
+  "Prompts are read speech, not spontaneous.",
+  "Table 1 italic (unreleased) data is not distinguishable in the text extraction."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Character Error Rate",
+   "definition": "Levenshtein distance of the characters between the ground-truth transcript and the decoding result",
+   "where": "Section 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep Speech: Scaling up end-to-end speech recognition (Hannun et al.)",
+   "year": 2014,
+   "arxiv": "1412.5567",
+   "relation": "uses-method",
+   "note": "DeepSpeech architecture basis",
+   "quote": null
+  },
+  {
+   "work": "Connectionist temporal classification (Graves et al.)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CTC loss",
+   "quote": null
+  },
+  {
+   "work": "Meyer, Multi-Task and Transfer Learning in Low-Resource Speech Recognition (PhD)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "end-to-end transfer learning approach",
+   "quote": null
+  },
+  {
+   "work": "VoxForge, Babel, M-AILABS",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior multilingual corpora",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Mean and standard deviation in CER improvement over all twelve languages relative to number of layers transferred",
+   "page": 4,
+   "why": "Shows the 4-layer optimum and the spread across languages"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Fine-Tuned Transfer Learning CER per language by layers copied",
+   "page": 4,
+   "why": "Per-language gains, including languages with no gain"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Architecture of Mozilla's DeepSpeech ASR model",
+   "page": 3,
+   "why": "Layer layout for what is copied"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells are flattened in extraction; read by column order (none,1..5). No embedded instructions found."
+ ]
+}

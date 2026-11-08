@@ -1,0 +1,148 @@
+{
+ "schema": 1,
+ "key": "1505.04870",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/plummer-2015-flickr30k-entities.pdf",
+ "bib": {
+  "title": "Flickr30k Entities: Collecting Region-to-Phrase Correspondences for Richer Image-to-Sentence Models",
+  "authors": ["Bryan A. Plummer", "Liwei Wang", "Chris M. Cervantes", "Juan C. Caicedo", "Julia Hockenmaier", "Svetlana Lazebnik"],
+  "first_author": "Plummer",
+  "year": 2016,
+  "venue": "preprint (arXiv v4, 19 Sep 2016; journal version 'Noname manuscript'; preliminary version ICCV 2015)",
+  "arxiv": "1505.04870",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 83155,
+  "chars_total": 83155,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (ends the text); no appendices exist."
+ },
+ "type": "benchmark",
+ "question": "Can dense region-to-phrase ground truth for image captions be collected at scale, and how well can current methods localize textual entity mentions and use that to improve image-sentence retrieval?",
+ "hypothesis": "Grounding language to image regions is hard and fundamental enough to need its own annotations and benchmark; better phrase localization is expected, but not guaranteed, to help global image-sentence tasks.",
+ "contributions": [
+  "Flickr30k Entities: 244k coreference chains and 276k manually annotated boxes over the 158k Flickr30k captions",
+  "A phrase localization benchmark (Recall@K at IoU >= 0.5)",
+  "A strong CCA + detector + size + color baseline",
+  "An analysis showing phrase localization gains do not easily transfer to image-sentence retrieval"
+ ],
+ "method": {
+  "summary": "Crowdsourced (AMT) pipeline of atomic tasks links NP mentions across the 5 captions of each Flickr30k image into coreference chains and draws boxes per chain. A CCA region-phrase embedding (word2vec/HGLMM Fisher vectors and VGG19 or Fast RCNN features) is combined with PASCAL detector scores, a size prior and a color classifier to localize phrases among 200 EdgeBox proposals; the same model is added to a whole-image CCA for retrieval.",
+  "task": "phrase localization (grounding) benchmark and bidirectional image-sentence retrieval",
+  "trains": true,
+  "datasets": [
+   {"name": "Flickr30k Entities", "role": "both", "size": "31,783 images; 158,915 captions; 513,644 mentions; 244,035 coreference chains; 275,775 boxes", "split": "29,783 train / 1,000 val / 1,000 test images (same split as Gong et al. 2014b)", "source": "Flickr30k (Young et al. 2014) captions with new AMT annotations", "preprocessing": "NP chunks from Flickr30k chunking (avg 2.35 words); personal pronouns and non-visual terms excluded; boxes merged at IoU >= 0.8 (0.9 for other), cutting boxes 19.8% and chains 5.9%"},
+   {"name": "PASCAL VOC 2007+2012 trainval", "role": "pretrain", "size": null, "split": "trainval", "source": "used to fine-tune Fast RCNN detector", "preprocessing": null},
+   {"name": "ImageNet", "role": "pretrain", "size": null, "split": null, "source": "VGG19 classification training", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "CCA region-phrase embedding", "role": "proposed", "params": null, "architecture": "Canonical Correlation Analysis, linear projections to 4096-D; phrase = 300-D word2vec, Fisher Vector HGLMM with 30 centers = 18,000-D; region = 4096-D fc activations of VGG19 (ImageNet) or Fast RCNN VGG19 (PASCAL fine-tuned)", "init_from": "ImageNet VGG19 / Fast RCNN", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"cca_dim": "4096", "samples_per_phrase_N": "10", "region_proposals": "200 EdgeBox, NMS IoU 0.5"}},
+   {"name": "Fast RCNN color classifier", "role": "proposed", "params": null, "architecture": "Fast RCNN fine-tuned for 11 colors, softmax loss, people phrases excluded", "init_from": "Fast RCNN", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"lr": "0.001", "weight_decay": "0.0005", "momentum": "0.9", "iterations": "20K"}}
+  ],
+  "training": {
+   "objective": "CCA (maximise correlation of image and text views); color net: softmax classification over 11 colors",
+   "optimizer": "color net: SGD with momentum 0.9 (inferred from lr/momentum listing)",
+   "lr": "0.001 (color net)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "20K iterations (color net)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0005 (color net)",
+   "dropout": null,
+   "regularisation": "at most N=10 random region exemplars per phrase for CCA training",
+   "hardware": "NVIDIA GPUs (donated); type not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"size_weight_w_size": "0.2 for scene, vehicle, instrument; 0.1 for all else, set on validation", "w_color": "not stated", "detector_mapping": "manual map of phrases to 20 PASCAL categories, covers 25.32% of phrases (83.4% of those person)"}
+  },
+  "inference": {
+   "decoding": "rank 200 EdgeBox proposals per phrase by combined distance; NMS IoU 0.5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or variance reported",
+   "prompting": null,
+   "retrieval": "retrieval: D_SI = alpha*D_CCA + (1-alpha)*D_PR, alpha = 0.7, gamma = 1.5; ground-truth NP chunks used as phrases",
+   "parameters": {"D_CCA+det": "0.5*D_CCA + 0.5*(1 - sigma_det)", "D_CCA+det+size": "(1-w_size)*D_CCA+det + w_size*(1-size(r))", "alpha": "0.7", "gamma": "1.5", "w_size": "0.1 or 0.2 by type"},
+   "other": {"multi-box_phrases": "regions merged into a single bounding box for CCA training"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Recall@K (phrase localization)", "definition": "percentage of phrase queries for which a correct proposal (IoU >= 0.5 with ground truth box) has rank <= K, K=1,5,10", "unit": "%", "higher_is_better": true},
+    {"name": "Recall@K (image-sentence retrieval)", "definition": "percentage of queries for which at least one correct ground truth match is in top K; 1,000 test images, 5,000 sentences", "unit": "%", "higher_is_better": true},
+    {"name": "Matched gold links / chains, FP/FN rate", "definition": "annotation-strategy agreement with gold on 200 images", "unit": "%", "higher_is_better": null}
+   ],
+   "baselines": ["Zhang et al. 2016", "Hu et al. 2016", "Rohrbach et al. 2016", "Wang et al. 2016a,b", "Fukui et al. 2016", "Klein et al. 2014", "Mao et al. 2015", "Ma et al. 2015", "Lev et al. 2016"],
+   "protocol": "Test with ground-truth NP chunks; automatic chunking lowers recall by about 3%. AP dropped because annotations are sparse (reporting bias). Competing methods use 100 proposals, ours 200."
+  },
+  "availability": {"code": null, "weights": null, "data": "http://web.engr.illinois.edu/~bplumme2/Flickr30kEntities/"},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.split", "quote": "we split Flickr30K into 29,783 training, 1,000 validation, and 1,000 test images", "where": "Sec 4.1.2"}
+  ]
+ },
+ "results": [
+  {"claim": "Full model (CCA + Detector + Size + Color) reaches 50.89 Recall@1 on Flickr30k Entities test phrase localization.", "kind": "measured", "source": null, "metric": "Recall@1", "value": "50.89", "unit": "%", "baseline_value": "48.69 (Fukui et al. 2016, Fast RCNN)", "n": "1,000 test images", "setup": "200 EdgeBox proposals, IoU>=0.5, ground-truth NP chunks, Fast RCNN features", "quote": null, "table": "Table 5, row CCA+Detector+Size+Color, column R@1", "note": null, "where": "Table 5(d)"},
+  {"claim": "Switching region features from classification VGG19 to detection Fast RCNN raises CCA R@1 from 30.83 to 41.77.", "kind": "measured", "source": null, "metric": "Recall@1", "value": "41.77", "unit": "%", "baseline_value": "30.83", "n": null, "setup": "CCA only, test set", "quote": null, "table": "Table 5, rows CCA - VGG19 and CCA - Fast RCNN, column R@1", "note": null, "where": "Table 5(b)"},
+  {"claim": "Averaging detector and CCA scores gives 43.84 R@1 versus 41.77 for CCA alone.", "kind": "measured", "source": null, "metric": "Recall@1", "value": "43.84", "unit": "%", "baseline_value": "41.77", "n": null, "setup": "detector for 25.32% of phrases mapped to 20 PASCAL classes", "quote": null, "table": "Table 5, row CCA+Detector, column R@1", "note": null, "where": "Table 5(c)"},
+  {"claim": "A size prior alone adds about 5.4 R@1 points; picking the largest proposal regardless of phrase already gives 24% R@1.", "kind": "measured", "source": null, "metric": "Recall@1", "value": "49.22", "unit": "%", "baseline_value": "43.84", "n": null, "setup": "CCA+Detector+Size, w_size 0.1 or 0.2 by phrase type", "quote": "simply selecting the largest proposal regardless of the phrase already gets R@1 of 24%", "table": "Table 5, row CCA+Detector+Size, column R@1", "note": "Text says size increases R@1 and mAP by about six points; table gap is 5.38", "where": "Sec 4.1.3, Table 5(d)"},
+  {"claim": "Body parts are the hardest phrase type (R@1 17.21 for the full model; only 50.48% have a proposal at IoU>=0.5 among 200).", "kind": "measured", "source": null, "metric": "Recall@1 by phrase type", "value": "17.21", "unit": "%", "baseline_value": null, "n": "523 instances", "setup": "full model, body parts type", "quote": null, "table": "Table 6, row CCA+Detector+Size+Color, column bodyparts; upper bound row R@200 50.48", "note": null, "where": "Table 6"},
+  {"claim": "Color classifier fine-tuned on 11 colors gets 80.47% accuracy versus 16% for an SVM on detection features.", "kind": "measured", "source": null, "metric": "color accuracy", "value": "80.47", "unit": "%", "baseline_value": "16", "n": null, "setup": "11 colors with >=1,000 training occurrences, people excluded", "quote": "has a much higher accuracy of 80.47%", "table": null, "note": null, "where": "Sec 4.1.3, Fig 8"},
+  {"claim": "Adding region-phrase scores to whole-image CCA improves image annotation R@1 only from 36.5 to 37.5.", "kind": "measured", "source": null, "metric": "Image Annotation R@1", "value": "37.5", "unit": "%", "baseline_value": "36.5", "n": "1,000 images, 5,000 sentences", "setup": "alpha 0.7, gamma 1.5, full region-phrase model vs HGLMM FV+VGG19", "quote": null, "table": "Table 7, row Weighted Distance Full Model, column Image Annotation R@1", "note": "Text: small but consistent improvement of 1%-2%", "where": "Table 7(c)"},
+  {"claim": "Full and basic VGG region-phrase models perform similarly for retrieval (image search R@1 25.8 vs 25.7) despite big phrase-localization differences.", "kind": "measured", "source": null, "metric": "Image Search R@1", "value": "25.8", "unit": "%", "baseline_value": "25.7", "n": null, "setup": "Weighted Distance Full Model vs Weighted Distance VGG19", "quote": null, "table": "Table 7, rows Weighted Distance Full Model and Weighted Distance VGG19, column Image Search R@1", "note": null, "where": "Table 7(c)"},
+  {"claim": "Dataset scale: 244,035 chains and 275,775 boxes over 31,783 images.", "kind": "measured", "source": null, "metric": "dataset size", "value": "275,775", "unit": "boxes", "baseline_value": null, "n": "31,783 images", "setup": "full dataset", "quote": "yielded 275,775 bounding boxes in the 31,783 images", "table": null, "note": null, "where": "Sec 3.4"},
+  {"claim": "Annotation errors: chunking errors under 1% of mentions and coreference errors under 1% of chains, giving an error in about 8% of images.", "kind": "measured", "source": null, "metric": "image-level error rate", "value": "8", "unit": "%", "baseline_value": null, "n": null, "setup": "automated plus manual analysis", "quote": "there is an error of some kind in around 8% of our images", "table": null, "note": null, "where": "Sec 3.3.3"},
+  {"claim": "Greedy Plus link collection matches gold links 96.40% while annotating 66.94% of links versus exhaustive.", "kind": "measured", "source": null, "metric": "Matched gold links", "value": "96.40", "unit": "%", "baseline_value": "95.03", "n": "200 images", "setup": "binary coreference link annotation strategy comparison", "quote": null, "table": "Table 2, column Greedy Plus, row Matched Gold Links", "note": null, "where": "Table 2"},
+  {"claim": "Coreference chain verification marked 90.2% of 123,758 multi-mention chains as good.", "kind": "measured", "source": null, "metric": "chain verification pass rate", "value": "90.2", "unit": "%", "baseline_value": null, "n": "123,758 chains", "setup": "multi-mention chains only", "quote": "111,628 (90.2%) were marked as good by workers", "table": null, "note": null, "where": "Sec 3.1.2"},
+  {"claim": "Annotation is sparse, so AP was dropped as unreliable and only recall is reported.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "valid regions for body parts and clothing lack boxes when not mentioned in captions", "quote": null, "table": null, "note": null, "where": "Sec 4.1.2"}
+ ],
+ "limits": [
+  "Annotation is sparse: mentioned entities only, so valid unmentioned regions count as wrong and AP is unreliable (authors dropped it).",
+  "Phrases are scored without sentence context, so identical mentions land on the same box; no constraint ties people to clothing or body parts.",
+  "Multi-box phrases are merged into one box for training and the benchmark.",
+  "Proposal recall caps results: only about 50% of body parts and 77% of clothing have a proposal at IoU>=0.5 among 200; more proposals lowered precision.",
+  "Gains in localization do not carry to image-sentence retrieval (about 1 point).",
+  "Competing results use 100 proposals versus 200 here, and results are single-run without variance.",
+  "Evaluation uses ground-truth NP chunks; automatic chunking lowers recall by about 3%.",
+  "Data bias: images focus mainly on people and animals; about 8% of images contain some annotation error.",
+  "w_color, the manual phrase-to-PASCAL mapping, and code are not released or stated in the text."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "coreference chain", "definition": "a set or cluster of mentions c in M referring to the same set of entities", "where": "Sec 3.1"},
+  {"term": "phrase localization", "definition": "given an image and a caption that accurately describes it, predict a bounding box for a specific entity mention from that sentence", "where": "Sec 1"}
+ ],
+ "lineage": [
+  {"work": "Flickr30k (Young et al. 2014)", "year": 2014, "arxiv": null, "relation": "extends", "note": "captions and chunking augmented with boxes and chains", "quote": null},
+  {"work": "Klein et al. 2014, Fisher vectors derived from HGLMM", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "CCA text/image embedding implementation follows it", "quote": null},
+  {"work": "Fast R-CNN (Girshick 2015)", "year": 2015, "arxiv": "1504.08083", "relation": "uses-method", "note": "region features and detector", "quote": null},
+  {"work": "VGG (Simonyan and Zisserman 2014)", "year": 2014, "arxiv": "1409.1556", "relation": "uses-method", "note": "19-layer image features", "quote": null},
+  {"work": "EdgeBoxes (Zitnick and Dollar 2014)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "region proposals", "quote": null},
+  {"work": "Rohrbach et al. 2016 (GroundeR)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "LSTM attention, 47.70 R@1 Fast RCNN", "quote": null},
+  {"work": "Fukui et al. 2016 (MCB)", "year": 2016, "arxiv": "1606.01847", "relation": "baseline", "note": "48.69 R@1", "quote": null},
+  {"work": "Wang et al. 2016a,b; Hu et al. 2016; Zhang et al. 2016", "year": 2016, "arxiv": null, "relation": "baseline", "note": "other localization baselines in Table 5", "quote": null},
+  {"work": "Plummer et al. 2015 (ICCV preliminary version)", "year": 2015, "arxiv": null, "relation": "extends", "note": "R@1 improved from about 25% to 50%", "quote": null},
+  {"work": "MSCOCO, ReferIt, Google Refexp, Scene Graph, Visual Genome", "year": 2015, "arxiv": null, "relation": "related", "note": "dataset comparison in Table 1", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Example annotations from our dataset. In each group of captions describing the same image, coreferent mentions (coreference chains) and their corresponding bounding boxes are marked with the same color.", "page": 2, "why": "Shows chain-to-box structure, including many-to-many and scene mentions with no box."},
+  {"figure": "Table 5", "caption": "Overall phrase localization performance across the Flickr30k Entities test set.", "page": 13, "why": "Ablation ladder from CCA to full model next to prior methods."},
+  {"figure": "Fig 11", "caption": "Examples of successful and failed localization", "page": 15, "why": "Caption text not read from figure captions tool; failure modes are people-instance and body-part confusion."},
+  {"figure": "Fig 9", "caption": "Error sources and phrase-type confusion matrix", "page": 14, "why": "Caption text not verified; text says phrase confusion is a main error source and boxes are biased toward people."}
+ ],
+ "code": [
+  {"where": "Eq 3, Sec 4.1.3", "snippet": "D_full(phi, r) = (1 - w_size - w_color) D_CCA+det(phi, r) + w_size (1 - size(r)) + w_color (1 - sigma_color(phi, r))", "verbatim": false}
+ ],
+ "problems": [
+  "Fig 9 and Fig 11 captions were not retrieved with the figures tool; described from body text only.",
+  "No instructions embedded in the text.",
+  "Table 5 vs text: size term described as about six points, table shows 5.38; text also mentions mAP though AP was dropped."
+ ]
+}

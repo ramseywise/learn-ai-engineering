@@ -1,0 +1,484 @@
+{
+ "schema": 1,
+ "key": "1904.08779",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/park-2019-specaugment.pdf",
+ "bib": {
+  "title": "SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition",
+  "authors": [
+   "Daniel S. Park",
+   "William Chan",
+   "Yu Zhang",
+   "Chung-Cheng Chiu",
+   "Barret Zoph",
+   "Ekin D. Cubuk",
+   "Quoc V. Le"
+  ],
+  "first_author": "Park",
+  "year": 2019,
+  "venue": "preprint (arXiv v3, Dec 2019; Interspeech 2019 paper)",
+  "arxiv": "1904.08779",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 29622,
+  "chars_total": 29622,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a simple augmentation applied directly to log mel spectrograms make end-to-end ASR networks beat hybrid systems on LibriSpeech and Switchboard?",
+ "hypothesis": "Features robust to time deformation, partial frequency loss and partial loss of short speech segments help the network learn useful features and reduce overfitting.",
+ "contributions": [
+  "SpecAugment: time warping, frequency masking and time masking on the log mel spectrogram, applied online",
+  "State-of-the-art WER on LibriSpeech 960h and Switchboard 300h with LAS, with and without an LM",
+  "Observation that augmentation turns overfitting into underfitting, so bigger networks and longer schedules help"
+ ],
+ "method": {
+  "summary": "Three deformations (time warp, frequency mask, time mask) are applied online to the log mel spectrogram as if it were an image. LAS encoder-decoder networks are trained with long ramp-hold-decay learning rate schedules, then optionally decoded with shallow fusion of an RNN LM.",
+  "task": "end-to-end automatic speech recognition",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LibriSpeech 960h",
+    "role": "both",
+    "size": "960h",
+    "split": "dev-other for checkpoint selection; test-clean/test-other for reporting",
+    "source": "Panayotov et al. 2015",
+    "preprocessing": "80-dim filter banks with delta and delta-delta; 16k word piece model built from training transcripts; log mel normalized to zero mean"
+   },
+   {
+    "name": "Switchboard 300h (LDC97S62)",
+    "role": "both",
+    "size": "300h",
+    "split": "no canonical dev set; checkpoint at end of schedule; test Hub5'00 SWBD and CallHome",
+    "source": "LDC; Kaldi s5c recipe adapted",
+    "preprocessing": "80-dim filter banks with delta and delta-delta; 1k WPM from Switchboard+Fisher transcripts"
+   },
+   {
+    "name": "LibriSpeech LM corpus",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "LibriSpeech",
+    "preprocessing": "trains the LibriSpeech RNN LM"
+   },
+   {
+    "name": "Fisher + Switchboard transcripts",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "LDC2004T19, LDC2005T19",
+    "preprocessing": "trains the Switchboard RNN LM"
+   },
+   {
+    "name": "RT-03 (LDC2007S10)",
+    "role": "dev",
+    "size": null,
+    "split": "grid search of fusion parameters",
+    "source": "LDC",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LAS-d-w (LAS-4-1024, LAS-6-1024, LAS-6-1280)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Listen Attend and Spell: 2-layer CNN with max-pooling and stride 2, then d stacked bidirectional LSTMs of cell size w, 2-layer RNN decoder of cell dimension w",
+    "init_from": null,
+    "tokenizer": "Word Piece Model",
+    "vocab": "16k LibriSpeech, 1k Switchboard",
+    "layers": "d = 4 or 6",
+    "hidden": "w = 1024 or 1280",
+    "heads": null,
+    "context": null,
+    "other": {
+     "LAS-4-1024": "the large model of Irie et al. 2019"
+    }
+   },
+   {
+    "name": "RNN LM (LibriSpeech)",
+    "role": "base",
+    "params": null,
+    "architecture": "two-layer RNN, embedding dimension 1024",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RNN LM (Switchboard)",
+    "role": "base",
+    "params": null,
+    "architecture": "two-layer RNN, embedding dimension 256",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 2,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": "peak 0.001",
+   "lr_schedule": "ramp up from zero to sr, hold, exponential decay from si to sf down to 1/100 of max, constant after. (sr,snoise,si,sf): B=(0.5k,10k,20k,80k), D=(1k,20k,40k,160k), L=(1k,20k,140k,320k)",
+   "warmup": "ramp-up over sr steps (0.5k B, 1k D and L)",
+   "batch_size": "512",
+   "steps": "B ends 80k (Switchboard evaluated at 100k); D 160k; L 320k (Switchboard reported at 340k)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "variational weight noise std 0.075 turned on at snoise; uniform label smoothing 0.1; SpecAugment",
+   "hardware": "32 Google Cloud TPU chips",
+   "compute": "7 days for the Table 2 runs; ~24 days for schedule L",
+   "wall_clock": "7 days (B/D), ~24 days (L)",
+   "seeds": null,
+   "other": {
+    "label_smoothing_policy": "LibriSpeech: off in Table 2 runs; with L on only for steps < 140k; Switchboard: on throughout with L, both tried with B",
+    "policies": "Table 1: None W0; LB W80 F27 mF1 T100 p1.0 mT1; LD W80 F27 mF2 T100 p1.0 mT2; SM W40 F15 mF2 T70 p0.2 mT2; SS W40 F27 mF2 T70 p0.2 mT2",
+    "other_hyperparameters": "all other hyperparameters fixed, no additional tuning"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 8",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per configuration; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "shallow_fusion": "y* = argmax_y (log P(y|x) + lambda log P_LM(y)) plus coverage penalty c",
+    "librispeech": "lambda=0.35, c=0.05 (from Irie et al.)",
+    "switchboard": "(lambda,c) = (0.3,0.05), (0.2,0.0125), (0.1,0.025) for the three entries of Table 5, grid search on RT-03"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "WER",
+     "definition": "word error rate",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "HMM, CTC/ASG and LAS systems in Tables 3 and 5",
+    "LAS without SpecAugment (same network)"
+   ],
+   "protocol": "LibriSpeech: checkpoint chosen by dev-other, test reported. Switchboard: end-of-schedule checkpoint. No significance tests or repeated runs."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "public LibriSpeech; Switchboard/Fisher via LDC"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "on 32 Google Cloud TPU chips for 7 days",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "LAS-6-1280 with SpecAugment reaches 6.8% test-other with no LM",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 6.8,
+   "unit": "% WER",
+   "baseline_value": 13.4,
+   "n": null,
+   "setup": "LibriSpeech 960h, LAS-6-1280, schedule L (~24 days), policy LD, best dev-other checkpoint; baseline is Irie et al. LAS-4-1024 without augmentation",
+   "table": "Table 3, row LAS + SpecAugment, column No LM other",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "With shallow fusion LM, test-other falls to 5.8%, a 22% relative gain over the prior best hybrid",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 5.8,
+   "unit": "% WER",
+   "baseline_value": 7.5,
+   "n": null,
+   "setup": "LibriSpeech 960h, LAS-6-1280, schedule L (~24 days), policy LD, best dev-other checkpoint plus RNN LM shallow fusion; prior best is Yang et al. 2018 hybrid",
+   "table": "Table 3, row LAS + SpecAugment, column With LM other",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Test-clean 2.8% no LM and 2.5% with LM",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 2.8,
+   "unit": "% WER",
+   "baseline_value": 4.7,
+   "n": null,
+   "setup": "LibriSpeech 960h, LAS-6-1280, schedule L (~24 days), policy LD, best dev-other checkpoint",
+   "table": "Table 3, row LAS + SpecAugment, column No LM clean",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Switchboard/CallHome 7.2/14.6 without LM, versus 8.3/17.3 for the best prior hybrid",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 7.2,
+   "unit": "% WER (SWBD)",
+   "baseline_value": 8.3,
+   "n": null,
+   "setup": "Switchboard 300h, LAS-6-1280, schedule L, policy SM, Hub5'00, no LM",
+   "table": "Table 5, row LAS + SpecAugment (SM), column No LM SWBD",
+   "note": "CallHome 14.6 vs 17.3",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Switchboard with LM: 6.8% SWBD and 14.1% CallHome",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 6.8,
+   "unit": "% WER (SWBD)",
+   "baseline_value": 8.3,
+   "n": null,
+   "setup": "as above plus Fisher-Switchboard RNN LM, (lambda,c)=(0.3,0.05)",
+   "table": "Table 5, row LAS + SpecAugment (SM), column With LM SWBD",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Same LAS-6-1280 model without SpecAugment scores 12.5% test-other no LM, so augmentation roughly halves WER",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 12.5,
+   "unit": "% WER",
+   "baseline_value": 6.8,
+   "n": null,
+   "setup": "LibriSpeech 960h, LAS-6-1280, schedule L (~24 days), best dev-other checkpoint; no augmentation",
+   "table": "Table 3, row LAS, column No LM other",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Augmentation helps at fixed size: LAS-4-1024 schedule B test-other 13.4 (none) to 9.2 (LD)",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 9.2,
+   "unit": "% WER",
+   "baseline_value": 13.4,
+   "n": null,
+   "setup": "LibriSpeech, LAS-4-1024, schedule B, no LM, policy LD",
+   "table": "Table 2, row B LD, column No LM other",
+   "note": "Table 2 first row (13.4) is Irie et al., not this work",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Bigger network and longer schedule help more under harsh augmentation: LAS-6-1024 sched D LD test-other 8.0 vs 12.9-13.1 unaugmented",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 8.0,
+   "unit": "% WER",
+   "baseline_value": 13.1,
+   "n": null,
+   "setup": "LibriSpeech, LAS-6-1024, schedule D, no LM",
+   "table": "Table 2, row LAS-6-1024 D LD, column No LM other",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Switchboard: SpecAugment and label smoothing are additive; SM with LS gives 8.5 SWBD vs 12.1 unaugmented no LS",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 8.5,
+   "unit": "% WER (SWBD)",
+   "baseline_value": 12.1,
+   "n": null,
+   "setup": "Switchboard 300h, LAS-4-1024, schedule B, no LM",
+   "table": "Table 4, row SM, LS circle, column SWBD",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Ablation: removing time warping costs only 0.1 test-other (10.1 vs 10.0); removing frequency masking costs 1.0, removing time masking 0.9",
+   "kind": "measured",
+   "source": null,
+   "metric": "WER",
+   "value": 10.1,
+   "unit": "% WER test-other",
+   "baseline_value": 10.0,
+   "n": null,
+   "setup": "LibriSpeech LAS-4-1024, schedule B, no LM",
+   "table": "Table 6, row W=0, column test-other",
+   "note": "no-freq-mask 11.0, no-time-mask 10.9",
+   "where": "Table 6"
+  },
+  {
+   "claim": "Authors state augmentation converts overfitting into underfitting",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAS-6-1280 LibriSpeech schedule D training curves (Fig 3)",
+   "table": "Section 5",
+   "note": null,
+   "where": "Section 5"
+  }
+ ],
+ "limits": [
+  "Single runs, no seeds or confidence intervals; differences of 0.1 WER (time warp ablation) are within plausible noise",
+  "Policies are hand-crafted; no search over policies",
+  "Checkpoint for Switchboard chosen at schedule end because there is no dev set",
+  "Fusion parameters for Switchboard do not transfer between networks and need per-model grid search",
+  "Label smoothing destabilizes training under augmentation with decaying LR",
+  "Very long compute: about 24 days on 32 TPU chips for the best models",
+  "Only LAS evaluated, English read and conversational speech, no noise or far-field test",
+  "Optimizer, parameter counts and code not stated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SpecAugment",
+   "definition": "augmentation on the log mel spectrogram: time warping, frequency masking and time masking",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Listen, Attend and Spell (Chan et al. 2016)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model",
+   "quote": null
+  },
+  {
+   "work": "Model Unit Exploration for Sequence-to-Sequence Speech Recognition (Irie et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LAS-4-1024 baseline, LM and fusion parameters",
+   "quote": null
+  },
+  {
+   "work": "Cutout (DeVries and Taylor 2017)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "inspiration for masking",
+   "quote": null
+  },
+  {
+   "work": "AutoAugment (Cubuk et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "learned augmentation in vision",
+   "quote": null
+  },
+  {
+   "work": "Speed perturbation (Ko et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "raw-audio augmentation",
+   "quote": null
+  },
+  {
+   "work": "Deep Speech (Hannun et al. 2014)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "noise superposition",
+   "quote": null
+  },
+  {
+   "work": "Kovacs et al. 2017 channel dropout",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "similar to frequency masking but binned per minibatch",
+   "quote": null
+  },
+  {
+   "work": "LibriSpeech (Panayotov et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Switchboard (Godfrey 1992), Fisher (Cieri 2004)",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Augmentations applied to the base input",
+   "page": 2,
+   "why": "shows time warp, frequency mask, time mask on a spectrogram"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Augmentation policies applied to the base input (None, LB, LD)",
+   "page": 2,
+   "why": "shows policy strength"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "LAS-6-1280 on LibriSpeech with schedule D",
+   "page": 4,
+   "why": "training curves showing underfitting under augmentation"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Augmentation parameters for policies",
+   "page": 2,
+   "why": "policy parameters"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "y* = argmax_y (log P(y|x) + \u03bb log P_LM(y))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure content not read, only captions",
+  "Tables flattened by extraction; cell alignment inferred from column order"
+ ]
+}

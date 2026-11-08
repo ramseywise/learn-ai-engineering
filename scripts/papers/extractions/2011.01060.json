@@ -1,0 +1,341 @@
+{
+ "schema": 1,
+ "key": "2011.01060",
+ "pdf": "generative-ai/02-rag-retrieval/sources/ho-2020-constructing-multi-hop-qa-dataset.pdf",
+ "bib": {
+  "title": "Constructing A Multi-hop QA Dataset for Comprehensive Evaluation of Reasoning Steps",
+  "authors": ["Xanh Ho", "Anh-Khoa Duong Nguyen", "Saku Sugawara", "Akiko Aizawa"],
+  "first_author": "Ho",
+  "year": 2020,
+  "venue": "Proceedings of the 28th International Conference on Computational Linguistics (COLING 2020), pages 6609-6625",
+  "arxiv": "2011.01060",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56442,
+  "chars_total": 56442,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only."
+ },
+ "type": "benchmark",
+ "question": "How can a large multi-hop QA dataset be built that guarantees multi-hop reasoning and gives a structured explanation of the reasoning path from question to answer?",
+ "hypothesis": "Combining Wikipedia text with Wikidata triples and logical rules yields natural questions that still require multi-hop reasoning and are harder than HotpotQA.",
+ "contributions": [
+  "A large, high quality multi-hop dataset (2WikiMultiHopQA) with comprehensive explanations from question to answer, built from Wikipedia and Wikidata.",
+  "New per-sample evidence information (Wikidata triples forming the reasoning path) for interpreting predictions and testing reasoning skills.",
+  "Logical rules used to generate simple, natural questions that still require multi-hop reasoning."
+ ],
+ "method": {
+  "summary": "Template-based generation of comparison, inference, compositional and bridge-comparison questions from the intersection of Wikipedia summaries and Wikidata triples, with checks that force two-hop reasoning, distractor paragraphs from bigram tf-idf, and a single-hop-model-based split. Baselines are the HotpotQA multi-hop model plus an evidence-generation head, and a single-hop BERT; human performance on 100 test samples.",
+  "task": "multi-hop reading comprehension: answer prediction, sentence-level supporting-fact prediction, evidence (triple) generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "both",
+    "size": "192,606 examples (comparison 57,989; inference 7,478; compositional 86,979; bridge-comparison 40,160)",
+    "split": "train-medium 154,878; train-hard 12,576; dev 12,576; test 12,576. train = train-medium + train-hard",
+    "source": "English Wikipedia dump of January 1, 2020 and Wikidata dump of December 31, 2019 (online versions where entities missing); 5,950,475 entities in 23,763 'instance of' groups; CC BY 4.0 paper licence",
+    "preprocessing": "Only the Wikipedia summary used as paragraph. Sentence segmentation with Stanford CoreNLP and Spacy. Context = 10 paragraphs (gold + distractors), shuffled. Distractors: bigram tf-idf top-50, then filtered by entity type of the gold paragraphs to top-8 (top-6 for bridge-comparison, which has 4 gold). Yes/no balanced; ambiguous cases dropped; equal numeric comparisons dropped."
+   },
+   {
+    "name": "HotpotQA (distractor setting)",
+    "role": "eval",
+    "size": "112,779 (Table 8)",
+    "split": null,
+    "source": "Yang et al., 2018",
+    "preprocessing": "17,456 comparison questions from its train set used to derive comparison templates via Spacy NER"
+   }
+  ],
+  "models": [
+   {
+    "name": "Multi-hop baseline (Yang et al. 2018 HotpotQA baseline + evidence generation block)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "HotpotQA baseline with bi-attention; added component predicts relations from the question, then subject/object entities from predicted relations and context after sentence-level SF prediction",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "10 paragraphs per question",
+    "other": {}
+   },
+   {
+    "name": "Single-hop BERT (as Min et al. 2019)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT (Devlin et al. 2019) single-hop reader; also used to split train/dev/test",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AMIE",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "rule miner (Galarraga et al. 2013), used to propose logical rules, then manually verified: 28 rules used",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"note": "No baseline training hyperparameters are given; the paper defers to Yang et al. 2018 and its code release."}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Split built with five-fold cross-validation of the single-hop model over all data; baseline results single run (not stated)",
+   "prompting": null,
+   "retrieval": "Distractor construction only: bigram tf-idf (Chen et al. 2017) top-50 paragraphs, then entity-type filter to top-8 (top-6 bridge-comparison)",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "EM", "definition": "exact match for answer span, supporting facts, evidence", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "token F1 for answers; set F1 for SFs and evidence triples", "unit": "%", "higher_is_better": true},
+    {"name": "Joint F1", "definition": "2PR/(P+R) with P_joint = P_ans P_sup P_evi and R_joint = R_ans R_sup R_evi", "unit": "%", "higher_is_better": true},
+    {"name": "Joint EM", "definition": "1 only when answer, SFs and evidence all exactly match, else 0", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["HotpotQA multi-hop model (Yang et al. 2018)", "single-hop BERT (Min et al. 2019 style)", "human (3 graduate-student annotators per sample, 100 test samples; upper bound = max EM/F1 per sample)"],
+   "protocol": "Difficulty: same multi-hop model on HotpotQA vs this dataset. Multi-hop necessity: single-hop BERT F1 on both. Humans given question, context and predefined relation set. Quality check: 100 random train samples checked manually for Wikipedia/Wikidata mismatch."
+  },
+  "availability": {
+   "code": "https://github.com/Alab-NII/2wikimultihop",
+   "weights": null,
+   "data": "https://github.com/Alab-NII/2wikimultihop (full dataset, baseline model and construction information)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets[0].split", "quote": "We used train-medium and train-hard as the training data in our dataset.", "where": "Sec 3.2, Table 1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Single-hop BERT scores 8.7 F1 lower on 2WikiMultiHopQA than on HotpotQA, indicating many examples need multi-hop reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gap, single-hop BERT, HotpotQA minus 2Wiki",
+   "value": "8.7",
+   "unit": "F1 points",
+   "baseline_value": "64.6 on HotpotQA (55.9 on 2Wiki)",
+   "n": null,
+   "setup": "Single-hop BERT, answer F1, HotpotQA distractor vs 2WikiMultiHopQA; follows Min et al. 2019.",
+   "quote": "The result of our dataset is lower than the result of HotpotQA by 8.7 F1.",
+   "table": null,
+   "note": "Min et al. 2019 reported 67.0 F1 on HotpotQA; the authors got 64.6.",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Multi-hop model joint F1 is 26.76 on 2Wiki versus 40.52 on HotpotQA; answer F1 40.95 vs 58.54.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Joint F1 (multi-hop model)",
+   "value": "26.76",
+   "unit": "%",
+   "baseline_value": "40.52 (HotpotQA)",
+   "n": null,
+   "setup": "HotpotQA baseline model, distractor setting, answer+SF joint (no evidence task).",
+   "quote": null,
+   "table": "Table 4, row Our Dataset, column Joint F1",
+   "note": "Sp Fact F1 is higher on 2Wiki (66.94 vs 65.66); Sp Fact EM 26.47 vs 20.68.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Baseline with evidence head on the test split: answer F1 43.93, SF F1 65.26, evidence F1 14.94, joint F1 5.41.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Joint F1 (answer+SF+evidence), test",
+   "value": "5.41",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 12576,
+   "setup": "Modified HotpotQA baseline plus evidence generation, test split.",
+   "quote": null,
+   "table": "Table 5, row Test, column Joint F1",
+   "note": "Dev: answer F1 42.45, SF F1 64.31, evidence F1 14.77, joint F1 5.03. Evidence EM 1.07, joint EM 0.35 on test.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Evidence generation is far harder for the model than for humans: 16.7 F1 vs 78.8 (human upper bound).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Evidence F1",
+   "value": "16.74",
+   "unit": "%",
+   "baseline_value": "78.81 (human UB); 75.63 (human average)",
+   "n": 100,
+   "setup": "100 random test samples; model row differs from full-test Table 5.",
+   "quote": null,
+   "table": "Table 7, row Model, column Evidence F1",
+   "note": "Text rounds to 78.8 and 16.7. Model on these 100 samples: answer F1 58.48, joint F1 9.79; human UB joint F1 75.25.",
+   "where": "Table 7, Sec 5.3"
+  },
+  {
+   "claim": "Human upper bound on answer prediction is 91.8 F1, versus 98.8 F1 on HotpotQA (borrowed).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Answer F1, human UB",
+   "value": "91.8",
+   "unit": "F1",
+   "baseline_value": "98.8 (HotpotQA, from its paper)",
+   "n": 100,
+   "setup": "3 annotators per sample, 100 test samples, max per sample.",
+   "quote": "The human performance of the answer prediction task on our dataset (91.8 F1 UB) shows a relatively small gap against that on HotpotQA (98.8 F1 UB; borrowed from their paper).",
+   "table": null,
+   "note": "Table 7 prints 91.79; human average answer F1 82.34.",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "By question type, inference questions have the lowest joint F1 (1.40) and bridge-comparison has the highest SF F1 (89.16) but lowest answer F1 (20.45).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Joint F1 by type, test",
+   "value": "1.40",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Baseline model, test split, per question type.",
+   "quote": null,
+   "table": "Table 6, row Inference, column Joint F1",
+   "note": "Joint F1: comparison 2.45, compositional 9.19, bridge-comparison 3.60. Evidence EM is 0.00 for all types except compositional (2.57).",
+   "where": "Table 6"
+  },
+  {
+   "claim": "The single-hop model used to split data has average five-fold F1 of 86.7%; questions it solves form train-medium (154,878).",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 of single-hop model, five-fold CV",
+   "value": "86.7",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 192606,
+   "setup": "Five-fold cross-validation over all generated data.",
+   "quote": "The average F1 score of the model is 86.7%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "8 of 100 manually checked training samples have a Wikipedia/Wikidata mismatch (unanswerable-ish noise).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mismatch rate",
+   "value": "8",
+   "unit": "of 100 samples",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "100 random training samples, manual check, after heuristics.",
+   "quote": "We obtained eight out of 100 samples that have a mismatch between Wikipedia article and Wikidata triple.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Answer type mix: yes/no 31.2%, date 16.9%, film 13.5%, human 11.7%, big city 4.7%; 708 unique answer types.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of yes/no answers",
+   "value": "31.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 192606,
+   "setup": "Whole dataset, by Wikidata 'instance of'.",
+   "quote": "The top-5 types of answers in our dataset are: yes/no (31.2%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Dataset has 192,606 questions, larger than HotpotQA (112,779) and R4C (4,588).",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "192,606",
+   "unit": "examples",
+   "baseline_value": "112,779 HotpotQA",
+   "n": null,
+   "setup": "Table 8 comparison of datasets with explanations.",
+   "quote": null,
+   "table": "Table 8, row Our work, column Size",
+   "note": null,
+   "where": "Table 8, Table 1"
+  }
+ ],
+ "limits": [
+  "Questions are template-generated (hand-crafted templates, 28 logical rules), so language diversity is limited; comparison templates are few per property (Table 9).",
+  "Inference questions are few (7,478) because only Wikidata relations with a single value were kept to ensure one answer.",
+  "Wikipedia/Wikidata mismatch: 8 of 100 sampled train examples mismatched; human answer UB is 91.8 F1, partly attributed to this.",
+  "Evidence F1 depends on one ground-truth name per Wikidata entity while humans may use aliases; authors conjecture this depresses the evidence score.",
+  "Sentence-level SF prediction is a binary classification that cannot test reasoning (authors' own point); model SF F1 is high regardless.",
+  "Baseline details (hyperparameters, seeds, compute) not reported; only one baseline family evaluated; human study is 100 samples.",
+  "Pre-LLM paper: baselines are HotpotQA 2018 model and BERT; later retrievers and LLMs are not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "bridge question", "definition": "a question comprising a bridge entity that connects the two paragraphs (inference and compositional are its two subtypes)", "where": "Sec 2.2"},
+  {"term": "bridge-comparison question", "definition": "combines the bridge question with the comparison question; requires finding the bridge entities and doing comparisons", "where": "Sec 2.2"},
+  {"term": "evidence", "definition": "a set of (subject entity, property, object entity) triples from Wikidata describing the reasoning path from question to answer", "where": "Sec 1, 2.1"}
+ ],
+ "lineage": [
+  {"work": "HotpotQA", "year": 2018, "arxiv": "1809.09600", "relation": "extends", "note": "Baseline model, joint metrics, distractor-paragraph recipe and comparison-question templates taken from it; adds evidence triples.", "quote": null},
+  {"work": "Compositional questions do not necessitate multi-hop reasoning (Min et al.)", "year": 2019, "arxiv": "1906.02900", "relation": "uses-method", "note": "Single-hop BERT test; removes single-hop and context-dependent templates.", "quote": null},
+  {"work": "R4C (Inoue et al.)", "year": 2020, "arxiv": "2005.03754", "relation": "extends", "note": "Derivation-based explanations on 4,588 questions; 2Wiki is larger.", "quote": null},
+  {"work": "Understanding dataset design choices for multi-hop reasoning (Chen and Durrett)", "year": 2019, "arxiv": "1904.12106", "relation": "related", "note": "Showed many HotpotQA examples do not need multi-hop reasoning.", "quote": null},
+  {"work": "AMIE (Galarraga et al.)", "year": 2013, "arxiv": null, "relation": "uses-method", "note": "Logical rule mining; rules manually verified.", "quote": null},
+  {"work": "Reading Wikipedia to answer open-domain questions (Chen et al.)", "year": 2017, "arxiv": "1704.00051", "relation": "uses-method", "note": "Bigram tf-idf retrieval for distractors.", "quote": null},
+  {"work": "BERT (Devlin et al.)", "year": 2019, "arxiv": "1810.04805", "relation": "evaluates", "note": "Single-hop reader.", "quote": null},
+  {"work": "QAngaroo / WikiHop (Welbl et al.)", "year": 2018, "arxiv": "1710.06481", "relation": "related", "note": "KB-based multi-hop dataset without explanations.", "quote": null},
+  {"work": "ComplexWebQuestions (Talmor and Berant)", "year": 2018, "arxiv": "1803.06643", "relation": "related", "note": "KB-based multi-hop dataset without explanations.", "quote": null},
+  {"work": "HybridQA (Chen et al.)", "year": 2020, "arxiv": "2004.07347", "relation": "related", "note": "Multi-hop over tables and text.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Example of an inference question in our dataset. The difference between our dataset and HotpotQA is the evidence information that explains the reasoning path.", "page": 2, "why": "Shows the question, gold paragraphs and the Wikidata triple path in one picture."},
+  {"figure": "Fig 2", "caption": "The Requirements for bridge questions in our dataset.", "page": 5, "why": "Shows the bridge-entity and 2-hop conditions (p mentions e1, p1 mentions e2, p lacks e2, p1 lacks e)."},
+  {"figure": "Fig 3", "caption": "Our baseline model. The right part is the baseline model of HotpotQA (Yang et al., 2018).", "page": 7, "why": "Architecture with the added evidence generation block."},
+  {"figure": "Table 3", "caption": "Types of multi-hop reasoning in our dataset.", "page": 6, "why": "One worked example per question type."}
+ ],
+ "code": [
+  {"where": "Sec 2.1, Eq 1", "snippet": "Joint F1 = 2 P_joint R_joint / (P_joint + R_joint), P_joint = P_ans P_sup P_evi, R_joint = R_ans R_sup R_evi", "verbatim": false}
+ ],
+ "problems": [
+  "PDF text uses ligature characters (fi shown as a single glyph), so quotes containing fi/fl were avoided.",
+  "No embedded instructions found.",
+  "Figure page numbers are derived from COLING page numbers (6609 = p1), not from figures.py."
+ ]
+}

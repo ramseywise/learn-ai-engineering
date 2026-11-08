@@ -1,0 +1,663 @@
+{
+ "schema": 1,
+ "key": "2106.11520",
+ "pdf": "generative-ai/08-eval/sources/yuan-2021-bartscore.pdf",
+ "bib": {
+  "title": "BARTScore: Evaluating Generated Text as Text Generation",
+  "authors": [
+   "Weizhe Yuan",
+   "Graham Neubig",
+   "Pengfei Liu"
+  ],
+  "first_author": "Yuan",
+  "year": 2021,
+  "venue": "NeurIPS 2021",
+  "arxiv": "2106.11520",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63077,
+  "chars_total": 63077,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can the quality of generated text be evaluated unsupervised as the likelihood of generating it (or the reference/source) under a pre-trained seq2seq model?",
+ "hypothesis": "Models trained to convert generated text to/from a reference or source will assign higher scores when the generated text is better.",
+ "contributions": [
+  "Formulate evaluation of generated text as text generation with BART (BARTScore), with four directions (s->h, r->h, h->r, r<->h)",
+  "Variants via prompting and fine-tuning on CNNDM and ParaBank2",
+  "Meta-evaluation on 16 datasets and 7 perspectives; best in 16 of 22 settings",
+  "Interactive ExplainaBoard leaderboard for meta-evaluation"
+ ],
+ "method": {
+  "summary": "BARTScore is the weighted sum of token log-probabilities of a target text y given a source text x under BART, with uniform weights. Direction (s->h, h->r, r->h, F) is picked per perspective; variants fine-tune BART on CNNDM then ParaBank2 or add prompts to the decoder input. Metrics are meta-evaluated by correlation with human judgments on MT, summarization, factuality and data-to-text datasets.",
+  "task": "Unsupervised evaluation metric for text generation (MT, summarization, data-to-text)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT19 metrics DARR",
+    "role": "eval",
+    "size": "7 language pairs (de-en, fi-en, gu-en, kk-en, lt-en, ru-en, zh-en)",
+    "split": null,
+    "source": "WMT19 metrics shared task (Ma et al. 2019)",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT18",
+    "role": "dev",
+    "size": "used to search one best prompt",
+    "split": "n/a",
+    "source": "WMT18 metrics shared task",
+    "preprocessing": null
+   },
+   {
+    "name": "REALSumm",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Bhandari et al. 2020; pyramid recall",
+    "preprocessing": null
+   },
+   {
+    "name": "SummEval",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Fabbri et al. 2021; CNNDM summaries, expert and crowd annotation",
+    "preprocessing": null
+   },
+   {
+    "name": "NeR18 (Newsroom)",
+    "role": "eval",
+    "size": "60 articles, 7 systems",
+    "split": null,
+    "source": "Grusky et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Rank19",
+    "role": "eval",
+    "size": "373 triples (source sentence, one correct and one incorrect summary sentence)",
+    "split": null,
+    "source": "Falke et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "QAGS-CNN / QAGS-XSUM",
+    "role": "eval",
+    "size": "235 CNNDM outputs / 239 XSUM outputs",
+    "split": null,
+    "source": "Wang et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "BAGEL / SFHOT / SFRES",
+    "role": "eval",
+    "size": "202 / 398 / 581 samples",
+    "split": null,
+    "source": "Mairesse 2010; Wen et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CNNDM",
+    "role": "train",
+    "size": "BART already fine-tuned, off-the-shelf from Huggingface",
+    "split": null,
+    "source": "Hermann et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "ParaBank2",
+    "role": "train",
+    "size": "random subset of 30,000 examples",
+    "split": null,
+    "source": "Hu et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BART",
+    "role": "base",
+    "params": null,
+    "architecture": "encoder-decoder seq2seq",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "size of BART variant not stated in the paper"
+    }
+   },
+   {
+    "name": "BART-CNN (Huggingface)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BART fine-tuned on CNNDM",
+    "init_from": "BART",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BART-CNN-Para",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BART-CNN further fine-tuned on ParaBank2",
+    "init_from": "BART-CNN",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "T5 / PEGASUS",
+    "role": "baseline",
+    "params": "T5-base, T5-large, PEGASUS-large",
+    "architecture": "seq2seq",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "tried as alternative backbones, Appendix A.2"
+    }
+   },
+   {
+    "name": "COMET, BLEURT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "supervised",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "fine-tuning of BART on ParaBank2 paraphrase pairs (generation); BARTScore itself needs no training",
+   "optimizer": null,
+   "lr": "5e-5",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "20",
+   "steps": null,
+   "epochs": "1",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "two 2080Ti GPUs",
+   "compute": null,
+   "wall_clock": "less than one hour",
+   "seeds": null,
+   "other": {
+    "data": "random subset of 30,000 ParaBank2 examples",
+    "cnn_step": "CNNDM-fine-tuned BART taken off the shelf from Huggingface Transformers"
+   }
+  },
+  "inference": {
+   "decoding": "no decoding: teacher-forced log-likelihood scoring",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "deterministic scoring; no seeds or repeats reported",
+   "prompting": "Prompt prefixed to decoder input (target) or appended to source; for summarization and data-to-text all prompts in the set are averaged (Eq. 3); for MT a single prompt 'Such as' picked on WMT18",
+   "retrieval": null,
+   "parameters": {
+    "token_weights": "uniform (w_t equal); IDF, stop-word-ignoring and prior-probability weighting tried and did not beat uniform",
+    "directions": "h->r for REALSumm (pyramid recall); s->h for linguistic quality, factuality; F score (r<->h) for MT and data-to-text",
+    "prompt_set_size": "70 prompts for s->h (seed 'in summary'), 34 for h<->r (seed 'in other words'), paraphrases from wordhippo.com",
+    "prompt_combination": "mean over prompts of length-normalised log-prob (Eq. 3)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Kendall's Tau",
+     "definition": "ordinal association between metric and human scores (WMT19)",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman",
+     "definition": "monotonic correlation (summarization, data-to-text)",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson",
+     "definition": "linear correlation (QAGS)",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "percentage of correct rankings between factual and non-factual texts (Rank19)",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ROUGE-1/2/L",
+    "BLEU",
+    "CHRF",
+    "BERTScore",
+    "MoverScore",
+    "PRISM",
+    "BLEURT",
+    "COMET",
+    "FactCC",
+    "QAGS"
+   ],
+   "protocol": "Correlation with human judgments; bootstrapping pairwise significance test (p<0.05); official code for each baseline; dagger = beats other unsupervised metrics excluding BARTScore variants, double dagger = beats all unsupervised incl. variants"
+  },
+  "availability": {
+   "code": "https://github.com/neulab/BARTScore",
+   "weights": null,
+   "data": "public meta-evaluation datasets; leaderboard on ExplainaBoard"
+  },
+  "prompts": [
+   {
+    "purpose": "MT prompt chosen on WMT18",
+    "text": "Such as",
+    "where": "4.2.2"
+   },
+   {
+    "purpose": "seed prompt s->h",
+    "text": "in summary",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "seed prompt h<->r",
+    "text": "in other words",
+    "where": "Table 2"
+   },
+   {
+    "purpose": "example from the full prompt sets (70 s->h and 34 h<->r, all in Appendix Table 9)",
+    "text": "In a nutshell",
+    "where": "Appendix Table 9"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "BARTScore variants beat existing top-scoring metrics in 16 of 22 test settings",
+   "kind": "measured",
+   "source": null,
+   "metric": "settings won",
+   "value": 16,
+   "unit": "of 22",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 datasets, 7 perspectives, 22 settings",
+   "note": null,
+   "where": "Abstract",
+   "quote": "outperform existing top-scoring metrics in 16 of 22 test settings"
+  },
+  {
+   "claim": "Prompt 'Such as' lifts de-en Kendall's Tau by 0.033, significantly passing supervised BLEURT and COMET",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau de-en",
+   "value": 0.238,
+   "unit": "correlation",
+   "baseline_value": 0.205,
+   "n": null,
+   "setup": "WMT19 de-en, BARTScore+CNN+Para+Prompt vs 0.205 without prompt; COMET 0.219, BLEURT 0.174",
+   "note": null,
+   "where": "Table 3, 4.3.1",
+   "table": "Table 3, row + CNN + Para + Prompt, column de-en"
+  },
+  {
+   "claim": "Average Kendall's Tau on WMT19 for full BARTScore variant is below supervised COMET",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau avg",
+   "value": 0.337,
+   "unit": "correlation",
+   "baseline_value": 0.339,
+   "n": null,
+   "setup": "WMT19 7 pairs; COMET avg 0.339, PRISM 0.326, BERTScore 0.317",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + CNN + Para + Prompt, column Avg."
+  },
+  {
+   "claim": "Vanilla BARTScore average Spearman beats BERTScore and MoverScore on summarization",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman avg",
+   "value": 0.465,
+   "unit": "correlation",
+   "baseline_value": 0.217,
+   "n": null,
+   "setup": "REALSumm, SummEval, NeR18 (Table 4); BERTScore 0.217, MoverScore 0.200, PRISM 0.410; best variant with prompt 0.518",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BARTSCORE, column Avg."
+  },
+  {
+   "claim": "Prompted BARTScore best average on summarization",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman avg",
+   "value": 0.518,
+   "unit": "correlation",
+   "baseline_value": 0.499,
+   "n": null,
+   "setup": "Table 4 row + Omega + Prompt",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + Ω+ Prompt, column Avg."
+  },
+  {
+   "claim": "BARTScore+CNN nearly matches human accuracy on Rank19 factuality ranking",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 0.836,
+   "unit": "accuracy",
+   "baseline_value": 0.7,
+   "n": null,
+   "setup": "Rank19; human 0.839, PRISM 0.780, QAGS 0.721, FactCC 0.700",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row + CNN, column Rank19 Acc."
+  },
+  {
+   "claim": "BARTScore+CNN on QAGS-CNN Pearson",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.735,
+   "unit": "correlation",
+   "baseline_value": 0.545,
+   "n": null,
+   "setup": "QAGS-CNN; QAGS 0.545, BERTScore 0.576",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row + CNN, column Q-CNN"
+  },
+  {
+   "claim": "On QAGS-XSUM BARTScore+CNN reaches only 0.184, barely above QAGS 0.175; vanilla 0.009",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson",
+   "value": 0.184,
+   "unit": "correlation",
+   "baseline_value": 0.175,
+   "n": null,
+   "setup": "QAGS-XSUM",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row + CNN, column Q-XSUM"
+  },
+  {
+   "claim": "Paraphrase fine-tuning lowers factuality performance and prompts do not help",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 0.788,
+   "unit": "correlation",
+   "baseline_value": 0.836,
+   "n": null,
+   "setup": "Rank19, CNN+Para 0.788 vs CNN 0.836",
+   "note": null,
+   "where": "Table 5, 4.3.2",
+   "table": "Table 5, row + CNN + Para, column Rank19 Acc."
+  },
+  {
+   "claim": "Data-to-text: fully tuned prompted BARTScore beats PRISM on average",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman avg",
+   "value": 0.27,
+   "unit": "correlation",
+   "baseline_value": 0.219,
+   "n": null,
+   "setup": "BAGEL, SFRES, SFHOT; PRISM 0.219, BERTScore 0.193",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row + Ω+ Prompt, column Avg."
+  },
+  {
+   "claim": "Prompt combination improves data-to-text correlation on average by 0.028",
+   "kind": "measured",
+   "source": null,
+   "metric": "Spearman gain",
+   "value": 0.028,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 6",
+   "note": null,
+   "where": "4.3.3",
+   "quote": "consistently improve correlation, on average",
+   "table": "Table 6"
+  },
+  {
+   "claim": "BARTScore is more robust when only top-k systems are scored (smoother decline), below only COMET",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT19 average over language pairs, Fig 2a; read qualitatively",
+   "note": null,
+   "where": "4.4.1"
+  },
+  {
+   "claim": "BARTScore is weaker at ranking extractive systems than abstractive ones on REALSumm (24 systems)",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3 rank differences",
+   "note": null,
+   "where": "4.4.3"
+  },
+  {
+   "claim": "Almost all prompts help semantic overlap perspectives, few help factuality, linguistic quality unpredictable",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summarization and data-to-text, Fig 2c",
+   "note": null,
+   "where": "4.4.2"
+  },
+  {
+   "claim": "T5 and PEGASUS give no improvement over BART on WMT19",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau de-en",
+   "value": 0.156,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BART vanilla de-en; T5-base 0.170, PEGASUS-large 0.124; BART-cnn 0.190 vs T5-base-cnn 0.177",
+   "note": "Mixed: T5-base beats vanilla BART on de-en, but the paper states no improvements were seen overall",
+   "where": "Appendix A.2",
+   "table": "Table 8, row BART, column de-en"
+  }
+ ],
+ "limits": [
+  "Prompts only help semantic-overlap perspectives; factuality and linguistic quality show inconsistent or negative effects (4.4.2, 5)",
+  "Weak on extractive summarization systems (4.4.3)",
+  "Fine-tuning on NeR18 did not help; dataset has only 7 easily distinguished systems",
+  "Prompts hand-built from synonyms; searched discrete prompts did worse (footnote 4)",
+  "Prompt for MT chosen on WMT18 dev only; no seeds or variance reported",
+  "Model size of BART not stated",
+  "Predates LLM-as-judge methods; correlation with human labels only"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "BARTScore",
+   "definition": "weighted log probability of one text y given another text x under BART (Eq. 2)",
+   "where": "3.2"
+  },
+  {
+   "term": "Faithfulness / Precision / Recall / F score",
+   "definition": "s->h, r->h, h->r, and the average of the latter two",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BART",
+   "year": 2020,
+   "arxiv": "1910.13461",
+   "relation": "uses-method",
+   "note": "backbone",
+   "quote": null
+  },
+  {
+   "work": "PRISM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "closest prior text-generation formulation; paraphrase-only, trained from scratch (Thompson and Post)",
+   "quote": null
+  },
+  {
+   "work": "BERTScore",
+   "year": 2020,
+   "arxiv": "1904.09675",
+   "relation": "baseline",
+   "note": "embedding matching",
+   "quote": null
+  },
+  {
+   "work": "MoverScore",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "BLEURT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised",
+   "quote": null
+  },
+  {
+   "work": "COMET",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "supervised",
+   "quote": null
+  },
+  {
+   "work": "FactCC; QAGS",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "factuality metrics",
+   "quote": null
+  },
+  {
+   "work": "How can we know what language models know?",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "prompt ensembling",
+   "quote": null
+  },
+  {
+   "work": "WMT19 metrics, REALSumm, SummEval, Newsroom, Rank19, QAGS, BAGEL, SFHOT, SFRES, CNNDM, ParaBank2",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "T5; PEGASUS",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "alternative backbones",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Evaluation metrics as different tasks",
+   "page": 3,
+   "why": "Matching vs regression vs ranking vs generation framing"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Fine-grained analysis (a,b) and prompt analysis (c)",
+   "page": 9,
+   "why": "Robustness to top-k systems and the prompt-helps-semantic-not-factual split"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Bias analysis of BARTScore",
+   "page": 10,
+   "why": "Extractive vs abstractive rank differences"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Kendall's Tau on WMT19",
+   "page": 7,
+   "why": "Main MT result"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 2",
+   "snippet": "BARTSCORE = sum_{t=1}^{m} w_t log p(y_t | y_<t, x, theta)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. 3 (A.4)",
+   "snippet": "BARTSCORE-PROMPT = (1/n) sum_{i=1}^{n} (1/m_i) sum_{t=1}^{m_i} log p([y:z_i]_t | [y:z_i]_<t, x, theta)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table values are interleaved in extracted text; transcribed by row order",
+  "Reference list has duplicate entries; no embedded instructions found"
+ ]
+}

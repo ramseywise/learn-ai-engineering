@@ -1,0 +1,640 @@
+{
+ "schema": 1,
+ "key": "1912.08777",
+ "pdf": "generative-ai/08-eval/sources/zhang-2019-pegasus.pdf",
+ "bib": {
+  "title": "PEGASUS: Pre-training with Extracted Gap-sentences for Abstractive Summarization",
+  "authors": [
+   "Jingqing Zhang",
+   "Yao Zhao",
+   "Mohammad Saleh",
+   "Peter J. Liu"
+  ],
+  "first_author": "Zhang",
+  "year": 2020,
+  "venue": "ICML 2020 (PMLR 119); arXiv v3 10 Jul 2020",
+  "arxiv": "1912.08777",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 332878,
+  "chars_total": 332878,
+  "engine": "pymupdf",
+  "skipped": "Appendix I sample-output tables (about chars 70000-332878) skimmed only: generated example summaries, no method values."
+ },
+ "type": "empirical",
+ "question": "Does a pre-training objective tailored to abstractive summarization (masking and generating whole important sentences) improve transformer encoder-decoders across diverse summarization domains and low-resource settings?",
+ "hypothesis": "A pre-training objective that closely resembles the downstream task (summary-like generation of principal sentences) gives better and faster fine-tuning performance.",
+ "contributions": [
+  "A new self-supervised objective, gap-sentences generation (GSG), with a study of sentence-selection strategies",
+  "Evaluation on 12 downstream datasets with ablations, 568M-parameter model at or above SOTA on all",
+  "State-of-the-art on 6 datasets with only 1000 fine-tuning examples",
+  "Human evaluation showing human-level summaries on XSum, CNN/DailyMail, Reddit TIFU"
+ ],
+ "method": {
+  "summary": "Standard transformer encoder-decoder pre-trained with GSG: top-scoring sentences (ROUGE1-F1 against the rest of the document) are replaced by [MASK1] and generated as one output sequence. Ablations on a 223M base model pick corpus, objective, GSR and vocabulary, then a 568M model is trained and fine-tuned on 12 datasets and in low-resource settings.",
+  "task": "abstractive summarization (pre-training plus fine-tuning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4",
+    "role": "pretrain",
+    "size": "350M Web-pages (750GB)",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": "Raffel et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "HugeNews",
+    "role": "pretrain",
+    "size": "1.5B articles (3.8TB), news and news-like sites 2013-2019",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": "Crawled from a curated domain whitelist; main article text only",
+    "preprocessing": null
+   },
+   {
+    "name": "XSum",
+    "role": "both",
+    "size": "226k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "CNN/DailyMail",
+    "role": "both",
+    "size": "311k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": "non-anonymized variant of See et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "NEWSROOM",
+    "role": "both",
+    "size": "1212k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Multi-News",
+    "role": "both",
+    "size": "56k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Gigaword",
+    "role": "both",
+    "size": "3995k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "WikiHow",
+    "role": "both",
+    "size": "168k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Reddit TIFU",
+    "role": "both",
+    "size": "42k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": "TIFU-long subset, TLDR as summary",
+    "preprocessing": null
+   },
+   {
+    "name": "BIGPATENT",
+    "role": "both",
+    "size": "1341k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "arXiv",
+    "role": "both",
+    "size": "215k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "PubMed",
+    "role": "both",
+    "size": "133k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "AESLC",
+    "role": "both",
+    "size": "18k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "BillSum",
+    "role": "both",
+    "size": "24k",
+    "split": "TFDS splits; 80/10/10 if none given; 10% of train as validation if no validation split",
+    "source": "California test set not used",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PEGASUS-base",
+    "role": "proposed",
+    "params": "223M",
+    "architecture": "transformer encoder-decoder, sinusoidal positions",
+    "init_from": null,
+    "tokenizer": "SentencePiece Unigram (BPE and sizes 32k-256k compared)",
+    "vocab": "ablated 32k-256k",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512 input / 256 target tokens in pre-training",
+    "other": {
+     "ffn": 3072
+    }
+   },
+   {
+    "name": "PEGASUS-large",
+    "role": "proposed",
+    "params": "568M",
+    "architecture": "transformer encoder-decoder, sinusoidal positions",
+    "init_from": null,
+    "tokenizer": "SentencePiece Unigram",
+    "vocab": "96k",
+    "layers": "16",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "512 input / 256 target in pre-training; fine-tuned up to 1024 input",
+    "other": {
+     "ffn": 4096
+    }
+   },
+   {
+    "name": "Transformer-base",
+    "role": "baseline",
+    "params": "223M (same as PEGASUS-base)",
+    "architecture": "PEGASUS-base without pre-training",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "GSG (Ind-Orig, principal sentences by ROUGE1-F1), GSR 30% in ablations and 45% for large with 20% of selected sentences left unchanged in input; MLM (15% tokens, 80/10/10) ablated and dropped from the large model",
+   "optimizer": "Adafactor",
+   "lr": "pre-training 0.1 (Table C.1); fine-tuning 5e-4 for base on most datasets, large 5e-5 to 5e-3 by dataset",
+   "lr_schedule": "square root decay",
+   "warmup": null,
+   "batch_size": "256 (base pre-training), 8192 (large pre-training), 256 fine-tuning",
+   "steps": "500k pre-training (1.5M for mixed stochastic model); fine-tuning 12k-300k by dataset; 2k for low-resource",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 input, 256 target pre-training; 1024 input for long-document fine-tuning",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1",
+   "regularisation": "label smoothing 0.0 pre-training, 0.1 fine-tuning",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "mixed_stochastic_model": "C4+HugeNews mixture weighted by example count, GSR sampled uniformly 15%-45%, 20% uniform noise on importance scores, 1.5M steps, tokenizer updated to encode newline",
+    "low_resource": "first 10/100/1k/10k training examples, best validation checkpoint up to 2000 steps",
+    "fine_tuning_grid": "learning rate and length penalty alpha swept per dataset"
+   }
+  },
+  "inference": {
+   "decoding": "greedy in Sec 6.1 ablations and low-resource; beam search size 8 with length penalty alpha (Wu et al. 2016) for large model",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "max target 32-256 tokens by dataset (Table C.1); BIGPATENT/arXiv/PubMed/Multi-News summaries truncated to 256 in Table 1",
+   "samples": "single run; no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam_alpha": "0.6-0.9 by dataset (Table C.1)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1/2/L F1",
+     "definition": "ROUGE F-measure (Lin 2004)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human Likert rating",
+     "definition": "1 (poor) to 5 (great) per summary, median of 3 MTurk workers, paired t-test vs human reference",
+     "unit": "1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "test-set overlap",
+     "definition": "ROUGE-2 recall between test targets and pre-training documents",
+     "unit": "fraction",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Transformer-base",
+    "BART",
+    "T5",
+    "UniLM",
+    "MASS",
+    "BERTShare",
+    "prior SOTA per dataset"
+   ],
+   "protocol": "Test sets of 12 datasets; ablation scores normalised by first bar; human eval 100 examples per dataset, 4 summaries per task rated by 3 US workers (95% approval, 1000+ HITs, USD 1 per task)."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/pegasus",
+   "weights": "checkpoints released at same repo",
+   "data": "TensorFlow Summarization Datasets for downstream; HugeNews not released (inferred: no link given)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PEGASUS-large (HugeNews) beats BART on XSum ROUGE-2 (R1/R2/RL 47.21/24.56/39.25 vs 45.14/22.27/37.25).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "24.56",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "22.27",
+   "n": null,
+   "setup": "XSum test, PEGASUS-large pre-trained on HugeNews, beam 8 alpha 0.8, fine-tuned on full train set",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row XSum, column PEGASUSLARGE (HugeNews)"
+  },
+  {
+   "claim": "Pre-training with GSG lifts a 223M model over the no-pretraining Transformer-base on XSum.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "16.58",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "10.83",
+   "n": null,
+   "setup": "PEGASUS-base, C4, 500k steps, greedy decoding, XSum",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row XSum, column PEGASUSBASE"
+  },
+  {
+   "claim": "Zero-shot PEGASUS-large beats GPT-2 TL;DR on CNN/DailyMail.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "13.28",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "8.27",
+   "n": null,
+   "setup": "CNN/DailyMail, PEGASUS-large (HugeNews), 0 fine-tuning examples; GPT-2 value from Radford et al. 2018b",
+   "note": null,
+   "where": "Sec 6.3",
+   "quote": "PEGASUSLARGE demonstrated much better zero-shot (ROUGE2-F=13.28) performance than GPT-2 (ROUGE2-F=8.27)"
+  },
+  {
+   "claim": "With 1000 fine-tuning examples PEGASUS-large reaches ROUGE-2 19.35 on CNN/DailyMail, above Khandelwal et al. with 3000 examples.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "19.35",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "13.1",
+   "n": null,
+   "setup": "CNN/DailyMail, PEGASUS-large (HugeNews), first 1k training examples, 2000 steps, batch 256, lr 0.0005",
+   "note": null,
+   "where": "Sec 6.3",
+   "quote": "PEGASUSLARGE achieved ROUGE2-F of 19.35, much higher than the 13.1 obtained in Khandelwal et al. (2019) with 3000 examples"
+  },
+  {
+   "claim": "Largest gain from pre-training is on small datasets: ROUGE-2 on Reddit TIFU rises from 1.94 (Transformer-base) to 8.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "8.94",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "1.94",
+   "n": null,
+   "setup": "Reddit TIFU, PEGASUS-large (C4), full supervision",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Reddit TIFU, column PEGASUSLARGE (C4)"
+  },
+  {
+   "claim": "Mixed-corpus, stochastic-GSR, 1.5M-step PEGASUS-large gets the best BillSum ROUGE-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "41.58",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "39.56",
+   "n": null,
+   "setup": "BillSum, PEGASUS-large (mixed, stochastic)",
+   "note": "Baseline is PEGASUS-large (HugeNews), Table 1",
+   "where": "Table 4",
+   "table": "Table 4, BillSum cell 59.67/41.58/47.59"
+  },
+  {
+   "claim": "Human raters scored PEGASUS-large (HugeNews) 3.0 vs 3.0 human on XSum (p=0.6), 1-5 Likert.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human Likert",
+   "value": "3.0",
+   "unit": "Likert 1-5",
+   "baseline_value": "3.0",
+   "n": null,
+   "setup": "100 examples per dataset, MTurk, 3 workers each, median kept, paired t-test",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Experiment 1, row PEGASUSLARGE (HugeNews), column XSum"
+  },
+  {
+   "claim": "On CNN/DailyMail the model scored higher than the human reference (3.6 vs 3.1, p=0.0001).",
+   "kind": "measured",
+   "source": null,
+   "metric": "human Likert",
+   "value": "3.6",
+   "unit": "Likert 1-5",
+   "baseline_value": "3.1",
+   "n": null,
+   "setup": "Same human eval, CNN/DailyMail, PEGASUS-large (HugeNews)",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Experiment 1, row PEGASUSLARGE (HugeNews), column CNN/DailyMail"
+  },
+  {
+   "claim": "On Reddit TIFU the low-resource model (100 examples) was clearly worse than human (2.1 vs 3.3, p=4e-8); human level needed full supervision.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human Likert",
+   "value": "2.1",
+   "unit": "Likert 1-5",
+   "baseline_value": "3.3",
+   "n": null,
+   "setup": "Experiment 2, PEGASUS-large (HugeNews) 100 examples, Reddit TIFU",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, Experiment 2, row 100 examples, column Reddit TIFU"
+  },
+  {
+   "claim": "Principal-sentence GSG (Ind-Orig) beats Random and Lead; MLM alone is clearly worse. XSum R2: Ind-Orig 16.58, Random 16.23, Lead 16.12, MLM solely 14.48.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "16.58",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "16.23",
+   "n": null,
+   "setup": "PEGASUS-base, C4, 30% GSR, 500k steps, greedy decoding, XSum",
+   "note": null,
+   "where": "Table D.1",
+   "table": "Table D.1, Figure 4a, row Ind-Orig, column XSum"
+  },
+  {
+   "claim": "Pre-training corpus should match domain: HugeNews better on XSum (R2 18.47 vs 16.58), C4 better on WikiHow (15.64 vs 14.67).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2 F1",
+   "value": "18.47",
+   "unit": "ROUGE-2 F1",
+   "baseline_value": "16.58",
+   "n": null,
+   "setup": "PEGASUS-base, 500k steps, XSum",
+   "note": null,
+   "where": "Table D.1",
+   "table": "Table D.1, Figure 3, row Pre-trained on HugeNews, column XSum"
+  },
+  {
+   "claim": "Test-set overlap with C4 is significant only for XSum (15-20%); filtering it changes ROUGE by under 1%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "% max ROUGE change",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap by ROUGE-2 recall, thresholds 1.0 and 0.8, C4 vs XSum/CNNDM/Reddit TIFU/WikiHow test targets",
+   "note": null,
+   "where": "Sec 6.5",
+   "quote": "filtering those examples does not change ROUGE scores more than 1%"
+  },
+  {
+   "claim": "Model summaries are less abstractive than human ones on all datasets (extractive coverage/density).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "All 12 datasets, Appendix H",
+   "note": null,
+   "where": "App H"
+  },
+  {
+   "claim": "Fine-tuned from 1k examples, PEGASUS-large beats previous SOTA on 6 of 12 datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6",
+   "unit": "datasets",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ROUGE-2 vs Table 1 previous SOTA, 1k examples",
+   "note": null,
+   "where": "Sec 6.3",
+   "quote": "PEGASUSLARGE also beat previous state-of-the-art results on 6 out of 12 datasets with only 1000 fine-tuning examples"
+  }
+ ],
+ "limits": [
+  "Authors concede ROUGE over-penalises abstractive summaries and ignores linguistic quality (Sec 6.4)",
+  "Inputs capped at 1024 tokens; BIGPATENT, arXiv, PubMed, Multi-News average inputs are longer",
+  "Human eval limited to 3 datasets and 100 examples each; Experiment 2 gives fewer ratings per model",
+  "Model summaries are less abstractive than human ones (App H)",
+  "Compute, hardware, seeds, warmup and precision not stated; HugeNews not released",
+  "No factuality evaluation; sample outputs only qualitative",
+  "ROUGE-based SOTA claims have dated; later LLMs superseded them"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Gap Sentences Generation (GSG)",
+   "definition": "select and mask whole sentences from a document, concatenate them into a pseudo-summary, and generate it from the remaining document",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "GSR",
+   "definition": "gap sentences ratio: number of selected gap sentences to total sentences in the document",
+   "where": "Sec 3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base architecture, sinusoidal positions",
+   "quote": null
+  },
+  {
+   "work": "T5 / C4 (Raffel et al.)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "C4 corpus; baseline; text-to-text pre-training",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al.)",
+   "year": 2019,
+   "arxiv": "1910.13461",
+   "relation": "baseline",
+   "note": "prior SOTA on XSum, CNN/DailyMail",
+   "quote": null
+  },
+  {
+   "work": "MASS (Song et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "masked seq2seq pre-training",
+   "quote": null
+  },
+  {
+   "work": "UniLM (Dong et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "unified LM pre-training",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MLM objective compared and combined",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT (Joshi et al.)",
+   "year": 2019,
+   "arxiv": "1907.10529",
+   "relation": "related",
+   "note": "masking spans inspired whole-sentence masking",
+   "quote": null
+  },
+  {
+   "work": "Adafactor (Shazeer & Stern)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "SummaRuNNer (Nallapati et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sequential sentence selection",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 TL;DR (Radford et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "zero-shot ROUGE-2 8.27 on CNN/DailyMail",
+   "quote": null
+  },
+  {
+   "work": "Khandelwal et al. sample efficient summarization",
+   "year": 2019,
+   "arxiv": "1905.08836",
+   "relation": "baseline",
+   "note": "3000-example ROUGE-2 13.1",
+   "quote": null
+  },
+  {
+   "work": "XSum, CNN/DailyMail, NEWSROOM, Multi-News, Gigaword, arXiv/PubMed, BIGPATENT, WikiHow, Reddit TIFU, AESLC, BillSum",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "12 downstream datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Base architecture: GSG and MLM applied to one example",
+   "page": 1,
+   "why": "shows [MASK1]/[MASK2] and target pseudo-summary at a glance"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Sentences selected by Random, Lead and Ind-Orig",
+   "page": 3,
+   "why": "makes the selection strategies concrete"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Effect of pre-training objectives and GSR",
+   "page": 4,
+   "why": "central ablation"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Fine-tuning with limited supervised examples",
+   "page": 6,
+   "why": "low-resource curves vs full-data Transformer-base"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Human evaluation side-by-side on Likert scale",
+   "page": 6,
+   "why": "human-parity claim with p-values"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "S := empty; for j in 1..m: s_i = rouge(S ∪ {x_i}, D \\ (S ∪ {x_i})) for all i not in S; k = argmax_i s_i; S := S ∪ {x_k}",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix I (about 260k chars) is generated sample summaries and tables; skimmed only",
+  "Extractor flagged a stray line 'table 10 comprises a daedal series...' in the appendix samples: sample text, no instruction"
+ ]
+}

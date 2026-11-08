@@ -1,0 +1,715 @@
+{
+ "schema": 1,
+ "key": "2305.15294",
+ "pdf": "generative-ai/02-rag-retrieval/sources/shao-2023-enhancing-retrieval-augmented-large-language.pdf",
+ "bib": {
+  "title": "Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy",
+  "authors": [
+   "Zhihong Shao",
+   "Yeyun Gong",
+   "yelong shen",
+   "Minlie Huang",
+   "Nan Duan",
+   "Weizhu Chen"
+  ],
+  "first_author": "Shao",
+  "year": 2023,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2023",
+  "arxiv": "2305.15294",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 86550,
+  "chars_total": 86550,
+  "engine": "pymupdf",
+  "skipped": "Reference list and few-shot prompt tables 13-32 skimmed only; prompts for HotPotQA read."
+ },
+ "type": "empirical",
+ "question": "Can iterating retrieval and generation, with each output used as extra retrieval context, answer questions with complex information needs better and more cheaply than interleaved retrieval-generation workflows?",
+ "hypothesis": "A model's response shows what knowledge is still needed, so using it as retrieval context fetches more relevant knowledge, which improves the next response.",
+ "contributions": [
+  "ITER-RETGEN: iterate retrieval-augmented generation and generation-augmented retrieval",
+  "Generation-augmented retrieval adaptation: distil a re-ranker that sees the generation into a dense retriever that sees only the task input",
+  "Finding that exact match underestimates LLM QA; LLM-judged Acc† is more reliable",
+  "Analysis of parametric vs non-parametric knowledge use against Self-Ask"
+ ],
+ "method": {
+  "summary": "Per iteration t, retrieve top-5 paragraphs with the query y_{t-1} concatenated with question q (q alone at t=1), then prompt the LLM with the paragraphs prepended to q using 3-shot chain-of-thought to produce y_t; the last output is the answer. Optionally the dense retriever's query encoder is distilled from a TART re-ranker that sees y1.",
+  "task": "multi-hop QA, fact verification, commonsense reasoning (retrieval-augmented, few-shot)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "HotPotQA",
+    "role": "eval",
+    "size": "first 500 questions",
+    "split": "development set",
+    "source": "Yang et al., 2018; Oct 2017 Wikipedia dump corpus",
+    "preprocessing": null
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "eval",
+    "size": "first 500 questions",
+    "split": "development set",
+    "source": "Ho et al., 2020; Dec 2018 Wikipedia dump (Karpukhin et al., 2020)",
+    "preprocessing": null
+   },
+   {
+    "name": "MuSiQue",
+    "role": "eval",
+    "size": "first 500 questions, 2-hop only",
+    "split": "development set",
+    "source": "Trivedi et al., 2022b; Dec 2021 Wikipedia dump",
+    "preprocessing": null
+   },
+   {
+    "name": "Bamboogle",
+    "role": "eval",
+    "size": "all 125 questions",
+    "split": "all",
+    "source": "Press et al., 2022; Dec 2021 Wikipedia dump",
+    "preprocessing": null
+   },
+   {
+    "name": "Feverous",
+    "role": "eval",
+    "size": "first 500 questions",
+    "split": "development set",
+    "source": "Aly et al., 2021; Dec 2021 Wikipedia dump",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "eval",
+    "size": "first 500 questions",
+    "split": "train set",
+    "source": "Geva et al., 2021; Dec 2021 Wikipedia dump",
+    "preprocessing": null
+   },
+   {
+    "name": "HotPotQA and Feverous train subsets (retriever adaptation)",
+    "role": "train",
+    "size": "9,000 train + 1,000 validation questions each",
+    "split": "random sample from train set",
+    "source": "same datasets",
+    "preprocessing": "ITER-RETGEN run for one iteration, outputs y1 used as re-ranker input"
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003 (InstructGPT)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "also": "used as Acc† judge"
+    }
+   },
+   {
+    "name": "Llama-2 13B and 70B",
+    "role": "base",
+    "params": "13B, 70B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "where": "Appendix A, Table 8"
+    }
+   },
+   {
+    "name": "Contriever-MSMARCO",
+    "role": "retriever",
+    "params": null,
+    "architecture": "dense bi-encoder, inner-product score",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "TART",
+    "role": "reward",
+    "params": null,
+    "architecture": "task-aware re-ranker (Asai et al., 2022)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "teacher for distillation"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one greedy run per item; no seeds or repeated runs reported; ITER-RETGEN evaluated at each iteration up to T=7",
+   "prompting": "3-shot chain-of-thought ('Let's think step by step'), same demonstrations for CoT and ITER-RETGEN, retrieved paragraphs ({Knowledge}) placed before question",
+   "retrieval": "Contriever-MSMARCO, top-5 paragraphs per query; query at t>1 is previous output concatenated with question; ReAct and Self-Ask allowed at most 5 retrieval interactions",
+   "parameters": {
+    "T": "1-7 iterations; T=2 headline",
+    "k": "5 per iteration",
+    "distillation_temperature_tau": null,
+    "adaptation": "query encoder only; <=1,000 steps; batch 32; lr 1e-5; checkpoint with lowest distillation loss"
+   },
+   "other": {
+    "max_tokens_note": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "exact match to gold answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "token F1 (multi-hop QA)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc",
+     "definition": "accuracy (Feverous, StrategyQA)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc†",
+     "definition": "correctness of model output judged by text-davinci-003 with a Yes/No 'does Prediction imply Ground-truth Answer' prompt",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "answer recall",
+     "definition": "share of questions whose retrieved paragraphs mention the answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Direct prompting",
+    "CoT prompting",
+    "ReAct",
+    "Self-Ask",
+    "DSP (HotPotQA only)"
+   ],
+   "protocol": "Single run per setting, no significance tests; manual checks on 80 EM/Acc† disagreements and 20 failures."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "Acc† judge",
+    "text": "In the following task, you are given a Question, a model Prediction for the Question, and a Ground-truth Answer to the Question. You should decide whether the model Prediction implies the Ground-truth Answer. Question {question} Prediction {model output} Ground-truth Answer {answer} Does the Prediction imply the Ground-truth Answer? Output Yes or No:",
+    "where": "Sec 4.2, p4"
+   },
+   {
+    "purpose": "ITER-RETGEN few-shot format (HotPotQA)",
+    "text": "{Knowledge} Question: ... Let's think step by step. ... So the answer is ...",
+    "where": "Appendix B, Table 12"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.decoding",
+    "quote": "All experiments used greedy decoding.",
+    "where": "Sec 4.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ITER-RETGEN reaches up to 8.6% absolute gains over previous state-of-the-art retrieval-augmented methods on four of six datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "8.6",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-davinci-003, 3-shot, six datasets, Contriever-MSMARCO top-5.",
+   "note": null,
+   "where": "Sec 1",
+   "quote": "Our method achieves up to 8.6% absolute gains over previous state-of-the-art retrieval-augmented methods on four out of six datasets"
+  },
+  {
+   "claim": "HotPotQA Acc† with T=2 iterations vs Self-Ask.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "71.2",
+   "unit": "% Acc†",
+   "baseline_value": "64.8 (Self-Ask)",
+   "n": null,
+   "setup": "HotPotQA first 500 dev questions, text-davinci-003, 3-shot, Acc† judged by text-davinci-003.",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column HotPotQA Acc†"
+  },
+  {
+   "claim": "Self-Ask HotPotQA Acc† (best baseline).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "64.8",
+   "unit": "% Acc†",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Self-Ask, column HotPotQA Acc†"
+  },
+  {
+   "claim": "ITER-RETGEN 1 (single retrieval-augmented CoT) HotPotQA Acc†.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "65.5",
+   "unit": "% Acc†",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 1, column HotPotQA Acc†"
+  },
+  {
+   "claim": "ITER-RETGEN at 4 iterations peaks on HotPotQA Acc†.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "73.4",
+   "unit": "% Acc†",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same",
+   "note": "Iterations 5-7 are 72.8, 73.3, 72.9: plateau.",
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 4, column HotPotQA Acc†"
+  },
+  {
+   "claim": "2WikiMultiHopQA Acc†, ITER-RETGEN T=2 vs Self-Ask 55.9, while EM is lower (34.9 vs 37.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "58.1",
+   "unit": "% Acc†",
+   "baseline_value": "55.9 (Self-Ask)",
+   "n": null,
+   "setup": "first 500 dev questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column 2WikiMultiHopQA Acc†"
+  },
+  {
+   "claim": "Bamboogle Acc†, T=2 vs Self-Ask 54.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "59.2",
+   "unit": "% Acc†",
+   "baseline_value": "54.8 (Self-Ask)",
+   "n": null,
+   "setup": "all 125 questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column Bamboogle Acc†"
+  },
+  {
+   "claim": "MuSiQue (2-hop) Acc†: Self-Ask beats ITER-RETGEN T=2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "41.0",
+   "unit": "% Acc† (ITER-RETGEN 2)",
+   "baseline_value": "42.9 (Self-Ask)",
+   "n": null,
+   "setup": "first 500 dev 2-hop questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column MuSiQue Acc†"
+  },
+  {
+   "claim": "StrategyQA Acc† T=2 vs CoT without retrieval 71.0 and Self-Ask 70.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "73.0",
+   "unit": "% Acc†",
+   "baseline_value": "70.2 (Self-Ask)",
+   "n": null,
+   "setup": "first 500 train questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column StrategyQA Acc†"
+  },
+  {
+   "claim": "Feverous Acc† T=2: ITER-RETGEN roughly equal to Self-Ask 70.7 (Acc) / 70.2 (Acc†).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc",
+   "value": "68.8",
+   "unit": "% Acc",
+   "baseline_value": "70.7 (Self-Ask)",
+   "n": null,
+   "setup": "first 500 dev questions",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row ITER-RETGEN 2, column Feverous Acc"
+  },
+  {
+   "claim": "ITER-RETGEN T=2 uses 2 LLM API calls and 10 retrieved paragraphs in total, vs ReAct/Self-Ask about 2.8-3.2 calls and 14-16 paragraphs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2",
+   "unit": "API calls",
+   "baseline_value": "3.2 API calls, 16.0 docs (Self-Ask HotPotQA)",
+   "n": null,
+   "setup": "Table 3 averages over datasets; HotPotQA Self-Ask 3.2 calls, 16.0 paragraphs.",
+   "note": null,
+   "where": "Sec 4.5, Table 3",
+   "quote": "using fewer API calls to the LLM (i.e., 2)"
+  },
+  {
+   "claim": "EM underestimates: in 80 sampled outputs where EM and Acc† disagree, EM=0 and Acc†=1 in 98.75%, and Acc† label correct 97.5% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc† label correctness",
+   "value": "97.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "80 samples (20 from each of 4 multi-hop datasets), ITER-RETGEN iteration 2, manual check.",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "Acc† gives the correct labels 97.5% of the time"
+  },
+  {
+   "claim": "Generation-augmented retrieval adaptation (distilling TART re-ranker with access to y1 into the query encoder) raises HotPotQA Acc† at T=2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "75.7",
+   "unit": "% Acc†",
+   "baseline_value": "71.2 (original retriever); 75.2 (distilled w/o y1)",
+   "n": null,
+   "setup": "HotPotQA; 9,000 train questions, 1,000 validation; TART re-ranker; <=1,000 steps, batch 32, lr 1e-5; dense retriever Contriever.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ITER-RETGEN 2, column HotPotQA Distilled w/ y1"
+  },
+  {
+   "claim": "Adaptation lets T=1 reach 70.7 on Feverous vs 67.0 original retriever (fewer iterations).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "70.7",
+   "unit": "% Acc†",
+   "baseline_value": "67.0 (original)",
+   "n": null,
+   "setup": "Feverous, same adaptation recipe.",
+   "note": "At T=2 on Feverous adaptation helps little: 68.8 original, 68.1 w/o y1, 69.5 w/ y1.",
+   "where": "Table 4",
+   "table": "Table 4, row ITER-RETGEN 1, column Feverous Distilled w/ y1"
+  },
+  {
+   "claim": "Answer recall of retrieved paragraphs jumps from iteration 1 to 2 on HotPotQA, then plateaus.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer recall",
+   "value": "66.1",
+   "unit": "% answer recall (iteration 2)",
+   "baseline_value": "49.5 (iteration 1)",
+   "n": null,
+   "setup": "Answer recall of retrieved paragraphs, ITER-RETGEN.",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row HotPotQA, column 2"
+  },
+  {
+   "claim": "Bamboogle answer recall rises 20.8 to 36.0 from iteration 1 to 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer recall",
+   "value": "36.0",
+   "unit": "% answer recall",
+   "baseline_value": "20.8",
+   "n": null,
+   "setup": "same",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Bamboogle, column 2"
+  },
+  {
+   "claim": "ITER-RETGEN preserves performance on questions CoT solves without retrieval better than Self-Ask (HotPotQA CoT-correct subset).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "88.0",
+   "unit": "% Acc†",
+   "baseline_value": "77.5 (Self-Ask)",
+   "n": null,
+   "setup": "Acc† on subset CoT answers correctly; Self-Ask vs ITER-RETGEN T=2",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row HotPotQA, column CoT ✓ ITER-RETGEN 2"
+  },
+  {
+   "claim": "On HotPotQA when the answer is not in retrieved paragraphs, ITER-RETGEN is far more accurate than Self-Ask.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "40.8",
+   "unit": "% Acc†",
+   "baseline_value": "29.9 (Self-Ask)",
+   "n": null,
+   "setup": "Acc† subset w/o Answer Retrieved",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row HotPotQA, column w/o Answer Retrieved ITER-RETGEN 2"
+  },
+  {
+   "claim": "Error analysis on 20 HotPotQA failures: 65% are retrieval-related, and 76.9% of those were misled by wrong first-iteration reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "65",
+   "unit": "% of failures",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 random failures of ITER-RETGEN T=2, manual.",
+   "note": null,
+   "where": "Sec 4.7",
+   "quote": "The remaining 65% of error cases are related with retrieval, on 76.9% of which, retrieval is misled by completely wrong reasoning from the first iteration"
+  },
+  {
+   "claim": "DSP failure analysis: of 10 questions DSP fails but ITER-RETGEN gets right, 40% DSP did not retrieve answer-covering docs and 50% summaries were misleading.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50",
+   "unit": "% misleading summary",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 random questions, manual.",
+   "note": null,
+   "where": "Sec 4.5",
+   "quote": "on 50% of them, the summarized knowledge is misleading"
+  },
+  {
+   "claim": "With Llama-2-70B, ITER-RETGEN T=2 beats all baselines on HotPotQA Acc†.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "67.8",
+   "unit": "% Acc†",
+   "baseline_value": "58.4 (Self-Ask)",
+   "n": null,
+   "setup": "Llama-2-70B replaces text-davinci-003; Acc† judged by text-davinci-003.",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ITER-RETGEN 2, column Llama-2-70B HotPotQA"
+  },
+  {
+   "claim": "DSP HotPotQA Acc† is lower than ITER-RETGEN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Acc†",
+   "value": "60.8",
+   "unit": "% Acc†",
+   "baseline_value": "71.2 (ITER-RETGEN 2)",
+   "n": null,
+   "setup": "DSP run only on HotPotQA",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DSP, column HotPotQA Acc†"
+  }
+ ],
+ "limits": [
+  "Fixed black-box LLM (text-davinci-003), not optimised for the prompting forms; authors suggest gradient-based prompt optimisation.",
+  "No long-form generation; authors say it would likely need finer-grained retrieval than ITER-RETGEN.",
+  "Subsets of 500 questions (125 Bamboogle), single greedy run, no variance or significance testing.",
+  "Acc† uses text-davinci-003 as judge; validated by manual check on only 80 samples.",
+  "Retrieval-adaptation gain is small or mixed at T=2 on Feverous (Table 4).",
+  "Failures: 65% retrieval-related, mostly from wrong first-iteration reasoning misleading retrieval.",
+  "Code, data and weights availability not stated.",
+  "text-davinci-003 is retired, so exact numbers cannot be rerun."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ITER-RETGEN",
+   "definition": "iterates retrieval-augmented generation and generation-augmented retrieval",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-Ask (Press et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "interleaves follow-up question, retrieval, answer",
+   "quote": null
+  },
+  {
+   "work": "ReAct (Yao et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "interleaved reasoning/action/observation",
+   "quote": null
+  },
+  {
+   "work": "DSP (Khattab et al., 2022)",
+   "year": 2022,
+   "arxiv": "2212.14024",
+   "relation": "baseline",
+   "note": "multi-hop retrieval with summarisation",
+   "quote": null
+  },
+  {
+   "work": "IRCoT (Trivedi et al., 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "partial generation as query",
+   "quote": null
+  },
+  {
+   "work": "FLARE / Active retrieval augmented generation (Jiang et al., 2023)",
+   "year": 2023,
+   "arxiv": "2305.06983",
+   "relation": "related",
+   "note": "forward-looking sentences as queries",
+   "quote": null
+  },
+  {
+   "work": "HyDE (Gao et al., 2022a)",
+   "year": 2022,
+   "arxiv": "2212.10496",
+   "relation": "related",
+   "note": "hypothetical paragraphs for zero-shot retrieval",
+   "quote": null
+  },
+  {
+   "work": "GAR (Mao et al., 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "queries augmented with generated background",
+   "quote": null
+  },
+  {
+   "work": "RepoCoder (Zhang et al., 2023)",
+   "year": 2023,
+   "arxiv": "2303.12570",
+   "relation": "related",
+   "note": "2-iteration retrieval-generation for code",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting (Wei et al., 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "demonstrations annotated as CoT",
+   "quote": null
+  },
+  {
+   "work": "Contriever (Izacard et al., 2022a)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "retriever",
+   "quote": null
+  },
+  {
+   "work": "TART (Asai et al., 2022)",
+   "year": 2022,
+   "arxiv": "2211.09260",
+   "relation": "uses-method",
+   "note": "re-ranker for distillation",
+   "quote": null
+  },
+  {
+   "work": "HotPotQA, 2WikiMultiHopQA, MuSiQue, Bamboogle, Feverous, StrategyQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation sets",
+   "quote": null
+  },
+  {
+   "work": "Llama-2 (Touvron et al., 2023)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "open-source generator in Appendix A",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "ITER-RETGEN iterates retrieval and generation. In each iteration, ITER-RETGEN leverages the model output from the previous iteration as a specific context to help retrieve more relevant knowledge",
+   "page": 3,
+   "why": "Shows the two-iteration loop with the AFL Rising Star height example in one picture."
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Two examples demonstrating retrieval-generation synergy",
+   "page": 8,
+   "why": "Traces how iteration-1 output pulls in the missing paragraph (Androscoggin Bank Colisée; Raclette) and fixes the answer."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.1",
+   "snippet": "y_t = M(y_t | prompt(D_{y_{t-1}||q}, q)), for 1 <= t <= T",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3, Sec 3.4",
+   "snippet": "theta_q* = argmin KL(P_phi(.|y1,q), P_theta(.|q)); P_phi(d|y1,q) = softmax over d' in D_{y1||q} of s_phi(y1||q,d')/tau",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Table 2 text layout is flattened; Feverous Acc and Acc† columns are identical for retrieval rows in the cache, so read with care.",
+  "distillation temperature tau not stated."
+ ]
+}

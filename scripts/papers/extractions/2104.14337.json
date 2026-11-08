@@ -1,0 +1,402 @@
+{
+ "schema": 1,
+ "key": "2104.14337",
+ "pdf": "generative-ai/08-eval/sources/kiela-2021-dynabench.pdf",
+ "bib": {
+  "title": "Dynabench: Rethinking Benchmarking in NLP",
+  "authors": [
+   "Douwe Kiela",
+   "Max Bartolo",
+   "Yixin Nie",
+   "Divyansh Kaushik",
+   "Atticus Geiger",
+   "Zhengxuan Wu",
+   "Bertie Vidgen",
+   "Grusha Prasad",
+   "Amanpreet Singh",
+   "Pratik Ringshia",
+   "Zhiyi Ma",
+   "Tristan Thrush",
+   "Sebastian Riedel",
+   "Zeerak Waseem",
+   "Pontus Stenetorp",
+   "Robin Jia",
+   "Mohit Bansal",
+   "Christopher Potts",
+   "Adina Williams"
+  ],
+  "first_author": "Kiela",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021, pages 4110-4124",
+  "arxiv": "2104.14337",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 68392,
+  "chars_total": 68392,
+  "engine": "pymupdf",
+  "skipped": "References skimmed; the paper has no appendix."
+ },
+ "type": "system",
+ "question": "Can benchmarks be kept informative if data are collected dynamically, with humans and state-of-the-art models in the loop over multiple rounds, instead of as static datasets that saturate?",
+ "hypothesis": "We can make even faster progress if we evaluate models and collect data dynamically, with humans and models in the loop, rather than the traditional static way.",
+ "contributions": [
+  "Dynabench, an open-source web platform for human-and-model-in-the-loop dataset creation and model benchmarking",
+  "Four initial official tasks (NLI, QA, sentiment, hate speech) with multi-round data",
+  "A discussion of objections to dynamic benchmarking and future goals"
+ ],
+ "method": {
+  "summary": "A web platform where annotators write examples intended to fool a target model served live (TorchServe), with other humans validating the examples; collection proceeds in rounds, with models retrained between rounds. Position paper with a progress report on four tasks.",
+  "task": "dynamic adversarial data collection and benchmarking (NLI, extractive QA, sentiment, hate speech)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ANLI (seed of Dynabench NLI)",
+    "role": "both",
+    "size": "NLI total 170,294 examples over 4 rounds (Table 1)",
+    "split": null,
+    "source": "Nie et al. 2020; R1/R2 contexts Wikipedia passages from Yang et al. 2018, R3 various domains",
+    "preprocessing": null
+   },
+   {
+    "name": "Adversarial QA (Beat the AI) round 1",
+    "role": "both",
+    "size": "QA total 36,406 examples over 2 rounds (Table 1)",
+    "split": null,
+    "source": "Bartolo et al. 2020; Wikipedia contexts identical to SQuAD1.1",
+    "preprocessing": "fooled if word-overlap F1 between answer and model prediction is below a threshold (value not given)"
+   },
+   {
+    "name": "Sentiment",
+    "role": "both",
+    "size": "19,975 examples over 3 rounds (Table 1)",
+    "split": null,
+    "source": "Potts et al. 2020; prompt condition uses product/service review sentences",
+    "preprocessing": null
+   },
+   {
+    "name": "Hate speech",
+    "role": "both",
+    "size": "41,255 examples over 4 rounds (Table 1); initial training set 470,000 hateful and abusive statements",
+    "split": null,
+    "source": "derived from hatespeechdata.com, anonymized; Vidgen et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-Large (NLI R1 target)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": "fine-tuned on SNLI and MNLI",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa-Large ensemble (NLI R2, R3 target)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer encoder ensemble",
+    "init_from": "fine-tuned on SNLI, MNLI, FEVER recast as NLI, and prior ANLI rounds",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BiDAF, BERT-Large, RoBERTa-Large (QA R1 targets)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa (QA current round)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "trained on QA round 1 examples plus SQuAD1.1",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa (hate speech, retrained each round)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "round 1 trained on 470,000 statements; later rounds on original data plus prior rounds",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; the platform serves live models to annotators",
+   "prompting": "sentiment 'prompt' condition: workers edit a real review sentence to fool the model; 'no prompt': write original sentences",
+   "retrieval": null,
+   "parameters": {
+    "serving": "PyTorch with TorchServe",
+    "interpretability": "layer integrated gradients via Captum ('inspect model')",
+    "collection": "web interface, community, or Mephisto (e.g. Mechanical Turk)",
+    "validation": "model-fooling examples verified by other humans"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validated model error rate (vMER)",
+     "definition": "number of human-validated model errors divided by the total number of examples",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "HateCheck accuracy",
+     "definition": "external diagnostic suite of Rottger et al. 2020",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "models of the HateCheck original authors (hate speech)"
+   ],
+   "protocol": "Multi-round adversarial collection; vMER not comparable across tasks because interfaces and in-the-loop models differ. No seeds, significance tests or per-round tables given."
+  },
+  "availability": {
+   "code": "open source platform (no URL printed in text)",
+   "weights": null,
+   "data": "all collected data to be open sourced in anonymized form"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Validated model error rate remains high on all four tasks, 33% to 44%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "vMER",
+   "value": "43.90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 hate speech row; error rates not comparable across tasks",
+   "quote": "still very high across all tasks",
+   "table": "Table 1, row Hate speech, column vMER",
+   "note": "Other rows: NLI 33.24%, QA 33.74%, Sentiment 35.00%",
+   "where": "Section 3.3, Table 1"
+  },
+  {
+   "claim": "NLI task has 170,294 examples over 4 rounds.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 170294,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1 NLI row",
+   "quote": "170,294",
+   "table": "Table 1, row NLI, column Examples",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "State-of-the-art models with 90%+ on SNLI and MNLI cannot exceed 50% accuracy on ANLI rounds 2 and 3.",
+   "kind": "reported",
+   "source": "Nie et al. 2020",
+   "metric": "accuracy",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ANLI R2/R3, models fine-tuned on SNLI/MNLI",
+   "quote": "cannot exceed 50% accuracy on rounds 2 and 3",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Final-round hate speech target model reaches 94% on HateCheck.",
+   "kind": "measured",
+   "source": null,
+   "metric": "HateCheck accuracy",
+   "value": 94,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa retrained over 4 rounds of Dynabench hate data; HateCheck external suite",
+   "quote": "achieves 94% on HATECHECK",
+   "table": null,
+   "note": null,
+   "where": "Section 3.2"
+  },
+  {
+   "claim": "Dynamic adversarial data cost about $1.00 per ANLI example versus $0.50 for SNLI and $0.64 for MultiNLI.",
+   "kind": "reported",
+   "source": "personal communication with ANLI authors",
+   "metric": "cost per example",
+   "value": 1.0,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "per validated example, personal communication with authors",
+   "quote": "closer to $1.00",
+   "table": null,
+   "note": "SNLI approx $0.50 (20K validated), MultiNLI $0.64 (40K validated)",
+   "where": "Section 4 (Is it expensive?)"
+  },
+  {
+   "claim": "The prompt condition in sentiment (editing a real review sentence) gives more diverse examples than no-prompt.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "qualitative",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "sentiment, prompt vs no prompt",
+   "quote": "the \"prompt\" condition is superior",
+   "table": null,
+   "note": "no numbers given",
+   "where": "Section 3.2"
+  }
+ ],
+ "limits": [
+  "Position paper plus progress report: no controlled experiments, no per-round accuracy tables, no hyperparameters or seeds.",
+  "Authors concede unnatural distributions, annotator overfitting to the model in the loop, dependence on the target model, and no guarantees for future models not in the loop.",
+  "Only classification and span-extraction tasks, English text only; generative tasks left to future work.",
+  "Dynamic benchmarks cost more and benchmark comparability across changing rounds is the main adoption hurdle.",
+  "Numbers are from 2021 and Table 1 statistics are a snapshot."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "vMER",
+   "definition": "validated model error rate; the number of human-validated model errors divided by the total number of examples",
+   "where": "Section 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adversarial NLI (ANLI)",
+   "year": 2020,
+   "arxiv": "1910.14599",
+   "relation": "extends",
+   "note": "seeds the NLI task",
+   "quote": null
+  },
+  {
+   "work": "Beat the AI",
+   "year": 2020,
+   "arxiv": "2002.00293",
+   "relation": "extends",
+   "note": "seeds the QA task",
+   "quote": null
+  },
+  {
+   "work": "Vidgen et al. hate speech dynamic data",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "hate speech task",
+   "quote": null
+  },
+  {
+   "work": "Potts et al. DynaSent",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "sentiment task",
+   "quote": null
+  },
+  {
+   "work": "HateCheck",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "external validation",
+   "quote": null
+  },
+  {
+   "work": "SQuAD 1.1",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "QA format",
+   "quote": null
+  },
+  {
+   "work": "Build it break it fix it for dialogue safety",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "adversarial human attack",
+   "quote": null
+  },
+  {
+   "work": "Huang et al. counterfactually-augmented SNLI",
+   "year": 2020,
+   "arxiv": "2010.04762",
+   "relation": "contradicts",
+   "note": "model-in-the-loop augmented data does not necessarily generalize better",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Benchmark saturation over time for popular benchmarks, normalized with initial performance at minus one and human performance at zero.",
+   "page": 1,
+   "why": "Shows time-to-human-level shrinking from decades to years across MNIST, ImageNet, GLUE, SQuAD; the motivation for dynamic benchmarks."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The Dynabench example creation interface for sentiment analysis with illustrative example.",
+   "page": 4,
+   "why": "Shows the annotator-vs-model loop concretely."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Statistics for the initial four official tasks.",
+   "page": 7,
+   "why": "Rounds, examples and vMER per task."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Fig 1 axis values are plotted data, not readable as numbers."
+ ]
+}

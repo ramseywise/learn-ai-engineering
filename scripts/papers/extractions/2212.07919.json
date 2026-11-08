@@ -1,0 +1,757 @@
+{
+ "schema": 1,
+ "key": "2212.07919",
+ "pdf": "generative-ai/08-eval/sources/golovneva-2022-roscoe.pdf",
+ "bib": {
+  "title": "ROSCOE: A Suite of Metrics for Scoring Step-by-Step Reasoning",
+  "authors": [
+   "Olga Golovneva",
+   "Moya Chen",
+   "Spencer Poff",
+   "Martin Corredor",
+   "Luke Zettlemoyer",
+   "Maryam Fazel-Zarandi",
+   "Asli Celikyilmaz"
+  ],
+  "first_author": "Golovneva",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2212.07919",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 193412,
+  "chars_total": 193412,
+  "engine": "pymupdf",
+  "skipped": "Appendix tables 18-39 (per-dataset, per-perturbation correlation grids) and Tables 12-13, 40-41 (example instances) were sampled for headers and captions, not read cell by cell."
+ },
+ "type": "benchmark",
+ "question": "How can the correctness of an LLM's step-by-step reasoning chain be scored automatically, without a gold reference chain and independent of the final answer?",
+ "hypothesis": "Reference-free, interpretable metrics built on step-level alignment, embedding similarity, NLI contradiction and fluency will correlate better with reasoning errors than text-generation metrics such as ROUGE, BERTScore and BARTScore.",
+ "contributions": [
+  "A taxonomy of reasoning errors, used for human annotation and synthetic datasets.",
+  "ROSCOE, a suite of 18 interpretable metrics (semantic alignment, semantic similarity, logical inference, language coherence) at step and chain level.",
+  "Comparative analysis on 11 datasets (6 diagnostic, 5 human judged) against baseline metrics."
+ ],
+ "method": {
+  "summary": "Metrics score a hypothesis chain h against source context s (reference-free) or reference chain r. Sentence embeddings (SimCSE finetuned with contrastive loss on perturbed gold chains) give cosine-based alignment and similarity scores; an NLI model gives contradiction probabilities; GPT2-Large perplexity and a grammar classifier give fluency. Metrics are meta-evaluated by Somers' D against synthetic perturbation labels and expert human error labels.",
+  "task": "automatic evaluation of step-by-step reasoning chains",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "EntailmentBank",
+    "role": "both",
+    "size": "1,840 instances",
+    "split": "train/val used for SimCSE finetuning; test for diagnostics",
+    "source": "Dalvi et al., 2021",
+    "preprocessing": "perturbations applied to half of the reference chains"
+   },
+   {
+    "name": "ProofWriter",
+    "role": "both",
+    "size": "272,430 instances",
+    "split": "train/val/test; correlations on depth-5 subset",
+    "source": "Tafjord et al., 2021",
+    "preprocessing": "depth-0,1,2,3,5 OWA sets used"
+   },
+   {
+    "name": "MATH",
+    "role": "both",
+    "size": "12,500 instances",
+    "split": "train/val/test",
+    "source": "Hendrycks et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "ASDIV",
+    "role": "both",
+    "size": "2,305 instances",
+    "split": "train/val/test",
+    "source": "Miao et al., 2020",
+    "preprocessing": "1-step equation dataset, so no repetition or self-consistency scores"
+   },
+   {
+    "name": "AQUA",
+    "role": "both",
+    "size": "97,975 instances",
+    "split": "train/val/test",
+    "source": "Liang et al., 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "EQASC",
+    "role": "both",
+    "size": "9,060 instances",
+    "split": "train/val/test",
+    "source": "Aggarwal et al., 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "StrategyQA",
+    "role": "train",
+    "size": "2,290 instances (Table 11); text also says 2,780 questions in the original",
+    "split": "train/val only, no test reference chains",
+    "source": "Geva et al., 2021",
+    "preprocessing": "used only to finetune SimCSE"
+   },
+   {
+    "name": "DROP (human judged)",
+    "role": "eval",
+    "size": "210 annotated instances",
+    "split": "test only",
+    "source": "Dua et al., 2019",
+    "preprocessing": "GPT-3 few-shot step-by-step chains"
+   },
+   {
+    "name": "GSM8K (human judged)",
+    "role": "eval",
+    "size": "200 annotated instances",
+    "split": "test only",
+    "source": "Cobbe et al., 2021",
+    "preprocessing": "chains from Wei et al. 2022 175b_verification model"
+   },
+   {
+    "name": "ESNLI (human judged)",
+    "role": "eval",
+    "size": "151 annotated instances",
+    "split": "test only",
+    "source": "Camburu et al., 2018",
+    "preprocessing": "GPT-3 few-shot chains"
+   },
+   {
+    "name": "CosmosQA (human judged)",
+    "role": "eval",
+    "size": "195 annotated instances",
+    "split": "test only",
+    "source": "Huang et al., 2019",
+    "preprocessing": "GPT-3 few-shot chains"
+   },
+   {
+    "name": "SemEval (human judged)",
+    "role": "eval",
+    "size": "209 annotated instances",
+    "split": "test only",
+    "source": "Ostermann et al., 2018",
+    "preprocessing": "GPT-3 few-shot chains"
+   }
+  ],
+  "models": [
+   {
+    "name": "ROSCOE embedding model (finetuned SimCSE)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "RoBERTa-base sentence encoder (SimCSE)",
+    "init_from": "sup-simcse-roberta-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "max sequence length 512",
+    "other": {
+     "release": "huggingface facebook/roscoe-512-roberta-base"
+    }
+   },
+   {
+    "name": "sup-simcse-roberta-base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SimCSE",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "all-mpnet-base-v2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sentence embedding model (Reimers & Gurevych 2019)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NLI model (Laurer et al., 2022)",
+    "role": "judge",
+    "params": null,
+    "architecture": "entailment/neutral/contradiction classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "p_contr for Self-Consistency and Source-Consistency; exact checkpoint not named in the main text"
+    }
+   },
+   {
+    "name": "GPT2-Large",
+    "role": "judge",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "perplexity for ROSCOE-LC, used as-is"
+    }
+   },
+   {
+    "name": "Grammar classifier (Krishna et al., 2020)",
+    "role": "judge",
+    "params": null,
+    "architecture": "English grammatical acceptability classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "p_gram, used as-is"
+    }
+   },
+   {
+    "name": "GPT-3 text-davinci-002",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "generated chains for DROP, ESNLI, CosmosQA, SemEval with few-shot prompts; text-davinci-002 named for Table 1 example only"
+    }
+   },
+   {
+    "name": "175b_verification (Wei et al. 2022)",
+    "role": "evaluated",
+    "params": "175b",
+    "architecture": "LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "GSM8K chains"
+    }
+   },
+   {
+    "name": "BART (BARTScore-P)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "seq2seq",
+    "init_from": "BART (Lewis et al. 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "finetuned on the same reasoning datasets"
+    }
+   }
+  ],
+  "training": {
+   "objective": "SimCSE contrastive loss with in-batch negatives (cross-entropy); positive (s,r), hard negative (s,h) with h a perturbed reference; source and whole chain embedded as one text",
+   "optimizer": null,
+   "lr": "5e-6",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64",
+   "steps": "best checkpoint chosen by evaluating every 100 steps on dev",
+   "epochs": "5",
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "NVIDIA Tesla V100 32GB GPU instances",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "inference seed 42; without it embedding scores varied by about 0.01",
+   "other": {
+    "temperature": "0.05",
+    "samples_per_dataset": "500,000 sampled with replacement from each dataset",
+    "hparam_search": "batch size {32,64,256,512,1024,2048}, lr {5e-06,1e-05,5e-05,1e-04}, max seq len {64,128,512}; not all combinations tried",
+    "validation": "checkpoint maximising mean [cos(s_i,r_i) - cos(s_i,h_i)]/2 on perturbed dev chains",
+    "other_params": "kept as in original SimCSE"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one score per chain; inference seed 42",
+   "prompting": "GPT-3 chains for human-judged sets: 2-shot or few-shot in-context examples, 'Explain if premise entails hypothesis.' style prompts (App. B, Table 9)",
+   "retrieval": null,
+   "parameters": {
+    "score_range": "each ROSCOE metric bounded in [0,1], 1 best",
+    "alignment": "r-align(h_i->s)=[1+max_j cos(h_i,s_j)]/2"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Somers' D",
+     "definition": "D(Y|X)=tau(X,Y)/tau(X,X) between metric score Y and perturbation or error indicator X; SciPy; p<0.05 required, non-significant omitted",
+     "unit": "correlation",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ROUGE-1/2/L",
+    "BLEURT",
+    "PRISM",
+    "BERTScore",
+    "BARTScore",
+    "BARTScore+ (CNN+Para)",
+    "BARTScore-P",
+    "CTC Relevancy",
+    "CTC Consistency"
+   ],
+   "protocol": "Diagnostics: 12 perturbation rules applied to half of gold chains, binary label per chain, max correlation across perturbations. Human judged: five expert annotators rate overall quality and coherence (Likert 1-5) and mark each of 9 error types per step (Y/N); max correlation across error types. Number of annotators per item and agreement not stated."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/ParlAI/tree/main/projects/roscoe",
+   "weights": "https://huggingface.co/facebook/roscoe-512-roberta-base",
+   "data": "https://dl.fbaipublicfiles.com/parlai/projects/roscoe/annotations.zip"
+  },
+  "prompts": [
+   {
+    "purpose": "2-shot logical inference explanation (GPT-3), Table 1 example",
+    "text": "I will explain how to make logical inferences:\nContext: John wakes to the sound of his children giggling outside the door. They bust in and say \"Happy Father's Day!\" with a plate full of food. 2022 has been a great year.\nQuestion: Can we infer that John was born before the inauguration of Barack Obama?\nExplanation: We can infer that John is a father because of \"his children\". We can infer that the current year is 2022. Barack Obama was inaugurated in 2009, so it has been about 13 years since Obama was inaugurated. John's children are old enough to speak, so if John were born after Obama's inauguration, he would have been younger than 10 when he had children. So, we can infer that John was born before Obama's inauguration. The answer is \"yes\".\n(second exemplar about Sam, a piano and Juilliard omitted here; see App. B)",
+    "where": "App. B, p.15"
+   },
+   {
+    "purpose": "ESNLI few-shot prompt header",
+    "text": "Explain if premise entails hypothesis.",
+    "where": "App. B, Table 9, p.16"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Learning rate\n5e-6",
+    "where": "Table 17"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ROSCOE-SS reaches 0.955 on EntailmentBank against best reference-free baseline PRISM 0.453.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.955,
+   "unit": "correlation",
+   "baseline_value": 0.453,
+   "n": null,
+   "setup": "Diagnostics dataset, reference-free on (s,h), max over perturbations, ROSCOE with finetuned SimCSE embeddings; non-significant (p>=0.05) correlations omitted; EntailmentBank",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ROSCOE-SS, column EntBank (baseline: row PRISM 0.453)"
+  },
+  {
+   "claim": "ROSCOE (finetuned) beats all reference-free baselines on all six diagnostics datasets.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Diagnostics dataset, reference-free on (s,h), max over perturbations, ROSCOE with finetuned SimCSE embeddings; non-significant (p>=0.05) correlations omitted",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "(1) ROSCOE"
+  },
+  {
+   "claim": "ROSCOE-SA reaches 0.879 on ASDIV vs best baseline CTC Consistency 0.396; off-the-shelf embeddings drop to 0.198 (all-mpnet) and 0.515 (sup-simcse), showing finetuning matters most there.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.879,
+   "unit": "correlation",
+   "baseline_value": 0.396,
+   "n": null,
+   "setup": "Diagnostics dataset, reference-free on (s,h), max over perturbations, ROSCOE with finetuned SimCSE embeddings; non-significant (p>=0.05) correlations omitted; ASDIV",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ROSCOE-SA, column ASDIV (rows ROSCOE-SA1 0.198, ROSCOE-SA2 0.515, CTC Consist. 0.396)"
+  },
+  {
+   "claim": "ProofWriter is the weakest dataset: best ROSCOE group is ROSCOE-LC at 0.788 against CTC Consistency 0.513.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.788,
+   "unit": "correlation",
+   "baseline_value": 0.513,
+   "n": null,
+   "setup": "Diagnostics dataset, reference-free on (s,h), max over perturbations, ROSCOE with finetuned SimCSE embeddings; non-significant (p>=0.05) correlations omitted; ProofWriter depth-5 subset",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ROSCOE-LC, column ProofWr. (row CTC Consist. 0.513)"
+  },
+  {
+   "claim": "Finetuning SimCSE improves all non-repetition correlations on average across diagnostics datasets, by up to 0.556 on Informativeness-Chain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain in Somers' D",
+   "value": 0.556,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Finetuned vs off-the-shelf SimCSE, mean over datasets",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "on average across datasets, all correlations except Repetition_* scores improve (up to 0.556"
+  },
+  {
+   "claim": "On human-judged DROP, ROSCOE-SS gets 0.824 vs best baseline CTC-Consistency 0.462.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.824,
+   "unit": "correlation",
+   "baseline_value": 0.462,
+   "n": null,
+   "setup": "Human-judged dataset (GPT-3 or 175b_verification chains, expert labels), reference-free on (s,h), max over error types in Table 2; DROP, n=210",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ROSCOE-SS, column DROP (row CTC-Consistency 0.462)"
+  },
+  {
+   "claim": "On ESNLI, ROSCOE-SA1 (all-mpnet embeddings) gets 0.799 vs best baseline CTC-Consistency 0.647; finetuned ROSCOE-SA is only 0.521.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.799,
+   "unit": "correlation",
+   "baseline_value": 0.647,
+   "n": null,
+   "setup": "Human-judged dataset (GPT-3 or 175b_verification chains, expert labels), reference-free on (s,h), max over error types in Table 2; ESNLI, n=151",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ROSCOE-SA1, column ESNLI (row CTC-Consistency 0.647, ROSCOE-SA 0.521)"
+  },
+  {
+   "claim": "On GSM8K, best ROSCOE group is ROSCOE-SS2 at 0.638 while BARTScore correlates negatively (-0.546).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.638,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human-judged dataset (GPT-3 or 175b_verification chains, expert labels), reference-free on (s,h), max over error types in Table 2; GSM8K, n=200",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ROSCOE-SS2, column GSM8K (row BARTScore -0.546)"
+  },
+  {
+   "claim": "Several baselines show strongly negative max correlation with human error labels on DROP, e.g. BARTScore -0.835.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": -0.835,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human-judged dataset (GPT-3 or 175b_verification chains, expert labels), reference-free on (s,h), max over error types in Table 2; DROP",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row BARTScore, column DROP"
+  },
+  {
+   "claim": "Human-judged correlations are moderate compared with synthetic ones.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Human-judged dataset (GPT-3 or 175b_verification chains, expert labels), reference-free on (s,h), max over error types in Table 2",
+   "note": null,
+   "where": "Sec 6",
+   "quote": "most correlations with human judge-"
+  },
+  {
+   "claim": "Metric scores drift across datasets: an Info-Chain threshold for Repetition set on EntBank (around 0.95) would flag nearly all EQASC chains, even unperturbed ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Info-Chain threshold",
+   "value": 0.95,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Interquartile ranges, Info-Chain score, Repetition perturbation, five diagnostics datasets",
+   "note": null,
+   "where": "Sec 7, Fig 2",
+   "quote": "based off EntBank (around 0.95)"
+  },
+  {
+   "claim": "Grammar score (GPT-based classifier) overlaps heavily between perturbed (mean 0.854) and unperturbed (mean 0.909) chains, giving Somers' D 0.392.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Somers' D",
+   "value": 0.392,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ROSCOE-LC Grammar on a diagnostics dataset (dataset not clear in extracted text; Table 41)",
+   "note": null,
+   "where": "Table 41",
+   "quote": "the correlation score is 0.392"
+  },
+  {
+   "claim": "Info-Chain covers 10 of 12 perturbation types; no ROSCOE score reliably detects the missing-step (Remove Step) perturbation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perturbation types covered",
+   "value": 10,
+   "unit": "of 12",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Perturbation-level correlations in 90th percentile, finetuned embeddings, reference-free",
+   "note": null,
+   "where": "App H.1, Fig 6",
+   "quote": "Info-Chain is able to cover 10 out of 12"
+  },
+  {
+   "claim": "Expert annotation of at most 5 examples took an average 754 seconds (about 2.5 minutes per example); crowd workers paid over $30 an hour could not annotate accurately.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation time per session",
+   "value": 754,
+   "unit": "seconds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Expert annotators, human-judged datasets",
+   "note": null,
+   "where": "App F",
+   "quote": "754 seconds"
+  },
+  {
+   "claim": "Embedding-based scores varied by about 0.01 across runs unless the seed was fixed at 42.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score variation",
+   "value": 0.01,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inference with finetuned SimCSE",
+   "note": null,
+   "where": "App G",
+   "quote": "naturally varied by about 0.01"
+  }
+ ],
+ "limits": [
+  "Authors concede the taxonomy does not cover all reasoning errors and that use of the metrics to improve downstream task performance is left to future work (App A).",
+  "Human-judged sets are small (151-210 instances each) and mostly GPT-3 outputs; no inter-annotator agreement reported in the text read.",
+  "Reported correlation is the maximum over perturbation or error types per dataset, which favours metrics with many variants and overstates typical performance.",
+  "Moderate correlations with human judgement; metrics fail on missing-step errors and scores drift across datasets so fixed thresholds do not transfer.",
+  "ProofWriter results are low because correct proofs may order facts freely.",
+  "Ethics statement: metrics do not check integrity or bias of explanations.",
+  "Dated: baselines are 2020-2021 text-generation metrics; no LLM-as-judge baseline."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Somers' D",
+   "definition": "measures the ordinal association between two measured quantities; D(Y|X)=tau(X,Y)/tau(X,X), preferred over Kendall tau because it handles ties of a biased random variable better",
+   "where": "Sec 5"
+  },
+  {
+   "term": "reasoning alignment",
+   "definition": "r-align(h_i->s)=[1+max_j cos(h_i,s_j)]/2, normalized cosine similarity between a hypothesis step and the most similar context sentence",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "reference-free metric",
+   "definition": "uses source and hypothesis (h->s); reference-based uses hypothesis and reference (h->r)",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CTC: Compression, Transduction, and Creation",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Deng et al. 2021; information alignment, closest prior metric",
+   "quote": null
+  },
+  {
+   "work": "BARTScore",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Yuan et al. 2021; closest prior metric",
+   "quote": null
+  },
+  {
+   "work": "SimCSE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Gao et al. 2021; embedding model finetuned",
+   "quote": null
+  },
+  {
+   "work": "BERTScore",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zhang et al. 2020",
+   "quote": null
+  },
+  {
+   "work": "BLEURT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Sellam et al. 2020",
+   "quote": null
+  },
+  {
+   "work": "PRISM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Thompson & Post 2020",
+   "quote": null
+  },
+  {
+   "work": "ROUGE",
+   "year": 2004,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Lin 2004",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-thought prompting",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Wei et al. 2022; motivates scoring rationales, GSM8K chains reused",
+   "quote": null
+  },
+  {
+   "work": "Scratchpads / show your work",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Nye et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "Self-consistency",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Wang et al. 2022",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Brown et al. 2020; generates the chains",
+   "quote": null
+  },
+  {
+   "work": "EntailmentBank, ProofWriter, MATH, ASDIV, AQUA, EQASC, StrategyQA, DROP, GSM8K, e-SNLI, CosmosQA, SemEval",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Datasets in Table 11",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Sensitivity of selected metrics on Somers' D by injecting levels of error into reasoning steps.",
+   "page": 9,
+   "why": "Shows ROSCOE-SA/SS rising steadily with error count while baselines fluctuate."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Box-and-whisker plots of interquartile ranges of scores, for perturbations and reference-free metrics with strong Somers' D values.",
+   "page": 9,
+   "why": "Shows scores separate within a dataset but overlap across datasets, so thresholds do not transfer."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Reasoning alignment illustrating the measurement of the Faithfulness-Step and Faithfulness-Token semantic alignment scores.",
+   "page": 19,
+   "why": "Token and step cosine-similarity grid; the core of the metric design."
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Taxonomy of Step-by-Step Reasoning Errors.",
+   "page": 3,
+   "why": "Nine error types in one place."
+  },
+  {
+   "figure": "Table 7",
+   "caption": "Somers' D correlation of different metrics on six Diagnostics datasets.",
+   "page": 7,
+   "why": "Headline ROSCOE vs baseline comparison."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4.1, Table 3",
+   "snippet": "alpha_i = r-align(h_i -> s) = [1 + max_{j=1..T} cos(h_i, s_j)] / 2",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 5",
+   "snippet": "D(Y|X) = tau(X, Y) / tau(X, X)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "PDF text has multi-line tables flattened to one value per line; table cells were matched by position.",
+  "Table 41 Grammar example's dataset is not visible in the extracted text.",
+  "Table 11 lists StrategyQA as 2,290 instances while App E.1 says 2,780 questions.",
+  "No embedded instructions found."
+ ]
+}

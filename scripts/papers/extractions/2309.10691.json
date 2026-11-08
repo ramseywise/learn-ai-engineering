@@ -1,0 +1,138 @@
+{
+ "schema": 1,
+ "key": "2309.10691",
+ "pdf": "generative-ai/08-eval/sources/wang-2023-mint.pdf",
+ "bib": {
+  "title": "MINT: Evaluating LLMs in Multi-turn Interaction with Tools and Language Feedback",
+  "authors": ["Xingyao Wang", "Zihan Wang", "Jiateng Liu", "Yangyi Chen", "Lifan Yuan", "Hao Peng", "Heng Ji"],
+  "first_author": "Wang",
+  "year": 2023,
+  "venue": "ICLR 2024",
+  "arxiv": "2309.10691",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 106291,
+  "chars_total": 106291,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only (lineage); everything else read including appendices A-F."
+ },
+ "type": "benchmark",
+ "question": "How well do LLMs solve tasks over multiple turns when they can use tools (Python code) and receive natural language feedback, and what training choices (SIFT, RLHF) help or hurt?",
+ "hypothesis": "Single-turn benchmarks neglect tool use and language feedback, so they misrepresent real-world multi-turn use; LLMs should gain from both.",
+ "contributions": [
+  "MINT, a benchmark of 586 instances from 8 repurposed datasets for multi-turn interaction with tools and language feedback",
+  "An evaluation framework where LLMs call tools by executing Python code and receive feedback simulated by GPT-4",
+  "Evaluation of 20 LLMs (4 closed, 16 open) measuring tool-augmented task-solving, ability to use feedback and ability to give feedback",
+  "Findings that SIFT/RLHF generally hurt multi-turn ability and that single-turn rank does not predict multi-turn rank",
+  "Human evaluation that GPT-4 feedback is about as helpful as human feedback"
+ ],
+ "method": {
+  "summary": "Eight datasets are filtered to instances needing multi-turn interaction and sub-sampled to 586. The evaluated LLM takes up to k turns, each either executing Python (tools) or proposing a solution (max 2 proposals); an optional GPT-4 (gpt-4-0613) simulated user gives natural language feedback. Success rate at k=1..5 and its change with feedback measure tool and feedback ability.",
+  "task": "multi-turn tool-augmented task solving (reasoning, code generation, ALFWorld decision-making) with simulated user feedback",
+  "trains": false,
+  "datasets": [
+   {"name": "MINT (re-purposed)", "role": "eval", "size": "586 instances (from 29,307 collected)", "split": "test sets of 8 datasets", "source": "HumanEval 164->45, MBPP 500->91, ALFWorld 134->134, GSM8K 1319->48, HotpotQA 7,405->43, MATH 5,000->100, MMLU 13,985->76, TheoremQA 800->49", "preprocessing": "Drop multiple-choice items with <4 options; for MATH and MMLU drop subject classes whose mean gpt-3.5-turbo-0613 turns fall below a threshold (MATH N=100, k=3.5; MMLU N=20, k=2.5); run gpt-3.5-turbo-0613 with k=5, no feedback and drop instances finished within 2 turns; stratified sampling over 16 strata (8 datasets x solved/unsolved by gpt-3.5) with keep proportions alfworld 1, mbpp 0.5, humaneval 0.5, gsm8k 0.2, hotpotqa 0.2, theoremqa 0.2, MMLU 0.1, MATH 0.05; HotpotQA first 500 instances reserved before filtering"}
+  ],
+  "models": [
+   {"name": "gpt-4-0613", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also_role": "judge/feedback provider"}},
+   {"name": "gpt-3.5-turbo-0613", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also_used": "for filtering; fixed evaluated model in feedback-provider study"}},
+   {"name": "claude-instant-1 (v1.2), claude-2 (v2.0), chat-bison-001", "role": "evaluated", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "LLaMA-2 base and chat (RLHF)", "role": "evaluated", "params": "7B, 13B, 70B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "CodeLLaMA base and instruct (SIFT)", "role": "evaluated", "params": "7B, 13B, 34B", "architecture": null, "init_from": "LLaMA-2 base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Lemur-v1 base and chat (SIFT)", "role": "evaluated", "params": "70B", "architecture": null, "init_from": "LLaMA-2", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Vicuna-v1.5 (SIFT)", "role": "evaluated", "params": "7B, 13B", "architecture": null, "init_from": "LLaMA-2 base", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "inferred: 4,096 tokens, from 'most modern LLMs' context window (4,096 tokens)'", "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "inferred: one trajectory per instance per setting (no repeats, seeds or variance stated)",
+   "prompting": "System-style instruction asking for <thought>, then <execute> code or <solution>; 1-shot in-context example per task type (with and without feedback variants); reminder 'You have X steps left and Y chances to propose solution left'; max 5 total steps, 2 proposals",
+   "retrieval": "Reasoning tasks get a wikipedia_search tool; ALFWorld gets 11 action tools; code generation gets only the Python interpreter",
+   "parameters": {"interaction_limit_k": "1-5 (k=1 means no interaction)", "max_propose_solution": "2", "feedback_model": "gpt-4-0613", "feedback_conditioning": "no ground truth by default (gt_solution = NOT GIVEN); dense (every turn) and textual by default"},
+   "other": {"cost_per_model": "about 100 USD (3M prompt tokens, 100K completion tokens) with gpt-4-0613 feedback at $0.03/1K prompt and $0.06/1K completion"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Success Rate SR_k", "definition": "percentage of successful task instances when the model may interact up to k turns; micro-averaged across tasks", "unit": "%", "higher_is_better": true},
+    {"name": "Delta_tools", "definition": "slope b of least-squares regression of SR_k on k (k=1..5), with R2", "unit": "% per turn", "higher_is_better": true},
+    {"name": "Delta_feedback", "definition": "SR5 with GPT-4 feedback minus SR5 without feedback", "unit": "% absolute", "higher_is_better": true}
+   ],
+   "baselines": ["20 LLMs compared with each other; lazy-user setting (binary 'Your answer is wrong.' after first wrong proposal) is the no-feedback baseline"],
+   "protocol": "Lazy user checks proposals against ground truth; interaction ends on 2 proposals, a correct solution or turn k. Human evaluation: 113 trajectories, annotators A/B write feedback, C/D compare to GPT-4 feedback on helpfulness and human-likeness (Potato interface). No significance tests."
+  },
+  "availability": {"code": "https://xingyaoww.github.io/mint-bench (project website); outputs from all LLMs released in code repo", "weights": null, "data": "released with code repo"},
+  "prompts": [
+   {"purpose": "Evaluated-LLM system prompt (F.4.1)", "text": "You are a helpful assistant assigned with the task of problem-solving. To achieve this, you will be using an interactive coding environment equipped with a variety of tool functions to assist you throughout the process. At each turn, you should first provide your step-by-step thinking for solving the task. Your thought process should be enclosed using \"<thought>\" tag ... 1) Interact with a Python programming environment ... enclosed using \"<execute>\" tag ... 2) Directly provide a solution ... enclosed using \"<solution>\" tag ... You have {max_total_steps} chances to interact with the environment or propose a solution. You can only propose a solution {max_propose_solution} times. {tool_desc} --- {in_context_example} --- {task_prompt}", "where": "Appendix F.4.1 (abridged)"},
+   {"purpose": "GPT-4 feedback simulator (F.4.2)", "text": "You are an expert tasked with evaluating and providing feedback on an assistant's performance. --- Here is an example. Please follow the format as the following expert acts. {in_context_example} --- {tool_desc} {trajectory} Correct solution (please DO NOT disclose the correct solution to the assistant): {gt_solution} Please provide concise and constructive feedback. Remember, your role is similar to a teacher. Rather than giving away the solution or details about the answer, guide the assistant toward understanding how to arrive at the correct answer. Your feedback should focus on enhancing the assistant's ability to think critically and respond accurately. Now provide your feedback. Expert feedback:", "where": "Appendix F.4.2"},
+   {"purpose": "Format error message returned to the LLM", "text": "I don't understand your input. If you want to execute code, please use <execute> YOUR_CODE_HERE </execute>. If you want to give me an answer, please use <solution> YOUR_SOLUTION_HERE </solution>. For example: The answer to the question is <solution> 42 </solution>.", "where": "Appendix F.2"}
+  ],
+  "evidence": [
+   {"field": "inference.parameters.max_propose_solution", "quote": "You can only propose a solution 2 times.", "where": "Appendix E.1 / F.4.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Models gain 1-8% absolute per additional tool-use turn and 2-17% from natural language feedback.", "kind": "measured", "source": null, "metric": "absolute gain range", "value": null, "unit": "%", "baseline_value": null, "n": 20, "setup": "MINT, 20 LLMs, k up to 5", "quote": "performance gains (absolute, same below) of 1–8% for each turn of tool use and 2–17% with natural language feedback", "table": null, "note": "Range statement; value left null", "where": "Abstract"},
+  {"claim": "gpt-4-0613 reaches the highest success rate at k=5 among evaluated models.", "kind": "measured", "source": null, "metric": "SR5", "value": 69.5, "unit": "%", "baseline_value": null, "n": 586, "setup": "MINT, k=5, no feedback, micro-average", "quote": null, "table": "Table 2, row gpt-4-0613, column k = 5", "note": "Fig. 2 legend prints 69.11 for the same quantity; Table 3 prints 69.5", "where": "Table 2"},
+  {"claim": "claude-instant-1 overtakes claude-2 as k grows (45.9 vs 39.9 at k=5) despite doing worse at k=1.", "kind": "measured", "source": null, "metric": "SR5", "value": 45.9, "unit": "%", "baseline_value": 39.9, "n": 586, "setup": "MINT, k=5, no feedback", "quote": "a higher SR5 (45.9% vs. 39.9%)", "table": null, "note": null, "where": "Section 3.2"},
+  {"claim": "claude-instant-1 has the steepest tool improvement slope among closed models and gpt-3.5-turbo is similar with the best linear fit.", "kind": "measured", "source": null, "metric": "Delta_tools slope", "value": 8.2, "unit": "% per turn", "baseline_value": null, "n": 586, "setup": "gpt-3.5-turbo-0613, R2 0.96; claude-instant-1 slope +8.0", "quote": null, "table": "Table 2, row gpt-3.5-turbo-0613, column Slope", "note": null, "where": "Table 2"},
+  {"claim": "Even with feedback, the best open model (Lemur-v1 70B SIFT) lags the best closed model by 8.7 points.", "kind": "measured", "source": null, "metric": "SR5 with feedback gap", "value": 8.7, "unit": "% absolute", "baseline_value": null, "n": 586, "setup": "k=5, GPT-4 feedback", "quote": "still lags be-hind the best closed-source model claude-instant-1 by 8.7%", "table": null, "note": "Quote broken by hyphenation; intro states it as 'lags behind the best closed-source model by 8.7% in absolute success rate'", "where": "Intro / Section 3.3"},
+  {"claim": "SIFT hurts CodeLlama-34B multi-turn performance by 11.1 points (and 15.4 with feedback).", "kind": "measured", "source": null, "metric": "SR5 change", "value": 11.1, "unit": "% absolute", "baseline_value": null, "n": 586, "setup": "CodeLlama-34B base vs SIFT, k=5", "quote": "SIFT hurts Codellama-34B’s multi-turn performance by 11.1% and 15.4% (w/ feedback)", "table": null, "note": null, "where": "Intro"},
+  {"claim": "RLHF lowers LLaMA-2-70B multi-turn performance by 8.5 points (8.7 with feedback).", "kind": "measured", "source": null, "metric": "SR5 change", "value": 8.5, "unit": "% absolute", "baseline_value": null, "n": 586, "setup": "LLaMA-2-70B base vs chat, k=5", "quote": "RLHF negatively affects LLaMA-2-70B by 8.5% and 8.7%, respectively", "table": null, "note": "Authors caution it is hard to conclude RLHF in general hurts", "where": "Intro"},
+  {"claim": "GPT-4 feedback lifts gpt-3.5-turbo-0613 from 36.2 to 51.4 SR5 (+15.2).", "kind": "measured", "source": null, "metric": "Delta_feedback", "value": 15.2, "unit": "% absolute", "baseline_value": 36.2, "n": 586, "setup": "k=5, gpt-4-0613 feedback", "quote": null, "table": "Table 3, row gpt-3.5-turbo-0613, column Micro Average, Delta feedback", "note": null, "where": "Table 3"},
+  {"claim": "GPT-4 does not benefit from its own feedback (-0.7).", "kind": "measured", "source": null, "metric": "Delta_feedback", "value": -0.7, "unit": "% absolute", "baseline_value": 69.5, "n": 586, "setup": "gpt-4-0613 evaluated with gpt-4-0613 feedback, k=5", "quote": null, "table": "Table 3, row gpt-4-0613, column Micro Average, Delta feedback", "note": "Printed as −0.7", "where": "Table 3"},
+  {"claim": "Task-solving ability is orthogonal to feedback-giving: gpt-3.5-turbo-16k as feedback provider hurts gpt-3.5 by 10.4 points, while CodeLlama-34B-Instruct helps by 3.2.", "kind": "measured", "source": null, "metric": "Delta_feedback", "value": -10.4, "unit": "% absolute", "baseline_value": null, "n": 586, "setup": "evaluated model fixed to gpt-3.5-turbo-0613", "quote": null, "table": "Table 4, row gpt-3.5-turbo-16k-0613, column Delta feedback", "note": "Printed as −10.4; CodeLlama-34b-Instruct row is +3.2", "where": "Table 4"},
+  {"claim": "Human annotators judged 91.2% of GPT-4 feedback as at least as helpful as human feedback.", "kind": "measured", "source": null, "metric": "helpfulness parity", "value": 91.2, "unit": "%", "baseline_value": null, "n": 113, "setup": "113 trajectories, 2 annotators writing feedback, 2 comparing", "quote": "human annotators consider 91.2% of GPT-4 generated language feedback to be as helpful as, if not better than, human written feedback", "table": null, "note": "Table 5: equal 36.3, GPT-4 better 54.9, human better 8.8", "where": "Section 3.6"},
+  {"claim": "gpt-3.5 performance after one turn of human vs GPT-4 feedback is similar.", "kind": "measured", "source": null, "metric": "SR5 feedback", "value": 33.6, "unit": "%", "baseline_value": 32.7, "n": 113, "setup": "gpt-3.5-turbo-0613 continuing with human vs GPT-4 feedback", "quote": "(32.7% vs. 33.6%)", "table": null, "note": "Order is human vs GPT-4", "where": "Section 3.6"},
+  {"claim": "Binary feedback instead of textual cuts the feedback gain from +15.09 to +2.71 micro-average.", "kind": "measured", "source": null, "metric": "Delta_feedback", "value": 2.71, "unit": "% absolute", "baseline_value": 15.09, "n": 586, "setup": "gpt-3.5-turbo-0613 evaluated, gpt-4-0613 feedback", "quote": null, "table": "Table A.6, row Delta feedback binary, column Micro Average", "note": null, "where": "Appendix C.1"},
+  {"claim": "Sparse feedback (only at solution proposal) cuts the gain to +4.07 versus +15.09 dense.", "kind": "measured", "source": null, "metric": "Delta_feedback", "value": 4.07, "unit": "% absolute", "baseline_value": 15.09, "n": 586, "setup": "gpt-3.5-turbo-0613, equals Reflexion-style feedback", "quote": null, "table": "Table A.6, row Delta feedback sparse, column Micro Average", "note": null, "where": "Appendix C.1.2"},
+  {"claim": "Giving the feedback model the ground-truth solution hurts decision-making (-8.95) but helps reasoning and code.", "kind": "measured", "source": null, "metric": "Delta_feedback with GT", "value": -8.95, "unit": "% absolute", "baseline_value": null, "n": 134, "setup": "ALFWorld, gpt-3.5-turbo-0613 with gpt-4 feedback conditioned on GT", "quote": "leads to a performance drop (−8.95%) compared to no feedback", "table": null, "note": null, "where": "Appendix C.1.1"},
+  {"claim": "Vicuna models emit escaped underscores in code, up to 90.44% of code-task interactions for 13B.", "kind": "measured", "source": null, "metric": "escaped underscore rate", "value": 90.44, "unit": "%", "baseline_value": null, "n": null, "setup": "Vicuna-v1.5 13B, k=5, no feedback, Code tasks", "quote": null, "table": "Table A.9, row Vicuna-v1.5 13B SIFT, column Code", "note": "About 15% of ShareGPT conversations contain the pattern", "where": "Appendix E.1"},
+  {"claim": "CodeLlama-34B-Instruct wraps code in [PYTHON] tags in 100% of code-generation tasks, ignoring the <execute> instruction.", "kind": "measured", "source": null, "metric": "[PYTHON] tag rate", "value": 100.0, "unit": "%", "baseline_value": null, "n": null, "setup": "k=5, no feedback, code tasks", "quote": "happens on 100% of code generation tasks, 0% on other tasks", "table": null, "note": null, "where": "Section 3.5"},
+  {"claim": "About 73% of Human-ChatGPT conversations contain more than one turn.", "kind": "reported", "source": "ShareGPT data (2023), 94k entries", "metric": "multi-turn share", "value": 73, "unit": "%", "baseline_value": null, "n": 94000, "setup": "ShareGPT", "quote": "roughly 73% of Human-ChatGPT conversations contain more than one turn", "table": null, "note": null, "where": "Section 1"},
+  {"claim": "Evaluating one LLM costs about 100 USD, roughly 7% of hiring human annotators for feedback.", "kind": "measured", "source": null, "metric": "cost per model", "value": 100, "unit": "USD", "baseline_value": null, "n": null, "setup": "gpt-4-0613 feedback, about 3M prompt and 100K completion tokens", "quote": "Evaluating an LLM using MINT costs around 100 USD", "table": null, "note": null, "where": "Footnote 3"}
+ ],
+ "limits": [
+  "GPT-4 simulated feedback may not cover real human responses or nuanced judgments of human values (Appendix A).",
+  "Does not study training on language feedback (left to future work).",
+  "Metrics assess outcome only, not the interaction process; repetitive guessing is not penalized.",
+  "Tool coverage is narrow (Python, wikipedia search, ALFWorld actions); no web-browsing or OS tasks.",
+  "Single run per setting, no seeds, decoding temperature or max tokens stated; no significance tests.",
+  "Authors say it is hard to conclude RLHF in general hurts; some SIFT/RLHF drops are confounded by formatting failures and data artifacts (Vicuna backslash-underscore, CodeLlama [PYTHON]).",
+  "Subset construction uses gpt-3.5-turbo-0613 to filter, so difficulty is relative to that model; k=5 is capped by a 4,096-token context.",
+  "Models are mid-2023 (GPT-4-0613, Claude 1/2, LLaMA-2); results have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Lazy user", "definition": "a simulated user who provides at most one additional binary feedback ('Your answer is wrong.') during interaction", "where": "Section 2.1"},
+  {"term": "Delta_tools", "definition": "improvement per additional interaction turn, estimated as the least-squares slope of SR_k on k", "where": "Section 3.2"},
+  {"term": "Delta_feedback", "definition": "SR5 with feedback minus SR5 without feedback", "where": "Section 3.3"}
+ ],
+ "lineage": [
+  {"work": "ReAct: Synergizing reasoning and acting in language models (Yao et al. 2022)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "Thought then action format; ALFWorld in-context prompts adapted", "quote": null},
+  {"work": "Executable Code Actions Elicit Better LLM Agents (Wang et al. 2024)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "Python code as unified tool interface", "quote": null},
+  {"work": "Reflexion (Shinn et al. 2023)", "year": 2023, "arxiv": null, "relation": "related", "note": "Sparse feedback setting equals Reflexion feedback", "quote": null},
+  {"work": "ALFWorld (Shridhar et al. 2020)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "decision-making", "quote": null},
+  {"work": "HumanEval (Chen et al. 2021); MBPP (Austin et al. 2021); GSM8K (Cobbe et al. 2021); HotpotQA (Yang et al. 2018); MATH (Hendrycks et al. 2021); MMLU (Hendrycks et al. 2020); TheoremQA (Chen et al. 2023a)", "year": null, "arxiv": null, "relation": "uses-data", "note": "datasets repurposed", "quote": null},
+  {"work": "LLaMA-2 (Touvron et al. 2023); Code Llama (Roziere et al. 2023); Vicuna (Zheng et al. 2023); Lemur (Xu et al. 2023)", "year": 2023, "arxiv": null, "relation": "evaluates", "note": "open-source models evaluated", "quote": null},
+  {"work": "Training language models to follow instructions with human feedback (Ouyang et al. 2022)", "year": 2022, "arxiv": null, "relation": "related", "note": "RLHF; alignment can degrade task performance", "quote": null},
+  {"work": "Program-aided language models (Gao et al. 2023)", "year": 2023, "arxiv": null, "relation": "related", "note": "tool-augmented reasoning adaptation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An interaction trajectory produced by evaluating gpt-3.5-turbo-0613 with MINT on a mathematical reasoning task. The evaluated model’s outputs are in the blue boxes, and the feedback by gpt-4-0613 in red, dotted ones.", "page": 3, "why": "Shows the thought/execute/solution loop with tool observations and simulated user feedback in one view."},
+  {"figure": "Fig 2", "caption": "With an increasing interaction limit k, the success rate (%, micro averaged) improves at different rates for different LLMs.", "page": 6, "why": "Shows rank crossover (claude-instant-1 overtakes claude-2) that single-turn scores hide."},
+  {"figure": "Table 2", "caption": "Tool-augmented task-solving success rate with different interaction limit k and improvement rate (slope and R2).", "page": 6, "why": "Per-model SR_k and slope for all 20 models."},
+  {"figure": "Table 3", "caption": "LLM’s ability to leverage natural language feedback, measured by delta feedback.", "page": 8, "why": "Per-task gains from GPT-4 feedback, base vs SIFT vs RLHF."}
+ ],
+ "code": [],
+ "problems": [
+  "Fig. 2 legend prints gpt-4-0613 success rate 69.11 at k=5 while Tables 2 and 3 print 69.5.",
+  "Table cells were flattened to one value per line by PDF extraction; row and column mapping was reconstructed by order.",
+  "No embedded instructions found in the PDF text."
+ ]
+}

@@ -1,0 +1,550 @@
+{
+ "schema": 1,
+ "key": "2211.12561",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/yasunaga-2022-retrieval-augmented-multimodal-language-modeling.pdf",
+ "bib": {
+  "title": "Retrieval-Augmented Multimodal Language Modeling",
+  "authors": [
+   "Michihiro Yasunaga",
+   "Armen Aghajanyan",
+   "Weijia Shi",
+   "Rich James",
+   "Jure Leskovec",
+   "Percy Liang",
+   "Mike Lewis",
+   "Luke Zettlemoyer",
+   "Wen-tau Yih"
+  ],
+  "first_author": "Yasunaga",
+  "year": 2023,
+  "venue": "Proceedings of the 40th International Conference on Machine Learning (ICML), PMLR 202, 2023",
+  "arxiv": "2211.12561",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65475,
+  "chars_total": 65475,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a multimodal generator that retrieves and conditions on text and image documents from an external memory beat a non-retrieval multimodal model on image and caption generation at lower training compute?",
+ "hypothesis": "Storing knowledge in an external memory rather than in parameters lets a smaller model train with less compute and generate more faithful images and captions.",
+ "contributions": [
+  "First retrieval-augmented multimodal model that can retrieve and generate both text and images (RA-CM3)",
+  "Mixed-modal CLIP dense retriever plus retrieval strategy (relevance, modality, diversity)",
+  "Retrieval-augmented CM3 generator trained with joint loss on main and retrieved documents",
+  "Strong MS-COCO results at <30% of DALL-E compute, plus faithful generation and multimodal in-context learning"
+ ],
+ "method": {
+  "summary": "A frozen CLIP ViT-L/14 bi-encoder retrieves up to 2 multimodal documents (text and image averaged, L2-normalised) from a FAISS flat index of the 150M LAION training pairs. They are prepended to the input of a 2.7B CM3 Transformer trained from scratch with loss on main plus retrieved docs (alpha 0.1). Evaluated zero-finetune on MS-COCO.",
+  "task": "retrieval-augmented text-to-image and image-to-text generation (CM3 causal masked LM over HTML-formatted image/text tokens)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION subset",
+    "role": "pretrain",
+    "size": "150M text-image pairs",
+    "split": null,
+    "source": "LAION (Schuhmann et al., 2021), cleaned following Stable Diffusion preprocessing; same 150M used as external memory",
+    "preprocessing": "filtered out images with watermark probability above 0.5, unsafe probability above 0.5, or resolution below 256x256; each pair formatted as '<img alt=[text] src=[image]>' with image as 1024 VQGAN tokens"
+   },
+   {
+    "name": "MS-COCO",
+    "role": "eval",
+    "size": null,
+    "split": "validation set captions/images",
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet (binary non-semantic-label few-shot task)",
+    "role": "eval",
+    "size": "e.g. 100 test images per class",
+    "split": null,
+    "source": "Deng et al. 2009",
+    "preprocessing": "labels replaced by 'animal X'/'animal Y'"
+   }
+  ],
+  "models": [
+   {
+    "name": "RA-CM3",
+    "role": "proposed",
+    "params": "2.7B",
+    "architecture": "CM3 Transformer decoder with retrieved docs prepended",
+    "init_from": "scratch",
+    "tokenizer": "VQGAN image tokenizer (1024 tokens per image)",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens (up to 3 documents)",
+    "other": {
+     "scaling_sizes": "125M, 350M, 1.3B, 2.7B"
+    }
+   },
+   {
+    "name": "Vanilla CM3",
+    "role": "baseline",
+    "params": "2.7B",
+    "architecture": "same as RA-CM3, no retrieval",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP ViT-L/14",
+    "role": "retriever",
+    "params": null,
+    "architecture": "frozen off-the-shelf text and image encoders, mean pooled",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L = L_main + alpha L_retr (CM3 token prediction on main and retrieved docs), alpha=0.1; retriever fixed; CM3 infilling objective",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98",
+   "lr": "peak 1e-4",
+   "lr_schedule": "linear decay",
+   "warmup": "1500 steps",
+   "batch_size": "16 sequences per GPU; model parallelism over 4 GPUs",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "4096",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping 1.0; Query Dropout (20% of query tokens)",
+   "hardware": "256 A100 GPUs",
+   "compute": "five days on 256 A100 GPUs",
+   "wall_clock": "five days",
+   "seeds": null,
+   "other": {
+    "K": "retrieved docs per input ~ Uniform({0,1,2})",
+    "framework": "PyTorch with Metaseq",
+    "scaling_runs": "two days on 256 GPUs",
+    "ablation_runs": "2.7B model, a day on 256 GPUs",
+    "query": "text part or image part of the document used as query in training"
+   }
+  },
+  "inference": {
+   "decoding": "sampling; rerank samples",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "text-to-image: 10 images per caption, top by CLIP score; image-to-text: 32 captions per image, top by perplexity; qualitative figures: 256 images re-ranked by CLIP",
+   "prompting": "retrieved docs prepended as in-context examples; k-shot classification by averaging probabilities over k single-pair passes",
+   "retrieval": "CLIP ViT-L/14, FAISS Flat index MIPS over 150M docs, K up to 2 (ensemble for more at inference); skip candidates with relevance score > 0.9 to query or already retrieved (Avoid Redundancy); retrieval under a second",
+   "parameters": {
+    "alpha": "0.1",
+    "query_dropout": "20% tokens (training only)",
+    "redundancy_threshold": "0.9"
+   },
+   "other": {
+    "super_resolution": "off-the-shelf (Rombach et al., 2022) for qualitative figures"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "generate images for MS-COCO val captions, compare with ground-truth images",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CIDEr",
+     "definition": "captions for MS-COCO val images vs ground-truth captions",
+     "unit": "CIDEr",
+     "higher_is_better": true
+    },
+    {
+     "name": "Perplexity",
+     "definition": "image/text perplexity on MS-COCO validation",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "Recall@k",
+     "definition": "CLIP retrieval on MS-COCO",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "k-shot accuracy",
+     "definition": "binary ImageNet classification with non-semantic labels",
+     "unit": "accuracy",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Vanilla CM3",
+    "Retrieval Baseline (returns retrieved item)",
+    "DALL-E",
+    "Parti",
+    "Stable Diffusion",
+    "Imagen",
+    "Re-Imagen",
+    "Flamingo"
+   ],
+   "protocol": "no finetuning; single run, no seeds or significance tests stated; vanilla CM3 matched on architecture, data and compute"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "LAION (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "The model is trained from scratch for five days on 256 A100 GPUs.",
+    "where": "Sec 4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RA-CM3 gets lower MS-COCO FID than vanilla CM3 and DALL-E without finetuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID",
+   "value": 15.7,
+   "unit": "FID",
+   "baseline_value": 29.5,
+   "n": null,
+   "setup": "MS-COCO val captions, 2.7B, no finetune; vanilla CM3 29.5, DALL-E 12B ~28",
+   "quote": null,
+   "table": "Table 2, row RA-CM3 (2.7B), column Not finetuned",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "RA-CM3 improves CIDEr over vanilla CM3 and beats Parti 20B and Flamingo 3B 4-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "CIDEr",
+   "value": 89.1,
+   "unit": "CIDEr",
+   "baseline_value": 71.9,
+   "n": null,
+   "setup": "MS-COCO val images, no finetune, 2 retrieved docs; vanilla CM3 71.9",
+   "quote": null,
+   "table": "Table 3, row RA-CM3 (2.7B), column CIDEr",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Abstract headline: 12 FID and 17 CIDEr improvement over baseline CM3",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID improvement",
+   "value": 12,
+   "unit": "FID points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO vs vanilla CM3",
+   "quote": "12 FID and 17 CIDEr",
+   "table": "",
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Training compute is under 30% of DALL-E for better FID",
+   "kind": "measured",
+   "source": null,
+   "metric": "compute ratio",
+   "value": "<30%",
+   "unit": "of DALL-E training compute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO FID vs A100 GPU hours (Fig 2)",
+   "quote": "requiring much less compute for training (<30% of DALL-",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Training with retrieval and inferring with retrieval beats random-at-train, retrieve-at-infer",
+   "kind": "measured",
+   "source": null,
+   "metric": "image ppl",
+   "value": 227,
+   "unit": "ppl",
+   "baseline_value": 243,
+   "n": null,
+   "setup": "2.7B ablation, MS-COCO val; random train + retrieve infer 243; random both 246",
+   "quote": null,
+   "table": "Table 5, row Retrieve at train & infer (final), column Image ppl",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Retrieving multimodal documents beats only image or only text",
+   "kind": "measured",
+   "source": null,
+   "metric": "image ppl",
+   "value": 227,
+   "unit": "ppl",
+   "baseline_value": 234,
+   "n": null,
+   "setup": "ablation; only image or only text 234",
+   "quote": null,
+   "table": "Table 5, row Multimodal document (final)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Taking simple top-K is worse than Avoid Redundancy; adding Query Dropout is best",
+   "kind": "measured",
+   "source": null,
+   "metric": "image ppl",
+   "value": 244,
+   "unit": "ppl",
+   "baseline_value": 227,
+   "n": null,
+   "setup": "ablation; top K 244, Avoid redundancy 235, plus Query dropout 227",
+   "quote": null,
+   "table": "Table 5, row Simply take top K, column Image ppl",
+   "note": "Value 244 is the simple top-K result; final method is 227",
+   "where": "Table 5"
+  },
+  {
+   "claim": "Joint loss alpha=0.1 best; alpha=0 gives 239 and alpha=1 gives 240 image ppl",
+   "kind": "measured",
+   "source": null,
+   "metric": "image ppl",
+   "value": 231,
+   "unit": "ppl",
+   "baseline_value": 227,
+   "n": null,
+   "setup": "ablation alpha=0.3 row; alpha=0.1 gives 227",
+   "quote": null,
+   "table": "Table 5, row alpha = 0.3, column Image ppl",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "RA-CM3 k-shot accuracy on binary non-semantic ImageNet task",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 0.9,
+   "unit": "accuracy",
+   "baseline_value": 0.56,
+   "n": null,
+   "setup": "k=8; baseline CM3 0.56; k=1 0.78 vs 0.53",
+   "quote": "0.90 accuracy at k = 8",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4"
+  },
+  {
+   "claim": "Image-to-mixture retrieval recall with CLIP mixed encoder",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@1",
+   "value": 78,
+   "unit": "%",
+   "baseline_value": 56,
+   "n": null,
+   "setup": "MS-COCO, frozen CLIP; text-to-image 48",
+   "quote": null,
+   "table": "Table 4, row CLIP image-to-mixture retrieval, column @1",
+   "note": "base is image-to-text recall@1",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Retrieval gains hold across 125M to 2.7B with no diminishing returns",
+   "kind": "measured",
+   "source": null,
+   "metric": "scale",
+   "value": "125M-2.7B",
+   "unit": "params",
+   "baseline_value": null,
+   "n": null,
+   "setup": "equal compute (two days on 256 GPUs), MS-COCO val perplexity",
+   "quote": "We do not observe any dimin",
+   "table": null,
+   "note": null,
+   "where": "App C.2"
+  },
+  {
+   "claim": "RA-CM3 1.3B outperforms vanilla CM3 2.7B (perplexity)",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 9, equal compute",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "App D.1"
+  },
+  {
+   "claim": "Varying K at inference: K=2 best image ppl",
+   "kind": "measured",
+   "source": null,
+   "metric": "image ppl",
+   "value": 227,
+   "unit": "ppl",
+   "baseline_value": 232,
+   "n": null,
+   "setup": "K=1 228, 4 228, 8 232",
+   "quote": null,
+   "table": "Table 6, row RA-CM3, column K=2",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "No finetuned numbers reported for RA-CM3, and FID gap to Imagen (7.27), Re-Imagen (6.88) and Parti (7.23) remains.",
+  "Retriever is frozen CLIP; co-training or finetuning retriever left as future work.",
+  "Memory is the same 150M LAION data as training, so no test of an unseen or updated memory.",
+  "K limited to 2 by 4096 context; larger K only via ensemble; K>2 not helpful for MS-COCO captions.",
+  "Qualitative figures only for knowledge-intensive generation and editing; no quantitative faithfulness metric.",
+  "Single run; no seeds or significance tests; no code or weights link in text.",
+  "Model is a research prototype; authors warn against generating images of people; data may hold biases."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Query Dropout",
+   "definition": "drops some tokens of the query used in retrieval (e.g., 20% of tokens)",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Avoid Redundancy",
+   "definition": "skip a candidate if it is too similar (e.g., relevance score > 0.9) to the query or to documents already retrieved",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CM3: A causal masked multimodal model of the internet",
+   "year": 2022,
+   "arxiv": "2201.07520",
+   "relation": "extends",
+   "note": "generator architecture and baseline",
+   "quote": null
+  },
+  {
+   "work": "Learning transferable visual models from natural language supervision (CLIP)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen retriever encoders",
+   "quote": null
+  },
+  {
+   "work": "Dense passage retrieval (Karpukhin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "bi-encoder dense retrieval",
+   "quote": null
+  },
+  {
+   "work": "Retrieval-augmented generation (Lewis et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "text RAG generalised to multimodal",
+   "quote": null
+  },
+  {
+   "work": "LAION-400M",
+   "year": 2021,
+   "arxiv": "2111.02114",
+   "relation": "uses-data",
+   "note": "training data and memory",
+   "quote": null
+  },
+  {
+   "work": "Re-Imagen",
+   "year": 2022,
+   "arxiv": "2209.14491",
+   "relation": "baseline",
+   "note": "concurrent, image generation only",
+   "quote": null
+  },
+  {
+   "work": "MuRAG",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent, text generation (QA) only",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "CIDEr comparison",
+   "quote": null
+  },
+  {
+   "work": "DALL-E / Parti",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "FID comparisons",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Our approach, retrieval-augmented multimodal modeling. (a) Overview ... (b) dense retriever ... (c) retrieval-augmented generator",
+   "page": 2,
+   "why": "Whole pipeline: CLIP retriever, mixed-modal encoding, prepend docs, joint loss"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Image generation quality vs training compute",
+   "page": 5,
+   "why": "Shows RA-CM3 below the FID-compute line of DALL-E, CM3, Parti"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "Analysis of our method's design choices",
+   "page": 13,
+   "why": "Ablations of relevance, modality, diversity, alpha"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "One/few-shot image classification via in-context learning",
+   "page": 8,
+   "why": "Shows k-shot ensemble protocol and accuracy table"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2-3",
+   "snippet": "L = L_main + alpha L_retr = -log p(x|m1,...,mK) - alpha log p(m1,...,mK)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells arrive as one value per line; table columns inferred from layout.",
+  "Abstract quote for compute ratio wraps across lines; Fig 2 compute values not given as numbers in text."
+ ]
+}

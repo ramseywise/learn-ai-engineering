@@ -1,0 +1,106 @@
+{
+ "schema": 1,
+ "key": "1506.03099",
+ "pdf": "generative-ai/08-eval/sources/a-2015-scheduled-sampling-sequence-prediction-recurrent.pdf",
+ "bib": {"title": "Scheduled Sampling for Sequence Prediction with Recurrent Neural Networks", "authors": ["Samy Bengio","Oriol Vinyals","Navdeep Jaitly","Noam Shazeer"], "first_author": "Bengio", "year": 2015, "venue": "preprint", "arxiv": "1506.03099", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 33689, "chars_total": 33689, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How can the mismatch between training (true previous token fed) and inference (model's own previous token fed) in recurrent sequence generators be reduced?",
+ "hypothesis": "Gradually moving training from feeding true previous tokens to feeding the model's own samples makes the model robust to its own mistakes and improves inference quality.",
+ "contributions": ["Scheduled Sampling: a curriculum that flips a coin per token to feed the true or the model-generated previous token, with a decaying probability of truth", "Experiments on image captioning, constituency parsing and speech recognition", "Used in the winning entry of the 2015 MSCOCO captioning challenge"],
+ "method": {
+  "summary": "During mini-batch SGD training of an RNN/LSTM sequence model, for each token a coin is flipped: with probability eps_i the true previous token is the input, otherwise a token sampled (or argmax) from the model. eps_i decays over training by a linear, exponential or inverse-sigmoid schedule. Gradient is not propagated through the sampling decision.",
+  "task": "sequence prediction (image captioning, constituency parsing, framewise speech recognition)",
+  "trains": true,
+  "datasets": [
+   {"name": "MSCOCO captions", "role": "both", "size": "75k training images, 5 captions each", "split": "75k train, separate 5k-image development set", "source": "Lin et al. 2014", "preprocessing": "image embedded by a pretrained CNN (without last classification layer) similar to Ioffe and Szegedy; embedding treated as the first word; one of 5 captions picked at random per example"},
+   {"name": "WSJ parsing data", "role": "both", "size": "40k training instances", "split": "F1 reported on WSJ 22 development set", "source": "Hovy et al. 2006", "preprocessing": "parse tree linearised to a sequence of operations (Vinyals et al. 2014)"},
+   {"name": "TIMIT", "role": "both", "size": "3696 train, 400 validation, 192 test sequences; average length 304 frames", "split": "3696/400/192", "source": "LDC93S1", "preprocessing": "40-dim log Mel filter banks plus first and second derivatives; 180-dim targets per frame from forced alignment with a GMM-HMM (Kaldi)"}
+  ],
+  "models": [
+   {"name": "Captioning LSTM", "role": "proposed", "params": null, "architecture": "one-layer LSTM, image embedding as first input", "init_from": "CNN image encoder pretrained", "tokenizer": null, "vocab": "8857 words", "layers": "1", "hidden": "512", "heads": null, "context": null, "other": {"embedding": "512"}},
+   {"name": "Parsing LSTM with attention", "role": "proposed", "params": null, "architecture": "one-layer LSTM with attention (Bahdanau et al.)", "init_from": null, "tokenizer": null, "vocab": "input ~90k words, target 128 symbols", "layers": "1", "hidden": "512", "heads": null, "context": null, "other": {"embedding": "512"}},
+   {"name": "Speech LSTM", "role": "proposed", "params": null, "architecture": "two-layer LSTM plus softmax, framewise with acoustic input x_t", "init_from": null, "tokenizer": null, "vocab": "180 targets", "layers": "2", "hidden": "250 cells per layer", "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "maximise log likelihood of target sequence (Eq 4) with previous-token input chosen by scheduled sampling",
+   "optimizer": "mini-batch SGD (no further detail)",
+   "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null,
+   "steps": null,
+   "epochs": "speech: eps ramped linearly over ten epochs then held; baseline best validation at about 14 epochs, sampling models about 9 epochs",
+   "tokens": null, "seq_len": null, "precision": null, "weight_decay": null,
+   "dropout": "dropout variants compared for captioning and parsing; rate not stated",
+   "regularisation": null, "hardware": null, "compute": "not meaningfully slower or faster to train than baseline (footnote 3)", "wall_clock": null,
+   "seeds": "speech: 3 models per configuration, average reported; others not stated",
+   "other": {"schedule_captioning": "inverse sigmoid decay", "schedule_parsing": "inverse sigmoid decay", "schedule_speech": "linear from eps_s to eps_e over ten epochs then constant", "schedule_formulas": "linear max(eps, k-ci); exponential k^i; inverse sigmoid k/(k+exp(i/k))", "schedule_constants": "k, c not stated", "coin": "flipped per token; per sequence was much worse", "sampling": "sample from P or argmax", "model_selection_speech": "validation set chooses best epoch"}
+  },
+  "inference": {
+   "decoding": "beam search; beam size 10 for speech; captioning and parsing beam size not stated",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "speech: average over 3 trained models",
+   "prompting": null, "retrieval": null, "parameters": {}, "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BLEU-4, METEOR, CIDER", "definition": "overlap between generated and target captions; best over the 5 references", "unit": "score", "higher_is_better": true},
+    {"name": "F1", "definition": "parse F1 on WSJ 22", "unit": "F1", "higher_is_better": true},
+    {"name": "Frame Error Rate", "definition": "next step: ground truth fed to predict next frame class (validation); decoding: beam search best sequence (test)", "unit": "%", "higher_is_better": false}
+   ],
+   "baselines": ["Baseline", "Baseline with dropout", "Always Sampling", "Uniform Scheduled Sampling", "Baseline ensemble of 10"],
+   "protocol": "single development set per task; no significance tests reported"
+  },
+  "availability": {"code": null, "weights": null, "data": "public datasets"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Scheduled sampling raises captioning BLEU-4 over the baseline", "kind": "measured", "source": null, "metric": "BLEU-4", "value": "30.6", "unit": "BLEU-4", "baseline_value": "28.8", "n": null, "setup": "MSCOCO dev 5k, LSTM 512, inverse sigmoid schedule", "quote": null, "table": "Table 1, row Scheduled Sampling, column BLEU-4; baseline 28.8", "note": null, "where": "Table 1"},
+  {"claim": "Scheduled sampling raises captioning CIDER over the baseline", "kind": "measured", "source": null, "metric": "CIDER", "value": "92.1", "unit": "CIDER", "baseline_value": "89.5", "n": null, "setup": "MSCOCO dev 5k", "quote": null, "table": "Table 1, row Scheduled Sampling, column CIDER; baseline 89.5", "note": null, "where": "Table 1"},
+  {"claim": "Always Sampling collapses captioning quality", "kind": "measured", "source": null, "metric": "BLEU-4", "value": "11.2", "unit": "BLEU-4", "baseline_value": "28.8", "n": null, "setup": "MSCOCO dev", "quote": null, "table": "Table 1, row Always Sampling, column BLEU-4", "note": null, "where": "Table 1"},
+  {"claim": "Uniform scheduled sampling (random tokens) beats baseline but less than model sampling, so gain is not mere regularisation", "kind": "measured", "source": null, "metric": "BLEU-4", "value": "29.2", "unit": "BLEU-4", "baseline_value": "28.8", "n": null, "setup": "MSCOCO dev", "quote": null, "table": "Table 1, row Uniform Scheduled Sampling, column BLEU-4", "note": null, "where": "Table 1"},
+  {"claim": "Ensemble of 5 scheduled-sampling models beats ensemble of 10 baselines on BLEU-4", "kind": "measured", "source": null, "metric": "BLEU-4", "value": "32.3", "unit": "BLEU-4", "baseline_value": "30.7", "n": null, "setup": "MSCOCO dev", "quote": null, "table": "Table 1, row Scheduled Sampling ensemble of 5, column BLEU-4; baseline ensemble of 10 is 30.7", "note": null, "where": "Table 1"},
+  {"claim": "Dropout hurt captioning metrics", "kind": "measured", "source": null, "metric": "CIDER", "value": "87.0", "unit": "CIDER", "baseline_value": "89.5", "n": null, "setup": "MSCOCO dev", "quote": null, "table": "Table 1, row Baseline with Dropout, column CIDER", "note": null, "where": "Table 1"},
+  {"claim": "Entry using scheduled sampling ranked first in the 2015 MSCOCO captioning challenge", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "MSCOCO 2015 challenge final leaderboard", "quote": null, "table": null, "note": "claim only, no score given", "where": "Section 4.1"},
+  {"claim": "Scheduled sampling improves parsing F1 and is additive with dropout", "kind": "measured", "source": null, "metric": "F1", "value": "88.68", "unit": "F1", "baseline_value": "86.54", "n": null, "setup": "WSJ 22 dev, 40k training instances, LSTM 512 with attention", "quote": null, "table": "Table 2, row Scheduled Sampling with Dropout, column F1; Baseline LSTM 86.54, Scheduled Sampling 88.08, Dropout 87.0", "note": null, "where": "Table 2"},
+  {"claim": "Always Sampling in parsing gives often invalid trees (no F1)", "kind": "measured", "source": null, "metric": "F1", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "WSJ 22 dev", "quote": null, "table": null, "note": "Table 2 prints '-'", "where": "Table 2"},
+  {"claim": "Best scheduled sampling config cuts decoding FER versus baseline in speech", "kind": "measured", "source": null, "metric": "Decoding FER", "value": "34.5", "unit": "%", "baseline_value": "46.0", "n": "3 models averaged", "setup": "TIMIT test, 2x250 LSTM, beam 10, eps linear 0.25 to 0", "quote": null, "table": "Table 3, row Scheduled Sampling 1, column Decoding FER; Baseline LSTM 46.0", "note": null, "where": "Table 3"},
+  {"claim": "Baseline has the best next-step FER but worst decoding FER, showing the train/inference gap", "kind": "measured", "source": null, "metric": "Next Step FER", "value": "15.0", "unit": "%", "baseline_value": null, "n": "3 models averaged", "setup": "TIMIT validation (next step)", "quote": null, "table": "Table 3, row Baseline LSTM, column Next Step FER", "note": null, "where": "Table 3"},
+  {"claim": "Always Sampling works well on speech, likely because HMM-state targets are highly redundant", "kind": "measured", "source": null, "metric": "Decoding FER", "value": "35.8", "unit": "%", "baseline_value": "46.0", "n": "3 models averaged", "setup": "TIMIT test", "quote": null, "table": "Table 3, row Always Sampling, column Decoding FER", "note": null, "where": "Table 3"},
+  {"claim": "Mild sampling (eps 0.9 to 0.5) gives intermediate decoding FER", "kind": "measured", "source": null, "metric": "Decoding FER", "value": "42.0", "unit": "%", "baseline_value": "46.0", "n": "3 models averaged", "setup": "TIMIT test", "quote": null, "table": "Table 3, row Scheduled Sampling 3, column Decoding FER", "note": null, "where": "Table 3"}
+ ],
+ "limits": [
+  "Gradient is not back-propagated through the sampling decision; authors say this makes training not exact and may explain validation accuracy dropping after about 9 epochs in speech (future work)",
+  "Hyperparameters (learning rate, batch size, schedule constants k and c, dropout rate, beam size for captioning and parsing) are not given",
+  "Single run per config for captioning and parsing, no significance tests",
+  "Speech results are framewise on HMM-state targets, not comparable to hybrid HMM systems",
+  "Authors cannot say whether the parsing gain comes from reducing mismatch or reducing overfitting",
+  "Later work showed the objective is inconsistent (not stated here; outside source)"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Scheduled Sampling", "definition": "randomly choose, per token during training, between the true previous token (probability eps_i) and the model's own estimate (1-eps_i), with eps_i decayed on a schedule", "where": "Section 2.4"},
+  {"term": "Always Sampling", "definition": "ablation where the model is only fed its own predictions during training", "where": "Section 4.1"},
+  {"term": "Uniform Scheduled Sampling", "definition": "ablation sampling the replacement token from a uniform distribution instead of the model", "where": "Section 4.1"}
+ ],
+ "lineage": [
+  {"work": "Curriculum learning (Bengio, Louradour, Collobert, Weston)", "year": 2009, "arxiv": null, "relation": "extends", "note": "the curriculum idea behind the schedule", "quote": null},
+  {"work": "SEARN (Daume, Langford, Marcu)", "year": 2009, "arxiv": null, "relation": "related", "note": "batch approach to the same train/test mismatch; this is online", "quote": null},
+  {"work": "Ross, Gordon, Bagnell (DAgger)", "year": 2011, "arxiv": null, "relation": "related", "note": "no-regret imitation learning reduction", "quote": null},
+  {"work": "Venkatraman et al.", "year": 2015, "arxiv": null, "relation": "related", "note": "multi-step prediction of learned time series", "quote": null},
+  {"work": "Goldberg and Nivre dynamic oracle", "year": 2012, "arxiv": null, "relation": "related", "note": "perceptron, fixed truth probability", "quote": null},
+  {"work": "Show and Tell (Vinyals et al.)", "year": 2015, "arxiv": "1411.4555", "relation": "baseline", "note": "captioning model basis", "quote": null},
+  {"work": "Grammar as a foreign language", "year": 2014, "arxiv": "1412.7449", "relation": "uses-method", "note": "parsing linearisation", "quote": null},
+  {"work": "Bahdanau et al. attention", "year": 2015, "arxiv": "1409.0473", "relation": "uses-method", "note": "attention in parser", "quote": null},
+  {"work": "Microsoft COCO", "year": 2014, "arxiv": "1405.0312", "relation": "uses-data", "note": "captioning data and metrics", "quote": null},
+  {"work": "TIMIT / Kaldi (Povey et al.)", "year": 2011, "arxiv": null, "relation": "uses-data", "note": "speech data and alignments", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Illustration of the Scheduled Sampling approach, where one flips a coin at every time step to decide to use the true previous token or one sampled from the model itself.", "page": 4, "why": "shows the per-step coin flip"},
+  {"figure": "Fig 2", "caption": "Examples of decay schedules.", "page": 4, "why": "compares linear, exponential and inverse sigmoid decay of eps_i"},
+  {"figure": "Table 3", "caption": "Frame Error Rate (FER) on the speech recognition experiments.", "page": 8, "why": "next-step vs decoding FER shows the train/inference gap"}
+ ],
+ "code": [
+  {"where": "Section 2.4", "snippet": "Inverse sigmoid decay: eps_i = k/(k+exp(i/k)) where k >= 1", "verbatim": false}
+ ],
+ "problems": []
+}

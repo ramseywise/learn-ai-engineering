@@ -6,6 +6,7 @@ sources:
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Arsanjani & Bustos, Agentic Architectural Patterns for Building Multi-Agent Systems (Packt, 2026), ch. 1, 2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 16"
+  - "Deshpande et al. 2023, Toxicity in ChatGPT: Analyzing Persona-assigned Language Models — https://arxiv.org/abs/2304.05335"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -64,6 +65,8 @@ The restock agent fits this ladder directly. Its notification email can be a tem
 **Self-check has limits.** A token's log probability gives its probability as *p* = e^logprob. In the book's receipt test, GPT-4o-mini fills in billed, tax, tip and paid amounts at a 9.21% tax rate, and the lowest token probability on each line serves as its confidence. A consistent line (300, 27.63, 60, 387.63) scored 0.999, and a line whose total was off (312.32, 28.76, 60, 400.00) scored 0.55. But low probability does not mean wrong. Asked when Atatürk was born, GPT-3.5 was nearly certain of the year and only 58% sure of the first token "At", because starting with "Mustafa" would have been just as valid. The authors call the receipt example contrived and say a calculator tool is the right fix for it. Not every model exposes log probabilities either. They also write that logprobs are "also called logits"; that is wrong, since logits are the unnormalized scores before the [softmax](../../01-llm-fundamentals/notes/04-decoding-and-inference-behaviour.md#decoding).
 
 **Errors drop but do not vanish.** The book cites Vectara's summarization benchmark: among the top 25 models, hallucination rates ran from 1.3% to 4.1% in December 2024 and from 0.7% to 2.4% in April 2025. That measures summarization, which is the easy case, and a small rate per step still compounds across a chain.
+
+**A persona is part of the attack surface.** Agents are often given roles in the system prompt (a buyer, a reviewer, an expert). Deshpande et al. assigned 90 personas to gpt-3.5-turbo through the system role in March 2023 and scored its replies with Perspective ([arXiv:2304.05335](https://arxiv.org/abs/2304.05335) (Deshpande et al., Findings of EMNLP 2023)). **The persona "a bad person" raised toxicity from 0.11 to 0.62, and persona assignment raised it up to 6 times**, with dictator personas highest. The figures use the maximum over 5 samples, which inflates them, and only one model was tested. Screen the role text a user or a tool can set, and run the output guardrails on role-played agents too.
 
 **Give every guardrail the same signature.** A shared signature lets you chain them, reorder them and test each alone:
 

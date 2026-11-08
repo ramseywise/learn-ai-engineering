@@ -9,6 +9,9 @@ sources:
   - https://arxiv.org/abs/2304.03442
   - https://arxiv.org/abs/2505.22101
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
+  - "Zhong et al. 2024, MemoryBank: Enhancing Large Language Models with Long-Term Memory — https://arxiv.org/abs/2305.10250"
+  - "Bulatov et al. 2022, Recurrent Memory Transformer — https://arxiv.org/abs/2207.06881"
+  - "Wang et al. 2023, Enhancing Large Language Model with Self-Controlled Memory Framework — https://arxiv.org/abs/2304.13343"
 confidence: high
 cleaned: 2026-11-01
   - Schuurmans 2023, Memory Augmented Large Language Models are Computationally Universal — https://arxiv.org/abs/2301.04589
@@ -368,6 +371,19 @@ better_prompt = optimizer.invoke({
 ```
 
 RAISE ([arXiv:2401.02777](https://arxiv.org/abs/2401.02777) (Liu et al., 2024-01, preprint)) is a small worked case of prompt-assembled memory rather than paging. It extends ReAct with a scratchpad (dialogue-level, short-term) and retrieved examples (turn-level, long-term). In the fine-tuned Qwen-14B-Chat block, quality rose step by step as each was added: ReAct 7.52, plus scratchpad 7.61, plus examples 7.66, RAISE 7.71 (100 held-out real-estate chat scenes, human-scored, 848 training scenes). Under GPT-4 prompting RAISE (7.69) did not beat ReAct plus examples (7.72), so the memory gain is small and shows mainly after fine-tuning; one in-house dataset, no significance test, and no long-conversation test.
+
+MemoryBank adds forgetting to the store ([arXiv:2305.10250](https://arxiv.org/abs/2305.10250) (Zhong et al., AAAI 2024)). It keeps timestamped dialogues, daily event summaries and a user portrait, retrieves with a dual-tower encoder over FAISS, and weakens a memory as R = e^(-t/S), where S rises by 1 each time it is recalled.
+
+![MemoryBank's storage of conversations, event summaries and user portrait, its forgetting-curve updater, and the companion bot that reads it](../sources/images/zhong-memorybank-fig1.png)
+
+*Image Source: Zhong et al., [MemoryBank: Enhancing Large Language Models with Long-Term Memory](https://arxiv.org/abs/2305.10250) (2024), Fig. 1*
+
+The evidence is thin. On 97 English probing questions over 10 simulated days with 15 ChatGPT-played users, the ChatGPT-backed companion scored 0.716 on correctness against 0.479 for the BELLE-backed one, but that compares backbones. There is no run without memory and none without forgetting, and the authors call the updater "exploratory and highly simplified".
+
+SCM adds a controller that decides when memory is worth reading ([arXiv:2304.13343](https://arxiv.org/abs/2304.13343) (Wang et al., 2023-04, preprint)). A prompted LLM decides whether to retrieve, ranks memories by recency and relevance, and chooses full text or summary for each. On 105 questions over 18 dialogues of up to 200 turns (34k tokens), using text-davinci-003, **removing the controller cost 17.8 points of answer accuracy (77.1 to 59.3), removing the retrieved-memory slot collapsed it to 10.5, and removing the previous-turn buffer cost only 4.2**. The benchmark is small, and the authors name 200 turns as the longest tested.
+
+The Recurrent Memory Transformer moves the memory into the activations ([arXiv:2207.06881](https://arxiv.org/abs/2207.06881) (Bulatov et al., NeurIPS 2022)). A few memory tokens are read at the start of each text segment and written at its end, then handed to the next segment. On WikiText-103 (16 layers, segments of 150 tokens), **10 memory vectors reached perplexity 25.04 against 25.57 for Transformer-XL caching 25 states per layer**. That match is not like for like, since Transformer-XL stores every layer and RMT only the input. The models are small, and RMT matched rather than beat Transformer-XL, with the best result from using both.
+
 
 ---
 

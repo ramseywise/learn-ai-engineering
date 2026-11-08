@@ -1,0 +1,613 @@
+{
+ "schema": 1,
+ "key": "2402.03216",
+ "pdf": "generative-ai/02-rag-retrieval/sources/chen-2024-m3-embedding.pdf",
+ "bib": {
+  "title": "M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation",
+  "authors": [
+   "Jianlv Chen",
+   "Shitao Xiao",
+   "Peitian Zhang",
+   "Kun Luo",
+   "Defu Lian",
+   "Zheng Liu"
+  ],
+  "first_author": "Chen",
+  "year": 2024,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2024, pages 2318-2335",
+  "arxiv": "2402.03216",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69502,
+  "chars_total": 69502,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only for lineage."
+ },
+ "type": "empirical",
+ "question": "Can one embedding model support 100+ languages, dense, sparse and multi-vector retrieval, and inputs up to 8192 tokens, and does combining the three scores help?",
+ "hypothesis": "Relevance scores from heterogeneous retrieval functions can be integrated as a teacher signal so the functions reinforce rather than conflict, and hybrid scoring beats each alone.",
+ "contributions": [
+  "M3-Embedding with unified multi-linguality, multi-functionality, multi-granularity",
+  "Self-knowledge distillation training framework and efficient batching, plus data curation",
+  "Model, code and data publicly released"
+ ],
+ "method": {
+  "summary": "XLM-RoBERTa-large extended to 8192 positions and adapted with RetroMAE, then contrastively pre-trained on 1.2B multilingual pairs (dense only) and fine-tuned with self-knowledge distillation where the weighted sum of dense, lexical and multi-vector scores teaches each head. Hybrid retrieval re-ranks with a weighted sum of the three scores.",
+  "task": "multilingual, cross-lingual and long-document retrieval with a single embedding model",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Unsupervised pre-training data",
+    "role": "train",
+    "size": "1.2B text pairs, 194 languages, 2655 cross-lingual correspondences",
+    "split": null,
+    "source": "MTP 291.1M (EN,ZH); S2ORC+Wikipedia 48.3M (EN); xP3, mC4, CC-News 488.4M (multilingual); NLLB, CCMatrix 391.3M (cross-lingual); CodeSearchNet 344.1K",
+    "preprocessing": "filtered for bad content and low relevance; for long texts, with probability 0.2% a passage is split into three segments and shuffled"
+   },
+   {
+    "name": "Labeled fine-tuning data",
+    "role": "train",
+    "size": "EN 1.1M; ZH 386.6K; MIRACL+Mr.TyDi 88.9K",
+    "split": null,
+    "source": "EN: HotpotQA, TriviaQA, NQ, MS MARCO, COLIEE, PubMedQA, SQuAD, SimCSE NLI; ZH: DuReader, mMARCO-ZH, T2-Ranking, LawGPT, CMedQAv2, NLI-zh, LeCaRDv2",
+    "preprocessing": "7 hard negatives per query (ANCE method)"
+   },
+   {
+    "name": "MultiLongDoc (synthetic)",
+    "role": "both",
+    "size": "41.4K train; Table 7: 41,434 train, 2,600 dev, 3,800 test, 493,709 corpus docs, 13 languages",
+    "split": "train/dev/test",
+    "source": "Wikipedia, Wudao, mC4 articles; GPT-3.5 generates one question per sampled paragraph; question paired with the full article",
+    "preprocessing": null
+   },
+   {
+    "name": "MIRACL",
+    "role": "eval",
+    "size": "18 languages",
+    "split": "dev",
+    "source": "Zhang et al. 2023c",
+    "preprocessing": "Pyserini evaluation"
+   },
+   {
+    "name": "MKQA",
+    "role": "eval",
+    "size": "25 non-English query languages vs English Wikipedia (BEIR NQ corpus)",
+    "split": null,
+    "source": "Longpre et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "MLDR",
+    "role": "eval",
+    "size": "13 languages, test 3,800 queries",
+    "split": "test",
+    "source": "MultiLongDoc",
+    "preprocessing": null
+   },
+   {
+    "name": "NarrativeQA",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "English long-doc retrieval",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "M3-Embedding",
+    "role": "proposed",
+    "params": null,
+    "architecture": "XLM-RoBERTa-large encoder, max position extended to 8192; CLS embedding for dense, ReLU(W_lex h) per-token weight for sparse, projection W_mul for ColBERT-style multi-vector",
+    "init_from": "XLM-RoBERTa-large, further adapted with RetroMAE",
+    "tokenizer": "XLM-RoBERTa",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "8192 tokens",
+    "other": {}
+   },
+   {
+    "name": "BM25",
+    "role": "baseline",
+    "params": null,
+    "architecture": "lexical",
+    "init_from": null,
+    "tokenizer": "XLM-R tokenizer (main) or Lucene Analyzer (Table 11)",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "mDPR, mContriever, mE5-large, E5-mistral-7b, OpenAI text-embedding-3-large, ada-002, jina-embeddings-v2-base-en",
+    "role": "baseline",
+    "params": "E5-mistral 7B; others not stated",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "InfoNCE per retrieval function plus self-knowledge distillation: L_final=(L+L')/2, with teacher s_inter=w1*s_dense+w2*s_lex+w3*s_mul and L'=-p(s_inter)*log p(s_*); L=(l1 Ldense+l2 Llex+l3 Lmul+Linter)/4",
+   "optimizer": null,
+   "lr": "RetroMAE stage 7e-5; unsupervised stage 5e-5; fine-tune lr not stated",
+   "lr_schedule": null,
+   "warmup": "unsupervised stage warmup ratio 0.1; fine-tune: about 6000 warm-up steps training dense/sparse/multi-vector before unified SKD training",
+   "batch_size": "RetroMAE batch 32 with gradient accumulation 16; unsupervised and fine-tune total batch sizes vary by length from 67,200 to 9,984 and 1,152 to 192 (Table 9)",
+   "steps": "RetroMAE 20,000; unsupervised 25,000; fine-tune not stated",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "RetroMAE 8192; unsupervised query 512, passage 8192",
+   "precision": null,
+   "weight_decay": "0.01 (unsupervised stage)",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "RetroMAE 32 A100 40GB; unsupervised 96 A800 80GB; fine-tune 24 A800 80GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "loss_weights": "w1=1,w2=0.3,w3=1; lambda1=1,lambda2=0.1,lambda3=1",
+    "retromae_data": "184M samples from Pile, Wudao, mC4, 105 languages",
+    "temperature_tau": "not stated",
+    "negatives": "7 per query in fine-tuning",
+    "efficient_batching": "group by length, split-batch with gradient checkpointing, cross-GPU embedding broadcast; batch size per device at length 8192 rises 6 -> 130 (Table 10)",
+    "MCLS": "insert a [CLS] every 256 tokens at inference and average last hidden states; no training"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; no seeds or significance test stated",
+   "prompting": "GPT-3.5 for synthetic questions only",
+   "retrieval": "Dense: Faiss top-1000. Sparse: Lucene index top-1000. Multi-vec: rerank top-200 of dense. Dense+Sparse: rerank union of top-1000 each. All: rerank top-200 of dense.",
+   "parameters": {
+    "MIRACL and MKQA Dense+Sparse": "w1=1,w2=0.3,w3=0",
+    "MIRACL and MKQA All": "w1=1,w2=0.3,w3=1",
+    "MLDR Dense+Sparse": "w1=0.2,w2=0.8,w3=0",
+    "MLDR All": "w1=0.15,w2=0.5,w3=0.35"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "nDCG@10",
+     "definition": "primary for MIRACL, MLDR, NarrativeQA",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@100",
+     "definition": "primary for MKQA; Recall@20 in appendix",
+     "unit": "points",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BM25",
+    "mDPR",
+    "mContriever",
+    "mE5-large",
+    "E5-mistral-7b",
+    "OpenAI text-embedding-3-large",
+    "text-embedding-ada-002",
+    "jina-embeddings-v2-base-en"
+   ],
+   "protocol": "Single reported run per cell; BM25 uses the XLM-R tokenizer for comparability; no significance tests stated."
+  },
+  "availability": {
+   "code": "https://github.com/FlagOpen/FlagEmbedding",
+   "weights": "https://github.com/FlagOpen/FlagEmbedding",
+   "data": "https://github.com/FlagOpen/FlagEmbedding"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT-3.5 synthetic question generation for MultiLongDoc",
+    "text": "You are a curious AI assistant, please generate one specific and valuable question based on the following text. The generated question should revolve around the core content of this text, and avoid using pronouns (e.g., \"this\"). Note that you should generate only one question, without including additional content:",
+    "where": "Appendix A.2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On MIRACL dev, all three retrieval functions combined give the best average nDCG@10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 71.5,
+   "unit": "points",
+   "baseline_value": 31.9,
+   "n": null,
+   "setup": "MIRACL dev, 18 languages, M3 All (w1=1,w2=0.3,w3=1, rerank top-200 dense)",
+   "note": "baseline is BM25 with XLM-R tokenizer; 38.5 with Lucene analyzer (Table 11)",
+   "where": "Table 1",
+   "table": "Table 1, row All, column Avg"
+  },
+  {
+   "claim": "M3 dense alone beats mE5-large on MIRACL average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 69.2,
+   "unit": "points",
+   "baseline_value": 66.6,
+   "n": null,
+   "setup": "MIRACL dev, M3 Dense",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dense, column Avg"
+  },
+  {
+   "claim": "M3 sparse alone beats BM25 on MIRACL average (same XLM-R tokenizer) but is far below dense.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 53.9,
+   "unit": "points",
+   "baseline_value": 31.9,
+   "n": null,
+   "setup": "MIRACL dev, M3 Sparse",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Sparse, column Avg"
+  },
+  {
+   "claim": "Dense+Sparse hybrid improves over dense alone on MIRACL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 70.4,
+   "unit": "points",
+   "baseline_value": 69.2,
+   "n": null,
+   "setup": "MIRACL dev, w1=1,w2=0.3",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Dense+Sparse, column Avg"
+  },
+  {
+   "claim": "Multi-vector reranking of dense top-200 beats dense on MIRACL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 70.5,
+   "unit": "points",
+   "baseline_value": 69.2,
+   "n": null,
+   "setup": "MIRACL dev",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Multi-vec, column Avg"
+  },
+  {
+   "claim": "On MKQA cross-lingual retrieval, All gives the best Recall@100.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 75.5,
+   "unit": "points",
+   "baseline_value": 39.9,
+   "n": null,
+   "setup": "MKQA, 25 query languages vs English Wikipedia",
+   "note": "baseline is BM25",
+   "where": "Table 2",
+   "table": "Table 2, row Avg, column All"
+  },
+  {
+   "claim": "On MKQA, M3 sparse is poor because query and passage share few terms across languages.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Recall@100",
+   "value": 45.3,
+   "unit": "points",
+   "baseline_value": 39.9,
+   "n": null,
+   "setup": "MKQA, M3 Sparse",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Avg, column Sparse"
+  },
+  {
+   "claim": "On long documents (MLDR) sparse beats dense by about 10 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 62.2,
+   "unit": "points",
+   "baseline_value": 52.5,
+   "n": null,
+   "setup": "MLDR test, 13 languages, 8192 tokens, M3 Sparse",
+   "note": "baseline is M3 Dense",
+   "where": "Table 3",
+   "quote": "which achieves another about 10 points improvement over the dense method",
+   "table": "Table 3, row Sparse, column Avg"
+  },
+  {
+   "claim": "On MLDR, All gives the best average and Dense+Sparse (w1=0.2,w2=0.8) nearly matches.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 65.0,
+   "unit": "points",
+   "baseline_value": 53.6,
+   "n": null,
+   "setup": "MLDR test, M3 All (w1=0.15,w2=0.5,w3=0.35)",
+   "note": "baseline is BM25 with XLM-R tokenizer, max length 8192; Dense+Sparse is 64.8",
+   "where": "Sec 4.3",
+   "quote": "remarkable average performance of 65.0"
+  },
+  {
+   "claim": "BM25 with the Lucene analyzer beats M3 sparse on MLDR; BM25 remains a strong baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 64.1,
+   "unit": "points",
+   "baseline_value": 62.2,
+   "n": null,
+   "setup": "MLDR, BM25 with Lucene Analyzer",
+   "note": "baseline is M3 Sparse with XLM-R tokenizer; M3 All is 65.0",
+   "where": "Table 11",
+   "quote": "This suggests that BM25 remains a highly competitive baseline model.",
+   "table": "Table 11, row BM25 Analyzer, column MLDR"
+  },
+  {
+   "claim": "On NarrativeQA, All is best and beats E5-mistral-7b and text-embedding-3-large.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 61.7,
+   "unit": "points",
+   "baseline_value": 51.6,
+   "n": null,
+   "setup": "NarrativeQA, M3 All, 8192 tokens",
+   "note": "baseline is text-embedding-3-large",
+   "where": "Table 4",
+   "table": "Table 4, row All, column nDCG@10"
+  },
+  {
+   "claim": "Removing self-knowledge distillation collapses the sparse head on MIRACL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 36.7,
+   "unit": "points",
+   "baseline_value": 53.9,
+   "n": null,
+   "setup": "MIRACL dev, M3 sparse trained without skd",
+   "note": "baseline is with skd; dense 68.7 vs 69.2, multi-vec 69.3 vs 70.5",
+   "where": "Table 5",
+   "quote": "the impact is more pronounced for sparse retrieval",
+   "table": "Table 5, row M3-w.o.skd Sparse"
+  },
+  {
+   "claim": "RetroMAE adaptation and unsupervised pre-training each raise dense MIRACL nDCG@10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 69.2,
+   "unit": "points",
+   "baseline_value": 60.5,
+   "n": null,
+   "setup": "MIRACL dev, Dense: fine-tune only 60.5; RetroMAE+fine-tune 66.1; RetroMAE+Unsup+fine-tune 69.2",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row RetroMAE + Unsup + Fine-tune"
+  },
+  {
+   "claim": "MCLS (training-free multiple CLS tokens) improves long-doc dense retrieval for a model not fine-tuned on long data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "nDCG@10",
+   "value": 45.0,
+   "unit": "points",
+   "baseline_value": 41.2,
+   "n": null,
+   "setup": "MLDR test, Dense-w.o.long with MCLS vs without",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "MCLS can significantly improve the performance of document retrieval without training (41.2 \u2192 45.0)"
+  },
+  {
+   "claim": "Split-batch lets the per-device batch size grow by over 20x at length 8192.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max batch per device",
+   "value": 130,
+   "unit": "sequences",
+   "baseline_value": 6,
+   "n": null,
+   "setup": "Length 8192, with vs without split-batch",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, length 8192, split-batch enabled"
+  },
+  {
+   "claim": "Lucene analyzer yields 37% more unique terms per MLDR article than the XLM-R tokenizer, raising latency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unique terms per article",
+   "value": 1451,
+   "unit": "terms",
+   "baseline_value": 1056,
+   "n": null,
+   "setup": "MLDR, Lucene analyzer vs XLM-R tokenizer (1056)",
+   "note": null,
+   "where": "App C.2",
+   "quote": "the tokenizer of XLM-RoBERTa produces 1056 unique terms per article, while Lucene\u2019s analyzer gen-\nerates 1451 unique terms"
+  }
+ ],
+ "limits": [
+  "Authors concede generalisation beyond MIRACL/MKQA to other datasets and real-world scenarios is untested.",
+  "Performance on documents over 8192 tokens or extremely long documents is not studied.",
+  "Per-language variation across the claimed 100+ languages is not thoroughly analysed.",
+  "Fusion weights w1..w3 are hand-set per benchmark (different for MLDR vs MIRACL), no tuning procedure given.",
+  "No seeds, variance or significance tests; parameter count, fine-tune lr, tau and optimizer not stated.",
+  "Hybrid All uses only top-200 dense candidates; recall of the pipeline is bounded by the dense first stage.",
+  "BM25 baseline in main tables uses XLM-R tokenizer; with Lucene analyzer BM25 is stronger (MLDR 64.1 vs M3 sparse 62.2).",
+  "Hybrid here fuses learned scores from one model, not independent BM25 and dense systems."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MCLS",
+   "definition": "insert multiple CLS tokens (one per 256 tokens) into a long document at inference and average their embeddings",
+   "where": "App B.2"
+  },
+  {
+   "term": "self-knowledge distillation",
+   "definition": "the integrated relevance score from dense, lexical and multi-vector functions is used as teacher for each function",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "XLM-RoBERTa",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base encoder (Conneau et al., 2020)",
+   "quote": null
+  },
+  {
+   "work": "RetroMAE",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "pre-training adaptation (Xiao et al., 2022)",
+   "quote": null
+  },
+  {
+   "work": "ColBERT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "late-interaction multi-vector score (Khattab and Zaharia, 2020)",
+   "quote": null
+  },
+  {
+   "work": "ANCE",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "hard negative sampling (Xiong et al., 2020)",
+   "quote": null
+  },
+  {
+   "work": "BM25",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Robertson and Zaragoza",
+   "quote": null
+  },
+  {
+   "work": "mE5 / E5-mistral-7b",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Wang et al. 2022, 2023",
+   "quote": null
+  },
+  {
+   "work": "mDPR / mContriever",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Zhang et al. 2023b; Izacard et al. 2022",
+   "quote": null
+  },
+  {
+   "work": "MIRACL",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Zhang et al. 2023c",
+   "quote": null
+  },
+  {
+   "work": "MKQA",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Longpre et al. 2021",
+   "quote": null
+  },
+  {
+   "work": "NarrativeQA",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Kocisky et al. 2018",
+   "quote": null
+  },
+  {
+   "work": "jina-embeddings-v2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Gunther et al. 2023",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Multi-stage training process of M3-Embedding with self-knowledge distillation.",
+   "page": 4,
+   "why": "shows pre-training then fine-tuning with dense/lex/multi-vec scores feeding the teacher"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Efficient Batching.",
+   "page": 5,
+   "why": "length-grouped batches and split-batch"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Multi-lingual retrieval performance on the MIRACL dev set (nDCG@10).",
+   "page": 5,
+   "why": "dense vs sparse vs multi-vec vs hybrid per language"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Evaluation of multilingual long-doc retrieval on the MLDR test set (nDCG@10).",
+   "page": 7,
+   "why": "sparse beats dense on long docs; hybrid best"
+  },
+  {
+   "figure": "Table 11",
+   "caption": "Comparison with the BM25 methods using different tokenizers.",
+   "page": 14,
+   "why": "BM25 stays competitive"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.2 Eq 1",
+   "snippet": "s_rank <- w1*s_dense + w2*s_lex + w3*s_mul",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure page numbers for tables are approximate (PDF page = printed page minus 2318 plus 1).",
+  "No embedded instructions found."
+ ]
+}

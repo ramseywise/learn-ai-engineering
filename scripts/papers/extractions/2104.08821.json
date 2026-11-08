@@ -1,0 +1,641 @@
+{
+ "schema": 1,
+ "key": "2104.08821",
+ "pdf": "generative-ai/02-rag-retrieval/sources/gao-2021-simcse.pdf",
+ "bib": {
+  "title": "SimCSE: Simple Contrastive Learning of Sentence Embeddings",
+  "authors": [
+   "Tianyu Gao",
+   "Xingcheng Yao",
+   "Danqi Chen"
+  ],
+  "first_author": "Gao",
+  "year": 2021,
+  "venue": "EMNLP 2021",
+  "arxiv": "2104.08821",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 69287,
+  "chars_total": 69287,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a simple contrastive objective on pre-trained language models produce much better sentence embeddings, with or without labeled data?",
+ "hypothesis": "Dropout noise alone can serve as minimal data augmentation for a self-prediction contrastive objective; NLI entailment pairs plus contradiction hard negatives further improve alignment; the contrastive objective flattens the anisotropic embedding spectrum.",
+ "contributions": [
+  "Unsupervised SimCSE: predict the sentence itself with two dropout masks as positive pair",
+  "Supervised SimCSE: NLI entailment as positives, contradiction as hard negatives",
+  "Alignment/uniformity and singular-spectrum analysis linking contrastive learning to anisotropy",
+  "Consolidated STS evaluation settings (regressor, Spearman vs Pearson, aggregation)"
+ ],
+ "method": {
+  "summary": "Fine-tune all parameters of pre-trained BERT/RoBERTa with an in-batch-negative cross-entropy contrastive loss on cosine similarity with temperature. Unsupervised: same sentence encoded twice with different dropout masks. Supervised: NLI entailment pairs as positives, contradiction hypotheses as hard negatives.",
+  "task": "sentence embedding learning, evaluated on semantic textual similarity (STS) and transfer tasks",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English Wikipedia sentences",
+    "role": "train",
+    "size": "10^6 randomly sampled sentences",
+    "split": "unsupervised SimCSE training",
+    "source": "English Wikipedia",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI + MNLI",
+    "role": "train",
+    "size": "314k entailment pairs (942k all)",
+    "split": "entailment pairs as positives, contradiction as hard negatives",
+    "source": "Bowman et al. 2015; Williams et al. 2018",
+    "preprocessing": "one contradiction hypothesis sampled per premise"
+   },
+   {
+    "name": "STS 2012-2016, STS-B, SICK-R",
+    "role": "eval",
+    "size": null,
+    "split": "STS-B development set for model selection and ablations; test sets for final results; no STS training sets used",
+    "source": "Agirre et al. 2012-2016; Cer et al. 2017; Marelli et al. 2014",
+    "preprocessing": "no additional regressor, Spearman, 'all' aggregation"
+   },
+   {
+    "name": "SentEval transfer tasks (MR, CR, SUBJ, MPQA, SST, TREC, MRPC)",
+    "role": "eval",
+    "size": null,
+    "split": "logistic regression on frozen embeddings, SentEval defaults",
+    "source": "Conneau and Kiela 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Flickr30k captions",
+    "role": "eval",
+    "size": "150k captions",
+    "split": "small qualitative retrieval by cosine similarity",
+    "source": "Young et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SimCSE (BERT-base/large, RoBERTa-base/large)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT uncased / RoBERTa cased encoder, [CLS] with MLP pooler",
+    "init_from": "pre-trained BERT / RoBERTa checkpoints",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout": "default p=0.1 on FC layers and attention probs, no extra dropout",
+     "pooling": "unsup: [CLS] with MLP in training, MLP removed at test; sup: [CLS] with MLP"
+    }
+   }
+  ],
+  "training": {
+   "objective": "in-batch contrastive cross-entropy on cosine sim / tau; Eq 4 (unsup), Eq 5 (sup with hard negatives); tau=0.05",
+   "optimizer": null,
+   "lr": "Table A.1, six columns in text order: 3e-5, 1e-5, 1e-5, 3e-5, 5e-5, 1e-5; column-to-model mapping ambiguous in the text layer (see problems)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "Table A.1, six columns in text order: 64, 64, 512, 512, 512, 512; mapping ambiguous (see problems)",
+   "steps": "evaluate on STS-B dev every 250 steps, keep best checkpoint",
+   "epochs": "1 unsupervised, 3 supervised",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (default Transformer)",
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "grid_search": "batch size in {64,128,256,512}, lr in {1e-5,3e-5,5e-5} on STS-B dev",
+    "mlm_aux": "optional loss + lambda*MLM; lambda=0.1 in transfer-task table",
+    "hard_negative_weight_alpha": "1.0 best"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated; appears single run",
+   "prompting": null,
+   "retrieval": "Flickr30k qualitative: random caption query, cosine similarity over 150k captions",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Spearman correlation on STS",
+     "definition": "rank correlation between cosine similarity of embeddings and human scores, 'all' aggregation (concatenate subsets)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "alignment",
+     "definition": "E||f(x)-f(x+)|| squared over positive pairs (STS-B score>4), normalised embeddings",
+     "unit": "distance",
+     "higher_is_better": false
+    },
+    {
+     "name": "uniformity",
+     "definition": "log E exp(-2||f(x)-f(y)||^2) over all STS-B sentences",
+     "unit": "log value",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "avg GloVe",
+    "BERT/RoBERTa first-last avg",
+    "BERT-flow",
+    "BERT-whitening",
+    "IS-BERT",
+    "CT-BERT",
+    "DeCLUTR",
+    "InferSent",
+    "Universal Sentence Encoder",
+    "SBERT / SRoBERTa"
+   ],
+   "protocol": "STS-B dev used for ablations and checkpoint choice; no STS training data; baselines re-evaluated in same setting where possible; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/princeton-nlp/SimCSE",
+   "weights": "pre-trained models released (same URL)",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Unsupervised SimCSE-BERTbase averages 76.25 Spearman on 7 STS tasks, up from 72.05 for the previous best (CT-BERT).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 76.25,
+   "unit": "Spearman %",
+   "baseline_value": 72.05,
+   "n": null,
+   "setup": "BERTbase, trained on 1M Wikipedia sentences, STS test, 'all' setting",
+   "quote": null,
+   "table": "Table 5, row *SimCSE-BERTbase (unsupervised), column Avg.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Supervised SimCSE-BERTbase averages 81.57 on STS, a 2.2 point gain over prior best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 81.57,
+   "unit": "Spearman %",
+   "baseline_value": 79.39,
+   "n": null,
+   "setup": "BERTbase, SNLI+MNLI entailment + contradiction hard negatives",
+   "quote": "When using NLI datasets, SimCSE-BERTbase fur-",
+   "table": "Table 5, row *SimCSE-BERTbase (supervised), column Avg.",
+   "note": null,
+   "where": "Table 5; Sec 6.2"
+  },
+  {
+   "claim": "Supervised SimCSE-RoBERTalarge reaches 83.76 average STS.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 83.76,
+   "unit": "Spearman %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTalarge, NLI",
+   "quote": null,
+   "table": "Table 5, row *SimCSE-RoBERTalarge (supervised), column Avg.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Raw BERTbase first-last average embeddings score only 56.70 average STS, below averaged GloVe (61.32).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 56.7,
+   "unit": "Spearman %",
+   "baseline_value": 61.32,
+   "n": null,
+   "setup": "BERTbase, no fine-tuning, cosine similarity",
+   "quote": null,
+   "table": "Table 5, row BERTbase (first-last avg.), column Avg.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Supervised SBERTbase averages 74.89 STS, below supervised SimCSE-BERTbase.",
+   "kind": "reported",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 74.89,
+   "unit": "Spearman %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SBERTbase, results from Reimers and Gurevych 2019",
+   "quote": null,
+   "table": "Table 5, row SBERTbase, column Avg.",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Removing dropout (identical positives) cuts STS-B dev from 82.5 to 71.1; using the same dropout mask on both gives 43.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 43.6,
+   "unit": "Spearman %",
+   "baseline_value": 82.5,
+   "n": null,
+   "setup": "BERTbase unsup SimCSE, STS-B dev",
+   "quote": null,
+   "table": "Table 3, columns p=0.0 and Fixed 0.1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Unsup SimCSE beats next-sentence objectives (82.5 vs 67.4 on STS-B dev) and discrete augmentations such as deleting one word (75.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 82.5,
+   "unit": "Spearman %",
+   "baseline_value": 67.4,
+   "n": null,
+   "setup": "BERTbase, STS-B dev",
+   "quote": "(82.5 vs 67.4 on STS-",
+   "table": "Table 1 and Table 2",
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Dropout 0.1 is best for unsup SimCSE; 0.5 gives 71.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 82.5,
+   "unit": "Spearman %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERTbase STS-B dev",
+   "quote": null,
+   "table": "Table 3, column p=0.1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "NLI entailment pairs are the best positives (84.9 full) versus QQP 81.8, Flickr30k 81.4, ParaNMT 78.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 84.9,
+   "unit": "Spearman %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERTbase STS-B dev, same hyperparameters as final model",
+   "quote": null,
+   "table": "Table 4, row SNLI+MNLI entailment (314k), column full",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "NLI entailment pairs have 39% lexical overlap (F1 of bags of words), versus 60% for QQP and 55% for ParaNMT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 39,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNLI+MNLI entailment pairs",
+   "quote": "is 39%, while they",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Adding contradiction hypotheses as hard negatives lifts STS-B dev from 84.9 to 86.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 86.2,
+   "unit": "Spearman %",
+   "baseline_value": 84.9,
+   "n": null,
+   "setup": "BERTbase supervised, STS-B dev",
+   "quote": "(84.9 →86.2)",
+   "table": "Table 4 last block",
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Neutral hypotheses as extra hard negatives give no gain (85.3 vs 86.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 85.3,
+   "unit": "Spearman %",
+   "baseline_value": 86.2,
+   "n": null,
+   "setup": "BERTbase, STS-B dev, alpha=1",
+   "quote": null,
+   "table": "Table 7, column Contra.+Neutral",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "A dual-encoder variant of supervised SimCSE hurts (86.2 to 84.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.2,
+   "unit": "Spearman %",
+   "baseline_value": 86.2,
+   "n": null,
+   "setup": "BERTbase STS-B dev",
+   "quote": "(86.2 →84.2)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Temperature matters: tau=0.05 gives 86.2, tau=1 gives 64.0; dot product gives 85.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "STS-B dev Spearman",
+   "value": 86.2,
+   "unit": "Spearman %",
+   "baseline_value": null,
+   "n": null,
+   "setup": "supervised BERTbase, STS-B dev",
+   "quote": null,
+   "table": "Table D.1, column 0.05",
+   "note": null,
+   "where": "Table D.1"
+  },
+  {
+   "claim": "Post-processing (flow, whitening) improves uniformity but degrades alignment; SimCSE improves uniformity while keeping alignment, and supervised data further improves alignment.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "alignment/uniformity plot of BERTbase-based models, STS-B pairs; no numeric values printed in text",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7, Fig 3"
+  },
+  {
+   "claim": "Pre-trained embeddings have good alignment but poor uniformity, i.e. they are highly anisotropic.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERTbase, Fig 3",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7"
+  },
+  {
+   "claim": "SimCSE gives more spread cosine similarities across human-rated STS-B similarity groups than BERT/SBERT, with lower variance on similar pairs than whitening.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "STS-B pairs grouped by rating, density plots, Fig G.1",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix G"
+  },
+  {
+   "claim": "SimCSE is not sensitive to batch size when learning rate is tuned, contradicting the claim that contrastive learning needs large batches.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "grid over batch 64-512, lr 1e-5 to 5e-5, STS-B dev; pre-trained init suggested as cause",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "BERT-flow/whitening post-processing hurt SentEval transfer performance relative to base models; STS results alone do not predict transfer.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Appendix E, no numbers printed in text",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Published STS papers use incoherent protocols (regressor, Pearson/Spearman, all/mean/wmean aggregation); e.g. SBERT average is 74.85 under all and 73.55 under wmean.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Avg STS Spearman",
+   "value": 73.55,
+   "unit": "Spearman %",
+   "baseline_value": 74.85,
+   "n": null,
+   "setup": "SBERT reproduced",
+   "quote": null,
+   "table": "Table B.2, row SBERT (wmean), column Avg.",
+   "note": null,
+   "where": "Table B.2"
+  }
+ ],
+ "limits": [
+  "Evaluation is mainly STS (symmetric sentence similarity) and SentEval; no retrieval benchmark such as BEIR or passage retrieval; only a qualitative 150k-caption Flickr30k retrieval example.",
+  "Authors concede STS gains need not transfer: flow/whitening hurt transfer tasks, MLM helps transfer but hurts STS.",
+  "Ablations use STS-B dev, which is also used for checkpoint selection and hyperparameter grid search.",
+  "Single runs; no seeds or significance tests stated.",
+  "English only; sentences, not documents or queries vs passages.",
+  "Hardware, compute, optimizer, warmup and schedule, max sequence length not stated.",
+  "Anisotropy argument (Jensen bound) is asymptotic in number of negatives and assumes positive similarities."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "alignment",
+   "definition": "expected distance between embeddings of paired positive instances",
+   "where": "Sec 2, Eq 2"
+  },
+  {
+   "term": "uniformity",
+   "definition": "how well the embeddings are uniformly distributed on the hypersphere",
+   "where": "Sec 2, Eq 3"
+  },
+  {
+   "term": "anisotropy",
+   "definition": "the learned embeddings occupy a narrow cone in the vector space, which severely limits their expressiveness",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "A Simple Framework for Contrastive Learning of Visual Representations (Chen et al. 2020)",
+   "year": 2020,
+   "arxiv": "2002.05709",
+   "relation": "uses-method",
+   "note": "contrastive cross-entropy with in-batch negatives framework",
+   "quote": null
+  },
+  {
+   "work": "Understanding contrastive representation learning through alignment and uniformity (Wang and Isola 2020)",
+   "year": 2020,
+   "arxiv": "2005.10242",
+   "relation": "uses-method",
+   "note": "alignment and uniformity analysis tools",
+   "quote": null
+  },
+  {
+   "work": "Sentence-BERT (Reimers and Gurevych 2019)",
+   "year": 2019,
+   "arxiv": "1908.10084",
+   "relation": "baseline",
+   "note": "supervised baseline and evaluation setting followed",
+   "quote": null
+  },
+  {
+   "work": "InferSent (Conneau et al. 2017)",
+   "year": 2017,
+   "arxiv": "1705.02364",
+   "relation": "extends",
+   "note": "NLI for sentence embeddings, recast as contrastive",
+   "quote": null
+  },
+  {
+   "work": "BERT-flow (Li et al. 2020)",
+   "year": 2020,
+   "arxiv": "2011.05864",
+   "relation": "baseline",
+   "note": "anisotropy post-processing",
+   "quote": null
+  },
+  {
+   "work": "BERT-whitening (Su et al. 2021)",
+   "year": 2021,
+   "arxiv": "2103.15316",
+   "relation": "baseline",
+   "note": "whitening post-processing",
+   "quote": null
+  },
+  {
+   "work": "Ethayarajh 2019",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "anisotropy of contextual representations",
+   "quote": null
+  },
+  {
+   "work": "Karpukhin et al. 2020 (DPR)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "related",
+   "note": "contrastive dual-encoder with supervised pairs",
+   "quote": null
+  },
+  {
+   "work": "DeCLUTR (Giorgi et al. 2021), CT (Carlsson et al. 2021), IS-BERT (Zhang et al. 2020)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "contrastive unsupervised baselines",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al. 2019); RoBERTa (Liu et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initial encoders",
+   "quote": null
+  },
+  {
+   "work": "SNLI (Bowman et al. 2015); MNLI (Williams et al. 2018)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "supervised pairs",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Unsupervised SimCSE predicts the input sentence itself from in-batch negatives, with different hidden dropout masks applied. (b) Supervised SimCSE leverages the NLI datasets...",
+   "page": 2,
+   "why": "shows both training setups at a glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "l_align-l_uniform plot of models based on BERTbase. Color of points and numbers in brackets represent average STS performance.",
+   "page": 9,
+   "why": "shows pre-trained embeddings aligned but non-uniform, whitening trading alignment for uniformity"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "l_align-l_uniform plot for unsupervised SimCSE, no dropout, fixed 0.1, and delete one word.",
+   "page": 4,
+   "why": "training trajectories showing dropout preserves alignment"
+  },
+  {
+   "figure": "Fig G.1",
+   "caption": "Density plots of cosine similarities between sentence pairs in STS-B, grouped by ground-truth rating.",
+   "page": 13,
+   "why": "directly shows where raw cosine misleads and how contrastive training spreads it"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "l_i = -log( e^{sim(h_i,h_i+)/tau} / sum_{j=1..N} e^{sim(h_i,h_j+)/tau} ), sim = cosine",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 5",
+   "snippet": "-log( e^{sim(h_i,h_i+)/tau} / sum_j ( e^{sim(h_i,h_j+)/tau} + e^{sim(h_i,h_j-)/tau} ) )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table A.1 header is flattened (Unsupervised/Supervised x BERT/RoBERTa x base/large gives six columns in the text layer but the grouping is unclear); values are recorded in text order only. Check the PDF table before citing a specific model's lr or batch size.",
+  "Figure axis labels garbled in text; Fig 3 values not extractable.",
+  "No embedded instructions found."
+ ]
+}

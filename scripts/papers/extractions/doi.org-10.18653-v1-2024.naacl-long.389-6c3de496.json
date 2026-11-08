@@ -1,0 +1,608 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.naacl-long.389",
+ "pdf": "generative-ai/02-rag-retrieval/sources/jeong-2024-adaptive-rag.pdf",
+ "bib": {
+  "title": "Adaptive-RAG: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity",
+  "authors": [
+   "Soyeong Jeong",
+   "Jinheon Baek",
+   "Sukmin Cho",
+   "Sung Ju Hwang",
+   "Jong C. Park"
+  ],
+  "first_author": "Jeong",
+  "year": 2024,
+  "venue": "NAACL-HLT 2024 (Volume 1: Long Papers), pages 7036-7050",
+  "arxiv": "2403.14403",
+  "doi": "10.18653/v1/2024.naacl-long.389"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 71872,
+  "chars_total": 71872,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Appendix Tables 7 and 8 (FLAN-T5-XXL and GPT-3.5 per dataset) only skimmed."
+ },
+ "type": "empirical",
+ "question": "How can a retrieval-augmented QA system pick between no retrieval, single-step and multi-step retrieval per query, instead of one fixed strategy?",
+ "hypothesis": "Simple retrieval strategies are less effective than the complex one while the complex one is much more expensive, so routing by query complexity should balance accuracy and cost.",
+ "contributions": [
+  "Point out that real queries vary in complexity and existing RAG approaches are overly simple or complex.",
+  "Adapt retrieval-augmented LLMs to query complexity assessed by a classifier.",
+  "Show Adaptive-RAG is effective and efficient across diverse queries."
+ ],
+ "method": {
+  "summary": "A T5-Large classifier predicts a complexity label A/B/C for each query and routes it to no-retrieval, single-step retrieval, or the IRCoT multi-step loop. Training labels are collected automatically from which strategy answers correctly (simplest first) plus dataset inductive bias (single-hop -> B, multi-hop -> C).",
+  "task": "open-domain QA (single-hop and multi-hop) with query-complexity routing",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SQuAD v1.1",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "test samples; 400 queries sampled separately for classifier training, no overlap",
+    "source": "Rajpurkar et al., 2016",
+    "preprocessing": "Wikipedia corpus preprocessed by Karpukhin et al. (2020)"
+   },
+   {
+    "name": "Natural Questions",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "as above",
+    "source": "Kwiatkowski et al., 2019",
+    "preprocessing": "as above"
+   },
+   {
+    "name": "TriviaQA",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "as above",
+    "source": "Joshi et al., 2017",
+    "preprocessing": "as above"
+   },
+   {
+    "name": "MuSiQue",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "as above",
+    "source": "Trivedi et al., 2022a",
+    "preprocessing": "corpus preprocessed by Trivedi et al. (2023)"
+   },
+   {
+    "name": "HotpotQA",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "as above",
+    "source": "Yang et al., 2018",
+    "preprocessing": "corpus preprocessed by Trivedi et al. (2023)"
+   },
+   {
+    "name": "2WikiMultiHopQA",
+    "role": "eval",
+    "size": "500 test samples",
+    "split": "as above",
+    "source": "Ho et al., 2020",
+    "preprocessing": "corpus preprocessed by Trivedi et al. (2023)"
+   },
+   {
+    "name": "Classifier training set",
+    "role": "train",
+    "size": "400 queries sampled from each of 6 datasets for silver labels (model-outcome labels), plus 400 queries annotated by inductive bias",
+    "split": "validation set used to pick best epoch; no overlap with test queries",
+    "source": "automatically labelled, no human labels",
+    "preprocessing": "Label A if no-retrieval answers correctly; else B if single-step correct; else C if multi-step correct; unlabeled queries get B (single-hop datasets) or C (multi-hop datasets)"
+   }
+  ],
+  "models": [
+   {
+    "name": "T5-Large classifier",
+    "role": "proposed",
+    "params": "770M",
+    "architecture": "encoder-decoder LM predicting label A/B/C",
+    "init_from": "T5-Large (Raffel et al., 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "sizes_tested": "Small 60M, Base 223M, Large 770M"
+    }
+   },
+   {
+    "name": "FLAN-T5-XL",
+    "role": "base",
+    "params": "3B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FLAN-T5-XXL",
+    "role": "base",
+    "params": "11B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 (gpt-3.5-turbo-instruct)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BM25",
+    "role": "retriever",
+    "params": null,
+    "architecture": "term-based sparse retrieval",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Self-RAG",
+    "role": "baseline",
+    "params": "LLaMA2 7B (vs XL) / 13B",
+    "architecture": null,
+    "init_from": "LLaMA2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over classes A/B/C",
+   "optimizer": "AdamW",
+   "lr": "inferred: 3e-5, text reads 3e- then 5 across a page break",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "best epoch within 100 training iterations, chosen on validation set",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "A100 GPUs, 80GB",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single run",
+   "other": {
+    "lr_text": "learning rate of 3e-5 (printed 3e- / 5 across a page break)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config, 500 test samples per dataset",
+   "prompting": "Follows Trivedi et al. (2023) input prompts and instructions (IRCoT)",
+   "retrieval": "BM25 over Wikipedia corpus (Karpukhin et al. 2020) for single-hop and Trivedi et al. (2023) corpus for multi-hop; number of documents retrieved per step not stated",
+   "parameters": {
+    "classes": "A no retrieval, B single-step, C multi-step",
+    "multi_step_max_steps": "maximum step number exists, value not stated"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "EM",
+     "definition": "predicted answer is the same as ground truth",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "word overlap between predicted and ground-truth answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Acc",
+     "definition": "predicted answer contains the ground-truth answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Step",
+     "definition": "number of retrieval-and-generate steps",
+     "unit": "steps",
+     "higher_is_better": false
+    },
+    {
+     "name": "Time",
+     "definition": "average time per query relative to the one-step approach",
+     "unit": "relative (single-step = 1.00)",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "No Retrieval",
+    "Single-step Approach",
+    "Adaptive Retrieval (Mallen et al. 2023, entity popularity via BLINK)",
+    "Self-RAG (Asai et al. 2024)",
+    "Multi-step Approach (IRCoT, Trivedi et al. 2023)",
+    "Adaptive-RAG w/ Oracle classifier"
+   ],
+   "protocol": "Single run (cost); no significance test; Self-RAG uses LLaMA2 base, not the same LLM."
+  },
+  "availability": {
+   "code": "https://github.com/starsuzi/Adaptive-RAG",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "with the learning rate of 3e-",
+    "where": "Sec 4.4 (continues '5 and the AdamW' on next page)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Adaptive-RAG with FLAN-T5-XL averages F1 46.94 at relative time 3.60, against multi-step F1 48.85 at time 8.81.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 46.94,
+   "unit": "F1",
+   "baseline_value": 48.85,
+   "n": null,
+   "setup": "FLAN-T5-XL (3B), BM25, 6 datasets x 500 test samples, averaged, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adaptive-RAG (Ours), FLAN-T5-XL column F1 (46.94); Multi-step 48.85, time 8.81"
+  },
+  {
+   "claim": "With FLAN-T5-XL, Adaptive-RAG uses 2.17 retrieval steps and 3.60 relative time versus 4.69 steps and 8.81 for multi-step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Time",
+   "value": 3.6,
+   "unit": "time relative to single-step (=1.00)",
+   "baseline_value": 8.81,
+   "n": null,
+   "setup": "FLAN-T5-XL (3B), BM25, 6 datasets x 500 test samples, averaged, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adaptive-RAG (Ours), FLAN-T5-XL column Time (3.60); Multi-step Approach column Time (8.81)"
+  },
+  {
+   "claim": "With GPT-3.5, Adaptive-RAG averages F1 50.91, matching multi-step F1 50.87 at less than half the time (1.46 vs 3.33) and 1.03 vs 2.81 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 50.91,
+   "unit": "F1",
+   "baseline_value": 50.87,
+   "n": null,
+   "setup": "GPT-3.5-Turbo-Instruct, BM25, 6 datasets x 500 test samples averaged, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adaptive-RAG (Ours), GPT-3.5 column F1 (50.91); Multi-step 50.87, Time 1.46 vs 3.33"
+  },
+  {
+   "claim": "With GPT-3.5, the non-retrieval baseline already averages F1 48.56 at time 0.71, close to the single-step 46.99.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 48.56,
+   "unit": "F1",
+   "baseline_value": 46.99,
+   "n": null,
+   "setup": "GPT-3.5-Turbo-Instruct, BM25, 6 datasets x 500 test samples averaged, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row No Retrieval, GPT-3.5 column F1 (48.56); Single-step 46.99"
+  },
+  {
+   "claim": "With FLAN-T5-XL, the Adaptive Retrieval baseline (entity popularity) averages F1 32.24, well below single-step 44.31.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 32.24,
+   "unit": "F1",
+   "baseline_value": 44.31,
+   "n": null,
+   "setup": "FLAN-T5-XL (3B), BM25, 6 datasets x 500 test samples, averaged, single run",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adaptive Retrieval, FLAN-T5-XL column F1 (32.24); Single-step 44.31"
+  },
+  {
+   "claim": "Self-RAG (LLaMA2 7B/13B base, not same LLM) averages F1 20.79 vs Adaptive-RAG 46.94 with FLAN-T5-XL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 20.79,
+   "unit": "F1",
+   "baseline_value": 46.94,
+   "n": null,
+   "setup": "Self-RAG* trained on LLaMA2; XL compared with 7B; averaged",
+   "note": "Self-RAG* F1 is low partly because it generates long answers scored by EM/F1; its Acc is 31.57. Not same base LLM.",
+   "where": "Table 1",
+   "table": "Table 1, row Self-RAG*, FLAN-T5-XL column F1"
+  },
+  {
+   "claim": "Oracle classifier gives FLAN-T5-XL F1 56.28 with 1.28 steps and time 2.11, the upper bound for the routing idea.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 56.28,
+   "unit": "F1",
+   "baseline_value": 46.94,
+   "n": null,
+   "setup": "FLAN-T5-XL (3B), BM25, 6 datasets x 500 test samples, averaged, single run, oracle classifier",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Adaptive-RAG w/ Oracle, FLAN-T5-XL column F1 (56.28), Step 1.28, Time 2.11"
+  },
+  {
+   "claim": "With FLAN-T5-XL on MuSiQue, Adaptive-RAG F1 31.80 nearly equals multi-step 31.90 at time 6.61 vs 7.58.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 31.8,
+   "unit": "F1",
+   "baseline_value": 31.9,
+   "n": null,
+   "setup": "FLAN-T5-XL, MuSiQue, 500 samples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, MuSiQue, row Adaptive-RAG (Ours) F1 31.80; Multi-step 31.90"
+  },
+  {
+   "claim": "On SQuAD with FLAN-T5-XL, multi-step (F1 35.60) is worse than single-step (F1 39.30), so extra steps can hurt simple queries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 35.6,
+   "unit": "F1",
+   "baseline_value": 39.3,
+   "n": null,
+   "setup": "FLAN-T5-XL, SQuAD, 500 samples",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, SQuAD, row Multi-step Approach F1 35.60; Single-step F1 39.30"
+  },
+  {
+   "claim": "Classifier routes 8.60% of queries to no retrieval, 53.33% to single-step and 38.07% to multi-step.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.6,
+   "unit": "% of queries (no retrieval)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Predicted labels from the T5-Large classifier over test samples, GPT-3.5 setting (inferred)",
+   "note": "Setup model for Table 3 timing not stated in caption.",
+   "where": "Table 3",
+   "table": "Table 3, column Percentage (%): No (A) 8.60, One (B) 53.33, Multi (C) 38.07"
+  },
+  {
+   "claim": "Time per query by route: 0.35 s no retrieval, 3.08 s single-step, 27.18 s multi-step.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 27.18,
+   "unit": "seconds per query (multi-step)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Exact elapsed time per query for Adaptive-RAG routes",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, column Time/Query (Sec.): 0.35, 3.08, 27.18"
+  },
+  {
+   "claim": "Classifier confusion: A misclassified as B about 47%, C as B about 31%, B as C about 23%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 31,
+   "unit": "% (C predicted as B)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Silver-labelled test queries, T5-Large classifier",
+   "note": "Quote is the verbatim fragment; the 31% is printed on the next line of the text as '(about 31%)'. Diagonal 0.31/0.66/0.65 read from Fig 3 confusion matrix is ambiguous in extraction.",
+   "where": "Sec 5 Classifier Performance",
+   "quote": "‘C (Multi)’ is sometimes misclassified as"
+  },
+  {
+   "claim": "Training the classifier on inductive bias only (w/o Silver) gives F1 48.79 but 1464 steps, versus 46.94 and 1084 steps for the full strategy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 48.79,
+   "unit": "F1",
+   "baseline_value": 46.94,
+   "n": null,
+   "setup": "FLAN-T5-XL classifier-training ablation",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row w/o Silver, F1 48.79, Step 1464; row Adaptive-RAG (Ours) F1 46.94, Step 1084"
+  },
+  {
+   "claim": "Silver labels only (w/o Binary) gives F1 43.43 with 640 steps, and 0.00 accuracy on the No class... see note.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 43.43,
+   "unit": "F1",
+   "baseline_value": 46.94,
+   "n": null,
+   "setup": "Classifier-training ablation, FLAN-T5-XL",
+   "note": "Row labels in Table 4 are garbled in extraction: 'w/o Binary' row has F1 43.43 / 640 steps; 'w/o Silver' row has Step 1464 and No-class accuracy 0.00. Do not rely on the per-class cells of the w/o Silver row without checking the PDF page.",
+   "where": "Table 4",
+   "table": "Table 4, row w/o Binary, F1 43.43, Step 640"
+  },
+  {
+   "claim": "Classifier size barely matters: Small (60M) F1 45.83, Base (223M) 45.97, Large (770M) 46.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 45.83,
+   "unit": "F1",
+   "baseline_value": 46.94,
+   "n": null,
+   "setup": "FLAN-T5-XL, T5 classifiers of different sizes",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Small (60M) F1 45.83; Base (223M) 45.97; Large (770M) 46.94"
+  }
+ ],
+ "limits": [
+  "Labels are automatically generated and may be wrong; the authors call it one specific instantiation.",
+  "Classifier is the simplest design; gap to oracle (F1 56.28 vs 46.94 with XL) shows room, and confusion is large (A->B about 47%).",
+  "Single run, no seeds or significance tests, due to cost.",
+  "Only three complexity levels; finer-grained levels left to future work.",
+  "BM25 only; QA only; 500 samples per dataset; Self-RAG baseline uses a different base LLM.",
+  "Silver labels cover only queries some strategy answers correctly; ablation shows silver-only labels generalise worse.",
+  "Ethics: offensive inputs or retrieved documents not handled."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Query complexity labels A/B/C",
+   "definition": "A straightforward and answerable by LLM(q) itself; B moderate, at least single-step LLM(q,d) needed; C complex, requiring the most extensive LLM(q,d,c)",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Interleaving Retrieval with Chain-of-Thought Reasoning (IRCoT)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Multi-step approach, prompts, and number of test samples follow Trivedi et al. (2023)",
+   "quote": null
+  },
+  {
+   "work": "When not to trust language models (Adaptive Retrieval)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Mallen et al. 2023, retrieve only for low-popularity entities",
+   "quote": null
+  },
+  {
+   "work": "Self-RAG",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Asai et al. 2024",
+   "quote": null
+  },
+  {
+   "work": "T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Raffel et al., classifier backbone",
+   "quote": null
+  },
+  {
+   "work": "FLAN-T5 (Scaling instruction-finetuned language models)",
+   "year": 2022,
+   "arxiv": "2210.11416",
+   "relation": "evaluates",
+   "note": "XL and XXL",
+   "quote": null
+  },
+  {
+   "work": "BM25",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Robertson et al., retriever",
+   "quote": null
+  },
+  {
+   "work": "Qi et al. adaptive retrieval (retrieve, read, rerank loop)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed operations repeated for every query",
+   "quote": null
+  },
+  {
+   "work": "SQuAD, NQ, TriviaQA, MuSiQue, HotpotQA, 2WikiMultiHopQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "six QA benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "A conceptual comparison of different retrieval-augmented LLM approaches to question answering. (A) single-step ... (B) multi-step ... (C) Our adaptive approach",
+   "page": 2,
+   "why": "Shows the three strategies and the classifier router in one picture"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "QA performance (F1) and efficiency (Time/Query) for different retrieval-augmented generation approaches (GPT-3.5-Turbo-Instruct)",
+   "page": 1,
+   "why": "Accuracy vs cost frontier"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Performance on QA and query-complexity assessment of different adaptive approaches ... confusion matrix across three labels (Right)",
+   "page": 7,
+   "why": "Classifier accuracy vs baselines and its confusion matrix"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Averaged results on benchmark datasets with different LLMs",
+   "page": 6,
+   "why": "Main comparison"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 4 row labels and cells are garbled in text extraction; per-class accuracy cells need page check.",
+  "Text on lr splits across a page break ('3e-' then '5'); read as 3e-5.",
+  "Table 3 caption does not state which LLM was used.",
+  "No embedded instructions found."
+ ]
+}

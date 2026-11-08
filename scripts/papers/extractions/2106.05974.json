@@ -1,0 +1,557 @@
+{
+ "schema": 1,
+ "key": "2106.05974",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/riquelme-2021-scaling-vision-sparse-mixture-experts.pdf",
+ "bib": {
+  "title": "Scaling Vision with Sparse Mixture of Experts",
+  "authors": [
+   "Carlos Riquelme",
+   "Joan Puigcerver",
+   "Basil Mustafa",
+   "Maxim Neumann",
+   "Rodolphe Jenatton",
+   "André Susano Pinto",
+   "Daniel Keysers",
+   "Neil Houlsby"
+  ],
+  "first_author": "Riquelme",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2106.05974",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 106377,
+  "chars_total": 106377,
+  "engine": "pymupdf",
+  "skipped": "Plot tick numbers (axis values) skimmed only; text and tables read in full."
+ },
+ "type": "empirical",
+ "question": "Can sparse conditional computation (mixture of experts) scale Vision Transformers to match dense state of the art with less compute?",
+ "hypothesis": "Sparse MoE layers in ViT give better quality at the same compute, or the same quality at lower compute, than dense models.",
+ "contributions": [
+  "Vision models at scale: V-MoE up to 24 MoE layers, 32 experts per layer, almost 15B parameters, 90.35% ImageNet",
+  "Outperforms dense counterparts upstream, few-shot and fine-tuned; can match largest dense model at about half the inference compute",
+  "Batch Prioritized Routing for adaptive per-image compute",
+  "Analysis of routing decisions"
+ ],
+ "method": {
+  "summary": "Vision MoE (V-MoE): replace a subset of ViT MLP blocks with sparse MoE layers (32 experts, top-k routing applied after softmax, per-patch routing, fixed expert buffer capacity, importance+load auxiliary losses). Pretrain on JFT-300M, transfer by linear few-shot and full fine-tuning; add Batch Prioritized Routing (BPR) that ranks tokens by max routing weight so low capacity C drops the least useful patches; scale to 14.7B (V-MoE-15B) on JFT-3B.",
+  "task": "image classification; pretraining and transfer",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "JFT-300M",
+    "role": "pretrain",
+    "size": "~305M train, 50,000 val images, 18,291 classes (1.89 labels/image)",
+    "split": "train/val",
+    "source": "Sun et al. 2017, noisily labelled",
+    "preprocessing": "deduplicated against all validation/test sets"
+   },
+   {
+    "name": "JFT-3B",
+    "role": "pretrain",
+    "size": "almost 3B images, 30k classes",
+    "split": null,
+    "source": "larger version of JFT-300M",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet (ILSVRC2012)",
+    "role": "both",
+    "size": "1,281,167 train, 1,000 classes",
+    "split": "few-shot 1/5/10 (and 25 in Table 9) shots per class; full fine-tune on ~1M train; eval on validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "VTAB",
+    "role": "eval",
+    "size": "19 tasks, 1,000 examples per task",
+    "split": null,
+    "source": "Zhai et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR10/CIFAR100/Oxford-IIIT Pets/Oxford Flowers-102",
+    "role": "eval",
+    "size": "50,000/50,000/3,680/1,020 examples",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-21k",
+    "role": "pretrain",
+    "size": "~14M images, 21k classes",
+    "split": null,
+    "source": null,
+    "preprocessing": "RandAugment N=2 M=10 in one ablation"
+   }
+  ],
+  "models": [
+   {
+    "name": "V-MoE (S/32,B/32,B/16,L/32,L/16,H/14)",
+    "role": "proposed",
+    "params": "36.5M dense S/32 up to 7160.8M (H/14 Every-2); L/16 Every-2 3446.0M",
+    "architecture": "ViT with MoE MLP layers on every other block (Every-2) or last-n even blocks (Last-n); E=32 experts, k=2 default",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "capacity_ratio_C_upstream": "1.05",
+     "hyperparams": "Table 8 gives blocks/heads/embed/MLP per variant, e.g. H/14: 32 blocks, 16 heads, 1280, 5120",
+     "routing": "g(x)=TOPk(softmax(Wx+eps)), eps~N(0,1/E^2)",
+     "buffer": "Be=round(kNPC/E)"
+    }
+   },
+   {
+    "name": "V-MoE-15B",
+    "role": "proposed",
+    "params": "14705.1M",
+    "architecture": "48 blocks, 16 heads, embed 1408, MLP 6400, Every-2, E=32, k=2; bfloat16 moving average, rsqrt lr, new attention head",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48",
+    "hidden": "1408",
+    "heads": "16",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ViT (dense S/32 .. H/14)",
+    "role": "baseline",
+    "params": "36.5M to 655.8M",
+    "architecture": "Vision Transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NFNet-F4+, Meta Pseudo Labels",
+    "role": "baseline",
+    "params": "527M; 480M",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "imagenet_ft": "89.20; 90.20"
+    }
+   }
+  ],
+  "training": {
+   "objective": "multilabel classification loss on JFT plus lambda * auxiliary loss, L_aux = 0.5 L_imp + 0.5 L_load (squared coefficient of variation)",
+   "optimizer": "Adam (Adafactor for V-MoE-15B)",
+   "lr": "base LR by variant: S/32 1e-3, B 8e-4, L/32 6e-4, L/16 4e-4, H/14 3e-4, V-MoE-15B 8e-4",
+   "lr_schedule": "linear decay; rsqrt with final linear cooldown for V-MoE-15B",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "JFT-300M epochs: S/32 5, B 7, L/32 7, L/16 7 or 14, H/14 14",
+   "tokens": null,
+   "seq_len": "inferred: 256 patches at 224x224 with 14x14 patches (paper text); 730 patches at 384x384",
+   "precision": "bfloat16 for gradient moving average (V-MoE-15B); otherwise float32",
+   "weight_decay": "0.1 on all params (0.03 kernels and 3 for head in V-MoE-15B)",
+   "dropout": "expert dropout 0.1 during fine-tuning",
+   "regularisation": "router noise std 1/E; auxiliary loss lambda=0.01",
+   "hardware": "TPUv3",
+   "compute": "Table 8 ExaFLOPs and TPUv3-days per model; V-MoE-15B 33.9k ExaFLOPs, 16.8k TPUv3-core-days",
+   "wall_clock": null,
+   "seeds": "BPR training figures mean over 4 seeds; ImageNet fine-tune averaged over 3 runs; others not stated",
+   "other": {
+    "finetune_steps_and_lr": "ImageNet 10,000 steps, LR in {0.003,0.01,0.03,0.06}; CIFAR10/100 2,500 steps; Pets/Flowers 250 steps; VTAB 1,250 steps LR 0.001; V-MoE-15B ImageNet 560x560, 30,000 steps (~6 epochs), LR 0.006, Polyak momentum 0.999999",
+    "few_shot": "linear regression on frozen features to one-hot labels"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated for inference; ImageNet fine-tune averaged over 3 runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "k": "2 default; adjustable at inference",
+    "C": "capacity ratio, 1.05 upstream; 0.1-1.0 swept at inference with BPR",
+    "BPR_score": "max routing weight per token"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "JFT precision@1",
+     "definition": "top-1 predicted class is one of the image's true labels, hierarchy ignored",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ImageNet k-shot",
+     "definition": "linear regression few-shot on frozen features, k=1,5,10",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ImageNet fine-tune accuracy",
+     "definition": "top-1 after fine-tuning full model",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Inference FLOPs and time",
+     "definition": "percent of dense ViT-H/14",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "dense ViT S/32 to H/14",
+    "NFNet-F4+",
+    "Meta Pseudo Labels"
+   ],
+   "protocol": "Pareto frontiers against training ExaFLOPs and TPUv3-days; no significance tests apart from VTAB 95% CIs"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "JFT is proprietary (not stated as released)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Fine-tuned V-MoE-15B (14.7B params, JFT-3B pretrain) reaches 90.35% ImageNet top-1, above Meta Pseudo Labels' 90.2% at less compute.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet fine-tune accuracy",
+   "value": "90.35",
+   "unit": "% ImageNet fine-tune acc",
+   "baseline_value": "90.20",
+   "n": null,
+   "setup": "V-MoE-15B, 48 blocks, Every-2, E=32, k=2, JFT-3B; fine-tuned at 560x560 for 30,000 steps",
+   "note": null,
+   "where": "Sec 3.6, Table 2",
+   "table": "Table 2, row V-MoE-15B, column IN/Fine-t.; row MPL"
+  },
+  {
+   "claim": "V-MoE-15B training cost 16.8k TPUv3-core-days vs 22.5k for MPL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training compute",
+   "value": "16.8k",
+   "unit": "TPUv3-core-days",
+   "baseline_value": "22.5k",
+   "n": null,
+   "setup": "V-MoE-15B pretrain; MPL figure as quoted by the paper",
+   "note": null,
+   "where": "Sec 3.6",
+   "quote": "achieving 90.2% while requiring 22.5k",
+   "table": "Table 2, row V-MoE-15B, column TPUv3-days (16.8k)"
+  },
+  {
+   "claim": "V-MoE-L/16 Every-2 (vanilla routing) beats dense ViT-H/14 on ImageNet 5-shot at about half the inference FLOPs and 57% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 5-shot acc",
+   "value": "77.10",
+   "unit": "% IN/5shot",
+   "baseline_value": "76.95",
+   "n": null,
+   "setup": "ViT-H/14 dense = 76.95; V-MoE-L/16 Every-2 uses 49.95% of ViT-H FLOPs and 57.40% of its time",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row V-MoE-L/16 Every-2 Vanilla, columns INet/5shot, Time[%], FLOPs[%]"
+  },
+  {
+   "claim": "At matched FLOPs (BPR, C=0.5, k=2) V-MoE-H/14 Last-5 beats dense ViT-H/14 by about one point on ImageNet 5-shot, but takes 118% of the runtime.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 5-shot acc",
+   "value": "77.92",
+   "unit": "% IN/5shot",
+   "baseline_value": "76.95",
+   "n": null,
+   "setup": "Inference-only change to a model trained with vanilla routing; FLOPs 100.02% of ViT-H/14",
+   "note": null,
+   "where": "Table 11",
+   "table": "Table 11, row V-MoE-H/14 Last-5 k=2 C=0.5, columns INet/5shot, Time[%], FLOPs[%]"
+  },
+  {
+   "claim": "V-MoE-H/14 Every-2 (7.2B params) vs dense ViT-H/14 on JFT precision@1; sparse model costs 135.59% of inference FLOPs and 164.89% of time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "JFT prec@1",
+   "value": "60.62",
+   "unit": "% JFT-300M prec@1",
+   "baseline_value": "56.68",
+   "n": null,
+   "setup": "JFT-300M pretrain, multilabel precision@1",
+   "note": null,
+   "where": "Table 2, Table 10",
+   "table": "Table 2, rows V-MoE-H/14 Every-2 and ViT-H/14, column JFT prec@1"
+  },
+  {
+   "claim": "On the 19-task VTAB (1,000 examples per task), V-MoE-L/16 gains 0.9 points over ViT-L/16; at H/14 the difference is within confidence intervals.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VTAB mean score",
+   "value": "77.2",
+   "unit": "% VTAB score",
+   "baseline_value": "76.3",
+   "n": null,
+   "setup": "V-MoE-L/16 vs ViT-L/16; 95% CIs; fine-tune 1,250 steps",
+   "note": null,
+   "where": "Table 1, Sec 3.5",
+   "table": "Table 1, row L/16, columns ViT 76.3±0.5, V-MoE 77.2±0.4"
+  },
+  {
+   "claim": "Applying TOP-k after the softmax (this work) beats softmax-after-TOP-k of Shazeer et al. on ViT-S/32 with k=2 (ImageNet 10-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 10-shot acc",
+   "value": "56.06",
+   "unit": "% IN/10shot",
+   "baseline_value": "53.63",
+   "n": null,
+   "setup": "V-MoE-S/32, k=2",
+   "note": null,
+   "where": "Appendix A.1",
+   "table": "Table 3, row TOP-K(softmax), column ImageNet/10shot"
+  },
+  {
+   "claim": "Training V-MoE-S/32 with Batch Prioritized Routing at low capacity saves about 20% of training FLOPs while matching dense upstream performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training FLOPs saved",
+   "value": "20",
+   "unit": "% training FLOPs saved",
+   "baseline_value": "0",
+   "n": null,
+   "setup": "V-MoE-S/32, k=1 and k=2, mean over 4 seeds; B/32 saves ~10% on few-shot, L/32 saves 20%+",
+   "note": null,
+   "where": "Appendix C.3",
+   "quote": "Overall, we can save 20% of the FLOPs while training a small model like V-MoE-S/32."
+  },
+  {
+   "claim": "With BPR at inference, V-MoE-H/14 stays competitive with the dense model while processing only 15-30% of tokens; vanilla routing collapses at low C.",
+   "kind": "measured",
+   "source": null,
+   "metric": "quality vs capacity",
+   "value": "15-30",
+   "unit": "% tokens processed",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V-MoE-H/14 Every-2, k=2, trained with vanilla routing, C swept at inference only",
+   "note": "Read from Fig 6 caption; per-C numbers appear only in plots",
+   "where": "Fig 6 caption, Sec 4.2",
+   "quote": "by processing only 15-30% of the tokens."
+  },
+  {
+   "claim": "Fine-tuning accuracy on ImageNet with V-MoE-S/32: low capacity C=0.1 costs accuracy (77.4% to 68.6%); BPR in pre-train and fine-tune recovers to 71.8%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet fine-tune acc",
+   "value": "71.8",
+   "unit": "% ImageNet fine-tune acc",
+   "baseline_value": "68.6",
+   "n": null,
+   "setup": "V-MoE-S/32 k=2, C=0.1 both stages with BPR",
+   "note": null,
+   "where": "Appendix C.3, Fig 26",
+   "quote": "accuracy increases to 71.8% at the same capacity."
+  },
+  {
+   "claim": "Retaining high capacity at fine-tuning matters more than at pretraining: C=1.05 fine-tune after C=0.1 pretrain gets 74.1% vs 71.7% for the inverse.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet fine-tune acc",
+   "value": "74.1",
+   "unit": "% ImageNet fine-tune acc",
+   "baseline_value": "71.7",
+   "n": null,
+   "setup": "V-MoE-S/32 with BPR at both stages",
+   "note": null,
+   "where": "Appendix C.3",
+   "quote": "accuracy 74.1%"
+  },
+  {
+   "claim": "With only 9M JFT pretraining images (about 3%), V-MoE-L/32 cannot use its extra capacity; from 30M images it does.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative quality",
+   "value": "9",
+   "unit": "M pretraining images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V-MoE-L/32 vs ViT-L/32, 8 experts every-2, JFT subsets of 9M/30M/90M/300M",
+   "note": null,
+   "where": "Appendix E.5, Fig 37",
+   "quote": "At the lowest data size (9M, around 3% of the original), the MoE model is not able to leverage its"
+  },
+  {
+   "claim": "ImageNet deduplication of JFT shows no consistent effect on few-shot results for V-MoE-S/32 (3 seeds).",
+   "kind": "measured",
+   "source": null,
+   "metric": "few-shot acc",
+   "value": "3",
+   "unit": "seeds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V-MoE-S/32, IN/1,5,10,25-shot",
+   "note": null,
+   "where": "Appendix B.7",
+   "table": "Table 9, rows V-MoE-S/32 Dedup Yes seeds 0,1,2"
+  }
+ ],
+ "limits": [
+  "Authors suspect the fine-tuning protocol is not tuned for sparse models (Sec 3.5).",
+  "On VTAB, V-MoE-H/14 matches ViT within confidence intervals.",
+  "Dense models need less runtime at equal FLOPs because of cross-device data transfer (Sec 4.2).",
+  "V-MoE does not help on ImageNet-21k pretraining without RandAugment (overfitting) and loses at 9M JFT images.",
+  "Batch size, warmup, hardware counts are not stated; JFT is not public.",
+  "Router outputs encode expert-token fit, not token importance; BPR uses them as a proxy.",
+  "Hyperparameters tuned for transfer, not JFT precision."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Batch Prioritized Routing",
+   "definition": "sort tokens across the whole batch by max routing weight before allocating expert buffer slots, so low-priority tokens are dropped when capacity C is small",
+   "where": "Sec 4.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "An Image is Worth 16x16 Words (ViT)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Dense base architecture and fine-tune protocol",
+   "quote": null
+  },
+  {
+   "work": "Shazeer et al. Outrageously large neural networks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sparsely gated MoE layer, auxiliary losses; routing order changed",
+   "quote": null
+  },
+  {
+   "work": "GShard (Lepikhin et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MoE placement every other layer",
+   "quote": null
+  },
+  {
+   "work": "Switch Transformers",
+   "year": 2021,
+   "arxiv": "2101.03961",
+   "relation": "uses-method",
+   "note": "expert dropout, k=1 routing",
+   "quote": null
+  },
+  {
+   "work": "Scaling Vision Transformers (Zhai et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "changes for V-MoE-15B (bfloat16, rsqrt, head)",
+   "quote": null
+  },
+  {
+   "work": "Meta Pseudo Labels",
+   "year": 2020,
+   "arxiv": "2003.10580",
+   "relation": "baseline",
+   "note": "prior ImageNet SOTA 90.2%",
+   "quote": null
+  },
+  {
+   "work": "NFNet",
+   "year": 2021,
+   "arxiv": "2102.06171",
+   "relation": "baseline",
+   "note": "89.20 ImageNet",
+   "quote": null
+  },
+  {
+   "work": "JFT-300M (Sun et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "VTAB",
+   "year": 2019,
+   "arxiv": "1910.04867",
+   "relation": "uses-data",
+   "note": "low-data transfer benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the architecture: V-MoE blocks, expert per device, token dispatch, capacity ratio.",
+   "page": 2,
+   "why": "Shows the routing and capacity mechanism in one picture."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "White patches are discarded tokens in the first layer of experts, for different capacities, using BPR with a V-MoE-H/14.",
+   "page": 6,
+   "why": "Visualises which image patches are dropped as C falls; best fit for an image-input note."
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Priority routing works where vanilla fails: performance vs inference capacity ratio for V-MoE-H/14.",
+   "page": 7,
+   "why": "BPR vs vanilla across C."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "JFT-300M precision@1 and ImageNet 5-shot vs compute.",
+   "page": 5,
+   "why": "Pareto frontiers of ViT vs V-MoE."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3",
+   "snippet": "g(x) = TOPk (softmax(Wx + eps)), eps ~ N(0, 1/E^2)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 2.4",
+   "snippet": "Be = round( kNP C / E )",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction mangles equations and plot axes; some figure axis numbers appear as stray lines."
+ ]
+}

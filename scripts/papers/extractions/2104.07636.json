@@ -1,0 +1,129 @@
+{
+ "schema": 1,
+ "key": "2104.07636",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/saharia-2022-image-super-resolution-iterative-refinement.pdf",
+ "bib": {"title": "Image Super-Resolution via Iterative Refinement", "authors": ["Chitwan Saharia","Jonathan Ho","William Chan","Tim Salimans","David J. Fleet","Mohammad Norouzi"], "first_author": "Saharia", "year": 2021, "venue": "preprint", "arxiv": "2104.07636", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 61052, "chars_total": 61052, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a conditional denoising diffusion model, trained with a simple denoising loss, do high-fidelity image super-resolution on faces and natural images and serve as the upsampling stage of cascaded generation?",
+ "hypothesis": "Iterative denoising yields sharper, more photo-realistic super-resolution than one-step MSE regression and than GANs, without auxiliary consistency losses or adversarial training.",
+ "contributions": ["Adapt denoising diffusion models to conditional image generation (SR3, super-resolution via iterative refinement).", "SR3 is effective on face and natural image super-resolution at different magnification factors; human fool rate close to 50% on 8x face SR, GANs at most 34%.", "Cascade a 64x64 synthesis model with SR3 models for 1024x1024 unconditional faces (3 stages) and 256x256 class-conditional ImageNet (2 stages) with competitive FID."],
+ "method": {
+  "summary": "A DDPM-style U-Net takes the bicubic-upsampled low-resolution image concatenated channel-wise with the noisy high-resolution target plus the noise level gamma, and is trained to predict the noise. Sampling starts from Gaussian noise and runs up to 100 refinement steps. SR3 models are also chained after an unconditional or class-conditional 64x64 diffusion model for cascaded generation.",
+  "task": "conditional image generation / single-image super-resolution (16->128, 64->256, 64->512, 256->1024) and cascaded image synthesis",
+  "trains": true,
+  "datasets": [
+   {"name": "FFHQ", "role": "train", "size": null, "split": null, "source": "Karras et al. 2019", "preprocessing": "low-res by bicubic downsampling with anti-aliasing; high-res by largest central crop resized with area resampling"},
+   {"name": "CelebA-HQ", "role": "eval", "size": "100 test images used in human evaluation", "split": null, "source": "Karras et al. 2018", "preprocessing": null},
+   {"name": "ImageNet 1K", "role": "both", "size": null, "split": "train for training, dev split (validation) for evaluation; Table 3 uses first 1K validation images", "source": "Russakovsky et al.", "preprocessing": "images with shorter side below target resolution discarded; largest central crop (as BigGAN) resized to target with area resampling; bicubic anti-aliased downsampling"}
+  ],
+  "models": [
+   {"name": "SR3 16x16->128x128", "role": "proposed", "params": "550M", "architecture": "DDPM U-Net with BigGAN residual blocks, skip connections rescaled by 1/sqrt2, channel dim 128, depth multipliers {1,2,4,8,8}, 3 ResNet blocks", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"dropout": "0.2"}},
+   {"name": "SR3 64x64->256x256", "role": "proposed", "params": "625M", "architecture": "U-Net, channel dim 128, multipliers {1,2,4,4,8,8}, 3 ResNet blocks", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "SR3 64x64->512x512", "role": "proposed", "params": "625M", "architecture": "U-Net, channel dim 64, multipliers {1,2,4,8,8,16,16}, 3 ResNet blocks", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "SR3 256x256->1024x1024", "role": "proposed", "params": "150M", "architecture": "U-Net, channel dim 16, multipliers {1,2,4,8,16,32,32,32}, 2 ResNet blocks", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Regression baseline", "role": "baseline", "params": "same as SR3 per task", "architecture": "same U-Net as SR3, one-step, trained with MSE", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "FSRGAN, PULSE", "role": "baseline", "params": null, "architecture": "GAN-based face SR (PULSE: latent-space optimisation); samples provided by PULSE authors", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Unconditional 64x64 face DDPM and class-conditional 64x64 ImageNet Improved DDPM", "role": "base", "params": null, "architecture": "DDPM / Improved DDPM feeding the SR3 cascade", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "their training details are not given"}}
+  ],
+  "training": {
+   "objective": "predict noise: E || f_theta(x, sqrt(gamma) y0 + sqrt(1-gamma) eps, gamma) - eps ||_p, p in {1,2}; L1 used for best result (Table 5)",
+   "optimizer": "Adam",
+   "lr": "1e-4 for SR3, 1e-5 for regression",
+   "lr_schedule": "linear warmup then fixed",
+   "warmup": "10k training steps",
+   "batch_size": "256",
+   "steps": "1M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.2 for 16x16->128x128 only, none otherwise",
+   "regularisation": "Gaussian blur augmentation on low-res input (64->256 ImageNet ablation); none at inference",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"T": "2000 diffusion steps in training; gamma sampled piecewise-uniformly: t uniform in {0..T}, gamma ~ U(gamma_{t-1}, gamma_t)", "checkpoint": "regression: best peak-PSNR on held-out set; SR3: latest checkpoint, no selection", "conditioning": "bicubic upsample of x concatenated with y_t on channels; FiLM tried, similar quality"}
+  },
+  "inference": {
+   "decoding": "ancestral reverse diffusion, y_{t-1} = 1/sqrt(alpha_t) (y_t - (1-alpha_t)/sqrt(1-gamma_t) f(x,y_t,gamma_t)) + sqrt(1-alpha_t) z",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"max_inference_steps": "100", "inference noise schedule": "hyper-parameter searched, chosen by FID on held-out data (PSNR did not correlate); the chosen schedule values are not given", "cascade": "more refinement steps at low resolution, fewer at high; step counts per stage not given"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "PSNR", "definition": "peak signal-to-noise ratio vs reference", "unit": "dB", "higher_is_better": true},
+    {"name": "SSIM", "definition": "structural similarity vs reference", "unit": "index", "higher_is_better": true},
+    {"name": "Consistency", "definition": "MSE between down-sampled SR output and low-res input", "unit": "MSE x1e-5", "higher_is_better": false},
+    {"name": "FID / FID-50k, IS", "definition": "Frechet inception distance and inception score of samples", "unit": "score", "higher_is_better": false},
+    {"name": "Classification error", "definition": "ResNet-50 top-1/top-5 error on 4x SR of 56x56 center crops (resized 64, SR to 256, resized to 224), first 1K ImageNet val images", "unit": "error fraction", "higher_is_better": false},
+    {"name": "Fool rate (2AFC)", "definition": "fraction of trials where subject picks model output over ground truth; Task-1 shows low-res input, Task-2 does not; 3 s display", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["FSRGAN","PULSE","Regression (same U-Net, MSE)","DRCN","FSRCNN","PsyCo","ENet-E","RCAN","VQ-VAE-2","BigGAN"],
+   "protocol": "Human study: 50 subjects, each shown 50 of the 100 test images; 3 s display (similar rates up to 12 s). Single run, no seeds or significance tests reported."
+  },
+  "availability": {"code": "human evaluation code linked via tinyurl; model code not stated", "weights": null, "data": "SR3 and regression samples used in human study linked via tinyurl"},
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics.Consistency", "quote": "Consistency measures MSE (×10−5) between the low-resolution inputs and the down-sampled super-resolution outputs.", "where": "Table 1 caption"}
+  ]
+ },
+ "results": [
+  {"claim": "SR3 achieves a human fool rate near 50% on 8x face super-resolution, versus at most 34% for GAN methods.", "kind": "measured", "source": null, "metric": "fool rate (Task-2, no input shown)", "value": "47.4", "unit": "%", "baseline_value": "33.7 (PULSE)", "n": "50 subjects x 50 images", "setup": "CelebA-HQ 16x16->128x128, SR3 trained on FFHQ, 3 s display, compared to ground truth", "quote": "SR3 achieves a fool rate close to 50%, suggesting photo-realistic outputs, while GANs do not exceed a fool rate of 34%.", "table": "Fig 6 bottom, SR3 47.4%, PULSE 33.7%, FSRGAN 8.5%, Regression 15.3%", "note": "Task-1 (inputs shown): SR3 54.1, Regression 29.3, PULSE 24.6, FSRGAN 8.9, read from Fig 6 top", "where": "Abstract; Fig 6"},
+  {"claim": "Two-stage cascade (64x64 class-conditional DDPM + 4x SR3) reaches FID 11.3 on class-conditional 256x256 ImageNet, better than VQ-VAE-2 and comparable to BigGAN at truncation 1.5 but worse than BigGAN at 1.0.", "kind": "measured", "source": null, "metric": "FID-50k", "value": "11.3", "unit": "FID", "baseline_value": "7.4 (BigGAN trunc 1.0); 11.8 (BigGAN trunc 1.5); 38.1 (VQ-VAE-2)", "n": null, "setup": "ImageNet class-conditional 256x256, Improved DDPM 64x64 then SR3 (not class-conditioned), L1 loss and Gaussian-blur augmentation", "quote": "yielding a competitive FID score of 11.3 on ImageNet.", "table": "Table 4, row SR3 (Two Stage), column FID-50k", "note": null, "where": "Abstract; Table 4"},
+  {"claim": "On ImageNet 64->256 SR3 gives much better FID than regression but lower PSNR/SSIM, showing PSNR/SSIM favour blurry MSE outputs.", "kind": "measured", "source": null, "metric": "FID", "value": "5.2", "unit": "FID", "baseline_value": "15.2 (Regression); reference 1.9", "n": null, "setup": "ImageNet validation set, 64x64->256x256; SR3 IS 180.1 vs 121.1, PSNR 26.4 vs 27.9, SSIM 0.762 vs 0.801", "quote": null, "table": "Table 2, row SR3, column FID", "note": null, "where": "Table 2"},
+  {"claim": "SR3 beats prior SR methods and regression on ResNet-50 top-1 error after 4x upscaling.", "kind": "measured", "source": null, "metric": "top-1 error", "value": "0.317", "unit": "error fraction", "baseline_value": "0.383 (Regression); 0.393 (RCAN); unscaled baseline 0.252", "n": "first 1K ImageNet val images", "setup": "56x56 center crops -> 64 -> 4x SR -> 224, pre-trained ResNet-50; top-5 0.120 vs 0.173 regression", "quote": null, "table": "Table 3, row SR3, column Top-1 Error", "note": null, "where": "Table 3"},
+  {"claim": "On ImageNet 64->256 SR3 fool rate is about 39% vs regression 13-17%.", "kind": "measured", "source": null, "metric": "fool rate", "value": "38.8", "unit": "%", "baseline_value": "16.8 (Regression, Task-1)", "n": null, "setup": "ImageNet 64x64->256x256, Task-1 with inputs; Task-2 SR3 39.0 vs regression 13.4", "quote": "In both tasks with natural images, SR3 achieves a human subject fool rate is close to 40%.", "table": null, "note": "38.8/16.8 read from Fig 7 top", "where": "Sec 4.2.2; Fig 7"},
+  {"claim": "SR3 has the best consistency error on 16->128 faces, slightly below regression and far below GANs, with no auxiliary loss.", "kind": "measured", "source": null, "metric": "Consistency (MSE x1e-5)", "value": "2.68", "unit": "MSE x1e-5", "baseline_value": "2.71 Regression; 33.8 FSRGAN; 161.1 PULSE", "n": null, "setup": "CelebA-HQ 16x16->128x128", "quote": null, "table": "Table 1, row Consistency, column SR3", "note": null, "where": "Table 1"},
+  {"claim": "On faces SR3 PSNR/SSIM trails the regression baseline but beats the GANs.", "kind": "measured", "source": null, "metric": "PSNR", "value": "23.04", "unit": "dB", "baseline_value": "23.96 Regression; 23.01 FSRGAN; 16.88 PULSE", "n": null, "setup": "16x16->128x128 faces; SSIM 0.65 vs 0.69 regression", "quote": null, "table": "Table 1, row PSNR, column SR3", "note": null, "where": "Table 1"},
+  {"claim": "Gaussian-blur augmentation on the low-res input improves FID by about 2 points; L1 beats L2 slightly.", "kind": "measured", "source": null, "metric": "FID-50k", "value": "11.3", "unit": "FID", "baseline_value": "13.1 (no augmentation); 11.8 (L2)", "n": null, "setup": "64x64->256x256 ImageNet SR3, class-conditional 256x256 FID", "quote": null, "table": "Table 5, row SR3 (w/ Gaussian Blur) and SR3 (L1), column FID-50k", "note": null, "where": "Table 5"},
+  {"claim": "SR3 sampling uses at most 100 steps although trained with T=2000, because the model conditions on gamma and the inference schedule is tuned after training.", "kind": "measured", "source": null, "metric": "max inference steps", "value": "100", "unit": "steps", "baseline_value": null, "n": null, "setup": "all SR3 experiments; earlier DDPMs need 1-2k steps", "quote": "For efficient inference we set the maximum inference budget to 100 diffusion steps", "table": null, "note": null, "where": "Sec 2.4"},
+  {"claim": "Cascading is more efficient than direct high-res generation with no quality loss, using more steps at low resolution and fewer at high resolution.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "cascade experiments; no step counts or timing numbers given", "quote": null, "table": null, "note": null, "where": "Sec 4.3"}
+ ],
+ "limits": [
+  "Authors observed evidence of mode dropping: near-identical outputs for the same input, and over-smooth skin that drops moles, pimples and piercings.",
+  "Authors state SR3 should not be used for real-world super-resolution until these biases are understood.",
+  "Failure cases: braided hair, frameless glasses, eye highlight consistency, text on ImageNet, fine building structure.",
+  "No quality-vs-diversity knob (like BigGAN truncation); FID 11.3 is worse than BigGAN at truncation 1.0 (7.4).",
+  "No wall-clock, hardware, compute, seeds or confidence intervals; sampling latency vs steps not measured; chosen inference schedule not given.",
+  "Human evaluation covers only 100 faces and only SR3, regression, PULSE, FSRGAN; ImageNet study compares only regression.",
+  "Forward process not conditioned on x; loss choice (epsilon vs y0 regression) left unexplored."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "fool rate", "definition": "the fraction of trials on which a subject selects the model output over ground truth", "where": "Sec 4.2.2"},
+  {"term": "SR3", "definition": "Super-Resolution via Repeated Refinement", "where": "Introduction"}
+ ],
+ "lineage": [
+  {"work": "Denoising Diffusion Probabilistic Models (Ho, Jain, Abbeel)", "year": 2020, "arxiv": null, "relation": "extends", "note": "SR3 adapts DDPM to conditional generation; U-Net and loss follow it", "quote": null},
+  {"work": "Sohl-Dickstein et al. nonequilibrium thermodynamics diffusion", "year": 2015, "arxiv": null, "relation": "extends", "note": "original diffusion formulation [47-48]", "quote": null},
+  {"work": "WaveGrad (Chen et al.)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "conditioning on noise level gamma and piecewise noise sampling, fast inference schedule search", "quote": null},
+  {"work": "Score-based generative modeling through SDEs (Song et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "U-Net modifications [51], continuous-time diffusion", "quote": null},
+  {"work": "Improved DDPM (Nichol and Dhariwal)", "year": 2021, "arxiv": "2102.09672", "relation": "uses-method", "note": "class-conditional 64x64 ImageNet base model; concurrent cascade results", "quote": null},
+  {"work": "BigGAN (Brock et al.)", "year": 2018, "arxiv": "1809.11096", "relation": "baseline", "note": "residual blocks used; FID baseline", "quote": null},
+  {"work": "PULSE (Menon et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "face SR baseline", "quote": null},
+  {"work": "FSRGAN / FSRNet (Chen et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "face SR baseline", "quote": null},
+  {"work": "VQ-VAE-2 (Razavi et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "FID 38.1 comparison", "quote": null},
+  {"work": "FFHQ, CelebA-HQ, ImageNet", "year": null, "arxiv": null, "relation": "uses-data", "note": "train/eval datasets", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "The forward diffusion process q gradually adds Gaussian noise to the target image. The reverse inference process p iteratively denoises the target image conditioned on a source image x.", "page": 2, "why": "Shows the forward/reverse chain at a glance."},
+  {"figure": "Fig A.1", "caption": "U-Net architecture with skip connections; low-res x is interpolated and concatenated with noisy y_t.", "page": null, "why": "Shows how conditioning is just channel concatenation."},
+  {"figure": "Fig 3", "caption": "Bicubic / Regression / SR3 / Reference, 64x64->256x256 on ImageNet with enlarged patches.", "page": 4, "why": "Visual contrast of blurry regression vs sharp SR3."},
+  {"figure": "Fig 6", "caption": "Face super-resolution human fool rates with and without inputs shown.", "page": 6, "why": "Key evidence that SR3 approaches 50% fool rate."},
+  {"figure": "Fig 8", "caption": "Synthetic 1024x1024 faces via 64->256->1024 cascade.", "page": 7, "why": "Illustrates cascaded generation."}
+ ],
+ "code": [
+  {"where": "Algorithm 1, p3", "snippet": "Training: (x, y0) ~ p(x,y); gamma ~ p(gamma); eps ~ N(0,I); gradient step on || f_theta(x, sqrt(gamma) y0 + sqrt(1-gamma) eps, gamma) - eps ||", "verbatim": false},
+  {"where": "Algorithm 2, p3", "snippet": "y_T ~ N(0,I); for t=T..1: z~N(0,I) if t>1 else 0; y_{t-1} = 1/sqrt(alpha_t) (y_t - (1-alpha_t)/sqrt(1-gamma_t) f_theta(x,y_t,gamma_t)) + sqrt(1-alpha_t) z; return y0", "verbatim": false}
+ ],
+ "problems": ["Text is arXiv v2 (30 Jun 2021); ledger year may differ (published 2022). Fig 6/7 numbers read from figure text, not captions. Section 4 intro says 64x64->512x1512 (typo for 512x512). No embedded instructions found."]
+}

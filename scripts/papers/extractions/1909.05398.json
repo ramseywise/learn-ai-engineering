@@ -1,0 +1,397 @@
+{
+ "schema": 1,
+ "key": "1909.05398",
+ "pdf": "generative-ai/08-eval/sources/hausknecht-2020-interactive-fiction-games.pdf",
+ "bib": {
+  "title": "Interactive Fiction Games: A Colossal Adventure",
+  "authors": [
+   "Matthew Hausknecht",
+   "Prithviraj Ammanabrolu",
+   "Marc-Alexandre Côté",
+   "Xingdi Yuan"
+  ],
+  "first_author": "Hausknecht",
+  "year": 2020,
+  "venue": "preprint",
+  "arxiv": "1909.05398",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 79795,
+  "chars_total": 79795,
+  "engine": "pymupdf",
+  "skipped": "Appendix B transcripts and learning-curve axis ticks skimmed (numeric noise); appendix A read in full"
+ },
+ "type": "benchmark",
+ "question": "Can interactive fiction (text adventure) games serve as a testbed for language-based agents, and how well do current RL and heuristic agents do on a broad set of human-made games?",
+ "hypothesis": "IF games combine combinatorial action spaces, language understanding and commonsense reasoning, so they make a good testbed for language agents.",
+ "contributions": [
+  "Jericho, a learning environment for human-made IF games",
+  "A template-based action space argued to suit language generation",
+  "An empirical evaluation of learning agents across a large set of human-made games"
+ ],
+ "method": {
+  "summary": "Introduces Jericho, an OpenAI-Gym-like Python interface to human-made IF games with score-based reward, save/load, templates, vocabulary and world-change detection. Evaluates a random agent, NAIL (heuristic, no training), DRRN (choice-based RL) and the new Template-DQN (TDQN) on 32 supported games.",
+  "task": "text-adventure game playing (sequential decision making in language)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Jericho supported games (32 evaluated)",
+    "role": "eval",
+    "size": "32 games, max score 1 to 600 per game (Table 1)",
+    "split": "DRRN/TDQN trained and evaluated per game; no held-out games",
+    "source": "Infocom classics (Zork, HHGG) and community games (Anchorhead, Afflicted); github.com/Microsoft/jericho",
+    "preprocessing": "SentencePiece 8000-vocab model trained on strings from human play sessions of IF games"
+   }
+  ],
+  "models": [
+   {
+    "name": "DRRN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "separate GRUs for narrative, inventory, location description and action text; Q(o,a) via ReLU+linear; softmax action sampling; prioritized replay",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "8000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "handicaps": "world-change detection for valid actions, load/save"
+    }
+   },
+   {
+    "name": "Template-DQN (TDQN)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "extends LSTM-DQN; GRU observation encoder with three heads: Q(o,u) over templates and Q(o,p1), Q(o,p2) over vocabulary",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "8000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "aux_loss": "supervised binary cross entropy toward valid templates/words, evenly mixed with TD error",
+     "handicaps": "same as DRRN"
+    }
+   },
+   {
+    "name": "NAIL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "hand-crafted heuristics with map building and a web-based language model",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "handicaps": "none"
+    }
+   },
+   {
+    "name": "RAND",
+    "role": "baseline",
+    "params": null,
+    "architecture": "uniform sampling from {north, south, east, west, up, down, look, inventory, take all, drop, yes}",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Q-learning (TD error); TDQN adds BCE valid-action loss",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "DRRN 100,000 updates (16 parallel environments, 1.6 million environment interactions); TDQN 1 million environment steps (single environment)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 independent runs per game; no environment seeds set",
+   "other": {
+    "hyperparameters": "tuned on Zork1 and held fixed across games; values not given in the paper",
+    "episode_limit": "terminated after 100 valid steps or game over/victory"
+   }
+  },
+  "inference": {
+   "decoding": "DRRN: softmax sampling over Q-values of valid actions; TDQN: template then words",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "RAND and NAIL: 1000 total environment steps; scores averaged over 5 runs; learned-agent score is mean return over last 100 episodes of learning",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "action_space_example": "200 templates, 700 words gives O(T V^2) about 98 million"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "raw game score",
+     "definition": "mean return over last hundred training episodes",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "progress score",
+     "definition": "agent score normalized by maximum possible game score, averaged across games",
+     "unit": "% completion",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "RAND",
+    "NAIL",
+    "DRRN",
+    "TDQN"
+   ],
+   "protocol": "5 runs per learned agent per game; 32 games; per-game hyperparameters not tuned; handicaps reported per algorithm"
+  },
+  "availability": {
+   "code": "https://github.com/Microsoft/jericho; DRRN/TDQN at https://github.com/microsoft/tdqn; NAIL at https://github.com/microsoft/nail_agent",
+   "weights": null,
+   "data": "games listed in Jericho; unsupported games at github.com/BYU-PCCL/z-machine-games"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.steps",
+    "quote": "DRRN was trained for 100,000 updates, using data collected from 16 environments in parallel.",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DRRN reaches the highest average progress across 32 games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progress score",
+   "value": "10.7",
+   "unit": "% completion",
+   "baseline_value": "RANDOM 1.8, NAIL 4.9, TDQN 6.1",
+   "n": 32,
+   "setup": "32 Jericho games, 5 runs, hyperparameters tuned on Zork1",
+   "quote": "RANDOM 1.8%, NAIL 4.9%, TDQN 6.1%, and DRRN 10.7% completion",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "No agent scored on five of the games.",
+   "kind": "measured",
+   "source": null,
+   "metric": "games with zero score",
+   "value": "5",
+   "unit": "games",
+   "baseline_value": null,
+   "n": 32,
+   "setup": "all four agents",
+   "quote": "None of the agents were able to get any score on ﬁve of the games.",
+   "table": null,
+   "note": null,
+   "where": "Sec 6"
+  },
+  {
+   "claim": "DRRN on Zork1 scores 32.6 of 350.",
+   "kind": "measured",
+   "source": null,
+   "metric": "raw score",
+   "value": "32.6",
+   "unit": "points",
+   "baseline_value": "TDQN 9.9, NAIL 10.3",
+   "n": 5,
+   "setup": "Zork1, max 350",
+   "quote": null,
+   "table": "Table 1, row zork1, column DRRN (32.6)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The template action space is about three orders of magnitude smaller than 4-word vocabulary actions.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "action space size",
+   "value": "98 million",
+   "unit": "actions",
+   "baseline_value": "240 billion",
+   "n": null,
+   "setup": "200 templates, 700-word vocabulary",
+   "quote": "a typical game with 200 templates and a 700 word vocabulary yields an action space of O(T V2) ≈98 million",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Zork1 template-action space is 115 million actions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "action space size",
+   "value": "115 million",
+   "unit": "actions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "237 templates, 697 words",
+   "quote": "Zork1 has 237 templates with a 697 word vocabulary, yielding an action space of 115 million",
+   "table": null,
+   "note": null,
+   "where": "Sec 5"
+  },
+  {
+   "claim": "A 4-word action from a 700-word vocabulary has 240 billion possibilities, of which perhaps 100 million parse and only about a hundred are valid.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "action space size",
+   "value": "240 billion",
+   "unit": "actions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "illustrative",
+   "quote": "out of the 240 billion possible actions there may be 100 million that are grammatical and successfully parseable",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  }
+ ],
+ "limits": [
+  "Agents trained and evaluated on the same single game; no test on unseen games (authors concede, Future Work).",
+  "Agents differ in handicaps (DRRN/TDQN use save/load, valid-action detection; NAIL none), so scores are not a like-for-like ranking; authors say they provide scores as benchmarks, not comparisons.",
+  "NAIL was developed on many of the evaluation games.",
+  "Hyperparameters tuned on Zork1 and not reported; no optimizer or learning rate in the paper.",
+  "TDQN assumes independence between template and word choices, producing invalid combinations like 'take north'.",
+  "Scores are mean over last 100 training episodes, not a separate test phase.",
+  "RL-era agents; no LLM agents evaluated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Valid action",
+   "definition": "actions recognized by the game's parser that cause changes in the game state",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Handicaps",
+   "definition": "optional Jericho aids: fixed seed, load/save, game-specific templates and vocabulary, world object tree, world-change detection",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "TextWorld (Côté et al.)",
+   "year": 2018,
+   "arxiv": "1806.11532",
+   "relation": "related",
+   "note": "procedurally generated text games",
+   "quote": null
+  },
+  {
+   "work": "NAIL (Hausknecht et al.)",
+   "year": 2019,
+   "arxiv": "1902.04259",
+   "relation": "evaluates",
+   "note": "general IF agent used as baseline",
+   "quote": null
+  },
+  {
+   "work": "DRRN (He et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "choice-based RL agent",
+   "quote": null
+  },
+  {
+   "work": "LSTM-DQN (Narasimhan et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "TDQN extends it with templates",
+   "quote": null
+  },
+  {
+   "work": "KG-DQN (Ammanabrolu and Riedl)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "knowledge-graph state for text games",
+   "quote": null
+  },
+  {
+   "work": "Action-elimination network (Zahavy et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "predefined minimal action sets",
+   "quote": null
+  },
+  {
+   "work": "LIGHT (Urbanek et al.)",
+   "year": 2019,
+   "arxiv": "1903.03094",
+   "relation": "related",
+   "note": "crowdsourced text adventure dialogue",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Excerpt from Adam Cadre's 9:05.",
+   "page": 2,
+   "why": "shows observation/action loop of an IF game"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Models: DRRN and Template-DQN architectures",
+   "page": 5,
+   "why": "contrasts action-encoding DRRN with template/word heads of TDQN"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Categories of Difficulty: Possible, Difficult, Extreme games",
+   "page": 8,
+   "why": "difficulty tiers by action space, solution length and features"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Episode score as a function of training steps for DRRN (top) and TDQN (bottom)",
+   "page": 9,
+   "why": "learning curves with std over 5 runs"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "for template u in T: for all combinations p1,p2 in P: a <- u <= p1,p2; if E.world_changed(E.step(a)): Y <- Y U a; E.load(s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 and Table 2 extracted as column-per-line text; read by position.",
+  "No embedded instructions found."
+ ]
+}

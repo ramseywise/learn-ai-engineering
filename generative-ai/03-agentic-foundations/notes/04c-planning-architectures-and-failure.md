@@ -32,6 +32,9 @@ sources:
   - https://arxiv.org/abs/2502.16111
   - https://arxiv.org/abs/2504.17192
   - https://arxiv.org/abs/2603.05294
+  - "Song et al. 2023, LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large Language Models — https://arxiv.org/abs/2212.04088"
+  - "Lin et al. 2023, SwiftSage: A Generative Agent with Fast and Slow Thinking for Complex Interactive Tasks — https://arxiv.org/abs/2305.17390"
+  - "Nottingham et al. 2023, Do Embodied Agents Dream of Pixelated Sheep — https://arxiv.org/abs/2301.12050"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -136,6 +139,25 @@ A fixed branching factor is a poor fit for sampling, because a model can always 
 Planning can also be steered by a small separate model that holds task knowledge. WKM ([arXiv:2405.14205](https://arxiv.org/abs/2405.14205) (Qiao et al., NeurIPS 2024)) trains a LoRA "world knowledge model" beside the agent. It writes task knowledge (workflows and commonsense, distilled by contrasting expert trajectories with the agent's own failed ones) once per task, and state knowledge for each step. State knowledge is not put in the prompt. Matching training triplets are retrieved, and their next-action counts are mixed into the agent's action probabilities, with weight γ on the agent. On ALFWorld (seen/unseen), WebShop and ScienceWorld with 7 to 8B models, it beat the fine-tuned baselines NAT, ETO and KnowAgent by 1 to 5 points of average reward (Mistral-7B ALFWorld 73.57/76.87, +3.13/+5.44), and 7B WKM beat one-shot GPT-4 ReAct on ALFWorld (44.29/38.05) and WebShop but not ScienceWorld. Invalid-action trajectories on ALFWorld fell to 32.86%/29.85% from 45.71%/50.00% for NAT (the table does not name the backbone). Task knowledge helped more than state knowledge, a Mistral-7B knowledge model also lifted GPT-4 on ALFWorld to 50.71/47.01, and inference costs about 2.5 times the agent alone. Simulated text environments, no seeds, and the knowledge base cannot update as the world changes.
 
 **Decomposition-first plans break at execution, so repair them instead of starting over.** An early zero-shot planning study found the gap ([arXiv:2201.07207](https://arxiv.org/abs/2201.07207) (Huang et al., ICML 2022)). In VirtualHome, human judges rated 78% of GPT-3 175B's plans correct (human-written plans: 70%), but only 8% could be executed, because the steps didn't map to actions the environment supports. Mapping each step to the nearest admissible action by embedding similarity took Codex 12B from 18% to 79% executable, and correctness fell from 65% to 55%. DEPS ([arXiv:2302.01560](https://arxiv.org/abs/2302.01560) (Wang et al., NeurIPS 2023)) closes the loop in Minecraft. When a subgoal fails, a descriptor reports what happened, the LLM explains why the plan failed and rewrites it, and a trained selector orders parallel subgoals by predicted steps to completion. Across 71 tasks, average success went from 25.8% for the best prior LLM planner (Code-as-Policies) to 39.4% with describe-explain-plan and 48.6% with the selector. StructuredAgent ([arXiv:2603.05294](https://arxiv.org/abs/2603.05294) (Lobo et al., 2026-03, preprint)) makes repair local. The plan is an AND/OR tree; a failed node is repaired in place, and OR nodes hold alternatives. With Claude 3.5 Sonnet on WebArena's 630 tasks it reached 53% success, against 46% for AgentOccam on the same backbone. In ablation, repair restored 37–44% of failed nodes while leaving 88–99% of the tree intact, and OR alternatives without repair added nothing. The gain vanished with a weaker backbone (Kimi-k2): the tree is only as good as the decompositions the model writes.
+
+Three embodied-agent papers show when to re-plan, who should act, and how little a plan needs to be right. LLM-Planner has GPT-3 write a high-level plan from 9 retrieved examples, then re-prompts it with the finished subgoals and the objects now seen when a subgoal fails ([arXiv:2212.04088](https://arxiv.org/abs/2212.04088) (Song et al., ICCV 2023)). On ALFRED (valid unseen), 100 paired examples (under 0.5% of the data) gave **15.36 success against 9.88 for SayCan given oracle object knowledge**, near the full-data HLSM at 18.28, with 7 GPT-3 calls per task against 22. Re-planning added 1.83 points on the test-unseen split.
+
+![LLM-Planner producing a plan at t=0 and re-planning at t=5 and t=20 from what the agent sees](../sources/images/song-llm-planner-fig1.png)
+
+*Image Source: Song et al., [LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large Language Models](https://arxiv.org/abs/2212.04088) (2023), Fig. 1*
+
+SwiftSage lets a small model act and calls the LLM only when stuck ([arXiv:2305.17390](https://arxiv.org/abs/2305.17390) (Lin et al., NeurIPS 2023)). A behaviour-cloned flan-t5-large (770M) acts by default, and GPT-4 plans subgoals when it loops or hits an exception. On ScienceWorld (30 task types, 270 test variations), **it scored 84.68 against 45.34 for Reflexion and 36.43 for ReAct, at 757 tokens per action against 1,972 and 2,983**; with gpt-3.5-turbo it kept 62.22 while ReAct fell to 19.76. It is one text simulator.
+
+![SayCan, ReAct and Reflexion prompting an LLM at every step against SwiftSage's small model with on-demand LLM planning](../sources/images/lin-swiftsage-fig1.png)
+
+*Image Source: Lin et al., [SwiftSage: A Generative Agent with Fast and Slow Thinking for Complex Interactive Tasks](https://arxiv.org/abs/2305.17390) (2023), Fig. 1*
+
+DECKARD treats the plan as a hypothesis ([arXiv:2301.12050](https://arxiv.org/abs/2301.12050) (Nottingham et al., ICML 2023)). Codex writes a recipe graph for 391 Minecraft items, which is exactly right for only 55% of them (69% for tools). The agent explores toward the graph's nodes and corrects edges it can verify in the world. **Crafting a stone pickaxe took 2.6M steps with the graph and 32M without it.**
+
+![DECKARD's dream phase samples a subgoal from the LLM's recipe graph and its wake phase executes it and verifies the edge](../sources/images/nottingham-deckard-fig1.png)
+
+*Image Source: Nottingham et al., [Do Embodied Agents Dream of Pixelated Sheep](https://arxiv.org/abs/2301.12050) (2023), Fig. 1*
+
 
 ---
 

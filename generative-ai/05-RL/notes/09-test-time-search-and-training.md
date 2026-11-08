@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://arxiv.org/abs/1909.13231 (Sun et al., Test-Time Training with Self-Supervision, ICML 2020)
   - "Koenigstein, \"AI Agents: The Definitive Guide\" (O'Reilly, 2026)"
   - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 6)
   - https://arxiv.org/abs/2203.07814
@@ -163,6 +164,8 @@ recipes often start.
 
 **Test-time training sits between the two.** You update weights, but only temporarily, and for
 one problem.
+
+The idea predates LLMs. Sun et al. ([arXiv:1909.13231](https://arxiv.org/abs/1909.13231) (Sun et al., ICML 2020)) trained an image classifier jointly with a rotation-prediction head, then at test time took SGD steps on the rotation loss of the single unlabelled test image (10 steps, lr 0.001, parameters reset per image) before classifying it. On CIFAR-10-C level 5 Gaussian noise (ResNet-26) error was 45.6% with the standard version and 25.8% when the parameters were kept across the test stream, against 50.5% for the baseline. Gains on natural shifts were small (CIFAR-10.1 error 15.9% against 17.4%). The gain tracked the gradient agreement between the main and auxiliary losses (correlation 0.93 across 75 test sets for the standard version, 0.89 online), a correlation and not a proof for deep nets. Vision only, with a rotation task, and each test image costs several forward and backward passes.
 
 - **TTT for few-shot tasks.** Akyürek et al. train a per-task LoRA (rank 128) on leave-one-out
   tasks built from the task's own demonstrations, with invertible augmentations

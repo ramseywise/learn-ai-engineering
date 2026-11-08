@@ -1,0 +1,680 @@
+{
+ "schema": 1,
+ "key": "2305.18565",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/chen-2023-pali-x.pdf",
+ "bib": {
+  "title": "PaLI-X: On Scaling up a Multilingual Vision and Language Model",
+  "authors": [
+   "Xi Chen",
+   "Josip Djolonga",
+   "Piotr Padlewski",
+   "Basil Mustafa",
+   "Soravit Changpinyo",
+   "Jialin Wu",
+   "Carlos Riquelme Ruiz",
+   "Sebastian Goodman",
+   "Xiao Wang",
+   "Yi Tay",
+   "Siamak Shakeri",
+   "Mostafa Dehghani",
+   "Daniel Salz",
+   "Mario Lucic",
+   "Michael Tschannen",
+   "Arsha Nagrani",
+   "Hexiang Hu",
+   "Mandar Joshi",
+   "Bo Pang",
+   "Ceslee Montgomery",
+   "Paulina Pietrzyk",
+   "Marvin Ritter",
+   "AJ Piergiovanni",
+   "Matthias Minderer",
+   "Filip Pavetic",
+   "Austin Waters",
+   "Gang Li",
+   "Ibrahim Alabdulmohsin",
+   "Lucas Beyer",
+   "Julien Amelot",
+   "Kenton Lee",
+   "Andreas Peter Steiner",
+   "Yang Li",
+   "Daniel Keysers",
+   "Anurag Arnab",
+   "Yuanzhong Xu",
+   "Keran Rong",
+   "Alexander Kolesnikov",
+   "Mojtaba Seyedhosseini",
+   "Anelia Angelova",
+   "Xiaohua Zhai",
+   "Neil Houlsby",
+   "Radu Soricut"
+  ],
+  "first_author": "Chen",
+  "year": 2023,
+  "venue": "preprint (arXiv, 'Preprint. Under review.')",
+  "arxiv": "2305.18565",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 97779,
+  "chars_total": 97779,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "What does scaling both the vision encoder (to 22B) and the language encoder-decoder (to 32B) of a multilingual vision-language model, with a broad objective mixture, buy across captioning, VQA, document, video, few-shot, classification and detection tasks?",
+ "hypothesis": "Scaling both V&L components together, with a mixture of objectives, improves performance and the few-shot vs fine-tuning Pareto frontier.",
+ "contributions": [
+  "Scale a V&L model to 55B, showing scaling both components helps and is unsaturated",
+  "Mixture of prefix-completion and masked-token objectives improves the few-shot vs fine-tuning Pareto frontier",
+  "ViT-22B co-trained on image classification and OCR label classification improves text-in-image tasks",
+  "SoTA via fine-tuning on 15+ benchmarks; multitask fine-tuning across diverse benchmarks without significant degradation"
+ ],
+ "method": {
+  "summary": "PaLI-X pairs a ViT-22B (further trained with JFT classification plus OCR bag-of-words classification) with a UL2-initialised 32B encoder-decoder. Visual patch embeddings are projected and concatenated with text embeddings. It is trained in two stages on a 13-objective mixture (frozen ViT at 224px, then OCR/detection-only at rising resolution up to 756px), then fine-tuned per task or multitask.",
+  "task": "multilingual image/video captioning, VQA, document understanding, few-shot captioning, classification, detection",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WebLI",
+    "role": "pretrain",
+    "size": "roughly one billion images with alt-texts and OCR, over 100 languages",
+    "split": null,
+    "source": "PaLI [5]; OCR via GCP Vision API",
+    "preprocessing": null
+   },
+   {
+    "name": "Episodic WebLI",
+    "role": "pretrain",
+    "size": "75M episodes, around 400M images",
+    "split": null,
+    "source": "WebLI grouped by URL field",
+    "preprocessing": "loosely related images clustered by URL"
+   },
+   {
+    "name": "CC3M (native and translated), VQ2A-CC3M",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "35 XM3600 languages",
+    "preprocessing": "translated"
+   },
+   {
+    "name": "COCO Captions, NoCaps, TextCaps, VizWiz-Cap, Screen2Words, Widget-Cap; VQAv2, OKVQA, TallyQA, TextVQA, VizWiz-VQA, STVQA, OCRVQA, InfographicVQA, DocVQA, AI2D, ChartQA, OVEN, InfoSeek",
+    "role": "both",
+    "size": null,
+    "split": "COCO Karpathy split; val/test-dev/test as in tables",
+    "source": "Table 15",
+    "preprocessing": "training sets deduplicated against test images of all tasks"
+   },
+   {
+    "name": "Video: MSR-VTT, VATEX, ActivityNet Captions, SMIT, NExT-QA, MSR-VTT-QA, ActivityNet-QA",
+    "role": "both",
+    "size": "Table 24; 10% or more videos missing in most (e.g. MSR-VTT train 4768 of 6513)",
+    "split": "validation for early stopping, test reported",
+    "source": "freshly collected",
+    "preprocessing": "up to 8 or 16 frames, fixed temporal stride per dataset"
+   },
+   {
+    "name": "ImageNet, REAL, -R, -A, -Sketch, -v2, ObjectNet",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LVIS / COCO detection",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": "LVIS-rare labels removed from pretraining detection data; LVIS and COCO labels removed for zero-shot"
+   }
+  ],
+  "models": [
+   {
+    "name": "PaLI-X",
+    "role": "proposed",
+    "params": "55B",
+    "architecture": "ViT-22B + UL2-variant encoder-decoder (32B)",
+    "init_from": "ViT-22B [6]; UL2 [7] 32B variant",
+    "tokenizer": "mT5 tokenizer for OCR targets",
+    "vocab": null,
+    "layers": "50 in both encoder and decoder (up from 32 in UL2)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "capacity split": "roughly 40%-60% vision/language",
+     "image resolutions": "224, 448, 672, 756"
+    }
+   },
+   {
+    "name": "PaLI ablation 5B",
+    "role": "base",
+    "params": "5B",
+    "architecture": "UL2-3B + ViT-G 2B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "roughly 10:1 down-scale of PaLI-X"
+    }
+   },
+   {
+    "name": "PaLI 700M ablation",
+    "role": "baseline",
+    "params": "700M",
+    "architecture": "ViT-B/16 + mT5-base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "mixture: span corruption (15% of tokens), split-captioning, CC3M captioning, split-ocr, VQA (VQ2A, Object-Aware), VQG, episodic captioning, 4-pair VQA, pix2struct, video captioning (4 frames), OWL-ViT pseudo-label detection, ViT-VQGAN image-token prediction (256 tokens at 256x256)",
+   "optimizer": null,
+   "lr": "fine-tuning: 1e-4 (pretraining lr not stated)",
+   "lr_schedule": "fine-tuning: linear decay from 1e-4 to 0",
+   "warmup": null,
+   "batch_size": "fine-tuning: 256 (COCO, VQAv2, OCRVQA, multitask) or 128 (all other)",
+   "steps": "fine-tuning: 10k (COCO), 20k (VQAv2, OCRVQA, multitask), 5k (other)",
+   "epochs": null,
+   "tokens": "stage 1: 2.2B examples",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stage 1": "ViT frozen, 224x224, 2.2B examples, full mixture",
+    "stage 2": "only pix2struct, split-ocr and detection objectives; resolution raised to 448, 672, 756",
+    "ViT-22B OCR tuning": "JFT classification plus multilabel OCR-token-occurrence classification (mT5 tokenizer, expanded head)",
+    "multitask FT": "about 5M examples, 20k steps at batch 256; 672px captioning, 756px VQA; same prompt without task indicators",
+    "few-shot pretraining": "up to 4 shots, Ne sampled uniformly 1..N",
+    "few-shot FT": "up to 8 encoder shots, no decoder shots",
+    "detection": "Pix2seq-style, coords 0-999, prompt 'detect a and b', separate detection-specific model fine-tuned after the 672 stage"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "few-shot: shots pool of 256 train examples, N shots drawn at random per test point; seeds not stated",
+   "prompting": "'Generate caption in ⟨lang⟩'; 'Answer in ⟨lang⟩: {question}'; detection 'detect class1 and class2'; optional OCR tokens from GCP Vision API as extra text",
+   "retrieval": null,
+   "parameters": {
+    "attention re-weighting": "cross-attention weights multiplied by N (total shots) for target image and prompt tokens",
+    "video frames": "8 or 16, no spatial pooling, 16x16 patches per frame",
+    "fine-tune resolution": "672x672 for end-to-end captioning/VQA, 756x756 for scene-text and document tasks, 224x224 for video",
+    "toxicity threshold": "Perspective API > 0.8"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr",
+     "definition": "captioning",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA accuracy / EM / ANLS / relaxed accuracy",
+     "definition": "per benchmark, Table 15",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "WUPS",
+     "definition": "NExT-QA open-ended",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "LVIS AP",
+     "definition": "bounding box mean AP",
+     "unit": "AP",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-1 accuracy",
+     "definition": "exact match of generated class name",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PaLI 17B",
+    "GIT2",
+    "Flamingo 80B",
+    "BEiT-3",
+    "PaLM-E",
+    "MoVie",
+    "Pix2Struct",
+    "OwlViT"
+   ],
+   "protocol": "single run per setting, no seeds or significance tests stated; multitask fine-tuning uses a single checkpoint for all tasks"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WebLI and other mixture components not released in the text"
+  },
+  "prompts": [
+   {
+    "purpose": "captioning",
+    "text": "Generate caption in ⟨lang⟩",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "VQA",
+    "text": "Answer in ⟨lang⟩: {question}",
+    "where": "Sec 3.1"
+   },
+   {
+    "purpose": "detection",
+    "text": "detect class1 and class2 and class3",
+    "where": "App E.1"
+   },
+   {
+    "purpose": "person detection fairness probe",
+    "text": "Is there a person in this image?",
+    "where": "Sec 5"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.PaLI-X.layers",
+    "quote": "The architecture of this variant has 50 layers in both encoder and decoder (up from 32 layers in [7])",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PaLI-X sets new SoTA on VQAv2",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 test-std accuracy",
+   "value": 86.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "55B, end-to-end, no OCR pipeline, 672px, per-task fine-tune",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "We additionally note the state-of-the-art result on VQAv2 at 86.1 accuracy"
+  },
+  {
+   "claim": "TallyQA simple counting beats specialised MoVie",
+   "kind": "measured",
+   "source": null,
+   "metric": "TallyQA simple gain",
+   "value": 11.1,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vs MoVie, end-to-end 55B",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "at +11.1 for simple counting questions"
+  },
+  {
+   "claim": "TallyQA complex counting beats MoVie",
+   "kind": "measured",
+   "source": null,
+   "metric": "TallyQA complex gain",
+   "value": 18.8,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "vs MoVie, end-to-end 55B",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "+18.8 for complex counting questions"
+  },
+  {
+   "claim": "Complex counting emerges between 3B and 17B; simple counting grows more linearly",
+   "kind": "measured",
+   "source": null,
+   "metric": "TallyQA complex accuracy",
+   "value": 71.0,
+   "unit": "%",
+   "baseline_value": 65.5,
+   "n": null,
+   "setup": "224px, PaLI 700M/3B/17B and PaLI-X 55B",
+   "note": "baseline is PaLI 17B; 55.6 at 700M, 56.7 at 3B",
+   "where": "App B.4",
+   "table": "Table 18, row PaLI-X (55B), column TallyQA complex"
+  },
+  {
+   "claim": "AI2D jumps over Pix2Struct with answer choices as text input",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI2D gain",
+   "value": 42.9,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "multiple-choice, with OCR pipeline input, 756px",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "a significant jump of +42.9 points is observed on AI2D"
+  },
+  {
+   "claim": "Question-only AI2D (no choices) still beats Pix2Struct",
+   "kind": "measured",
+   "source": null,
+   "metric": "AI2D accuracy",
+   "value": 46.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "no answer choices in input",
+   "note": null,
+   "where": "Sec 4.1.1",
+   "quote": "In a question-only configuration (no answer choice present), PaLI-X achieves 46.3 on AI2D"
+  },
+  {
+   "claim": "OCR co-training of ViT-22B helps scene-text VQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "ST-VQA",
+   "value": 47.0,
+   "unit": "%",
+   "baseline_value": 42.6,
+   "n": null,
+   "setup": "mT5-base + ViT-22B-OCR, pretrain 224 on 40M WebLI-OCR, FT 448, val",
+   "note": "baseline vanilla ViT-22B; 3-task avg 51.9 vs 49.2",
+   "where": "App B.8",
+   "table": "Table 22, row mT5-base + ViT-22B-OCR (No indicator), column ST-VQA"
+  },
+  {
+   "claim": "Multitask fine-tuning costs little on captioning",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg change",
+   "value": -1.4,
+   "unit": "CIDEr points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "6 captioning benchmarks, one checkpoint, vs single-task FT",
+   "note": null,
+   "where": "Sec 4.1.2",
+   "quote": "the average performance decreases by 1.4 points (0.2 excluding Screen2Words)"
+  },
+  {
+   "claim": "Few-shot COCO captioning beats Flamingo at 4 shots",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO CIDEr 4-shot",
+   "value": 107.6,
+   "unit": "CIDEr",
+   "baseline_value": 103.2,
+   "n": null,
+   "setup": "Karpathy test, 256-example shots pool, random shots",
+   "note": "32-shot 114.5 vs 113.8",
+   "where": "Sec 4.1.3",
+   "table": "Table 4, row PaLI-X, column COCO 4 shots"
+  },
+  {
+   "claim": "Few-shot VQAv2 trails Flamingo",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 32-shot",
+   "value": 57.1,
+   "unit": "%",
+   "baseline_value": 67.6,
+   "n": null,
+   "setup": "PaLI-X fine-tunes language backbone; Flamingo freezes it",
+   "note": null,
+   "where": "Sec 4.1.3",
+   "table": "Table 4, row PaLI-X, column VQAv2 32 shots"
+  },
+  {
+   "claim": "Not pooling image tokens matters in few-shot",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO 4-shot CIDEr",
+   "value": 61.7,
+   "unit": "CIDEr",
+   "baseline_value": 56.3,
+   "n": null,
+   "setup": "700M ablation (ViT-B/16 + mT5-base); full tokens vs pooled",
+   "note": null,
+   "where": "App B.5.3",
+   "quote": "which is substantially lower than the full model’s CIDEr score of 61.7"
+  },
+  {
+   "claim": "Attention re-weighting prevents degradation with many shots",
+   "kind": "measured",
+   "source": null,
+   "metric": "COCO CIDEr 16 encoder shots",
+   "value": 84.5,
+   "unit": "CIDEr",
+   "baseline_value": 66.3,
+   "n": null,
+   "setup": "early-stopped PaLI-2 3B, inference with re-weighting",
+   "note": "without re-weighting: 83.4, 76.5, 66.3",
+   "where": "App B.5.3",
+   "quote": "Attention re-weighting achieves increasing CIDEr scores of 82.1, 84.3 and 84.5 with 4, 8 and 16 shots respectively"
+  },
+  {
+   "claim": "Video: 16 frames beat 8 and set SoTA on 5 of 7 tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "MSR-VTT CIDEr",
+   "value": 76.8,
+   "unit": "CIDEr",
+   "baseline_value": 75.9,
+   "n": null,
+   "setup": "fine-tuned per task at 224px, lr 1e-4",
+   "note": null,
+   "where": "Sec 4.2",
+   "table": "Table 5, row PaLI-X (16fr), column MSR-VTT Cap."
+  },
+  {
+   "claim": "ImageNet fine-tuning at 756px",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1",
+   "value": 89.19,
+   "unit": "%",
+   "baseline_value": 89.22,
+   "n": null,
+   "setup": "PaLI-X (756), generative class-name output",
+   "note": "baseline GIT2 (384); Table 26 prints 88.82 for 756 and 89.19 for the 2.2x-longer run",
+   "where": "Sec 4.3",
+   "table": "Table 6, row PaLI-X (756), column INet"
+  },
+  {
+   "claim": "Detection-tuned LVIS rare-class AP equals common-class AP",
+   "kind": "measured",
+   "source": null,
+   "metric": "LVIS APRare",
+   "value": 31.42,
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "detection-tuned PaLI-X; zero-shot about 12",
+   "note": null,
+   "where": "Sec 4.4",
+   "table": "Table 7, row PaLI-X (Detection-tuned), column LVIS APRare"
+  },
+  {
+   "claim": "Multilingual captioning: 35-lang average slightly below PaLI",
+   "kind": "measured",
+   "source": null,
+   "metric": "XM3600 CIDEr 35-lang avg",
+   "value": 53.1,
+   "unit": "CIDEr",
+   "baseline_value": 53.6,
+   "n": null,
+   "setup": "fine-tuned at 224px",
+   "note": "English 94.2 vs 98.1",
+   "where": "App B.3",
+   "table": "Table 17, row PaLI-X, column 35-lang avg."
+  }
+ ],
+ "limits": [
+  "Pretraining optimizer, lr, warmup, batch size, hardware and compute are not stated; WebLI and several mixture sources are not released",
+  "No seeds or variance; single runs",
+  "Few-shot VQA lags Flamingo; authors attribute to fine-tuning the language backbone (tension between few-shot and fine-tuning)",
+  "Multitask FT loses 7.3 on Screen2Words and COCO needs longer training",
+  "Video datasets are missing 10% or more of videos, so numbers are not on the original splits",
+  "Fairness analysis limited: toxicity judged on captions only, attributes inferred by tools",
+  "Counting emergence read from only four model sizes; ablations use a 5B or 700M proxy",
+  "Comparisons with GIT2 etc. use different resolutions and SCST on VATEX (footnote)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Episodic WebLI",
+   "definition": "each episode corresponds to a set of image-text pairs, loosely related, clustered by URL, used to train few-shot ability",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "encoder shots / decoder shots",
+   "definition": "shots whose answers are given in encoder text vs shots whose answers the decoder must predict like targets, during training",
+   "where": "App B.5.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "PaLI",
+   "year": 2022,
+   "arxiv": "2209.06794",
+   "relation": "extends",
+   "note": "jointly-scaled multilingual language-image model; WebLI data",
+   "quote": null
+  },
+  {
+   "work": "Scaling vision transformers to 22 billion parameters",
+   "year": 2023,
+   "arxiv": "2302.05442",
+   "relation": "uses-method",
+   "note": "ViT-22B encoder",
+   "quote": null
+  },
+  {
+   "work": "UL2",
+   "year": 2023,
+   "arxiv": "2205.05131",
+   "relation": "uses-method",
+   "note": "mixture-of-objectives; encoder-decoder init",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "few-shot baseline",
+   "quote": null
+  },
+  {
+   "work": "GIT / GIT2",
+   "year": 2022,
+   "arxiv": "2205.14100",
+   "relation": "baseline",
+   "note": "captioning, ImageNet SoTA",
+   "quote": null
+  },
+  {
+   "work": "Pix2Struct",
+   "year": 2023,
+   "arxiv": "2210.03347",
+   "relation": "baseline",
+   "note": "document baseline and pix2struct objective",
+   "quote": null
+  },
+  {
+   "work": "Pix2seq",
+   "year": 2022,
+   "arxiv": "2109.10852",
+   "relation": "uses-method",
+   "note": "detection as sequence",
+   "quote": null
+  },
+  {
+   "work": "OWL-ViT",
+   "year": 2022,
+   "arxiv": "2205.06230",
+   "relation": "uses-method",
+   "note": "pseudo detection labels",
+   "quote": null
+  },
+  {
+   "work": "Unified-IO",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "argued multitask-vs-single-task gap; PaLI-X finds on-par",
+   "quote": null
+  },
+  {
+   "work": "PaLM-E",
+   "year": 2023,
+   "arxiv": "2303.03378",
+   "relation": "baseline",
+   "note": "OKVQA match at 66.1",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "[Left] PaLI-X vs PaLI on captioning and VQA. [Right] Pareto frontier few-shot vs fine-tuned",
+   "page": 2,
+   "why": "Scaling gain and few-shot/fine-tune tradeoff in one view"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Visual input for videos: each frame independently processed by ViT; patch embeddings flattened and concatenated",
+   "page": 13,
+   "why": "Shows how multi-image input becomes a token sequence (n*k tokens)"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Performance on TallyQA splits for simple and complex using PaLI variants and PaLI-X",
+   "page": 16,
+   "why": "Emergence of complex counting"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Few-shot exemplars fed to model components",
+   "page": 17,
+   "why": "Shows interleaved image/text flow"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Multilingual, OCR and other capabilities transferred to detection",
+   "page": 8,
+   "why": "Detection as text output with coordinates"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells extracted one per line; column alignment of Tables 2, 5 and 13 inferred, not verified visually",
+  "Table 26 and Table 6 print different 756px ImageNet numbers (88.82/89.19)",
+  "No embedded instructions found"
+ ]
+}

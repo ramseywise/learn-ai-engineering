@@ -1,0 +1,663 @@
+{
+ "schema": 1,
+ "key": "2311.03079",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/wang-2024-cogvlm.pdf",
+ "bib": {
+  "title": "CogVLM: Visual Expert for Pretrained Language Models",
+  "authors": [
+   "Weihan Wang",
+   "Qingsong Lv",
+   "Wenmeng Yu",
+   "Wenyi Hong",
+   "Ji Qi",
+   "Yan Wang",
+   "Junhui Ji",
+   "Zhuoyi Yang",
+   "Lei Zhao",
+   "Xixuan Song",
+   "Jiazheng Xu",
+   "Keqin Chen",
+   "Bin Xu",
+   "Juanzi Li",
+   "Yuxiao Dong",
+   "Ming Ding",
+   "Jie Tang"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "preprint (arXiv v2, 4 Feb 2024)",
+  "arxiv": "2311.03079",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65079,
+  "chars_total": 65079,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a pretrained LLM gain strong visual understanding without losing its NLP ability, by deep fusion rather than shallow alignment?",
+ "hypothesis": "A trainable visual expert (separate QKV and FFN for image tokens in every layer) beats shallow alignment and avoids the forgetting caused by training the LLM itself on image-text data.",
+ "contributions": [
+  "CogVLM deeply integrates visual and linguistic features while retaining the full capabilities of a pretrained LLM; CogVLM-17B, trained from Vicuna-7B, achieves state-of-the-art across 17 classic cross-modal benchmarks",
+  "Ablations validate the visual expert and deep fusion, and examine visual encoder scale, attention masks, the most impactful parameters and image SSL loss",
+  "Weights and the SFT-phase dataset released"
+ ],
+ "method": {
+  "summary": "CogVLM adds to a frozen Vicuna-1.5-7B a frozen EVA2-CLIP-E ViT, a two-layer SwiGLU MLP adapter and, in every layer, a trainable visual expert (own QKV matrix and FFN for image tokens, initialised from the LLM). Two-stage pretraining on about 1.5B image-text pairs plus 40M grounding images, then SFT into CogVLM-Chat and CogVLM-Grounding.",
+  "task": "vision-language pretraining and instruction tuning (captioning, VQA, grounding)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION-2B + COYO-700M (filtered)",
+    "role": "pretrain",
+    "size": "about 1.5B images",
+    "split": null,
+    "source": "public",
+    "preprocessing": "removed broken URLs, NSFW images, noisy captions, images with political bias, aspect ratio > 6 or < 1/6"
+   },
+   {
+    "name": "Visual grounding set (from LAION-115M)",
+    "role": "pretrain",
+    "size": "40M images",
+    "split": null,
+    "source": "LAION-115M, subset of LAION-400M filtered by Li et al. 2023b",
+    "preprocessing": "nouns by spaCy, boxes by GLIPv2; retained subset so over 75% of images have at least two boxes"
+   },
+   {
+    "name": "SFT data for CogVLM-Chat",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "VQAv2, OKVQA, TextVQA, OCRVQA, ScienceQA, LLaVA-Instruct, LRV-Instruction, LLaVAR",
+    "preprocessing": "LLaVA-Instruct errors manually corrected; prompts 'Question: Short answer:' for short VQA, 'Question: Answer:' for dialogue"
+   },
+   {
+    "name": "Grounding SFT data for CogVLM-Grounding",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Flickr30K Entities, RefCOCO/+/g, Visual7W, VisualGenome (about 86k images, 3.6M region-caption pairs), Grounded CoT-VQA",
+    "preprocessing": "four task types GC, REG, REC, GroundedVQA; datasets converted between tasks"
+   },
+   {
+    "name": "Eval benchmarks",
+    "role": "eval",
+    "size": "see Table 7 and A.2",
+    "split": "NoCaps val, Flickr/COCO Karpathy test, TextCaps test, VQAv2 test-dev, OKVQA val, TextVQA val, MMBench test, MathVista test-mini etc.",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "CogVLM-17B",
+    "role": "proposed",
+    "params": "17B total (6.5B trainable in pretraining; 6.6B in Table 4)",
+    "architecture": "ViT + MLP adapter + GPT-style LLM + per-layer visual expert",
+    "init_from": "Vicuna-1.5-7B; visual expert initialised from LLM weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "visual_expert": "doubles parameters, same FLOPs",
+     "position_ids": "all image tokens share one RoPE position id",
+     "mask": "causal mask on all attention including image tokens"
+    }
+   },
+   {
+    "name": "EVA2-CLIP-E",
+    "role": "base",
+    "params": "4.4B",
+    "architecture": "ViT, final layer removed",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "patch_size": "14"
+    }
+   },
+   {
+    "name": "Vicuna-1.5-7B",
+    "role": "base",
+    "params": "7B",
+    "architecture": "GPT-style LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: next-token prediction on caption text; Stage 2: captioning plus REC as VQA with boxes [[x0,y0,x1,y1]] in 000-999, loss on Answer only; SFT: next-token on answers",
+   "optimizer": "Adam (pretraining), AdamW (SFT); betas (0.9, 0.95), eps 1e-8",
+   "lr": "pretrain 1e-4 (stage 1), 1e-5 (stage 2); SFT 1e-5 (ViT at one-tenth)",
+   "lr_schedule": "Cosine decay",
+   "warmup": "12,000 steps (stage 1), 1,200 (stage 2)",
+   "batch_size": "8,192 (stage 1), 1,024 (stage 2), 1,024 (SFT)",
+   "steps": "120,000 (stage 1), 60,000 (stage 2), 6,000 (SFT)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.05 pretraining, 0.1 SFT",
+   "dropout": "0.1",
+   "regularisation": "EMA used during pretraining",
+   "hardware": null,
+   "compute": "230.1 PFLOPS*days pretraining; 1.2 VQAv2 finetune; 0.13 TextVQA finetune (Table 8)",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "resolution": "224x224 stage 1; 224 then 490x490 for last 30,000 stage-2 iterations; SFT at 490x490",
+    "ablation_protocol": "6,000 iterations, batch size 8,192",
+    "sft_vit": "ViT unfrozen in SFT at lr one-tenth",
+    "trainable_in_pretraining": "visual expert + MLP adapter, 6.5B"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "'Question: Short answer:' (short) or 'Question: Answer:' (extended); grounding questions 'Where is the object?'",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIDEr",
+     "definition": "captioning",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "VQA score / accuracy",
+     "definition": "per benchmark, Table 7",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "GPT4 score",
+     "definition": "MM-Vet and LLaVA-Bench judged by GPT-4",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "grounding accuracy",
+     "definition": "RefCOCO family, Visual7W",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BLIP-2",
+    "InstructBLIP",
+    "MiniGPT-4",
+    "LLaVA-1.5",
+    "Qwen-VL",
+    "PaLI-17B/X-55B",
+    "GIT2",
+    "Emu2",
+    "SPHINX",
+    "Shikra",
+    "Ferret",
+    "UNINEXT-H",
+    "ONE-PEACE"
+   ],
+   "protocol": "Single reported numbers; no seeds, variance or significance tests stated. NoCaps and Flickr zero-shot; COCO and TextCaps finetuned. Many VQA numbers marked * were trained during SFT."
+  },
+  "availability": {
+   "code": "https://github.com/THUDM/CogVLM",
+   "weights": "released (checkpoints)",
+   "data": "SFT dataset stated to be released"
+  },
+  "prompts": [
+   {
+    "purpose": "SFT short-answer VQA",
+    "text": "Question: Short answer:",
+    "where": "2.3"
+   },
+   {
+    "purpose": "SFT extended answers",
+    "text": "Question: Answer:",
+    "where": "2.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.other",
+    "quote": "During the final 30,000 iterations, we change the input resolution from 224 × 224 to 490 × 490.",
+    "where": "2.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Directly training the language part of a VLM on LAION drops MMLU to 24.9 at 2500 steps (catastrophic forgetting).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU",
+   "value": 24.9,
+   "unit": "score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM trained directly on LAION during multimodal pretraining (Fig 3)",
+   "quote": "dropping to 24.9 at 2500 steps",
+   "table": null,
+   "note": null,
+   "where": "Fig 3 caption"
+  },
+  {
+   "claim": "Cited: adapting an 8B LM for VLM pretraining can cut NLG performance by 87.3%.",
+   "kind": "reported",
+   "source": "Driess et al., 2023 (PaLM-E)",
+   "metric": "NLG reduction",
+   "value": 87.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PaLM-E 8B",
+   "quote": "can lead to an 87.3% reduction in natural language generation",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Ablation: tuning only the MLP adapter (shallow alignment) is clearly worse than the visual expert on VQAv2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 top1",
+   "value": 73.8,
+   "unit": "%",
+   "baseline_value": 80.0,
+   "n": null,
+   "setup": "Table 4, 6,000 iterations, batch 8,192, 140M trainable params vs CogVLM 6.6B",
+   "quote": null,
+   "table": "Table 4, row MLP Adapter, column VQAv2 (73.8 vs 80.0 for CogVLM)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Tuning all LLM parameters plus adapter (no visual expert, 6.9B) gets VQAv2 78.9 vs 80.0 for the visual expert at similar trainable size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 top1",
+   "value": 78.9,
+   "unit": "%",
+   "baseline_value": 80.0,
+   "n": null,
+   "setup": "Table 4, LLM+MLP Adapter row",
+   "quote": null,
+   "table": "Table 4, row LLM+MLP Adapter, column VQAv2",
+   "note": "Also OKVQA 56.8 vs 59.3, TextVQA 44.7 vs 45.3",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Visual expert at every 4th layer (1.7B trainable) is only slightly worse than every layer.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 top1",
+   "value": 77.6,
+   "unit": "%",
+   "baseline_value": 80.0,
+   "n": null,
+   "setup": "Table 4",
+   "quote": null,
+   "table": "Table 4, row VE-full every 4th layer, column VQAv2",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Random initialisation of the expert is worse than initialising from the LLM on captioning and OKVQA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "OKVQA top1",
+   "value": 55.9,
+   "unit": "%",
+   "baseline_value": 59.3,
+   "n": null,
+   "setup": "Table 4, Random init (6.6B)",
+   "quote": null,
+   "table": "Table 4, row Random init, column OKVQA",
+   "note": "COCO 138.0 vs 142.8",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Swapping EVA2-E (4.4B) for EVA2-L (300M) drops TextVQA by 2.5 points, little elsewhere.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TextVQA top1",
+   "value": 42.8,
+   "unit": "%",
+   "baseline_value": 45.3,
+   "n": null,
+   "setup": "Table 4",
+   "quote": "where we recorded a decline of 2.5",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Full (bidirectional) mask on visual tokens is slightly worse than causal on NoCaps and OKVQA; image SSL loss gives no gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NoCaps CIDEr",
+   "value": 117.2,
+   "unit": "CIDEr",
+   "baseline_value": 120.1,
+   "n": null,
+   "setup": "Table 4 Full mask row",
+   "quote": null,
+   "table": "Table 4, row Full mask, column NoCaps",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "CogVLM base reaches NoCaps val OOD CIDEr 132.6 zero-shot, beating GIT2 (130.6) with 1.5B vs 12.9B pretraining pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NoCaps OOD CIDEr",
+   "value": 132.6,
+   "unit": "CIDEr",
+   "baseline_value": 130.6,
+   "n": null,
+   "setup": "Table 1, zero-shot",
+   "quote": null,
+   "table": "Table 1, row CogVLM, column NoCaps val OOD",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "CogVLM zero-shot Flickr CIDEr 94.9, 9.1 above Qwen-VL.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Flickr CIDEr",
+   "value": 94.9,
+   "unit": "CIDEr",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 1",
+   "quote": "achieves a SOTA score of 94.9 surpassing the concurrently released Qwen-VL model by 9.1 points",
+   "table": null,
+   "note": null,
+   "where": "3.1"
+  },
+  {
+   "claim": "CogVLM-Chat VQAv2 82.3, TextVQA 70.4, ScienceQA 91.2 (* trained in SFT, except ScienceQA unstarred in text but starred in table).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2",
+   "value": 82.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2, Vicuna-7B CogVLM-Chat",
+   "quote": null,
+   "table": "Table 2, row CogVLM-Chat, column VQAv2",
+   "note": "Table 2 stars VQA sets as trained in SFT, so these are not zero-shot",
+   "where": "Table 2"
+  },
+  {
+   "claim": "CogVLM-Chat on LVLM benchmarks: MM-Vet 51.1, SEED 72.5, MMBench 77.6, POPE 87.9, MMMU 41.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MM-Vet",
+   "value": 51.1,
+   "unit": "GPT4 score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2",
+   "quote": null,
+   "table": "Table 2, row CogVLM-Chat, column MM-Vet",
+   "note": "MathVista printed 34.5 in Table 2 but 35.2 in text",
+   "where": "Table 2, 3.3"
+  },
+  {
+   "claim": "MathVista printed as 35.2 in text.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MathVista",
+   "value": 35.2,
+   "unit": "%",
+   "baseline_value": 34.5,
+   "n": null,
+   "setup": "Section 3.3",
+   "quote": "35.2 on the multimodal mathematical reasoning benchmark MathVista",
+   "table": null,
+   "note": "Table 2 prints 34.5",
+   "where": "3.3"
+  },
+  {
+   "claim": "CogVLM-Grounding RefCOCO val 92.76, surpassing specialist UNINEXT-H 92.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RefCOCO val acc",
+   "value": 92.76,
+   "unit": "%",
+   "baseline_value": 92.64,
+   "n": null,
+   "setup": "Table 3, generalist model",
+   "quote": "our model attains a score of 92.76, surpassing UNINEXT-H’s 92.64",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "CogVLM achieves SOTA on 5 of 9 grounding splits vs specialists.",
+   "kind": "measured",
+   "source": null,
+   "metric": "splits won",
+   "value": 5,
+   "unit": "of 9",
+   "baseline_value": null,
+   "n": 9,
+   "setup": "Table 3",
+   "quote": "achieving SOTA performance on 5 of 9 splits",
+   "table": null,
+   "note": null,
+   "where": "3.4"
+  },
+  {
+   "claim": "TDIUC overall accuracy 94.0 vs 88.2 previous SOTA (MUREL).",
+   "kind": "measured",
+   "source": null,
+   "metric": "TDIUC acc",
+   "value": 94.0,
+   "unit": "%",
+   "baseline_value": 88.2,
+   "n": null,
+   "setup": "TDIUC val, official script",
+   "quote": "resulting in a 94.0 accuracy score compared to the previous SOTA of 88.2",
+   "table": null,
+   "note": null,
+   "where": "App B"
+  },
+  {
+   "claim": "Pretraining compute 230.1 PFLOPS*days vs PaLI-17B 453.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pretraining compute",
+   "value": 230.1,
+   "unit": "PFLOPS*days",
+   "baseline_value": 453,
+   "n": null,
+   "setup": "Table 8, 1.5B pretraining pairs",
+   "quote": null,
+   "table": "Table 8, row CogVLM, column Pretraining compute",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Visual expert doubles parameters, keeps FLOPs the same, and reproduces original LLM behaviour on text-only input.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "architecture",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Authors name better SFT alignment, RLHF and anti-hallucination as unexplored; no text-only benchmark numbers after training are given to back the no-NLP-loss claim (only Fig 3 for the direct-training baseline).",
+  "Many Table 2 VQA numbers are on datasets trained in SFT (starred), so not zero-shot.",
+  "No seeds, variance, hardware or wall-clock reported; ablations are 6,000 iterations only.",
+  "MathVista 35.2 (text) vs 34.5 (Table 2).",
+  "Dataset sizes for the SFT mixtures are not given.",
+  "Ablation compares expert vs full-LLM tuning only at roughly matched trainable size, in one setting."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "visual expert",
+   "definition": "a trainable QKV matrix and MLP per layer, applied to image tokens, same shapes as and initialised from the pretrained LM",
+   "where": "2.1"
+  },
+  {
+   "term": "shallow alignment",
+   "definition": "mapping image features into the input embedding space of a frozen LM via a Q-Former or linear layer",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BLIP-2",
+   "year": 2023,
+   "arxiv": "2301.12597",
+   "relation": "baseline",
+   "note": "shallow alignment via Q-Former",
+   "quote": null
+  },
+  {
+   "work": "InstructBLIP",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "shallow alignment",
+   "quote": null
+  },
+  {
+   "work": "MiniGPT-4",
+   "year": 2023,
+   "arxiv": "2304.10592",
+   "relation": "baseline",
+   "note": "linear-layer shallow alignment",
+   "quote": null
+  },
+  {
+   "work": "LLaVA-1.5",
+   "year": 2023,
+   "arxiv": "2310.03744",
+   "relation": "baseline",
+   "note": "trainable LM params; data source LLaVA-Instruct (2304.08485)",
+   "quote": null
+  },
+  {
+   "work": "LoRA",
+   "year": 2021,
+   "arxiv": "2106.09685",
+   "relation": "uses-method",
+   "note": "motivating analogy: per-layer adaptation beats prefix (P-Tuning)",
+   "quote": null
+  },
+  {
+   "work": "GPT Understands, Too (P-Tuning)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prefix analogy for shallow alignment",
+   "quote": null
+  },
+  {
+   "work": "Vicuna",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "base LLM",
+   "quote": null
+  },
+  {
+   "work": "EVA-CLIP",
+   "year": 2023,
+   "arxiv": "2303.15389",
+   "relation": "uses-method",
+   "note": "ViT encoder",
+   "quote": null
+  },
+  {
+   "work": "PaLM-E",
+   "year": 2023,
+   "arxiv": "2303.03378",
+   "relation": "related",
+   "note": "source of 87.3% NLG drop",
+   "quote": null
+  },
+  {
+   "work": "Kosmos-2",
+   "year": null,
+   "arxiv": "2306.14824",
+   "relation": "uses-method",
+   "note": "grounding data construction",
+   "quote": null
+  },
+  {
+   "work": "Qwen-VL",
+   "year": 2023,
+   "arxiv": "2308.12966",
+   "relation": "baseline",
+   "note": "trains LLM directly",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "MMLU score and training loss over multimodal pre-training phase.",
+   "page": 3,
+   "why": "Shows forgetting when the LLM is trained directly on LAION."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The architecture of CogVLM. Only the purple parts are trainable.",
+   "page": 3,
+   "why": "Shows the per-layer split of QKV and FFN between image and text tokens."
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation studies for various components and training settings.",
+   "page": 8,
+   "why": "Adapter-only vs LLM-tuning vs visual expert at matched settings."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-5",
+   "snippet": "Q = concat(X_I W^Q_I, X_T W^Q_T); FFN(X) = concat(FFN_I(X_I), FFN_T(X_T))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction fine. Table 1 and 2 are flattened one cell per line; Fig 1 radar numbers are noise. No embedded instructions."
+ ]
+}

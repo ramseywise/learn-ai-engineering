@@ -1,0 +1,613 @@
+{
+ "schema": 1,
+ "key": "2303.15343",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zhai-2023-sigmoid-loss-language-image-pre.pdf",
+ "bib": {
+  "title": "Sigmoid Loss for Language Image Pre-Training",
+  "authors": [
+   "Xiaohua Zhai",
+   "Basil Mustafa",
+   "Alexander Kolesnikov",
+   "Lucas Beyer"
+  ],
+  "first_author": "Zhai",
+  "year": 2023,
+  "venue": "preprint",
+  "arxiv": "2303.15343",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 64650,
+  "chars_total": 64650,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a pairwise sigmoid loss replace the batch-softmax contrastive loss in language-image pre-training, and how does it change the effect of batch size and training cost?",
+ "hypothesis": "A per-pair binary sigmoid loss, which needs no global normalisation, is simpler, more memory efficient and better at small batch sizes than softmax (implied).",
+ "contributions": [
+  "Pairwise sigmoid loss for language-image pre-training (SigLIP, and SigLiT with locked image tower)",
+  "Memory-efficient chunked implementation without all-gathers",
+  "Batch-size study from 512 to 1M showing saturation near 32k",
+  "Ablations on bias term, negative ratio, beta2 stability, label-noise robustness",
+  "Released SigLIP / mSigLIP models in big_vision"
+ ],
+ "method": {
+  "summary": "Replaces the softmax InfoNCE loss with an independent binary sigmoid loss over all image-text pairs in a batch, with learnable temperature t'=log10 and bias b=-10 initialisation, computed in device-local chunks. Applied to LiT-style locked-image training (SigLiT) and from-scratch/unlocked training (SigLIP, mSigLIP) on WebLI, evaluated by zero-shot ImageNet and retrieval.",
+  "task": "contrastive language-image pre-training (zero-shot classification and retrieval)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LiT image-text dataset",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Zhai et al. 2022 (LiT)",
+    "preprocessing": "Images precomputed ViT-g embeddings, resize to fixed 288x288 only"
+   },
+   {
+    "name": "WebLI",
+    "role": "pretrain",
+    "size": null,
+    "split": "English-only subset for SigLIP; all 100 languages for mSigLIP",
+    "source": "Chen et al. 2022 (PaLI)",
+    "preprocessing": "224x224 images, 32k sentencepiece (C4 English), max 16 text tokens; scale-up runs use 256 patches and 64 text tokens"
+   },
+   {
+    "name": "ImageNet / v2 / ReaL / ObjectNet",
+    "role": "eval",
+    "size": null,
+    "split": "validation",
+    "source": "cited",
+    "preprocessing": null
+   },
+   {
+    "name": "MSCOCO",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "cited",
+    "preprocessing": null
+   },
+   {
+    "name": "Crossmodal-3600 (XM3600)",
+    "role": "eval",
+    "size": null,
+    "split": "36 languages",
+    "source": "Thapliyal et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SigLiT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "locked ViT-g (or AugReg B/8, g/14) image tower with precomputed embeddings; Base text transformer (Large 12-layer in 4-chip runs)",
+    "init_from": "public pre-trained image checkpoints (frozen); text from scratch",
+    "tokenizer": "sentencepiece 32k on English C4",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "16 text tokens",
+    "other": {}
+   },
+   {
+    "name": "SigLIP B/16",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ViT-B/16 image + B text transformer, from scratch",
+    "init_from": "random, or AugReg B/16 with 0.1 LR multiplier for unlocked fine-tuning",
+    "tokenizer": "sentencepiece 32k",
+    "vocab": "32k",
+    "layers": null,
+    "hidden": "768 (B), 1024 (L), 1152 (SoViT-400M) output dim",
+    "heads": null,
+    "context": "16 tokens (64 in scale-up)",
+    "other": {}
+   },
+   {
+    "name": "mSigLIP",
+    "role": "proposed",
+    "params": null,
+    "architecture": "B-sized ViT and text model, multilingual",
+    "init_from": "random",
+    "tokenizer": "mT5 250k vocab; also 32k multilingual",
+    "vocab": "250k",
+    "layers": null,
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {
+     "bottleneck_token_embedding": "K=96 with W=768, about half a percent ImageNet drop vs full 250k"
+    }
+   },
+   {
+    "name": "CLIP (WebLI)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same as SigLIP with softmax loss",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "CLIP, OpenCLIP, EVA-CLIP, CLIPA-v2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "public models in Table 3",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sigmoid pairwise binary loss, -1/|B| sum_i sum_j log(1/(1+exp(z_ij(-t x_i.y_j + b)))), z=1 for matches else -1; t=exp(t'), t' init log 10, b init -10",
+   "optimizer": "ScalingViT-Adafactor (beta1=0.9, beta2=0.95) default; AdamW tested; LION for 4-chip SigLiT",
+   "lr": "0.001 default (peak 1e-4 for LION 4-chip run); 0.1x multiplier on pre-trained image tower",
+   "lr_schedule": "linear warmup then cosine decay to zero",
+   "warmup": "200M examples seen (SigLiT sweep); 6.5k steps (LION run); 10% of steps (label-noise runs)",
+   "batch_size": "512 to 1M studied; 32k recommended",
+   "steps": "65,000 (4-chip SigLiT B/8, batch 32k); 107k (g/14, batch 20k)",
+   "epochs": null,
+   "tokens": "examples seen: 450M to 18B (SigLiT), 3B/9B (SigLIP), 30B (mSigLIP), 40B (scale-up) plus 5B at target resolution",
+   "seq_len": "16 text tokens (64 in scale-up)",
+   "precision": null,
+   "weight_decay": "0.0001 default; 1e-7 decoupled for LION run; none on pre-trained image weights when fine-tuning",
+   "dropout": null,
+   "regularisation": "beta2=0.95 for stability",
+   "hardware": "Google Cloud TPU v4 (4, 16, 32 chips in small-budget runs)",
+   "compute": "SigLiT B/8: 4 TPUv4 chips, 1 day; g/14: 4 chips, 2 days; SigLIP B/16 unlocked: 16 chips, 3 days; from scratch 32 chips, 2 days (72.1) / 5 days (73.4)",
+   "wall_clock": "see compute",
+   "seeds": "five repeated runs at 32k batch, 3B examples (Table 7)",
+   "other": {
+    "resolution_scale_up": "extra 5B examples at target resolution with 100x smaller LR and no weight decay",
+    "sweep": "LR {0.0003,0.001,0.003} x WD {0.00003,0.0001,0.0003} x batch {8k,16k,32k}",
+    "label_noise_runs": "M/16 image + M text, batch 16384, 3.6B examples, peak LR 0.001"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "zero-shot; Table 7 reports mean and std of five training runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ImageNet zero-shot accuracy",
+     "definition": "zero-shot classification top-1 on ImageNet",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "XM3600 recall@1",
+     "definition": "image-to-text and text-to-image retrieval averaged over 36 languages",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "COCO R@1",
+     "definition": "zero-shot I->T and T->I retrieval",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "softmax CLIP (WebLI)",
+    "CLIP",
+    "OpenCLIP",
+    "EVA-CLIP",
+    "CLIPA-v2",
+    "LiT"
+   ],
+   "protocol": "Single runs except Table 7 (five runs). Sigmoid vs softmax compared at matched examples seen across batch sizes."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/big_vision",
+   "weights": "released in big_vision",
+   "data": "WebLI is not public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use 0.001 learning rate with a linear warmup schedule for the first 200 M examples seen",
+    "where": "Appendix A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SigLiT with a frozen g/14 image tower reaches 84.5% ImageNet zero-shot on four TPUv4 chips in two days.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 84.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Frozen ViT-g/14, Large text tower, batch 20k, 107k steps, LiT dataset, 4 TPUv4 chips",
+   "quote": "This further pushes the 0-shot ImageNet classification accuracy up to 84.5%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "SigLiT with a public B/8 image checkpoint reaches 79.7% in under one day on four chips.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 79.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AugReg B/8 locked, 12-layer Large text, LION, batch 32k, 65k steps, 4 TPUv4",
+   "quote": "achieving 79.7% 0-shot ImageNet classi",
+   "table": null,
+   "note": "Table 1 prints 79.8 for this row, text prints 79.7",
+   "where": "Sec 4.4, Table 1"
+  },
+  {
+   "claim": "Sigmoid loss beats softmax clearly below about 16k batch, and the gap closes at larger batch sizes (SigLiT, 18B seen: 83.6 vs 83.1 at 8k).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 83.6,
+   "unit": "%",
+   "baseline_value": 83.1,
+   "n": null,
+   "setup": "SigLiT, ViT-g precomputed, B text, 18B examples seen, batch 8k",
+   "quote": null,
+   "table": "Table 8, row 8 k, columns 18 B sigmoid and softmax (83.6, 83.1)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "Batch-size gains saturate near 32k; a SigLiT trained at 1M batch gets 84.7 against 84.6 at 32k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 84.7,
+   "unit": "%",
+   "baseline_value": 84.6,
+   "n": null,
+   "setup": "SigLiT, 18B examples seen, sigmoid; batch 1024k vs 32k",
+   "quote": null,
+   "table": "Table 8, rows 1024 k and 32 k, column 18 B sigmoid",
+   "note": "Text says the model peaks at 256k batch",
+   "where": "Table 8, Sec 4.1"
+  },
+  {
+   "claim": "From-scratch SigLIP B/16 reaches 73.4% zero-shot with 32 TPUv4 chips in 5 days (72.1% in 2 days).",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 73.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B/16 + B text, WebLI English, batch 32k, 32 TPUv4 chips",
+   "quote": "SigLIP’s more demanding from-scratch training reaches 73.4% zero-shot accuracy in 5 days with 32 TPUv4 chips.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "Unlocked fine-tuning of a pre-trained B/16 reaches 71% only when weight decay is disabled on the pre-trained image weights.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AugReg B/16 init, 0.1 LR multiplier, 16 chips, batch 16k, 2.4B examples, 3 days",
+   "quote": "SigLIP reaches 71% 0-shot accuracy on ImageNet, using 16k batch size, trained on 16 chips for three days.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5, Fig 4"
+  },
+  {
+   "claim": "SigLIP SoViT-400M at 729 patches scores 83.2% ImageNet-1k zero-shot, above EVA-CLIP E (5B) at 82.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k validation",
+   "value": 83.2,
+   "unit": "%",
+   "baseline_value": 82.0,
+   "n": null,
+   "setup": "Shape-optimised 400M ViT, 729 patches, 40B examples seen at batch 32k plus 5B at target res; baseline is EVA-CLIP E (5B), 256 patches",
+   "quote": null,
+   "table": "Table 3, row SigLIP SO (400M) 729, column Validation (83.2); baseline row EVA-CLIP E (5B) 256 (82.0)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "SigLIP B/16 at 196 patches beats OpenCLIP B on ImageNet zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet-1k validation",
+   "value": 76.2,
+   "unit": "%",
+   "baseline_value": 70.2,
+   "n": null,
+   "setup": "Base size, 196 patches, public-model comparison",
+   "quote": null,
+   "table": "Table 3, row SigLIP B 196, column Validation (76.2); row OpenCLIP B 196 (70.2)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "mSigLIP B reaches 34.9% average XM3600 text-to-image recall@1 at 32k batch, beating the prior 28.5% from a 4B ViT-e LiT model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "XM3600 T->I avg",
+   "value": 34.9,
+   "unit": "%",
+   "baseline_value": 28.5,
+   "n": null,
+   "setup": "mSigLIP Base, 30B examples seen, batch 32k, 36 languages",
+   "quote": "Our best result is 34.9%, which is more than 6% higher than the previously reported result 28.5%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Scaled-up mSigLIP B gets 42.6% image-retrieval and 54.1% text-retrieval recall@1 on XM3600.",
+   "kind": "measured",
+   "source": null,
+   "metric": "XM3600 recall@1",
+   "value": 42.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "mSigLIP ViT-B, 40B-example recipe",
+   "quote": "achieves the state-of-the-art 42.6% image retrieval recall@1 and 54.1% text retrieval recall@1 for a Base model",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6"
+  },
+  {
+   "claim": "Beyond 32k batch, multilingual retrieval gets worse: average XM T->I falls from 34.9 to 32.7 at 240k while ImageNet stays flat (73.2 to 73.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "XM avg T->I",
+   "value": 32.7,
+   "unit": "%",
+   "baseline_value": 34.9,
+   "n": null,
+   "setup": "mSigLIP Base, 30B examples seen, batch 240k vs 32k",
+   "quote": null,
+   "table": "Table 2, column 240k, row XM avg (32.7); column 32k (34.9)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Learnable bias initialised at -10 with t'=log 10 gives 63.0% vs 62.0% with no bias, and 0 bias with t'=log 1 collapses to 53.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot",
+   "value": 63.0,
+   "unit": "%",
+   "baseline_value": 62.0,
+   "n": null,
+   "setup": "Base, batch 8k, 900M examples",
+   "quote": null,
+   "table": "Table 4, row b=-10, t'=log 10, column INet-0 (63.0); row n/a (62.0)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Sigmoid matches or edges softmax at 32k and 3B examples over five runs: 70.1 +/- 0.2 vs 69.9 +/- 0.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet 0-shot mean",
+   "value": 70.1,
+   "unit": "%",
+   "baseline_value": 69.9,
+   "n": 5,
+   "setup": "SigLIP B, 32k batch, 3B examples, ViT-Adafactor",
+   "quote": null,
+   "table": "Table 7, row Sigmoid ViT-Adafactor (70.1 ± 0.2); row Softmax (69.9 ± 0.1)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Lowering beta2 from 0.999 to 0.95 stabilises large-batch training, which otherwise spikes in gradient norm.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Base-size SigLIP at large batch",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.7, Fig 5"
+  },
+  {
+   "claim": "Keeping only the hardest negatives nearly preserves quality, random or easy masking hurts; class imbalance is not a major concern.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SigLiT, batch 16k, ratios from 1:16k to 1:1.6",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.8, Fig 6"
+  },
+  {
+   "claim": "Sigmoid-trained models stay ahead of softmax under image, text and batch-alignment corruption.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "M/16 + M text, batch 16384, 3.6B examples",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4.10, Fig 7"
+  }
+ ],
+ "limits": [
+  "Large-scale WebLI is private, so the headline numbers cannot be rerun without it.",
+  "Hard-negative mining is flagged as promising but no efficient method is given.",
+  "Very large batches only help with a sufficiently long schedule; short schedules give too few update steps.",
+  "Noise-robustness figure is qualitative (read from Fig 7); no numeric table.",
+  "Comparison in Table 3 is to publicly released models with differing data and recipes; EVA-CLIP and CLIPA-v2 are concurrent."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "SigLIP",
+   "definition": "Sigmoid loss for Language-Image Pre-training",
+   "where": "Abstract"
+  },
+  {
+   "term": "SigLiT",
+   "definition": "Sigmoid loss with a locked image tower (LiT)",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "softmax contrastive baseline",
+   "quote": null
+  },
+  {
+   "work": "ALIGN",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "large-scale softmax contrastive",
+   "quote": null
+  },
+  {
+   "work": "LiT: Zero-shot transfer with locked-image text tuning",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "SigLiT applies sigmoid to LiT",
+   "quote": null
+  },
+  {
+   "work": "PaLI / WebLI",
+   "year": 2022,
+   "arxiv": "2209.06794",
+   "relation": "uses-data",
+   "note": "WebLI training data",
+   "quote": null
+  },
+  {
+   "work": "Scaling Vision Transformers",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ScalingViT-Adafactor optimizer",
+   "quote": null
+  },
+  {
+   "work": "Getting ViT in Shape",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "SoViT-400M",
+   "quote": null
+  },
+  {
+   "work": "EVA-CLIP",
+   "year": 2023,
+   "arxiv": "2303.15389",
+   "relation": "baseline",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "CLIPA-v2",
+   "year": 2023,
+   "arxiv": "2306.15658",
+   "relation": "baseline",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "OpenCLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Ilharco et al.",
+   "quote": null
+  },
+  {
+   "work": "Are we done with ImageNet?",
+   "year": 2020,
+   "arxiv": "2006.07159",
+   "relation": "uses-data",
+   "note": "ReaL labels; sigmoid label-noise robustness",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Efficient loss implementation demonstrated via a mock setup with 3 devices and a global batch size of 12.",
+   "page": 3,
+   "why": "Shows the chunked permute-and-accumulate loss with no all-gather."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The effect of pre-training batch size (SigLiT, SigLIP, mSigLIP).",
+   "page": 4,
+   "why": "Sigmoid vs softmax across batch sizes and the 32k saturation."
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Comparison with other publicly released models.",
+   "page": 8,
+   "why": "Direct comparison to CLIP/OpenCLIP/EVA-CLIP."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p2",
+   "snippet": "t = exp(t_prime)\nzimg = l2_normalize(img_emb)\nztxt = l2_normalize(txt_emb)\nlogits = dot(zimg, ztxt.T) * t + b\nlabels = 2 * eye(n) - ones(n) # -1 with diagonal 1\nl = -sum(log_sigmoid(labels * logits)) / n",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Layer/width counts and parameter counts are not stated for B/L text towers beyond size names.",
+  "Text uses ligature characters (fi), so some quotes avoid them."
+ ]
+}

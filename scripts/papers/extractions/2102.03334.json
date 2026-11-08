@@ -1,0 +1,639 @@
+{
+ "schema": 1,
+ "key": "2102.03334",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/kim-2021-vilt.pdf",
+ "bib": {
+  "title": "ViLT: Vision-and-Language Transformer Without Convolution or Region Supervision",
+  "authors": [
+   "Wonjae Kim",
+   "Bokyung Son",
+   "Ildoo Kim"
+  ],
+  "first_author": "Kim",
+  "year": 2021,
+  "venue": "Proceedings of the 38th International Conference on Machine Learning, PMLR 139, 2021",
+  "arxiv": "2102.03334",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 52377,
+  "chars_total": 52377,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; no appendix in the cached text."
+ },
+ "type": "empirical",
+ "question": "Can a vision-and-language model embed images with a plain linear patch projection (no CNN, no region detector) and still match region/grid-feature VLP models at far lower cost?",
+ "hypothesis": "The transformer used for modality interaction can also process visual features in place of a convolutional visual embedder, just as it processes textual features.",
+ "contributions": [
+  "ViLT is the simplest architecture by far for a vision-and-language model as it commissions the transformer module to extract and process visual features in place of a separate deep visual embedder.",
+  "For the first time, competent performance on vision-and-language tasks without region features or deep convolutional visual embedders.",
+  "For the first time, empirically show that whole word masking and image augmentations further drive downstream performance."
+ ],
+ "method": {
+  "summary": "Single-stream transformer initialised from ViT-B/32. Image is cut into 32x32 patches, linearly projected, concatenated with BERT-tokenised text embeddings plus modal-type embeddings. Pre-trained with ITM (+ word patch alignment) and whole-word MLM on 4 caption datasets, then fine-tuned on VQAv2, NLVR2 and retrieval.",
+  "task": "vision-and-language pre-training; VQA, NLVR2, image-text retrieval",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MSCOCO",
+    "role": "pretrain",
+    "size": "113K images, 567K captions",
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": "caption length 11.81 ± 2.81 bert-base-uncased tokens"
+   },
+   {
+    "name": "Visual Genome",
+    "role": "pretrain",
+    "size": "108K images, 5.41M captions",
+    "split": null,
+    "source": "Krishna et al. 2017",
+    "preprocessing": "caption length 5.53 ± 1.76"
+   },
+   {
+    "name": "Google Conceptual Captions",
+    "role": "pretrain",
+    "size": "3.01M images, 3.01M captions",
+    "split": null,
+    "source": "Sharma et al. 2018; only urls provided, images from urls still accessible",
+    "preprocessing": "caption length 10.66 ± 4.93"
+   },
+   {
+    "name": "SBU Captions",
+    "role": "pretrain",
+    "size": "867K images, 867K captions",
+    "split": null,
+    "source": "Ordonez et al. 2011; urls still accessible",
+    "preprocessing": "caption length 15.0 ± 7.74"
+   },
+   {
+    "name": "VQAv2",
+    "role": "both",
+    "size": null,
+    "split": "train+val for fine-tuning, 1,000 val images and their questions held out for internal validation; test-dev via server",
+    "source": "Goyal et al. 2017",
+    "preprocessing": "3,129 answer classes"
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": null,
+    "split": "dev, test-P",
+    "source": "Suhr et al. 2018",
+    "preprocessing": "pair method: two (question,image) pairs, concatenated pooled outputs"
+   },
+   {
+    "name": "MSCOCO and Flickr30K retrieval",
+    "role": "both",
+    "size": null,
+    "split": "Karpathy & Fei-Fei 2015 split; F30K 1K test, COCO 5K test",
+    "source": "Plummer et al. 2015",
+    "preprocessing": "15 random negative texts sampled per positive"
+   }
+  ],
+  "models": [
+   {
+    "name": "ViLT-B/32",
+    "role": "proposed",
+    "params": "87.4M (Table 6, excl. text embedder)",
+    "architecture": "single-stream pre-norm ViT-style transformer encoder over concatenated text+patch tokens",
+    "init_from": "ViT-B/32 pre-trained on ImageNet-21K, fine-tuned on ImageNet-1K; text embeddings (t_class, T, T_pos) learned from scratch, not from BERT",
+    "tokenizer": "bert-base-uncased",
+    "vocab": "30K (embedding dictionary 23.47M params)",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "max 200 image patches sampled in pre-training (240 max for 384x640) + text",
+    "other": {
+     "mlp_size": 3072,
+     "patch_size": "32x32",
+     "patch_projection_params": "2.4M",
+     "text_length_for_flops": "40 tokens (arbitrary)",
+     "pooler": "tanh(W_pool z_D[0])",
+     "image_resize": "shorter edge 384, longer edge < 640, aspect ratio preserved",
+     "ITM_head": "single linear layer",
+     "MLM_head": "two-layer MLP",
+     "downstream_head": "two-layer MLP, hidden 1,536"
+    }
+   },
+   {
+    "name": "Region/grid VLP baselines",
+    "role": "baseline",
+    "params": null,
+    "architecture": "ViLBERT, VisualBERT, LXMERT, UNITER-Base, OSCAR-Base, VinVL-Base, Unicoder-VL, ImageBERT, Pixel-BERT-X152/R50",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "image_resolution": "800x1333 region models and Pixel-BERT-R50; 600x1000 Pixel-BERT-X152"
+    }
+   }
+  ],
+  "training": {
+   "objective": "ITM (aligned image replaced by another with p=0.5, NLL) + 0.1 x word patch alignment (IPOT, beta=0.5, N=50 iterations) + MLM with whole word masking, p=0.15",
+   "optimizer": "AdamW",
+   "lr": "1e-4 (base)",
+   "lr_schedule": "linear decay to zero",
+   "warmup": "10% of total training steps",
+   "batch_size": "4,096 pre-training; 256 VQAv2/retrieval and 128 NLVR2 fine-tuning",
+   "steps": "100K or 200K pre-training",
+   "epochs": "10 for each downstream task",
+   "tokens": null,
+   "seq_len": "up to 200 patches sampled in pre-training; up to 240 in fine-tuning",
+   "precision": null,
+   "weight_decay": "1e-2",
+   "dropout": null,
+   "regularisation": "RandAugment (N=2, M=9) at fine-tuning, without color inversion and cutout",
+   "hardware": "64 NVIDIA V100 GPUs",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "classification tasks: 3 fine-tuning runs (head init seed and data order), mean reported; retrieval: single run",
+   "other": {
+    "retrieval_loss": "cross-entropy over 1 positive + 15 sampled negatives, head initialised from ITM true-pair logits",
+    "MPP_ablation": "masked patch prediction p=0.15 predicting mean RGB; did not help"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "latency averaged over 10K runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "latency_hardware": "Xeon E5-2650 CPU and NVIDIA P40 GPU",
+    "viz": "1,000 IPOT iterations, z-normalised, clamped to [1.0,3.0]"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA score",
+     "definition": "inferred answer compared to 10 ground-truth answers, test-dev",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "NLVR2 accuracy",
+     "definition": "binary classification, dev and test-P",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "R@K",
+     "definition": "whether ground truth is in top K results",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Time",
+     "definition": "visual embedder + transformer latency",
+     "unit": "ms",
+     "higher_is_better": false
+    },
+    {
+     "name": "FLOPs",
+     "definition": "visual embedder + transformer",
+     "unit": "G",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ViLBERT",
+    "VisualBERT",
+    "LXMERT",
+    "UNITER-Base",
+    "OSCAR-Base",
+    "VinVL-Base",
+    "Unicoder-VL",
+    "ImageBERT",
+    "Pixel-BERT-X152",
+    "Pixel-BERT-R50",
+    "MCAN (VQAv2 w/o VLP)",
+    "MaxEnt (NLVR2 w/o VLP)",
+    "SCAN (retrieval w/o VLP)"
+   ],
+   "protocol": "Classification: mean of 3 seeds, std in Table 5. Retrieval: one fine-tune. Zero-shot and fine-tuned retrieval."
+  },
+  "availability": {
+   "code": "https://github.com/dandelin/vilt",
+   "weights": "pre-trained weights available (same URL)",
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.ViLT-B/32.params",
+    "quote": null,
+    "where": "Table 6, row ViLT-B/32 200+40, column #Params (M)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "ViLT-B/32 visual+transformer runtime is about 15 ms versus about 900 ms for region-feature models like UNITER-Base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "~15",
+   "unit": "ms",
+   "baseline_value": "~900 (UNITER-Base)",
+   "n": null,
+   "setup": "Xeon E5-2650 CPU + P40 GPU, averaged over 10K runs; image 384x640 vs 800x1333",
+   "quote": null,
+   "table": "Table 6, row ViLT-B/32 200+40, column Time (ms)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Linear patch embedding takes about 0.4 ms of the pipeline, versus ~810 ms for region operations plus ~75 ms backbone in region-feature models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": "~0.4",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 1 runtime breakdown",
+   "quote": "~0.4 ms",
+   "table": null,
+   "note": "Read from Fig 1 labels",
+   "where": "Fig 1"
+  },
+  {
+   "claim": "ViLT-B/32 uses 55.9 GFLOPs versus 949.9 for UNITER-Base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FLOPs",
+   "value": "55.9",
+   "unit": "G",
+   "baseline_value": "949.9 (UNITER-Base)",
+   "n": null,
+   "setup": "visual embedder + transformer; 200 image + 40 text tokens",
+   "quote": null,
+   "table": "Table 6, row ViLT-B/32 200+40, column #FLOPs (G)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Parameters: ViLT-B/32 87.4M versus 154.7M UNITER-Base and 94.9M Pixel-BERT-R50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "params",
+   "value": "87.4",
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "excludes textual embedder",
+   "quote": null,
+   "table": "Table 6, row ViLT-B/32 200+40, column #Params (M)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "32x32 patch projection costs only 2.4M parameters, versus 25M for ResNet-50, 44M R101, 60M X152.",
+   "kind": "measured",
+   "source": null,
+   "metric": "params",
+   "value": "2.4",
+   "unit": "M",
+   "baseline_value": null,
+   "n": null,
+   "setup": "patch projection layer",
+   "quote": "We use a 32 × 32 patch projection which only requires 2.4M",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  },
+  {
+   "claim": "ViLT-B/32 (100K steps) scores 70.33 VQAv2 test-dev, below region models like UNITER-Base 72.70 and VinVL-Base 75.95.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "70.33",
+   "unit": "%",
+   "baseline_value": "72.70 (UNITER-Base)",
+   "n": null,
+   "setup": "VQAv2 test-dev, 100K pre-train steps, no RandAugment, mean of 3 seeds",
+   "quote": null,
+   "table": "Table 2, row ViLT-B/32, column VQAv2 test-dev",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Best ViLT-B/32 (RandAugment, 200K steps) gets 71.26 on VQAv2 test-dev.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQA score",
+   "value": "71.26",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "200K pre-train steps, RandAugment at fine-tuning",
+   "quote": null,
+   "table": "Table 2, row ViLT-B/32 a+, column VQAv2 test-dev",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On NLVR2 test-P ViLT-B/32 reaches 74.57, near UNITER-Base 75.80, and 76.13 with RandAugment+200K steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.57",
+   "unit": "%",
+   "baseline_value": "75.80 (UNITER-Base)",
+   "n": null,
+   "setup": "NLVR2 test-P, 100K steps, pair method",
+   "quote": null,
+   "table": "Table 2, row ViLT-B/32, column NLVR2 test-P",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Fine-tuned Flickr30k text retrieval R@1 is 81.4 for ViLT-B/32 versus 75.7 for Pixel-BERT-R50.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "81.4",
+   "unit": "%",
+   "baseline_value": "75.7 (Pixel-BERT-R50)",
+   "n": null,
+   "setup": "Flickr30k 1K, fine-tuned, 100K steps",
+   "quote": null,
+   "table": "Table 4, row ViLT-B/32, column Flickr30k Text Retrieval R@1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Fine-tuned MSCOCO 5K image retrieval R@1 is 41.3 for ViLT-B/32 versus 50.3 for UNITER-Base.",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "41.3",
+   "unit": "%",
+   "baseline_value": "50.3 (UNITER-Base)",
+   "n": null,
+   "setup": "MSCOCO 5K image retrieval, fine-tuned",
+   "quote": null,
+   "table": "Table 4, row ViLT-B/32, column MSCOCO Image Retrieval R@1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Zero-shot Flickr30k text retrieval R@1 is 73.2 for ViLT-B/32 at 200K steps, versus 70.7 ImageBERT (pre-trained on 14M).",
+   "kind": "measured",
+   "source": null,
+   "metric": "R@1",
+   "value": "73.2",
+   "unit": "%",
+   "baseline_value": "70.7 (ImageBERT)",
+   "n": null,
+   "setup": "zero-shot, Flickr30k 1K, 200K steps",
+   "quote": null,
+   "table": "Table 3, row ViLT-B/32 +, column Zero-Shot Text Retrieval Flickr30k R@1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Whole word masking raises NLVR2 test-P from 74.15 to 74.57 and Flickr30k zero-shot TR from 66.99 to 69.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.57",
+   "unit": "%",
+   "baseline_value": "74.15",
+   "n": null,
+   "setup": "100K steps, ablation rows 3 vs 4",
+   "quote": null,
+   "table": "Table 5, row 100K w=O m=X a=X, column NLVR2 test-P",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "RandAugment at fine-tuning raises NLVR2 test-P from 74.57 to 75.57.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75.57",
+   "unit": "%",
+   "baseline_value": "74.57",
+   "n": null,
+   "setup": "100K steps, ablation rows 4 vs 6",
+   "quote": null,
+   "table": "Table 5, row 100K w=O m=X a=O, column NLVR2 test-P",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Masked patch prediction objective does not help: NLVR2 test-P drops to 73.54.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "73.54",
+   "unit": "%",
+   "baseline_value": "74.57",
+   "n": null,
+   "setup": "100K steps, w=O m=O a=X vs 74.57 without MPP",
+   "quote": null,
+   "table": "Table 5, row 100K w=O m=O a=X, column NLVR2 test-P",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "CLIP-style dot product of pooled vectors with a fine-tuned MLP head fails on NLVR2 (near chance).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "50.99 ± 0.38",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLVR2 dev, CLIP embeddings, three seeds",
+   "quote": "50.99 ± 0.38",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.1"
+  },
+  {
+   "claim": "Per-class NMS for 1,600 classes alone costs more than 500 ms latency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": ">500",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "region-feature VLP with VG detector",
+   "quote": "per-class NMS",
+   "table": null,
+   "note": "Caption text: 'per-class NMS for 1,600 classes amounts to more than 500 ms in latency'",
+   "where": "Table 6 caption"
+  },
+  {
+   "claim": "ViLT image resolution (384x640) is four times smaller than 800x1333 used by other VLP models; max 240 patches.",
+   "kind": "measured",
+   "source": null,
+   "metric": "patches",
+   "value": "240",
+   "unit": "patches",
+   "baseline_value": null,
+   "n": null,
+   "setup": "384x640 input with 32x32 patches (12x20)",
+   "quote": "× 20 = 240 patches for an image with a resolution of 384 ×",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  }
+ ],
+ "limits": [
+  "ViLT-B/32 is described as a proof of concept; falls short on VQAv2 and COCO image retrieval versus heavy visual embedders (authors suspect detector objects ease VQA).",
+  "Weights from ViT-B/32 (ImageNet-21K) only; larger data (JFT-300M) and larger variants (ViLT-L/H) left for future work.",
+  "Masked patch prediction failed; no good visual masking objective without region supervision.",
+  "Initialising from BERT plus ViT patch projection 'did not work' (footnote 4, no numbers).",
+  "Pre-training stopped at 200K steps because fine-tuned text retrieval decreased afterward.",
+  "Hyperparameters not tuned per task; retrieval fine-tuned once only; precision, compute hours not stated.",
+  "Speed numbers are for 2021 hardware (CPU Xeon E5-2650 + P40); superseded by later models (e.g. CLIP, ViT-based VLMs)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Patch projection",
+   "definition": "linear projection that operates on image patches, introduced by ViT, used to embed pixels directly",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Region feature",
+   "definition": "bottom-up features from an off-the-shelf object detector like Faster R-CNN (RPN, NMS, RoI Align, RoI heads)",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Grid feature",
+   "definition": "output feature grid of a CNN such as ResNet used as visual features",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "Whole word masking",
+   "definition": "masks all consecutive subword tokens that compose a whole word",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ViT: An image is worth 16x16 words",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "uses-method",
+   "note": "weight init and patch projection",
+   "quote": null
+  },
+  {
+   "work": "UNITER",
+   "year": 2019,
+   "arxiv": "1909.11740",
+   "relation": "baseline",
+   "note": "word region alignment inspired WPA; single-stream",
+   "quote": null
+  },
+  {
+   "work": "Pixel-BERT",
+   "year": 2020,
+   "arxiv": "2004.00849",
+   "relation": "baseline",
+   "note": "only prior VLP with ImageNet CNN grid features",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Fig 2b dual-encoder with shallow interaction; fails NLVR2 under dot-product fusion",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention (Anderson et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "region features",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tokenizer, MLM, whole word masking (Cui et al. 2019)",
+   "quote": null
+  },
+  {
+   "work": "RandAugment",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fine-tuning augmentation",
+   "quote": null
+  },
+  {
+   "work": "Multimodal pretraining unmasked (Bugliarello et al.)",
+   "year": 2020,
+   "arxiv": "2011.15124",
+   "relation": "related",
+   "note": "single vs dual-stream taxonomy",
+   "quote": null
+  },
+  {
+   "work": "MSCOCO, Visual Genome, SBU, GCC, VQAv2, NLVR2, Flickr30K",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pre-training and downstream data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Visual comparison of conventional VLP architectures and our proposed ViLT.",
+   "page": 1,
+   "why": "Runtime breakdown per component (region ~810 ms vs linear 0.4 ms) with scores."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Four categories of vision-and-language models.",
+   "page": 2,
+   "why": "Taxonomy by relative compute of visual embed, text embed, modality interaction."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Model overview.",
+   "page": 4,
+   "why": "Patch projection + word embeddings + position/modal-type embeddings into one transformer."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Visualizations of transportation plan of word patch alignment.",
+   "page": 9,
+   "why": "Shows words aligned to image patches."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-3, Sec 3.1",
+   "snippet": "z0 = [t̄ + t_type; v̄ + v_type]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells in cached text are one value per line; table values located via table references. No embedded instructions found."
+ ]
+}

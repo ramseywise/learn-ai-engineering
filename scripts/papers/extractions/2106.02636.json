@@ -1,0 +1,654 @@
+{
+ "schema": 1,
+ "key": "2106.02636",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/zellers-2021-merlot.pdf",
+ "bib": {
+  "title": "MERLOT: Multimodal Neural Script Knowledge Models",
+  "authors": [
+   "Rowan Zellers",
+   "Ximing Lu",
+   "Jack Hessel",
+   "Youngjae Yu",
+   "Jae Sung Park",
+   "Jize Cao",
+   "Ali Farhadi",
+   "Yejin Choi"
+  ],
+  "first_author": "Zellers",
+  "year": 2021,
+  "venue": "NeurIPS 2021",
+  "arxiv": "2106.02636",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 140813,
+  "chars_total": 140813,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; long token/attention-weight dumps in Figures 5, 6, 11 scanned only."
+ },
+ "type": "empirical",
+ "question": "Can a model learn commonsense, temporal multimodal script knowledge from unlabeled YouTube videos with ASR transcripts, and does it transfer to video QA and static-image reasoning?",
+ "hypothesis": "Pretraining on diverse videos with both frame-level and video-level objectives yields representations of events over time that beat models trained on static image-caption pairs.",
+ "contributions": [
+  "MERLOT, an end-to-end vision and language model that learns multimodal world representations from videos and their transcripts, using no labeled data",
+  "YT-Temporal-180M, a diverse corpus of frames/ASR derived from a filtered set of 6M YouTube videos",
+  "Experiments/ablations on 14 tasks spanning finetuning and zero-shot transfer, images and videos"
+ ],
+ "method": {
+  "summary": "A ResNet-50 + 12-layer ViT image encoder (from scratch) and a RoBERTa-base-initialised 12-layer joint transformer are pretrained on 180M (frame, 32-BPE-token ASR segment) pairs from 6M YouTube videos with three objectives: contrastive frame-transcript matching, attention-masked language modelling, and temporal frame reordering. The model is then finetuned per task with a 2-layer MLP head on the CLS token, or used zero-shot for story ordering.",
+  "task": "self-supervised video+language pretraining; transfer to video QA and VCR",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "YT-Temporal-180M",
+    "role": "pretrain",
+    "size": "6M videos, 180M segments, 5B BPE tokens of ASR",
+    "split": "no split; pretraining only",
+    "source": "27M candidate YouTube video IDs (18 FreeBase topic pages, VLOG, HowTo100M, MSCOCO-noun searches, BFS over 50k channels); released as video IDs only",
+    "preprocessing": "drop videos with no English ASR, >20 min, Gaming, thumbnails with <4 COCO objects at 30% prob or mean cosine sim >0.9; ASR denoised by GROVER-Large seq2seq (perplexity >200 drops video); segments of L=32 BPE tokens, middle frame; 16 segments per example"
+   },
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": "290k questions over 110k movie scenes",
+    "split": "standard",
+    "source": "Zellers et al. 2019",
+    "preprocessing": "bounding boxes drawn as coloured highlights in pixel space"
+   },
+   {
+    "name": "SIND visual stories",
+    "role": "eval",
+    "size": "5K stories, 5 images + captions each",
+    "split": "zero-shot (no finetuning on SIND)",
+    "source": "Huang et al. 2016",
+    "preprocessing": null
+   },
+   {
+    "name": "MSRVTT-QA",
+    "role": "both",
+    "size": "244K questions over 10K videos",
+    "split": "standard",
+    "source": "Xu et al. 2017",
+    "preprocessing": "5 frames, 1K answer vocab"
+   },
+   {
+    "name": "TVQA",
+    "role": "both",
+    "size": "152K questions over 21K clips",
+    "split": "standard",
+    "source": "Lei et al. 2018",
+    "preprocessing": "6 frames"
+   },
+   {
+    "name": "TVQA+",
+    "role": "both",
+    "size": "29.4K questions over 4.2K clips",
+    "split": "standard",
+    "source": "Lei et al. 2019",
+    "preprocessing": "6 frames, boxes drawn"
+   },
+   {
+    "name": "VLEP",
+    "role": "both",
+    "size": "28.7K questions over 10K clips",
+    "split": "standard",
+    "source": "Lei et al. 2020",
+    "preprocessing": "6 frames"
+   },
+   {
+    "name": "DramaQA",
+    "role": "both",
+    "size": "17.9K questions over 23.9K clips",
+    "split": "standard",
+    "source": "Choi et al. 2020",
+    "preprocessing": "6 frames"
+   },
+   {
+    "name": "ActivityNetQA",
+    "role": "both",
+    "size": "58K questions over 5.8K videos",
+    "split": "standard",
+    "source": "Yu et al. 2019",
+    "preprocessing": "5 frames, 1K answer vocab"
+   },
+   {
+    "name": "TGIF-QA (Action, Transition, FrameQA)",
+    "role": "both",
+    "size": null,
+    "split": "standard",
+    "source": "Jang et al. 2017",
+    "preprocessing": "5 frames"
+   },
+   {
+    "name": "LSMDC (FiB, MC) and MSRVTT-MC",
+    "role": "both",
+    "size": "LSMDC-FiB test 30,000 examples from 10,000 clips; MSRVTT-MC 2,990 questions; LSMDC-MC 100,000 train pairs created",
+    "split": "standard",
+    "source": "Rohrbach et al.; Yu et al. 2018",
+    "preprocessing": "5 frames"
+   },
+   {
+    "name": "UCF-101, HMDB-51",
+    "role": "eval",
+    "size": null,
+    "split": "average over 3 standard splits",
+    "source": "linear probe",
+    "preprocessing": "single central frame"
+   }
+  ],
+  "models": [
+   {
+    "name": "MERLOT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ResNet-50 (C5 removed, 2x2 avg-pool) + 12-layer 768-d ViT image encoder; 12-layer 768-d joint transformer (RoBERTa base)",
+    "init_from": "image encoder random init; joint encoder and word embeddings from RoBERTa",
+    "tokenizer": "GPT-2 BPE",
+    "vocab": null,
+    "layers": "12 (joint) + 12 (ViT)",
+    "hidden": "768",
+    "heads": null,
+    "context": "pretraining: language-only 512 tokens (16x32); joint encoder 396 tokens (4 segments, 192x352)",
+    "other": {
+     "image_encoder_flops": "40 gigaFLOPs per forward, 2% of 2 teraFLOPs for Faster-RCNN",
+     "pretrain_resolution": "192x352, 16x16 patches",
+     "finetune_resolution": "384x704 default (512x512 DramaQA)"
+    }
+   },
+   {
+    "name": "GROVER-Large (ASR denoiser)",
+    "role": "base",
+    "params": null,
+    "architecture": "seq2seq finetune of GROVER-Large",
+    "init_from": "GROVER-Large",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "1536 max seq len",
+    "other": {
+     "denoise_data": "RealNews trimmed to 600 BPE tokens; lowercase, no punct, 1% word replacement (25% homophone via CMUdict, 75% random BPE), 1% filler insertion",
+     "loss": "noisy-token loss x0.01",
+     "lr": "1e-5",
+     "batch": "256",
+     "steps": "80k",
+     "sampling": "nucleus p=0.9, 512-token groups"
+    }
+   },
+   {
+    "name": "CLIP, UNITER, ViLBERT, VILLA, ERNIE-ViL, etc.",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "contrastive frame-transcript matching (tau=0.05, weight 0.25) + attention-masked LM (20% of tokens corrupted; 50% random token, 50% one of top-20% attended tokens; SpanBERT spans avg 0.5 tokens each side) + temporal reordering (40% of the time scramble i in [2,N] frames; two-layer MLP on pairs of frame CLS states, cross-entropy)",
+   "optimizer": "AdamW, beta2=0.98",
+   "lr": "3e-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1024 sequences (16k segments)",
+   "steps": null,
+   "epochs": "40 epochs over YT-Temporal-180M",
+   "tokens": null,
+   "seq_len": "N=16 segments x L=32 BPE (512 tokens language-only); joint encoder 4 groups of N=4, 396 tokens",
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": null,
+   "regularisation": "image augmentation: random scale 1.125-1.5x and crop, brightness/contrast jitter 0.7-1.3 on 80% of images; random choice of clean or noisy ASR per iteration",
+   "hardware": "TPU v3-1024 pod",
+   "compute": null,
+   "wall_clock": "30 hours",
+   "seeds": null,
+   "other": {
+    "finetune": "AdamW beta2 0.98, lr 1.2e-5 (searched [1e-5,2e-4] on VCR), weight decay 0.01, dropout 10%, linear warmup 10% then linear decay to 0, early stopping each epoch, 18 epochs default, batch 64 (16 for MSRVTT-QA/TGIF/ActivityNet/LSMDC/MSRVTT-MC); per-task steps in Table 8 (VCR 60k, TGIF 70k, LSMDC-FiB 150k, ActivityNetQA 34k, DramaQA 3.5k in text vs 18k in table)",
+    "story_ordering": "extra 10 epochs pretraining, peak lr 2e-5, 384x384, 5 segments, caption-frame temporal loss with 4 options"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "story ordering: 2 random orderings of unknown-position embeddings averaged; finetuned results single reported number, no seeds stated",
+   "prompting": "no prompting; video frames sampled uniformly (5 to 7 frames per clip), question and answers concatenated (QSEP separator in TGIF/LSMDC)",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "story_score": "sum over caption/frame pairs of log pairwise probability; CLIP/UNITER use Hungarian maximum-weight bipartite matching"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct for QA/multiple choice; VCR Q->AR requires both answer and rationale right",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Spearman",
+     "definition": "rank correlation of predicted vs true story order",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pairwise acc",
+     "definition": "pairwise ordering accuracy on SIND",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Distance",
+     "definition": "ordering distance",
+     "unit": "normalised",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "ViLBERT",
+    "Unicoder-VL",
+    "VLBERT",
+    "UNITER",
+    "VILLA",
+    "ERNIE-ViL",
+    "CLIP",
+    "ActBERT",
+    "ClipBERT",
+    "RSPNet"
+   ],
+   "protocol": "standard splits; ablations on VCR Q->A and TVQA+ validation; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "released at rowanzellers.com/merlot",
+   "weights": "released for research use",
+   "data": "video IDs and transcripts only, not videos"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.compute",
+    "quote": "This pretraining process on this hardware takes 30 hours.",
+    "where": "Sec 3.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MERLOT (base-sized) beats same-size image-caption models on VCR Q->A",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 80.6,
+   "unit": "%",
+   "baseline_value": "77.0 (ERNIE-ViL)",
+   "n": null,
+   "setup": "VCR test, base-size, finetuned",
+   "quote": null,
+   "table": "Table 1, row MERLOT (base-sized), column Q->A",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "VCR joint Q->AR accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 65.1,
+   "unit": "%",
+   "baseline_value": "62.1 (ERNIE-ViL)",
+   "n": null,
+   "setup": "VCR test, base-size",
+   "quote": null,
+   "table": "Table 1, row MERLOT (base-sized), column Q->AR",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Zero-shot SIND story unscrambling pairwise accuracy beats CLIP",
+   "kind": "measured",
+   "source": null,
+   "metric": "pairwise accuracy",
+   "value": 84.5,
+   "unit": "%",
+   "baseline_value": "78.7 (CLIP)",
+   "n": null,
+   "setup": "5K SIND stories, captions in order, frames to place, no finetuning",
+   "quote": null,
+   "table": "Table 2, row MERLOT, column Pairwise acc",
+   "note": "v1 of the arXiv paper leaked frame order, inflating this by a few points; corrected in this version",
+   "where": "Table 2"
+  },
+  {
+   "claim": "MERLOT sets SOTA on TGIF-Transition",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 96.2,
+   "unit": "%",
+   "baseline_value": "87.8",
+   "n": null,
+   "setup": "finetuned, test",
+   "quote": null,
+   "table": "Table 3, row TGIF-Transition, column MERLOT",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MERLOT on TGIF-Action",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.0,
+   "unit": "%",
+   "baseline_value": "82.8",
+   "n": null,
+   "setup": "finetuned, test",
+   "quote": null,
+   "table": "Table 3, row TGIF-Action, column MERLOT",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MERLOT on TVQA (long video)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.7,
+   "unit": "%",
+   "baseline_value": "76.2",
+   "n": null,
+   "setup": "finetuned, test",
+   "quote": null,
+   "table": "Table 3, row TVQA, column MERLOT",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "MERLOT on MSRVTT-QA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 43.1,
+   "unit": "%",
+   "baseline_value": "41.5",
+   "n": null,
+   "setup": "finetuned, test",
+   "quote": null,
+   "table": "Table 3, row MSRVTT-QA, column MERLOT",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Removing the contrastive V+L loss drops VCR sharply",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->A val accuracy",
+   "value": 57.5,
+   "unit": "%",
+   "baseline_value": "75.2 all losses",
+   "n": null,
+   "setup": "ablation, 4 segments, attention masking",
+   "quote": null,
+   "table": "Table 4b, row No contrastive V-L loss, column VCR",
+   "note": null,
+   "where": "Table 4b"
+  },
+  {
+   "claim": "Static image caption pretraining (Conceptual U COCO) gives poor VCR",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->A val accuracy",
+   "value": 58.9,
+   "unit": "%",
+   "baseline_value": "75.2",
+   "n": null,
+   "setup": "same steps as 5 epochs on YT-Temporal-180M",
+   "quote": "The resulting model achieves 58.9% accuracy on VCR.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3, Table 4d"
+  },
+  {
+   "claim": "HowTo100M-only pretraining is 6.5 VCR points below diverse YT-Temporal-180M",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR gain",
+   "value": 6.5,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "equal number of steps",
+   "quote": "improves VCR performance by 6.5 points",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Raw ASR instead of denoised ASR reduces VCR",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR drop",
+   "value": 2.4,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation",
+   "quote": "reduces performance by 2.4 points",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "VCR improves monotonically with pretraining epochs",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR Q->A val accuracy",
+   "value": 79.4,
+   "unit": "%",
+   "baseline_value": "75.2",
+   "n": null,
+   "setup": "40 epochs vs 75.2 at 5 epochs",
+   "quote": null,
+   "table": "Table 4e, row 40 epochs, column VCR",
+   "note": null,
+   "where": "Table 4e"
+  },
+  {
+   "claim": "Drawing boxes on VCR images helps",
+   "kind": "measured",
+   "source": null,
+   "metric": "VCR drop without boxes",
+   "value": 5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ablation",
+   "quote": "Performance drops 5% when they are removed",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Linear probe on UCF-101: MERLOT visual branch trails CLIP ViT-B/16",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 74.9,
+   "unit": "%",
+   "baseline_value": "87.1 (CLIP), 61.8 (RSPNet)",
+   "n": null,
+   "setup": "central frame, linear probe, 3 splits averaged",
+   "quote": null,
+   "table": "Table 6, row UCF-101, column MERLOT-VizBranch",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Pretraining cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 30,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TPU v3-1024, batch 1024 sequences",
+   "quote": "This pretraining process on this hardware takes 30 hours.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  }
+ ],
+ "limits": [
+  "Frame ordering is a coarse temporal objective; finer temporal localisation in transcripts is future work (Sec 5)",
+  "English-only YouTube; multilingual learning left open",
+  "Temporal ordering loss helps TVQA but slightly hurts VCR (75.5 without vs 75.2 with); authors say it is mainly a query interface",
+  "Linear-probe action recognition trails CLIP (Table 6); benchmark object/background bias cited",
+  "Dataset skewed: ~30% local broadcast news, crime topics, YouTube popularity biases; authors do not advocate deployed use",
+  "Pretraining performance had not plateaued at 40 epochs; no compute scaling beyond that tested",
+  "Only video IDs released, so exact reproduction of the corpus is hard",
+  "No seeds or variance reported; ablation accuracy differences of ~1 point are single runs",
+  "Models are base-size only; 2021 baselines have since been superseded"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "script knowledge",
+   "definition": "knowledge of how events unfold over time (before, present, after), after Schank and Abelson 1975",
+   "where": "Sec 1"
+  },
+  {
+   "term": "attention masking",
+   "definition": "mask highly attended-to tokens from a language-only encoder 50% of the time, as a proxy for visually grounded words",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "uses-method",
+   "note": "initialises joint encoder",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformer",
+   "year": 2020,
+   "arxiv": "2010.11929",
+   "relation": "uses-method",
+   "note": "hybrid ResNet/ViT image encoder",
+   "quote": null
+  },
+  {
+   "work": "CLIP",
+   "year": 2021,
+   "arxiv": "2103.00020",
+   "relation": "baseline",
+   "note": "contrastive loss design and story-ordering baseline",
+   "quote": null
+  },
+  {
+   "work": "UNITER",
+   "year": 2019,
+   "arxiv": "1909.11740",
+   "relation": "baseline",
+   "note": "VCR and story baseline",
+   "quote": null
+  },
+  {
+   "work": "HowTo100M",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "part of video list and ablation corpus",
+   "quote": null
+  },
+  {
+   "work": "VideoBERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prior video-language pretraining",
+   "quote": null
+  },
+  {
+   "work": "ClipBERT",
+   "year": 2021,
+   "arxiv": "2102.06183",
+   "relation": "baseline",
+   "note": "video QA baseline",
+   "quote": null
+  },
+  {
+   "work": "SpanBERT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "span masking",
+   "quote": null
+  },
+  {
+   "work": "GROVER / RealNews",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ASR denoiser base",
+   "quote": null
+  },
+  {
+   "work": "VCR",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main image benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Left: MERLOT learns to match contextualized captions with their corresponding video frames. Right: joint encoder unmasks words and orders scrambled frames.",
+   "page": 4,
+   "why": "Shows the three-objective architecture in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Zero-shot story ordering (same setup as Table 2).",
+   "page": 9,
+   "why": "Shows cross-frame coreference"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Attention masking for a video of 16 frames.",
+   "page": 24,
+   "why": "Shows how segment transcripts are masked"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Ablation study on VCR Q->A and TVQA+ validation",
+   "page": 8,
+   "why": "Data and objective ablations"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 8 lists DramaQA/VLEP steps as 18k while text says DramaQA 3.5k and VLEP 8k; MSRVTT-QA text 60k steps vs table 35k",
+  "Text-cache figure dumps (attention weights, masked transcripts) are noisy",
+  "Pretraining total step count, LR schedule/warmup and precision are not stated",
+  "No embedded instructions found"
+ ]
+}

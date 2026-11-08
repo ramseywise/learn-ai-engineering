@@ -1,0 +1,591 @@
+{
+ "schema": 1,
+ "key": "1506.02142",
+ "pdf": "generative-ai/08-eval/sources/gal-2015-dropout-as-bayesian-approximation.pdf",
+ "bib": {
+  "title": "Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning",
+  "authors": [
+   "Yarin Gal",
+   "Zoubin Ghahramani"
+  ],
+  "first_author": "Gal",
+  "year": 2016,
+  "venue": "Proceedings of the 33rd International Conference on Machine Learning (ICML), New York, NY, USA, 2016",
+  "arxiv": "1506.02142",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45899,
+  "chars_total": 45899,
+  "engine": "pymupdf",
+  "skipped": "The full theoretical appendix (derivations, sections 2-4, D.1, E.1, E.2) is not in this PDF; it is hosted at arXiv 1506.02157 (the PDF only has Table 2 as appendix). Setup details in E.1/E.2 are therefore unrecorded."
+ },
+ "type": "empirical",
+ "question": "Can dropout training in neural networks be interpreted as approximate Bayesian inference in a deep Gaussian process, so that existing dropout networks yield model uncertainty at test time?",
+ "hypothesis": "Keeping dropout active at test time and averaging T stochastic forward passes (MC dropout) gives useful predictive mean and uncertainty without changing the model or its optimisation.",
+ "contributions": [
+  "Theory: a NN of arbitrary depth with dropout before every weight layer is equivalent to an approximation to a deep GP; the dropout objective minimises KL to the GP posterior",
+  "MC dropout: predictive mean, variance and log-likelihood estimators from T stochastic forward passes",
+  "Empirical study of uncertainty across architectures and non-linearities (ReLU vs TanH), MNIST classification, UCI regression benchmarks, and a reinforcement learning use"
+ ],
+ "method": {
+  "summary": "Theory casts dropout training as variational inference with a Bernoulli q(w); at test time T stochastic forward passes give mean and variance, with model precision tau tied to weight decay by tau = p l^2 / (2 N lambda). Evaluated on CO2 extrapolation, rotated MNIST digit with LeNet, 10 UCI regression sets vs VI and PBP, and Thompson sampling in a 2D RL task.",
+  "task": "model uncertainty estimation for regression, classification and RL",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Mauna Loa atmospheric CO2 (subset)",
+    "role": "both",
+    "size": "about 200 data points",
+    "split": "trained on data left of a dashed line, tested on the entire dataset",
+    "source": "Keeling et al., 2004",
+    "preprocessing": "centred and normalised"
+   },
+   {
+    "name": "Reconstructed solar irradiance",
+    "role": "both",
+    "size": "about 200 data points",
+    "split": null,
+    "source": "Lean, 2004",
+    "preprocessing": "centred and normalised; results only in the external appendix (D.1)"
+   },
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": "full MNIST dataset",
+    "source": "LeCun & Cortes, 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "UCI regression benchmarks (Boston, Concrete, Energy, Kin8nm, Naval, Power Plant, Protein, Wine Red, Yacht, Year MSD)",
+    "role": "both",
+    "size": "N from 308 (Yacht) to 515,345 (Year MSD)",
+    "split": "20 random splits (Protein 5 splits, Year 1 split)",
+    "source": "setup replicated from Hernandez-Lobato & Adams (2015)",
+    "preprocessing": null
+   },
+   {
+    "name": "2D RL world (convnetjs)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Karpathy & authors, 2014-2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Dropout MLP for CO2",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP, 4 or 5 hidden layers, ReLU or TanH",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4 or 5 hidden",
+    "hidden": "1024 units",
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout_p": "0.1 or 0.2"
+    }
+   },
+   {
+    "name": "LeNet with dropout",
+    "role": "proposed",
+    "params": null,
+    "architecture": "convnet, dropout before last fully connected layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout_p": "0.5"
+    }
+   },
+   {
+    "name": "Dropout MLP for UCI",
+    "role": "proposed",
+    "params": null,
+    "architecture": "one hidden layer, 50 units (Table 2 also tests 2 layers)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1 hidden (2 in Table 2 variant)",
+    "hidden": "50 units",
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout_p": "0.05 and 0.005"
+    }
+   },
+   {
+    "name": "Dropout Q-network",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same structure as original convnetjs agent, dropout before every weight layer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "dropout_p": "0.1"
+    }
+   },
+   {
+    "name": "VI (Graves 2011)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Bayesian NN with variational inference",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PBP (Hernandez-Lobato & Adams 2015)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "probabilistic backpropagation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L2-regularised loss (eq. 1), equal to the GP KL objective for suitable tau and l; softmax loss for classification, square loss for regression",
+   "optimizer": "Adam (UCI); Caffe reference solver for MNIST",
+   "lr": null,
+   "lr_schedule": "MNIST: same policy as 'before' with gamma=0.0001, p=0.75 (earlier definition not in this PDF)",
+   "warmup": null,
+   "batch_size": "32 (UCI)",
+   "steps": "MNIST: 10^6 iterations; UCI: Bayesian optimisation 40 iterations, then 10x more epochs for the final model",
+   "epochs": "UCI: 10x the 40 epochs of PBP (Table 1); 100x in the Table 2 '10x Epochs' variant",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "lambda = p l^2 / (2 N tau); UCI prior length-scale l = 10^-2 for most datasets, tau found by Bayesian optimisation on validation log-likelihood",
+   "dropout": "see models",
+   "regularisation": "dropout plus L2 weight decay",
+   "hardware": null,
+   "compute": "Naval Propulsion: 276 s per split including BO, 95 s without; PBP 220 s. Kin8nm: 188 s with BO, 65 s without; PBP 156 s",
+   "wall_clock": null,
+   "seeds": "20 random splits (Protein 5, Year 1)",
+   "other": {
+    "software": "Keras on Theano (UCI); Caffe (MNIST); convnetjs code (RL)",
+    "bayes_opt": "Spearmint (Snoek et al.)"
+   }
+  },
+  "inference": {
+   "decoding": "MC dropout: T stochastic forward passes, average for mean (eq. 6), sample variance plus tau^-1 for variance",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "T=1000 for CO2 figures (T=10 in Fig 3); 100 stochastic forward passes scattered for MNIST; RL uses a single forward pass per action (Thompson sampling); T for UCI not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "model_precision": "tau = p l^2 / (2 N lambda)",
+    "predictive_log_likelihood": "logsumexp(-0.5 tau ||y - yhat_t||^2) - log T - 0.5 log 2pi + 0.5 log tau",
+    "uncertainty_measures_classification": "entropy or variation ratios"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Test RMSE",
+     "definition": "root mean squared error of MC dropout mean prediction",
+     "unit": "dataset units",
+     "higher_is_better": false
+    },
+    {
+     "name": "Test predictive log-likelihood (LL)",
+     "definition": "Monte Carlo estimate of eq. 8",
+     "unit": "nats",
+     "higher_is_better": true
+    },
+    {
+     "name": "RL average reward",
+     "definition": "average reward per batch, log plot",
+     "unit": "reward",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VI (Graves 2011)",
+    "PBP (Hernandez-Lobato & Adams 2015)",
+    "standard dropout with weight averaging",
+    "epsilon greedy Q-network"
+   ],
+   "protocol": "Mean and standard error over 20 random splits (Protein 5, Year 1); median and IQR also reported for Boston and Concrete. Standard errors were corrected in Oct 2016 (earlier ones scaled up by 4.5)."
+  },
+  "availability": {
+   "code": "http://yarin.co (code and demos)",
+   "weights": null,
+   "data": "public benchmark datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Dropout beats VI and PBP on RMSE and test LL on nearly all UCI sets (Boston Housing RMSE shown).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.97,
+   "unit": "RMSE",
+   "baseline_value": "3.01 (PBP)",
+   "n": null,
+   "setup": "Boston Housing, N=506, 1 hidden layer of 50 units, 20 splits; VI 4.32, PBP 3.01",
+   "quote": "Dropout signiﬁcantly outperforms all other models both in terms of RMSE as well as test log-likelihood on all datasets apart from Yacht",
+   "table": "Table 1, row Boston Housing, column Dropout RMSE",
+   "note": null,
+   "where": "Sec 5.3, Table 1"
+  },
+  {
+   "claim": "Dropout log-likelihood on Boston Housing vs PBP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": -2.46,
+   "unit": "nats",
+   "baseline_value": "-2.57 (PBP)",
+   "n": null,
+   "setup": "Same as above; PBP -2.57, VI -2.90",
+   "quote": null,
+   "table": "Table 1, row Boston Housing, column Dropout LL",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Yacht is the exception: PBP has better RMSE than dropout.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.11,
+   "unit": "RMSE",
+   "baseline_value": "1.02 (PBP)",
+   "n": null,
+   "setup": "Yacht Hydrodynamics, N=308",
+   "quote": null,
+   "table": "Table 1, row Yacht Hydrodynamics, column Dropout RMSE",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ten times more epochs and a second layer improve results further (Boston Housing, 2 layers RMSE).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.8,
+   "unit": "RMSE",
+   "baseline_value": "2.97",
+   "n": null,
+   "setup": "Boston Housing; 1 layer baseline 2.97",
+   "quote": null,
+   "table": "Table 2, row Boston Housing, column 2 Layers RMSE",
+   "note": "Energy Efficiency RMSE drops from 1.66 to 0.47 with 2 layers",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Setting dropout probability to 0 hurts Boston Housing RMSE, showing dropout itself matters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 3.07,
+   "unit": "RMSE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Boston Housing, dropout p=0 versus MC dropout RMSE 2.97; LL -2.59",
+   "quote": "results in RMSE of 3.07 and predictive log-likelihood of",
+   "table": null,
+   "note": "Quote partial; context 'results in RMSE of 3.07 and predictive log-likelihood of -2.59'",
+   "where": "Sec 5.3 p.7"
+  },
+  {
+   "claim": "Boston Housing median RMSE is much better than the mean.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.68,
+   "unit": "RMSE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Boston Housing dropout; IQR [2.45, 3.35]; median LL -2.34",
+   "quote": "median RMSE of 2.68",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Run time including Bayesian optimisation on Naval Propulsion is comparable to PBP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 276,
+   "unit": "seconds per split",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Naval Propulsion; PBP takes 220 s; training alone 95 s",
+   "quote": "our model takes 276 seconds on average per split",
+   "table": null,
+   "note": "Quote must match; see table-less text 'our model takes 276 seconds on average per split'",
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Thompson sampling with a dropout Q-network reaches reward above 1 within 25 batches after burn-in; epsilon greedy needs 175 batches.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25,
+   "unit": "batches",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2D 9-eye agent task from convnetjs, dropout p=0.1 before every weight layer, 25 burn-in batches",
+   "quote": "within 25 batches from burn-in",
+   "table": null,
+   "note": "Epsilon greedy 175 batches",
+   "where": "Sec 5.4, Fig 6"
+  },
+  {
+   "claim": "Standard dropout predicts an insensible value far from the data with high confidence; MC dropout expresses uncertainty by growing std, as the GP does.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CO2 extrapolation, 5-layer ReLU 1024 units",
+   "quote": "The standard dropout NN model (ﬁg. 2a) predicts value 0 for point",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Fig 2"
+  },
+  {
+   "claim": "Uncertainty grows far from data for ReLU but stays bounded for TanH, since TanH saturates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CO2, 5 layers",
+   "quote": "whereas for the TanH model it stays bounded",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "A small T gives reasonable mean and uncertainty estimates.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "forward passes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CO2, ReLU MC dropout (Fig 3) versus T=1000 for main figures",
+   "quote": "example with T = 10",
+   "table": null,
+   "note": "Quote partial",
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "On rotated MNIST digit 1, softmax output can be near 1 while the softmax-input uncertainty envelopes overlap across classes, so softmax output is not confidence.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LeNet, dropout 0.5, 100 stochastic passes, 12 rotated images",
+   "quote": "softmax output can be arbitrarily high",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Fig 4"
+  },
+  {
+   "claim": "MC dropout cost: forward passes can run concurrently, giving running time identical to standard dropout.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theory",
+   "quote": "the forward passes can be done concurrently, resulting in constant running time identical to that of standard dropout",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Full derivations and setup details (E.1, E.2, D.1) live in an external appendix, arXiv 1506.02157, and are not in this PDF.",
+  "Predictive distribution is highly multi-modal; the moment-matching estimates are only a glimpse of it.",
+  "Uncertainty quality depends on the nonlinearity and weight-regularisation choice, which fix the GP covariance; study left to future work.",
+  "UCI dropout probabilities (0.05, 0.005) and tau were tuned by Bayesian optimisation; networks were small; RMSE better on only 9 of 10 sets (Yacht exception).",
+  "In RL, the dropout agent stops improving after about 1K batches because it still samples random moves.",
+  "Standard errors in the earlier arXiv version were scaled up by 4.5 (corrected Oct 2016); results rest on one RL run.",
+  "Later work disputes whether the Bayesian interpretation yields calibrated posteriors; the paper itself does not test calibration directly beyond LL."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MC dropout",
+   "definition": "Monte Carlo estimate of the predictive mean from T stochastic forward passes with dropout active at test time",
+   "where": "Sec 4"
+  },
+  {
+   "term": "standard dropout",
+   "definition": "weight averaging: multiplying each W_i by p_i at test time",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dropout: A simple way to prevent neural networks from overfitting (Srivastava et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "reinterprets dropout as approximate Bayesian inference",
+   "quote": null
+  },
+  {
+   "work": "Probabilistic backpropagation for scalable learning of Bayesian neural networks (Hernandez-Lobato & Adams)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "UCI protocol replicated and PBP compared",
+   "quote": null
+  },
+  {
+   "work": "Practical variational inference for neural networks (Graves)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VI baseline",
+   "quote": null
+  },
+  {
+   "work": "Weight uncertainty in neural networks (Blundell et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "VI Bayesian NN that performs as well as dropout at double the parameters",
+   "quote": null
+  },
+  {
+   "work": "Deep Gaussian processes (Damianou & Lawrence)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dropout approximates this model",
+   "quote": null
+  },
+  {
+   "work": "Human-level control through deep reinforcement learning (Mnih et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RL task similar; Thompson sampling instead of epsilon greedy",
+   "quote": null
+  },
+  {
+   "work": "Fast dropout training (Wang & Manning)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier Bayesian view of dropout",
+   "quote": null
+  },
+  {
+   "work": "Adam (Kingma & Ba)",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "UCI optimiser",
+   "quote": null
+  },
+  {
+   "work": "UCI regression benchmarks; MNIST; Mauna Loa CO2",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A sketch of softmax input and output for an idealised binary classification problem.",
+   "page": 2,
+   "why": "Shows why passing a point estimate through softmax gives unjustified confidence far from the data"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Predictive mean and uncertainties on the Mauna Loa CO2 concentrations dataset, for various models.",
+   "page": 4,
+   "why": "Side-by-side standard dropout, GP, MC dropout ReLU and TanH extrapolation"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "A scatter of 100 forward passes of the softmax input and output for dropout LeNet.",
+   "page": 5,
+   "why": "Shows high softmax output with huge uncertainty"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Log plot of average reward obtained by both epsilon greedy (in green) and our approach (in blue), as a function of the number of batches.",
+   "page": 7,
+   "why": "Thompson sampling speedup"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Average test performance in RMSE and predictive log likelihood for VI, PBP and Dropout.",
+   "page": 6,
+   "why": "Main benchmark comparison"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4 eq. 8",
+   "snippet": "log p(y*|x*, X, Y) ≈ logsumexp(-1/2 tau ||y - yhat_t||^2) - log T - 1/2 log 2pi + 1/2 log tau",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 4 eq. 7",
+   "snippet": "tau = p l^2 / (2 N lambda)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix with derivations is external (arXiv 1506.02157); not in the PDF.",
+  "Ligatures (fi) in the cached text; several results quotes are partial.",
+  "Uses 2016 ICML version (v6), arXiv listed 2015."
+ ]
+}

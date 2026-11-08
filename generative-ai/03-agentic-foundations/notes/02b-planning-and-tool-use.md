@@ -10,6 +10,11 @@ sources:
   - "Verma et al. 2025, Teaching LLMs to Plan (PDDL-INSTRUCT) — https://arxiv.org/abs/2509.13351"
   - "Du et al. 2025, Agentic-R1: Distilled Dual-Strategy Reasoning — https://arxiv.org/abs/2507.05707"
   - "Pan et al. 2025, CoAT: Chain-of-Associated-Thoughts, Findings of EMNLP 2025 — https://arxiv.org/abs/2502.02390"
+  - "Wang et al. 2023, Plan-and-Solve Prompting — https://doi.org/10.18653/v1/2023.acl-long.147"
+  - "Qiao et al. 2023, Reasoning with Language Model Prompting: A Survey — https://doi.org/10.18653/v1/2023.acl-long.294"
+  - "Dong et al. 2024, A Survey on In-context Learning — https://doi.org/10.18653/v1/2024.emnlp-main.64"
+  - "Xie et al. 2023, Self-Evaluation Guided Beam Search for Reasoning — https://arxiv.org/abs/2305.00633"
+  - "Zhou et al. 2024, WebArena: A Realistic Web Environment for Building Autonomous Agents — https://arxiv.org/abs/2307.13854"
 confidence: medium
 cleaned: 2026-11-06
   - Chen et al. 2024, When is Tree Search Useful for LLM Planning? It Depends on the Discriminator — https://arxiv.org/abs/2402.10890
@@ -33,6 +38,9 @@ The cheapest plan is one a person writes once. Routine ([arXiv:2507.14447](https
 
 The lesson for the restock agent is narrow and useful. Where the process is known (check stock, check lead time, compute the order, raise it), write the steps and the tools into the prompt. Don't make the model rediscover the order on every run. Keep one routine per process in context, because the wrong ones are distractors.
 
+The zero-shot version of the same idea is Plan-and-Solve ([doi:10.18653/v1/2023.acl-long.147](https://doi.org/10.18653/v1/2023.acl-long.147) (Wang et al., ACL 2023)): the prompt asks the model to devise a plan and then carry it out, and PS+ adds "extract the variables and calculate intermediate results". On text-davinci-003 at temperature 0 across six math sets, **PS+ averaged 76.7% against 70.4% for zero-shot chain of thought**, close to 8-shot hand-written chains (77.6%) with no examples. The gain was smallest on GSM8K (59.3 against 56.4), and the trigger sentences were tuned per dataset. Two surveys explain the limits. Qiao et al. relay that chain-of-thought prompts give no gain, and may hurt, below roughly 100B parameters ([doi:10.18653/v1/2023.acl-long.294](https://doi.org/10.18653/v1/2023.acl-long.294) (Qiao et al., ACL 2023, survey)). Dong et al.'s own run (8 demonstrations, four models, five tasks, 1,000 test items each) found no demonstration selector best everywhere, with MDL best on GPT-2 and top-k similarity best on the other three ([doi:10.18653/v1/2024.emnlp-main.64](https://doi.org/10.18653/v1/2024.emnlp-main.64) (Dong et al., EMNLP 2024, survey)). So test any planning prompt on the model you will deploy.
+
+
 ---
 
 ## Restate the state as you go
@@ -50,6 +58,11 @@ Whether search over plans pays depends on what picks among the branches. Chen et
 ![Accuracy and inference time of re-ranking, iterative correction and tree search as discriminator accuracy rises](../sources/images/chen-tree-search-discriminator-fig3.png)
 
 *Image Source: Chen et al., [When is Tree Search Useful for LLM Planning? It Depends on the Discriminator](https://arxiv.org/abs/2402.10890) (2024), Fig. 3*
+
+Self-evaluation can also steer the search itself. Xie et al. have the same LLM score each reasoning step's correctness and sample beams by those scores ([arXiv:2305.00633](https://arxiv.org/abs/2305.00633) (Xie et al., NeurIPS 2023)). With Codex on GSM8K (5 beams, 16 candidates per step), **PAL with guided beams scored 85.5% against 80.4% for PAL with self-consistency**, and gains grew with chain length (72.9 to 82.6 on the 358 problems of 9 or more steps). It is not free: single-chain guided PAL used about 27.7k tokens against 7.4k, it needs token logits so it cannot run on API-only models, and Llama-2 13B was the only compute-matched check (46.1 against 41.8 at 12.6k against 13.9k tokens).
+
+Long horizons are still where planning breaks. WebArena gives agents 812 tasks on self-hosted shopping, forum, code and CMS sites, scored by answer matching or checks on final state ([arXiv:2307.13854](https://arxiv.org/abs/2307.13854) (Zhou et al., ICLR 2024)). With a 2-shot prompt over the accessibility tree and at most 30 actions, in one run each, **the best GPT-4 agent (with chain of thought) completed 14.41% of tasks, against 78.24% for humans on a 170-task sample**. GPT-3.5 reached 8.75% and text-bison-001 5.05%. Chain of thought added 2.34 points for GPT-3.5 (6.41 to 8.75). The authors' explanations, missing exploration and weak recovery from failure, are hypotheses and not tested.
+
 
 ---
 

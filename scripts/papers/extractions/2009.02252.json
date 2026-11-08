@@ -1,0 +1,846 @@
+{
+ "schema": 1,
+ "key": "2009.02252",
+ "pdf": "generative-ai/02-rag-retrieval/sources/petroni-2021-kilt.pdf",
+ "bib": {
+  "title": "KILT: a Benchmark for Knowledge Intensive Language Tasks",
+  "authors": [
+   "Fabio Petroni",
+   "Aleksandra Piktus",
+   "Angela Fan",
+   "Patrick Lewis",
+   "Majid Yazdani",
+   "Nicola De Cao",
+   "James Thorne",
+   "Yacine Jernite",
+   "Vladimir Karpukhin",
+   "Jean Maillard",
+   "Vassilis Plachouras",
+   "Tim Rocktäschel",
+   "Sebastian Riedel"
+  ],
+  "first_author": "Petroni",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021",
+  "arxiv": "2009.02252",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 76681,
+  "chars_total": 76681,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "benchmark",
+ "question": "How can knowledge-intensive tasks (fact checking, entity linking, slot filling, open-domain QA, dialogue) be evaluated on one shared Wikipedia snapshot so that retrieval and generation components can be compared across tasks, including whether models can provide provenance?",
+ "hypothesis": "A shared dense index coupled with a seq2seq model is a strong general baseline for knowledge-intensive tasks.",
+ "contributions": [
+  "a publicly-available benchmark of knowledge-intensive tasks aligned to a single Wikipedia snapshot",
+  "an open-source library for knowledge-intensive architectures",
+  "provenance for all instances, extended by an annotation campaign, enabling joint assessment of output accuracy and evidence",
+  "a comparative performance of various modeling approaches"
+ ],
+ "method": {
+  "summary": "KILT maps 11 datasets across 5 tasks onto one 2019/08/01 Wikipedia snapshot (5.9M articles) with a common JSONL interface and provenance spans. Baselines (task-specific, closed-book seq2seq, BART+DPR, RAG, retrievers) are evaluated on downstream metrics, page-level retrieval, and joint KILT scores that award points only if the gold provenance page is ranked first.",
+  "task": "knowledge-intensive language tasks (fact checking, entity linking, slot filling, open-domain QA, knowledge-grounded dialogue)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "KILT total (11 datasets)",
+    "role": "both",
+    "size": "3,160,734 train / 51,464 dev / 50,736 test",
+    "split": "per Table 6",
+    "source": "Wikipedia 2019/08/01 snapshot, 5.9M articles; 22,220,793 100-word passages",
+    "preprocessing": "map provenance by highest BLEU on matched page; drop dev/test items with BLEU<0.5 for any provenance span (avg 18% dropped, except entity linking); keep all train"
+   },
+   {
+    "name": "FEVER (FEV)",
+    "role": "both",
+    "size": "104,966/10,444/10,100",
+    "split": "train/dev/test",
+    "source": "Thorne 2018a, merged with FEVER2.0",
+    "preprocessing": "SUPPORTED/REFUTED only; NEI excluded"
+   },
+   {
+    "name": "AIDA CoNLL-YAGO (AY2)",
+    "role": "both",
+    "size": "18,395/4,784/4,463",
+    "split": "testa=dev, testb=test",
+    "source": "Hoffart 2011b",
+    "preprocessing": null
+   },
+   {
+    "name": "WNED-WIKI",
+    "role": "eval",
+    "size": "- /3,396/3,376",
+    "split": "random dev/test split, zero-shot",
+    "source": "Guo and Barbosa 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "WNED-CWEB",
+    "role": "eval",
+    "size": "- /5,599/5,543",
+    "split": "random dev/test split, zero-shot",
+    "source": "Guo and Barbosa 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "T-REx",
+    "role": "both",
+    "size": "2,284,168/5,000/5,000",
+    "split": "5k random dev, 5k test",
+    "source": "Elsahar 2018",
+    "preprocessing": "filtered facts with >20 provenances and relations with <1000 facts: 113 relations, 2.3M facts"
+   },
+   {
+    "name": "Zero Shot RE (zsRE)",
+    "role": "both",
+    "size": "147,909/3,724/4,966",
+    "split": "disjoint relations: 84 train, 12 dev, 24 test",
+    "source": "Levy 2017",
+    "preprocessing": "negatives excluded; grouped by subject-relation"
+   },
+   {
+    "name": "Natural Questions (NQ)",
+    "role": "both",
+    "size": "87,372/2,837/1,444",
+    "split": "new held-out NQ portion as test",
+    "source": "Kwiatkowski 2019",
+    "preprocessing": "short answers only, answers <=5 tokens (Lee 2019)"
+   },
+   {
+    "name": "HotpotQA (HoPo)",
+    "role": "both",
+    "size": "88,869/5,600/5,569",
+    "split": "fullwiki",
+    "source": "Yang 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "TriviaQA (TQA)",
+    "role": "both",
+    "size": "61,844/5,359/6,586",
+    "split": "Wikipedia case",
+    "source": "Joshi 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "ELI5",
+    "role": "both",
+    "size": "272,634/1,507/600",
+    "split": "dev/test provenance collected via MTurk",
+    "source": "Fan 2019b",
+    "preprocessing": null
+   },
+   {
+    "name": "Wizard of Wikipedia (WoW)",
+    "role": "both",
+    "size": "94,577/3,058/2,944",
+    "split": "unseen split for dev/test, open-domain (no topic given)",
+    "source": "Dinan 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BART (large)",
+    "role": "baseline",
+    "params": "406M",
+    "architecture": "seq2seq",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": "no retrieval; finetuned on all KILT tasks with fairseq"
+   },
+   {
+    "name": "T5 (base)",
+    "role": "baseline",
+    "params": "220M",
+    "architecture": "seq2seq",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "HuggingFace Transformers, no retrieval"
+    }
+   },
+   {
+    "name": "BART + DPR",
+    "role": "baseline",
+    "params": "406M + DPR 220M +15B idx",
+    "architecture": "DPR retrieves top-3 passages prepended to input, BART finetuned",
+    "init_from": "BART large, DPR (Karpukhin 2020)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "recipe": "follows Petroni et al. 2020"
+    }
+   },
+   {
+    "name": "RAG",
+    "role": "baseline",
+    "params": "626M +15B idx",
+    "architecture": "DPR retriever + BART generator, query encoder back-propagated",
+    "init_from": "Lewis 2020b",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "retrieval": "top-5 passages per generation step, used as provenance"
+    }
+   },
+   {
+    "name": "DPR (and Multi-task DPR)",
+    "role": "retriever",
+    "params": "220M +15B idx",
+    "architecture": "BERT bi-encoder, 100-word passages, MIPS",
+    "init_from": "Karpukhin 2020",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "multitask": "trained on TQA, NQ, HoPo, FEV, zsRE, AY2, T-REx, WoW; 150k samples per task per epoch; single-dataset batches round-robin"
+    }
+   },
+   {
+    "name": "Tf-idf (DrQA)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "page-level bigram hashing TF-IDF",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BLINK + flair",
+    "role": "retriever",
+    "params": "680M +6B idx",
+    "architecture": "BERT bi-encoder + cross-encoder; flair finds mentions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT + DPR",
+    "role": "baseline",
+    "params": "BERT base 110M",
+    "architecture": "DPR passages + BERT reader/classifier",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "NSMN",
+    "role": "baseline",
+    "params": "199M +93M nt",
+    "architecture": "FEVER shared-task winner, public pretrained",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Trans MemNet",
+    "role": "baseline",
+    "params": "15.5M",
+    "architecture": "Generative Transformer MemNet, ParlAI pretrained",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "seq2seq generation of the output string (BART/T5/BART+DPR); RAG end-to-end with retriever query encoder",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Paper gives no hyperparameters for any baseline finetuning; only Multi-task DPR sampling (150k per task per epoch) and the BERT-base FEVER classifier recipe (supported/refuted + neutral class from negative-sampled passages)."
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per system on test; no seeds reported",
+   "prompting": null,
+   "retrieval": "BART+DPR: top-3 passages prepended; RAG: top-5 passages per step; DPR passages 100 words; FEVER BERT classifier uses first sentence of pages from top-100 DPR passages with majority vote; slot filling uses one random template question per subject-relation",
+   "parameters": {},
+   "other": {
+    "entity_linking_input_max": "256 tokens"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy",
+     "definition": "strict exact match, no post-processing; for FEVER, entity linking",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Match",
+     "definition": "lowercase, strip articles/punctuation/whitespace; NQ, TQA, HoPo, T-REx, zsRE",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE-L",
+     "definition": "ELI5",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "Wizard of Wikipedia",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "R-precision",
+     "definition": "r/R, R pages in provenance set, r relevant among top-R retrieved pages; max over provenance sets; page level; equals Precision@1 when R=1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Recall@k",
+     "definition": "w/n, complete provenance sets within top-k over n sets",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "KILT-AC/EM/RL/F1",
+     "definition": "downstream metric awarded only if R-precision is 1 for that datapoint",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "NSMN",
+    "BERT+DPR",
+    "BLINK",
+    "Trans MemNet",
+    "BART",
+    "T5",
+    "BART+DPR",
+    "RAG",
+    "Tf-idf",
+    "DPR",
+    "Multi-task DPR",
+    "BLINK+flair"
+   ],
+   "protocol": "test sets via EvalAI leaderboard; single run; no significance tests"
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/KILT",
+   "weights": null,
+   "data": "https://huggingface.co/datasets?search=kilt (test sets via EvalAI only)"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "RAG and BART+DPR score far higher on FEVER accuracy than closed-book BART",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 86.31,
+   "unit": "% accuracy",
+   "baseline_value": 78.93,
+   "n": null,
+   "setup": "FEVER test, RAG; BART 78.93, BART+DPR 86.74",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RAG, column FEV Accuracy"
+  },
+  {
+   "claim": "Retrieval lifts open-domain QA: RAG vs closed-book BART on Natural Questions",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 44.39,
+   "unit": "EM",
+   "baseline_value": 21.75,
+   "n": null,
+   "setup": "NQ test",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RAG, column NQ Exact Match"
+  },
+  {
+   "claim": "RAG on TriviaQA vs BART closed-book",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 71.27,
+   "unit": "EM",
+   "baseline_value": 32.39,
+   "n": null,
+   "setup": "TQA test; BART 32.39, T5 18.11, BART+DPR 58.55",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RAG, column TQA"
+  },
+  {
+   "claim": "Slot filling zsRE: RAG vs closed-book BART (retrieval needed for unseen relations)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 44.74,
+   "unit": "accuracy",
+   "baseline_value": 9.14,
+   "n": null,
+   "setup": "zsRE test, zero-shot relations; BART+DPR 30.43",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RAG, column zsRE"
+  },
+  {
+   "claim": "T-REx: RAG vs BART",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 59.2,
+   "unit": "accuracy",
+   "baseline_value": 45.06,
+   "n": null,
+   "setup": "T-REx test; BART+DPR 59.16",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row RAG, column T-REx"
+  },
+  {
+   "claim": "ELI5: retrieval does not help ROUGE-L; closed-book BART beats RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-L",
+   "value": 20.55,
+   "unit": "ROUGE-L",
+   "baseline_value": 14.05,
+   "n": null,
+   "setup": "ELI5 test BART; RAG 14.05, BART+DPR 17.41",
+   "note": "BART is the higher value, RAG the baseline value here is lower",
+   "where": "Table 3",
+   "table": "Table 3, row BART (large), column ELI5"
+  },
+  {
+   "claim": "Entity linking: BLINK specialist best; closed-book BART surprisingly strong on AIDA",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": 77.55,
+   "unit": "accuracy",
+   "baseline_value": 81.54,
+   "n": null,
+   "setup": "AY2 test BART; BLINK 81.54, RAG 72.62",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row BART (large), column AY2"
+  },
+  {
+   "claim": "Multi-task DPR improves page R-precision on NQ over single-dataset DPR",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 59.42,
+   "unit": "R-precision",
+   "baseline_value": 54.29,
+   "n": null,
+   "setup": "NQ test; DPR (NQ+TQA trained) 54.29",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-task DPR, column NQ"
+  },
+  {
+   "claim": "Multi-task DPR on zsRE vs DPR",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 80.91,
+   "unit": "R-precision",
+   "baseline_value": 28.96,
+   "n": null,
+   "setup": "zsRE test; DPR 28.96",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-task DPR, column zsRE"
+  },
+  {
+   "claim": "Multi-task DPR on T-REx vs DPR",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 69.46,
+   "unit": "R-precision",
+   "baseline_value": 13.26,
+   "n": null,
+   "setup": "T-REx test; DPR 13.26",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Multi-task DPR, column T-REx"
+  },
+  {
+   "claim": "Entity-centric retrieval wins entity tasks: BLINK+flair on WNED-WIKI",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 80.24,
+   "unit": "R-precision",
+   "baseline_value": 0.3,
+   "n": null,
+   "setup": "WnWi test; DPR 0.3, Multi-task DPR 4.91",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row BLINK + flair, column WnWi"
+  },
+  {
+   "claim": "Tf-idf beats DPR variants on Wizard of Wikipedia retrieval",
+   "kind": "measured",
+   "source": null,
+   "metric": "R-precision",
+   "value": 49.01,
+   "unit": "R-precision",
+   "baseline_value": 25.48,
+   "n": null,
+   "setup": "WoW test; RAG 57.78 best, Multi-task DPR 41.07, DPR 25.48",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Tf-idf, column WoW"
+  },
+  {
+   "claim": "KILT scores collapse on ELI5: RAG answers but cannot justify",
+   "kind": "measured",
+   "source": null,
+   "metric": "KILT-RL",
+   "value": 1.69,
+   "unit": "KILT-RL",
+   "baseline_value": 14.05,
+   "n": null,
+   "setup": "ELI5 test; RAG ROUGE-L 14.05",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RAG, column ELI5"
+  },
+  {
+   "claim": "HotpotQA KILT-EM very low despite EM 26.97 (multi-hop provenance)",
+   "kind": "measured",
+   "source": null,
+   "metric": "KILT-EM",
+   "value": 3.21,
+   "unit": "KILT-EM",
+   "baseline_value": 26.97,
+   "n": null,
+   "setup": "HoPo test RAG; EM 26.97",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RAG, column HoPo"
+  },
+  {
+   "claim": "NQ: KILT-EM much lower than EM for RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "KILT-EM",
+   "value": 32.69,
+   "unit": "KILT-EM",
+   "baseline_value": 44.39,
+   "n": null,
+   "setup": "NQ test RAG; EM 44.39",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RAG, column NQ"
+  },
+  {
+   "claim": "FEVER KILT-AC for RAG",
+   "kind": "measured",
+   "source": null,
+   "metric": "KILT-AC",
+   "value": 53.45,
+   "unit": "KILT-AC",
+   "baseline_value": 86.31,
+   "n": null,
+   "setup": "FEV test; accuracy 86.31; BERT+DPR 58.58 best",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row RAG, column FEV"
+  },
+  {
+   "claim": "Mapping to snapshot preserves performance: DPR on KILT NQ dev",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 42.58,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KILT NQ dev; Karpukhin report 41.5",
+   "note": null,
+   "where": "Appendix, Performance Impact of the Mapping Strategy",
+   "quote": "With our setting, DPR achieves an on-par performance on the dev set, with a 42.58 EM"
+  },
+  {
+   "claim": "NQ annotation campaign raised provenance pages per question",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.57,
+   "unit": "avg pages per question",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ dev/test; was 1",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "increase the average number of provenance pages per question from 1 to 1.57"
+  },
+  {
+   "claim": "Annotator agreement on provenance is low, lowest for ELI5",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.1,
+   "unit": "Cohen kappa",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ELI5 (NQ 0.3); three annotations per passage, accept if >=2 agree",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "The average inter-annotator agreement is 0.3 and 0.1 Cohen"
+  },
+  {
+   "claim": "Mapping filter drops about 18% of dev/test",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 18,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all tasks except entity linking, BLEU threshold 0.5",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "discarding on average 18% of test and dev data"
+  },
+  {
+   "claim": "Pages holding knowledge needed for KILT",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1642311,
+   "unit": "pages",
+   "baseline_value": null,
+   "n": null,
+   "setup": "about 28% of the 5.9M-article source",
+   "note": null,
+   "where": "Fig 2 caption",
+   "quote": "1,642,311 pages contains knowledge needed for KILT"
+  }
+ ],
+ "limits": [
+  "Provenance may not be exhaustive: other Wikipedia pages can contain the evidence; annotation campaign only mitigates this (kappa 0.3 NQ, 0.1 ELI5).",
+  "Provenance for a prediction could come from a different system and this is hard to detect.",
+  "In-KB only: unanswerable instances, FEVER NEI label, left to future work.",
+  "Provenance is scored at page level; for most tasks R-precision=1 requires the top page right.",
+  "Baselines are single runs; no finetuning hyperparameters, seeds, or compute reported; NQ test is 3-4 points lower than dev.",
+  "TriviaQA and ELI5 evidence documents are not guaranteed to contain evidence (TQA est. 79.7%).",
+  "Closed-book BART/T5 cannot be given KILT scores (no provenance).",
+  "Dated: 2019 Wikipedia snapshot, BART/DPR-era baselines, 2020-era leaderboard."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "provenance",
+   "definition": "a set of textual spans in Wikipedia that contain evidence for producing an output given a specific input",
+   "where": "Sec 2"
+  },
+  {
+   "term": "KILT score",
+   "definition": "downstream metric awarded only if R-precision is 1, i.e. a complete provenance page set is ranked at the top",
+   "where": "Sec 5"
+  },
+  {
+   "term": "R-precision",
+   "definition": "r/R, relevant pages among top-R retrieved where R is the pages in the provenance set",
+   "where": "Sec 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Retrieval-Augmented Generation (Lewis et al., 2020b)",
+   "year": 2020,
+   "arxiv": "2005.11401",
+   "relation": "evaluates",
+   "note": "RAG finetuned on KILT as the strongest baseline",
+   "quote": null
+  },
+  {
+   "work": "Dense Passage Retrieval (Karpukhin et al., 2020)",
+   "year": 2020,
+   "arxiv": "2004.04906",
+   "relation": "baseline",
+   "note": "retriever, plus Multi-task DPR variant",
+   "quote": null
+  },
+  {
+   "work": "BART (Lewis et al., 2019)",
+   "year": 2019,
+   "arxiv": "1910.13461",
+   "relation": "baseline",
+   "note": "closed-book and +DPR",
+   "quote": null
+  },
+  {
+   "work": "T5 (Raffel et al., 2019)",
+   "year": 2019,
+   "arxiv": "1910.10683",
+   "relation": "baseline",
+   "note": "closed-book",
+   "quote": null
+  },
+  {
+   "work": "BLINK (Wu et al., 2019)",
+   "year": 2019,
+   "arxiv": "1911.03814",
+   "relation": "baseline",
+   "note": "entity linking and entity retrieval",
+   "quote": null
+  },
+  {
+   "work": "Language Models as Knowledge Bases? (Petroni et al., 2019)",
+   "year": 2019,
+   "arxiv": "1909.01066",
+   "relation": "related",
+   "note": "parametric knowledge motivation",
+   "quote": null
+  },
+  {
+   "work": "How much knowledge can you pack into the parameters (Roberts et al., 2020)",
+   "year": 2020,
+   "arxiv": "2002.08910",
+   "relation": "related",
+   "note": "closed-book approach",
+   "quote": null
+  },
+  {
+   "work": "FEVER (Thorne et al., 2018a)",
+   "year": 2018,
+   "arxiv": "1803.05355",
+   "relation": "uses-data",
+   "note": "FEVER-score inspired KILT scores",
+   "quote": null
+  },
+  {
+   "work": "Natural Questions, HotpotQA, TriviaQA, ELI5, Wizard of Wikipedia, T-REx, zsRE, AIDA, WNED",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "the 11 datasets",
+   "quote": null
+  },
+  {
+   "work": "DrQA (Chen et al., 2017)",
+   "year": 2017,
+   "arxiv": "1704.00051",
+   "relation": "baseline",
+   "note": "Tf-idf retriever",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Common KILT interface for knowledge intensive language tasks: each instance consists of input and output with a provenance (text span) from the common KILT knowledge source.",
+   "page": 2,
+   "why": "one-glance view of all five tasks sharing one interface and Wikipedia source"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Downstream performance on the test data.",
+   "page": 7,
+   "why": "shows closed-book vs retrieval vs RAG per task"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Page-level R-Precision on test data.",
+   "page": 7,
+   "why": "retriever comparison, multi-task DPR gains"
+  },
+  {
+   "figure": "Table 5",
+   "caption": "KILT scores on the test data.",
+   "page": 8,
+   "why": "gap between answering and justifying"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "KILT datasets' interface (pseudo-JSON record).",
+   "page": 16,
+   "why": "schema of id/input/output/provenance"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells are flattened in the text cache; values were matched by column order against appendix Tables 7-17.",
+  "Appendix mentions a BART+DPR FEVER classifier 'full description in the appendix' that is not present.",
+  "No embedded instructions found."
+ ]
+}

@@ -14,6 +14,10 @@ sources:
   - "Chi et al. 2025, AsyncThink (The Era of Agentic Organization) — https://arxiv.org/abs/2510.26658"
   - "Qi et al. 2026, Beyond Individual Intelligence (survey) — https://arxiv.org/abs/2605.14892"
   - "Wang et al. 2026, Agentopia — https://arxiv.org/abs/2606.07513"
+  - "Du et al. 2023, Improving Factuality and Reasoning in Language Models through Multiagent Debate — https://arxiv.org/abs/2305.14325"
+  - "Liang et al. 2024, Encouraging Divergent Thinking in Large Language Models through Multi-Agent Debate — https://arxiv.org/abs/2305.19118"
+  - "Chan et al. 2023, ChatEval — https://arxiv.org/abs/2308.07201"
+  - "Tang et al. 2024, MedAgents — https://arxiv.org/abs/2311.10537"
 confidence: medium
 cleaned: 2026-11-06
 ---
@@ -33,6 +37,27 @@ Self-consistency samples several reasoning chains at nonzero temperature and ret
 Mirzaei ran that comparison for the self-critique family ([arXiv:2607.28576](https://arxiv.org/abs/2607.28576) (Mirzaei, 2026-07, preprint)). On Qwen2.5 Instruct at 1.5B, 3B and 7B, with 150 questions each from GSM8K and MATH-500, every method was compared against self-consistency interpolated to that method's measured token cost. **Of 36 comparisons, none beat the baseline**, 10 were significantly worse after a Holm correction within each setting and 26 were indistinguishable. Self-Refine (3 rounds) and a forced Reflexion stayed below the baseline even at 7B, by 3.6 and 5.5 points on GSM8K and 6.3 and 10.1 on MATH-500. Reflexion as published did nothing at 1.5B: the model called its first answer correct on every question, so what was measured as Reflexion was one chain of thought, cheap and therefore well placed on the cost curve.
 
 The cleanest test holds the samples fixed. Given the same 8 candidates, asking the model to pick the best lost to counting votes by 8.0 and 11.3 points at 1.5B (GSM8K, MATH-500) and 5.3 and 17.3 at 3B. At 7B the gap was 2.0 and 1.3, with confidence intervals that include zero. Where the verifier and the vote disagreed and only one was right, the verifier was right 12.5–33.3% of the time. This is the self-critique result of [04](04-multi-agent-design-patterns.md#when-self-critique-helps-and-when-it-doesnt) stated in tokens: the critic cannot tell a right chain from a wrong one, so its calls are better spent on more samples. The limits are wide. It covers math with exact-match answers only, small quantized models on CPU, one prompt per method and 150 questions per cell (enough to detect gaps of about 5–6 points). Sampling, Best-of-N and debate ran once, and the author notes that Self-Refine was designed for open-ended text, where a vote cannot be taken. A first draft scored Best-of-N as if it were the vote; the published tables carry the corrected scoring.
+
+---
+
+## Debate against the vote
+
+Debate is the oldest version of a team, and the early papers compared it with a single call more often than with a vote. Du et al. had N copies of gpt-3.5-turbo answer, then each read the others' answers and updated, for R rounds ([arXiv:2305.14325](https://arxiv.org/abs/2305.14325) (Du et al., 2023-05, preprint)). With 3 agents and 2 rounds on 100 problems per task, **debate lifted GSM8K from 77.0 to 85.0, arithmetic from 67.0 to 81.8, and biography facts (524 computer scientists, ChatGPT judging against Wikipedia) from 66.0 to 73.8**. The paper's own vote baseline, with the same three agents, scored 81.0 on GSM8K and 69.0 on arithmetic. So on GSM8K half of debate's gain over one agent is what counting votes already gives, and only on arithmetic does debate clearly pay. One agent reflecting on itself lowered GSM8K (77.0 to 75.0). The cost is not reported (several generations per agent per round), debate is not matched to the vote on tokens, and the authors note that models can affirm a wrong consensus and lose early turns in long histories.
+
+![Three rounds of debate between two agents converging on the correct total of 595 gems](../sources/images/du-multiagent-debate-fig2.png)
+
+*Image Source: Du et al., [Improving Factuality and Reasoning in Language Models through Multiagent Debate](https://arxiv.org/abs/2305.14325) (2023), Fig. 2*
+
+Liang et al. assign the roles instead of copying one prompt: an affirmative and a negative debater argue in turn from the shared history, and a judge ends the debate or extracts the answer ([arXiv:2305.19118](https://arxiv.org/abs/2305.19118) (Liang et al., EMNLP 2024)). On Counter-Intuitive AR (200 questions, GPT-3.5-Turbo, temperature 0, zero-shot), **debate scored 37.0% against 28.0 for chain of thought, 29.5 for self-consistency and 27.5 for self-reflection**, still below GPT-4 at 51.0. The self-consistency sample count is not stated, so this is not an equal-compute result. Their ablations match the sections above: more than two debaters made results worse, and an LLM judge may favour its own outputs.
+
+![Chain of thought, self-reflection and multi-agent debate on a counter-intuitive question about rolling circles](../sources/images/liang-multi-agent-debate-fig2.png)
+
+*Image Source: Liang et al., [Encouraging Divergent Thinking in Large Language Models through Multi-Agent Debate](https://arxiv.org/abs/2305.19118) (2024), Fig. 2*
+
+ChatEval uses debate to *judge* rather than to answer ([arXiv:2308.07201](https://arxiv.org/abs/2308.07201) (Chan et al., 2023-08, preprint)). On FairEval (80 questions, ChatGPT, one run at temperature 0), two debating referees with different role prompts agreed with human labels 60.0% of the time against 53.8% for a single referee; GPT-4 went from 61.3% to 63.8%. **Giving both referees the same role prompt gave 53.8%, no better than one**, and extra turns brought no significant gain. One question is 1.25 points, and the paper does not compare against sampling one referee several times and voting. That role-diversity result fits Chen et al. below: the ingredient is different views, not more speakers.
+
+MedAgents puts the pattern in one domain ([arXiv:2311.10537](https://arxiv.org/abs/2311.10537) (Tang et al., Findings of ACL 2024)). Role-played experts for the question and the options write analyses, vote on a summary until all agree, and a decision maker answers. Across nine medical QA sets (300 random items each, zero-shot), **GPT-4 averaged 86.7 against 83.0 for zero-shot chain of thought with 5-sample self-consistency**, and GPT-3.5 72.1 against 70.9. The cost is about $1.41 per 100 questions and 40 s each, and the vote is not matched to that spend. On MedQA with GPT-3.5, six experts from different domains scored 64.1 and six of the same domain 59.2.
+
 
 ---
 
