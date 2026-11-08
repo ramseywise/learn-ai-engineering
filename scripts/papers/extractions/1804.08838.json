@@ -1,0 +1,515 @@
+{
+ "schema": 1,
+ "key": "1804.08838",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/li-2018-measuring-intrinsic-dimension-objective-landscapes.pdf",
+ "bib": {
+  "title": "Measuring the Intrinsic Dimension of Objective Landscapes",
+  "authors": [
+   "Chunyuan Li",
+   "Heerad Farkhoor",
+   "Rosanne Liu",
+   "Jason Yosinski"
+  ],
+  "first_author": "Li",
+  "year": 2018,
+  "venue": "ICLR 2018",
+  "arxiv": "1804.08838",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78146,
+  "chars_total": 78146,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How many parameters does a neural network really need to solve a problem, measured as the smallest random-subspace dimension in which training reaches a solution?",
+ "hypothesis": "Solutions are highly redundant, so the intrinsic dimension of a problem is far below the parameter count and changes little as the model grows.",
+ "contributions": [
+  "Define intrinsic dimension of an objective landscape and estimate it by random subspace training",
+  "Measure d_int90 on MNIST, CIFAR-10, ImageNet and RL tasks, enabling cross-domain difficulty comparison",
+  "Show d_int90 is nearly constant across FC models of very different size",
+  "Give an upper bound on minimum description length and a simple network compression scheme"
+ ],
+ "method": {
+  "summary": "Train theta(D)=theta0(D)+P theta(d), with theta0 and the D x d projection P random and frozen, only theta(d) (init zero) trained. Sweep d, and report the smallest d at which performance reaches 90% of a directly trained baseline (d_int90).",
+  "task": "measuring intrinsic dimension of supervised (MNIST, CIFAR-10, ImageNet) and RL (CartPole, InvertedPendulum, Humanoid, Pong) objective landscapes",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": "50,000 training examples (shuffled-label experiment)",
+    "split": null,
+    "source": null,
+    "preprocessing": "shuffled-pixel variant: one random permutation applied to train and test; shuffled-label variant: labels randomised, training accuracy used"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky & Hinton 2009",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "CartPole-v0, InvertedPendulum-v1, Humanoid-v1, Pong-v0",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "OpenAI Gym, MuJoCo, Atari",
+    "preprocessing": "Pong: 4-frame stacking, 210x160x3 frames"
+   }
+  ],
+  "models": [
+   {
+    "name": "FC 784-200-200-10 (MNIST)",
+    "role": "evaluated",
+    "params": "199,210",
+    "architecture": "fully connected",
+    "init_from": "random (He/Glorot style init as theta0)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "2 hidden",
+    "hidden": "200",
+    "heads": null,
+    "context": null,
+    "other": {
+     "sweep": "20 FC nets, hidden layers {1..5} x width {50,100,200,400}; D varies 24.1x"
+    }
+   },
+   {
+    "name": "LeNet (MNIST)",
+    "role": "evaluated",
+    "params": "44,426",
+    "architecture": "conv",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FC / LeNet / ResNet-20 / SqueezeNet / ConvNet (Pong)",
+    "role": "evaluated",
+    "params": "CIFAR FC 656,810; CIFAR LeNet 62,006; ResNet-20 280k; SqueezeNet 1,248,424; Pong ConvNet 1,005,974; Humanoid FC 166,673",
+    "architecture": "various",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "mnist_shuffled_labels_FC5": "D=959,610 (L=5, W=400)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "classification loss (supervised); DQN and Evolution Strategies (RL)",
+   "optimizer": "SGD lr 0.1 and Adam lr 0.001 on MNIST FC (S5.4); RL ES uses Adam with beta1 0.9, beta2 0.999, eps 1e-7",
+   "lr": "MNIST: SGD 0.1, Adam 0.001; ES Adam LR 3e-1 (InvertedPendulum), 3e-2 (Humanoid, Pong)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": "ES iterations: 1000 InvertedPendulum, 2000 Humanoid, 500 Pong",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "inferred: float32 (compression arithmetic assumes 32-bit floats)",
+   "weight_decay": "l2 penalty in ES: 1e-8 InvertedPendulum, 5e-3 Humanoid and Pong",
+   "dropout": null,
+   "regularisation": "regularisation study (CIFAR FC L=2,W=200): l2 {1e-2,1e-3,5e-4,1e-4,1e-5,0}, dropout {0.5..0}",
+   "hardware": "ImageNet SqueezeNet: 4 GPUs",
+   "compute": "ImageNet: each intrinsic dimension takes about 6 to 7 days on 4 GPUs",
+   "wall_clock": "6-7 days per d on ImageNet",
+   "seeds": "3 runs per d on MNIST FC sweep (median), 50 bootstrap samples for variance; DQN at least 5 runs per d; most other experiments single run",
+   "other": {
+    "projection": "dense Gaussian (O(Dd)), very sparse (density 1/sqrt(D), Li et al 2006) for CIFAR-10, Fastfood transform for ImageNet and Pong; columns normalised to unit length",
+    "threshold": "d_int90 = smallest d with performance >= 90% of best directly trained baseline; accuracy or reward (shifted min 0), not loss",
+    "DQN": "FC L=2 W=400, CartPole baseline 195.07",
+    "RL performance": "max-attained mean eval reward over iterations, averaged over 30 evaluations"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "see training.seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "d_int90",
+     "definition": "smallest random-subspace dimension d whose performance is at least 90% of the directly trained baseline (validation accuracy, or total reward)",
+     "unit": "dimensions (parameters)",
+     "higher_is_better": false
+    },
+    {
+     "name": "d_int100",
+     "definition": "smallest d with performance statistically indistinguishable from baseline; found to vary widely, so not used",
+     "unit": "dimensions",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "best directly trained model (global baseline of 100% accuracy for the MNIST FC grid, or per-model baseline)",
+    "1000 small random direct FC nets"
+   ],
+   "protocol": "Sweep d upward, oversampling near the threshold; for MNIST FC grid take median of 3 runs per d and bootstrap std (50 samples); many other results are one-run."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "SGD (learning rate 0.1) and ADAM (learning",
+    "where": "S5.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MNIST FC reaches 90% of baseline in a subspace of only about 750 dimensions out of 199,210",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 750,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FC 784-200-200-10, D=199,210, MNIST, one-run measurement",
+   "note": null,
+   "where": "3.1",
+   "quote": "we measure this network’s intrinsic dimension dint90 at about 750"
+  },
+  {
+   "claim": "D varies 24.1x across 20 FC MNIST models but d_int90 varies only 1.33x",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.33",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 FC nets, depth 1-5, width 50-400, MNIST, global 100% baseline, 3 runs/d",
+   "note": "With per-model baselines the factor is 1.42 (Fig S7).",
+   "where": "3.1, Fig 3",
+   "quote": "dint90 changes over this range by a factor of only 1.33"
+  },
+  {
+   "claim": "LeNet on MNIST has d_int90 of 290, about 150x compression",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 290,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LeNet D=44,426, MNIST, one run",
+   "note": null,
+   "where": "3.1",
+   "quote": "we ﬁnd dint90 = 290, or a compression rate of about 150× for this network"
+  },
+  {
+   "claim": "Storing the 750-dim FC solution (seed + 750 floats) compresses 793kB to 3.2kB",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 260,
+   "unit": "x compression",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNIST FC, 32-bit floats; subspace training gives no inference speedup",
+   "note": null,
+   "where": "3.1",
+   "quote": "It leads to compression\n(assuming 32-bit ﬂoats) by a factor of 260×"
+  },
+  {
+   "claim": "Shuffling MNIST pixels leaves FC d_int90 at 750 but raises LeNet from 290 to 1400",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1400,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LeNet, MNIST shuffled pixels",
+   "note": null,
+   "where": "3.1",
+   "quote": "the intrinsic dimension of a convnet increases from 290 to 1400"
+  },
+  {
+   "claim": "Memorising random labels on 50,000 MNIST examples needs d_int90 of 190,000 (3.8 floats per label)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 190000,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "FC L=5 W=400, D=959,610, shuffled labels, training accuracy",
+   "note": null,
+   "where": "3.1, Table S2",
+   "quote": "requires a very high\ndimension, dint90 = 190, 000, or 3.8 ﬂoats per memorized label"
+  },
+  {
+   "claim": "CIFAR-10 is harder than MNIST: d_int90 9k (FC) and 2.9k (LeNet)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9000,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 FC D=656,810",
+   "note": null,
+   "where": "3.2",
+   "quote": "9k vs. 750 for FC and 2.9k vs. 290 for LeNet"
+  },
+  {
+   "claim": "For >50% CIFAR-10 accuracy, FC, LeNet and ResNet need d_int90 about 9k, 2.9k, 1k",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1000,
+   "unit": "dimensions (ResNet)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, global >50% accuracy",
+   "note": null,
+   "where": "3.2",
+   "quote": "FC, LeNet and ResNet approximately\nrequires dint90 = 9k, 2.9k and 1k"
+  },
+  {
+   "claim": "ImageNet SqueezeNet d_int90 not determined, only above 500k",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SqueezeNet D=1.24M, direct top-1 55.5%; at d=500k accuracy 34.34%; each d takes 6-7 days on 4 GPUs",
+   "note": "Claim only: d_int90 > 500k.",
+   "where": "3.2, S9"
+  },
+  {
+   "claim": "Inverted pendulum needs only 4 parameters; Humanoid 700; Pong 6k",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ES policy training, MuJoCo InvertedPendulum-v1",
+   "note": "Humanoid text says MNIST FC d_int90 is 650 in S6.2 and CIFAR convnet 2,500, versus 750 and 2.9k elsewhere.",
+   "where": "3.3",
+   "quote": "dint100 = dint90 = 4"
+  },
+  {
+   "claim": "Pole-balancing DQN d_int90: CartPole 25, Pole 23, Cart 7",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25,
+   "unit": "dimensions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DQN FC L=2 W=400, at least 5 runs per d, baseline 195.07",
+   "note": null,
+   "where": "S6.1",
+   "quote": "dint90 = 25, 23 and 7"
+  },
+  {
+   "claim": "Both local connectivity and weight tying lower d_int90: LeNet variants 290/600/425/2000 on MNIST",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2000,
+   "unit": "dimensions (FC-LeNet, MNIST)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LeNet, Untied, FCTied, FC-LeNet; MNIST threshold 90%",
+   "note": null,
+   "where": "S10",
+   "quote": "dint90 = 290, 600, 425, 2000 on MNIST"
+  },
+  {
+   "claim": "Subspace training stabilises deep FC nets: direct training fails for depth > 5, subspace training stable at all depths",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FC on MNIST, SGD step 0.1, ReLU, He init, up to 10 layers; read from Fig S9",
+   "note": null,
+   "where": "S5.3, Fig S9"
+  },
+  {
+   "claim": "Subspace training acts as implicit regulariser, beating direct training on test NLL when d is well chosen",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 FC L=2 W=200, vs l2 and dropout; qualitative, Fig S15-S17",
+   "note": null,
+   "where": "S8"
+  }
+ ],
+ "limits": [
+  "Random linear subspaces only; the authors suggest better (non-linear or constructed) subspaces might contain solutions more likely.",
+  "The 90% threshold is a heuristic; d_int100 varies widely. Conclusions are said to hold qualitatively for other thresholds but this is not tested.",
+  "A constant intrinsic dimension was shown for one architecture/dataset family (MNIST FC), not claimed in general.",
+  "ImageNet d_int90 was not estimated (only >500k) due to time and memory.",
+  "Most numbers are single-run; only the MNIST FC sweep has 3 runs per d.",
+  "d_int is an upper bound on MDL; tightness unknown.",
+  "Paper studies training from random init on small vision/RL problems; it does not study pretrained or fine-tuned models, LoRA, layer selection, transformers or language models.",
+  "Subspace training does not speed up inference and is costlier per update (two modules)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "intrinsic dimension",
+   "definition": "the codimension of the solution set inside R^D: D = dint + s",
+   "where": "Sec 2, Eq 1"
+  },
+  {
+   "term": "d_int90",
+   "definition": "intrinsic dimension of the 90% solution: solutions with performance at least 90% of the baseline",
+   "where": "Sec 2.2"
+  },
+  {
+   "term": "direct training",
+   "definition": "standard optimisation with steps taken directly in the space of theta(D)",
+   "where": "Sec 2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dauphin et al. 2014 saddle point problem",
+   "year": 2014,
+   "arxiv": "1406.2572",
+   "relation": "related",
+   "note": "local critical points in high dimension are saddles",
+   "quote": null
+  },
+  {
+   "work": "Goodfellow, Vinyals, Saxe 2015 Qualitatively characterizing neural network optimization problems",
+   "year": 2015,
+   "arxiv": "1412.6544",
+   "relation": "related",
+   "note": "straight-line paths from init to final are often monotonically decreasing",
+   "quote": null
+  },
+  {
+   "work": "Zhang et al. 2017 Understanding deep learning requires rethinking generalization",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shuffled pixel and label experiments",
+   "quote": null
+  },
+  {
+   "work": "Very sparse random projections (Li, Hastie, Church)",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sparse projection for CIFAR-10",
+   "quote": null
+  },
+  {
+   "work": "Fastfood (Le, Sarlos, Smola)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implicit projection for ImageNet and Pong",
+   "quote": null
+  },
+  {
+   "work": "Evolution Strategies (Salimans et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "policy training for RL tasks",
+   "quote": null
+  },
+  {
+   "work": "DQN (Mnih et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "value-based RL",
+   "quote": null
+  },
+  {
+   "work": "Rissanen 1978; Hinton & Van Camp 1993",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "related",
+   "note": "minimum description length",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of parameter vectors for direct optimization (D=3), a random subspace (D=3, d=2), and performance vs subspace dim for the toy example",
+   "page": 3,
+   "why": "Shows the theta0 + P theta(d) construction and d_int on a toy problem"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Measured intrinsic dimension d_int90 vs number of parameters D for 20 FC models",
+   "page": 6,
+   "why": "Flat d_int90 while D grows 24x is the paper's main redundancy result"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Validation accuracy vs subspace dimension for FC and LeNet on MNIST",
+   "page": 5,
+   "why": "Shows how d_int90 is read off"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 2.1",
+   "snippet": "theta(D) = theta0(D) + P theta(d)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Figure axis values appear as stray numbers in the extracted text; Table 1 and S5 are column-scrambled, so values were aligned by order.",
+  "Inconsistent numbers: MNIST FC d_int90 750 (main) vs 650 (S6.2); CIFAR LeNet 2.9k vs 2,500 (S6.2) and 2900 vs 1000 (S10, different threshold).",
+  "No instructions embedded in the PDF."
+ ]
+}

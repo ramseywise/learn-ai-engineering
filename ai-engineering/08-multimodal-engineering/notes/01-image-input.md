@@ -40,6 +40,11 @@ sources:
   - https://arxiv.org/abs/2306.16410
   - https://arxiv.org/abs/2307.13721
   - https://ai.google.dev/gemini-api/docs/image-understanding
+  - https://arxiv.org/abs/2102.03334
+  - https://arxiv.org/abs/2106.05974
+  - https://arxiv.org/abs/2209.06794
+  - https://arxiv.org/abs/2305.18565
+  - https://arxiv.org/abs/2312.14238
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -52,6 +57,8 @@ A customer uploads a phone photo of an invoice and asks your assistant what they
 ## What the model actually sees
 
 A vision-language model turns an image into a sequence of vectors and hands that sequence to a language model. The vision half is usually a Vision Transformer, which cuts the image into fixed-size square patches and encodes each one. CLIP established the training recipe that made such encoders useful for language. It trains an image encoder and a text encoder together so that matching image-caption pairs land close in a shared embedding space ([arXiv:2103.00020](https://arxiv.org/abs/2103.00020) (Radford et al., ICML 2021)). LLaVA then gave builders the simplest architecture that works: take the patch features from a CLIP encoder, project them with a small linear layer into the language model's embedding space, and put them in the prompt as if they were words ([arXiv:2304.08485](https://arxiv.org/abs/2304.08485) (Liu et al., NeurIPS 2023)). LLaVA-1.5 replaced the linear layer with a small MLP, moved the input to 336×336, and reached state-of-the-art results across 11 benchmarks with only 1.2M public training examples ([arXiv:2310.03744](https://arxiv.org/abs/2310.03744) (Liu et al., CVPR 2024)). Convolutional networks came before it: see [Convolutional networks](../../../data-science/02-deep-learning/notes/04-convolutional-networks.md#a-cnn-on-the-digits) in data science. Optional, if you have not built one: [DS 02 Vision in practice](../../../data-science/02-deep-learning/notes/04b-vision-in-practice.md#what-a-transformer-would-need) constructs a ViT from the paper's equations and checks it against torchvision's parameter count.
+
+Two designs bracket that recipe. ViLT drops the detector and the convolutional backbone and feeds linear patch embeddings straight into the transformer. Its visual embedder plus transformer takes about 15 ms against about 900 ms for region-feature models such as UNITER-Base, and 55.9 GFLOPs against 949.9 (averaged over 10K runs on a Xeon E5-2650 and a P40). The speed costs accuracy: the authors call ViLT-B/32 a proof of concept that falls short of the heavier embedders on VQAv2 and COCO retrieval ([arXiv:2102.03334](https://arxiv.org/abs/2102.03334) (Kim et al., ICML 2021)). At the other end, V-MoE sends each patch token to 2 of 32 experts in every second ViT block. The L/16 variant scored 77.10 on ImageNet 5-shot against 76.95 for dense ViT-H/14 with 49.95% of its FLOPs and 57.40% of its time, but a matched-FLOPs variant ran at 118% of the dense runtime, so fewer FLOPs do not guarantee a faster model ([arXiv:2106.05974](https://arxiv.org/abs/2106.05974) (Riquelme et al., NeurIPS 2021)).
 
 ![LLaVA architecture: a vision encoder and a projection W turn the image into visual tokens that sit beside the instruction tokens in a language model](../sources/images/liu-llava-fig1.png)
 *Image Source: Liu et al., [Visual Instruction Tuning](https://arxiv.org/abs/2304.08485) (NeurIPS 2023), Fig. 1. Image features pass through one linear projection and enter the language model as ordinary tokens.*
@@ -109,6 +116,8 @@ Two consequences follow, and the rest of this chapter works them out. The image 
 ## Resolution is the main knob
 
 If you can change one thing about how images enter your system, change the resolution. Apple's MM1 study varied encoders, connectors and data systematically, and its summary is blunt: image resolution had the highest impact, followed by model size and training data composition. Going from 224 to 336 pixels gave about a 3% boost across architectures, while doubling encoder parameters from ViT-L to ViT-H usually gave less than 1%. The connector design that joins vision to language had comparatively little effect once the number of visual tokens was fixed ([arXiv:2403.09611](https://arxiv.org/abs/2403.09611) (McKinzie et al., ECCV 2024)). These figures are on the authors' zero-shot and few-shot benchmarks, for a family of research models, so read them as a ranking of levers and not as a forecast for your task.
+
+PaLI measured the same knob at larger scale. All variants pretrain at 224×224, and PaLI-17B adds a short 588×588 phase of 10,000 steps that lifted the average over seven benchmarks by 2.0 points. Growing the vision tower from ViT-G to ViT-e (+2B parameters, about 13% of the model) added 3.2 on that average, against 3.1 for growing mT5-L to XXL (+12B), so in that comparison the encoder was the cheaper place to put parameters ([arXiv:2209.06794](https://arxiv.org/abs/2209.06794) (Chen et al., ICLR 2023)). PaLI-X's VQAv2 score of 86.1 came from a 55B model fine-tuned at 672 px, end to end with no OCR pipeline ([arXiv:2305.18565](https://arxiv.org/abs/2305.18565) (Chen et al., CVPR 2024)). The cost is easy to see in InternViT-6B, whose encoding time goes from 15.5 ms at 224 to 66.9 ms at 448 (batch 128, one A100, bf16 with Flash Attention), while InternVL-C's throughput falls from 48.9 to 13.9 frames per second ([arXiv:2312.14238](https://arxiv.org/abs/2312.14238) (Chen et al., CVPR 2024)).
 
 Resolution costs compute, because tokens grow with the square of the side length. Model builders have four ways of paying less.
 

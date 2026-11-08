@@ -1,0 +1,169 @@
+{
+ "schema": 1,
+ "key": "2212.03827",
+ "pdf": "generative-ai/08-eval/sources/burns-2022-discovering-latent-knowledge-language-models.pdf",
+ "bib": {
+  "title": "Discovering Latent Knowledge in Language Models Without Supervision",
+  "authors": ["Collin Burns", "Haotian Ye", "Dan Klein", "Jacob Steinhardt"],
+  "first_author": "Burns",
+  "year": 2022,
+  "venue": "preprint (arXiv v2, 2 Mar 2024)",
+  "arxiv": "2212.03827",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 94582,
+  "chars_total": 94582,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; transfer-matrix numbers (Fig 2, Fig 9) are heatmap cell values, not read individually; Figure 5 prefix text is an image and not in the text layer."
+ },
+ "type": "empirical",
+ "question": "Can a language model's latent knowledge of truth be recovered from its unlabeled hidden activations alone, without labels or model outputs?",
+ "hypothesis": "Truth satisfies logical consistency properties (a statement and its negation have opposite truth values) that few other features satisfy, so a direction enforcing them will recover truth.",
+ "contributions": [
+  "Contrast-Consistent Search (CCS), an unsupervised probe that finds a direction in activation space consistent across negations",
+  "CCS outperforms calibrated zero-shot on 6 models and 10 datasets and halves prompt sensitivity",
+  "CCS stays accurate under a misleading prefix, transfers across tasks, and works with little data",
+  "Contrastive Representation Clustering (TPC, BSS) shows truth directions are salient"
+ ],
+ "method": {
+  "summary": "For each yes-no question build two statements (answered Yes, answered No), extract last-token hidden states, mean-normalise each set independently, and train a linear+sigmoid probe with a consistency loss plus a confidence loss. No labels and no model outputs are used; model weights are frozen.",
+  "task": "binary (yes-no) question answering / classification via unsupervised probing of hidden states",
+  "trains": true,
+  "datasets": [
+   {"name": "IMDB, Amazon (sentiment); AG-News, DBpedia-14 (topic); RTE, QNLI (NLI); COPA, Story-Cloze (story completion); BoolQ (QA); PIQA (commonsense)", "role": "both", "size": "1000 examples per dataset, label-balanced (COPA 500 total); about 180k examples counting 9 prompts x 10 datasets x 6 models", "split": "60% unsupervised train / 40% test, random", "source": "public datasets; test/validation split used when possible, else some train examples", "preprocessing": "each converted to a binary task; for AG-News and DBpedia a random incorrect label is paired with the correct one, randomly assigned to label0/label1"},
+   {"name": "MNLI", "role": "train", "size": null, "split": null, "source": "used to finetune RoBERTa and DeBERTa for the zero-shot baseline (Yin et al. 2020)", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "RoBERTa", "role": "evaluated", "params": null, "architecture": "encoder-only", "init_from": "finetuned on MNLI", "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "DeBERTa (v2)", "role": "evaluated", "params": null, "architecture": "encoder-only", "init_from": "finetuned on MNLI (not for Appendix C MLM test)", "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT-J", "role": "evaluated", "params": null, "architecture": "autoregressive decoder", "init_from": null, "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "T5", "role": "evaluated", "params": null, "architecture": "encoder-decoder", "init_from": null, "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"hidden_states_used": "encoder"}},
+   {"name": "UnifiedQA", "role": "evaluated", "params": null, "architecture": "encoder-decoder", "init_from": null, "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"hidden_states_used": "encoder", "note": "trained on BoolQ"}},
+   {"name": "T0", "role": "evaluated", "params": null, "architecture": "encoder-decoder", "init_from": null, "tokenizer": "standard HF tokenizer", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"hidden_states_used": "decoder", "note": "trained on 9 of the 10 evaluation datasets (all but RTE), excluded from means"}}
+  ],
+  "training": {
+   "objective": "L_CCS = mean_i [ (p(x+_i) - (1 - p(x-_i)))^2 + min{p(x+_i), p(x-_i)}^2 ]; probe p = sigmoid(theta^T phi~ + b)",
+   "optimizer": "AdamW",
+   "lr": "0.01",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "1000 epochs per run",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "10 random restarts (theta initialised random unit norm); run with lowest unsupervised loss kept",
+   "other": {
+    "what_is_trained": "only a linear probe on frozen hidden states; model weights unchanged",
+    "normalisation": "subtract mean of x+ and of x- features separately; also divide by average norm times sqrt(d)",
+    "hidden_state": "last token, last layer unless stated; for encoder-decoder, whichever of encoder/decoder gives lower unsupervised loss",
+    "prompts_per_dataset": "8 to 13 (9 on average), pooled in one training set, normalised independently per prompt",
+    "label_direction": "evaluation takes the max accuracy over the two possible labelings of the clusters",
+    "BSS": "T = E = 20, Adam, lr 0.1, loss = (var of negative side + var of nonnegative side) / total var",
+    "layer_sweep": "hidden states every 2 layers (Fig 10, 11)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "accuracy averaged over about 9 prompts per dataset, 10 datasets, 5 models (T0 excluded); sample-size study resamples k points 32 times",
+   "prompting": "zero-shot prompts derived or slightly modified from Sanh et al. 2021 (T0/promptsource); x+ and x- = same prompt with the two labels; no few-shot examples except the misleading prefix test",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy", "definition": "fraction of the 40% test split classified correctly, averaged over prompts and datasets", "unit": "%", "higher_is_better": true},
+    {"name": "prompt sensitivity", "definition": "std of accuracy across prompts per model and dataset, averaged over datasets (shown in parentheses)", "unit": "% points", "higher_is_better": false}
+   ],
+   "baselines": ["zero-shot (highest log prob, averaged over label tokens)", "calibrated zero-shot (threshold gamma so predictions are 50/50)", "logistic regression on (phi~(x+), phi~(x-)) as supervised ceiling", "CRC TPC and BSS"],
+   "protocol": "Wald test with upper-bound standard error 0.5/sqrt(3800) about 0.8%; main comparisons significant at 0.00001 level. No seeds beyond the 10 restarts."
+  },
+  "availability": {
+   "code": "https://www.github.com/collin-burns/discovering_latent_knowledge",
+   "weights": null,
+   "data": "public datasets listed; prompts in Appendix I"
+  },
+  "prompts": [
+   {"purpose": "contrast pair construction (sentiment example)", "text": "x+ = [prefix] Q: Is the sentiment of \"[text]\" [label0] or [label1]? A: [label0]; x- = same with A: [label1]", "where": "Appendix I"},
+   {"purpose": "MLM test with label in the middle of the prompt", "text": "The following movie review expresses a [label] sentiment:\\n[text]", "where": "Appendix C"},
+   {"purpose": "AG News / DBpedia hand-written prompt", "text": "[prefix]Consider the following example: ''' [text] ''' Choice 1: [label0]. Choice 2: [label1].Between choice 1 and choice 2, the topic of this example is [label]", "where": "Appendix I.2.1"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "we optimize it 10 times using AdamW (Loshchilov & Hutter, 2017) with learning rate 0.01", "where": "Section 3.1"},
+   {"field": "training.epochs", "quote": "we train each time for E = 1000 epochs with a learning rate η = 0.01", "where": "Appendix G.3"}
+  ]
+ },
+ "results": [
+  {"claim": "CCS beats calibrated zero-shot on average over 5 models (T0 excluded).", "kind": "measured", "source": null, "metric": "mean accuracy", "value": 71.2, "unit": "%", "baseline_value": 67.2, "n": 5, "setup": "10 datasets, about 9 prompts each, models RoBERTa, DeBERTa, GPT-J, T5, UnifiedQA; last-layer last-token states; 1000 examples per dataset, 40% test", "quote": "CCS attains an accuracy of 71.2% on average, compared to 67.2% for calibrated zero-shot.", "table": null, "note": null, "where": "Section 3.2.1, Table 1"},
+  {"claim": "CCS halves prompt sensitivity relative to calibrated zero-shot.", "kind": "measured", "source": null, "metric": "mean std of accuracy across prompts", "value": 3.2, "unit": "% points", "baseline_value": 6.1, "n": 5, "setup": "same as Table 1", "quote": null, "table": "Table 1, row CCS vs Calibrated 0-shot, column Mean* (3.2 vs 6.1)", "note": "abstract says 'cuts prompt sensitivity in half'", "where": "Table 1"},
+  {"claim": "Supervised logistic regression ceiling on the same hidden states.", "kind": "measured", "source": null, "metric": "mean accuracy", "value": 83.7, "unit": "%", "baseline_value": null, "n": 5, "setup": "same as Table 1, uses labels", "quote": null, "table": "Table 1, row LR (Ceiling), column Mean*", "note": "gap of about 12 points to CCS remains", "where": "Table 1"},
+  {"claim": "A misleading few-shot prefix drops UnifiedQA zero-shot accuracy but not CCS.", "kind": "measured", "source": null, "metric": "UnifiedQA accuracy with prefix", "value": 83.8, "unit": "%", "baseline_value": 70.9, "n": 1, "setup": "UnifiedQA, 10 datasets, prefix of incorrectly answered questions (Fig 5); CCS 82.1 -> 83.8, calibrated 0-shot 80.4 -> 70.9", "quote": "CCS maintains high accuracy (82.1% →83.8%)", "table": null, "note": "Appendix B authors concede results are qualitatively similar with correct-answer prefixes, so the effect may be out-of-distribution rather than imitation of errors", "where": "Section 3.2.2, Table 3"},
+  {"claim": "CCS on MLM-only DeBERTa with the label mid-prompt and no [MASK] still works, while zero-shot does not.", "kind": "measured", "source": null, "metric": "Amazon accuracy", "value": 93.7, "unit": "%", "baseline_value": 71.6, "n": 1, "setup": "DeBERTa-v2 without NLI finetuning, Amazon, 1000 new points, 60/40 split", "quote": "attaining an accuracy of 93.7%", "table": null, "note": null, "where": "Appendix C"},
+  {"claim": "Training CCS on all datasets together adds an insignificant gain on average, but large for T0.", "kind": "measured", "source": null, "metric": "T0 accuracy", "value": 84.8, "unit": "%", "baseline_value": 77.6, "n": 1, "setup": "T0, CCS vs CCS (All Data)", "quote": "with large gains for T0 in particular (77.6% →84.8%)", "table": null, "note": "average gain 0.3%", "where": "Section 3.2.1"},
+  {"claim": "CCS is worse than zero-shot on RoBERTa and on T0 (whose zero-shot is inflated by training on the test datasets).", "kind": "measured", "source": null, "metric": "T0 accuracy, calibrated 0-shot", "value": 90.5, "unit": "%", "baseline_value": 77.6, "n": 1, "setup": "T0 trained on 9 of 10 evaluation datasets", "quote": null, "table": "Table 1, row Calibrated 0-shot, column T0*", "note": null, "where": "Table 1"},
+  {"claim": "CRC variants (no training of a probe beyond PCA/clustering) are nearly as good as CCS.", "kind": "measured", "source": null, "metric": "mean accuracy", "value": 70.1, "unit": "%", "baseline_value": 71.2, "n": 5, "setup": "TPC; BSS gets 70.2", "quote": null, "table": "Table 2, row CRC (TPC), column Mean*", "note": null, "where": "Table 2"},
+  {"claim": "Using the encoder vs decoder states for UnifiedQA under the misleading prefix: decoder accuracy falls like zero-shot.", "kind": "measured", "source": null, "metric": "CCS accuracy on UnifiedQA decoder states", "value": 73.5, "unit": "%", "baseline_value": 81.0, "n": 1, "setup": "UnifiedQA, with vs without prefix", "quote": "accuracy using the decoder hidden states drops from 81.0% to 73.5%", "table": null, "note": null, "where": "Section 3.3.2"},
+  {"claim": "Calibration raises zero-shot accuracy by about 5% on average.", "kind": "measured", "source": null, "metric": "accuracy gain", "value": 5, "unit": "%", "baseline_value": null, "n": null, "setup": "calibrated vs raw zero-shot", "quote": "We find this increases accuracy by about 5% on average.", "table": null, "note": null, "where": "Section 3.1"},
+  {"claim": "Training CCS on Amazon transfers with average accuracy slightly above the no-transfer setting.", "kind": "measured", "source": null, "metric": "transfer accuracy", "value": 71.8, "unit": "%", "baseline_value": null, "n": null, "setup": "UnifiedQA etc., train on Amazon, test on all datasets", "quote": "achieves an average transfer accuracy of 71.8%, which is 0.6% higher than CCS without transfer", "table": null, "note": null, "where": "Section 3.3.1"}
+ ],
+ "limits": [
+  "CCS needs a direction that separates true from false and the model must actively evaluate truth; the authors say it is not clear when this holds (Section 5.1).",
+  "No test on active lying or deception by models; no such evaluation setup existed (Section 5.1).",
+  "CCS does not say which cluster is true; evaluation takes the max over both labelings, so reported accuracy is optimistic by that choice (Section 2.2); Appendix A only sketches an unsupervised fix using conjunctions.",
+  "Only yes-no or binary tasks with clear-cut answers; a gap to the LR ceiling remains.",
+  "Misleading-prefix effect is ambiguous: qualitatively similar with correct answers, and only UnifiedQA showed a significant drop (Appendix B).",
+  "T0 contaminated by training on 9 of 10 datasets; UnifiedQA trained on BoolQ.",
+  "Several models (RoBERTa, GPT-J, T5) show weak transfer and near-chance accuracy on some datasets (Fig 9).",
+  "Model sizes are not stated; results are for 2020-2021 era models, later work questioned whether CCS finds truth rather than other salient features (not in this paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Contrast-Consistent Search (CCS)", "definition": "a method that learns a linear projection of the hidden states that is consistent across negations", "where": "Introduction"},
+  {"term": "Contrast pair", "definition": "for each question q_i, the statement x+ answering Yes and x- answering No", "where": "Section 2.2"},
+  {"term": "Contrastive Representation Clustering (CRC)", "definition": "cluster the differences of normalized hidden states of contrast pairs, via top principal component (TPC) or bimodal salience search (BSS)", "where": "Section 3.3.3"}
+ ],
+ "lineage": [
+  {"work": "Eliciting Latent Knowledge (Christiano, Cotra, Xu)", "year": 2022, "arxiv": null, "relation": "extends", "note": "ELK posed as worst-case theory; this paper treats it as empirical", "quote": null},
+  {"work": "Multitask prompted training enables zero-shot task generalization (T0)", "year": 2021, "arxiv": "2110.08207", "relation": "uses-data", "note": "prompts derived from promptsource; T0 evaluated", "quote": null},
+  {"work": "Calibrate before use (Zhao et al.)", "year": 2021, "arxiv": "2102.09690", "relation": "baseline", "note": "calibrated zero-shot variant", "quote": null},
+  {"work": "Yin et al. universal NLP with limited annotations", "year": 2020, "arxiv": null, "relation": "baseline", "note": "NLI-finetuned encoder-only zero-shot", "quote": null},
+  {"work": "UnifiedQA (Khashabi et al.)", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "model", "quote": null},
+  {"work": "T5 (Raffel et al.)", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "model", "quote": null},
+  {"work": "GPT-J (Wang & Komatsuzaki)", "year": 2021, "arxiv": null, "relation": "evaluates", "note": "only autoregressive model", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": "1907.11692", "relation": "evaluates", "note": "model", "quote": null},
+  {"work": "DeBERTa (He et al.)", "year": 2021, "arxiv": "2006.03654", "relation": "evaluates", "note": "model", "quote": null},
+  {"work": "Maieutic prompting (Jung et al.)", "year": 2022, "arxiv": "2205.11822", "relation": "related", "note": "also uses consistency but bootstraps from model outputs", "quote": null},
+  {"work": "Prompt consistency for zero-shot task generalization (Zhou et al.)", "year": 2022, "arxiv": "2205.00049", "relation": "related", "note": "same, consistency from outputs", "quote": null},
+  {"work": "TruthfulQA (Lin et al.)", "year": 2022, "arxiv": null, "relation": "related", "note": "models mimic human falsehoods", "quote": null},
+  {"work": "Rethinking the role of demonstrations (Min et al.)", "year": 2022, "arxiv": "2202.12837", "relation": "related", "note": "incorrect labels in demos often do not hurt; explains prefix ambiguity", "quote": null},
+  {"work": "Bolukbasi et al. debiasing word embeddings", "year": 2016, "arxiv": null, "relation": "related", "note": "TPC is similar in spirit but needs labels there", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "An illustration of our method, Contrast-Consistent Search (CCS).", "page": 2, "why": "Shows the whole pipeline: contrast pair, activations, probe, consistency+confidence loss, bimodal Yes-probability histogram."},
+  {"figure": "Fig 4", "caption": "Zero-shot accuracy drop caused by the misleading prefix for UnifiedQA; each point is one dataset and prompt.", "page": 15, "why": "Scatter vs y=x showing zero-shot falls while CCS does not."},
+  {"figure": "Fig 3", "caption": "Accuracy when CCS is trained on k samples (32 trials).", "page": 8, "why": "Shows data efficiency."},
+  {"figure": "Fig 2", "caption": "Transfer performance using CCS on UnifiedQA, T0 and DeBERTa.", "page": 7, "why": "Train-by-test heatmap of cross-task transfer."}
+ ],
+ "code": [
+  {"where": "Section 2.2", "snippet": "L_CCS = 1/n sum_i [ (p(x+_i) - (1 - p(x-_i)))^2 + min{p(x+_i), p(x-_i)}^2 ]", "verbatim": false}
+ ],
+ "problems": [
+  "Figure 5 (misleading prefix text) is an image, so the prefix wording is not in the text layer.",
+  "Model parameter counts and layer counts are not stated in the text.",
+  "Equation and table cells are linearised by the PDF text layer; table cells were read in order."
+ ]
+}

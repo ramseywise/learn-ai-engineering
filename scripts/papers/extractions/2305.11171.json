@@ -1,0 +1,121 @@
+{
+ "schema": 1,
+ "key": "2305.11171",
+ "pdf": "generative-ai/08-eval/sources/gekhman-2023-trueteacher.pdf",
+ "bib": {"title": "TrueTeacher: Learning Factual Consistency Evaluation with Large Language Models", "authors": ["Zorik Gekhman", "Jonathan Herzig", "Roee Aharoni", "Chen Elkind", "Idan Szpektor"], "first_author": "Gekhman", "year": 2023, "venue": "EMNLP 2023", "arxiv": "2305.11171", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 78049, "chars_total": 78049, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can annotating real model-generated summaries with an LLM produce synthetic training data that makes a small NLI-style model a better, more domain-robust factual consistency evaluator than perturbation-based synthetic data?",
+ "hypothesis": "A strong LLM can label model-generated summaries with sufficient quality to train a student that beats perturbation-based synthetic data and generalizes out of domain.",
+ "contributions": ["TrueTeacher: synthetic data by annotating model-generated summaries with an LLM", "Evaluation of FLAN-PaLM 540B on factual consistency, distilled into a smaller model", "Systematic re-evaluation of existing synthetic data methods under controlled conditions", "First multilingual synthetic data experiment for factual consistency", "Release of 1.4M example dataset and a checkpoint"],
+ "method": {
+  "summary": "Fine-tune T5 (small to 11B) summarizers on XSum, summarize CNN/DM training documents, label each document-summary pair consistent/inconsistent with zero-shot FLAN-PaLM 540B, then train a T5 student classifier on the labels (alone or mixed with ANLI). Compare against FactEdit, DocNLI, FactCC and Falsesum data under matched size and a CNN/DM-only, out-of-domain test.",
+  "task": "factual consistency evaluation of summaries (binary classification, distillation from LLM labels)",
+  "trains": true,
+  "datasets": [
+   {"name": "TrueTeacher synthetic data", "role": "train", "size": "907,899 consistent + 475,563 inconsistent (~1.4M)", "split": "CNN/DM training set documents only, gold summaries unused; full-data run balances labels by sampling 475,563 positive examples; study runs use 100k balanced examples", "source": "generated; released at github.com/google-research/google-research/tree/master/true_teacher", "preprocessing": "FLAN-PaLM answers 'It's impossible to say' are discarded"},
+   {"name": "XSum", "role": "train", "size": null, "split": "training set for summarizers; dev ROUGE as stopping criterion", "source": "Narayan et al. 2018", "preprocessing": null},
+   {"name": "CNN/DailyMail", "role": "train", "size": null, "split": "training documents", "source": "Hermann et al. 2015", "preprocessing": null},
+   {"name": "ANLI", "role": "train", "size": null, "split": "mixed with synthetic data", "source": "Nie et al. 2020", "preprocessing": null},
+   {"name": "TRUE summarization subset (MNBM, FRANK, SummEval, QAGS-X, QAGS-C)", "role": "eval", "size": null, "split": "benchmark test sets", "source": "Honovich et al. 2022", "preprocessing": "FRANK split into FRANK-C (CNN/DM) and FRANK-X (XSum) for domain analysis"},
+   {"name": "FactCC dataset (dev set for prompt and checkpoint selection)", "role": "dev", "size": "1,431 examples", "split": "dev and test merged, following Utama et al. 2022", "source": "Kryscinski et al. 2020", "preprocessing": null},
+   {"name": "WikiLingua (multilingual documents)", "role": "train", "size": "100k sampled: 25k per language (en, es, fr, de), 12,500 consistent + 12,500 inconsistent each", "split": null, "source": "Ladhak et al. 2020", "preprocessing": null},
+   {"name": "XLSum", "role": "train", "size": null, "split": "summarizer fine-tuning for mT5-XXL", "source": "Hasan et al. 2021", "preprocessing": null},
+   {"name": "mFACE test set", "role": "eval", "size": "3150 examples, 45 languages (70 per language)", "split": "XLSum test split", "source": "Aharoni et al. 2022", "preprocessing": "average attribution score >0.5 treated as consistent"}
+  ],
+  "models": [
+   {"name": "FLAN-PaLM 540B", "role": "teacher", "params": "540B", "architecture": "instruction-finetuned PaLM", "init_from": "PaLM", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "T5-11B (student)", "role": "proposed", "params": "11B", "architecture": "T5 encoder-decoder", "init_from": "pretrained T5", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"also": "T5-base used for the smaller-capacity study"}},
+   {"name": "T5-small/base/large/3B/11B summarizers", "role": "base", "params": "small, base, large, 3B, 11B", "architecture": "T5", "init_from": "pretrained T5", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fine_tuned_on": "XSum"}},
+   {"name": "mT5-XXL", "role": "base", "params": null, "architecture": "mT5", "init_from": "pretrained mT5-XXL", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"uses": "multilingual summarizer (XLSum) and multilingual student (ANLI+XNLI baseline)"}}
+  ],
+  "training": {
+   "objective": "binary classification: predict '1' if summary is factually consistent, '0' otherwise; input 'Premise: {document} Hypothesis: {summary}'",
+   "optimizer": null,
+   "lr": "10^-4",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": "checkpoint evaluated every 1k steps; best-ROC-AUC checkpoint on dev",
+   "epochs": "maximum of 20",
+   "tokens": null,
+   "seq_len": "512 tokens max input in training (premise truncated); 2048 at inference",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"summarizer_training": "T5 models fine-tuned on XSum 'in a similar fashion', ROUGE on XSum dev as stopping criterion", "same_regime": "same training regime used for all baselines"}
+  },
+  "inference": {
+   "decoding": "FLAN-PaLM label: predict mode, 'Yes' -> consistent, 'No' -> inconsistent; ROC-AUC score = probability of generating 'Yes' (score mode)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one label per document-summary pair",
+   "prompting": "zero-shot NLI-style prompt for the teacher",
+   "retrieval": null,
+   "parameters": {"self_verification_filter": "tried and dropped; removed 15% of data"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [{"name": "ROC-AUC", "definition": "binary classification setting on TRUE benchmark datasets, averaged across datasets", "unit": "ROC-AUC x100", "higher_is_better": true},
+    {"name": "Labeling accuracy (human)", "definition": "binary attribution judgement by NLP researchers on 100 sampled examples (50 pos, 50 neg)", "unit": "%", "higher_is_better": true},
+    {"name": "Abstractiveness (coverage x density)", "definition": "Grusky et al. 2018 extractive fragment coverage times density, on 5k random examples", "unit": "score", "higher_is_better": false}],
+   "baselines": ["QuestEval", "Q2", "SummaCZS", "T5-11B w. ANLI", "WeCheck", "Ensemble (Honovich 2022)", "FLAN-PaLM 540B", "FactEdit", "DocNLI", "FactCC", "Falsesum"],
+   "protocol": "Study restricts each method to 100k balanced examples, CNN/DM-based only; CNN/DM test sets in-domain, XSum-based out-of-domain; repeated with T5-base and with/without ANLI. Single runs; no seeds or significance tests stated. Human eval: one rater per example, NLP researchers with 1+ year experience, max 10 examples each."
+  },
+  "availability": {"code": null, "weights": "checkpoint released", "data": "1.4M example dataset released at github.com/google-research/google-research/tree/master/true_teacher"},
+  "prompts": [
+   {"purpose": "teacher labeling (zero-shot)", "text": "Premise: {document} Hypothesis: {summary} Can the hypothesis be inferred from the premise? Answer using \"Yes\" or \"No\" only.", "where": "A.1"},
+   {"purpose": "self-verification filter", "text": "Premise: {document} Hypothesis: {summary} Are you sure that the summary can be inferred from the document? Answer using \"Yes\" or \"No\" only.", "where": "A.5"},
+   {"purpose": "chain-of-thought variant", "text": "Premise: {document}\nHypothesis: {summary}\nQ: Can the hypothesis be inferred from the premise? Answer using \"Yes\" or \"No\" only.\nA: Let's think step by step", "where": "A.1"}
+  ],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "T5-11B trained on ANLI plus the full TrueTeacher data sets a new state of the art on the TRUE summarization subset and beats its 540B teacher.", "kind": "measured", "source": null, "metric": "ROC-AUC (TRUE summarization average)", "value": "87.8", "unit": "ROC-AUC", "baseline_value": "82.7 (T5-11B w. ANLI); 84.9 (FLAN-PaLM 540B)", "n": null, "setup": "T5-11B, ANLI + full ~1.4M TrueTeacher, five TRUE summarization datasets", "quote": "improves a state-of-the-art model’s ROC-AUC from 82.7 to 87.8", "table": null, "note": null, "where": "Sec 1, Table 2"},
+  {"claim": "FLAN-PaLM 540B zero-shot is itself a strong consistency evaluator, on par with the Ensemble.", "kind": "measured", "source": null, "metric": "ROC-AUC", "value": "84.9", "unit": "ROC-AUC", "baseline_value": "83.0 (WeCheck, best single-model baseline)", "n": null, "setup": "TRUE summarization subset average", "quote": "FLAN-PaLM 540B achieves an impressive performance, with an average ROC-AUC of 84.9 compared to 83.0 of the best single-model baseline", "table": null, "note": null, "where": "Sec 4.1"},
+  {"claim": "Out of domain (XSum documents), TrueTeacher is the only method above its ANLI-only baseline; Falsesum collapses.", "kind": "measured", "source": null, "metric": "out-of-domain average ROC-AUC, T5-11B, 100k examples, no ANLI", "value": "85.7", "unit": "ROC-AUC", "baseline_value": "85.0 (ANLI only)", "n": null, "setup": "T5-11B, 100k CNN/DM-based examples, XSum-based test sets", "quote": null, "table": "Table 3, row TrueTeacher (T5-11B), column Out-of-domain: 85.7 (+0.7); Falsesum 69.7 (-15.3)", "note": null, "where": "Table 3, Sec 4.2"},
+  {"claim": "TrueTeacher-only T5-11B with 100k examples already matches the 540B teacher on TRUE.", "kind": "measured", "source": null, "metric": "TRUE average ROC-AUC", "value": "85.2", "unit": "ROC-AUC", "baseline_value": "84.9", "n": null, "setup": "T5-11B, 100k examples, no ANLI", "quote": "the TrueTeacher-based variant using T5-11B (85.2) already performs on-par with the 540B LLM teacher (84.9, Table 2)", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Scaling from 100k to the full dataset improves TrueTeacher + ANLI.", "kind": "measured", "source": null, "metric": "TRUE average ROC-AUC", "value": "87.8", "unit": "ROC-AUC", "baseline_value": "86.4 (100k)", "n": null, "setup": "T5-11B + ANLI", "quote": "we observe a performance increase (86.4 →87.8)", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "In-domain, mixing ANLI with Falsesum or TrueTeacher raises the T5-11B in-domain score.", "kind": "measured", "source": null, "metric": "in-domain average ROC-AUC", "value": "87.9", "unit": "ROC-AUC", "baseline_value": "81.1", "n": null, "setup": "T5-11B, TrueTeacher + ANLI", "quote": "in-domain score increase from 81.1 to 87.9", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Human labeling accuracy of the synthetic data is 89%; the LLM labels are high precision on the inconsistent class and weaker on consistent.", "kind": "measured", "source": null, "metric": "labeling accuracy", "value": "89", "unit": "%", "baseline_value": null, "n": 100, "setup": "100 examples (50 positive, 50 negative), NLP researcher raters", "quote": "The labeling accuracy of the sampled examples from our data stands at 89%", "table": null, "note": "Table 4: consistent precision 80.0 recall 97.6; inconsistent precision 98.0 recall 83.1", "where": "Sec 4.4"},
+  {"claim": "Better labels and model-generated summaries contribute about equally; both together give the best result.", "kind": "measured", "source": null, "metric": "TRUE average ROC-AUC, T5-11B", "value": "86.4", "unit": "ROC-AUC", "baseline_value": "80.8 (Falsesum + ANLI)", "n": null, "setup": "LabelAblation 85.3, SummaryAblation 85.5, T5-11B, 100k + ANLI", "quote": "label correctness and summary distribution have a similar effect on the perfor-\nmance", "table": "Table 5, rows Falsesum + ANLI, TrueTeacher + ANLI, LabelAblation, SummaryAblation", "note": null, "where": "Sec 4.5"},
+  {"claim": "Filtering with self-verification raised label accuracy about 5% but did not improve the student.", "kind": "measured", "source": null, "metric": "TRUE average ROC-AUC", "value": "86", "unit": "ROC-AUC", "baseline_value": "86.4 (unfiltered)", "n": null, "setup": "TrueTeacher + ANLI, T5-11B, 100k sample; 15% filtered", "quote": "we got an average of 86 ROC-AUC on TRUE using the ﬁltered data, slightly below the 86.4 using the unﬁltered data", "table": null, "note": null, "where": "A.5"},
+  {"claim": "Zero-shot, few-shot and chain-of-thought prompting of FLAN-PaLM give nearly the same dev accuracy, so zero-shot was used.", "kind": "measured", "source": null, "metric": "dev accuracy", "value": "93.6", "unit": "%", "baseline_value": "93.2 few-shot; 93.8 chain-of-thought", "n": 1431, "setup": "FactCC dev set, FLAN-PaLM 540B", "quote": null, "table": "Table 8, row zero-shot, column Dev accuracy", "note": null, "where": "A.1, Table 8"},
+  {"claim": "TrueTeacher summaries are the most abstractive among compared methods.", "kind": "measured", "source": null, "metric": "combined coverage x density", "value": "2.15", "unit": "score (lower is more abstractive)", "baseline_value": "2.76 Falsesum; 15.20 DocNLI", "n": 5000, "setup": "random sample of 5k examples per method", "quote": null, "table": "Table 6, row TrueTeacher, column Combined", "note": null, "where": "Sec 4.6"},
+  {"claim": "Adding multilingual TrueTeacher data improves mFACE ROC-AUC over ANLI+XNLI and beats the English-only variant.", "kind": "measured", "source": null, "metric": "per-example average ROC-AUC", "value": "75.3", "unit": "ROC-AUC", "baseline_value": "71.6 (ANLI+XNLI); 73.8 (+English only)", "n": 3150, "setup": "mT5-XXL, +100k en/es/de/fr; mFACE 45 languages", "quote": "with avg.\nROC AUC\nof 75.3", "table": "Table 7, row +TrueTeacher en,fe,es,ge", "note": "Improves 35 of 45 languages (32 of 45 for English only); per-language average 77.2 vs 73.3", "where": "Sec 5, Table 7"}
+ ],
+ "limits": [
+  "LLM labels are noisy (89% human-checked accuracy, weaker on the consistent class); should be re-checked for new domains.",
+  "Labeling needs a 540B LLM over 1.4M summaries; resources not available to everyone.",
+  "Multilingual experiment covers 4 high-resource languages; trade-off between language coverage and label quality unexplored.",
+  "Data filtering to raise label accuracy did not help; reason only conjectured.",
+  "Human eval is 100 examples with one rater each. No seeds, variance or significance tests reported; hardware and compute not stated.",
+  "Teacher is not independent of FLAN training on NLI; test-set contamination of FLAN-PaLM not ruled out beyond noting FLAN instruction data is public."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work": "TRUE: re-evaluating factual consistency evaluation", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "benchmark and T5-11B w. ANLI baseline", "quote": null},
+  {"work": "Falsesum (Utama et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "perturbation-based synthetic data; also source of the abstractiveness metric", "quote": null},
+  {"work": "FactCC (Kryscinski et al.)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "rule-based synthetic data; its dataset serves as dev set", "quote": null},
+  {"work": "FactEdit (Balachandran et al.)", "year": 2022, "arxiv": null, "relation": "baseline", "note": "infilling-based synthetic data", "quote": null},
+  {"work": "DocNLI (Yin et al.)", "year": 2021, "arxiv": null, "relation": "baseline", "note": "reformatted NLI data with entity replacements", "quote": null},
+  {"work": "WeCheck (Wu et al.)", "year": 2023, "arxiv": null, "relation": "baseline", "note": "weakly supervised consistency model", "quote": null},
+  {"work": "Scaling instruction-finetuned language models (FLAN-PaLM)", "year": 2022, "arxiv": "2210.11416", "relation": "evaluates", "note": "teacher LLM", "quote": null},
+  {"work": "mFACE (Aharoni et al.)", "year": 2022, "arxiv": "2212.10622", "relation": "uses-data", "note": "multilingual evaluation set", "quote": null},
+  {"work": "Chen et al., Evaluating factual consistency of summaries with LLMs", "year": 2023, "arxiv": "2305.14069", "relation": "related", "note": "prompting LLMs as consistency evaluators", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 2", "caption": "Our data generation process. We train a collection of generative summarization models, use them to summarize documents and label the resulting summaries for factual consistency using a LLM.", "page": 2, "why": "pipeline diagram of the distillation recipe"},
+  {"figure": "Table 3", "caption": "ROC-AUC results on TRUE comparing different synthetic data generation methods.", "page": 5, "why": "in-domain vs out-of-domain contrast across methods"},
+  {"figure": "Fig 3", "caption": "A case study comparing factually inconsistent summaries of the same document generated using different methods.", "page": 6, "why": "shows why perturbations often fail to inject factual errors"}
+ ],
+ "code": [],
+ "problems": ["Table cells and Table 2/3 numbers flattened one per line in the text layer; reconstructed by position. Table 5 percentages (+6.9% etc.) are relative to Falsesum + ANLI."]
+}

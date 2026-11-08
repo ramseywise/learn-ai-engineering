@@ -1,0 +1,645 @@
+{
+ "schema": 1,
+ "key": "2312.13286",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/sun-2024-generative-multimodal-models-context-learners.pdf",
+ "bib": {
+  "title": "Generative Multimodal Models are In-Context Learners",
+  "authors": [
+   "Quan Sun",
+   "Yufeng Cui",
+   "Xiaosong Zhang",
+   "Fan Zhang",
+   "Qiying Yu",
+   "Zhengxiong Luo",
+   "Yueze Wang",
+   "Yongming Rao",
+   "Jingjing Liu",
+   "Tiejun Huang",
+   "Xinlong Wang"
+  ],
+  "first_author": "Sun",
+  "year": 2024,
+  "venue": "preprint (arXiv:2312.13286v2, 8 May 2024; CVPR-format)",
+  "arxiv": "2312.13286",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 77109,
+  "chars_total": 77109,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can scaling a generative multimodal model trained with one autoregressive objective over text tokens and continuous visual embeddings give strong task-agnostic in-context learning across understanding and generation?",
+ "hypothesis": "A scaled-up generative pretrained multimodal model can harness in-context learning abilities like those of large language models and generalize to unseen multimodal tasks.",
+ "contributions": [
+  "Emu2, a 37B generative multimodal model trained with a predict-the-next-multimodal-element objective",
+  "State-of-the-art few-shot results on several VQA datasets; Emu2-Chat (instruction-tuned) and Emu2-Gen (controllable generation) derived from it",
+  "Simpler architecture than Emu: mean pooling plus linear projection replaces C-Former",
+  "Code and models released"
+ ],
+ "method": {
+  "summary": "Emu2 joins an EVA-02-CLIP-E-plus visual encoder, a LLaMA-33B decoder and an SDXL-base visual decoder. Images become 64 continuous embeddings interleaved with text tokens; text is trained with classification loss and image embeddings with regression loss. The decoder is trained separately as an autoencoder detokenizer, then Emu2 is instruction tuned into Emu2-Chat and Emu2-Gen.",
+  "task": "unified autoregressive multimodal pretraining (text tokens and visual embeddings), VQA, chat, grounded and subject-driven image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAION-2B, CapsFusion-120M (image-text)",
+    "role": "pretrain",
+    "size": "162M image-text samples (stage 1)",
+    "split": null,
+    "source": "public",
+    "preprocessing": "224x224 then 448x448"
+   },
+   {
+    "name": "WebVid-10M (video-text)",
+    "role": "pretrain",
+    "size": "7M video-text samples (stage 1)",
+    "split": null,
+    "source": "public",
+    "preprocessing": "8 frames randomly sampled"
+   },
+   {
+    "name": "MMC4, YT-Storyboard-1B (interleaved)",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": "per MMC4 document N=8 images sampled to build a subsequence of L=1024; image placed before or after its text with p=0.5"
+   },
+   {
+    "name": "GRIT-20M, CapsFusion-grounded-100M",
+    "role": "pretrain",
+    "size": "20M; 100M",
+    "split": null,
+    "source": "Kosmos-2 pipeline",
+    "preprocessing": "coordinates as 224 discrete tokens; phrase placed before or after coordinates with p=0.7"
+   },
+   {
+    "name": "Pile (language only)",
+    "role": "pretrain",
+    "size": "3.6 billion tokens sampled (Appendix B.1); 3.8B tokens (Sec 2.2.2)",
+    "split": null,
+    "source": "public",
+    "preprocessing": "2048-token samples, LLaMA tokenizer"
+   },
+   {
+    "name": "LAION-COCO, LAION-Aesthetics",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": "drop images below 512x512; ratio-preserving random scale then square random crop; original size and crop coordinates as extra conditions (SDXL)"
+   },
+   {
+    "name": "Chat data: COCO Caption, TextCaps, VQAv2, OKVQA, GQA, TextVQA, M3IT, RefCOCO/+/g, LLaVA, LLaVAR, ShareGPT, Alpaca, VideoChat, clock reading",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "public",
+    "preprocessing": "two system messages (concise vs comprehensive)"
+   },
+   {
+    "name": "Generation data: CapsFusion-grounded-100M, GRIT (SAM-segmented subset ~5M), InstructPix2Pix, CapsFusion, LAION-Aesthetics, SA-1B, LAION-High-Resolution; ~500k premium pairs (Unsplash, Midjourney-V5, DALL-E-3)",
+    "role": "train",
+    "size": "~5M segmented; ~500k quality pairs",
+    "split": null,
+    "source": "public plus generated",
+    "preprocessing": "keep only images above 448x448"
+   },
+   {
+    "name": "MS-COCO val, DreamBench, VQAv2, OKVQA, VizWiz, TextVQA, HatefulMemes, GQA, MSVD, MSRVTT, SEED-Bench, MM-Vet, TouchStone, MMMU, RefCOCO family",
+    "role": "eval",
+    "size": "30k COCO val prompts; DreamBench 4 images x prompts = 3,000",
+    "split": "see Table 10",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Emu2",
+    "role": "proposed",
+    "params": "37B",
+    "architecture": "EVA-02-CLIP-E-plus encoder + LLaMA-33B decoder + SDXL-base visual decoder; mean pool each image to 8x8 (pretraining) or 16x16 (instruction tuning) tokens then linear projection",
+    "init_from": "EVA-02-CLIP-E-plus, LLaMA-33B, SDXL",
+    "tokenizer": "LLaMA tokenizer plus added special and <loc> tokens",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens in instruction tuning",
+    "other": {
+     "visual_embeddings_per_image": "N = 64"
+    }
+   },
+   {
+    "name": "Emu2-Chat",
+    "role": "proposed",
+    "params": "37B",
+    "architecture": "instruction-tuned Emu2",
+    "init_from": "Emu2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048",
+    "other": {}
+   },
+   {
+    "name": "Emu2-Gen",
+    "role": "proposed",
+    "params": "37B",
+    "architecture": "Emu2 tuned with regression loss on last image embeddings; decoder is SDXL-based",
+    "init_from": "Emu2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Flamingo 9B/80B, IDEFICS 80B, Kosmos-1/2, Emu 14B, Qwen-VL, LLaVA-1.5, CogVLM, SDXL, SDv1.5, DALL-E 3, GILL, SEED, Kosmos-G, BLIP-Diffusion",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Stage 1: captioning loss on text tokens only. Stage 2 and tuning: text classification (cross-entropy) loss plus image regression loss on visual embeddings; Chat supervises only the <Answer> tokens; Gen applies regression loss only to the last image. Visual decoder: image autoencoding (diffusion loss) conditioned on the 64 embeddings.",
+   "optimizer": "AdamW; pretrain beta1=0.9 beta2=0.95 eps=1e-6; Chat beta2=0.98; decoder beta2=0.999 eps 1e-8, weight decay 0.01",
+   "lr": "Stage 1 peak 1e-4 (linear projection), 3e-5 (LLaMA), 5e-5 (visual encoder); stage 2 1e-5; Chat 1e-5; Gen 5e-5 then 1e-5 (quality fine-tuning); decoder 1e-4",
+   "lr_schedule": "cosine decay (pretrain, Chat, Gen); log warm-up then linear decay (decoder)",
+   "warmup": "ratio 0.02 (stage 1), 0.1 (stage 2); Chat 100 steps; Gen 100 steps in text (Table 9 ratio 0.0); decoder 2,000 in text vs 2,500 in Table 7",
+   "batch_size": "Stage 1: 6,144 image-text, 768 video-text; stage 2: 12,800 / 6,400 / 3,200 interleaved / 800 language; Chat 768; Gen 4,096 (500k QFT 2,048); decoder 2,048",
+   "steps": "Stage 1 35,200 at 224px plus 4,000 at 448px; stage 2 20,350; Chat 8k; Gen 3k plus 900 quality fine-tuning; decoder 8,000 (2,000+6,000 in text)",
+   "epochs": null,
+   "tokens": "stage 2: about 160 million image-text samples and 3.8B language-only tokens",
+   "seq_len": "2048 (Chat, truncated)",
+   "precision": "bfloat16",
+   "weight_decay": "0.01 (visual decoder only)",
+   "dropout": null,
+   "regularisation": "gradient clip 5.0 (pretrain, Chat), 1.0 (Gen, decoder); classifier-free guidance by dropping image embeddings with 10% probability; noise offset 0.1; random drop of entity tokens and localization images in Gen",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stage_structure": "Stage 1 trains encoder, projection and LLaMA; stage 2 freezes the visual encoder",
+    "decoder_training": "SDXL VAE and visual encoder frozen, only U-Net updated; encoder input 448x448, output 1024x1024",
+    "video_decoder": "3D U-Net from Stable Diffusion 2.1 with 1D temporal conv after each 2D conv, fully trained; no hyperparameters given",
+    "chat_frames": "8, 12 or 16 frames sampled per video in training"
+   }
+  },
+  "inference": {
+   "decoding": "Chat: beam size 5; generation: EulerDiscreteScheduler, 50 diffusion steps",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "DreamBench: 4 images per prompt, 3,000 total; MM-Vet averaged over five scoring runs",
+   "prompting": "Few-shot examples chosen by RICES, separated by a period, prompt '[image] based on the picture, [question] short answer:'",
+   "retrieval": "RICES (Retrieval In-Context Example Selection) for few-shot selection",
+   "parameters": {
+    "classifier_free_guidance_scale": "3.0",
+    "diffusion_steps": "50",
+    "chat_video_frames": "16 uniformly sampled"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "VQA score / EM / accuracy / ROC AUC / GPT-4 score",
+     "definition": "per benchmark, Table 10",
+     "unit": "% or points",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP-I",
+     "definition": "CLIP-ViT-L image similarity to real image (GILL protocol)",
+     "unit": "cosine similarity",
+     "higher_is_better": true
+    },
+    {
+     "name": "CLIP-T",
+     "definition": "CLIP-ViT-B text-image similarity (DALL-E 3 protocol)",
+     "unit": "cosine similarity",
+     "higher_is_better": true
+    },
+    {
+     "name": "DINO",
+     "definition": "subject fidelity on DreamBench",
+     "unit": "similarity",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Flamingo",
+    "IDEFICS",
+    "Kosmos-1/2",
+    "Emu",
+    "Qwen-VL",
+    "LLaVA-1.5",
+    "CogVLM",
+    "SDXL",
+    "DALL-E 3",
+    "GILL",
+    "SEED",
+    "Kosmos-G",
+    "BLIP-Diffusion",
+    "DreamBooth"
+   ],
+   "protocol": "Single runs, no seeds or significance tests stated; MM-Vet and TouchStone scored by GPT-4."
+  },
+  "availability": {
+   "code": "https://github.com/baaivision/Emu",
+   "weights": "public (stated in abstract)",
+   "data": "public datasets plus unreleased ~500k quality set"
+  },
+  "prompts": [
+   {
+    "purpose": "few-shot VQA",
+    "text": "[image] based on the picture, [question] short answer:",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "zero-shot VQA",
+    "text": "[image] based on the picture, answer in one word or phrase. [question] short answer:",
+    "where": "Appendix E"
+   },
+   {
+    "purpose": "Chat system message, short answers",
+    "text": "You are a helpful assistant, dedicated to provide concise and efficient answers.",
+    "where": "Appendix C.1"
+   },
+   {
+    "purpose": "Chat system message, chat data",
+    "text": "You are a helpful assistant, dedicated to delivering comprehensive and meticulous responses.",
+    "where": "Appendix C.1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "Warmup steps 2,500",
+    "where": "Table 7 vs text Sec 2.2.3 (2,000 and 6,000 steps)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Emu2 beats Flamingo-80B and IDEFICS-80B in all few-shot settings on VQAv2, VizWiz and TextVQA at 37B; 16-shot VQAv2 68.8",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 accuracy",
+   "value": 68.8,
+   "unit": "VQA score",
+   "baseline_value": 66.8,
+   "n": null,
+   "setup": "VQAv2 16-shot, Emu2 37B base; Flamingo-80B 66.8",
+   "quote": null,
+   "table": "Table 1, row Emu2 (37B), 16 shots, column VQAv2",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Few-shot performance rises with more in-context examples (VQAv2 33.5 at 0 shot to 68.8 at 16 shot)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 33.5,
+   "unit": "VQA score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Emu2 base VQAv2 0-shot",
+   "quote": null,
+   "table": "Table 1, row Emu2 (37B), 0 shots, column VQAv2",
+   "note": "0-shot is below Flamingo (51.8, text two-shot); Emu2 0-shot uses a modified prompt",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Emu2-Chat sets best VQAv2 among compared models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.9,
+   "unit": "VQA score",
+   "baseline_value": 83.4,
+   "n": null,
+   "setup": "Emu2-Chat; asterisk means task training set was used in tuning; CogVLM 83.4*",
+   "quote": null,
+   "table": "Table 2, row Emu2-Chat, column VQAv2",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Emu2-Chat scores 48.5 on MM-Vet and 703.8 on TouchStone",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 48.5,
+   "unit": "GPT-4 score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MM-Vet, average of five scoring runs",
+   "quote": "Emu2-Chat achieves a score of 48.5 in MM-Vet and 703.8 in Touch-",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "GPT-4V reaches 67.7 on MM-Vet versus 48.5 for Emu2",
+   "kind": "reported",
+   "source": "GPT-4V (as cited in Emu2 Appendix A)",
+   "metric": null,
+   "value": 67.7,
+   "unit": "MM-Vet score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "closed-model gap conceded by authors",
+   "quote": "GPT-4V achieves 67.7 MM-Vet score vs. Emu2’s 48.5",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "Emu2-Chat gets 49.0 on MSVD-QA and 31.4 on MSRVTT-QA without video QA training data",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 49.0,
+   "unit": "EM",
+   "baseline_value": null,
+   "n": null,
+   "setup": "zero-shot video QA",
+   "quote": "It achieved an accuracy of 49.0 and 31.4 on",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Zero-shot COCO text-to-image: Emu2-Gen CLIP-I 0.686, above SDXL 0.674, GILL 0.684",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.686,
+   "unit": "CLIP-I",
+   "baseline_value": 0.674,
+   "n": null,
+   "setup": "30k random MS-COCO val prompts; CLIP-ViT-L",
+   "quote": null,
+   "table": "Table 4, row Emu2-Gen, column CLIP-I",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Emu2-Gen CLIP-T 0.297, below SDXL 0.310 and DALL-E 3 0.320 on prompt following",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.297,
+   "unit": "CLIP-T",
+   "baseline_value": 0.31,
+   "n": null,
+   "setup": "30k COCO val; CLIP-ViT-B; DALL-E 3 and DALL-E 2 computed on 4,096 samples",
+   "quote": null,
+   "table": "Table 4, row Emu2-Gen, column CLIP-T",
+   "note": "Paper says Emu2-Gen is state of the art on both CLIP-I and CLIP-T, but the table shows unimodal models with higher CLIP-T (DALL-E 3 0.320, MUSE 0.320, SDXL 0.310)",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Image autoencoding with Emu2 encoder and SDXL-based decoder reaches CLIP-I 0.907 on COCO",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.907,
+   "unit": "CLIP-I",
+   "baseline_value": null,
+   "n": null,
+   "setup": "encode to 64 embeddings and decode back, MS-COCO",
+   "quote": "achieve a strong 0.907\nCLIP-I [59] score",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Zero-shot single-image subject-driven DINO 0.766 versus Kosmos-G 0.694",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.766,
+   "unit": "DINO",
+   "baseline_value": 0.694,
+   "n": null,
+   "setup": "DreamBench, 4 images per prompt, 3,000 images, single entity input",
+   "quote": null,
+   "table": "Table 5, row Emu2-Gen (single image input), column DINO",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "RefCOCO+ val 87.05 for Emu2-Chat, best among generalist models",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 87.05,
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "referring expression comprehension; CogVLM 87.52 is grayed as specialist",
+   "quote": null,
+   "table": "Table 3, row Emu2-Chat, column RefCOCO+ val",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Emu2 pretraining uses 162 million image-text and 7 million video-text samples for 35,200 iterations",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 35200,
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "stage 1",
+   "quote": "162 million image-\ntext samples and 7 million video-text samples for 35,200",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.2.2"
+  }
+ ],
+ "limits": [
+  "In-context learning can fail in complex scenes such as counting in a crowd (Appendix A).",
+  "Gap to closed systems conceded: GPT-4V 67.7 vs Emu2 48.5 on MM-Vet.",
+  "Hallucination, biased or harmful generation inherited from training data.",
+  "Hardware, compute, wall clock, seeds and layer/hidden sizes are not stated; no ablations (e.g. pooling vs C-Former, 8x8 vs 16x16 tokens) are reported.",
+  "Zero-shot VQA is weak (VQAv2 33.5) unless the prompt is tuned; Emu2-Chat marks asterisks where task training sets were used, so Table 2 mixes seen and unseen data.",
+  "Generation scored only with CLIP-I, CLIP-T and DINO, no human or FID evaluation; text prompt-following trails SDXL and DALL-E 3.",
+  "Table 1 base-model comparison uses RICES-selected shots; benchmark contamination checks are not described."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "predict-the-next-multimodal-element",
+   "definition": "predict-the-next-multimodal-element (either visual embeddings or textual tokens)",
+   "where": "Sec 1"
+  },
+  {
+   "term": "RICES",
+   "definition": "Retrieval In-Context Example Selection for choosing few-shot examples, following Flamingo and Emu",
+   "where": "Appendix E"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Emu (Sun et al.)",
+   "year": 2023,
+   "arxiv": "2307.05222",
+   "relation": "extends",
+   "note": "Emu2 replaces the C-Former with mean pooling and a linear projection and trains the decoder without the language model",
+   "quote": null
+  },
+  {
+   "work": "Flamingo",
+   "year": 2022,
+   "arxiv": "2204.14198",
+   "relation": "baseline",
+   "note": "few-shot VQA comparison and evaluation protocol",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": "2302.13971",
+   "relation": "uses-method",
+   "note": "LLaMA-33B initializes the multimodal model",
+   "quote": null
+  },
+  {
+   "work": "SDXL",
+   "year": 2023,
+   "arxiv": "2307.01952",
+   "relation": "uses-method",
+   "note": "initializes the visual decoder",
+   "quote": null
+  },
+  {
+   "work": "EVA-02-CLIP-E-plus",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "visual encoder init",
+   "quote": null
+  },
+  {
+   "work": "Kosmos-2",
+   "year": 2023,
+   "arxiv": "2306.14824",
+   "relation": "uses-data",
+   "note": "grounding data pipeline and GRIT",
+   "quote": null
+  },
+  {
+   "work": "Kosmos-G",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DreamBench protocol and baseline",
+   "quote": null
+  },
+  {
+   "work": "SEED (Ge et al.)",
+   "year": 2023,
+   "arxiv": "2307.08041",
+   "relation": "baseline",
+   "note": "autoencoding and generation comparison",
+   "quote": null
+  },
+  {
+   "work": "GILL",
+   "year": 2023,
+   "arxiv": "2305.17216",
+   "relation": "baseline",
+   "note": "CLIP-I protocol",
+   "quote": null
+  },
+  {
+   "work": "DreamLLM",
+   "year": 2023,
+   "arxiv": "2309.11499",
+   "relation": "related",
+   "note": "unified understanding and creation",
+   "quote": null
+  },
+  {
+   "work": "CapsFusion",
+   "year": 2023,
+   "arxiv": "2310.20550",
+   "relation": "uses-data",
+   "note": "same-group caption data",
+   "quote": null
+  },
+  {
+   "work": "Multimodal C4",
+   "year": 2023,
+   "arxiv": "2304.06939",
+   "relation": "uses-data",
+   "note": "interleaved data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of Emu2 architecture. Emu2 learns with a predict-the-next-element objective in multimodality.",
+   "page": 3,
+   "why": "Shows encoder, regression on visual embeddings plus classification on text, and the decoder: the hybrid autoregressive-plus-diffusion pipeline"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison of autoencoding results among different methods [27, 71].",
+   "page": 4,
+   "why": "Shows the CLIP-plus-diffusion decoder reconstructs images from 64 embeddings"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Visualization of Emu2-Gen's controllable generation capability.",
+   "page": 7,
+   "why": "Interleaved text, location and subject prompts"
+  },
+  {
+   "figure": "Table 4",
+   "caption": "Quantitative comparison of zero-shot text-to-image generation on MS-COCO validation set.",
+   "page": 8,
+   "why": "Compares hybrid vs diffusion-only generators on CLIP-I and CLIP-T"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 2.3.2 training sample format",
+   "snippet": "“<s>A photo of <p>a man</p><coor>image embedding of object localization image</coor>[IMG]image embedding of man[/IMG]sitting next to <p>a dog</p><coor>image embedding of object localization image</coor>[IMG]image embedding of dog[/IMG][IMG]image embedding of the whole image[/IMG]</s>”",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Mean-pooling grid: text says 8x8 patches, which would be 64 embeddings (consistent with N = 64).",
+  "Visual decoder warmup: text says 2,000 warmup and 6,000 decay steps (8,000 total); Table 7 says warmup 2,500.",
+  "Language-only tokens: 3.8B in Sec 2.2.2 vs 3.6B sampled in Appendix B.1.",
+  "Gen warmup: text says 100 steps; Table 9 says warmup ratio 0.0.",
+  "Table text extraction garbled the Table 2 TouchStone column; values read as printed.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,445 @@
+{
+ "schema": 1,
+ "key": "2305.18153",
+ "pdf": "generative-ai/08-eval/sources/yin-2023-do-large-language-models-know.pdf",
+ "bib": {
+  "title": "Do Large Language Models Know What They Don’t Know?",
+  "authors": [
+   "Zhangyue Yin",
+   "Qiushi Sun",
+   "Qipeng Guo",
+   "Jiawen Wu",
+   "Xipeng Qiu",
+   "Xuanjing Huang"
+  ],
+  "first_author": "Yin",
+  "year": 2023,
+  "venue": "Findings of the Association for Computational Linguistics: ACL 2023, pages 8653-8665",
+  "arxiv": "2305.18153",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41696,
+  "chars_total": 41696,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Do large language models know what they do not know, i.e. can they recognise unanswerable or unknowable questions and express uncertainty?",
+ "hypothesis": "LLMs have some intrinsic self-knowledge that grows with scale, instruction tuning and in-context examples, but remains below human level.",
+ "contributions": [
+  "We have developed a new dataset, SelfAware, that comprises a diverse range of commonly posed unanswerable questions.",
+  "We propose an innovative evaluation technique based on text similarity to quantify the degree of uncertainty inherent in model outputs.",
+  "Through our detailed analysis of 20 LLMs, benchmarked against human self-knowledge, we identified a significant disparity between the most advanced LLMs and humans"
+ ],
+ "method": {
+  "summary": "SelfAware pairs 1,032 unanswerable questions with 2,337 answerable ones. A model's answer is flagged as uncertain if any 5-word window of it has SimCSE similarity above 0.75 to one of 16 reference uncertainty sentences. F1 is computed with unanswerable questions as the positive class. 20 LLMs are tested in three prompt forms (direct, instruction, ICL), with no training.",
+  "task": "detecting unanswerable questions via expressed uncertainty (self-knowledge)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "SelfAware (unanswerable part)",
+    "role": "eval",
+    "size": "1,032 questions (from 2,858 collected)",
+    "split": "all used for testing",
+    "source": "Quora, HowStuffWorks; kept only if all 3 independent annotators judged unanswerable; CC-BY-SA-4.0 on release",
+    "preprocessing": null
+   },
+   {
+    "name": "SelfAware (answerable part)",
+    "role": "eval",
+    "size": "2,337 questions: 1,487 SQuAD, 182 HotpotQA, 668 TriviaQA",
+    "split": "all used for testing",
+    "source": "SQuAD, HotpotQA, TriviaQA; chosen as closest by SimCSE to unanswerable questions",
+    "preprocessing": "inferred: 1,487+182+668 = 2,337 matches the total; the text lists 'SQuAD, HotpotQA, and TriviaQA' in that order with counts '1,487, 182, and 668 respectively'"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 series (ada, babbage, curie, davinci)",
+    "role": "evaluated",
+    "params": "350M, 1.3B, 6.7B, 175B (from Fig 2 axis; ada/babbage/curie/davinci)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "InstructGPT series (text-ada-001, text-babbage-001, text-curie-001, text-davinci-001/002/003)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "gpt-3.5-turbo-0301, gpt-4-0314",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gpt-4 sample": "100 random instances only"
+    }
+   },
+   {
+    "name": "LLaMA 7B/13B/30B/65B, Alpaca 7B/13B, Vicuna 7B/13B",
+    "role": "evaluated",
+    "params": "7B, 13B, 30B, 65B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "SimCSE",
+    "role": "judge",
+    "params": null,
+    "architecture": "sentence embedding model used for similarity",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "checkpoint": "not stated"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "0.7",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; paper says multiple experiments were not run for cost, replication of select experiments showed no substantial variation; GPT-4 on 100 random instances, other models on full SelfAware",
+   "prompting": "Three forms: Direct (Q/A), Instruction (prepended sentence), ICL (3 answerable + 3 unanswerable hand-written examples, then the question)",
+   "retrieval": null,
+   "parameters": {
+    "similarity_threshold": "0.75",
+    "sliding_window": "5 (target sentence parsed into chunks of length 5)",
+    "reference_sentences": "16, from pre-test of GPT-3/InstructGPT direct outputs on 100 SelfAware entries, normalised (punctuation removed, lowercased)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "F1 (self-knowledge)",
+     "definition": "Unanswerable questions are positives, answerable negatives; a response counts as uncertain if any window's SimCSE similarity to a reference sentence exceeds threshold T",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy (answerable questions)",
+     "definition": "Closed-book QA; output correct if it contains the correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Human (2 volunteers, 100 random samples, 30 minutes)",
+    "random baseline from BIG-bench Know-Unknowns discussed in intro (not run)"
+   ],
+   "protocol": "Automatic text-similarity judge validated on 100 text-davinci-002 direct responses (Table 2); human benchmark is mean of two volunteers' F1."
+  },
+  "availability": {
+   "code": "https://github.com/yinzhangyue/SelfAware",
+   "weights": null,
+   "data": "SelfAware, CC-BY-SA-4.0, research use"
+  },
+  "prompts": [
+   {
+    "purpose": "Direct input form",
+    "text": "Q: Are we alone in the universe, or will we discover alien life at some point?\nA:",
+    "where": "Appendix A.4, Fig 7"
+   },
+   {
+    "purpose": "Instruction input form",
+    "text": "When answering questions, interpret them literally and think them carefully. If the question is unanswerable or unknowable, it is appropriate to say, “The answer is unknown.”\nQ: Are we alone in the universe, or will we discover alien life at some point?\nA:",
+    "where": "Appendix A.4, Fig 8"
+   },
+   {
+    "purpose": "ICL input form, first of 6 hand-written examples (3 answerable, 3 unanswerable); the rest are in Fig 9",
+    "text": "Q: What is the nearest extraterrestrial civilization to us?\nA: It is currently unknown if there are any extraterrestrial civilizations in proximity to Earth. Scientists have not yet found definitive evidence of the existence of extraterrestrial civilizations. Thus, the answer is unknown.",
+    "where": "Appendix A.4, Fig 9"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "GPT-4 reaches the highest self-knowledge F1 of the tested models but is well below human level.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "75.47",
+   "unit": "%",
+   "baseline_value": "84.93",
+   "n": 100,
+   "setup": "SelfAware, instruction input form, gpt-4-0314, 100 random instances; human benchmark from two volunteers on 100 samples",
+   "quote": "the self-knowledge exhibited by the current state-of-the-art model, GPT-4, measures at 75.47%, signifying a notable disparity when contrasted with human self-knowledge, which is rated at 84.93%.",
+   "table": null,
+   "note": null,
+   "where": "Sec 1; Fig 3"
+  },
+  {
+   "claim": "In-context learning raises davinci's self-knowledge by 27.96 over the direct form.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1 gain",
+   "value": "27.96",
+   "unit": "% (as printed; points of F1)",
+   "baseline_value": "27.54",
+   "n": null,
+   "setup": "GPT-3 davinci, ICL vs direct input form, full SelfAware",
+   "quote": "where ICL facilitates a 27.96% improvement over the direct.",
+   "table": null,
+   "note": "Fig 2 shows davinci direct F1 27.54 (read from Fig 2) and ICL 55.5 (Fig 4); the figure axis labels make the per-model assignment ambiguous in the extracted text.",
+   "where": "Sec 4.4 Input Forms"
+  },
+  {
+   "claim": "Human self-knowledge F1 is 84.93, the mean of two volunteers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "84.93",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "2 volunteers, 100 random SelfAware samples, 30 minutes",
+   "quote": "yielding an average F1 score of 84.93%, which we subsequently adopted as the benchmark for human self-knowledge.",
+   "table": "Table 3: Volunteer A F1 84.37 (P 91.52, R 78.26); Volunteer B F1 85.48 (P 96.36, R 76.81)",
+   "note": "mean of 84.37 and 85.48 is 84.925",
+   "where": "Sec 4.3, App A.3"
+  },
+  {
+   "claim": "Under ICL, text-davinci-001 gets F1 65.12 and text-davinci-002 gets 66.46 versus davinci 55.5, and instruction tuning narrows the gap with base models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "66.46",
+   "unit": "%",
+   "baseline_value": "55.5",
+   "n": null,
+   "setup": "davinci series, ICL input form, full SelfAware",
+   "quote": "inclusion of instructions and examples successfully minimizes the performance disparity between the davinci and text-davinci models",
+   "table": "Fig 4 values: davinci 55.5, text-davinci-001 65.12, text-davinci-002 66.46, text-davinci-003 66.28, gpt-3.5-turbo-0301 60.86",
+   "note": "Fig 4 bar values read from figure text",
+   "where": "Fig 4; Sec 4.4"
+  },
+  {
+   "claim": "Instruction tuning raises LLaMA self-knowledge: Vicuna-13B beats LLaMA-65B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "47.84",
+   "unit": "%",
+   "baseline_value": "46.89",
+   "n": null,
+   "setup": "instruction input form; Vicuna-13B vs LLaMA-65B; Fig 5 values read from figure (LLaMA-7B 28.57, Alpaca-7B 35.87, Vicuna-7B 42.78, LLaMA-13B 30.12, Alpaca-13B 37.44, LLaMA-30B 30.3)",
+   "quote": "Among these, Vicuna-13B outperforms the LLaMA-65B, corroborating the efficacy of instruction tuning for enhancing model self-knowledge.",
+   "table": "Fig 5 labels: 28.57, 35.87, 42.78, 30.12, 37.44, 47.84, 30.3, 46.89",
+   "note": "Mapping of 47.84 to Vicuna-13B and 46.89 to LLaMA-65B follows bar order in Fig 5; the text lists the numbers without labels",
+   "where": "Fig 5; Sec 4.4"
+  },
+  {
+   "claim": "Self-knowledge F1 rises with model size across all three input forms, most strongly under ICL.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 and InstructGPT series, 350M to 175B, direct, instruction, ICL",
+   "quote": "across all three input forms, an augmentation in model parameter size is associated with an elevation in the F1 Score, with the most conspicuous enhancement manifesting in the ICL input form.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4 Model Size"
+  },
+  {
+   "claim": "Closed-book accuracy on answerable questions rises from 2.48 (text-ada-001) to 42.64 (GPT-4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Accuracy",
+   "value": "42.64",
+   "unit": "%",
+   "baseline_value": "2.48",
+   "n": null,
+   "setup": "InstructGPT series plus gpt-3.5-turbo-0301 and gpt-4-0314, instruction form, answerable SelfAware questions",
+   "quote": "whereas GPT-4 marks an even more striking jump to 42.64%.",
+   "table": null,
+   "note": null,
+   "where": "Fig 6; Sec 4.4"
+  },
+  {
+   "claim": "Similarity threshold 0.75 gives the best F1 for the automatic uncertainty detector against manual labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "91.89",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "100 text-davinci-002 direct responses, manually filtered for uncertainty; precision 100.00, recall 85.00 at 0.75",
+   "quote": "The results in Table 2 indicate that a threshold of 0.75 produced the highest F1 score",
+   "table": "Table 2, row 0.75, column F1",
+   "note": null,
+   "where": "App A.2, Table 2"
+  },
+  {
+   "claim": "Dataset construction: 2,858 collected unanswerable questions were filtered to 1,032 by unanimous agreement of three annotators.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": "1,032",
+   "unit": "questions",
+   "baseline_value": "2,858",
+   "n": null,
+   "setup": "Quora and HowStuffWorks questions, three independent annotators with search engines allowed",
+   "quote": "This rigorous process yielded a finalized collection of 1,032 unanswerable questions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "Unanswerable-question category shares: subjective 27%, no scientific consensus 25%, philosophical 23%, imagination 15%, too many variables 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share",
+   "value": "27",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "manual analysis of 100 random unanswerable questions",
+   "quote": "we undertook a manual analysis of 100 randomly selected unanswerable questions.",
+   "table": "Table 1, row Completely subjective, column Percentage (27%)",
+   "note": null,
+   "where": "Sec 2.1, Table 1"
+  }
+ ],
+ "limits": [
+  "Reference uncertainty sentences come only from GPT-3 and InstructGPT outputs, so other models' uncertainty phrasing may be missed (authors concede).",
+  "Only three input forms were examined; no reflection or tree-of-thought style methods (authors concede).",
+  "Single run per model, no error bars; GPT-4 scored on only 100 instances; the human benchmark is two volunteers on 100 samples.",
+  "Self-knowledge is judged by surface similarity to uncertainty phrases, not by calibration; ICL examples may teach the phrasing 'the answer is unknown' rather than real awareness (inferred, not discussed by the authors).",
+  "Answerable questions came from SQuAD/HotpotQA/TriviaQA and are assumed answerable from Wikipedia; GPT-4 closed-book accuracy is only 42.64%.",
+  "Models are from 2023 and the OpenAI text-davinci endpoints are deprecated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "model self-knowledge",
+   "definition": "the capability of recognizing their limitations and conveying uncertainty when responding to unanswerable or unknowable questions",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Beyond the imitation game (BIG-bench), Know-Unknowns",
+   "year": 2022,
+   "arxiv": "2206.04615",
+   "relation": "extends",
+   "note": "23 answerable/unanswerable multiple-choice pairs; SelfAware is larger and more varied",
+   "quote": null
+  },
+  {
+   "work": "Language models (mostly) know what they know",
+   "year": 2022,
+   "arxiv": "2207.05221",
+   "relation": "related",
+   "note": "probes self-knowledge with a trained Value Head; this paper avoids task-specific training",
+   "quote": null
+  },
+  {
+   "work": "SQuAD 2.0",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "context-specific unanswerable questions",
+   "quote": null
+  },
+  {
+   "work": "SimCSE",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "sentence similarity for uncertainty detection and answerable-question selection",
+   "quote": null
+  },
+  {
+   "work": "SQuAD, HotpotQA, TriviaQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "answerable questions",
+   "quote": null
+  },
+  {
+   "work": "GPT-3, InstructGPT, LLaMA, Alpaca, Vicuna, GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models tested",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Know-Unknow Quadrant. The horizontal axis represents the model’s memory capacity for knowledge, and the vertical axis represents the model’s ability to comprehend and utilize knowledge.",
+   "page": 1,
+   "why": "frames self-knowledge as the Known Unknows vs Unknown Unknows ratio"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Experimental results using three different input forms on a series of models from GPT-3 and InstructGPT",
+   "page": 4,
+   "why": "shows F1 by size for direct, instruction, ICL"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Comparison between the davinci series and human self-knowledge in instruction input form.",
+   "page": 4,
+   "why": "GPT-4 75.47 vs human 84.93"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "ICL input form.",
+   "page": 10,
+   "why": "the full six-shot prompt"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure value labels in the cached text lose their model assignment; per-model values in Figs 2 and 5 are read by bar order and may be mismatched.",
+  "No embedded instructions found."
+ ]
+}

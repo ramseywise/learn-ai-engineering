@@ -1,0 +1,627 @@
+{
+ "schema": 1,
+ "key": "2309.11499",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/dong-2023-dreamllm.pdf",
+ "bib": {
+  "title": "DREAMLLM: SYNERGISTIC MULTIMODAL COMPREHENSION AND CREATION",
+  "authors": [
+   "Runpei Dong",
+   "Chunrui Han",
+   "Yuang Peng",
+   "Zekun Qi",
+   "Zheng Ge",
+   "Jinrong Yang",
+   "Liang Zhao",
+   "Jianjian Sun",
+   "Hongyu Zhou",
+   "Haoran Wei",
+   "Xiangwen Kong",
+   "Xiangyu Zhang",
+   "Kaisheng Ma",
+   "Li Yi"
+  ],
+  "first_author": "Dong",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2309.11499",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 141868,
+  "chars_total": 141868,
+  "engine": "pymupdf",
+  "skipped": "References skimmed for lineage only."
+ },
+ "type": "empirical",
+ "question": "Can an MLLM learn to both comprehend and generate raw images and interleaved documents end to end, so that creation and comprehension improve each other?",
+ "hypothesis": "Learning image and text posteriors in raw space (not aligned to CLIP) on interleaved documents yields synergy between creation and comprehension.",
+ "contributions": [
+  "DREAMLLM: MLLM that generates raw language and images by direct sampling, with learnable dream queries conditioning a frozen Stable Diffusion via score distillation",
+  "Interleaved generative pretraining (I-GPT) with a <dream> token that decides where images go",
+  "First MLLM that generates free-form interleaved content, with analysis of creation-comprehension synergy"
+ ],
+ "method": {
+  "summary": "Vicuna-7B with frozen CLIP-L/14 encoder (linear projector) as input and frozen SDv2.1 as image decoder, conditioned on 64 learnable dream queries through a linear condition projector. The <dream> token predicts image positions; the diffusion noise-prediction loss on the frozen SD (score distillation) backpropagates into the LLM, queries and projectors. Three stages: alignment, I-GPT pretraining, SFT.",
+  "task": "unified multimodal comprehension and text/interleaved-document image generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Stage I alignment mix (LLaVAPretrain 558K, BLIP-LAION 8M, LAION400M 11M, LAION-COCO 11M)",
+    "role": "train",
+    "size": "30M image-text pairs",
+    "split": "1 epoch",
+    "source": "LAION400M, LAION-COCO, BLIP-captioned",
+    "preprocessing": null
+   },
+   {
+    "name": "MMC4 (filtered) + BLIP-LAION",
+    "role": "pretrain",
+    "size": "2M documents + 2M pairs (4M)",
+    "split": "1 epoch",
+    "source": "MMC4-Core, CLIP score threshold 0.25",
+    "preprocessing": "CLIP score filter 0.25"
+   },
+   {
+    "name": "SFT: LLaVAInstruct, InstructMMC4, Instruct-BLIP-LAION",
+    "role": "train",
+    "size": "80K/665K + 20K + 20K (120K total)",
+    "split": "3 epochs",
+    "source": "InstructMMC4 and Instruct-BLIP-LAION built by prompting GPT-4",
+    "preprocessing": null
+   },
+   {
+    "name": "Subject-driven data (BLIP-Diffusion style)",
+    "role": "train",
+    "size": "~270K samples",
+    "split": "20 epochs fine-tune",
+    "source": "following BLIP-Diffusion",
+    "preprocessing": null
+   },
+   {
+    "name": "MS-COCO val-30K, LN-COCO, held-out InstructMMC4 (15K docs)",
+    "role": "eval",
+    "size": "15K docs for the MMC4 subset",
+    "split": "val",
+    "source": "public",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO, Image2Paragraph, VQAv2, OKVQA, VizWiz, TextVQA, MMBench, MM-Vet, POPE, PIQA, SIQA, HellaSwag, WinoGrande, BoolQ, MMLU",
+    "role": "eval",
+    "size": null,
+    "split": "see Table 14",
+    "source": "public",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DREAMLLM-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "decoder-only LLM + CLIP-L/14 encoder + SDv2.1 decoder, 64 dream queries",
+    "init_from": "Vicuna-7B v1.1 (LLaMA-1 on ShareGPT)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens",
+    "other": {
+     "image_input": "224x224, 256 tokens per image, <IMG> and <IMG/> markers",
+     "sd_resolution": "512x512",
+     "dream_queries": "64",
+     "special_tokens": "<dream>, <dream/>"
+    }
+   },
+   {
+    "name": "CLIP-L/14",
+    "role": "base",
+    "params": null,
+    "architecture": "vision encoder, frozen throughout",
+    "init_from": "OpenAI CLIP",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Stable Diffusion v2.1",
+    "role": "base",
+    "params": null,
+    "architecture": "latent diffusion, frozen throughout",
+    "init_from": "SDv2.1 512x512",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Emu-13B/14B, GILL-8B, CM3Leon-7B, Flamingo-9B, LLaVA, InstructBLIP, MiniGPT-4 etc.",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Autoregressive MLE over text tokens plus denoising score-matching loss ||eps_xi(z_t; C, t) - eps||^2 on frozen SD conditioned on dream-query outputs (Eqs. 3-6)",
+   "optimizer": "AdamW",
+   "lr": "2e-3 (stage I) / 2e-5 (stage II) / 4e-5 (stage III)",
+   "lr_schedule": "Cosine",
+   "warmup": "ratio 0.003",
+   "batch_size": "8 per GPU",
+   "steps": null,
+   "epochs": "1 / 1 / 3",
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": null,
+   "weight_decay": "0.0",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128x NVIDIA A800",
+   "compute": null,
+   "wall_clock": "~6h / ~10h / ~1.5h (stages I/II/III)",
+   "seeds": null,
+   "other": {
+    "stage_I_trainable": "linear visual projector, linear condition projector, dream queries; LLM, CLIP and SD frozen",
+    "stage_II_III": "LLM unfrozen",
+    "libs": "Flash Attention, PyTorch FSDP"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MS-COCO FID: 8 images per prompt ranked by CLIP score; LN-COCO: 1 image per prompt",
+   "prompting": "Prompt templates per task in Fig 9, with system prompt 'A chat between a curious user and an artificial intelligence assistant...'",
+   "retrieval": null,
+   "parameters": {
+    "classifier_free_guidance_scale": "7.5 default, 2.0 for MS-COCO text-to-image",
+    "diffusion_steps_latency_test": "50/100/150"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID",
+     "definition": "Frechet Inception Distance, zero-shot",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "CIDEr / VQA acc / MMBench / MM-Vet / POPE",
+     "definition": "see Table 14; MM-Vet GPT-4 eval, MMBench GPT-3.5 eval",
+     "unit": "points/%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Stable Diffusion v2.1",
+    "Emu",
+    "GILL",
+    "CM3Leon",
+    "Flamingo",
+    "OpenFlamingo",
+    "LLaVA",
+    "MiniGPT-4",
+    "InstructBLIP",
+    "rewrite-then-generate"
+   ],
+   "protocol": "Zero-shot; single run, no seeds reported; human evaluation by five volunteers on 150 samples."
+  },
+  "availability": {
+   "code": "Project page dreamllm.github.io (no repo URL printed)",
+   "weights": null,
+   "data": "InstructMMC4 and Instruct-BLIP-LAION described; release not stated"
+  },
+  "prompts": [
+   {
+    "purpose": "VQA (short)",
+    "text": "Please provide an accurate answer within one word.",
+    "where": "Fig 9"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Learning Rate 2e-3 2e-5 4e-5",
+    "where": "Table 13"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DREAMLLM-7B reaches zero-shot FID 8.46 on MS-COCO, beating Emu-13B (11.66), GILL-8B (12.20), CM3Leon-7B (10.82) and the SDv2.1 decoder alone (12.43).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (MS-COCO val-30K)",
+   "value": "8.46",
+   "unit": "FID",
+   "baseline_value": "SDv2.1 12.43",
+   "n": null,
+   "setup": "Zero-shot, SDv2.1 frozen decoder, 7B Vicuna; 8 images sampled per prompt, CLIP-score ranking; CFG scale 2.0 on MS-COCO. Lower is better.",
+   "note": null,
+   "where": "Table 2, Sec 4.2",
+   "table": "Table 2, row DREAMLLM-7B (Ours), column MS-COCO"
+  },
+  {
+   "claim": "On LN-COCO (long captions) DREAMLLM-7B gets FID 20.53 against 34.26 for SDv2.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (LN-COCO)",
+   "value": "20.53",
+   "unit": "FID",
+   "baseline_value": "SDv2.1 34.26",
+   "n": null,
+   "setup": "Zero-shot, one image per prompt, no CLIP ranking (text exceeds CLIP length limit).",
+   "note": null,
+   "where": "Table 2, Sec 4.2",
+   "table": "Table 2, row DREAMLLM-7B (Ours), column LN-COCO"
+  },
+  {
+   "claim": "After stage-I alignment alone the FID already improves over SD by 3.67 (MS-COCO) and 11.83 (LN-COCO); after full training 3.97 and 13.73.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID reduction vs SD",
+   "value": "3.67",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stage-I alignment only (30M pairs); MS-COCO. LN-COCO reduction 11.83.",
+   "note": "Table 2 gives 8.76/22.42 after stage I, 8.46/20.53 final; 12.43-8.76=3.67, 12.43-8.46=3.97 (full training, text '3.97 and 13.73').",
+   "where": "Sec 4.2",
+   "quote": "reducing the score by 3.67 and 11.83 on MS-COCO and LN-COCO, respectively"
+  },
+  {
+   "claim": "DREAMLLM-7B beats Emu-13B on MS-COCO FID by 3.20.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID gap vs Emu-13B",
+   "value": "3.20",
+   "unit": "FID",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MS-COCO zero-shot; Emu-13B 11.66 (Table 2).",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "surpasses Emu-13B by a significant 3.20 FID on MS-COCO"
+  },
+  {
+   "claim": "Ablation: joint learning gives best comprehension (MM-Vet 35.9, VQAv2 56.6) vs comprehension-only 34.4 / 54.3 (with L_align) and 31.0 / 55.1 (without); evidence of creation-comprehension synergy, but gains are small and from single runs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MM-Vet",
+   "value": "35.9",
+   "unit": "points",
+   "baseline_value": "31.0 (Comprehension-only, no L_align, line 3); 34.4 (line 4)",
+   "n": null,
+   "setup": "Same DREAMLLM architecture and training data; Joint-learning (line 5) with interleaved data and L_align off vs Comprehension-only baselines.",
+   "note": null,
+   "where": "Table 3, Sec 5.1",
+   "table": "Table 3, row 5 Joint-learning, column MM-Vet"
+  },
+  {
+   "claim": "Adding a CLIP alignment loss L_align to DREAMLLM makes training fail to converge (collapse).",
+   "kind": "measured",
+   "source": null,
+   "metric": "convergence",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 3 line 6, Joint-learning with L_align and interleaved data: MM-Vet, VQAv2, COCO all N/A.",
+   "note": null,
+   "where": "Sec 5.1",
+   "quote": "our DREAMLLM fails to converge but rather ends in a collapsing point"
+  },
+  {
+   "claim": "Creation-only training with LLM-conditioned queries reaches FID 8.50; with L_align 8.57.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (COCO)",
+   "value": "8.50",
+   "unit": "FID",
+   "baseline_value": "Stable Diffusion 12.43",
+   "n": null,
+   "setup": "Table 3 line 1 Creation-only, no interleaved data, no L_align.",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row 1 Creation-only, column COCO"
+  },
+  {
+   "claim": "DREAMLLM-7B scores MMBench dev 49.9 overall (58.2 with LLaVA-1.5 SFT data) and MM-Vet 35.9 (36.6 with SFT data).",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMBench overall",
+   "value": "49.9",
+   "unit": "points",
+   "baseline_value": "LLaVA-7B 38.7; MiniGPT-4-13B 42.3",
+   "n": null,
+   "setup": "Zero-shot, MMBench dev set, GPT-3.5 evaluation; 7B Vicuna.",
+   "note": "Abstract/intro print MMBench as 49.1 ('49.1/35.9'); Tables 1 and 5 print 49.9.",
+   "where": "Table 1, Table 5",
+   "table": "Table 5, row DREAMLLM-7B (Ours), column Overall"
+  },
+  {
+   "claim": "VQAv2 zero-shot 56.6 for DREAMLLM-7B, +16.6 over Emu-13B (40.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "VQAv2 accuracy",
+   "value": "56.6",
+   "unit": "VQA acc",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-shot, test-dev.",
+   "note": null,
+   "where": "Sec 4.1, Table 1",
+   "quote": "achieving +16.6 higher accuracy on VQAv2 compared to Emu-13B"
+  },
+  {
+   "claim": "Dream-query count ablation: 64 queries give FID 8.46, 32 give 9.56, 128 give 14.24.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (COCO 30K)",
+   "value": "8.46",
+   "unit": "FID",
+   "baseline_value": "32: 9.56; 128: 14.24",
+   "n": null,
+   "setup": "Number of learnable <dream> queries; zero-shot MS-COCO 30K.",
+   "note": null,
+   "where": "Table 9a, Sec A.5",
+   "table": "Table 9a, row 64, column COCO FID"
+  },
+  {
+   "claim": "Compared with a rewrite-then-generate baseline (LLM outputs text between <dream> tokens, off-the-shelf SD), DREAMLLM is better at COCO FID (8.46 vs 11.91) and slightly better on VQAv2 (56.6 vs 54.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (COCO)",
+   "value": "8.46",
+   "unit": "FID",
+   "baseline_value": "11.91 (rewrite-then-generate)",
+   "n": null,
+   "setup": "Baseline trained on modified MMC4, only text output, no image decoder in training, 7B.",
+   "note": null,
+   "where": "Table 10, Sec A.6",
+   "table": "Table 10, row DREAMLLM-7B (Ours), column COCO"
+  },
+  {
+   "claim": "Image synthesis from a document: FID 36.62 vs 74.77 for SD on 15K held-out InstructMMC4 documents.",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID (InstructMMC4 held-out)",
+   "value": "36.62",
+   "unit": "FID",
+   "baseline_value": "SD 74.77",
+   "n": null,
+   "setup": "15K documents over 30 MMC4 topics, 500 per topic; each image generated from the matching ground-truth text.",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "our DREAMLLM significantly outperforms SD with an FID score of 36.62"
+  },
+  {
+   "claim": "Human evaluation: 60.68% of DREAMLLM-generated documents judged supported vs 77.24% for ground-truth MMC4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "supportive rate",
+   "value": "60.68",
+   "unit": "%",
+   "baseline_value": "77.24",
+   "n": null,
+   "setup": "150 samples (5 per topic) mixed with ground-truth, five volunteers.",
+   "note": "Text calls 60.68% 'surpassing the 30% Turing test requirement'; small panel, unspecified rubric.",
+   "where": "Sec 4.3",
+   "quote": "our DREAMLLM model achieves a supportive rate of 60.68%"
+  },
+  {
+   "claim": "Inference latency over SD is marginal: 3.65s vs 3.46s at 50 diffusion steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "3.65",
+   "unit": "s",
+   "baseline_value": "SD 3.46s",
+   "n": null,
+   "setup": "NVIDIA A800; 50 steps; latency dominated by the U-Net.",
+   "note": null,
+   "where": "Table 9b",
+   "table": "Table 9b, row 50, column DREAMLLM"
+  },
+  {
+   "claim": "Language ability is mostly retained after multimodal training, but MMLU drops from 45.0 (Vicuna-7B) to 41.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MMLU 5-shot",
+   "value": "41.8",
+   "unit": "acc",
+   "baseline_value": "Vicuna-7B 45.0",
+   "n": null,
+   "setup": "Table 4 zero-shot except MMLU 5-shot.",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row DREAMLLM-7B (Ours), column MMLU"
+  },
+  {
+   "claim": "POPE adversarial accuracy 72.63 for DREAMLLM-7B vs 72.10 for InstructBLIP-14B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "POPE accuracy (adversarial)",
+   "value": "72.63",
+   "unit": "%",
+   "baseline_value": "72.10",
+   "n": null,
+   "setup": "MS-COCO val, zero-shot.",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, Adversarial, row DREAMLLM-7B (Ours), column Accuracy"
+  },
+  {
+   "claim": "Training cost: stage I about 6h, stage II about 10h, stage III about 1.5h on 128 A800.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "~6h / ~10h / ~1.5h",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "128xNVIDIA A800 per stage.",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Training Time"
+  }
+ ],
+ "limits": [
+  "Only 7B LLM tested; scaling to 65B/130B untried.",
+  "MMC4 data is noisy (ads), harming output style; image consistency across generated images is weak.",
+  "Prompt sensitivity; VQA needs tailored prompts for short answers.",
+  "Fails on multi-image compositional prompts ('A and B' becomes 'A like B').",
+  "Synergy evidence is small ablation deltas from single runs, no seeds or variance; MMLU falls 3.2 points.",
+  "Image quality bounded by frozen SDv2.1 decoder; human-eval rubric unspecified.",
+  "Abstract says MMBench 49.1; tables say 49.9."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "dream queries",
+   "definition": "a series of learnable dream queries with length Q",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "I-GPT",
+   "definition": "Interleaved Generative Pre-Training",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Stable Diffusion (Rombach et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "frozen image decoder acting as score function",
+   "quote": null
+  },
+  {
+   "work": "Score Distillation Sampling (Poole et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "objective similar to SDS",
+   "quote": null
+  },
+  {
+   "work": "Emu (Sun et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "aligns outputs to CLIP and needs second-stage SD fine-tune",
+   "quote": null
+  },
+  {
+   "work": "GILL (Koh et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "CLIP-alignment baseline",
+   "quote": null
+  },
+  {
+   "work": "LLaVA / LLaVA-1.5 (Liu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "visual instruction data and pretrain set",
+   "quote": null
+  },
+  {
+   "work": "MMC4 (Zhu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "interleaved corpus",
+   "quote": null
+  },
+  {
+   "work": "Vicuna (Chiang et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base LLM",
+   "quote": null
+  },
+  {
+   "work": "Flamingo (Alayrac et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "comprehension-only MLLM",
+   "quote": null
+  },
+  {
+   "work": "CM3Leon (Yu et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "discrete-token MLLM",
+   "quote": null
+  },
+  {
+   "work": "DALL-E 3 (Betker et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prompt-rewriting contrast, Sec A.6",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Conceptual comparison of vision-language (VL) foundation models.",
+   "page": 2,
+   "why": "shows CLIP-aligned hybrids vs DreamLLM raw-space generation"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Overview of our DREAMLLM framework.",
+   "page": 4,
+   "why": "dream queries, <dream> token, frozen SD and score distillation in one diagram"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Concrete analysis of the synergy between multimodal comprehension and creation.",
+   "page": 8,
+   "why": "ablation of synergy and L_align collapse"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Cross-attention of dream queries and the diffusion U-Net latent.",
+   "page": 9,
+   "why": "what queries learn"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Abstract/intro say MMBench 49.1 but Tables 1 and 5 print 49.9.",
+  "Text says Emu-13B in places, tables say Emu-14B.",
+  "Table 6 has two rows both named DREAMLLM-7B (Ours); second is the SFT variant (36.6).",
+  "No embedded instructions found."
+ ]
+}

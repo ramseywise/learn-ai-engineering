@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # split from 03-keyword-semantic-and-hybrid-search.md (2026-11-08) so each part stays under the chapter length cap
 sources:
+  - https://arxiv.org/abs/2402.03216
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
   - https://arxiv.org/abs/2404.13781
@@ -113,6 +114,8 @@ The three in both lists lead; each retriever's unique pick (743, 289) survives l
 Pyserini shows the case where fusion pays. On MS MARCO passage dev, with every system built on the same toolkit, BM25 scored 0.184 MRR@10, and tuning k1 and b moved it only to 0.187. Document expansion with doc2query-T5 kept retrieval bag-of-words and reached 0.272 at default settings, 0.282 tuned. A dense TCT-ColBERT retriever reached 0.335. A weighted interpolation of dense and BM25 scores reached 0.353, and 0.365 with expansion. HNSW lost almost nothing against an exact scan (recall@1000 0.962 vs 0.964). The dense index was 25 GB against 2.6 GB for the sparse one (which includes the text) ([SIGIR 2021](https://doi.org/10.1145/3404835.3463238), Lin et al.). The paper reports no latency or interpolation weight, and tests on MS MARCO only. Pyserini ships pre-built indexes for about three dozen test collections, so a BM25 baseline like the one above is one command.
 
 ---
+
+M3-Embedding puts the three scorers in one model. An XLM-RoBERTa-large extended to 8,192 tokens gives a dense vector, per-token sparse weights and ColBERT-style multi-vectors, and the final score is a weighted sum, with the dense top-200 reranked by all three. On MIRACL dev (18 languages, nDCG@10) dense scored 69.2, sparse 53.9, multi-vector 70.5 and all three 71.5, against 31.9 for BM25 and 66.6 for mE5-large, so fusion added 2.3 over dense alone. On MLDR long documents (13 languages) sparse beat dense, 62.2 against 52.5, and all three reached 65.0. The weights were set by hand per benchmark (1/0.3/1 on MIRACL, 0.15/0.5/0.35 on MLDR), the fusion is a score sum from one model and not rank fusion of independent systems, and the main tables use BM25 on the XLM-R tokenizer. With a Lucene analyzer BM25 reached 64.1 on MLDR, above M3's sparse head (62.2) and just under all three (65.0), though on MIRACL the sparse head led (53.9 against 38.5). Training the sparse head without self-knowledge distillation dropped its MIRACL score from 53.9 to 36.7. Single runs, with no seeds or significance tests ([arXiv:2402.03216](https://arxiv.org/abs/2402.03216), Chen et al., Findings of ACL 2024).
 
 ## Evaluating a retriever
 

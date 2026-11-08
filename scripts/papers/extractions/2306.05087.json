@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "key": "2306.05087",
+ "pdf": "generative-ai/08-eval/sources/wang-2023-pandalm.pdf",
+ "bib": {
+  "title": "PandaLM: An Automatic Evaluation Benchmark for LLM Instruction Tuning Optimization",
+  "authors": [
+   "Yidong Wang",
+   "Zhuohao Yu",
+   "Wenjin Yao",
+   "Zhengran Zeng",
+   "Linyi Yang",
+   "Cunxiang Wang",
+   "Hao Chen",
+   "Chaoya Jiang",
+   "Rui Xie",
+   "Jindong Wang",
+   "Xing Xie",
+   "Wei Ye",
+   "Shikun Zhang",
+   "Yue Zhang"
+  ],
+  "first_author": "Wang",
+  "year": 2024,
+  "venue": "ICLR 2024",
+  "arxiv": "2306.05087",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 76795,
+  "chars_total": 76795,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "system",
+ "question": "Can an open, locally run judge LLM replace human or API judges to pick better hyperparameters for instruction tuning?",
+ "hypothesis": "A judge LLM trained on filtered GPT-3.5 pairwise labels with reasons can match GPT-3.5/GPT-4 agreement with humans and yield better-tuned models than Alpaca defaults.",
+ "contributions": [
+  "PandaLM, a privacy-protected judge LM for evaluating and optimizing LLM hyperparameters",
+  "A human-annotated test set for validating PandaLM",
+  "Use of PandaLM to tune hyperparameters of open LLMs, beating Alpaca's defaults"
+ ],
+ "method": {
+  "summary": "A LLaMA-based judge is fine-tuned on 300K GPT-3.5-distilled pairwise comparisons (verdict, reason, reference answer) after dropping order-inconsistent labels. It is validated against a 1K human-labelled test set and then used to pick among 80 hyperparameter configs for five 7B-class base models.",
+  "task": "pairwise response evaluation (win/lose/tie) and hyperparameter selection for instruction tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "PandaLM training data",
+    "role": "train",
+    "size": "300K samples after filtering",
+    "split": null,
+    "source": "instructions and inputs from Alpaca 52K; response pairs from five Alpaca-tuned models; labels from gpt-3.5-turbo",
+    "preprocessing": "hand-crafted rules remove invalid outputs; samples dropped when verdict conflicts after swapping response order"
+   },
+   {
+    "name": "Human-labelled test set",
+    "role": "eval",
+    "size": "1K samples (2.5K before filtering); 105 ties, 422 response-1 wins, 472 response-2 wins",
+    "split": null,
+    "source": "self-instruct human-evaluation inputs; three annotators from an annotation company",
+    "preprocessing": "samples with annotator divergence removed so IAA >0.85"
+   },
+   {
+    "name": "Hyperparameter validation set",
+    "role": "eval",
+    "size": "170 instructions",
+    "split": "subset of the 1K test set",
+    "source": "as above",
+    "preprocessing": null
+   },
+   {
+    "name": "LSAT / PubMedQA / BioASQ",
+    "role": "eval",
+    "size": "LSAT 1,009 questions; PubMedQA-l 1k; BioASQ 1k samples",
+    "split": null,
+    "source": "public datasets; responses from Vicuna and Alpaca; GPT-4 as gold judge",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PandaLM-7B",
+    "role": "proposed",
+    "params": "7B",
+    "architecture": "LLaMA backbone, seq2seq with next-token loss",
+    "init_from": "LLaMA-7B",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PandaLM-70B",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "LLaMA backbone",
+    "init_from": "LLaMA2-70B (per Table 3 caption)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PandaLM-70B-LoRA",
+    "role": "proposed",
+    "params": "70B",
+    "architecture": "LoRA variant of PandaLM-70B",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LLaMA-7B, Bloom-7B, Cerebras-GPT-6.7B, OPT-7B, Pythia-6.9B",
+    "role": "evaluated",
+    "params": "6.7B-7B",
+    "architecture": "decoder-only, each tuned on Alpaca data with Alpaca hyperparameters, then tuned over 80 configs",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "standard cross-entropy next-token prediction, seq2seq, no classification head",
+   "optimizer": "AdamW",
+   "lr": "2e-5",
+   "lr_schedule": "cosine",
+   "warmup": "warmup ratio 0.03",
+   "batch_size": "2 per GPU, gradient accumulation 8 steps (inferred: 128 effective on 8 GPUs)",
+   "steps": null,
+   "epochs": "2",
+   "tokens": null,
+   "seq_len": "1024 tokens (max, truncated)",
+   "precision": "BF16",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "8x NVIDIA A100-SXM4-80GB, DeepSpeed ZeRO Stage 2",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "alpaca_baseline": "3 epochs, final checkpoint, AdamW, lr 2e-5, cosine",
+    "search_space": "checkpoints epoch 1-5; lr 2e-6, 1e-5, 2e-5, 2e-4; SGD or AdamW; cosine or linear = 80 configs"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "each pair judged twice with order swapped; conflicts set to Tie; 800 comparisons for the search",
+   "prompting": "Alpaca-style instruction/input/response1/response2 template, outputs verdict then reason then reference",
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "search_procedure": "80 configs split into 4 blocks of 20; sequential comparison within block, then winners compared"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy, precision, recall, F1 vs human",
+     "definition": "three-class win/lose/tie agreement with human labels; averaging scheme for P/R/F1 not stated",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "win/lose/tie counts",
+     "definition": "pairwise counts between tuned models on 170 instructions",
+     "unit": "count",
+     "higher_is_better": true
+    },
+    {
+     "name": "lm-eval tasks",
+     "definition": "ARC-C 25-shot, HellaSwag 10-shot, MMLU 5-shot, TruthfulQA 0-shot",
+     "unit": "acc",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-3.5",
+    "GPT-4",
+    "Alpaca hyperparameters",
+    "untuned LLaMA and Vicuna log-likelihood judging"
+   ],
+   "protocol": "Judges vs human labels on 1K human-labelled test set; downstream tuned models judged by GPT-3.5, GPT-4 and human experts. Single run, no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "PandaLM training and judging prompt",
+    "text": "Below are two responses for a given task. The task is defined by the Instruction with an Input \nthat provides further context. Evaluate the responses and generate a reference answer for the task.\n### Instruction:\n{instruction}\n### Input:\n{input}\n### Response 1:\n{response 1, generated by a candidate model}\n### Response 2:\n{response 2, generated by another candidate model}\n### Evaluation:\n{evaluation result}\n{evaluation reason}\n### Reference:\n{a reference response for the instruction}",
+    "where": "Fig 6, App A"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "PandaLM-70B agrees with human labels slightly more than GPT-4 (accuracy).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy vs human",
+   "value": 0.6687,
+   "unit": "accuracy",
+   "baseline_value": 0.6647,
+   "n": null,
+   "setup": "Human-labelled test set of 999 pairs (105 ties, 422 R1, 472 R2), responses from five Alpaca-style tuned 7B models; judge outputs win/lose/tie, order swapped and conflicts set to Tie",
+   "note": "GPT-4 accuracy 0.6647; but GPT-4 precision 0.6620 and F1 0.6180 vs PandaLM-70B 0.7402 and 0.6923",
+   "where": "Sec 4, Table 2",
+   "table": "Table 2, row PandaLM-70B, column Accuracy"
+  },
+  {
+   "claim": "PandaLM-7B is below GPT-3.5 and GPT-4 in accuracy against humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy vs human",
+   "value": 0.5926,
+   "unit": "accuracy",
+   "baseline_value": 0.6296,
+   "n": null,
+   "setup": "Human-labelled test set of 999 pairs (105 ties, 422 R1, 472 R2), responses from five Alpaca-style tuned 7B models; judge outputs win/lose/tie, order swapped and conflicts set to Tie",
+   "note": "Baseline is GPT-3.5 0.6296; GPT-4 0.6647. Abstract says PandaLM-7B is 'comparable'.",
+   "where": "Table 2",
+   "table": "Table 2, row PandaLM-7B, column Accuracy"
+  },
+  {
+   "claim": "Training PandaLM-7B on only the win/tie/lose label drops accuracy sharply versus training with reason and reference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy vs human",
+   "value": 0.4725,
+   "unit": "accuracy",
+   "baseline_value": 0.5926,
+   "n": null,
+   "setup": "Same test set as Table 2, PandaLM-7B retrained without reason and reference",
+   "note": null,
+   "where": "Table 4 / Table 11",
+   "table": "Table 4, row PandaLM-7B with only win/tie/lose, column Accuracy"
+  },
+  {
+   "claim": "Models tuned with PandaLM-selected hyperparameters beat Alpaca-hyperparameter models under GPT-4 judging.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg wins over Alpaca hparams",
+   "value": 47.0,
+   "unit": "mean wins (of 170)",
+   "baseline_value": 26.2,
+   "n": null,
+   "setup": "170-instruction validation set, five base models averaged",
+   "note": "26.2 is average losses",
+   "where": "Sec 1",
+   "quote": "achieves an average of 47.0 superior responses and 26.2 inferior responses"
+  },
+  {
+   "claim": "Same comparison under human judges shows larger gains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg wins over Alpaca hparams",
+   "value": 79.8,
+   "unit": "mean wins (of 170)",
+   "baseline_value": 25.2,
+   "n": null,
+   "setup": "170-instruction validation set, five base models averaged",
+   "note": "25.2 is average losses",
+   "where": "Sec 1, Table 5",
+   "quote": "an average of 79.8 superior responses and 25.2 inferior responses"
+  },
+  {
+   "claim": "Hyperparameter search space is 80 configurations per model and costs 800 comparisons.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 800,
+   "unit": "comparisons",
+   "baseline_value": null,
+   "n": null,
+   "setup": "5 epochs x 4 learning rates x 2 optimizers x 2 schedulers; 4 blocks of 20; each comparison repeated twice",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "We repeat each comparison twice for robustness and carry out 800 comparisons in"
+  },
+  {
+   "claim": "Human annotator agreement on the test set (Cohen's kappa).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.85,
+   "unit": "kappa (also 0.86, 0.88)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Three annotators, filtered test set",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "yields average scores of 0.85, 0.86, and 0.88 respectively"
+  },
+  {
+   "claim": "Filtering for agreement cut the test set from 2.5K to 1K samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1,
+   "unit": "K samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Test data from self-instruct human-eval inputs",
+   "note": "Class counts 105+422+472 = 999",
+   "where": "Sec 4",
+   "quote": "The filtered test dataset contains 1K samples, while the original unfiltered dataset has 2.5K samples."
+  },
+  {
+   "claim": "Training data after removing position-inconsistent GPT-3.5 labels is 300K samples.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 300,
+   "unit": "K samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3.5 distilled, Alpaca 52K instructions, five tuned models' responses",
+   "note": null,
+   "where": "Sec 3.1",
+   "quote": "We finally obtain a filtered dataset containing 300K samples."
+  },
+  {
+   "claim": "Zero-shot log-likelihood judging with an untuned LLaMA-30B is far below PandaLM-7B.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy vs human",
+   "value": 42.24,
+   "unit": "% accuracy",
+   "baseline_value": 59.26,
+   "n": null,
+   "setup": "Same test set; 5-shot LLaMA-30B log-likelihood, accuracy in %",
+   "note": null,
+   "where": "App G",
+   "table": "Table 10, row LLaMA-30B 5-shot (log-likelihood), column Accuracy"
+  },
+  {
+   "claim": "Human win rate of LLaMA tuned with PandaLM hyperparameters versus Alpaca-tuned LLaMA, with higher perplexity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": 48.24,
+   "unit": "% win rate",
+   "baseline_value": 12.35,
+   "n": null,
+   "setup": "170 samples; LLaMA-Alpaca human win rate 12.35%",
+   "note": "Win rates are not pairwise comparisons against each other in the table text; protocol unclear",
+   "where": "App C",
+   "table": "Table 7, row LLaMA-PandaLM, column Human (win rate 48.24%; perplexity 2.81 vs 2.75)"
+  },
+  {
+   "claim": "lm-eval average improves for LLaMA-7B with PandaLM hyperparameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.5031,
+   "unit": "avg score",
+   "baseline_value": 0.4879,
+   "n": null,
+   "setup": "ARC 25-shot, HellaSwag 10-shot, MMLU 5-shot, TruthfulQA 0-shot averaged",
+   "note": null,
+   "where": "App C",
+   "table": "Table 6, row llama-7b w/ PandaLM, column Average"
+  },
+  {
+   "claim": "Cerebras-GPT-6.7B lm-eval average drops with PandaLM hyperparameters although judges prefer it.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.3752,
+   "unit": "avg score",
+   "baseline_value": 0.3836,
+   "n": null,
+   "setup": "Same lm-eval suite",
+   "note": null,
+   "where": "App C",
+   "table": "Table 6, row Cerebras-GPT-6.7B w/ PandaLM, column Average"
+  },
+  {
+   "claim": "PandaLM-70B on BioASQ against GPT-4 gold labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.7727,
+   "unit": "accuracy",
+   "baseline_value": 0.5152,
+   "n": null,
+   "setup": "1k BioASQ task b samples, responses from Vicuna/Alpaca, GPT-4 as gold (no humans)",
+   "note": "Baseline is PandaLM-7B",
+   "where": "Table 3",
+   "table": "Table 3, row BioASQ (PandaLM-70B), column Accuracy"
+  },
+  {
+   "claim": "Full fine-tuning beats LoRA for Pythia in 71 of 170 instances against 21 for LoRA.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71,
+   "unit": "wins",
+   "baseline_value": 21,
+   "n": null,
+   "setup": "PandaLM-7B judge, optimal hyperparameters, 170 instances",
+   "note": "Baseline is LoRA wins",
+   "where": "App F",
+   "table": "Table 9, row Pythia, column Full Fine-tuning Wins"
+  },
+  {
+   "claim": "Lowest-cost claim 'comparable to GPT-3.5/GPT-4' rests on one human-labelled set drawn from self-instruct inputs; domain sets use GPT-4 as gold.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 4",
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Hyperparameter ranges follow common practice and may miss the optimum (Sec 6).",
+  "Training labels come from GPT-3.5 and may not match human preference (Sec 6).",
+  "Only outcome-based evaluation, which is resource-intensive; supervised training only.",
+  "PandaLM-7B accuracy (0.5926) is below GPT-3.5 and GPT-4 despite the 'comparable' wording.",
+  "Domain tests use GPT-4 as gold, not humans (30-sample human check on BioASQ only).",
+  "Hyperparameter search uses PandaLM-7B, not 70B, for compute reasons.",
+  "Code and math not tested.",
+  "No seeds, variance or significance tests; no code/weights/data link in the text."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Stanford Alpaca",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Hyperparameter baseline, 52K instruction data",
+   "quote": null
+  },
+  {
+   "work": "Self-Instruct",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Distilling GPT-3.5 annotations; test inputs drawn from its human-eval set",
+   "quote": null
+  },
+  {
+   "work": "LLaMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Backbone for PandaLM",
+   "quote": null
+  },
+  {
+   "work": "GPT-3.5 / GPT-4",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Competing judges",
+   "quote": null
+  },
+  {
+   "work": "lm-eval harness (Gao et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Downstream evaluation",
+   "quote": null
+  },
+  {
+   "work": "Chatbot Arena (Zheng et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Cited for subjective evaluation",
+   "quote": null
+  },
+  {
+   "work": "BERTScore; MAUVE",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Similarity metrics the paper argues do not rank responses",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Models tuned with PandaLM-selected hyperparameters vs Alpaca's, judged by GPT-3.5, GPT-4 and humans (win/lose counts on 170 instances)",
+   "page": 3,
+   "why": "Headline payoff in one chart"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "The pipeline of instruction tuning LLMs.",
+   "page": 4,
+   "why": "Shows where the judge sits in the tuning loop and the cost trade-offs of API/human/PandaLM"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparative visualization of model performance (DAGs for GPT-3.5, GPT-4, humans, PandaLM)",
+   "page": 6,
+   "why": "Shows judges agree on partial order of base models"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "The prompt for training PandaLM.",
+   "page": 16,
+   "why": "Judge prompt template and output format"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Comparison between Human Annotation results and Judged Model evaluation results.",
+   "page": 7,
+   "why": "Judge-vs-human agreement table"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 2/5 values come from flattened table text; cell reading follows column order.",
+  "Sec 4 says Table 1 uses 'all' test data; Fig 7 uses a higher-IAA subset, so rankings differ from Fig 4 (App B).",
+  "Text says LLaMA 'OPT-6.7B' and 'OPT-7B' interchangeably.",
+  "No embedded instructions found."
+ ]
+}

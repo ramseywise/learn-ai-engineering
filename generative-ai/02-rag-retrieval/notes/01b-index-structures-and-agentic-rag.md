@@ -2,6 +2,8 @@
 origin: curated  # split from 01-rag-pipeline.md (2026-11-07) so each part stays under the chapter length cap
 confidence: medium
 sources:
+  - https://arxiv.org/abs/2305.15294
+  - https://arxiv.org/abs/2011.01060
   - https://arxiv.org/abs/2408.04259
   - https://arxiv.org/abs/2509.10697
   - https://arxiv.org/abs/2609.03874
@@ -78,6 +80,13 @@ IRCoT uses each chain-of-thought sentence as the next BM25 query. With GPT-3 (co
 
 ![IRCoT: each chain-of-thought sentence becomes the next retrieval query, and retrieved documents accumulate until the chain reaches the answer](../sources/images/trivedi-interleaving-retrieval-chain-fig1.png)
 *Image Source: Trivedi et al., [Interleaving Retrieval with Chain-of-Thought Reasoning for Knowledge-Intensive Multi-Step Questions](https://arxiv.org/abs/2212.10509) (2023), Fig. 1*
+
+ITER-RETGEN keeps the loop but drops the interleaving. Each round retrieves with the question plus the whole previous answer, then answers once from all retrieved paragraphs in a single chain-of-thought prompt. With text-davinci-003, 3-shot, Contriever-MSMARCO top-5, on the first 500 HotPotQA dev questions, accuracy judged by text-davinci-003 was 65.5 after one round, 71.2 after two and 73.4 after four, against 64.8 for Self-Ask and 50.0 with no retrieval. The answer's recall in the retrieved paragraphs went from 49.5 to 66.1 at round two, then flattened. Two rounds used 2 model calls and 10 paragraphs where Self-Ask used 3.2 and 16.0. It does not win everywhere: Self-Ask led on MuSiQue (42.9 against 41.0) and on 2Wiki exact match (37.3 against 34.9). A wrong first answer poisons the next query. Of 20 HotPotQA failures, 65% were retrieval-related and 76.9% of those followed wrong first-round reasoning. The sets are small (500 questions, 125 for Bamboogle), single greedy runs, on a retired model ([arXiv:2305.15294](https://arxiv.org/abs/2305.15294), Shao et al., Findings of EMNLP 2023).
+
+![ITER-RETGEN: iteration 1 retrieves with the question alone and answers 198 cm; iteration 2 retrieves with the question plus that answer and corrects it to 1.95 m](../sources/images/shao-iter-retgen-fig1.png)
+*Image Source: Shao et al., [Enhancing Retrieval-Augmented Large Language Models with Iterative Retrieval-Generation Synergy](https://arxiv.org/abs/2305.15294) (2023), Fig. 1*
+
+2WikiMultiHopQA is one of the multi-hop sets these loops are scored on. Its 192,606 questions come from Wikipedia and Wikidata triples in four types (compositional, comparison, bridge-comparison, inference), and each question carries its evidence triples as a third thing to predict. Single-hop BERT scored 8.7 F1 lower than on HotpotQA (55.9 against 64.6), so more of it needs two hops. On the test split a 2018-style baseline reached answer F1 43.93 but evidence F1 14.94 and joint F1 5.41, and on 100 samples evidence F1 was 16.74 for the model against 78.81 for the best human. Answer accuracy hides how little of the reasoning path is recovered. The templates are hand-written, 8 of 100 checked samples had a Wikipedia and Wikidata mismatch, and no retriever or LLM was evaluated ([arXiv:2011.01060](https://arxiv.org/abs/2011.01060), Ho et al., COLING 2020).
 
 EfficientRAG takes the per-hop step off the large model. Contriever-MSMARCO retrieves chunks. A small DeBERTa-v3-large model (304M) labels the useful tokens in each chunk and tags it Continue or Terminate, and a second one turns the question plus those tokens into the next-hop query. The loop ends when every chunk is Terminate or the iteration cap is reached, and one LLM call answers over the pooled chunks. On 200 MuSiQue samples that cost 1.00 LLM calls and 3.62 s, against 3.00 calls and 9.68 s for Iter-RetGen at three iterations and 7.18 calls and 27.47 s for SelfAsk. Retrieval was mixed: HotpotQA recall 81.84 at 6.41 chunks (Direct retrieval of 30 chunks: 77.05), 2WikiMQA 84.08 at 3.69 chunks (SelfAsk 88.90 at 33.68), and MuSiQue 49.51 at 6.09, just under direct retrieval of 10 (50.86). End to end with a Llama-3-8B-Instruct reader, accuracy was 57.86, 20.00 and 53.41 on HotpotQA, MuSiQue and 2WikiMQA, second best on two and best on none, so the abstract's "surpasses existing RAG methods" is stronger than its Table 3. The training data came from a 70B LLM and is dataset-specific, transfer was tested only between HotpotQA and 2WikiMQA, and the runs are single ([arXiv:2408.04259](https://arxiv.org/abs/2408.04259), Zhuang et al., EMNLP 2024).
 

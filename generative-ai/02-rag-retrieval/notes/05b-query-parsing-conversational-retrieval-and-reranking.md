@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # split from 05-chunking-query-parsing-and-reranking.md (2026-11-08) so each part stays under the chapter length cap
 sources:
+  - https://arxiv.org/abs/2303.07678
   - https://arxiv.org/abs/2407.02485
   - https://arxiv.org/abs/2306.17563
   - https://arxiv.org/abs/1910.14424
@@ -57,6 +58,11 @@ HyDE changes what is being matched: normally prompt-to-document, with HyDE docum
 GLiNER example: *"I read The Great Gatsby by F. Scott Fitzgerald last summer while visiting New York…"* → BOOK, PERSON, DATE, LOCATION. The DATE and LOCATION can become metadata filters.
 
 The HyDE paper itself averages the embeddings of several sampled answers, optionally with the query's own ([arXiv:2212.10496](https://arxiv.org/abs/2212.10496), Gao et al., ACL 2023). Averaging also means one odd generation doesn't steer the search. Raieli and Iuculano's example uses five (*Building AI Agents*, ch. 6).
+
+Query2doc sends the generated passage to BM25 instead of an embedder, and keeps the query by repeating it five times in front of the passage. With text-davinci-003 (4 MS MARCO examples, temperature 1, 128 tokens), Pyserini BM25 rose from nDCG@10 51.2 to 66.2 on TREC DL19 and from 47.7 to 62.9 on DL20, and MS MARCO dev MRR@10 from 18.4 to 21.4. BM25 with RM3 feedback fell below plain BM25 on dev MRR@10 (15.8 against 18.4). The passage alone scored below the query alone (48.7 against 51.2 on DL19), so the query stays. The gain shrinks as the retriever gets stronger (distilled SimLM dev MRR@10 41.1 to 41.5) and goes negative on some BEIR sets (SciFact 62.4 to 59.5 for SimLM). A 1.3B expander reached only 52.0 on DL19 against 66.2 for the 175B. Search time rose from 16 ms to 177 ms, plus over 2,000 ms for the model call. Baselines are the authors' reproductions, and the three-run mean on DL19 was 64.8 ±1.14, under the 66.2 headline ([arXiv:2303.07678](https://arxiv.org/abs/2303.07678), Wang et al., EMNLP 2023).
+
+![Query2doc: a few-shot prompt asks the model to write a passage for the query, and the model's passage is appended to the query for retrieval](../sources/images/wang-query2doc-fig1.png)
+*Image Source: Wang et al., [Query2doc: Query Expansion with Large Language Models](https://arxiv.org/abs/2303.07678) (2023), Fig. 1*
 
 ### Query transformations
 

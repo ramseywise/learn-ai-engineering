@@ -1,6 +1,7 @@
 ---
 origin: synthesis  # split from 06-generation-for-rag.md (2026-11-07) so each part stays under the chapter length cap
 sources:
+  - https://arxiv.org/abs/2202.03629
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation", Assignment 4 "Fashion Forward Hub")
   - https://gradientscience.org/contextcite/ (ContextCite, cited by the course)
@@ -70,6 +71,8 @@ One fix trains the reader to judge before it answers. Self-Reasoning emits a rel
 Retrieved context helps a fact-checker mainly where the model leans. On 3,000 PolitiFact claims, a ReAct agent with Google search (three rounds, ten snippets each) lifted GPT-4's binary accuracy on true claims from 71.30 to 84.92, but on mostly-false claims it fell from 68.70 to 55.82, and exact six-way labels stayed very low. GPT-3.5 without context said false 58.2% of the time against 22.89% for GPT-4. Single run, versions and decoding unstated ([arXiv:2310.13549](https://arxiv.org/abs/2310.13549), Quelle & Bovet, 2023, preprint).
 
 Mitigations come in layers. A survey of over thirty techniques sorts them by when they act: before generation (retrieval, clarifying questions), during it (sentence-level verification, since one hallucinated sentence raises the odds of the next), after it (post-editing against retrieved evidence, as RARR does), and in training (refusal-aware tuning such as R-Tuning). It names Context-Aware Decoding, which contrasts output probabilities with and without the context, as a training-free counter to the prior-overrides-context failure above. The survey runs no experiments of its own and reports almost no numbers, so read it as a map and take any figure from the method's own paper, and it stops at late 2023 ([arXiv:2401.01313](https://arxiv.org/abs/2401.01313), Tonmoy et al., 2024-01, preprint).
+
+Ji et al.'s survey supplies the vocabulary. An *intrinsic* hallucination contradicts the source, an *extrinsic* one cannot be checked against it, and *faithfulness* (consistent with the source) differs from *factuality* (consistent with the world). It gives two causes in the data: 62% of WikiBio first sentences carry information absent from the infobox, and summarisers measured by Falke et al. hallucinated in 25% of their summaries despite good overlap scores, as n-gram metrics correlate poorly with human judgments of long-form answers. Its metric families (statistical, information-extraction, QA-based, NLI-based, faithfulness classifiers, LM-based) each inherit the errors of the model they lean on. For RAG it names the challenges without measuring them (discern noisy or fake passages, merge conflicting sources, refuse when evidence is thin), and its numbers, such as InstructGPT's closed-domain drop from 41% to 21%, are relayed from other papers with no setup. Its LLM section was updated in January 2024 ([arXiv:2202.03629](https://arxiv.org/abs/2202.03629), Ji et al., ACM Computing Surveys 2023).
 
 **Citations are only as honest as their plumbing.** Rothman's research agent builds citations the robust way, with a weak spot (*Context Engineering for MAS*, ch. 7):
 

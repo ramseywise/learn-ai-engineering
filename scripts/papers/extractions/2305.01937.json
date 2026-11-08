@@ -1,0 +1,477 @@
+{
+ "schema": 1,
+ "key": "2305.01937",
+ "pdf": "generative-ai/08-eval/sources/chiang-2023-can-large-language-models-be.pdf",
+ "bib": {
+  "title": "Can Large Language Models Be an Alternative to Human Evaluation?",
+  "authors": [
+   "Cheng-Han Chiang",
+   "Hung-yi Lee"
+  ],
+  "first_author": "Chiang",
+  "year": 2023,
+  "venue": "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (ACL 2023), Volume 1: Long Papers, pages 15607-15631",
+  "arxiv": "2305.01937",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 94737,
+  "chars_total": 94737,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can LLMs, given the same instructions, samples and questions as human evaluators, rate text quality consistently with expert human evaluation?",
+ "hypothesis": "LLMs that follow instructions well (text-davinci-003, ChatGPT) will rate texts like expert humans and be stable to instruction and sampling changes.",
+ "contributions": [
+  "Show LLM evaluation produces results similar to expert human evaluation (S3.3, S4.3); first to propose it as alternative",
+  "Show results vary only slightly with instructions and sampling hyperparameters (S3.3.2, S3.3.3)",
+  "Discuss pros, cons and ethics of LLM evaluation (S5)"
+ ],
+ "method": {
+  "summary": "Each LLM is given the human-evaluation instruction, sample and a 1-5 Likert question; free-text answers are parsed for a score. Compared with three English teachers on story quality (human vs GPT-2) and on adversarial-attack text quality (fluency, meaning preservation).",
+  "task": "LLM-as-judge text quality rating (open-ended story generation; adversarial synonym-substitution attack quality)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "WritingPrompts (stories)",
+    "role": "eval",
+    "size": "303K prompt-story pairs for training the GPT-2; 200 test pairs used",
+    "split": "200 random test prompts; 200 human stories + 200 GPT-2 stories",
+    "source": "Fan et al. 2018, Kaggle copy",
+    "preprocessing": "Stories manually truncated to <150 words ending on a full sentence; tokenization artifacts removed from human stories"
+   },
+   {
+    "name": "AG-News adversarial samples (Yoo et al. 2022)",
+    "role": "eval",
+    "size": "100 benign/adversarial pairs per attack",
+    "split": "random 100 per attack for Textfooler, PWWS, BAE vs bert-base-uncased on AG-News",
+    "source": "Yoo et al. 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "T0pp",
+    "role": "judge",
+    "params": "13B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-curie-001",
+    "role": "judge",
+    "params": "estimated 13B (Gao 2021)",
+    "architecture": "InstructGPT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "text-davinci-003",
+    "role": "judge",
+    "params": "estimated 175B (Gao 2021)",
+    "architecture": "InstructGPT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ChatGPT (Dec. 15 and Jan. 9 versions, via GUI)",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 medium fine-tuned on WritingPrompts",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "GPT-2 medium",
+    "init_from": "GPT-2 medium",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "3 epochs, lr 5e-5, linear schedule, validation perplexity 20"
+    }
+   },
+   {
+    "name": "bert-base-uncased on AG-News",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BERT-base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "victim model of the attacks"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "nucleus sampling p=0.9 for T0 and InstructGPT; ChatGPT parameters not controllable",
+   "temperature": "1.0 default (T=1.0 row equals Original in Table 3); varied 1.0, 0.7, 0.3, 0 for text-davinci-003",
+   "top_p": "0.9",
+   "max_tokens": null,
+   "samples": "3 sampled answers per item for T0 and InstructGPT (analogue of 3 raters); 1 response for ChatGPT; ChatGPT regenerated when it refused to rate likability",
+   "prompting": "zero-shot; same instruction as human evaluation; four attributes queried separately for T0/InstructGPT; ChatGPT four attributes in one conversation; adversarial fluency and meaning queries in separate conversations",
+   "retrieval": null,
+   "parameters": {
+    "persona_variant": "prepend '(You are a human worker hired to rate the story fragment.)'",
+    "explain_variant": "append 'Please also explain your decision.'",
+    "score_parsing": "remove '1-5', 'out of 5', '/5', 'title 1/2'; regex first number; 0.5 increments kept; ChatGPT scores read by authors by hand"
+   },
+   "other": {
+    "ChatGPT_refusals": "2 stories and 3 news titles refused (content policy), excluded"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Mean Likert score (and std)",
+     "definition": "mean 1-5 rating per attribute",
+     "unit": "points 1-5",
+     "higher_is_better": true
+    },
+    {
+     "name": "Krippendorff's alpha (IAA)",
+     "definition": "agreement among 3 raters (human) or 3 samples (LLM); subscript = % stories where all three agree exactly",
+     "unit": "alpha / %",
+     "higher_is_better": true
+    },
+    {
+     "name": "Kendall's tau",
+     "definition": "correlation between per-story mean of 3 teachers and mean of 3 davinci samples, over 200 stories",
+     "unit": "tau",
+     "higher_is_better": true
+    },
+    {
+     "name": "Welch's t-test",
+     "definition": "significance of human-vs-GPT-2 rating difference",
+     "unit": "p-value",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "English teachers (human evaluation) as ground truth"
+   ],
+   "protocol": "Three certified English teachers (UpWork, ESL certificates), US$140 per 200 stories, human and GPT-2 stories rated separately without a break; supplementary mixed-order run with a different 3 teachers (Table 5). Adversarial: 3 teachers, 100 titles, US$35."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "WritingPrompts via Kaggle; adversarial samples from Yoo et al. 2022"
+  },
+  "prompts": [
+   {
+    "purpose": "Story grammaticality (cohesiveness, likability swap the last question)",
+    "text": "Please rate the story fragment\nThe goal of this task is to rate story fragment.\nNote: Please take the time to fully read and understand the story fragment. We will reject submissions from workers that are clearly spamming the task.\nStory fragment:\n[STORY]\n(End of story fragment)\nHow grammatically correct is the text of the story fragment? (on a scale of 1-5, with 1 being the lowest)",
+    "where": "Appendix D.2.2"
+   },
+   {
+    "purpose": "Questions for other attributes",
+    "text": "Cohesiveness: How well do the sentences in the story fragment fit together? | Likability: How enjoyable do you find the story fragment? | Relevance: Now read the PROMPT based on which the story fragment was written. PROMPT: [PROMPT] (End of PROMPT) How relevant is the story fragment to the prompt?  (each ends '(on a scale of 1-5, with 1 being the lowest)')",
+    "where": "Section 3.2, Appendix D.2.2"
+   },
+   {
+    "purpose": "Adversarial fluency",
+    "text": "You are given a news title. Please read the news title and answer the question.\nNews title:\n[NEWS_TITLE]\n(End of news title)\nQuestion: How natural and fluent is the text of the news title? (on a scale of 1-5, with 1 being the lowest",
+    "where": "Appendix D.2.3"
+   },
+   {
+    "purpose": "Adversarial meaning preservation",
+    "text": "You are given two news titles. Please read the news titles and answer the question.\nNews title 1:\n[BENIGN_TITLE]\n(End of news title 1)\nNews title 2:\n[ADVERSARIAL_TITLE]\n(End of news title 2)\nQuestion: Do you agree that the meaning (or semantics) of news title 1 is preserved in news title 2? (on a scale of 1-5, with 1 being the strongly disagree and 5 being strongly agree.)",
+    "where": "Appendix D.2.3"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LLM evaluation with the best InstructGPT is far cheaper than hiring a teacher for the same 200 stories.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cost per 200 stories (human)",
+   "value": 140,
+   "unit": "US$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-ended story generation, WritingPrompts, 200 human-written + 200 GPT-2-medium stories, 3 English teachers (UpWork) vs LLM, 5-point Likert, nucleus p=0.9",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "Hiring an English teacher to rate 200 stories costs us US$140, while LLM evalua- tion using the best InstructGPT model costs less than US$5."
+  },
+  {
+   "claim": "text-davinci-003 rates human-written stories above GPT-2 stories on grammaticality, like teachers.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean Likert grammaticality, davinci, human stories",
+   "value": 4.22,
+   "unit": "points",
+   "baseline_value": 4.07,
+   "n": null,
+   "setup": "Open-ended story generation, WritingPrompts, 200 human-written + 200 GPT-2-medium stories, 3 English teachers (UpWork) vs LLM, 5-point Likert, nucleus p=0.9",
+   "note": "Value 4.07 is davinci on GPT-2 stories; teachers 3.76 vs 3.56. T0 and text-curie-001 show no clear preference.",
+   "where": "Table 1",
+   "table": "Table 1, row davinci, column Grammaticality (human-written stories)"
+  },
+  {
+   "claim": "Per-story agreement of text-davinci-003 with teachers is strongest on relevance (human-written stories), weakest on grammaticality.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Kendall tau, relevance, human-written stories",
+   "value": 0.38,
+   "unit": "tau",
+   "baseline_value": 0.14,
+   "n": null,
+   "setup": "Same setup, mean of 3 teachers vs mean of 3 davinci samples, 200 stories; all p<0.05",
+   "note": "0.14 is grammaticality, human stories; GPT-2 stories: relevance 0.43, grammaticality 0.12",
+   "where": "Table 2",
+   "table": "Table 2, row Relevance, column Human"
+  },
+  {
+   "claim": "Lowering temperature to 0 slightly lowers davinci ratings but keeps human > GPT-2 ordering.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean Likert grammaticality at T=0, human stories",
+   "value": 4.07,
+   "unit": "points",
+   "baseline_value": 4.22,
+   "n": null,
+   "setup": "text-davinci-003, p=0.9, T varied 1.0/0.7/0.3/0",
+   "note": "4.22 is T=1.0; GPT-2 stories at T=0: 3.99",
+   "where": "Table 3",
+   "table": "Table 3, row T = 0, column Grammaticality Human"
+  },
+  {
+   "claim": "Adding a persona or an explain request changes davinci ratings by under 0.1 on grammaticality and cohesiveness and within 0.25 on the others.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max rating change on likability/relevance",
+   "value": 0.25,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-davinci-003, original vs +persona vs +explain",
+   "note": null,
+   "where": "Sec 3.3.2",
+   "quote": "but still in the range of 0.25"
+  },
+  {
+   "claim": "ChatGPT sanity check: asked to rate meaning preservation of two identical titles, it gives a perfect score.",
+   "kind": "measured",
+   "source": null,
+   "metric": "meaning-preserving rating of identical benign pair",
+   "value": 5.0,
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT, adversarial task",
+   "note": "text-davinci-003 gives 4.56 on same check (Table 11)",
+   "where": "Table 4",
+   "table": "Table 4, row Benign, column LLM evaluate Mean. (dagger)"
+  },
+  {
+   "claim": "ChatGPT rates adversarial texts higher than teachers but below benign texts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fluency Textfooler (ChatGPT vs teachers 2.17)",
+   "value": 2.12,
+   "unit": "points",
+   "baseline_value": 2.17,
+   "n": null,
+   "setup": "100 pairs per attack, AG-News BERT victim",
+   "note": "Benign fluency: teachers 4.55, ChatGPT 4.32",
+   "where": "Table 4",
+   "table": "Table 4, row Textfooler, column LLM evaluate Fluent"
+  },
+  {
+   "claim": "Teachers needed about five to ten stories to calibrate their ratings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "stories to calibrate",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 teachers, post-task interview",
+   "note": "Range 'five to ten stories'; value left null as a range",
+   "where": "App C.3.1"
+  },
+  {
+   "claim": "Teachers in the mixed-order run do not clearly prefer human grammar.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean grammaticality human vs GPT-2 (mixed order)",
+   "value": 3.89,
+   "unit": "points",
+   "baseline_value": 3.88,
+   "n": null,
+   "setup": "3 new teachers, 200+200 stories mixed",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Grammaticality, column Human"
+  }
+ ],
+ "limits": [
+  "LLMs may hold incorrect factual knowledge, so unsuitable for factual tasks (Sec 5)",
+  "Safety-trained LLMs bias to positive responses; ChatGPT refuses likability and some content",
+  "Sensitivity to instructions only tested for two variants; cannot guarantee other changes are harmless (Limitations)",
+  "LLMs cannot use visual cues in instructions",
+  "Only two tasks, English, only story quality and adversarial text; only 3 teachers; ChatGPT used via GUI with one sample and scores read by hand",
+  "Providers may update models, breaking reproducibility",
+  "Kendall tau with teachers is weak (0.12-0.22) for grammaticality, cohesiveness and likability",
+  "Models (text-davinci-003, T0, curie) are deprecated; ChatGPT Dec/Jan versions",
+  "Responsible NLP checklist leaves compute questions blank"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "LLM evaluation",
+   "definition": "feed the LLM the exact instructions, samples and questions used in human evaluation and take its generated answer as the rating",
+   "where": "Abstract, Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Karpinska et al. 2021, The perils of using Mechanical Turk to evaluate open-ended text generation",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "replicates",
+   "note": "Story-evaluation setup (attributes, teachers vs AMT) followed",
+   "quote": null
+  },
+  {
+   "work": "WritingPrompts (Fan et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Hierarchical neural story generation",
+   "quote": null
+  },
+  {
+   "work": "GPT-2 (Radford et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "story generator",
+   "quote": null
+  },
+  {
+   "work": "T0 (Sanh et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "judge",
+   "quote": null
+  },
+  {
+   "work": "InstructGPT (Ouyang et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "judge (curie, davinci-003)",
+   "quote": null
+  },
+  {
+   "work": "Yoo et al. 2022 adversarial examples benchmark",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "adversarial samples",
+   "quote": null
+  },
+  {
+   "work": "Textfooler, PWWS, BAE",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "attacks",
+   "quote": null
+  },
+  {
+   "work": "Amidei et al. 2019, Agreement is overrated",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "correlation instead of IAA",
+   "quote": null
+  },
+  {
+   "work": "Kojima et al., zero-shot chain-of-thought",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "inspired the explain variant",
+   "quote": null
+  },
+  {
+   "work": "Wang et al. 2023; Huang et al. 2023; Gilardi et al. 2023",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent similar ideas on arXiv",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the core idea of the paper using open-ended story generation as the example task.",
+   "page": 2,
+   "why": "Shows human vs LLM evaluation using the same instruction, sample and question"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "LLM evaluation and human evaluation results of human-written stories and GPT-2-generated stories.",
+   "page": 4,
+   "why": "Core result: which judges prefer human stories"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Understanding the variance of LLM evaluation.",
+   "page": 6,
+   "why": "Prompt and temperature robustness"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table cells in the text cache are garbled (mean and std run together, e.g. 4.220.38); table values were read from them",
+  "Responsible NLP checklist C section left blank by authors"
+ ]
+}

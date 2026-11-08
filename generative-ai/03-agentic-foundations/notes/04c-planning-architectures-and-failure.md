@@ -146,13 +146,13 @@ Three embodied-agent papers show when to re-plan, who should act, and how little
 
 *Image Source: Song et al., [LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large Language Models](https://arxiv.org/abs/2212.04088) (2023), Fig. 1*
 
-SwiftSage lets a small model act and calls the LLM only when stuck ([arXiv:2305.17390](https://arxiv.org/abs/2305.17390) (Lin et al., NeurIPS 2023)). A behaviour-cloned flan-t5-large (770M) acts by default, and GPT-4 plans subgoals when it loops or hits an exception. On ScienceWorld (30 task types, 270 test variations), **it scored 84.68 against 45.34 for Reflexion and 36.43 for ReAct, at 757 tokens per action against 1,972 and 2,983**; with gpt-3.5-turbo it kept 62.22 while ReAct fell to 19.76. It is one text simulator.
+SwiftSage lets a small model act and calls the LLM only when stuck ([arXiv:2305.17390](https://arxiv.org/abs/2305.17390) (Lin et al., NeurIPS 2023)). A behaviour-cloned T5-large (770M) acts by default, and GPT-4 plans subgoals when it loops or hits an exception. On ScienceWorld (30 task types, 270 test variations), **it scored 84.68 against 45.34 for Reflexion and 36.43 for ReAct, at 757 tokens per action against 1,971 and 2,983**; with gpt-3.5-turbo it kept 62.22 while ReAct fell to 19.76. It is one text simulator.
 
 ![SayCan, ReAct and Reflexion prompting an LLM at every step against SwiftSage's small model with on-demand LLM planning](../sources/images/lin-swiftsage-fig1.png)
 
 *Image Source: Lin et al., [SwiftSage: A Generative Agent with Fast and Slow Thinking for Complex Interactive Tasks](https://arxiv.org/abs/2305.17390) (2023), Fig. 1*
 
-DECKARD treats the plan as a hypothesis ([arXiv:2301.12050](https://arxiv.org/abs/2301.12050) (Nottingham et al., ICML 2023)). Codex writes a recipe graph for 391 Minecraft items, which is exactly right for only 55% of them (69% for tools). The agent explores toward the graph's nodes and corrects edges it can verify in the world. **Crafting a stone pickaxe took 2.6M steps with the graph and 32M without it.**
+DECKARD treats the plan as a hypothesis ([arXiv:2301.12050](https://arxiv.org/abs/2301.12050) (Nottingham et al., ICML 2023)). Codex writes a recipe graph for 391 Minecraft items, which is exactly right for only 55% of them (69% for tools). The agent explores toward the graph's nodes and corrects edges it can verify in the world. **Crafting a stone pickaxe took 2.6M steps with the LLM-hypothesised graph and 32M for the same agent without LLM guidance** (it then learns the graph from scratch).
 
 ![DECKARD's dream phase samples a subgoal from the LLM's recipe graph and its wake phase executes it and verifies the edge](../sources/images/nottingham-deckard-fig1.png)
 

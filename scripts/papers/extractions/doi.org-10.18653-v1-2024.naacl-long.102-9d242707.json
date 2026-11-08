@@ -1,0 +1,678 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.naacl-long.102",
+ "pdf": "generative-ai/08-eval/sources/wu-2024-reasoning-or-reciting.pdf",
+ "bib": {
+  "title": "Reasoning or Reciting? Exploring the Capabilities and Limitations of Language Models Through Counterfactual Tasks",
+  "authors": [
+   "Zhaofeng Wu",
+   "Linlu Qiu",
+   "Alexis Ross",
+   "Ekin Akyürek",
+   "Boyuan Chen",
+   "Bailin Wang",
+   "Najoung Kim",
+   "Jacob Andreas",
+   "Yoon Kim"
+  ],
+  "first_author": "Wu",
+  "year": 2024,
+  "venue": "Proceedings of NAACL 2024 (Long Papers), pages 1819-1862",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.naacl-long.102"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 143964,
+  "chars_total": 143964,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Do LM successes on standard tasks come from general, transferable reasoning or from narrow procedures tied to default conditions seen in pretraining?",
+ "hypothesis": "If models implement general task-solving procedures they perform comparably on default and counterfactual task variants; if they rely on default-specific procedures, counterfactual performance drops.",
+ "contributions": [
+  "A counterfactual evaluation framework that changes the world model (e.g. number base) while keeping the reasoning procedure fixed, with counterfactual comprehension checks (CCCs)",
+  "A suite of 11 tasks across arithmetic, code, syntax, logic, spatial reasoning, drawing, music, chess and SET",
+  "Analysis of commonness, proximity, default-counterfactual correlation and prompting effects"
+ ],
+ "method": {
+  "summary": "Four LMs are evaluated zero-shot on 11 tasks in default and counterfactual world variants, with and without zero-shot CoT, plus a task-specific counterfactual comprehension check to separate misunderstanding the prompt from failing the task.",
+  "task": "Counterfactual task evaluation of LMs",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Arithmetic (synthetic)",
+    "role": "eval",
+    "size": "1,000 two-digit additions per base",
+    "split": "bases 8, 9, 10, 11, 16; CCC 200 items",
+    "source": "synthetic",
+    "preprocessing": "for non-10 bases expressions chosen to have a different result than in base 10"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 problems (53-problem subset where 1-based execution fails tests)",
+    "split": "generation: 50 samples; execution: 150 programs, 969 test cases, 113 distinguishing",
+    "source": "Chen et al. 2021",
+    "preprocessing": "execution task removes docstring, renames function, drops 4 programs (IDs 32, 38, 50, 53) and tests indexing with 0"
+   },
+   {
+    "name": "Penn Treebank syntax",
+    "role": "eval",
+    "size": "100 sentences",
+    "split": "6 word orders; CCC 100 three-word sentences",
+    "source": "English PTB converted to Universal Dependencies",
+    "preprocessing": "Ravfogel et al. 2019 reordering; single-word main subjects only"
+   },
+   {
+    "name": "FOLIO",
+    "role": "eval",
+    "size": "81 instances rewritten (1,204 total for logistic regression)",
+    "split": "train+dev combined",
+    "source": "Han et al. 2022; updated non-public version",
+    "preprocessing": "one author rewrote premises, another verified"
+   },
+   {
+    "name": "Spatial rooms (synthetic)",
+    "role": "eval",
+    "size": "100 rooms, 3 objects each",
+    "split": "7 axis conventions",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Drawing objects",
+    "role": "eval",
+    "size": "100 emoji objects from 5 categories",
+    "split": "default, vflip, rot90, rot180",
+    "source": "Emoji",
+    "preprocessing": "Processing language code"
+   },
+   {
+    "name": "Chords",
+    "role": "eval",
+    "size": "guitar 120 chords; ukulele 108 chords",
+    "split": "standard and altered tunings",
+    "source": "tombatossals/chords-db",
+    "preprocessing": "filtered for wrong note count or missing root"
+   },
+   {
+    "name": "Melody retrieval",
+    "role": "eval",
+    "size": "8 melodies, n=1..7: 56 default, 1,120 counterfactual",
+    "split": "C major vs 20 other keys",
+    "source": "synthetic",
+    "preprocessing": null
+   },
+   {
+    "name": "Chess openings",
+    "role": "eval",
+    "size": "400 per setting",
+    "split": "balanced 200 legal/200 illegal",
+    "source": "procedurally generated, PGN",
+    "preprocessing": null
+   },
+   {
+    "name": "SET boards",
+    "role": "eval",
+    "size": "100 boards of 12 cards",
+    "split": "default vs inverted number rule",
+    "source": "synthetic",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-4 (gpt-4-0314)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-3.5 (gpt-3.5-turbo-0301)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Claude (claude-v1.3)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PaLM-2 (text-bison-001)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "second-largest PaLM-2 version; 1,024 output tokens max"
+    }
+   },
+   {
+    "name": "CLIP",
+    "role": "judge",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "0-shot 100-way classification of drawings; agrees with humans 84% of 240 images"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "temperature 0 by default; HumanEval generation uses temperature 0.1 for pass@1 and 0.8 for pass@10",
+   "temperature": "0 (0.1/0.8 for HumanEval generation; 0.1 for chess CCC)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 greedy sample per item; HumanEval 50 samples; chess CCC 15 samples per piece at temperature 0.1",
+   "prompting": "0-shot, with and without 'Let's think step by step' (0-CoT); no system message; few-shot CoT (up to 16 demos) for arithmetic analysis only",
+   "retrieval": null,
+   "parameters": {
+    "counterfactual_comprehension_check": "simpler control task with the same world-model prompt",
+    "arithmetic_bases": "8, 9, 10 (default), 11, 16",
+    "fewshot_demos": "0, 1, 2, 4, 8, 16"
+   },
+   "other": {
+    "palm2_exclusions": "PaLM-2 omitted from code execution and drawing due to 1,024 output limit"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct per task; spatial requires all 3 objects correct",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "pass@1 / pass@10",
+     "definition": "HumanEval functional correctness",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "human-judged drawing accuracy",
+     "definition": "4 annotators decide if drawing matches object including canonical orientation",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "default-condition performance of the same model",
+    "random baselines where non-trivial",
+    "CCC accuracy"
+   ],
+   "protocol": "Compare default vs counterfactual accuracy per model, with and without 0-CoT; no seeds or significance tests reported except bootstrap CIs in the FOLIO regression."
+  },
+  "availability": {
+   "code": "https://github.com/ZhaofengWu/counterfactual-evaluation",
+   "weights": null,
+   "data": "synthetic data and LM interactions released, except FOLIO interactions (non-public)"
+  },
+  "prompts": [
+   {
+    "purpose": "Arithmetic test (base-11)",
+    "text": "You are a mathematician. Assuming that all numbers are in base-11 where the digits are \"0123456789A\", what is 59+37? {Let’s think step by step, and }end the response with the result in \"\\boxed{result}\".",
+    "where": "Table 1"
+   },
+   {
+    "purpose": "Code execution counterfactual preamble (ThonPy 1-based indexing)",
+    "text": "You are an expert programmer who can readily adapt to new programming languages. There is a new programming language, ThonPy, which is identical to Python 3.7 except all variables of the `list`, `tuple`, and `str` types use 1-based indexing ...",
+    "where": "Table 2 (full text in appendix C)"
+   },
+   {
+    "purpose": "Chess counterfactual",
+    "text": "You are playing a chess variant where the starting positions for knights and bishops are swapped.",
+    "where": "Table 14"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "Unless otherwise specified, we use temperature=0",
+    "where": "A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-4 two-digit addition: base-10 vs base-9 accuracy (0-CoT); large default-counterfactual gap",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 38.6,
+   "unit": "% accuracy",
+   "baseline_value": 98.2,
+   "n": 1000,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 1,000 two-digit additions per base; base 9 is counterfactual",
+   "note": null,
+   "where": "Table 18",
+   "table": "Table 18, row GPT-4, w/ 0-CoT, column 9"
+  },
+  {
+   "claim": "GPT-4 without CoT on base-9 addition is far below base-10",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 23.4,
+   "unit": "% accuracy",
+   "baseline_value": 100.0,
+   "n": 1000,
+   "setup": "GPT-4, no CoT, 1,000 additions per base",
+   "note": null,
+   "where": "Table 18",
+   "table": "Table 18, row GPT-4, w/o 0-CoT, column 9"
+  },
+  {
+   "claim": "GPT-4 Python program execution under 1-based indexing (ThonPy) vs default, 0-CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 24.8,
+   "unit": "% accuracy",
+   "baseline_value": 73.5,
+   "n": 113,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 113 test cases that distinguish 0- vs 1-based indexing, HumanEval-derived",
+   "note": null,
+   "where": "Table 20",
+   "table": "Table 20, row GPT-4, w/ 0-CoT, column CF"
+  },
+  {
+   "claim": "GPT-4 code execution CCC (simple 1-based indexing checks) stays high under counterfactual, so the gap is not a comprehension failure",
+   "kind": "measured",
+   "source": null,
+   "metric": "CCC accuracy",
+   "value": 90.9,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": 750,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 750 CCC items",
+   "note": null,
+   "where": "Table 20",
+   "table": "Table 20, row GPT-4, CCC, w/ 0-CoT, CF"
+  },
+  {
+   "claim": "GPT-4 HumanEval generation pass@1 on the subset that distinguishes 1-based indexing, default vs counterfactual",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@1",
+   "value": 40.5,
+   "unit": "% pass@1",
+   "baseline_value": 82.5,
+   "n": 53,
+   "setup": "GPT-4, no CoT, 53 HumanEval problems, 50 samples, temperature 0.1",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, row GPT-4, HumanEval (Subset), pass@1, column CF"
+  },
+  {
+   "claim": "GPT-4 HumanEval pass@10 on same subset",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass@10",
+   "value": 64.9,
+   "unit": "% pass@10",
+   "baseline_value": 93.3,
+   "n": 53,
+   "setup": "temperature 0.8, 50 samples",
+   "note": null,
+   "where": "Table 21",
+   "table": "Table 21, row GPT-4, HumanEval (Subset), pass@10, column CF"
+  },
+  {
+   "claim": "GPT-4 spatial reasoning with rotated 180 degree axes collapses",
+   "kind": "measured",
+   "source": null,
+   "metric": "instance accuracy",
+   "value": 9.0,
+   "unit": "% accuracy",
+   "baseline_value": 98.0,
+   "n": 100,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 100 rooms, 3 objects each; all 3 objects must be placed correctly; random about 16.7%",
+   "note": null,
+   "where": "Table 24",
+   "table": "Table 24, row GPT-4, w/ 0-CoT, column R180"
+  },
+  {
+   "claim": "GPT-4 spatial reasoning with swapped north-south axes (most common counterfactual) degrades least",
+   "kind": "measured",
+   "source": null,
+   "metric": "instance accuracy",
+   "value": 71.0,
+   "unit": "% accuracy",
+   "baseline_value": 98.0,
+   "n": 100,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 100 rooms",
+   "note": null,
+   "where": "Table 24",
+   "table": "Table 24, row GPT-4, w/ 0-CoT, column S-NS"
+  },
+  {
+   "claim": "GPT-4 chess opening legality under swapped knight/bishop start positions is near chance",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.6,
+   "unit": "% accuracy",
+   "baseline_value": 87.8,
+   "n": 400,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 400 openings, balanced, so chance 50%",
+   "note": null,
+   "where": "Table 32",
+   "table": "Table 32, row GPT-4, w/ 0-CoT, column CF"
+  },
+  {
+   "claim": "GPT-4 SET game, finding the missing card with inverted number rule",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 61.0,
+   "unit": "% accuracy",
+   "baseline_value": 100.0,
+   "n": 100,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 100 boards, 2 cards given",
+   "note": null,
+   "where": "Table 33",
+   "table": "Table 33, row GPT-4, w/ 0-CoT, column CF"
+  },
+  {
+   "claim": "GPT-4 melody note retrieval in non-C-major keys vs C major",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 44.9,
+   "unit": "% accuracy",
+   "baseline_value": 64.3,
+   "n": 1120,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 8 melodies, n from 1 to 7",
+   "note": null,
+   "where": "Table 30",
+   "table": "Table 30, row GPT-4, w/ 0-CoT, column CF"
+  },
+  {
+   "claim": "GPT-4 first-order logic (FOLIO subset) with premises rewritten to violate common sense",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.7,
+   "unit": "% accuracy",
+   "baseline_value": 98.8,
+   "n": 81,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 81 instances, premises manually rewritten",
+   "note": null,
+   "where": "Table 23",
+   "table": "Table 23, row GPT-4, w/ 0-CoT, column CF"
+  },
+  {
+   "claim": "GPT-4 guitar chord fingering with two altered strings (ECF) vs standard tuning",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 10.0,
+   "unit": "% accuracy",
+   "baseline_value": 42.5,
+   "n": 120,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 120 chords",
+   "note": null,
+   "where": "Table 27",
+   "table": "Table 27, row GPT-4, w/ 0-CoT, column ECF-"
+  },
+  {
+   "claim": "GPT-4 drawing (human evaluation) when asked to draw rotated 180 degrees, 0-CoT",
+   "kind": "measured",
+   "source": null,
+   "metric": "human-judged accuracy",
+   "value": 52.0,
+   "unit": "% accuracy",
+   "baseline_value": 86.0,
+   "n": 100,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 100 emoji objects, 4 annotators averaged, Processing code; chance for binary correct/incorrect not stated",
+   "note": null,
+   "where": "Table 25",
+   "table": "Table 25, row GPT-4, Human Evaluation, w/ 0-CoT, column R180"
+  },
+  {
+   "claim": "Basic syntax: GPT-4 main subject/verb identification in SVO vs VSO order, 0-CoT (smaller gap than other tasks)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 69.0,
+   "unit": "% accuracy",
+   "baseline_value": 76.0,
+   "n": 100,
+   "setup": "GPT-4 (gpt-4-0314), 0-shot CoT, temperature 0, 100 PTB sentences",
+   "note": null,
+   "where": "Table 22",
+   "table": "Table 22, row GPT-4, Test w/ 0-CoT, column VSO"
+  },
+  {
+   "claim": "Few-shot CoT demonstrations narrow but do not close the gap in base-9 addition (16 demos)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.4,
+   "unit": "% accuracy",
+   "baseline_value": 99.9,
+   "n": 1000,
+   "setup": "GPT-4 with 0-shot-CoT plus few-shot CoT demos, two-digit addition",
+   "note": null,
+   "where": "Table 19, Fig 5",
+   "table": "Table 19, row 2 digits, 16 shots, column 9"
+  },
+  {
+   "claim": "GPT-4 accuracy falls with more digits, in both bases (4-digit base-9 addition)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 14.6,
+   "unit": "% accuracy",
+   "baseline_value": 83.4,
+   "n": null,
+   "setup": "GPT-4 0-CoT, 0 shots, 4-digit addition",
+   "note": null,
+   "where": "Table 19, Fig 4a",
+   "table": "Table 19, row 4 digits, 0 shots, column 9"
+  },
+  {
+   "claim": "Code execution test set size after filtering",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 150,
+   "unit": "programs",
+   "baseline_value": null,
+   "n": 150,
+   "setup": "HumanEval-derived execution task",
+   "note": null,
+   "where": "A.2",
+   "quote": "150 programs and 969 test cases remain."
+  },
+  {
+   "claim": "Logistic regression: all LMs predict correctly more often with more true premises and when conclusion truthfulness matches the label; a robust reasoner would have coefficient 0",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic regression coefficients",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "FOLIO 1,204 instances, 4 LMs, 95% CIs by bootstrap with 1,000 iterations",
+   "note": null,
+   "where": "B.1, Fig 6",
+   "quote": "Most of these trends are statistically significant."
+  },
+  {
+   "claim": "PaLM-2 more robust to counterfactuals than GPT-4 on spatial reasoning despite lower default accuracy (inverse correlation)",
+   "kind": "measured",
+   "source": null,
+   "metric": "instance accuracy",
+   "value": 95.0,
+   "unit": "% accuracy",
+   "baseline_value": 84.0,
+   "n": 100,
+   "setup": "PaLM-2 0-CoT spatial swap-NS, vs GPT-4 71.0",
+   "note": "Values order in flattened table: PaLM-2 0-CoT row begins 84.0 (default) then 95.0 (S-NS)",
+   "where": "Table 24",
+   "table": "Table 24, row PaLM-2, w/ 0-CoT, column S-NS"
+  }
+ ],
+ "limits": [
+  "Counterfactual difficulty may differ from default (e.g. base-11 has an extra digit; melody in another key may need a two-step transposition), so gaps may be underestimates of overfitting or reflect difficulty (Limitations)",
+  "Counterfactual conditions may appear in pretraining, so gaps could be larger for truly unseen conditions",
+  "Some perturbations admit a shortcut mapping back to default (logic word replacement, drawing transforms), plausibly explaining high logic counterfactual performance",
+  "CCC is heuristic and a nonperfect CCC cannot cleanly separate comprehension failure from task failure",
+  "FOLIO subset is 81 instances; no seeds, one greedy run per item; PaLM-2 was not the largest model; models are 2023 API snapshots",
+  "Authors claim a perfect prompt cannot be ruled out; few-shot demos shrink but do not close the gap"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "counterfactual task",
+   "definition": "Task variant that deviates from the default conditions assumed in standard tasks while keeping the same reasoning procedure",
+   "where": "Introduction"
+  },
+  {
+   "term": "counterfactual comprehension check (CCC)",
+   "definition": "A simpler control task that tests whether the LM understands the specified counterfactual world",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kojima et al. 2023 zero-shot CoT",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "'Let's think step by step' 0-CoT prompt",
+   "quote": null
+  },
+  {
+   "work": "HumanEval (Chen et al. 2021)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "code tasks",
+   "quote": null
+  },
+  {
+   "work": "FOLIO (Han et al. 2022)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "logic task",
+   "quote": null
+  },
+  {
+   "work": "McKenzie et al. 2023 inverse scaling",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "memorization-based explanation of reversed default-counterfactual correlation",
+   "quote": null
+  },
+  {
+   "work": "Razeghi et al. 2022 pretraining term frequencies",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "performance better for frequent numbers",
+   "quote": null
+  },
+  {
+   "work": "Hewitt and Liang 2019 control tasks",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "CCC is analogous to probing control tasks",
+   "quote": null
+  },
+  {
+   "work": "Li et al. 2023a counterfactual reasoning",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest prior counterfactual evaluation",
+   "quote": null
+  },
+  {
+   "work": "GPT-4, GPT-3.5, Claude, PaLM-2",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "models tested",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "GPT-4's performance on the default version of various tasks (blue) and counterfactual counterparts (orange), 0-shot CoT",
+   "page": 1,
+   "why": "One-page overview of all 11 tasks and the gap"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Main results: default vs counterfactual bars per model, with CCC",
+   "page": 5,
+   "why": "Shows consistent gap across models and tasks"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Default vs counterfactual performance correlation across digits, note index, SET cards, chord types",
+   "page": 8,
+   "why": "Shows counterfactual performance tracks default difficulty"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Two-digit addition accuracy with different numbers of demonstrations",
+   "page": null,
+   "why": "Few-shot narrows but does not close gap"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Tables are flattened by the PDF text; cell values were mapped to columns by the header order and checked against Table 19 where possible",
+  "No embedded instructions found"
+ ]
+}

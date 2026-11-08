@@ -1,0 +1,293 @@
+{
+ "schema": 1,
+ "key": "2302.07736",
+ "pdf": "generative-ai/08-eval/sources/huang-2023-chatgpt-better-than-human-annotators.pdf",
+ "bib": {
+  "title": "Is ChatGPT better than Human Annotators? Potential and Limitations of ChatGPT in Explaining Implicit Hate Speech",
+  "authors": [
+   "Fan Huang",
+   "Haewoon Kwak",
+   "Jisun An"
+  ],
+  "first_author": "Huang",
+  "year": 2023,
+  "venue": "WWW '23 Companion",
+  "arxiv": "2302.07736",
+  "doi": "10.1145/3543873.3587368"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 24404,
+  "chars_total": 24404,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can ChatGPT detect implicit hateful tweets and generate natural language explanations (NLEs) of quality comparable to human-written ones?",
+ "hypothesis": null,
+ "contributions": [
+  "Prompt design eliciting concise ChatGPT classification plus NLE for implicit hate",
+  "MTurk user studies comparing ChatGPT and human-written NLEs on informativeness and clarity"
+ ],
+ "method": {
+  "summary": "795 LatentHatred implicit-hate tweets were sent to ChatGPT three times each with a one-sentence-explanation prompt; yes/no answers were aggregated into a score. Disagreement cases were re-labelled by MTurk workers under three contexts, and 100 tweets had NLEs rated for informativeness and clarity.",
+  "task": "implicit hate classification and natural language explanation generation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "LatentHatred (ElSherief et al. 2021)",
+    "role": "eval",
+    "size": "6,358 implicit hateful tweets; 795 sampled",
+    "split": "random 12.5% (795), equal to the test size for explanation generation in the original; 100 sampled for NLE quality rating",
+    "source": "ElSherief et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT (Jan 9 2023 version)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 responses per tweet, new chat session per tweet",
+   "prompting": "zero-shot single prompt; unofficial ChatGPT API (github.com/acheong08/ChatGPT)",
+   "retrieval": null,
+   "parameters": {
+    "aggregation": "Yes=+1, No=-1, other=0; mean of 3 = ChatGPT score; >0 Hateful, <0 Non-Hateful, 0 Uncertain"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Informativeness",
+     "definition": "MTurk 7-point Likert, relevance of NLE in explaining why tweet is hateful",
+     "unit": "1-7",
+     "higher_is_better": true
+    },
+    {
+     "name": "Clarity",
+     "definition": "MTurk 7-point Likert, how clear the NLE is",
+     "unit": "1-7",
+     "higher_is_better": true
+    },
+    {
+     "name": "average hatefulness score",
+     "definition": "mean of three MTurk labels, Yes=+1, No=-1, Not Sure=0",
+     "unit": "-1 to 1",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "human-written NLEs (implied statements) from LatentHatred"
+   ],
+   "protocol": "MTurk Masters (approval >98%, >5000 HITs, US); 3 workers per item; research assistants reviewed and resolved disputes for NLE ratings; t-tests; no demographics collected; no inter-annotator agreement reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [
+   {
+    "purpose": "classification plus explanation",
+    "text": "Given Post: ‘An Implicit Hateful Tweet’. Answer yes or no for whether the post is implicitly hateful. Explain why in one sentence.",
+    "where": "Sec 3.2"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ChatGPT labels 80% of implicit hate tweets as hateful, agreeing with the dataset labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "tweets labelled implicitly hateful",
+   "value": 636,
+   "unit": "count of 795",
+   "baseline_value": null,
+   "n": 795,
+   "setup": "LatentHatred implicit-hate tweets, ChatGPT Jan 9 2023 version, prompt: classify + one-sentence explanation",
+   "quote": "ChatGPT recognizes 636 instances as ‘Implicitly Hateful (80%) .’",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "ChatGPT calls 146 tweets not hateful.",
+   "kind": "measured",
+   "source": null,
+   "metric": "not hateful",
+   "value": 146,
+   "unit": "count",
+   "baseline_value": null,
+   "n": 795,
+   "setup": "LatentHatred implicit-hate tweets, ChatGPT Jan 9 2023 version, prompt: classify + one-sentence explanation",
+   "quote": "ChatGPT recognizes 146 instances as ‘Not Implicitly Hateful (18.4%)’",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Clarity of ChatGPT NLEs is higher than human-written NLEs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Clarity mean",
+   "value": 5.39,
+   "unit": "1-7 Likert",
+   "baseline_value": 4.68,
+   "n": 100,
+   "setup": "LatentHatred implicit-hate tweets, ChatGPT Jan 9 2023 version, prompt: classify + one-sentence explanation; 100 random tweets, 3 ratings each",
+   "quote": "ChatGPT-generated NLEs show significantly higher Clarity scores (mean: 5.39) than human-written NLEs (mean: 4.68)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Informativeness shows no significant difference between ChatGPT and human NLEs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "t-test p-value",
+   "value": 0.49,
+   "unit": "p",
+   "baseline_value": null,
+   "n": 100,
+   "setup": "LatentHatred implicit-hate tweets, ChatGPT Jan 9 2023 version, prompt: classify + one-sentence explanation; 100 tweets",
+   "quote": "there is no statistically significant difference in Informativeness (t(198) = -0.69, p = 0.49)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "With post only, MTurk workers lean non-hateful on disagreement cases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average hatefulness score",
+   "value": -0.41,
+   "unit": "-1 to 1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "159 disagreement cases (146 not hateful + 13 uncertain), post only",
+   "quote": "we find the average hatefulness score is negative (mean: -0.41)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "With the ChatGPT NLE, workers lean even more non-hateful.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average hatefulness score",
+   "value": -0.52,
+   "unit": "-1 to 1",
+   "baseline_value": -0.41,
+   "n": null,
+   "setup": "disagreement cases, post + ChatGPT NLE",
+   "quote": "the average hatefulness score is negative (mean: -0.52) when a post is given with the ChatGPT-generated NLE",
+   "table": null,
+   "note": "Difference vs post only: t(316) = -13.75, p<0.001",
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "With the human-written NLE, workers lean hateful.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average hatefulness score",
+   "value": 0.29,
+   "unit": "-1 to 1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "disagreement cases, post + human NLE",
+   "quote": "the average hatefulness score is positive (mean: 0.29)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  }
+ ],
+ "limits": [
+  "Short 4-page study; one prompt, one ChatGPT version, one dataset; no prompt variants tested (authors defer)",
+  "Disagreement cases are judged by lay MTurk workers, not experts; no agreement statistics reported",
+  "Unofficial API, no temperature or decoding settings, no code or data release stated",
+  "Authors concede ChatGPT NLEs can reinforce lay perception and mislead if wrong",
+  "Only 100 tweets rated for NLE quality; one NLE randomly chosen of three",
+  "Informativeness not shown higher, so the title's 'better than' holds only for clarity",
+  "146+13 = 159 disagreements, but t-test df 316 implies ~317 paired items"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "NLE",
+   "definition": "natural language explanation",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Latent Hatred: A Benchmark for Understanding Implicit Hate Speech",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LatentHatred dataset and human implied statements as NLEs",
+   "quote": null
+  },
+  {
+   "work": "ChatGPT: Optimizing Language Model for Dialogue",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "OpenAI blog",
+   "quote": null
+  },
+  {
+   "work": "How Close is ChatGPT to Human Experts? (HC3)",
+   "year": 2023,
+   "arxiv": "2301.07597",
+   "relation": "related",
+   "note": "human vs ChatGPT comparison",
+   "quote": null
+  },
+  {
+   "work": "Chain of Explanation (Huang, Kwak, An)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "follow-up prompting method",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Human evaluation for disagreement between [7] and ChatGPT: post only, post+Human, post+ChatGPT",
+   "page": 2,
+   "why": "shows how explanation context shifts lay hatefulness scores"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Quality evaluation of human-written NLEs and ChatGPT-generated NLEs",
+   "page": 3,
+   "why": "Informativeness and Clarity comparison"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figures 1 and 2 are charts; means taken from text only"
+ ]
+}
