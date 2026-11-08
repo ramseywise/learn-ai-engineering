@@ -17,6 +17,7 @@ sources:
   - https://doi.org/10.18653/v1/2023.acl-tutorials.6
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
+  - Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), ch. 9
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2, ch. 3
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
@@ -215,6 +216,8 @@ failed parse  {'bm25': 0.0, 'dense': 0.0, 'hybrid': 0.0}
 Dense and hybrid search drop from 1.0 to 0.0, and no rerank stage can bring the page back. BM25 scores 0.0 in both rows for a different reason: "money back" shares no word with the page, the paraphrase gap of [03](03-keyword-semantic-and-hybrid-search.md). Ingestion can narrow it: Lakshmanan and Hapke expand jargon with a synonym dictionary on the documents at index time or on the query, and warn that some synonyms work one way only: "An ETF is an index fund, but an index fund isn't automatically an ETF", so the dictionary must store the direction. LLM-generated expansions can also be hallucinated (*Generative AI Design Patterns*, ch. 3, Pattern 7).
 
 **Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/multimodal-agent)).
+
+Arsanjani and Bustos draw the same fork for a scanned loan form: a pipeline (OCR service, then a text LLM) or one native multimodal call. They start with the pipeline, since it lets you swap in the best OCR and watch each step, and keep the native call for tasks that need the image and text read together (*Agentic Architectural Patterns*, ch. 9). Their code is two mocks with a fixed string and no measurement, so there is no accuracy or cost comparison to quote.
 
 ### Keeping the index in sync
 

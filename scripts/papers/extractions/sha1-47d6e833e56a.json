@@ -1,0 +1,581 @@
+{
+ "schema": 1,
+ "key": "sha1:47d6e833e56a",
+ "pdf": "data-analytics/sources/statistical-rethinking/ch10-counting-classification.pdf",
+ "bib": {
+  "title": "Statistical Rethinking, 1st ed., Chapter 10: Counting and Classification",
+  "authors": [
+   "Richard McElreath"
+  ],
+  "first_author": "McElreath",
+  "year": 2016,
+  "venue": "book chapter (CRC Press), pp. 291-330",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 92911,
+  "chars_total": 92911,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do you regress count outcomes (binomial and Poisson) on predictors while keeping sample-size information, and how should the resulting log-odds and log-rate parameters be interpreted?",
+ "hypothesis": null,
+ "contributions": [
+  "Binomial regression (logistic and aggregated) worked on the chimpanzee and UC Berkeley data",
+  "Poisson regression worked on Oceanic tool counts, with offsets for varying exposure",
+  "Short sketches of multinomial, geometric, negative-binomial and beta-binomial models"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Intercept-only logistic model: chimpanzees pull the left lever with probability about 0.58 overall (a=0.32 log-odds).",
+   "kind": "measured",
+   "source": null,
+   "metric": "logistic(a)",
+   "value": "0.58",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzees data, m10.1, map, Normal(0,10) prior, 7 actors",
+   "where": "p.294",
+   "quote": "the above summary implies a MAP probability of pulling the left lever of logistic(0.32)≈0.58, with a 89% interval of 0.54 to 0.61"
+  },
+  {
+   "claim": "WAIC ranks the prosocial-only model m10.2 first (weight 0.70) over the interaction model m10.3 (0.28).",
+   "kind": "measured",
+   "source": null,
+   "metric": "WAIC",
+   "value": "680.6",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzees, 3 models m10.1-m10.3, map, WAIC with SE 9.30",
+   "where": "p.295",
+   "table": "Table at R code 10.5, row m10.2, column WAIC",
+   "note": "m10.3 WAIC 682.4 dWAIC 1.8 weight 0.28; m10.1 WAIC 688.0 dWAIC 7.4 weight 0.02"
+  },
+  {
+   "claim": "Interaction of condition with prosocial option is near zero: bpC=-0.10 (sd 0.26, 89% interval -0.53 to 0.32), so the partner's presence made little difference.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.10",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzees, m10.3, map",
+   "where": "p.296",
+   "table": "Table at R code 10.6, row bpC, column Mean",
+   "note": "bp=0.61 (sd 0.23); a=0.05 (sd 0.13)"
+  },
+  {
+   "claim": "A log-odds coefficient of 0.61 multiplies odds by 1.84 (an 84% increase) but with intercept 4 changes probability by under 1 percentage point (0.982 to 0.990): relative effects mislead.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "1.84",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Worked example from bp=0.61, hypothetical alpha=4",
+   "where": "p.296",
+   "quote": "So that’s a difference, on the absolute scale, of less than 1%, despite being an 84% increase in proportional odds."
+  },
+  {
+   "claim": "MAP and MCMC agree for m10.3: MCMC gives bp=0.62, bpC=-0.11, a=0.05 with n_eff about 3000 and Rhat 1, so the quadratic approximation is fine.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.62",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m10.3 via map2stan, iter=1e4, warmup=1000",
+   "where": "p.298",
+   "table": "Table at R code 10.12, row bp, column Mean"
+  },
+  {
+   "claim": "With a separate intercept per actor (m10.4, MCMC), the intercept for always-left actor 2 is a[2]=10.91 with sd 5.42 and a strongly skewed posterior; the data cannot tell large values apart.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "10.91",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chimpanzees, m10.4, map2stan, 2 chains, iter=2500, warmup=500, Normal(0,10) priors",
+   "where": "p.300",
+   "table": "Table at R code 10.16, row a[2], column Mean",
+   "note": "bp rises to 0.84 (sd 0.28), bpC=-0.13 (sd 0.30); other intercepts range -1.05 to 1.83"
+  },
+  {
+   "claim": "Aggregating chimpanzee data to counts out of 18 trials gives the same posterior as the 0/1 model m10.3.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "18",
+   "unit": "trials per row",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m10.5, map, 28 aggregated rows (7 actors x 4 treatments)",
+   "where": "p.303",
+   "quote": "Take note of the 18 in the spot where a 1 used to be.",
+   "note": "The 28 row count is derived, not printed; text says four rows per actor."
+  },
+  {
+   "claim": "UC Berkeley admissions: 12 rows represent 4526 applications to 6 departments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4526",
+   "unit": "applications",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit data",
+   "where": "p.304",
+   "quote": "These 12 rows however represent 4526 applications, the sum of the applications column."
+  },
+  {
+   "claim": "Pooled gender model m10.6 beats the intercept-only model by 91.5 WAIC points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "91.5",
+   "unit": "dWAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit, m10.6 vs m10.7, map",
+   "where": "p.305",
+   "table": "Table at R code 10.24, row m10.7, column dWAIC",
+   "note": "WAIC m10.6 5954.9, m10.7 6046.3"
+  },
+  {
+   "claim": "Ignoring department, a male applicant has 1.84 times the odds of admission (bm=0.61), a median 14% higher probability of admission (95% interval 11% to almost 17%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.1413527",
+   "unit": "probability difference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit, m10.6, posterior samples",
+   "where": "p.306",
+   "quote": "This means that the median estimate of the male advantage is about 14%, with a 95% interval from 11% to almost 17%.",
+   "note": "Quantiles printed: 2.5% 0.1132778, 50% 0.1413527, 97.5% 0.1693274"
+  },
+  {
+   "claim": "Adding department intercepts reverses the sign: bm=-0.10 (sd 0.08), men have about 90% of women's odds within departments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-0.10",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit, m10.9, map, a[dept_id]+bm*male",
+   "where": "p.308",
+   "quote": "So a male in this sample has about 90% the odds of admission as a female, comparing within departments.",
+   "note": "Department intercepts a[1..6]: 0.68, 0.64, -0.58, -0.61, -1.06, -2.62"
+  },
+  {
+   "claim": "WAIC with department intercepts: m10.8 (no gender) 5200.9 and m10.9 (with gender) 5201.4 tie, versus 5954.8 for m10.6 and 6046.3 for m10.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5200.9",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit, 4 models, map; weights 0.56 and 0.44",
+   "where": "p.308",
+   "table": "Table at R code 10.29, row m10.8, column WAIC",
+   "note": "m10.6 WAIC is printed 5954.9 in the first comparison (R code 10.24) and 5954.8 here; its SE is 34.98 in both; m10.7 SE is 29.93 then 29.95"
+  },
+  {
+   "claim": "MCMC for m10.9 gives practically the same estimates as map, e.g. bm=-0.10, a[6]=-2.64.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-2.64",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m10.9stan, 2 chains, iter=2500, warmup=500",
+   "where": "p.308",
+   "table": "Table at R code 10.31, row a[6], column Mean"
+  },
+  {
+   "claim": "glm with flat priors on near-perfectly separated data returns an intercept of -9.13 and slope 11.43 with standard deviations of 2955.06, with no warning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2955.06",
+   "unit": "StdDev",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 simulated points, y = 10 zeros then 10 ones, x = 9 values of -1 then 11 of 1; glm binomial",
+   "where": "p.311",
+   "table": "Table at R code 10.35, row (Intercept), column StdDev"
+  },
+  {
+   "claim": "With Normal(0,10) priors, map gives a=-1.73 and b=4.02 (sd 2.78 each) on the same separated data, though the true posterior is asymmetric.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "4.02",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m.good, map",
+   "where": "p.311",
+   "table": "Table at R code 10.36, row b, column Mean"
+  },
+  {
+   "claim": "Binomial with n=1000 trials and p=1/1000 has mean and variance both near 1 (the Poisson shape).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "0.9968400",
+   "unit": "mean",
+   "baseline_value": null,
+   "n": null,
+   "setup": "rbinom(1e5,1000,1/1000)",
+   "where": "p.312",
+   "table": "Output of R code 10.38",
+   "note": "Text says 'over 10,000 (1e5) days' but 1e5 is 100,000; variance printed 0.9928199"
+  },
+  {
+   "claim": "Oceanic tools, interaction model m10.10: log-population slope bp=0.26 (sd 0.03) is precise, while bc=-0.09 (sd 0.84) and bpc=0.04 (sd 0.09) overlap zero; bc and bpc correlate -0.99.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.26",
+   "unit": "log-rate per log-population unit",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kline data, 10 societies, Poisson with log link, map, priors a~Normal(0,100), betas~Normal(0,1)",
+   "where": "p.315",
+   "table": "Table at R code 10.42, row bp, column Mean"
+  },
+  {
+   "claim": "Despite non-significant bc and bpc, 95.27% of posterior mass says a high-contact island at log-population 8 has more tools than a low-contact one.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.9527",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kline, m10.10, counterfactual lambda_high - lambda_low at log_pop = 8",
+   "where": "p.316",
+   "quote": "sum(diff > 0)/length(diff) [1] 0.9527",
+   "note": "The text also rounds this to 95% plausibility"
+  },
+  {
+   "claim": "WAIC for the island models: m10.11 (no interaction) 79.0 with weight 0.62, m10.10 80.1 with weight 0.35, m10.12 (population only) 84.6, intercept-only m10.14 141.5, contact-only m10.13 149.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "79.0",
+   "unit": "WAIC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kline, 5 Poisson models, map, compare with n=1e4",
+   "where": "p.318",
+   "table": "Table at R code 10.47, row m10.11, column WAIC"
+  },
+  {
+   "claim": "MCMC on m10.10 matches map (bp 0.27, bc -0.08, bpc 0.04). Centring log_pop cuts parameter correlations and raises n_eff (e.g. a: 2077 to 2574).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2574",
+   "unit": "n_eff",
+   "baseline_value": null,
+   "n": null,
+   "setup": "m10.10stan vs m10.10stan.c, 4 chains, iter=3000, warmup=1000; intercept prior changed to Normal(0,10) for the centred model",
+   "where": "p.320-321",
+   "table": "Table at R code 10.50, row a, column n_eff",
+   "note": "Centred estimates: a=3.31, bp=0.26, bc=0.28, bcp=0.07; the uncentred a n_eff is 2077"
+  },
+  {
+   "claim": "Offset model recovers daily rates for two monasteries from daily and weekly counts: lambda_old 1.61 (true 1.5), lambda_new 0.59 (true 0.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.61",
+   "unit": "manuscripts per day",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated: 30 daily counts at lambda 1.5, 4 weekly counts at 0.5*7; m10.15 with log(days) offset, map",
+   "where": "p.322",
+   "table": "Table at R code 10.55, row lambda_old, column Mean",
+   "note": "lambda_new 0.59 sd 0.14, 89% interval 0.37 to 0.81"
+  },
+  {
+   "claim": "Poisson fit of admit and reject counts reproduces the binomial overall admission probability: 0.3879816 vs 0.3877596.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.3879816",
+   "unit": "probability",
+   "baseline_value": null,
+   "n": null,
+   "setup": "UCBadmit, m_pois (map2stan, 3 chains) vs m_binom (map)",
+   "where": "p.327",
+   "quote": "[1] 0.3879816"
+  },
+  {
+   "claim": "Geometric regression recovers simulated coefficients: a=-1.00, b=1.75 against true -1 and 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.75",
+   "unit": "log-odds",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 simulated points, y = rgeom(N, logistic(-1+2x)), m10.18 map",
+   "where": "p.328",
+   "table": "Table at R code 10.63, row b, column Mean"
+  },
+  {
+   "claim": "Never convert counts to proportions before analysis: it destroys sample size information.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "General recommendation",
+   "where": "p.328",
+   "quote": "It is important to never convert counts to proportions before analysis, because doing so destroys information about sample size."
+  },
+  {
+   "claim": "Quadratic approximation is typically accurate for binomial regression only if no intercept sits far from zero and no predictor is strongly associated with the outcome.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Stated after m10.9 check",
+   "where": "p.308-309",
+   "quote": "is typical for binomial regression, as long as none of the intercepts are very far from zero, such that they push against the ceiling or floor, and none of the predictors are strongly associated with the outcome."
+  }
+ ],
+ "limits": [
+  "Year 2016 is inferred from the first edition; the chapter text prints no date.",
+  "Uses the old rethinking API (map, map2stan, ensemble, compare with WAIC); later editions replaced these with ulam/quap.",
+  "Negative-binomial and beta-binomial are named but deferred to the next chapter; no worked examples for multinomial beyond simulation.",
+  "Kline island data has 10 rows; the author says the Normal(0,1) priors are probably not conservative enough.",
+  "Model comparison is not a guarantee: 'They are not forms of divination.'",
+  "The author's own MAP caveat: 'in principle no GLM is safe for MAP estimation'."
+ ],
+ "practices": [
+  "Model counts, not proportions, to keep sample size (p.291, p.328).",
+  "Convert log-odds back to probability with the inverse link before interpreting; report absolute as well as relative (odds ratio) effects (p.294-297).",
+  "Check posterior predictions against data; a bad fit may be a good answer to the wrong question, as in the pooled gender model (p.306-307).",
+  "Add a per-group intercept (index variable) to control group heterogeneity, as department in UCBadmit (p.307).",
+  "Check quadratic approximation against MCMC for every GLM (p.298, 308, 319).",
+  "Use weakly regularizing priors instead of glm's flat priors, which fail under near-perfect separation (p.310-311).",
+  "Do not judge a predictor by marginal intervals alone when parameters are correlated; use counterfactual predictions or WAIC (p.315-317).",
+  "Centre predictors to reduce posterior correlations and raise n_eff (p.320-321).",
+  "Use log(exposure) as an offset when observation windows differ (p.312-313, 321-322).",
+  "Interpret multinomial models only through implied probabilities; estimates depend on the chosen reference event (p.325).",
+  "Use log of population when theory says order of magnitude matters (p.314).",
+  "WAIC for aggregated binomials is computed on disaggregated 0/1 points so it matches the logistic form (p.309)."
+ ],
+ "terms": [
+  {
+   "term": "logistic regression",
+   "definition": "the common name when the data are organized into single-trial cases, such that the outcome variable can only take values 0 and 1",
+   "where": "p.292"
+  },
+  {
+   "term": "aggregated binomial regression",
+   "definition": "individual trials with the same covariate values aggregated together; the outcome can take the value zero or any positive integer up to n, the number of trials",
+   "where": "p.292"
+  },
+  {
+   "term": "relative effect",
+   "definition": "just a proportional change induced by a change in the predictor (for logistic, the proportional change in odds, exp of the coefficient)",
+   "where": "p.296"
+  },
+  {
+   "term": "absolute effect",
+   "definition": "the change in the probability of the outcome; depends on all of the parameters",
+   "where": "p.296"
+  },
+  {
+   "term": "Poisson distribution",
+   "definition": "special shape of the binomial when n is very large and p very small; expected value np approximately equals variance np(1-p); one parameter lambda, the expected value",
+   "where": "p.311-312"
+  },
+  {
+   "term": "exposure / offset",
+   "definition": "tau, the unit of time or distance; adding log(tau) to the linear model without a parameter is the offset",
+   "where": "p.312-313, 321"
+  },
+  {
+   "term": "Simpson's paradox",
+   "definition": "a positive association in the entire population need not hold within each department; not a violation of logic, just of intuition",
+   "where": "p.309"
+  },
+  {
+   "term": "multinomial logit (softmax)",
+   "definition": "Pr(k|s1..sK) = exp(sk)/sum_i exp(si)",
+   "where": "p.323"
+  },
+  {
+   "term": "categorical regression / maximum entropy classifier",
+   "definition": "multinomial model with each event isolated on a single row; the machine-learning name is maximum entropy classifier",
+   "where": "p.323"
+  },
+  {
+   "term": "geometric distribution",
+   "definition": "Pr(y|p) = p(1-p)^(y-1); y is the number of time steps until the terminating event",
+   "where": "p.328"
+  },
+  {
+   "term": "over-dispersed",
+   "definition": "variation in the counts exceeds what we would expect from a pure binomial or Poisson process",
+   "where": "p.328"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Statistical Rethinking ch. 2 (globe tossing), ch. 6 (WAIC, compare), ch. 8 (map2stan), ch. 9 (maximum entropy, link functions)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Same book; this chapter reuses its tools",
+   "quote": null
+  },
+  {
+   "work": "Silk et al. chimpanzee prosociality experiment (footnote 140, reference not printed in the chapter)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "chimpanzees data in rethinking package",
+   "quote": null
+  },
+  {
+   "work": "UC Berkeley graduate admissions data (UCBadmit)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Classic Simpson's paradox example",
+   "quote": null
+  },
+  {
+   "work": "Kline oceanic tool data (Kline and Boyd)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Kline data, footnote 144; authors named by dataset only, not in the chapter text",
+   "quote": null
+  },
+  {
+   "work": "Chapter 11 (mixtures) and Chapter 12 (multilevel models)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Forward pointers for negative-binomial, beta-binomial and varying intercepts",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 10.2",
+   "caption": "Model averaged posterior predictive check for the chimpanzee models.",
+   "page": 8,
+   "why": "Shows the zig-zag prediction and the 7 individual handedness lines at once"
+  },
+  {
+   "figure": "Fig 10.3",
+   "caption": "Marginal posterior density of a[2], the intercept for actor number 2.",
+   "page": 11,
+   "why": "Shows a skewed, non-Gaussian posterior where MAP fails"
+  },
+  {
+   "figure": "Fig 10.5",
+   "caption": "Posterior validation for model m10.6.",
+   "page": 16,
+   "why": "Pooled gender model badly misfits departments"
+  },
+  {
+   "figure": "Fig 10.6",
+   "caption": "Posterior validation for m10.9.",
+   "page": 19,
+   "why": "Department intercepts fix the fit (Simpson's paradox)"
+  },
+  {
+   "figure": "Fig 10.8",
+   "caption": "Left: difference in average tool count between identical islands at log-population 8 with different contact rates. Right: joint posterior of bc and bpc.",
+   "page": 26,
+   "why": "Shows why correlated parameters hide a real effect"
+  },
+  {
+   "figure": "Fig 10.9",
+   "caption": "Ensemble posterior predictions for the islands model set.",
+   "page": 29,
+   "why": "Counterfactual high vs low contact curves"
+  },
+  {
+   "figure": "Fig 10.10",
+   "caption": "Posterior distributions for models m10.10stan (left) and m10.10stan.c (right).",
+   "page": 30,
+   "why": "Pairs plots before and after centring"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.294 R code 10.2-10.4",
+   "snippet": "logit(p) <- a + (bp + bpC*condition)*prosoc_left",
+   "verbatim": true
+  },
+  {
+   "where": "p.303 R code 10.21",
+   "snippet": "x ~ dbinom( 18 , p ) ,\nlogit(p) <- a + (bp + bpC*condition)*prosoc_left ,",
+   "verbatim": true
+  },
+  {
+   "where": "p.307 R code 10.28",
+   "snippet": "logit(p) <- a[dept_id] + bm*male ,\na[dept_id] ~ dnorm(0,10) ,",
+   "verbatim": true
+  },
+  {
+   "where": "p.310 R code 10.32",
+   "snippet": "m10.9glm <- glm( cbind(admit,reject) ~ male + dept , data=d , family=binomial )",
+   "verbatim": true
+  },
+  {
+   "where": "p.322 R code 10.54",
+   "snippet": "log(lambda) <- log_days + a + b*monastery,",
+   "verbatim": true
+  },
+  {
+   "where": "p.324 R code 10.57",
+   "snippet": "career ~ dcategorical( softmax(0,s2,s3) ),",
+   "verbatim": true
+  },
+  {
+   "where": "p.312-313",
+   "snippet": "log mu_i = log tau_i + alpha + beta x_i",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction splits table cells onto separate lines; tables were read by cell order.",
+  "Figure caption tool shows 'Figure 10: 2' for the in-text reference on p.7 (parsing noise).",
+  "Printing slips: the text says 'over 10,000 (1e5) days' but 1e5 = 100,000 (p.312); WAIC for m10.6 printed 5954.9 (R code 10.24) and 5954.8 (R code 10.29), with m10.7 SE 29.93 vs 29.95; the text says 'odds were 184% of' while elsewhere 'increase by 84%' (consistent, wording only); parameter named bpc in m10.10 but bcp in m10.10stan.c.",
+  "Kline WAIC table rows were fragmented in extraction; values read by row order.",
+  "No embedded instructions found."
+ ]
+}

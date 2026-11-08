@@ -3,7 +3,8 @@ origin: curated  # split from 01-rl-foundations.md (2026-11-08) so each part sta
 confidence: medium
 sources:
   - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–12, 14–15"
-  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1–2)
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 1–2, 4, 7)
+  - "Buduma & Locascio, \"Fundamentals of Deep Learning\" (O'Reilly, 2017), ch. 9"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/1312.5602
   - https://arxiv.org/abs/1707.06347
@@ -80,6 +81,11 @@ usually by importance sampling (*Reinforcement Learning*, ch. 1, 3 and 6).
 > prior already makes on-policy samples informative, which removes much of that argument.
 
 Murphy's overview (*RL: A Comprehensive Overview*, ch. 1, Table 1.1) arranges the same families by what is learned and whether the method is on- or off-policy: SARSA, REINFORCE, A2C and TRPO/PPO on-policy; Q-learning, DDPG and SAC off-policy. It calls value-based RL approximate dynamic programming. Two of its worked numbers are worth keeping. With γ = 0.99, a terminal reward of 1.0 reached in 15 steps is worth 0.99¹⁵ = 0.86, and in 17 steps 0.84, so discounting prices delay even at γ near 1. Setting γ = 1 − 1/T gives an effective horizon of about T steps: at 0.1 s per step, γ = 0.95 corresponds to 2 seconds. His Eq. 1.35 as printed drops the learning rate from the Q-learning update (a probable typo).
+
+Murphy's chapter on model-based RL splits the use of a model in two (*RL: A Comprehensive Overview*, ch. 4, Sec. 4.1). **Decision-time planning** searches from the current state and throws the search away (forward search, MCTS with the UCT rule, model-predictive control). **Background planning** uses the model to train a policy or value function that then acts without search, which is Dyna and Dreamer. The learning-signal argument is the one above: he cites a result that learning the dynamics needs fewer samples than learning the policy, and contrasts the OpenAI robot hand, a model-free controller that needed 100 years of simulated experience for the Rubik's-cube task. Forward search to depth d costs O((|S|·|A|)^d), which is why sparse sampling and MCTS sample instead. His worked example shows why open-loop plans lose in stochastic environments: on a 9-state, 2-action, horizon-2 problem the best fixed action sequence earns 20, while a closed-loop policy that reacts to where it lands earns 30 (Fig. 4.3). The lineage in his chapter runs AlphaZero (trains on the MCTS visit-count policy), MuZero (adds a learned reward and latent model) and EfficientZero (adds a self-prediction loss, which he calls the biggest of its three gains, with no numbers), and DreamerV3 reached Minecraft diamonds without demonstrations but took 17 days of training. DreamerV4 instead trains purely in imagination on 2,500 hours of reward-free Minecraft video. The chapter reports results from other papers and runs no experiment of its own.
+
+![Dyna: the agent acts in the environment, stores experience, learns a world model from it, and updates both directly from experience and from simulated rollouts of the model.](../sources/images/murphy-rl-fig4-4.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 4.4, from Liu et al. (2024), used with permission*
 
 ## Monte Carlo control and importance sampling
 
@@ -210,6 +216,10 @@ exploration and distributional returns.
 
 Maximization bias in one picture: state B has many actions whose rewards are drawn from N(−0.1, 1.0), so going left from A is worth −0.1 and is wrong, yet Q-learning with ε = 0.1 picks left most of the time early on because the max over noisy estimates is positive. The curve is averaged over 10,000 runs (Murphy, ch. 2, Sec. 2.5.3). Murphy's survey also lists Rainbow's six parts as double DQN, prioritized replay, C51, n-step with n = 3, dueling and noisy nets, and says each adds diminishing returns (read from his Fig. 2.9; no ablation numbers are printed). On the Atari-100k benchmark, which uses 26 of the 46 ALE games, the best method as of 2024, BBF, ranks its tricks by importance: a larger residual network, a higher update-to-data ratio, periodic soft resets, then n-step annealing (n from 10 to 3, γ from 0.97 to 0.997) (Schwarzer et al., 2023, as reported by Murphy). Target networks can be a periodic copy or an EMA of the weights (ρ ≈ 0.999). Murphy also reports Gallici et al. (2024) proving that off-policy nonlinear TD converges when the final-layer weights are bounded, the penultimate layer is wide and the critic input is norm-bounded (LayerNorm or RMSNorm), a modern answer to the deadly triad. His chapter only names distributional RL (C51, IQN) and defers it to a later section, so don't cite it for those methods.
 
+
+
+**A concrete DQN configuration (dated: 2017 textbook, TF 1.x code).** Buduma and Locascio's Breakout agent stacks 4 frames of 84×84 grayscale as input channels, then conv 32 filters 8×8 stride 4, conv 64 filters 4×4 stride 2, conv 64 filters 3×3 stride 1, a 512-unit dense layer and one Q-value per action. It uses Adam at 1e-3, γ = 0.98, batch 32, one update every 4 steps, a target-network sync every 16 steps, 100 random warm-up steps and a 5,000-transition replay queue that drops the oldest entry, with ε annealed linearly from 1.0 to 0.01. The chapter calls a γ "between 0.99 and 0.97" typical and shows the undiscounted sum of rewards as the naive alternative that "lacks any sense of urgency" (*Fundamentals of Deep Learning*, ch. 9). Treat the numbers as the shape of a setup, not a recipe. It prints no scores (only an upward reward curve, one run), and its prose ("update our target Q-network once every four batches", 1,000 episodes) disagrees with its own code (every 16 steps, 5,000 episodes). It also reports from Mnih et al. (2016), without hardware or setup, that A3C learns Breakout in under 12 hours where DQN "may take 3 to 4 days"; the mechanism it gives is that asynchronous actors in many environments decorrelate each batch, so no replay buffer is needed. The coverage stops at 2016, so Double and dueling heads, prioritized replay and PPO are absent. On the value head, Murphy reports that a Gaussian-smoothed histogram loss (HL-Gauss) beat MSE, two-hot and C51 in Farebrother et al. (2024), especially for large networks, and only conjectures why (robustness to noisy, non-stationary targets) (*RL: A Comprehensive Overview*, ch. 7, Sec. 7.3).
+
 **Offline (batch) RL** learns from a fixed log with no further interaction. Winder trains a
 DQN agent on the replay buffer of another DQN agent on CartPole, with no environment access.
 Its Q-values diverge, climbing on a log scale, and its reward stays poor. The `max` keeps
@@ -220,6 +230,11 @@ Learning*, ch. 4). The lesson carries over directly to LLMs. Offline preference 
 DPO ([03](03-preference-optimization.md)) are batch RL on a fixed preference set, and they
 share its limit: the policy improves only where the data has coverage. Online and on-policy
 methods keep the advantage of being able to check their own guesses.
+
+![Online on-policy, online off-policy and offline RL: offline learns once from a fixed buffer collected by any policy, then deploys.](../sources/images/murphy-rl-fig7-6.png)
+*Image Source: Murphy, [*Reinforcement Learning: A Comprehensive Overview*](https://arxiv.org/abs/2412.05265) (2024), Fig. 7.6, from Levine et al. (2020), used with permission*
+
+Murphy's survey names the same bottleneck: with no way to test actions the log never took, the policy "will be deployed on new states that it may not have seen", and out-of-distribution generalization is "the main bottleneck for current offline RL methods" (*RL: A Comprehensive Overview*, ch. 7, Sec. 7.7). Its fixes are policy constraints (a KL penalty, AWR), pessimistic value estimates (CQL, ensemble variance), model-based penalties (MOPO) and return-conditioned sequence models. It adds that return conditioning fails in stochastic environments, because a high return in the log may have been luck. It reports no benchmark numbers for these, so cite Decision Transformer's own paper below for numbers.
 
 Decision Transformer removes the `max` instead of constraining it
 ([arXiv:2106.01345](https://arxiv.org/abs/2106.01345) (Chen et al., NeurIPS 2021)). A small

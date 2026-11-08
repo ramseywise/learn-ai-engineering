@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft, sections cited only)
   - https://www.statsmodels.org/stable/mixed_linear.html
   - McElreath, Statistical Rethinking (draft of November 2015) (McElreath, draft of November 2015, ch. 12 and 13)
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 7)
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -385,6 +386,11 @@ pooled, size as a predictor   mean error +0.01, RMSE 0.49
 - **A real outlier.** One small segment truly at +5.0 is pulled down by 3.74 on average, and its RMSE rises from 3.01 to 3.76. The other 23 improve, from 1.25 to 0.49. If you are hunting for the rare real winner, shrinkage works against you on the one segment you most wanted to find.
 - **The wrong centre.** When small segments truly respond more, one common mean pulls them down by 1.10 on average. Their RMSE still improves on raw, 1.29 against 1.73, but the estimate is now biased. Add size as a group-level predictor and the bias goes and the RMSE falls to 0.49. GHY say the same: known structure belongs in the model, and they would not model a 2×3×4×5 structure as 120 exchangeable groups.
 - **A population-average question.** If only the overall effect matters, group estimates are beside the point, and the first row of the decision table is enough.
+
+One neighbouring habit is not partial pooling: fitting each group separately. McElreath argues for one model with interactions over split data, because the groups share a residual sigma, grouping uncertainty stays in the model and the alternatives are compared on the same data (*Statistical Rethinking*, ch. 7). His ruggedness example is a good warning about reading separate fits: the two marginal posteriors of the slope for African and non-African nations overlap, yet the posterior probability that the African slope is the smaller is 0.0036, so compare the posterior of the difference, not the intervals. In his comparison (log GDP on ruggedness, 170 nations) the interaction model carries 0.97 of the WAIC weight against the dummy-only model (469.6 against 476.4, difference 6.8, standard error of the difference 6.22).
+
+![Posterior distribution of the ruggedness slope gamma for African and non-African nations, with overlapping densities](../../sources/images/statistical-rethinking-fig7-5.png)
+*Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 7.5*
 
 With no real differences at all, the ratio is 0.16, and the 90% intervals cover 100% of the time, which means they are too wide. That is the safe direction, but it is a miss in calibration all the same.
 

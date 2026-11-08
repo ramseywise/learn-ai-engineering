@@ -5,6 +5,7 @@ sources:
   - https://adk.dev/evaluate/
   - https://arxiv.org/abs/2607.20709
   - https://aclanthology.org/2024.emnlp-demo.8/
+  - Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), ch. 13, ch. 14
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -127,6 +128,31 @@ except Exception as error:
 ```text
 LlmCallsLimitExceededError -> Max number of llm calls limit of `5` exceeded
 ```
+
+### A thinking budget is not a loop guard
+
+*Agentic Architectural Patterns* builds a loan agent on ADK with a planner that turns on the model's own reasoning (*Agentic Architectural Patterns*, ch. 13). The planner is the only thing in the code that limits the agent, and it limits tokens of thought, not steps:
+
+```python
+from google.adk.planners import BuiltInPlanner
+from google.genai.types import ThinkingConfig
+
+planner = BuiltInPlanner(thinking_config=ThinkingConfig(include_thoughts=True, thinking_budget=1024))
+agent = LlmAgent(model="gemini-3-flash", name="LoanProcessingAgent",
+                 instruction=agent_instructions, planner=planner, tools=loan_processing_tools)
+```
+
+The prompt tells the model to run a plan, execute and verify loop "N = 3" times and states success criteria (95% accuracy, 100% policy compliance, 5 minutes). The chapter says outright that N=3 "is not a Python parameter passed to BuiltInPlanner". Those lines are text for the model, nothing enforces or measures them, and the compliance tool in the build always returns pass. The code sets no step limit (the `max_llm_calls` above is the hard limit it lacks) and no retry, and the chapter says one failed credit call would halt the run.
+
+Checked against `google-adk` 2.14.0 (installed and imported, not run against a model): `LlmAgent`, `BuiltInPlanner`, `ThinkingConfig`, `Runner`, `AgentTool` and `InMemorySessionService` all exist under the names the book uses, and `Agent` is the same class as `LlmAgent`. Two details have moved. `ThinkingConfig` now also has `thinking_level`, and model ids and the free-tier request cap the chapter quotes ("approx. 20 requests/day") are vendor details that date quickly, so check the current model page before copying either. The book's `Runner(agent=..., app_name=..., session_service=...)` still matches the signature, and `Runner.run` is documented as for local testing, with `run_async` advised for production.
+
+**The retry wrapper protects nothing.** Chapter 14 adds a rate limit and a retry (15 calls per 60 s with `ratelimit`, then `tenacity` with 5 attempts and exponential wait of 2×, between 4 and 30 s, on rate-limit errors only), and the chapter 13 loop calls a function named `start_agent_run` under a comment "Protected by Retry & Throttling". The two chapters disagree about where it lives. Chapter 13 calls it without printing a definition, and chapter 14 prints the decorated definition and then calls `runner.run(...)` directly, so the guard is never used in the code shown. Even if it were, `Runner.run` is a generator, so the decorator wraps only the call that creates it and the API call happens later, while you iterate. A 30-line check shows the effect (a stand-in generator that raises on its first two iterations, `tenacity`, 5 attempts):
+
+```text
+raised on iteration: 429 RESOURCE_EXHAUSTED | attempts made by the decorator: 1
+```
+
+Put the retry around the iteration, not the call that returns the generator. Current ADK also has retry knobs of its own: `LlmAgent` takes a `retry_config` (attempts, delay, backoff, jitter, exception names) that is documented for workflow nodes, and the model layer takes `HttpRetryOptions` through the genai client. I read both signatures in 2.14.0 and did not run either, so test which one covers a 429 in your version before dropping `tenacity`.
 
 ---
 
@@ -331,6 +357,17 @@ from google.adk.agents import SequentialAgent
 pipeline = SequentialAgent(name="eval_pipeline", sub_agents=[preprocessor, grader, reporter])
 ```
 
+### Agents as tools: `AgentTool`
+
+`sub_agents` hands the conversation over: the specialist replies to the user and the coordinator is out of the loop. `AgentTool` is the other shape. It wraps an agent as a tool, so the supervisor calls it, gets a result back and carries on. *Agentic Architectural Patterns* refactors its single loan agent this way (*Agentic Architectural Patterns*, ch. 14): four specialists (document validation, credit check, risk assessment, compliance), each with one tool and a narrow instruction, wrapped as `AgentTool(agent=...)` and handed to a supervisor.
+
+![The monolithic loan agent with four tools above, and the same four steps as an orchestrator over four specialist agents below](../sources/images/agentic-architectural-patterns-fig14-2.png)
+*Image Source: Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), Fig. 14.2 (multi-agent system above, monolithic agent below)*
+
+Two things about the wrapper are worth knowing. The specialist's `description` becomes the tool description the supervisor sees. And the tool takes one string argument: building a wrapped agent in 2.14.0 declares a single `request: string` parameter, so the specialist sees only what the supervisor writes into it. That is why the chapter tells the supervisor which fields to extract and forward, and why a typed `input_schema` on the specialist is the sturdier contract.
+
+The chapter's own cautions are the useful part. Each delegation layer is another full model round trip, so keep the chain shallow. State is the supervisor's context window, not a state dict, so a field it forgets to forward is lost. Nothing was measured: two single runs on simulated tools (an approval at credit score 810, and a denial at risk score 8 where the credit score of 680 was not the reason), no failure injected, no comparison with the monolith, so the resilience and maintainability claims are arguments from design. The risk scale and approval threshold are never defined, and the prose mislabels the levels (the monolith is called Level 3 and also Level 5). Use it as a shape to copy, not as evidence for it.
+
 ---
 
 ## Memory across sessions
@@ -467,6 +504,7 @@ The ADK wrapper uses the plain Messages API, so the refusal fallback beta from [
 | Reading `output_key` as the final answer | Pre-tool narration is stuck to the front of the value | Read the final response event, or use a `Workflow` node, whose next node receives only the final response |
 | `output_schema` on `AnthropicLlm` with no tools | The wrapper's source asks for one schema tool with a forced `tool_choice` unless thinking is on, and forced choice returns 400 on Opus 5.5, Sonnet 5.5 and Fable 5.1 | Turn thinking on, or test this path at your version before relying on it. This path was read in the source and not run against the API |
 | Writing `temp:` state and expecting it next turn | The key is gone | Use a plain key for the session, or `user:` across sessions |
+| Wrapping `runner.run` in a retry decorator | The decorator returns at once and a 429 is raised later, during iteration, with no retry | Retry around the loop that consumes the events, or use the framework's retry options after testing them |
 | Treating `require_confirmation` as a UI | Nothing happens until your code answers the function call | Build the resume path and test both answers, as above |
 | Assuming `InMemoryMemoryService` is semantic | A synonym finds nothing | It matches keywords. Use a retrieval-backed service in production |
 

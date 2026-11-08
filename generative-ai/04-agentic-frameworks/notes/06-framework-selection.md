@@ -14,6 +14,7 @@ sources:
   - https://aclanthology.org/2024.emnlp-demo.8/
   - https://arxiv.org/abs/2309.07870
   - https://arxiv.org/abs/2408.15247
+  - Arsanjani & Bustos, *Agentic Architectural Patterns for Building Multi-Agent Systems* (Packt, 2026), ch. 15
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -187,6 +188,16 @@ The control-flow row is an old design choice. [Zhou et al. (2023-12, preprint)](
 | Best when | You need explicit, durable, auditable control flow | Gemini/Vertex shop, tree-shaped agents, want eval + dev UI in the box | You want plain typed Python and minimal magic | OpenAI-centric, handoff-shaped multi-agent | .NET or Azure shop; AutoGen/Semantic Kernel migrants |
 
 Rows marked as "bring your own" are where you will write glue. Confidence is medium on everything in this table except the LangGraph and ADK columns, which the notes in this pillar work through in code. For a second opinion, [Furgale et al. (2026, preprint)](https://arxiv.org/abs/2607.20709) scored 14 frameworks and coding harnesses from docs and source at pinned snapshots taken in July 2026. The rubric is the six capabilities of the authors' own NVIDIA system, which is the only system they score strong on all six, so use their paper as a map of each framework's facts and not as a ranking ([note 04](04-google-adk.md)).
+
+### What a book's three-framework tables add
+
+*Agentic Architectural Patterns* compares ADK, CrewAI and LangGraph in three tables (*Agentic Architectural Patterns*, ch. 15), and the first two mostly agree with the table above. Control flow is planner-driven for ADK, a sequential or hierarchical process for CrewAI and explicit edges for LangGraph. State is managed by session for ADK, passed implicitly as task context for CrewAI and an explicit state object for LangGraph. Callbacks are interceptors for ADK (redact, or skip the model call), lifecycle event hooks for CrewAI (`on_task_start`, `on_task_end`) and interrupts for LangGraph. Its selection advice reads like the "Best when" row: CrewAI for fast role-shaped prototypes, LangGraph for loops, explicit state and human pauses, ADK for Google Cloud services with OpenTelemetry. Three cautions apply.
+
+- **The launch dates are unsourced, so check them.** Table 15.1 gives ADK "2024 (prototype)/2025 (public)", CrewAI 2023 and LangGraph 2024. The PyPI registry's first uploads, read on 2026-11-08, are CrewAI 0.1.0 on 2023-11-14, LangGraph 0.0.8 on 2024-01-08 and `google-adk` 0.0.1 on 2025-03-17. Those support the CrewAI and LangGraph years. For ADK they show a public package in 2025 and nothing for a 2024 prototype, so drop that part.
+- **The maturity table is the authors' scheme, with a gap.** Table 15.3 maps their six levels (prompting, RAG, tuning, grounding and evaluation, single agent, multi-agent) to tools. Levels 1 to 3 need no agent framework (a provider API, LangChain or your own code for RAG, nothing for tuning). At level 5 ADK is "the primary use case", LangGraph is a graph with agent nodes and CrewAI a "crew of one", which the book calls less common. At level 6 CrewAI's crew and LangGraph's nodes and edges are the fit, and ADK means several independently deployed agent services talking over A2A. The text then says frameworks enable "Levels 4 and 5" in one place and "Level 5 and 6" in another. Read the table rows and ignore the numbers in the prose.
+- **The level 4 feature list is vendor-feature trivia that has probably dated.** It names a CrewAI hallucination guardrail scored 0 to 10, a test CLI that runs a crew N times, `crew.train()` and Patronus support, and credits LangGraph with LangSmith traces. None is sourced or versioned, and none was run. Treat each as a name to look up in the current docs.
+
+The book's own CrewAI-versus-LangGraph loan build is confounded (a rule-based risk tool against an LLM node, temperature 0.0 against unset) and has parser bugs, with no run output printed. That analysis is in [03-agentic-foundations note 05](../../03-agentic-foundations/notes/05-framework-survey.md#the-same-workflow-in-crewai-and-langgraph) and is not repeated here. Its portable advice matches the lock-in checklist below: stable tool contracts and explicit state schemas.
 
 ---
 

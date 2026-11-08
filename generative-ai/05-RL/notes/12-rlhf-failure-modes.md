@@ -205,6 +205,8 @@ goal. Where the penalty goes depends on the algorithm:
   unbiased k3 estimator. The paper does not disclose β
   ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI, 2025-01)).
 
+Estimator choice is not neutral. Murphy's LLM chapter compares the three Monte-Carlo estimators k1, k2 and k3 of this KL. It reports that k3 is unbiased but its gradient is biased, so the two papers he cites recommend k2, and that the penalty belongs in the token-level reward, not in the advantage (*RL: A Comprehensive Overview*, ch. 6, Sec. 6.2.4.9). So the k3 loss term above is a common choice, not a settled one. His Tinker example flags `KL(q‖p) > 0.01` between the sampling and training policies as very off-policy learning. For DPO, he notes a variant that replaces the KL with a χ² divergence for provable robustness to overoptimization (Huang et al., 2025, as reported; not read).
+
 With a verifiable reward, many RLVR recipes drop the penalty entirely. These include DAPO,
 MiMo-7B's modified GRPO ([arXiv:2505.07608](https://arxiv.org/abs/2505.07608) (Xiaomi, 2025-05))
 and Open-Reasoner-Zero's vanilla PPO. ORZ ran PPO with GAE λ = γ = 1 on Qwen2.5 bases with no KL

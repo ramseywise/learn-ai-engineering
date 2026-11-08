@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/1201.0490
   - https://doi.org/10.1214/10-STS330 (Shmueli, Statistical Science, 2010; link only, read in full)
   - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Science, 2001; link only, paper and discussion read)
+  - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 1-2
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -139,6 +140,11 @@ The straight line is all bias. Degree 3 to 5 is the sweet spot. By degree 9 the 
 | Overfitting | High | Much lower | High variance | More data, simpler model, more regularisation, early stopping |
 | Good fit | High | Close to train | — | Stop tuning; check the test set once |
 
+![Squared bias, variance and test MSE against flexibility for three simulated data sets: the minimum sits at a different flexibility in each](../../sources/images/islp-fig2-12.png)
+*Image Source: James et al., *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023), Fig. 2.12*
+
+ISLP draws the same decomposition for three simulated truths, and the lesson is that the sweet spot belongs to the data, not to the method: the test-MSE minimum falls at a flexibility of roughly 6 when the truth is smooth and curved, at about 3 when it is nearly linear, and at about 10 when it is strongly non-linear. In all three, test MSE never goes below the dashed $\mathrm{Var}(\varepsilon)$ line (*ISLP*, ch. 2, Fig. 2.12). The book's working definition of overfitting is the useful one: a model overfits when a less flexible model would have given a smaller test MSE, and it is not simply "training error is much lower than test error", since training error is lower than test error for nearly every fit. It also names the failure to avoid, which is to pick the most flexible method because it has the lowest training MSE (*ISLP*, ch. 2). For the same trade-off in classification, with the Bayes error as the floor, see the KNN numbers in [02](02-supervised-learning.md).
+
 **Complexity relative to data size.** The right complexity depends on how much data you have: more varied data supports a more complex model without overfitting (*Introduction to ML with Python*, ch. 2, "Relation of model complexity to dataset size"). Collecting more data is often a better fix than a cleverer model. Ng's ex5 makes this measurable with learning curves ([04](04-model-evaluation.md#learning-curves-and-bias-variance-diagnosis)).
 
 **Regularisation** is the general name for any constraint that pulls the fit toward simplicity: an L2 penalty on weights (ridge), an L1 penalty (lasso, which also zeros features), a maximum tree depth, a minimum number of neighbours. Every model in [02](02-supervised-learning.md) has one main complexity knob, and its strengths-and-weaknesses table names it.
@@ -241,7 +247,7 @@ These books live in data-analytics' [`sources/`](../../../data-analytics/sources
 
 | Book | Read with | Focus |
 |---|---|---|
-| James, Witten, Hastie, Tibshirani, Taylor, *An Introduction to Statistical Learning* (Python ed.) | ch. 2 → 01; ch. 3–4 → 02; ch. 5 → 04; ch. 6 → 03; ch. 8 → 06; ch. 10 → [deep learning](../../02-deep-learning/README.md); ch. 12 → 05 | The canonical theory text; free at [statlearning.com](https://www.statlearning.com/) |
+| James, Witten, Hastie, Tibshirani, Taylor, *An Introduction to Statistical Learning* (Python ed.) | ch. 1–2 → 01; ch. 3–4, 6, 9 → 02; ch. 5 → 04; ch. 6–7 → 03; ch. 8 → 06, 07; ch. 10 → [deep learning](../../02-deep-learning/README.md); ch. 12 → 05 | The canonical theory text; free at [statlearning.com](https://www.statlearning.com/) |
 | Müller & Guido, *Introduction to Machine Learning with Python* | ch. 1–6, 8 → 01–06; ch. 7 → [NLP](../../03-nlp/README.md) | The code-first companion; notebooks in [practice](../practice/intro-to-ml-in-python) |
 | Bruce, Bruce & Gedeck, *Practical Statistics for Data Scientists* | ch. 1–3 before 04 | Working statistics, chapter-level |
 | Reinhart, *Statistics Done Wrong* | Before reading any metric in 04 | Inference pitfalls |

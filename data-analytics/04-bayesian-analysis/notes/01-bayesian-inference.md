@@ -5,7 +5,7 @@ sources:
   - https://github.com/prasoon2211/bayesian_inference_talk (DataTalks.Club talk, Introduction to Bayesian Inference for Parameter Estimation)
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 1 to 5, 7 and 8; ch. 9 to 15 are in 01b)
-  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 1 (ch. 2 and 3 are in 01b)
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 1 (ch. 2 and 3 are in 01b))
   - https://doi.org/10.1080/01621459.1965.10480775 (Warner, JASA, 1965)
   - https://doi.org/10.1080/01621459.1989.10478858 (Dalal, Fowlkes and Hoadley, JASA, 1989)
 confidence: high
@@ -33,7 +33,7 @@ The two schools disagree about what a probability is, and everything else follow
 
 McElreath's version drops the belief language: Bayesian inference "is no more than counting the numbers of ways things can happen, according to our assumptions", and randomness describes our information, not the world (*Statistical Rethinking*, ch. 1). That is why it still applies where nothing is resampled, as with a blurred, deterministic telescope image. His other point is about what a test can conclude: hypotheses, process models and statistical models map many-to-many, so rejecting a null model does not falsify the hypothesis behind it.
 
-![Hypotheses, process models and statistical models: neutral and selection models both imply M-II](../sources/images/statistical-rethinking-fig1-2.png)
+![Hypotheses, process models and statistical models: neutral and selection models both imply M-II](../../sources/images/statistical-rethinking-fig1-2.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 1.2*
 

@@ -44,7 +44,8 @@ practice/      01-research-agent: the same agent built each way, offline
 slides/        deck.yaml and the built deck
 sources/       the papers these notes cite, as PDFs
   images/      course figures (ksm26-ai-agents-in-langgraph-fig1..6),
-               book figures (prompt-engineering-for-generative-ai-fig4-7)
+               book figures (prompt-engineering-for-generative-ai-fig4-7,
+               agentic-architectural-patterns-fig14-2)
 ```
 
 ---

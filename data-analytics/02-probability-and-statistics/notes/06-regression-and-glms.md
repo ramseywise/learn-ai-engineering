@@ -3,7 +3,7 @@ origin: synthesis
 sources:
   - James, Witten, Hastie, Tibshirani & Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), https://www.statlearning.com/ (ch. 3, Linear Regression; ch. 4, Classification, §4.3 and §4.6)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 4, Regression and Prediction; ch. 5, Classification)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 8, GLMs and Regression Trees)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (ch. 5, exponential families; ch. 7, ridge; ch. 8, GLMs and Regression Trees)
   - https://doi.org/10.1214/08-aoas191 (separation)
   - https://www.statsmodels.org/stable/index.html
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
@@ -419,7 +419,7 @@ The tell is an enormous coefficient with an absurd standard error: 28.52 with SE
 
 ## Poisson and other GLMs
 
-OLS, logistic and Poisson are one family. A *generalised linear model* has a linear predictor, a distribution for the outcome and a *link* function connecting them (ISLP §4.6; Efron & Hastie, ch. 8).
+OLS, logistic and Poisson are one family. A *generalised linear model* has a linear predictor, a distribution for the outcome and a *link* function connecting them (ISLP §4.6; Efron & Hastie, ch. 8). What makes the family tidy is that each outcome distribution is an *exponential family*, whose density has the form e^(αy − ψ(α)) times a base density, where ψ's first derivative is the mean and its second the variance. The log-odds, log-mean and identity links are the natural parameters α of the binomial, Poisson and normal, and for them the fit reduces to a sufficient statistic of fixed size, whatever n is (*Computer Age*, ch. 5). In the GLM, the maximum-likelihood condition is X′(y − μ̂(α̂)) = 0, so a Poisson regression with an intercept matches the observed total, and a logistic one matches the observed count of events (ch. 8).
 
 | Model | Outcome | Distribution | Link | Coefficient reads as |
 |---|---|---|---|---|
@@ -450,6 +450,12 @@ rate ratio 1.092 (truth 1.105), SE 0.0155, dispersion 1.00
 
 Exponentiating the coefficient gives a rate ratio: the new app multiplies the order rate by 1.09, against a true 1.105. The dispersion, Pearson χ² over the residual degrees of freedom, is 1.00 here, because the data really are Poisson.
 
+Efron and Hastie's dose-response data show what the logistic structure buys. Ten mice at each of 11 doses; fit logit(π) = α₀ + α₁·dose by maximum likelihood, and the estimated dose for 50% mortality (LD50) is 5.69. At dose 6, the standard deviation of the fitted mortality probability is 0.072, against 0.157 for the raw proportion at that dose (0.015 against 0.045 at dose 1). Pooling across doses cut the error by better than half, and the price is bias if the straight-line-in-logit assumption is wrong (*Computer Age*, ch. 8, Table 8.1).
+
+![Dose-response data: observed proportions of 10 mice per dose and the fitted logistic curve with LD50 = 5.69](../../sources/images/computer-age-statistical-inference-fig8-2.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 8.2.*
+
 ### Deviance
 
 GLMs have no residual sum of squares to report, so they report **deviance** instead: twice the gap in log likelihood between the fitted model and a *saturated* model, one with a free parameter for every row, which fits each row exactly. Fitting a GLM by maximum likelihood is "least total deviance" in the same way that OLS is least sum of squares (Efron & Hastie, §8.2). For Poisson, with fitted means μ̂ᵢ:
@@ -478,6 +484,8 @@ by hand 5450.1; drop 32.4, p 1.2e-08; z-test on new_app p 1.2e-08; deviance/df 1
 ```
 
 Adding `new_app` removes 32.4 of deviance for one degree of freedom, and that test agrees with the z-test on its coefficient. Only about 0.6% of the null deviance goes, because a randomised app says little about any one user's orders. A small drop can still be a clear effect, as with a low R² in OLS. Residual deviance per degree of freedom comes out at 1.09 where the Pearson dispersion above is 1.00, on data that really are Poisson, because with small counts deviance is an unreliable check on the variance. Use the Pearson version for the check below, and deviance for comparing models. On held-out rows, the same quantity averaged per row is `mean_poisson_deviance`, the count row in [choosing a metric](../../../data-science/01-classical-ml/notes/11-choosing-a-metric.md#counts).
+
+Deviance is also a lack-of-fit check when the cells are many. Efron and Hastie fit a Poisson regression to 487 galaxies binned into 18 x 15 = 270 cells, with a quadratic in the two coordinates for the log-mean. If the model held, the sum of squared deviance residuals would be near 270, the number of cells; it came out at 610, a poor fit, and adding the cross terms near the table's edges was the suggested repair (*Computer Age*, ch. 8). The same chapter shows the case for shrinkage in a GLM: a 57-predictor logistic regression on 4,601 emails (40% spam) is fitted by plain maximum likelihood with unstable coefficients (one coefficient has a z of about 5.6 in size and a neighbour has a standard error of 9.6 on a coefficient of −16), the problem [ridge and the lasso](../../../data-science/01-classical-ml/README.md) address.
 
 ### Overdispersion
 

@@ -150,7 +150,7 @@ Beyond tokens, Sarkar's chapter 3b covers the syntax layer that later chapters u
 | Analysis | Output | Tool |
 |---|---|---|
 | POS tagging | `("fox", "NN")`, `("jumps", "VBZ")`; Penn Treebank tags | `nltk.pos_tag`, spaCy `token.tag_` / `token.pos_` |
-| Shallow parsing (chunking) | Noun phrases `[The brown fox]` | `nltk.RegexpParser` grammar, n-gram taggers trained on conll2000 |
+| Shallow parsing (chunking) | Noun phrases `[The brown fox]`, tagged with IOB labels so a tagger can learn them (*NLP with Python*, ch. 7) | `nltk.RegexpParser` grammar, n-gram taggers trained on conll2000 |
 | Dependency parsing | Head → dependent arcs (`nsubj`, `dobj`) | spaCy `token.dep_`, `token.head` |
 | Constituency parsing | Phrase-structure tree | Stanford CoreNLP (Ch03c, needs a Java server) |
 
@@ -169,6 +169,12 @@ print([chunk.text for chunk in parsed.noun_chunks])
 ```
 
 These features power the rule-based extraction in [semantic analysis and NER](05-semantic-analysis-and-ner.md) and the keyphrase chunking in [topic models](03-topic-models-and-summarization.md).
+
+Why parsers return one tree and not all of them: a sentence with prepositional-phrase attachment ambiguity ("I shot an elephant in my pajamas") has two analyses, and the count of analyses grows with the Catalan numbers, 1, 2, 5, 14, 42 and on to 208,012 for a sentence of 23 words, the average length in the Wall Street Journal treebank, and more than $10^{12}$ at 50 words. Enumerating them is hopeless, so practical parsers either store shared sub-analyses (chart parsing, a dynamic programme) or score candidates with a weighted grammar; in a probabilistic grammar a parse's score is the product of its rule probabilities, with each left-hand side's rules summing to 1 (*NLP with Python*, ch. 8). A dependency analysis, which draws one labelled arc from each word to its head, expresses the same choice as a single attachment decision, and is what spaCy's `dep_` returns (*NLP with Python*, ch. 8). Feature-based grammars attach attribute-value structures such as number and person to categories and unify them while parsing, so that agreement is enforced by the grammar (*NLP with Python*, ch. 9). Nothing in this pillar's pipelines uses hand-written feature grammars; a trained parser takes agreement from its treebank.
+
+![A projective dependency parse of "I shot an elephant in my pajamas"](../../sources/images/nlp-with-python-fig8-8.png)
+
+*Image Source: Bird, Klein and Loper, *Natural Language Processing with Python* (O'Reilly, 2009), Fig. 8-8*
 
 ## Bag of words
 

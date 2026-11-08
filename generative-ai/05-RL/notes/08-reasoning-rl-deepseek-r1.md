@@ -4,6 +4,7 @@ sources:
   - https://arxiv.org/abs/2501.12948
   - https://arxiv.org/abs/2412.18319
   - https://arxiv.org/abs/2501.12599
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 6)
   - https://arxiv.org/abs/2503.24290
   - https://arxiv.org/abs/2504.13837
   - https://arxiv.org/abs/2505.07608
@@ -166,6 +167,8 @@ from a stronger teacher, unlike RLVR, did push pass@k past the base model. The p
 evaluate DeepSeek-R1-Zero itself. *This note's reading:* treat the "spontaneous"
 self-verification above as RL making existing base-model behaviour reliable at pass@1, not as
 proof of new capability.
+
+Murphy's overview agrees that the "RL creates emergent abilities" reading "has been disputed by many authors" and that the base model already carried the chain-of-thought patterns, with RL able to "expose" or "amplify" them (*RL: A Comprehensive Overview*, ch. 6, Sec. 6.2.3). It also records two details worth keeping. R1-Zero did worse on general reasoning, which is why R1 added SFT on synthetic chains of thought. And the GRPO family differs in small normalization choices. GRPO's group is often about 8 samples with advantage (R − mean)/std. Dr. GRPO drops the std divisor, which he says causes a difficulty bias. RLOO's leave-one-out baseline is identical to Dr. GRPO up to a factor J/(J−1) for group size J (his algebra, Eq. 6.27–6.28). REINFORCE++ normalizes with a global batch mean and std. DAPO's clip-higher uses ε_high = 0.28 against ε_low = 0.2 to stop entropy collapse (Sec. 6.2.4). That helps explain why several of the six algorithms in the Yue et al. comparison above behave alike: RLOO, Dr. GRPO and GRPO differ mainly in a scale and a normalizer.
 
 Xiaomi's MiMo-7B points the same way from the pretraining side
 ([arXiv:2505.07608](https://arxiv.org/abs/2505.07608) (Xiaomi, 2025-05)):

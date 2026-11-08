@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - "Koenigstein, \"AI Agents: The Definitive Guide\" (O'Reilly, 2026)"
+  - https://arxiv.org/abs/2412.05265 (Murphy, RL overview, 2024 preprint, ch. 6)
   - https://arxiv.org/abs/2203.07814
   - https://arxiv.org/abs/2203.11171
   - https://arxiv.org/abs/2509.06870
@@ -180,6 +181,8 @@ one problem.
 
 Both need a dense, trustworthy score at test time: a verifier on the demonstrations, or a
 continuous reward.
+
+**Best-of-N as KL-regularized RL without the training.** Murphy shows that sampling from the tilted distribution π*(y|x) ∝ π_ref(y|x)·exp(R(x,y)/β) is the optimum of the KL-regularized RL objective. RL fine-tuning then amortizes that sampling into the weights (it minimizes KL(π_θ‖π*)), and test-time search does it per prompt (*RL: A Comprehensive Overview*, ch. 6, Sec. 6.2.4.11–12). He reports that best-of-N "achieves an optimal reward vs KL tradeoff" in the papers he cites, yet that performance can fall as N grows once the reward model is imperfect, which is the selection bottleneck below. Sequential Monte Carlo steering reweights partial generations with a twist function that plays the role of a value function. One caveat he gives for training instead of searching: fine-tuning cannot easily enforce a hard constraint, while decision-time search (model-predictive control in the control view) can. The chapter surveys these and runs none of them.
 
 ## Measuring the selection bottleneck
 

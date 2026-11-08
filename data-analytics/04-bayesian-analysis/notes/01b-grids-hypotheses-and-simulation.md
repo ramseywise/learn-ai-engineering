@@ -3,7 +3,7 @@ origin: synthesis  # companion to 01-bayesian-inference.md, which is near the ch
 sources:
   - Downey, Think Bayes (Green Tea Press, 2012; first edition), https://greenteapress.com/wp/think-bayes/ (ch. 9 to 15)
   - Downey, Think Stats (Green Tea Press, 2nd ed.), https://greenteapress.com/wp/think-stats-2e/ (ch. 8)
-  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 2 and 3
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 2 and 3)
 confidence: high
 cleaned: 2026-11-08
 ---
@@ -183,7 +183,7 @@ The book prints the unbiased multiplier as 2N/(N−1); setting the mean error (1
 
 The one-parameter case is where the whole workflow fits on a page. McElreath's globe toss: 6 water in 9 tosses, flat prior (*Statistical Rethinking*, ch. 2). A grid of 20 points is already usable and little changes after the first 100; the cost is 100^2 = 10,000 evaluations for two parameters at 100 values each. The quadratic approximation replaces the posterior by a Gaussian at its mode, here mean 0.67 and sd 0.16, and at n = 9 it is visibly wrong: it puts mass at p = 1, which the data rule out. The same water fraction at n = 18 and n = 36 closes the gap (see the figure), which is why classical procedures are nervous at small N. McElreath adds that the rate of improvement varies by model, and for some it stays poor with thousands of observations. He also calls the "30 observations" rule a superstition: a posterior is valid at any N, and the price of small N is dependence on the prior.
 
-![Quadratic approximation against the exact Beta posterior at n = 9, 18 and 36 tosses](../sources/images/statistical-rethinking-fig2-8.png)
+![Quadratic approximation against the exact Beta posterior at n = 9, 18 and 36 tosses](../../sources/images/statistical-rethinking-fig2-8.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 2.8*
 
@@ -213,7 +213,7 @@ print((lo, hi), (ss[i], ss[i + k]))
 
 The grid itself gives 0.172 below 0.5; the book prints 0.1718746 for the grid and 0.1726 for 10,000 samples, so the sampling noise is in the third decimal. The middle 80% runs from 0.446 to 0.812. With 3 of 3 water the posterior is piled against p = 1, and the two 50% intervals disagree: the percentile interval (0.71 to 0.93, width 0.22) excludes the mode, and the highest-posterior-density interval (0.84 to 1.00, width 0.16) contains it. McElreath's advice is that if the choice of interval changes the inference, plot the whole posterior; with the 6-of-9 posterior the two are nearly identical. He also prefers nested 67, 89 and 97% intervals to 95%, which he calls a convention with no defence.
 
-![50% percentile interval and 50% HPDI for 3 water in 3 tosses](../sources/images/statistical-rethinking-fig3-3.png)
+![50% percentile interval and 50% HPDI for 3 water in 3 tosses](../../sources/images/statistical-rethinking-fig3-3.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 3.3*
 
@@ -221,7 +221,7 @@ A point estimate is a loss-function decision. Expected absolute loss for the 3-o
 
 Samples also do the predictive step. Draw `rng.binomial(9, s)` for each sampled p and the counts follow the posterior predictive distribution. Plugging in one value understates the spread: at the plug-in p = 0.67, 6 of 9 has probability 0.273, but the posterior predictive gives it 0.20, because the uncertainty about p spreads the counts out.
 
-![Sampling distributions at ten values of p combined into a posterior predictive distribution](../sources/images/statistical-rethinking-fig3-6.png)
+![Sampling distributions at ten values of p combined into a posterior predictive distribution](../../sources/images/statistical-rethinking-fig3-6.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 3.6*
 

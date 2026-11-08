@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "sha1:319997e6917b",
+ "pdf": "generative-ai/05-RL/sources/murphy-rl/ch06-llms-rl.pdf",
+ "bib": {
+  "title": "Reinforcement Learning: A Comprehensive Overview, Chapter 6: LLMs and RL",
+  "authors": [
+   "Kevin P. Murphy"
+  ],
+  "first_author": "Murphy",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2412.05265",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 74264,
+  "chars_total": 74264,
+  "engine": "pymupdf",
+  "skipped": "nothing; the chapter PDF has no reference list, so citations are bracket keys only"
+ },
+ "type": "book-chapter",
+ "question": "How is RL used to improve LLMs (RLFT, reward models, thinking models, single- and multi-turn algorithms), and how are LLMs used inside RL agents?",
+ "hypothesis": null,
+ "contributions": [
+  "Survey of RL fine-tuning of LLMs: reward types, PPO/GRPO/DAPO/GSPO/RLOO/REINFORCE++/VinePPO/DPO, inference-time scaling as posterior sampling, multi-turn RL",
+  "Survey of LLMs for RL (input processing, rewards, world models, policies) and efficient sequence models",
+  "Worked Tinker/GEM policy-gradient implementation with a guess-the-number example"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "GRPO samples a group of about 8 answers per prompt and normalises rewards by group mean and std.",
+   "kind": "reported",
+   "source": "Sha+24 (GRPO)",
+   "metric": "group size",
+   "value": "J~8",
+   "unit": "answers per prompt",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GRPO as described, Sha+24; used for DeepSeek-R1-Zero",
+   "quote": "(called a group, often of size J ∼8) which give final rewards Rj",
+   "table": null,
+   "note": null,
+   "where": "p152 Sec 6.2.4.3"
+  },
+  {
+   "claim": "DAPO uses asymmetric clipping eps_high 0.28 vs eps_low 0.2 to avoid entropy collapse.",
+   "kind": "reported",
+   "source": "Yu+25 (DAPO)",
+   "metric": "clip eps_high vs eps_low",
+   "value": "0.28 / 0.2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DAPO clip-higher, Yu+25",
+   "quote": "they suggest using ϵhigh = 0.28 > ϵlow = 0.2 in the clipping term",
+   "table": null,
+   "note": null,
+   "where": "p152 Sec 6.2.4.4"
+  },
+  {
+   "claim": "DrGRPO advantage equals RLOO advantage up to a scale factor J/(J-1).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "algebraic derivation Eq 6.27-6.28",
+   "quote": "The RLOO expression is identical (up to a scaling factor of J/(J −1)) to the DrGPO expression.",
+   "table": null,
+   "note": null,
+   "where": "p153 Sec 6.2.4.6"
+  },
+  {
+   "claim": "Best-of-N achieves an optimal reward vs KL tradeoff, but reward can fall as N grows.",
+   "kind": "reported",
+   "source": "GGV24; Bei+25",
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "best-of-N as posterior sampling from the tilted distribution",
+   "quote": "it was shown in [GGV24; Bei+25] that this method achieves an optimal reward vs KL tradeoff",
+   "table": null,
+   "note": null,
+   "where": "p156 Sec 6.2.4.11"
+  },
+  {
+   "claim": "A sampling-vs-training KL above 0.01 signals very off-policy learning and possible instability (Tinker heuristic).",
+   "kind": "reported",
+   "source": "Tinker docs rl-hyperparams",
+   "metric": "KL threshold",
+   "value": "0.01",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "KL(q||p) logged via k1 or k2 estimator during Tinker RL training",
+   "quote": "If the KL exceeds 0.01, it means that learning is very off-policy, and results might be unstable.",
+   "table": null,
+   "note": null,
+   "where": "p169 Sec 6.4.5"
+  },
+  {
+   "claim": "Guess-the-number RL run: average reward rose from 0.8 to 1.0 after 20 ReBN steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "average reward",
+   "value": "1.0",
+   "unit": "reward",
+   "baseline_value": 0.8,
+   "n": null,
+   "setup": "GuessTheNumber-v0-easy (1-10, T=4 turns); Qwen3-4B-Instruct-2507, LoRA rank 8, lr 4e-5, gamma 0.9, E=32 episodes per step; one run shown, no seeds",
+   "quote": "We fine-tune a Qwen3-4B-Instruct-2507 model using 20 steps of ReBN,",
+   "table": null,
+   "note": null,
+   "where": "p170 Sec 6.4.6, Fig 6.11a"
+  },
+  {
+   "claim": "Answer length in the same run fell from about 900 to about 500 action tokens per step.",
+   "kind": "measured",
+   "source": null,
+   "metric": "action tokens per turn",
+   "value": "500",
+   "unit": "tokens",
+   "baseline_value": 900,
+   "n": null,
+   "setup": "same guess-the-number run",
+   "quote": "the resulting action sequences are quite verbose (about 900 tokens). At the end of training, we",
+   "table": null,
+   "note": null,
+   "where": "p170 Sec 6.4.6, Fig 6.11c"
+  },
+  {
+   "claim": "Training that run takes about 20 minutes on a laptop using the Tinker client (compute in the cloud).",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "20 minutes",
+   "unit": "minutes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same run",
+   "quote": "Training takes about 20 minutes on a laptop, using the standard Tinker client.",
+   "table": null,
+   "note": null,
+   "where": "p170 Sec 6.4.6"
+  },
+  {
+   "claim": "Rank-one LoRA often suffices for RL fine-tuning, per the study cited as SL25.",
+   "kind": "reported",
+   "source": "SL25",
+   "metric": "LoRA rank",
+   "value": "rank 1",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LoRA in Tinker",
+   "quote": "In [SL25] they show experimentally that a rank one approximation often suffices",
+   "table": null,
+   "note": null,
+   "where": "p167 Sec 6.4.1"
+  },
+  {
+   "claim": "Transformer time-to-first-token grows O(N^2) in prompt length; decode is O(NM+M^2) with KV cache; an LLM policy needs O(T^2) time over a trajectory.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "O(t) per step",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LLM as policy conditioning on full history",
+   "quote": "this model (when implemented with standard transformers) needs O(t) time at step t to generate an action",
+   "table": null,
+   "note": null,
+   "where": "p165 Sec 6.3.5"
+  },
+  {
+   "claim": "DeepSeek-R1-Zero used GRPO on math and coding benchmarks with known answers starting from DeepSeek-V3-Base; R1 added SFT on synthetic CoTs.",
+   "kind": "reported",
+   "source": "Dee25",
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeepSeek-R1-Zero, Dee25; footnote 2 says R1-Zero did worse on general reasoning",
+   "quote": "They then used a variant of PPO, known as GRPO (see Section 6.2.4.3) to do RLFT, using a set math and coding",
+   "table": null,
+   "note": null,
+   "where": "p149 Sec 6.2.3.2"
+  },
+  {
+   "claim": "The claim that RL caused R1's emergent abilities is disputed; the base model already held CoT-style patterns.",
+   "kind": "reported",
+   "source": "Liu+25b; Yue+25; Gan+25a",
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Liu+25b; Yue+25; Gan+25a",
+   "quote": "Note that the claim that RL “caused” these emergent abilities has been disputed by many authors (see",
+   "table": null,
+   "note": null,
+   "where": "p150 Sec 6.2.3.4"
+  }
+ ],
+ "limits": [
+  "No reference list in the PDF: all citations are bracket keys.",
+  "Author says the field is fast growing and only highlights are covered (p147).",
+  "VinePPO is slow and not general purpose (p153).",
+  "DPO is limited to preference data (p155).",
+  "Only multi-turn LLM RL papers listed are few; the area is expected to grow (p157).",
+  "Tinker example is one run on an easy game, no seeds or error bars; o1/o3 details are not public (p149-150)."
+ ],
+ "practices": [
+  "Prefer RLFT over SFT where verification is easier than generation, for thinking actions, and for generalisation (p147).",
+  "Use binary verifiable rewards for math (answer equality) and code (unit tests) (p148).",
+  "Keep the policy near the reference with a per-token KL penalty -beta*KL (p151, p154).",
+  "Do not add the KL penalty to the advantage; modify the token-level reward instead (p169).",
+  "Use the k2 KL estimator when gradients matter since k3 has a biased gradient (p154).",
+  "Drop std division (Dr GRPO) or use a leave-one-out baseline to avoid difficulty bias (p153).",
+  "Use asymmetric clip with eps_high 0.28 to keep exploration (p152).",
+  "Use sequence-level importance ratio (GSPO) when reward is trajectory-level (p152).",
+  "For long-horizon multi-turn tasks truncate or summarise history and learn a critic with GAE, warm-starting actor from an instruct model (p158).",
+  "Average loss over transitions, not tokens, to avoid bias to long thinking traces (p167).",
+  "Monitor KL(q||p) and policy entropy during training (p169).",
+  "Handle invalid actions by truncating, restarting from the failure state, or resampling the action (p158)."
+ ],
+ "terms": [
+  {
+   "term": "RLFT",
+   "definition": "reinforcement learning fine-tuning: training the LLM with RL using a suitable reward function",
+   "where": "p147"
+  },
+  {
+   "term": "RLVR",
+   "definition": "RL with verifiable rewards, binary reward from answer equality or unit tests",
+   "where": "p148"
+  },
+  {
+   "term": "PRM / ORM",
+   "definition": "process reward model: reward on partial trajectories (dense); outcome reward model: reward on final sequence (sparse)",
+   "where": "p148"
+  },
+  {
+   "term": "RLHF",
+   "definition": "learning a reward model from human preference data (Bradley-Terry), then using RL to maximise it",
+   "where": "p148"
+  },
+  {
+   "term": "RLAIF",
+   "definition": "RL from AI feedback, with an LLM as judge giving preferences or rewards",
+   "where": "p149"
+  },
+  {
+   "term": "GRM",
+   "definition": "generative reward model: predicts reward and returns its chain of thought",
+   "where": "p149"
+  },
+  {
+   "term": "GRPO",
+   "definition": "Group Relative PPO: replaces the critic with group-mean/std normalised MC advantage",
+   "where": "p152"
+  },
+  {
+   "term": "GSPO",
+   "definition": "Group Sequence Policy Optimization: sequence-level length-normalised importance ratio",
+   "where": "p152"
+  },
+  {
+   "term": "RLOO",
+   "definition": "Reinforce Leave-One-Out: baseline is the mean reward of the other samples",
+   "where": "p153"
+  },
+  {
+   "term": "VinePPO",
+   "definition": "MC value estimates from rollouts reset at any intermediate state",
+   "where": "p153"
+  },
+  {
+   "term": "DPO",
+   "definition": "Direct Preference Optimization: fits the policy to preferences with loss -log sigma(beta log ratio_w - beta log ratio_l)",
+   "where": "p155"
+  },
+  {
+   "term": "twisted SMC",
+   "definition": "particle filtering with a twist function predicting future reward, for sampling the tilted posterior",
+   "where": "p156"
+  },
+  {
+   "term": "StarPO",
+   "definition": "State-Thinking-Action-Reward Policy Optimization (RAGEN)",
+   "where": "p157"
+  },
+  {
+   "term": "ReBN",
+   "definition": "return batch normalization, a multi-turn variant of GRPO",
+   "where": "p159"
+  },
+  {
+   "term": "code world model (CWM)",
+   "definition": "LLM-generated code that represents the world model",
+   "where": "p162"
+  },
+  {
+   "term": "TTFT",
+   "definition": "time to first token: prefill latency, O(N^2)",
+   "where": "p165"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepSeek-R1 / R1-Zero (Dee25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "GRPO RLFT thinking model; base DeepSeek-V3-Base (Dee24)",
+   "quote": null
+  },
+  {
+   "work": "GRPO (Sha+24)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "group relative advantage",
+   "quote": null
+  },
+  {
+   "work": "DAPO (Yu+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "asymmetric clipping",
+   "quote": null
+  },
+  {
+   "work": "GSPO (Zhe+25b)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "sequence-level objective",
+   "quote": null
+  },
+  {
+   "work": "Dr GRPO (Liu+25c)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "drop std denominator",
+   "quote": null
+  },
+  {
+   "work": "RLOO (Ahm+24)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "leave-one-out baseline",
+   "quote": null
+  },
+  {
+   "work": "REINFORCE++ (Hu+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "global batch normalisation",
+   "quote": null
+  },
+  {
+   "work": "VinePPO (Kaz+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "MC rollouts from intermediate states",
+   "quote": null
+  },
+  {
+   "work": "DPO (Raf+23)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "direct preference optimization",
+   "quote": null
+  },
+  {
+   "work": "Constitutional AI (Ant22)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "prompted constitution for AI feedback",
+   "quote": null
+  },
+  {
+   "work": "Chain of thought (Wei+22)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "CoT prompting",
+   "quote": null
+  },
+  {
+   "work": "RAGEN / StarPO (Wan+25c)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "multi-turn RL with thinking",
+   "quote": null
+  },
+  {
+   "work": "Turn-level training (Che+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "truncated context, critic, GAE",
+   "quote": null
+  },
+  {
+   "work": "GEM / ReBN (Liu+25d)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "multi-turn ReBN; Tinker script basis",
+   "quote": null
+  },
+  {
+   "work": "Red-teaming self-play (Liu+25a)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "zero-sum adversary/defender with REINFORCE++",
+   "quote": null
+  },
+  {
+   "work": "SPIRAL (Bo+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "self-play on zero-sum games, role-conditioned advantage",
+   "quote": null
+  },
+  {
+   "work": "Absolute Zero Reasoner (Zha+25f)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "self-generated curriculum",
+   "quote": null
+  },
+  {
+   "work": "GEPA (Agr+25)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "prompt evolution from GRM feedback",
+   "quote": null
+  },
+  {
+   "work": "Eureka (Ma+24)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "LLM reward code via evolutionary search",
+   "quote": null
+  },
+  {
+   "work": "Motif (Kli+24)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "LLM preferences as reward on NetHack",
+   "quote": null
+  },
+  {
+   "work": "GIF-MCTS (Dai+24); WorldCoder (TKE24)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "code world models",
+   "quote": null
+  },
+  {
+   "work": "Voyager (Wan+24a); ReAct (Yao+22); Reflexion (SLG23); SayCan (Ich+23); CodeAct (Wan+24c)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "LLM policies",
+   "quote": null
+  },
+  {
+   "work": "Tinker library; Thinking Machines",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "used for the worked example",
+   "quote": null
+  },
+  {
+   "work": "Qwen3-4B-Instruct-2507",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model fine-tuned in the example",
+   "quote": null
+  },
+  {
+   "work": "Russell assistance game (Rus19)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "alignment as cooperative game",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 6.1",
+   "caption": "Three ways to estimate the baseline b_t: MC from initial state, parametric value, MC from K rollouts at s_t (VinePPO). From [Kaz+25].",
+   "page": "p154 (pdf p8)",
+   "why": "contrasts GRPO, PPO and VinePPO baselines"
+  },
+  {
+   "figure": "Fig 6.2",
+   "caption": "Train an LLM to think internally and act externally; N trajectories with empirical-average baseline (RAGEN). From [Wan+25c].",
+   "page": "p157 (pdf p11)",
+   "why": "multi-turn thinking+action loop"
+  },
+  {
+   "figure": "Fig 6.3",
+   "caption": "Standard multi-turn RL vs turn-level training with truncated context and a value function. From [Che+25].",
+   "page": "p158 (pdf p12)",
+   "why": "shows context truncation and state-token masking"
+  },
+  {
+   "figure": "Fig 6.4",
+   "caption": "Zero-sum two-player game for training a robust and safe LLM.",
+   "page": "p159 (pdf p13)",
+   "why": "adversary/defender red-teaming setup"
+  },
+  {
+   "figure": "Fig 6.5",
+   "caption": "Pretrained LLM combined with RAG as a policy. From [Par+23].",
+   "page": "p164 (pdf p18)",
+   "why": "LLM policy with memory"
+  },
+  {
+   "figure": "Fig 6.6",
+   "caption": "Main Tinker training loop.",
+   "page": "p166 (pdf p20)",
+   "why": "rollout, advantage, datum, gradient, update loop (code image)"
+  },
+  {
+   "figure": "Fig 6.7",
+   "caption": "Code to collect trajectories.",
+   "page": "p168 (pdf p22)",
+   "why": "parallel rollouts"
+  },
+  {
+   "figure": "Fig 6.8",
+   "caption": "Code to compute advantages.",
+   "page": "p169 (pdf p23)",
+   "why": "ReBN advantage code"
+  },
+  {
+   "figure": "Fig 6.9",
+   "caption": "Code to compute data for token level loss computation.",
+   "page": "p170 (pdf p24)",
+   "why": "masking of state tokens"
+  },
+  {
+   "figure": "Fig 6.10",
+   "caption": "Code to compute metrics.",
+   "page": "p171 (pdf p25)",
+   "why": "KL and entropy monitoring"
+  },
+  {
+   "figure": "Fig 6.11",
+   "caption": "Results of RL on the guess-the-number game from GEM.",
+   "page": "p171 (pdf p25)",
+   "why": "reward, turns, tokens, entropy curves"
+  },
+  {
+   "figure": "Fig 6.12",
+   "caption": "Example of a state and action at the end of turn 5 of guess-the-number after training with gamma = 0.9.",
+   "page": "p172 (pdf p26)",
+   "why": "sample trained output"
+  }
+ ],
+ "code": [
+  {
+   "where": "p167 Sec 6.4.1",
+   "snippet": "prob_ratio = torch.exp(target_logprobs - sampling_logprobs)\nloss = -(prob_ratio * advantages).sum()",
+   "verbatim": true
+  },
+  {
+   "where": "p155 Eq 6.45",
+   "snippet": "L(θ) = -E[ log σ( β log πθ(yw|x)/πref(yw|x) - β log πθ(yl|x)/πref(yl|x) ) ]",
+   "verbatim": false
+  },
+  {
+   "where": "p152 Eq 6.19",
+   "snippet": "Â_n^j = (R_n^j - μ_n) / σ_n",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures 6.6-6.10 are images of code; their contents are not in the text.",
+  "Equation text is garbled by extraction in places (Eq 6.13 loses the clip arguments).",
+  "Method block is null because this is a book chapter; the Tinker example setup is recorded in results and limits only.",
+  "No embedded instructions found."
+ ]
+}

@@ -8,7 +8,7 @@ sources:
   - https://arxiv.org/abs/1111.4246 (Hoffman and Gelman, JMLR, 2014)
   - https://doi.org/10.1111/j.2517-6161.1977.tb01600.x
   - https://arxiv.org/abs/1312.6114
-  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 6
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 6)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -490,7 +490,7 @@ N=100  params=5  train 279.1  test 289.3  gap 10.2
 
 (5,000 runs per row; the book used 10,000 and prints slightly different gaps, 2, 4.1, 5.3, 7.6, 9.7 at N = 20.) Training deviance falls with every parameter, and test deviance is lowest at three, the true model. At N = 20 the two-parameter model is worse out of sample than the one-parameter one. The gap between test and train is close to twice the number of parameters, which is the idea behind AIC = D_train + 2p. AIC is reliable only with flat priors, a near-Gaussian posterior and N much larger than the parameter count. Regularising priors break the first condition, which is why [chapter 3](03-priors-and-bandits.md) pairs them with a different criterion.
 
-![Training and test deviance against number of parameters at N = 20 and N = 100](../sources/images/statistical-rethinking-fig6-7.png)
+![Training and test deviance against number of parameters at N = 20 and N = 100](../../sources/images/statistical-rethinking-fig6-7.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 6.7*
 

@@ -5,6 +5,7 @@ sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 4, The Greatest Theorem Never Told)
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 2, Data and Sampling Distributions)
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 4, Continuous distributions; ch. 6, Operations on distributions)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 6-7, empirical Bayes and James-Stein)
   - https://doi.org/10.1214/18-AOAS1161SF (Meng, Annals of Applied Statistics, 2018; link only, main text read)
 confidence: high
 cleaned: 2026-11-01
@@ -292,7 +293,15 @@ for t, h, r, s in zip(trials, hits, raw, shrunk):
  905/1000  raw 0.905  shrunk 0.905
 ```
 
-The 2/2 kicker drops below the 92/100 kicker, and the 905/1000 estimate does not change. The estimate moves only when N is too small to speak for itself. Efron and Hastie treat this as empirical Bayes and the James-Stein estimator (*Computer Age Statistical Inference*, ch. 6 and 7), where the amount of shrinkage is itself estimated from the data.
+The 2/2 kicker drops below the 92/100 kicker, and the 905/1000 estimate does not change. The estimate moves only when N is too small to speak for itself. Efron and Hastie treat this as empirical Bayes and the James-Stein estimator (*Computer Age Statistical Inference*, ch. 6 and 7), where the amount of shrinkage is itself estimated from the data. Empirical Bayes fits the prior to the whole collection and then reads off each case: in a study of 844 cancer surgeries, 340 patients had a raw positive-node ratio of exactly 0, yet the fitted prior puts only 12% of patients at 0.01 or below. A patient with 3 positive nodes out of 6 removed has raw ratio 0.50 and posterior mean 0.446, and the same ratio from a few nodes is far less certain than from 32 (*Computer Age*, ch. 6).
+
+Their baseball example puts a number on it. Eighteen players' batting averages over their first 90 at bats are shrunk toward the grand mean 0.254 by a data-estimated factor (B̂ = 0.34), and then scored against each player's average over the rest of the season (about 370 more at bats). Total squared error falls from 0.0425 for the raw averages to 0.0218 for James-Stein, about half, and shrinking everyone all the way to the grand mean already gets 0.0266 (*Computer Age*, ch. 7). The reason is that raw averages as a group are over-dispersed: E Σx² = N(A + 1) against E Σμ² = NA, so the spread of the estimates exceeds the spread of the truth by N in expectation, and shrinkage removes that excess. It is not free. In a simulation of 1,000 repeats, James-Stein wins for 14 of the 18 players and loses for the four most extreme ones, with the best hitter (true average 0.346) estimated worse (rms error 0.077 against 0.049).
+
+![Eighteen players: raw first-90 averages on top, James-Stein estimates in the middle, true averages at the bottom](../../sources/images/computer-age-statistical-inference-fig7-1.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 7.1. Dashed lines join each player's estimates to the truth.*
+
+The same chapter's ridge regression is the shrinkage idea inside a regression: on the diabetes data (n = 442, 10 standardised predictors), ridge at λ = 0.1 cuts the standard deviation of the total-cholesterol coefficient from 416.2 to 43.6, and flips the LDL coefficient from +476.7 to −70.8. Variance falls, but bias rises, and the authors note the two nearly offset in prediction error on that data. Ridge is not scale-equivariant, so standardise the predictors and leave the intercept unpenalised.
 
 ### Where this bites in analytics
 

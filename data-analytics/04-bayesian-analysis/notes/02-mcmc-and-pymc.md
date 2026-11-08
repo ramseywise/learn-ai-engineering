@@ -8,7 +8,7 @@ sources:
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 10)
   - https://www.pymc.io/
   - ../practice/BayesianML/week_4/
-  - McElreath, Statistical Rethinking (CRC Press, first edition), ch. 8
+  - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 8)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -417,7 +417,7 @@ with pm.Model():
 
 The book's weak-prior fit gives a mean of -0.01 with 1,121 effective samples. The fix costs one line, and the prior is washed out where there is data: the weak-prior posterior for alpha is centred on the sample mean, not on the prior's centre of 1. McElreath's second case is a non-identifiable model, mu = a1 + a2 with flat priors, where only the sum is constrained: a1 wanders to about -1,195 with R-hat 2.83 and 1 effective sample, and Normal(0, 10) priors repair it (1,223 effective samples). Two things to take from the pictures: the healthy chains in the bottom row overlap into a caterpillar, and the sick ones drift and spike. R-hat is a warning, never a certificate, since a value of 1.00 can come from an invalid chain.
 
-![Trace plots of a sick chain under flat priors and healthy chains under weak priors](../sources/images/statistical-rethinking-fig8-5.png)
+![Trace plots of a sick chain under flat priors and healthy chains under weak priors](../../sources/images/statistical-rethinking-fig8-5.png)
 
 *Image Source: McElreath, *Statistical Rethinking* (CRC Press), Fig. 8.5*
 

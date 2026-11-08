@@ -1,0 +1,225 @@
+{
+ "schema": 1,
+ "key": "sha1:bf8a7c6cabc7",
+ "pdf": "data-science/sources/nlp-with-python/ch10-analyzing-meaning-sentences.pdf",
+ "bib": {
+  "title": "Natural Language Processing with Python, Chapter 10: Analyzing the Meaning of Sentences",
+  "authors": [
+   "Steven Bird",
+   "Ewan Klein",
+   "Edward Loper"
+  ],
+  "first_author": "Bird",
+  "year": 2009,
+  "venue": "O'Reilly Media (book chapter; year inferred from the O'Reilly NLTK book, not printed in the chapter text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 105753,
+  "chars_total": 105753,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How can a sentence's meaning be represented so that a program can answer questions, check consistency and resolve scope and anaphora?",
+ "hypothesis": null,
+ "contributions": [
+  "Translates English questions into SQL by building a SEM feature value alongside the parse, as a first case of meaning representation",
+  "Introduces propositional and first-order logic, models, valuations and assignments, with Prover9 for proofs and Mace4 for countermodels",
+  "Builds sentence meanings compositionally with the lambda-calculus, treats quantifier scope ambiguity with Cooper storage, and extends to discourse with DRT"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A feature grammar with SEM values built by string concatenation turns 'What cities are located in China' into SELECT City FROM city_table WHERE Country=\"china\".",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "sql0.fcfg grammar and NLTK load_parser over the Chat-80 city table",
+   "quote": "SELECT City FROM city_table WHERE Country=\"china\"",
+   "table": null,
+   "note": null,
+   "where": "10.1 Querying a Database"
+  },
+  {
+   "claim": "The Chat-80 city table gives Athens a population of 1368 (thousands); the data date from at least the 1980s.",
+   "kind": "reported",
+   "source": null,
+   "metric": "population",
+   "value": "1368",
+   "unit": "thousands of people",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 10-1, population figures in thousands",
+   "quote": "1368",
+   "table": null,
+   "note": null,
+   "where": "10.1 Table 10-1"
+  },
+  {
+   "claim": "Mace4 builds a countermodel for premises 'a woman every man loves; Adam is a man; Eve is a woman' with conclusion 'Adam loves Eve': Adam and Eve denote the same individual a in the model, and the woman every man loves is a second individual b.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "nltk.MaceCommand over a4, a5, a6; valuation printed with Skolem constant C1",
+   "quote": "Mace4 found a countermodel in which there is some woman other",
+   "table": null,
+   "note": "Shows the premises leave background knowledge (that Adam loves Eve) unstated; adding a premise rules the countermodel out.",
+   "where": "10.3 Mace4"
+  },
+  {
+   "claim": "'Everybody admires someone' has two first-order readings: all x.(person(x) -> exists y...) allows a different admired person per x, while exists y.(... all x ...) requires a single admired person.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Examples (27a) and (27b)",
+   "quote": "(27b)\nis logically stronger than (27a)",
+   "table": null,
+   "note": null,
+   "where": "10.3 Quantifier Scope Ambiguity"
+  },
+  {
+   "claim": "A syntax-driven translation always gives the first scoping, e.g. 'Every girl chases a dog' becomes all x.(girl(x) -> exists y.(dog(y) & chase(x,y))) and never the reversed scope; Cooper storage generates every ordering.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Examples (52) and (53), nltk.sem.cooper_storage",
+   "quote": "will always be translated as (53a), not (53b)",
+   "table": null,
+   "note": null,
+   "where": "10.4 Quantifier Ambiguity Revisited"
+  },
+  {
+   "claim": "A discourse representation structure holds discourse referents and conditions, so the quantifier in 'Angus owns a dog' binds the pronoun in 'It bit Irene' across two sentences.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Example (54), Figure 10-4",
+   "quote": "Angus owns a dog. It bit Irene.",
+   "table": null,
+   "note": null,
+   "where": "10.5 Discourse Representation Theory"
+  }
+ ],
+ "limits": [
+  "The SQL grammar is hand-written for one table and a few words; the chapter itself says the restricted-domain approach does not generalize without a theory of meaning.",
+  "Logic-based semantics handles consistency and entailment but not lexical meaning, vagueness or world knowledge; Mace4 countermodels expose missing premises rather than supply them.",
+  "No evaluation on a benchmark: all results are worked examples with toy models.",
+  "Code uses Python 2 and NLTK 2 APIs; Prover9 and Mace4 are external binaries."
+ ],
+ "practices": [
+  "Check a meaning representation by evaluating it in a model and by asking a prover for entailment, and ask a model builder for a countermodel when a proof fails (10.3).",
+  "Make scope ambiguity explicit by generating all scopings (Cooper storage) instead of accepting the one the parse tree yields (10.4).",
+  "Keep a running discourse structure so that pronouns resolve to discourse referents introduced earlier (10.5)."
+ ],
+ "terms": [
+  {
+   "term": "SEM feature",
+   "definition": "a grammar feature whose value is a meaning representation built from the children's values during parsing",
+   "where": "10.1"
+  },
+  {
+   "term": "model",
+   "definition": "a formal representation of a situation as a domain of individuals and sets built from it, in which given sentences are true",
+   "where": "10.1"
+  },
+  {
+   "term": "valuation",
+   "definition": "a mapping from constants and predicates to their denotations in a model",
+   "where": "10.2"
+  },
+  {
+   "term": "lambda-calculus",
+   "definition": "a notation that abstracts over variables so that meanings of parts compose by function application and beta-reduction",
+   "where": "10.4"
+  },
+  {
+   "term": "Cooper storage",
+   "definition": "a method that stores quantifiers with a semantic representation and retrieves them in any order to produce all scopings",
+   "where": "10.4"
+  },
+  {
+   "term": "discourse representation structure",
+   "definition": "a list of discourse referents plus conditions, used to represent the meaning of a multi-sentence discourse",
+   "where": "10.5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Chat-80 (Warren and Pereira 1982)",
+   "year": 1982,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Source of the city database used for the NL-to-SQL example",
+   "quote": null
+  },
+  {
+   "work": "Turing 1950",
+   "year": 1950,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Behaviour as evidence of understanding, used to frame what 'understands' means",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 10-3",
+   "caption": "Quantifier scopings.",
+   "page": 34,
+   "why": "Two readings of 'Every girl chases a dog' as nested quantifier boxes."
+  },
+  {
+   "figure": "Figure 10-4",
+   "caption": "Building a DRS: the DRS on the left represents the result of processing the first sentence of a discourse, the right adds the second.",
+   "page": 38,
+   "why": "Shows how a pronoun adds a referent and a condition."
+  },
+  {
+   "figure": "Figure 10-2",
+   "caption": "Diagram of a model containing a domain D and subsets of D.",
+   "page": 7,
+   "why": "Model as sets; not embedded."
+  }
+ ],
+ "code": [
+  {
+   "where": "10.1",
+   "snippet": "SELECT Country FROM city_table WHERE City = 'athens'",
+   "verbatim": true
+  },
+  {
+   "where": "10.3",
+   "snippet": "mc = nltk.MaceCommand(g, assumptions=[a4, a5, a6])",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "The 'it-ebooks' watermark appears on every page and was ignored as instructed.",
+  "MuPDF printed 'object is not a stream' format errors; the text was extracted anyway and reads cleanly.",
+  "Year 2009 is not printed in the chapter text; it is inferred from the O'Reilly edition."
+ ]
+}

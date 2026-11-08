@@ -2,7 +2,7 @@
 origin: synthesis
 sources:
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 2, Data and Sampling Distributions)
-  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 2-4, 10-11)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 1-2, 4-5, 10-11)
   - https://doi.org/10.1214/aos/1176344552 (Efron, Bootstrap Methods, Annals of Statistics, 1979; not held)
   - https://doi.org/10.1007/s10618-008-0114-1 (sample-size rule of thumb)
   - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 8, Estimation)
@@ -96,6 +96,14 @@ SE formula sqrt(p(1-p)/N) 0.00328
 
 Curvature and the familiar formula agree to five decimals. That is no coincidence, because the formula *is* the curvature worked out by hand. The same machinery gives standard errors in logistic regression, where no simple formula exists: the summary table in [chapter 6](06-regression-and-glms.md) reads them off the Hessian.
 
+The curvature is worth reading at the observed sample, not only on average. Efron and Hastie simulate 10,000 Cauchy-location samples of size 20 and group them by the observed information 1/I(x) (*Computer Age*, ch. 4). The MLE's variance given the information runs from about 0.05 to 0.20 across the groups, while the textbook unconditional value 1/(nI) is 0.10 for all of them. The sample's own curvature is the honest accuracy statement, and the average is not.
+
+![Variance of the MLE rises with the observed information bound 1/I(x); the dashed red line is the single unconditional variance](../../sources/images/computer-age-statistical-inference-fig4-2.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 4.2. Cauchy samples of size 20, 10,000 draws, grouped by quantile intervals of 1/I(x).*
+
+Two cautions come with MLE as the default. First, it is dangerous with many parameters: on 6,033 gene effects, plugging in the estimate of the largest gives 5.29, almost certainly an overestimate (*Computer Age*, ch. 4; [the winner's curse](05-hypothesis-testing.md#significant-results-exaggerate)). Second, nuisance parameters never help the MLE: with a bivariate normal, knowing the second mean exactly would cut the first mean's variance from σ₁₁/n to (σ₁₁/n)(1 − ρ²), so the interval you report for an effect that needs other fitted parameters is wider than the one-parameter formula says (*Computer Age*, ch. 5, note 5).
+
 MLE fits the shape you tell it to. For the lognormal order value from chapter 1:
 
 ```python
@@ -129,6 +137,8 @@ revenue/user 2.681, SE 0.301, 95% CI [2.091, 3.272]
 ```
 
 So: 2.68 per user, plausibly 2.09 to 3.27. That is the finance answer, and it says 2.50 is fine as a plan and 3.20 is optimistic but not ruled out.
+
+Efron and Hastie's phrasing is a good one to borrow: report 54.25 ± 0.95, and the "±" tells the reader not to trust the digits after it (the mean of 211 kidney-filtration scores; *Computer Age*, ch. 2). The standard error is the inference and the mean is the algorithm. The same chapter names the plug-in rule (estimate the variance from the sample and divide by n), the delta method, MLE theory, the bootstrap and pivotal statistics as the five ways to get a standard error when the population is unknown. For non-smooth statistics only the bootstrap is easy: on those 211 scores it gives 0.78 for a 25% Winsorized mean and 0.87 for the median, against 0.95 for the mean (B = 1,000). A standard error also inherits the model it was computed under. In a kidney-score regression on 157 people, the linear fit's standard error at age 80 is 0.42, while a bootstrap of a lowess curve on the same points gives 0.70, and the ±2 SE bars cover about 95% only if the straight line is right (*Computer Age*, ch. 1).
 
 ### What a 95% interval means
 
@@ -264,6 +274,12 @@ delta 95% CI      [1.453 2.212]
 
 Bootstrap and delta agree on the SE (0.195 against 0.193). When they disagree, suspect the data before the theory. The delta method needed a page of algebra, and the bootstrap needed three lines, and would have worked just as well for a median or a 90th percentile, where the algebra gets far harder. The book's example is the median of Lending Club applicant income: with R = 1,000 resamples the original median is $62,000, the bootstrap standard error about $209, and the resampled medians sit about $70 below the original, a bias estimate (*Practical Statistics*, ch. 2). The same chapter adds that the bootstrap does not rescue a small sample: it describes the sampling variability of the data you have, and cannot invent data you lack.
 
+Efron and Hastie's worked example is a correlation-like statistic with no tidy formula: the ratio of the largest eigenvalue to the sum of all five, for 22 students' scores on five tests, is 0.693. B = 2,000 resamples of the students give a standard error of 0.075, and the histogram has a long left tail, so a symmetric ±1.96 SE interval is unsafe. The leave-one-out jackknife gives 0.083, a parametric bootstrap from a fitted normal gives 0.070 (the authors distrust it because the data have an outlier), and on a smooth statistic such as the age-score correlation (−0.572, n = 157) jackknife and bootstrap agree at 0.058 (*Computer Age*, ch. 10). The jackknife breaks on unsmooth statistics: it badly overstates the variability of a lowess curve at age 25. On the number of resamples, B = 200 is usually enough for a standard error, and intervals want 1,000 to 2,000, since they use the tails. Resample each group separately in a two-group comparison. The AML versus ALL median difference of 0.235 has bootstrap SE 0.074, about 3.2 standard errors above zero, with 25 and 47 patients resampled within their own groups.
+
+![Bootstrap distribution of the eigenratio, 2,000 resamples; jackknife SE 0.083 against bootstrap SE 0.075](../../sources/images/computer-age-statistical-inference-fig10-2.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 10.2. The black line is the observed 0.693.*
+
 ### Percentile and BCa
 
 The percentile interval reads the 2.5th and 97.5th percentiles of the bootstrap distribution. It is simple and it can be off with skewed statistics. The bias-corrected and accelerated (BCa) interval adjusts those percentiles for bias and for the way variance changes with the estimate, and Efron and Hastie derive it in ch. 11. On revenue, where skew is the whole problem, it shifts right.
@@ -285,6 +301,14 @@ BCa        [1.941, 3.802]
 ```
 
 Both intervals are asymmetric around 2.66, as the data demand, and a symmetric ±1.96 SE is not. On this kind of data, prefer BCa and verify by simulation when the decision matters.
+
+The cleanest numbers on how much BCa buys are Efron and Hastie's Poisson case: you observe a count of 10 and want a 95% interval for the mean (*Computer Age*, ch. 11). The exact interval is (5.08, 17.82). The standard interval 10 ± 1.96√10 is (3.80, 16.20), the percentile interval is (4.18, 16.73) and BCa is (5.02, 17.96). Measured by tail area, the standard interval's lower limit leaves 0.004 above 10 where 0.025 is nominal, and BCa leaves 0.023 on both sides. On the correlation of 0.498 between two scores (n = 22), the exact interval is (0.09, 0.75), the standard one is (0.17, 0.83), and BCa from a parametric bootstrap is (0.08, 0.75); the bootstrap histogram is long-tailed to the left, as in the figure below.
+
+![Nonparametric bootstrap of a sample correlation, 2,000 resamples, with 0.025 and 0.975 quantiles 0.118 and 0.758](../../sources/images/computer-age-statistical-inference-fig11-3.png)
+
+*Image Source: Efron & Hastie, *Computer Age Statistical Inference* (Cambridge University Press, 2016), Fig. 11.3. Observed correlation 0.498.*
+
+BCa applies three corrections: for non-normality, for bias (the constant z₀, from the share of resamples below the estimate) and for acceleration (a, how fast the standard error moves with the parameter, estimated from jackknife values). Set a = 0 and it becomes the BC interval, set z₀ = 0 and it is the percentile interval, and if the bootstrap histogram is normal it is the standard one. The standard interval's coverage error shrinks like 1/√n, so quadrupling n only halves it, while BCa's shrinks like 1/n (Hall's second-order accuracy). Two limits: BC and BCa are dependable only while |z₀| and |a| are around 0.2 or less (at z₀ = −1.01 the BC lower limit lands at the 0.000034 quantile), so computing z₀ is a cheap bias alarm even if you never use BCa; and z₀ itself needs B in the thousands, since its standard error is about 1.25/√B, or 0.028 at B = 2,000.
 
 ### When the bootstrap fails
 

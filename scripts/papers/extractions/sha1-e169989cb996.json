@@ -1,0 +1,547 @@
+{
+ "schema": 1,
+ "key": "sha1:e169989cb996",
+ "pdf": "generative-ai/05-RL/sources/murphy-rl/ch04-model-based-rl.pdf",
+ "bib": {
+  "title": "Reinforcement Learning: A Comprehensive Overview (Chapter 4: Model-based RL)",
+  "authors": [
+   "Kevin Murphy"
+  ],
+  "first_author": "Murphy",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2412.05265",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 104761,
+  "chars_total": 104761,
+  "engine": "pymupdf",
+  "skipped": "No reference list in the extracted chapter (text ends at book p.119); nothing skipped."
+ },
+ "type": "book-chapter",
+ "question": "How can a learned or known world model be used to make RL more sample efficient, through decision-time planning, background planning, and what should the model be trained to predict?",
+ "hypothesis": null,
+ "contributions": [
+  "Taxonomy of MBRL into decision-time planning (MPC/RHC, MCTS, SMC) and background planning (Dyna, Dreamer), Algorithms 12-17",
+  "Survey of world-model training targets (observation, reward, value, policy, latent self-prediction) and how they address objective mismatch (Table 4.2)",
+  "Treatment of model error, game-theoretic MBRL, and predictive representations (GVF, successor representations/features/measures)"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Learning the dynamics model needs fewer samples than learning the policy, which motivates MBRL.",
+   "kind": "reported",
+   "source": "[ZHR24]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theoretical statement in the chapter introduction; no setting given.",
+   "quote": "It can be shown that the sample complexity of learning the dynamics is less than the sample complexity of learning the policy [ZHR24].1",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, book p.83"
+  },
+  {
+   "claim": "A robot-hand controller needed about 100 years of simulated data to learn Rubik's cube manipulation, cited as model-free sample inefficiency.",
+   "kind": "reported",
+   "source": "[And+20] (OpenAI)",
+   "metric": "simulated experience",
+   "value": 100,
+   "unit": "years",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenAI robot hand, model-free RL.",
+   "quote": "needs 100 years of simulated data to learn to manipulate a rubiks cube.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, book p.83"
+  },
+  {
+   "claim": "Forward search to depth d costs exponential time in d; sparse sampling replaces |S| by m sampled next states, making cost independent of |S|.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Tree search over a model with |S| states, |A| actions, depth d, m samples per action (O((|S|x|A|)^d) vs O((m x |A|)^d)).",
+   "quote": "This process takes O((|S| × |A|)d) time.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.1.1, book p.85"
+  },
+  {
+   "claim": "Worked example: open-loop planning picks 'down' with expected reward 20, but closed-loop planning can guarantee 30, so open-loop MPC is suboptimal in stochastic environments.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "expected reward",
+   "value": 30,
+   "unit": "reward",
+   "baseline_value": 20,
+   "n": null,
+   "setup": "Fig 4.3: 9 states, 2 actions, horizon d=2; only up from s1 is stochastic (s2 or s3 with p 0.5). Open-loop plan utilities: (up,up)=15, (up,down)=15, (down,up)=20, (down,down)=20.",
+   "quote": "thereby guaranteeing a reward of 30.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.4.1, book pp.91-92"
+  },
+  {
+   "claim": "EfficientZero adds a self-prediction loss, an LSTM value prefix and Reanalyse leaf-value refresh to MuZero; all three help but the self-prediction loss gives the biggest gain.",
+   "kind": "reported",
+   "source": "[Ye+21]",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ablation reported in EfficientZero paper; no numbers given in this chapter.",
+   "quote": "but the biggest gain is from the self-prediction loss.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2.2.2, book p.89"
+  },
+  {
+   "claim": "DreamerV3 was the first method to obtain diamonds in Minecraft without human demonstrations, but it took 17 days of training.",
+   "kind": "reported",
+   "source": "[Haf+25]",
+   "metric": "training time",
+   "value": 17,
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DreamerV3, Minecraft diamond task, no human demonstration data.",
+   "quote": "(However, reaching this goal took 17 days of training.)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.1.3, book p.100"
+  },
+  {
+   "claim": "DreamerV4's world model is a latent video diffusion transformer trained offline on reward-free action-labelled Minecraft video, then a policy is trained purely in imagination.",
+   "kind": "reported",
+   "source": "[HYL25]; data from VPT [Bak+22]",
+   "metric": "WM training data",
+   "value": 2500,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DreamerV4: conditional latent video diffusion, context length c; policy initialised by behaviour cloning then actor-critic in imagination with Minecraft reward functions learned from VPT metadata.",
+   "quote": "offline on 2500 hours of reward-free but action-labeled videos (keyboard-mouse actions) of people playing",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.1.3, book p.101"
+  },
+  {
+   "claim": "DreamerV4 cuts diffusion sampling to 1-2 steps with the shortcut trick, because iterative diffusion makes the world model slow to sample.",
+   "kind": "reported",
+   "source": "[Fra+24a]",
+   "metric": "diffusion sampling steps",
+   "value": "1-2",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DreamerV4 world model sampling.",
+   "quote": "reduce the number of diffusion sampling steps to 1-2.",
+   "table": null,
+   "note": null,
+   "where": "Footnote 7, book p.101"
+  },
+  {
+   "claim": "JEPA-style encoders compress a 224x224x3 image into an embedding of about 1024, an information bottleneck that helps avoid latent collapse.",
+   "kind": "claim",
+   "source": null,
+   "metric": "embedding size",
+   "value": "~1024",
+   "unit": "dims",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT encoder example; input 224 x 224 x 3 = 150,528 values.",
+   "quote": "which often amounts to an embedding size of ∼1024.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4.2.10, book p.108"
+  },
+  {
+   "claim": "Successor representation example: under a random policy M(s13,s14)=5.97 and M(s13,s12)=0.16 in a 2D maze.",
+   "kind": "reported",
+   "source": "[Car+24] Fig 3",
+   "metric": "SR occupancy value",
+   "value": 5.97,
+   "unit": "discounted visits",
+   "baseline_value": 0.16,
+   "n": null,
+   "setup": "Fig 4.10: 2D maze, reward -0.1 everywhere except goal 1.0; random policy. Under optimal policy the same entries are 1.0 and 0.66.",
+   "quote": "(e.g., M π(s13, s14) = 5.97) and low values to states that are further away (e.g., M π(s13, s12) = 0.16).",
+   "table": null,
+   "note": null,
+   "where": "Fig 4.10 caption, book p.114"
+  }
+ ],
+ "limits": [
+  "Survey: no experiments of its own; every empirical statement is cited from other work and numbers are rare.",
+  "Convergence of self-predictive (EMA/stop-gradient) world models is proven only for linear encoders; the general nonlinear case is stated as open (Sec 4.4.2.7).",
+  "VICReg/Barlow Twins give an upper, not lower, bound on information I(z), so they do not strictly optimise Eq 4.34 (Sec 4.4.2.8).",
+  "CTRL closed-loop transcription is designed for iid images; extension to sequential world models is open (Sec 4.4.2.9).",
+  "Self-play AlphaZero-style agents remain open to adversarial attack; [Wan+23] showed humans can beat superhuman Go agents (Sec 4.2.2.1).",
+  "Successor representations assume a finite discrete state space and are policy dependent (Sec 4.5.2).",
+  "Model-free vs model-based: a limited-capacity model can be dominated by model-free RL (Sec 4.4.4.3).",
+  "Some on-policy methods are technically invalid with Dyna unless the replay buffer is not too stale (Sec 4.3.2.2)."
+ ],
+ "practices": [
+  "Interleave model learning and policy learning rather than learn a model once and plan, because the policy may query states with no data (Sec 4.1).",
+  "Use decision-time planning when the reward changes or is intrinsic, since the world model can be trained reward-free; accept it is slower (Sec 4.1).",
+  "Amortise planning into a reactive policy via background planning (Dyna, Dreamer) when decision-time search is too slow (Sec 4.3).",
+  "Start imagined rollouts from previously visited real states and keep them short (MBPO) to limit compounding model error (Sec 4.4.4.1).",
+  "In Dyna with function approximation, train the policy on real plus imagined data, with an off-policy learner for replayed data; gradually raise the real-data fraction per [Lai+21] (Sec 4.3.2.2).",
+  "Prefer latent prediction targets (reward, value, policy, self-prediction) over full observation prediction to avoid objective mismatch and distractors (Sec 4.4.2).",
+  "Prevent self-prediction collapse with a frozen EMA target network plus stop-gradient, or with variance/covariance regularisers (Sec 4.4.2.7-4.4.2.8).",
+  "Use symlog or log-transformed discretised cross-entropy for rewards/values to be robust to scale (DreamerV3, TD-MPC2) (Sec 4.4.1.3, 4.4.2.12).",
+  "Fall back to a model-free policy when the model-based policy is not confidently better (Sec 4.4.4.3).",
+  "Use successor features plus generalised policy improvement to reuse a policy library on a new reward weight w without relearning (Sec 4.5.3.1)."
+ ],
+ "terms": [
+  {
+   "term": "Model-based RL (MBRL)",
+   "definition": "learn the state transition or dynamics model pS(s'|s,a), also called a world model, and the reward function R(s,a), then use them to compute a policy",
+   "where": "Sec 4.1"
+  },
+  {
+   "term": "Decision-time planning / model predictive control",
+   "definition": "use the model to choose the next action by searching over possible future trajectories, score each, pick the best first action, step, and repeat",
+   "where": "Sec 4.1, 4.2"
+  },
+  {
+   "term": "Background planning",
+   "definition": "use the current model and policy to roll out imaginary trajectories and improve the policy with model-free RL on them",
+   "where": "Sec 4.1, 4.3"
+  },
+  {
+   "term": "Receding horizon control (RHC)",
+   "definition": "plan from the current state to a fixed depth d, take the first action, observe the new state, and replan",
+   "where": "Sec 4.2.1"
+  },
+  {
+   "term": "Sparse sampling",
+   "definition": "sample a subset of m possible next states per action in forward search, complexity O((m x |A|)^d), independent of |S|",
+   "where": "Sec 4.2.1.3"
+  },
+  {
+   "term": "UCT",
+   "definition": "MCTS action selection a = argmax Q(s,a) + c sqrt(log N(s)/N(s,a)); with prior P(s,a): Q + c P(s,a) sqrt(N(s))/(1+N(s,a))",
+   "where": "Eq 4.1-4.2"
+  },
+  {
+   "term": "Open-loop planning (MPC)",
+   "definition": "choose the sequence of future actions without knowing the future states, then replan each step",
+   "where": "Sec 4.2.4"
+  },
+  {
+   "term": "Random shooting / CEM / MPPI",
+   "definition": "sample action sequences from a proposal and keep the best; CEM refits a Gaussian to the top K; MPPI is a CEM variant whose Gaussian mean is the previous reference trajectory shifted one step",
+   "where": "Sec 4.2.4.4-4.2.4.6"
+  },
+  {
+   "term": "Dyna",
+   "definition": "train the policy on real data and imaginary model data, while the model is trained in parallel; a hybrid model-free/model-based method",
+   "where": "Sec 4.3.2"
+  },
+  {
+   "term": "Stackelberg MBRL (PAL / MAL)",
+   "definition": "ordered game where policy is leader (PAL) or model is leader (MAL), with provable local convergence, replacing unstable simultaneous gradient descent ascent",
+   "where": "Sec 4.3.1"
+  },
+  {
+   "term": "Objective mismatch",
+   "definition": "the discrepancy between how a model is trained (predict observations) and how its representation is used for control",
+   "where": "Sec 4.4.2.1"
+  },
+  {
+   "term": "Value equivalence",
+   "definition": "two states are value equivalent given a policy if V^pi(s1)=V^pi(s2); an optimal representation maps h_i,h_j to the same z only if Q*(h_i,a)=Q*(h_j,a)",
+   "where": "Sec 4.4.2.4"
+  },
+  {
+   "term": "Bisimulation",
+   "definition": "states s1,s2 are bisimilar if P(s'|s1,a) ~ P(s'|s2,a) and R(s1,a)=R(s2,a); stronger than value equivalence and policy independent",
+   "where": "Sec 4.4.2.4"
+  },
+  {
+   "term": "Representational collapse",
+   "definition": "trivially minimising self-prediction loss by mapping everything to a constant embedding",
+   "where": "Sec 4.4.2.7"
+  },
+  {
+   "term": "General value function (GVF)",
+   "definition": "V^{pi,C,gamma}(s)=E[sum gamma^t C(s_{t+1})], the discounted sum of a cumulant C instead of reward",
+   "where": "Eq 4.46"
+  },
+  {
+   "term": "Successor representation (SR)",
+   "definition": "M^pi(s,s~)=E[sum gamma^t I(s_{t+1}=s~)]; in matrix form T^pi (I - gamma T^pi)^-1; gives V for any reward as sum M(s,s~)R(s~)",
+   "where": "Eq 4.47-4.54"
+  },
+  {
+   "term": "Successor features (SF) and GPI",
+   "definition": "SF psi^pi(s)=E[sum gamma^t phi(s_{t+1})]; with R=phi^T w, V=psi^T w; generalised policy improvement a*=argmax_a max_i psi^{pi_i}(s,a)^T w_new",
+   "where": "Eq 4.60-4.71"
+  },
+  {
+   "term": "Successor measure (gamma-model)",
+   "definition": "mu^pi(s~|s)=(1-gamma) sum gamma^t P(s_{t+1}=s~|s_0=s), a normalised SR usable with continuous states",
+   "where": "Eq 4.78"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kochenderfer, Wheeler, Wray: Algorithms for Decision Making",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Sec 4.2 presentation is based in part on [KWW22, Ch. 9]; Figs 4.1 and 4.3 are from it",
+   "quote": "Our presentation is based in part on [KWW22, Ch. 9]."
+  },
+  {
+   "work": "Sutton 1990 Dyna",
+   "year": 1990,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Dyna hybrid model-free/model-based method",
+   "quote": null
+  },
+  {
+   "work": "Silver et al. AlphaGo / AlphaGo Zero / AlphaZero",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "MCTS with policy-value network and self-play",
+   "quote": null
+  },
+  {
+   "work": "Schrittwieser et al. MuZero",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "MCTS over a learned latent model",
+   "quote": null
+  },
+  {
+   "work": "Ye et al. EfficientZero",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "adds self-prediction loss, value prefix, Reanalyse",
+   "quote": null
+  },
+  {
+   "work": "Hafner et al. Dreamer, DreamerV2, V3, V4",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "background planning in a latent world model",
+   "quote": null
+  },
+  {
+   "work": "Janner et al. MBPO",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Dyna with SAC, ensemble models, short rollouts",
+   "quote": null
+  },
+  {
+   "work": "Hansen, Su, Wang TD-MPC / TD-MPC2",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "non-generative latent model with MPPI planning",
+   "quote": null
+  },
+  {
+   "work": "Rajeswaran, Mordatch, Kumar: game-theoretic framework for MBRL",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "Stackelberg PAL/MAL formulation",
+   "quote": null
+  },
+  {
+   "work": "Ni et al. Bridging state and history representations / Subramanian et al. AIS",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "OP, RP, VP, ZP, EZP criteria used in Sec 4.4.2",
+   "quote": "Our presentation is based in part on [Ni+24] (which in turn builds on [Sub+22])."
+  },
+  {
+   "work": "Carvalho et al. predictive representations",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Sec 4.5 is based on [Car+24]",
+   "quote": "Our presentation on this topic is based on [Car+24]."
+  },
+  {
+   "work": "Macfarlane et al. SPO (Sequential Monte Carlo Policy Optimisation)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "SMC planning with advantage twist",
+   "quote": null
+  },
+  {
+   "work": "LeCun JEPA, Assran et al. I-JEPA, Bardes et al. V-JEPA",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "surveys",
+   "note": "joint embedding predictive world models",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4.1",
+   "caption": "Illustration of forward search applied to a problem with 3 discrete states and 2 discrete actions.",
+   "page": "book p.85 (pdf p.3)",
+   "why": "Shows the exponential search tree."
+  },
+  {
+   "figure": "Fig 4.2",
+   "caption": "Illustration of MCTS. (a) Expanding nodes until we hit a new leaf node. (b) Propagating leaf value u back up the tree.",
+   "page": "book p.87 (pdf p.5)",
+   "why": "Select, expand, back up in one picture."
+  },
+  {
+   "figure": "Fig 4.3",
+   "caption": "Illustration of the suboptimality of open-loop planning.",
+   "page": "book p.91 (pdf p.9)",
+   "why": "The 9-state example behind the 15/20/30 numbers."
+  },
+  {
+   "figure": "Fig 4.4",
+   "caption": "Illustration of Dyna.",
+   "page": "book p.96 (pdf p.14)",
+   "why": "Acting, direct RL, model learning, planning updates and search in one loop."
+  },
+  {
+   "figure": "Table 4.1",
+   "caption": "Comparison of different world model-based methods.",
+   "page": "book p.97 (pdf p.15)",
+   "why": "Grid of background vs online planning vs exploration vs observation-prediction methods."
+  },
+  {
+   "figure": "Fig 4.5",
+   "caption": "Illustration of Dreamer world model as a factor graph.",
+   "page": "book p.99 (pdf p.17)",
+   "why": "Shows h_t, z_t, encoder, decoder, reward predictor."
+  },
+  {
+   "figure": "Table 4.2",
+   "caption": "Summary of some world-modeling methods (loss OP/ZP/RP/VP/PP/POP, policy input, usage Dyna/MCTS/Aux).",
+   "page": "book p.102 (pdf p.20)",
+   "why": "Compact map of which loss each method uses."
+  },
+  {
+   "figure": "Fig 4.6",
+   "caption": "Encoder passed to a value estimator and a world model predicting next latent, reward, termination.",
+   "page": "book p.103 (pdf p.21)",
+   "why": "Latent world model anatomy."
+  },
+  {
+   "figure": "Fig 4.7",
+   "caption": "Self-supervised learning methods. Left: masked auto-encoder. Right: self-prediction.",
+   "page": "book p.105 (pdf p.23)",
+   "why": "Contrasts masking with self-prediction."
+  },
+  {
+   "figure": "Fig 4.8",
+   "caption": "JEPA world model with two ways to avoid latent collapse: (a) self-distillation; (b) information theoretic regularizers.",
+   "page": "book p.107 (pdf p.25)",
+   "why": "Two anti-collapse designs side by side."
+  },
+  {
+   "figure": "Fig 4.9",
+   "caption": "Simplified BYOL-Explore architecture as a factor graph.",
+   "page": "book p.109 (pdf p.27)",
+   "why": "Self-prediction without stochastic latents."
+  },
+  {
+   "figure": "Fig 4.10",
+   "caption": "Successor representation for a 2D maze under random and optimal policy.",
+   "page": "book p.114 (pdf p.32)",
+   "why": "Visualises SR and the value functions derived from it."
+  },
+  {
+   "figure": "Fig 4.11",
+   "caption": "Successor features representation and generalized policy improvement.",
+   "page": "book p.116 (pdf p.34)",
+   "why": "Policy library reuse by weight vector."
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 12, book p.84",
+   "snippet": "MBRL-agent loop: collect tau_env=rollout(s,pi,T,M_env); D=D U tau_env; update model online/by replay; update policy (pi,V) on-policy/off-policy with real/imaginary rollouts, until converged",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 14, book p.85",
+   "snippet": "l(M) = -1/(NT) sum_n sum_{(s_t,a_t,r_{t+1},s_{t+1}) in tau^n} log M(s_{t+1}, r_{t+1} | s_t, a_t)  // NLL;  M = M - eta_M grad_M l(M)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.1, book p.86",
+   "snippet": "a = argmax_{a in A(s)} Q(s,a) + c sqrt(log N(s) / N(s,a))   (UCT);  prior form Eq 4.2: Q(s,a) + c P(s,a) sqrt(N(s)) / (1 + N(s,a))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.3, book p.86",
+   "snippet": "Q(s,a) <- Q(s,a) + 1/N(s,a) (u - Q(s,a))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.4, book p.88",
+   "snippet": "L(theta) = E[(V_MCTS(s) - V_theta(s))^2 - sum_a pi_MCTS_s(a) log pi_theta(a|s)];  pi_MCTS_s(a) = [N(s,a)/sum_b N(s,b)]^(1/tau)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.7/4.14, book pp.89-90",
+   "snippet": "SMC planning: q(tau) ∝ d_q(s0) prod_t T(s_{t+1}|s_t,a_t) pi(a_t|s_t) exp(A(s_t,a_t)/eta); particle weight w(tau_1:t) ∝ w(tau_1:t-1) exp(A(s_t,a_t)/eta)",
+   "verbatim": false
+  },
+  {
+   "where": "Algorithm 17, book p.96",
+   "snippet": "Tabular Dyna-Q: real step then Q(s,a) += eta[r + gamma max_a' Q(s',a') - Q(s,a)]; M_hat(s,a)=(s',r); then N times sample (s,a) from D, (s',r)=M_hat(s,a), same Q update",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.32-4.33, book p.104",
+   "snippet": "L_EZP = || M_theta(E_phi(h,a)) - sg(E_phi_bar(h')) ||_2^2 ; phi_bar_t = rho phi_bar + (1-rho) phi_bar_{t-1}  (EMA frozen target)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.43, book p.108",
+   "snippet": "TD-MPC2 loss: L = E sum_t lambda^t ( ||z'_t - sg(E(o'_t))||^2 + CE(r_hat_t, r_t) + CE(q_hat_t, q_t) )",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.49/4.54, book p.113",
+   "snippet": "M^pi = T^pi (I - gamma T^pi)^-1 ;  V^{R,pi}(s) = sum_s~ M^pi(s,s~) R(s~)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 4.71, book p.116",
+   "snippet": "a*(s; w_new) = argmax_a max_i psi^{pi_i}(s,a)^T w_new   (GPI)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Extracted chapter has no reference list; citations are bare keys like [Sil+16]. Years in lineage come from the key suffix or text; arXiv ids are null because none are printed.",
+  "Math is flattened by PDF extraction (subscripts, hats), so equations in 'code' are paraphrased (verbatim false).",
+  "No embedded instructions found."
+ ]
+}

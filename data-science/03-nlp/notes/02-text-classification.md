@@ -244,6 +244,16 @@ bigram alone 0.102  backoff chain 0.845
 
 The unigram test figure is 0.836 rather than the book's 0.812 because here it backs off to the noun default instead of returning `None` for unseen words.
 
+### How good can the labels be? (*NLP with Python*, ch. 11)
+
+A held-out score is bounded by the labels it is scored against. Bird, Klein and Loper's chapter on managing linguistic data advises double-annotating a sample, for instance 10% of the corpus, and reporting the agreement, which then serves as an upper bound on what an automatic system trained on the corpus can reach (*Natural Language Processing with Python*, ch. 11). They warn that the number depends on the task: 90% agreement would be a terrible score for part-of-speech tagging but an exceptional one for semantic role labeling (*NLP with Python*, ch. 11).
+
+Raw agreement overstates quality because annotators agree by chance. The kappa coefficient subtracts that. With four equally likely labels, two random annotators agree 25% of the time, so 25% agreement scores κ = 0, and 50% agreement scores κ = 0.333 (*NLP with Python*, ch. 11). For boundaries (tokens, sentences, entity spans) the book uses `nltk.windowdiff`, which slides a window of width 3 over two 0/1 boundary strings and gives partial credit for near misses. On the book's three strings the first two differ by 4 and the second and third by 16 (*NLP with Python*, ch. 11). The book's examples are toy strings, so treat the numbers as an illustration of the scale and not as a benchmark. The same discipline applies to labels written by an LLM judge: double-label a sample by hand and compute kappa before trusting the scores.
+
+![Three segmentations of one sequence, two close and one far](../../sources/images/nlp-with-python-fig11-4.png)
+
+*Image Source: Bird, Klein and Loper, *Natural Language Processing with Python* (O'Reilly, 2009), Fig. 11-4*
+
 ## Metrics for text classification
 
 Sarkar's chapter 5a re-derives the [evaluation metrics](../../01-classical-ml/notes/04-model-evaluation.md) on breast cancer before applying them to text. The additional points for text:

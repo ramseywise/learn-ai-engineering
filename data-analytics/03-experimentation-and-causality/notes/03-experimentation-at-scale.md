@@ -8,6 +8,7 @@ sources:
   - https://doi.org/10.1145/3097983.3097992 (Johari, Koomen, Pekelis and Walsh, Peeking at A/B Tests, KDD 2017; not held)
   - https://doi.org/10.1145/3292500.3330722 (Fabijan et al., Diagnosing Sample Ratio Mismatch, KDD 2019; not held)
   - https://doi.org/10.1145/1835804.1835810 (Tang et al., Overlapping Experiment Infrastructure, KDD 2010; not held)
+  - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 3, optional stopping)
   - https://experimentguide.com/ (Kohavi, Tang and Xu, Trustworthy Online Controlled Experiments, Cambridge, 2020; not held)
   - https://doi.org/10.1093/biomet/64.2.191
   - https://doi.org/10.1145/2783258.2788583
@@ -144,7 +145,7 @@ Three rules apply. Use a covariate measured strictly **before exposure**, becaus
 
 ## Looking early, safely
 
-[Chapter 1](01-ab-testing.md) showed that checking twenty times and stopping at the first p below 0.05 gives a false positive rate around 25%. Here is the shape of that curve under the null:
+[Chapter 1](01-ab-testing.md) showed that checking twenty times and stopping at the first p below 0.05 gives a false positive rate around 25%. One look is already enough to bend the rate: a 30-month experiment tested at the end with a one-sided 5% cutoff, but also stopped early if month 20 looks significant, has type I error 0.074 (*Computer Age*, ch. 3). Here is the shape of that curve under the null:
 
 ```python
 def fpr_with_looks(k, reps=4_000, n_max=10_000, seed=0, boundary=None):

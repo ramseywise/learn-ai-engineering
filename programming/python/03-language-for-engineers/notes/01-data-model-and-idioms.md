@@ -2,6 +2,7 @@
 origin: curated
 sources:
   - "Jake VanderPlas, A Whirlwind Tour of Python — https://github.com/jakevdp/WhirlwindTourOfPython (CC0)"
+  - "Ben Wilson, Machine Learning Engineering in Action (Manning, 2022), ch. 10 — chapter PDF in data-engineering/sources/ml-engineering-in-action/"
   - "Python docs, Data model — https://docs.python.org/3/reference/datamodel.html"
 concepts: [python-data-model, python-dunder-methods, python-mutability, python-idioms, python-unpacking]
 cleaned: 2026-11-01
@@ -67,6 +68,8 @@ def add(item, bucket=None):    # the fix
     bucket = [] if bucket is None else bucket
     ...
 ```
+
+The ML version of this bug is a feature list. Wilson's `feature_collection=[]` default (*Machine Learning Engineering in Action*, ch. 10, Listings 10.15 to 10.18) gave two separately built models the same six features, `['a', 'b', 'c', 'd', 'e', 'f']`, because the second call appended to the list the first had already filled. His fix, `feature_collection if feature_collection else list()`, also replaces an empty list the caller passed in on purpose; test `is None` as above.
 
 ## Dunder methods: how syntax maps to methods
 

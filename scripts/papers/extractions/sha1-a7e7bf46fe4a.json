@@ -1,0 +1,544 @@
+{
+ "schema": 1,
+ "key": "sha1:a7e7bf46fe4a",
+ "pdf": "data-analytics/sources/islp/ch11-survival-analysis-censored-data.pdf",
+ "bib": {
+  "title": "Survival Analysis and Censored Data (Chapter 11, An Introduction to Statistical Learning with Applications in Python)",
+  "authors": [
+   "G. James",
+   "D. Witten",
+   "T. Hastie",
+   "R. Tibshirani",
+   "J. Taylor"
+  ],
+  "first_author": "James",
+  "year": 2023,
+  "venue": "Springer Nature Switzerland AG, Springer Texts in Statistics",
+  "arxiv": null,
+  "doi": "10.1007/978-3-031-38747-0_11"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 76320,
+  "chars_total": 76320,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How do we estimate survival curves, compare groups and regress on covariates when some outcomes are only known to exceed an observed censoring time?",
+ "hypothesis": null,
+ "contributions": [
+  "Defines survival and censoring times, Kaplan-Meier, log-rank test, hazard function, Cox proportional hazards with partial likelihood, lasso/ridge-penalised Cox, C-index, time-dependent covariates, and a lifelines lab."
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "The Kaplan-Meier estimate of the probability of surviving past 20 months is 71%, higher than both naive estimates.",
+   "kind": "measured",
+   "source": null,
+   "metric": "S(20)",
+   "value": 71,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; KM estimator (11.3)",
+   "quote": "The estimated probability of survival past 20 months is 71%, which is quite a",
+   "table": null,
+   "note": null,
+   "where": "p.473 (Sec 11.3)"
+  },
+  {
+   "claim": "Naive estimate of S(20) as the share with Y>20 out of all 88 patients gives about 55%, biased low because 17 of the 40 patients not surviving to 20 months were censored.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 55,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; 48/88",
+   "quote": "the proportion of patients who are known to have survived past 20 months, i.e.",
+   "table": null,
+   "note": "Quote anchor is 'the proportion of patients who are known...'; the 55% figure is on the next text line ('or approximately 55%').",
+   "where": "p.472 (Sec 11.3)"
+  },
+  {
+   "claim": "Naive estimate of S(20) that drops patients censored before 20 months gives about 68% (48/71), biased because the censoring times are informative.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; 71 patients not censored by t=20",
+   "quote": "this comes out to 48/71, or approximately 68%.",
+   "table": null,
+   "note": null,
+   "where": "p.472 (Sec 11.3)"
+  },
+  {
+   "claim": "Log-rank test, female vs male survival, gives W = 1.2 with theoretical two-sided p = 0.2, so no rejection of equal survival.",
+   "kind": "measured",
+   "source": null,
+   "metric": "log-rank W",
+   "value": 1.2,
+   "unit": "z-statistic",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; 45 female, 43 male (lab, Out[4])",
+   "quote": "gives a log-rank test statistic of W = 1.2, which corresponds to a two-",
+   "table": null,
+   "note": "Lab output (Out[9]) prints chi-squared 1.44 (=1.2^2), p 0.23; text says p = 0.2 (rounded).",
+   "where": "p.476 (Sec 11.4)"
+  },
+  {
+   "claim": "The permutation null (1,000 permutations) gives p = 0.25 for the same log-rank test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.25,
+   "unit": "p-value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; 1,000 label permutations",
+   "quote": "a p-value of 0.25 using the permutation null distribution with 1,000 permutations.",
+   "table": null,
+   "note": null,
+   "where": "p.476 (Sec 11.4)"
+  },
+  {
+   "claim": "In the Cox model fitted to all BrainCancer predictors the hazard for males is e^0.18 = 1.2 times that for females, not significant (p = 0.61).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.2,
+   "unit": "hazard ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; Cox PH with sex, diagnosis, loc, ki, gtv, stereo",
+   "quote": "estimated hazard for a male patient is e0.18 = 1.2 times greater than for",
+   "table": "Table 11.2, row sex[Male], columns Coefficient 0.18, p-value 0.61",
+   "note": null,
+   "where": "p.482 (Table 11.2)"
+  },
+  {
+   "claim": "Each one-unit rise in the Karnofsky index multiplies the hazard by exp(-0.05) = 0.95 (p = 0.0027).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.95,
+   "unit": "hazard ratio per unit ki",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; Cox PH, all predictors",
+   "quote": "exp(−0.05) = 0.95 in the",
+   "table": null,
+   "note": "Table 11.2 prints p as <0.01; text and lab give 0.0027 (lab: 0.002693).",
+   "where": "p.482 (Sec 11.5.3)"
+  },
+  {
+   "claim": "After adjustment, HG glioma has about 8.6 times the hazard of meningioma.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.62,
+   "unit": "hazard ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BrainCancer dataset (ISLP), 88 patients with primary brain tumours treated with stereotactic radiation; 53 alive at end of study; one observation with missing diagnosis dropped (87 used); lab Out[12]",
+   "quote": "is more than eight times (i.e. e2.15 = 8.62) the risk associated with menin-",
+   "table": null,
+   "note": "Table 11.2 codes meningioma as baseline (HG glioma +2.15); the lab codes HG glioma as baseline (meningioma -2.154566). Same effect, opposite sign by coding.",
+   "where": "p.492 (Sec 11.8.1)"
+  },
+  {
+   "claim": "On the Publication data the log-rank test on positive vs negative result gives p = 0.36, but the Cox model with all covariates gives hazard ratio e^0.55 = 1.74 for positive results (z = 3.02).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.36,
+   "unit": "p-value (log-rank)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Publication dataset (ISLP), 244 NHLBI-funded trials, 156 published during study period, rest censored; Cox PH with posres, multi, clinend, mech (14 levels), sampsize, budget, impact",
+   "quote": "the log-rank test yields a very unimpressive p-value of 0.36.",
+   "table": null,
+   "note": "Adjusted result: 'e0.55 = 1.74 times higher'. Unadjusted Cox on posres alone (lab Out[19]): coef 0.148, p 0.3596. Lab model without mech: posres coef 0.5708, p 0.00118.",
+   "where": "p.483 (Sec 11.5.4)"
+  },
+  {
+   "claim": "Adjusted for other covariates, a positive trial result raises the instantaneous publication hazard by a factor of 1.74.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 1.74,
+   "unit": "hazard ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Publication dataset (ISLP), 244 NHLBI-funded trials, 156 published during study period, rest censored; Cox PH all covariates",
+   "quote": "chance of publication of a study with a positive result is e0.55 = 1.74 times",
+   "table": "Table 11.3, row posres[Yes], column Coefficient 0.55, z 3.02",
+   "note": null,
+   "where": "p.483 (Sec 11.5.4)"
+  },
+  {
+   "claim": "Lasso-penalised Cox on 244 trials split into equal train/test halves: cross-validation partial-likelihood deviance is minimised with just two non-zero predictors, budget and impact.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Publication dataset (ISLP), 244 NHLBI-funded trials, 156 published during study period, rest censored; random equal split of 244 trials; CV on the training half; Fig 11.7 y-axis range about 9.0-9.7",
+   "quote": "Specifically, this occurs when just two predictors, budget and impact, have",
+   "table": null,
+   "note": null,
+   "where": "p.485 (Sec 11.6)"
+  },
+  {
+   "claim": "Harrell's C-index of a Cox model trained on the Publication training set, evaluated on the test set, is 0.733.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Harrell C-index",
+   "value": 0.733,
+   "unit": "C-index",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Publication dataset (ISLP), 244 NHLBI-funded trials, 156 published during study period, rest censored; test half",
+   "quote": "C = 0.733. Roughly speaking, given two random papers from the test set,",
+   "table": null,
+   "note": null,
+   "where": "p.487 (Sec 11.7.1)"
+  },
+  {
+   "claim": "Risk-score tertiles (low/medium/high) from training-set coefficients separate the test-set survival curves and are correctly ordered.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Publication dataset (ISLP), 244 NHLBI-funded trials, 156 published during study period, rest censored; risk = budget*beta_budget + impact*beta_impact",
+   "quote": "clear separation between the three strata, and that the strata are correctly",
+   "table": null,
+   "note": null,
+   "where": "p.486 (Sec 11.6, Fig 11.8)"
+  },
+  {
+   "claim": "In the Cox model with one binary covariate the score test for beta=0 equals the log-rank test exactly.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "single binary covariate, no ties",
+   "quote": "the score test for H0 : β = 0 in Cox’s proportional hazards model is exactly equal to the log-rank test.",
+   "table": null,
+   "note": "Lab check: sex-only Cox likelihood-ratio test chi2 1.44, p 0.23, same as log-rank 1.44, p 0.23.",
+   "where": "p.481 (Sec 11.5.2)"
+  },
+  {
+   "claim": "Simulated call-centre data: 2,000 calls, Failed (answered) rate 0.8985 versus the 0.9 requested.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.8985,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated Cox PH data, rng seed 10, hazard h(t)=1e-5 t, wait time clipped to 1000 s, 90% answered by design",
+   "quote": "Out[28]: 0.8985",
+   "table": null,
+   "note": null,
+   "where": "p.496 (Sec 11.8.3)"
+  },
+  {
+   "claim": "Fitted Cox coefficient for Operators on the simulated data is 0.0439 against the true value 0.04; Center B -0.236 against -0.3; Time Even. 0.269 against 0.2; Time Morn. -0.148 against -0.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.043934,
+   "unit": "log hazard per operator",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated call-centre data, N=2000, true_beta=[0.04,-0.3,0,0.2,-0.2]",
+   "quote": null,
+   "table": "Lab Out[35], row Operators, column coef 0.043934 (se 0.007520)",
+   "note": "Authors: 'The coefficient estimates from the fitted Cox model are fairly accurate.'",
+   "where": "p.498 (Sec 11.8.3)"
+  },
+  {
+   "claim": "Log-rank (multivariate) tests on the simulated call-centre data: Center chi2 = 20.30 (2 df), Time of day chi2 = 49.90 (2 df), both p < 0.005.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 20.3,
+   "unit": "chi-squared",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated call-centre data, N=2000",
+   "quote": null,
+   "table": "Out[31], column test_statistic 20.30; Out[32] 49.90",
+   "note": null,
+   "where": "p.497 (Sec 11.8.3)"
+  },
+  {
+   "claim": "Dropping or ignoring censored patients biases survival estimates; independent censoring (T independent of C given features) is required and cannot be checked from the data.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Right censoring",
+   "quote": "In general, we need to assume that the censoring mechanism is indepen-",
+   "table": null,
+   "note": null,
+   "where": "p.471 (Sec 11.2)"
+  }
+ ],
+ "limits": [
+  "Only right censoring is treated; left and interval censoring are mentioned and not developed (p.471).",
+  "Independent censoring is assumed throughout and cannot be tested from data (p.471); non-informative censoring is called too technical.",
+  "Ties in failure times are ignored in the partial likelihood derivation; the tied case needs approximations (p.481).",
+  "Baseline hazard estimation, survival trees and random survival forests are only named, not worked (p.481, 488-489).",
+  "Cox model results are said to be fairly robust to violations of proportional hazards, but the check offered is only graphical (p.488).",
+  "The authors note survival analysis has received little attention in machine learning (p.470)."
+ ],
+ "practices": [
+  "Check how the status indicator is coded before analysis; the convention is 1 = event observed, 0 = censored (p.490).",
+  "Use the Kaplan-Meier estimator, not the proportion with Y>t, to estimate S(t) under censoring (p.472-473).",
+  "Use the log-rank test, not a two-sample t-test, to compare survival curves with censored data (p.474).",
+  "Fit a Cox model with all covariates rather than relying on a univariate log-rank test: confounding changed the Publication posres result from p=0.36 to highly significant (p.483).",
+  "Check proportional hazards by plotting log hazards per level, or stratifying a quantitative feature (p.488).",
+  "Do not use a fixed covariate for a state reached over time (Stanford heart transplant); use a time-dependent covariate (p.488).",
+  "Evaluate a Cox model on held-out data with risk-score strata or the C-index, because predicted survival times cannot be compared with censored true times (p.485-487).",
+  "Choose time zero deliberately (study end, birth, treatment date) because it changes what the model can measure (p.487-488).",
+  "Cross-validate the penalty lambda for Cox lasso on the partial likelihood deviance (p.485)."
+ ],
+ "terms": [
+  {
+   "term": "survival time / censoring time",
+   "definition": "T is the time the event occurs; C is the time censoring occurs; we observe Y = min(T, C)",
+   "where": "p.470, eq 11.1"
+  },
+  {
+   "term": "status indicator",
+   "definition": "delta = 1 if T <= C, 0 if T > C",
+   "where": "p.470"
+  },
+  {
+   "term": "independent censoring",
+   "definition": "conditional on the features, the event time T is independent of the censoring time C",
+   "where": "p.471"
+  },
+  {
+   "term": "right / left / interval censoring",
+   "definition": "right: T >= Y; left: T <= Y; interval: event time known to lie in an interval",
+   "where": "p.471"
+  },
+  {
+   "term": "survival function",
+   "definition": "S(t) = Pr(T > t)",
+   "where": "p.472, eq 11.2"
+  },
+  {
+   "term": "risk set",
+   "definition": "the patients alive and in the study just before death time d_k",
+   "where": "p.473"
+  },
+  {
+   "term": "Kaplan-Meier estimator",
+   "definition": "S^(d_k) = product over j<=k of (r_j - q_j)/r_j; constant between death times",
+   "where": "p.473, eq 11.3"
+  },
+  {
+   "term": "log-rank test",
+   "definition": "tests equality of two survival curves with W = sum(q1k - mu_k)/sqrt(sum Var(q1k)), mu_k = (r1k/rk) q_k; approximately N(0,1) for large samples",
+   "where": "p.475-476, eq 11.8"
+  },
+  {
+   "term": "hazard function",
+   "definition": "h(t) = lim Pr(t < T <= t + dt | T > t)/dt = f(t)/S(t); the death rate in the instant after t given survival to t",
+   "where": "p.476-477, eq 11.9-11.10"
+  },
+  {
+   "term": "likelihood with censoring",
+   "definition": "L_i = f(y_i) if uncensored, S(y_i) if censored; L = prod h(y_i)^delta_i S(y_i)",
+   "where": "p.477-478, eq 11.12-11.13"
+  },
+  {
+   "term": "proportional hazards assumption",
+   "definition": "h(t|x_i) = h0(t) exp(sum x_ij beta_j) with h0 an unspecified baseline hazard",
+   "where": "p.478, eq 11.14"
+  },
+  {
+   "term": "relative risk",
+   "definition": "exp(sum x_ij beta_j), relative to the all-zero feature vector",
+   "where": "p.479"
+  },
+  {
+   "term": "partial likelihood",
+   "definition": "PL(beta) = prod over uncensored i of exp(x_i beta)/sum over i' with y_i' >= y_i of exp(x_i' beta); h0 cancels",
+   "where": "p.480, eq 11.16"
+  },
+  {
+   "term": "partial likelihood deviance",
+   "definition": "twice the cross-validated negative log partial likelihood; plays the role of CV error",
+   "where": "p.485"
+  },
+  {
+   "term": "Harrell's concordance index",
+   "definition": "C = sum over pairs y_i>y_i' of I(eta_i' > eta_i) delta_i' divided by sum over the same pairs of delta_i'",
+   "where": "p.487"
+  },
+  {
+   "term": "time-dependent covariate",
+   "definition": "a predictor x_i(t) whose value changes over time; enters the partial likelihood as its current value at y_i",
+   "where": "p.488"
+  },
+  {
+   "term": "survival tree",
+   "definition": "regression tree whose split criterion maximises the difference between survival curves in daughter nodes",
+   "where": "p.488-489"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Selingerova et al. (2016), Survival of patients with primary brain tumors: Comparison of two statistical approaches, PLoS One 11(2):e0148733",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of BrainCancer data",
+   "quote": null
+  },
+  {
+   "work": "Gordon et al. (2013), Publication of trials funded by the National Heart, Lung, and Blood Institute, NEJM 369(20):1926-1934",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of Publication data",
+   "quote": null
+  },
+  {
+   "work": "lifelines (Python package)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "KaplanMeierFitter, CoxPHFitter, logrank_test, multivariate_logrank_test used in the lab",
+   "quote": null
+  },
+  {
+   "work": "ISLP chapters 3, 4, 6, 8 (regression, logistic regression, shrinkage, trees)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "ridge/lasso, AUC and trees carried over to the Cox setting",
+   "quote": null
+  },
+  {
+   "work": "Kaplan-Meier, Cox proportional hazards, Harrell C-index",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "named methods; the chapter gives no citation entries for them in the text read",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 11.1",
+   "caption": "Illustration of censored survival data. For patients 1 and 3, the event was observed. Patient 2 was alive when the study ended. Patient 4 dropped out of the study.",
+   "page": 3,
+   "why": "Shows T, C, Y and delta for four patients in one picture."
+  },
+  {
+   "figure": "Fig 11.2",
+   "caption": "For the BrainCancer data, the Kaplan-Meier survival curve (solid curve), along with standard error bands (dashed curves).",
+   "page": 6,
+   "why": "The step-shaped KM curve."
+  },
+  {
+   "figure": "Fig 11.3",
+   "caption": "For the BrainCancer data, Kaplan-Meier survival curves for males and females.",
+   "page": 6,
+   "why": "Motivates the log-rank test."
+  },
+  {
+   "figure": "Fig 11.4",
+   "caption": "Top: binary covariate with proportional hazards: log hazards differ by a constant and survival curves do not cross. Bottom: assumption fails, log hazards and survival curves cross.",
+   "page": 11,
+   "why": "Clearest picture of what proportional hazards means and how it fails."
+  },
+  {
+   "figure": "Fig 11.5",
+   "caption": "Survival curves for time until publication, Publication data, stratified by positive result.",
+   "page": 15,
+   "why": "Unadjusted curves that look similar (log-rank p=0.36)."
+  },
+  {
+   "figure": "Fig 11.6",
+   "caption": "Publication data survival curves by positive result after adjusting for all other covariates.",
+   "page": 17,
+   "why": "Same split as Fig 11.5 after adjustment shows clear separation; pair with Fig 11.5 to show confounding."
+  },
+  {
+   "figure": "Fig 11.7",
+   "caption": "Cross-validation results for the lasso-penalized Cox model; y-axis partial likelihood deviance, x-axis l1 norm ratio to the unpenalized fit.",
+   "page": 18,
+   "why": "U-shaped CV curve for a Cox model."
+  },
+  {
+   "figure": "Fig 11.8",
+   "caption": "Tertiles of risk in the test set using coefficients from the training set; clear separation.",
+   "page": 19,
+   "why": "How to validate a survival model without predicted-vs-true times."
+  },
+  {
+   "figure": "Table 11.1",
+   "caption": "Among patients at risk at time d_k, the number who died and survived in each of two groups.",
+   "page": 7,
+   "why": "The 2x2 table behind the log-rank statistic."
+  }
+ ],
+ "code": [
+  {
+   "where": "p.490, In [7]",
+   "snippet": "km = KaplanMeierFitter()\nkm_brain = km.fit(BrainCancer['time'], BrainCancer['status'])\nkm_brain.plot(label='Kaplan Meier estimate', ax=ax)",
+   "verbatim": true
+  },
+  {
+   "where": "p.491, In [9]",
+   "snippet": "logrank_test(by_sex['Male']['time'], by_sex['Female']['time'], by_sex['Male']['status'], by_sex['Female']['status'])",
+   "verbatim": true
+  },
+  {
+   "where": "p.491, In [10]",
+   "snippet": "cox_fit = coxph().fit(model_df, 'time', 'status')",
+   "verbatim": true
+  },
+  {
+   "where": "p.495-496, In [24]-[26]",
+   "snippet": "true_beta = np.array([0.04, -0.3, 0, 0.2, -0.2])\ntrue_linpred = X.dot(true_beta)\nhazard = lambda t: 1e-5 * t\ncum_hazard = lambda t: 1e-5 * t**2 / 2\nW = np.array([sim_time(l, cum_hazard, rng) for l in true_linpred])",
+   "verbatim": false
+  },
+  {
+   "where": "p.487, Sec 11.7.1",
+   "snippet": "C = sum_{i,i': y_i>y_i'} I(eta_i' > eta_i) delta_i' / sum_{i,i': y_i>y_i'} delta_i'",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Chapter text has no embedded instructions.",
+  "Equations extracted as split lines; quotes taken from single lines.",
+  "Exercises 1-11 (pages 498-502) are problems with no answers; Table 11.4 has 6 observations.",
+  "Method block is null (book chapter); lab setup recorded in results/code: lifelines, rng seed 10, N=2000."
+ ]
+}
