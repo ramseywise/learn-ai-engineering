@@ -1,0 +1,461 @@
+{
+ "schema": 1,
+ "key": "1511.06732",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ranzato-2015-sequence-level-training-recurrent-neural.pdf",
+ "bib": {
+  "title": "Sequence Level Training with Recurrent Neural Networks",
+  "authors": [
+   "Marc'Aurelio Ranzato",
+   "Sumit Chopra",
+   "Michael Auli",
+   "Wojciech Zaremba"
+  ],
+  "first_author": "Ranzato",
+  "year": 2016,
+  "venue": "ICLR 2016",
+  "arxiv": "1511.06732",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54833,
+  "chars_total": 54833,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can text-generation RNNs be trained to avoid exposure bias and directly optimise the test-time metric (BLEU, ROUGE) despite the huge action space?",
+ "hypothesis": "Starting REINFORCE from a cross-entropy-trained policy and gradually replacing XENT steps with REINFORCE steps (MIXER) makes sequence-level RL training work for text generation and beats word-level training.",
+ "contributions": [
+  "MIXER: Mixed Incremental Cross-Entropy Reinforce, a recipe combining incremental (curriculum) learning and a hybrid XENT+REINFORCE loss",
+  "Thorough empirical evaluation on summarization, machine translation and image captioning against XENT, DAD and the proposed End-to-End BackProp baseline"
+ ],
+ "method": {
+  "summary": "Pretrain an RNN with cross-entropy for N_XENT epochs, then for each sequence use XENT on the first s steps and REINFORCE (sampled words, sequence-level BLEU/ROUGE-2 reward, learned linear baseline) on the remaining T-s steps, lowering s by delta every N_XE+R epochs until all steps use REINFORCE. Compared with XENT, DAD (scheduled sampling) and E2E (top-k soft inputs) on three tasks.",
+  "task": "conditional text generation (abstractive summarization, German-English translation, image captioning)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Gigaword subset (Rush et al. 2015)",
+    "role": "both",
+    "size": "179414 train / 22568 val / 22259 test pairs",
+    "split": "as given",
+    "source": "first sentence to headline pairs from news",
+    "preprocessing": "lower-cased, rare words to <unk>; 12321 source and 6828 target words; targets cropped to 15 words (covers 95%)"
+   },
+   {
+    "name": "IWSLT 2014 German-English",
+    "role": "both",
+    "size": "about 153000 training sentences; 6969 val pairs (taken from training data); 6750 test pairs",
+    "split": "test = dev2010+dev2012+tst2010+tst2011+tst2012",
+    "source": "TED and TEDx subtitles",
+    "preprocessing": "Moses tokenizer, sentences over 50 words removed, lower-cased; English dict 22822, German 32009; unrolled 25 steps"
+   },
+   {
+    "name": "MSCOCO",
+    "role": "both",
+    "size": "about 80k train images; 5000 val and 5000 test sampled from the original ~40k validation set",
+    "split": "random without replacement",
+    "source": "Lin et al. 2014",
+    "preprocessing": "lower-cased, words under 3 occurrences to <unk>; 10012 words; 5 captions per image, one sampled in training, max BLEU over five at test; unrolled 15 steps; 1024 ImageNet CNN features, not back-propagated"
+   }
+  ],
+  "models": [
+   {
+    "name": "Summarization RNN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "conditional Elman RNN with convolutional attentive encoder (window q=5)",
+    "init_from": "random, then XENT pretraining",
+    "tokenizer": null,
+    "vocab": "6828 target",
+    "layers": null,
+    "hidden": "128",
+    "heads": null,
+    "context": "15 steps",
+    "other": {
+     "note": "LSTM tried, no improvement"
+    }
+   },
+   {
+    "name": "Translation LSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM with same attentive encoder",
+    "init_from": "random, then XENT pretraining",
+    "tokenizer": "Moses",
+    "vocab": "32009 German, 22822 English",
+    "layers": null,
+    "hidden": "256",
+    "heads": null,
+    "context": "25 steps",
+    "other": {}
+   },
+   {
+    "name": "Captioning LSTM",
+    "role": "proposed",
+    "params": null,
+    "architecture": "single-layer LSTM, image features fed as first word",
+    "init_from": "random, then XENT pretraining",
+    "tokenizer": null,
+    "vocab": "10012",
+    "layers": "1",
+    "hidden": "512",
+    "heads": null,
+    "context": "15 steps",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "XENT for N_XENT epochs, then XENT on first s steps plus REINFORCE with reward BLEU-4 or ROUGE-2 on remaining steps, s annealed from T by delta; single sample; baseline reward from linear regressor on hidden state trained with MSE, no backprop into RNN",
+   "optimizer": "stochastic gradient descent",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "N_XENT 20/25/20, N_XE+R 5/5/5 (summarization/translation/captioning)",
+   "tokens": null,
+   "seq_len": "15 / 25 / 15 unrolled steps",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient rescaled when norm above 10",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "delta": "2 / 3 / 2 (Table 2)",
+    "hidden_state_reset": "at start of each sequence",
+    "hparam_search": "initial learning rate, scheduling parameters, epochs searched on validation set; values not given"
+   }
+  },
+  "inference": {
+   "decoding": "greedy (argmax); beam search k up to 10 compared in Fig 6",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "15 / 25 / 15",
+   "samples": "one model per method, no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "beam": "k=1..10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-2",
+     "definition": "recall over bigrams",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU-4",
+     "definition": "geometric mean of n-gram precisions up to 4-grams with brevity penalty; corpus-level except captioning",
+     "unit": "score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "XENT",
+    "DAD (Data as Demonstrator / scheduled sampling)",
+    "E2E (End-to-End BackProp)",
+    "plain REINFORCE (never converged, not reported)"
+   ],
+   "protocol": "Test set only, model chosen on validation; input is context plus BOS; same protocol for baselines; no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/MIXER",
+   "weights": null,
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": null,
+    "where": "Table 2: N_XENT 20, 25, 20; N_XE+R 5, 5, 5; delta 2, 3, 2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "MIXER improves over XENT by 1 to 3 points across all three tasks with greedy generation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "score gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "greedy generation, test set, single model per method, hyper-parameters chosen on validation; summarization, translation, captioning",
+   "quote": "MIXER produces the best generations and improves generation over XENT by 1 to 3 points across all the tasks",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Summarization ROUGE-2: MIXER 16.22 vs XENT 13.01.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2",
+   "value": 16.22,
+   "unit": "ROUGE-2",
+   "baseline_value": 13.01,
+   "n": null,
+   "setup": "Gigaword, greedy generation, test set, single model per method, hyper-parameters chosen on validation",
+   "quote": null,
+   "table": "Figure 5 table, row summarization, column MIXER (XENT 13.01, DAD 12.18, E2E 12.78)",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Translation BLEU-4: MIXER 20.73 vs XENT 17.74 (DAD 20.12).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4",
+   "value": 20.73,
+   "unit": "BLEU-4",
+   "baseline_value": 17.74,
+   "n": null,
+   "setup": "IWSLT14 De-En, greedy generation, test set, single model per method, hyper-parameters chosen on validation",
+   "quote": null,
+   "table": "Figure 5 table, row translation, column MIXER (XENT 17.74, DAD 20.12, E2E 17.77)",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "Captioning BLEU-4: MIXER 29.16 vs XENT 27.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4",
+   "value": 29.16,
+   "unit": "BLEU-4",
+   "baseline_value": 27.8,
+   "n": null,
+   "setup": "MSCOCO, greedy generation, test set, single model per method, hyper-parameters chosen on validation",
+   "quote": null,
+   "table": "Figure 5 table, row image captioning, column MIXER (XENT 27.8, DAD 28.16, E2E 26.42)",
+   "note": null,
+   "where": "Fig 5"
+  },
+  {
+   "claim": "MIXER with greedy search is at least 10 times faster than XENT with beam size 10 and, in two of three tasks, not matched by baselines using beam search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speed ratio",
+   "value": 10,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "greedy MIXER vs XENT beam k=10",
+   "quote": "MIXER with greedy search is at least 10 times faster than the cross entropy model with a beam of size 10",
+   "table": null,
+   "note": "Speed is argued from k forward passes, not timed; accuracy claim is from Fig 6, values read only from plot.",
+   "where": "Intro, Sec 4.4"
+  },
+  {
+   "claim": "Training on the test metric matters: on summarization, BLEU of XENT 8.16 and MIXER(ROUGE) 5.80 vs 9.32 for MIXER trained with BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 9.32,
+   "unit": "BLEU",
+   "baseline_value": 8.16,
+   "n": null,
+   "setup": "Gigaword summarization, greedy",
+   "quote": "XENT and MIXER trained with ROUGE achieve a poor performance in terms of BLEU (8.16 and 5.80 versus 9.32 of MIXER trained with BLEU)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Reverse: ROUGE-2 of MIXER trained with BLEU is 15.1 vs 16.22 when trained with ROUGE.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2",
+   "value": 15.1,
+   "unit": "ROUGE-2",
+   "baseline_value": 16.22,
+   "n": null,
+   "setup": "Gigaword summarization, greedy",
+   "quote": "15.1 versus 16.22",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "Plain REINFORCE from a random policy never converged, and the hybrid XENT-REINFORCE loss without incremental learning did not take off.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all three tasks",
+   "quote": "Using the hybrid XENT-REINFORCE loss without incremental learning is also insufﬁcient to make training take off from random chance.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.4"
+  },
+  {
+   "claim": "A random language model has perplexity near the vocabulary size (about 10,000) versus about 50 for a trained one, motivating the XENT warm start.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "stated for the paper's datasets",
+   "quote": "A good language model trained on one of our data sets has perplexity of 50, whereas a random model is likely to have perplexity close to the size of the vocabulary",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2.2"
+  },
+  {
+   "claim": "E2E backprop did not prove very effective (translation 17.77 vs XENT 17.74; captioning 26.42 below XENT 27.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4",
+   "value": 17.77,
+   "unit": "BLEU-4",
+   "baseline_value": 17.74,
+   "n": null,
+   "setup": "IWSLT14 De-En greedy",
+   "quote": "Unfortunately the E2E approach did not prove to be very effective.",
+   "table": null,
+   "note": "Value 17.77 from Fig 5 table",
+   "where": "Sec 4.4, Fig 5"
+  }
+ ],
+ "limits": [
+  "Small models (128-512 hidden units) on small datasets; 2015-era RNNs, not transformers.",
+  "One run per method, no seeds or significance tests reported; learning rates and many hyper-parameters not stated.",
+  "Beam-search comparison results are shown only as a plot (Fig 6); speed claim not timed.",
+  "Authors concede reward-baseline estimation is poor and can slow convergence; training uses a single sample.",
+  "Reward is BLEU/ROUGE on a single reference, which later work showed correlates imperfectly with quality (not in paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "exposure bias",
+   "definition": "the model is only exposed to the training data distribution, instead of its own predictions",
+   "where": "Sec 1"
+  },
+  {
+   "term": "MIXER",
+   "definition": "Mixed Incremental Cross-Entropy Reinforce: XENT-pretrained policy, then incremental replacement of XENT steps by REINFORCE steps",
+   "where": "Sec 3.2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Williams 1992, REINFORCE",
+   "year": 1992,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "MIXER builds on REINFORCE",
+   "quote": "we build on the REINFORCE algorithm proposed by Williams (1992)"
+  },
+  {
+   "work": "Bengio et al. 2015, Scheduled sampling",
+   "year": 2015,
+   "arxiv": "1506.03099",
+   "relation": "baseline",
+   "note": "DAD baseline",
+   "quote": null
+  },
+  {
+   "work": "Venkatraman et al. 2015, Data as Demonstrator",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DAD",
+   "quote": null
+  },
+  {
+   "work": "Ross et al. 2011, DAGGER",
+   "year": 2011,
+   "arxiv": "1011.0686",
+   "relation": "uses-method",
+   "note": "annealed mixing of own predictions",
+   "quote": null
+  },
+  {
+   "work": "Daume III et al. 2009, SEARN",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "related",
+   "note": "first advocated using model predictions in training",
+   "quote": null
+  },
+  {
+   "work": "Rush et al. 2015, neural attention summarization",
+   "year": 2015,
+   "arxiv": "1509.00685",
+   "relation": "uses-data",
+   "note": "Gigaword split and encoder",
+   "quote": null
+  },
+  {
+   "work": "Bahdanau et al. 2015, attention",
+   "year": 2015,
+   "arxiv": "1409.0473",
+   "relation": "uses-method",
+   "note": "attentive decoder",
+   "quote": null
+  },
+  {
+   "work": "Zaremba & Sutskever 2015, RL Neural Turing Machines",
+   "year": 2015,
+   "arxiv": "1505.00521",
+   "relation": "uses-method",
+   "note": "linear reward baseline regressor",
+   "quote": null
+  },
+  {
+   "work": "Papineni et al. 2002, BLEU",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "reward and metric",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "BLEU-4 / ROUGE-2 with greedy generation and relative gains",
+   "page": 10,
+   "why": "Main results table"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Illustration of MIXER",
+   "page": 8,
+   "why": "Shows XENT prefix then sampled REINFORCE suffix with annealed s"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Search space toy case, training with exposure bias vs in expectation",
+   "page": 14,
+   "why": "Visualises exposure bias"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1",
+   "snippet": "for s = T, 1, -delta: if s == T train N_XENT epochs XENT only; else train N_XE+R epochs, XENT on first s steps, REINFORCE on remaining T-s steps",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure 5 and 6 values are in figure text; Fig 6 beam-search numbers are not in the text."
+ ]
+}

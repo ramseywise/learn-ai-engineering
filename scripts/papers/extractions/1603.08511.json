@@ -1,0 +1,561 @@
+{
+ "schema": 1,
+ "key": "1603.08511",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2016-colorful-image-colorization.pdf",
+ "bib": {
+  "title": "Colorful Image Colorization",
+  "authors": [
+   "Richard Zhang",
+   "Phillip Isola",
+   "Alexei A. Efros"
+  ],
+  "first_author": "Zhang",
+  "year": 2016,
+  "venue": "ECCV 2016",
+  "arxiv": "1603.08511",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 63296,
+  "chars_total": 63296,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can a CNN colorize grayscale photos plausibly (not just accurately) despite the multimodal ambiguity of color, and is colorization a useful pretext task for self-supervised feature learning?",
+ "hypothesis": "Posing colorization as per-pixel classification over quantized ab bins with class rebalancing, instead of L2 regression, avoids desaturated outputs and yields more vibrant, realistic colors.",
+ "contributions": [
+  "An objective (classification over 313 ab bins, rarity-based rebalancing, annealed-mean decoding) that handles multimodal color uncertainty",
+  "A 'colorization Turing test' (AMT real vs fake) for evaluating synthesis",
+  "New high-water mark on colorization trained on 1.3M ImageNet photos",
+  "Colorization as a competitive self-supervised pretext task (cross-channel encoder)"
+ ],
+ "method": {
+  "summary": "A VGG-style single-stream CNN without pooling (dilated convs, BatchNorm) maps the L channel to a distribution over Q=313 quantized ab bins per pixel. Trained with soft-encoded multinomial cross-entropy reweighted by color rarity; at test time the annealed-mean (softmax temperature T=0.38) gives the ab estimate. Evaluated by AMT fooling rate, VGG-16 classification of recolorized images, and AuC; also transferred as AlexNet pretraining to ImageNet linear probes and PASCAL.",
+  "task": "image colorization (L to ab), and self-supervised representation learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": "1.3M training images; 10k validation images for validation, a separate 10k validation images for test",
+    "split": "train on ImageNet train; validate on first 10k val images; test on separate 10k val images",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "input is L channel, target is ab channels in CIE Lab; ab quantized with grid size 10, 313 in-gamut bins; soft-encoding of target over 5 nearest bins with Gaussian kernel sigma=5"
+   },
+   {
+    "name": "PASCAL VOC 2007/2012",
+    "role": "eval",
+    "size": null,
+    "split": "VOC2007 classification and detection, VOC2012 segmentation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "LEARCH/SUN subset (Deshpande et al.)",
+    "role": "eval",
+    "size": "240 images, 6 scene categories",
+    "split": "test only",
+    "source": "Deshpande et al. 2015",
+    "preprocessing": "grayscale input (R+G+B)/3 as in that benchmark"
+   }
+  ],
+  "models": [
+   {
+    "name": "Ours (full)",
+    "role": "proposed",
+    "params": "129 MB (parameter memory)",
+    "architecture": "VGG-style CNN, conv1-conv8 blocks of 2-3 conv+ReLU then BatchNorm, no pooling, dilated convs, 224x224 input, Q=313 output via 1x1 conv",
+    "init_from": "from scratch with k-means initialization [Krahenbuhl et al.]",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8 conv blocks (Table 4)",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "feature_memory": "142 MB",
+     "runtime": "22.1 ms (Titan X, Caffe)"
+    }
+   },
+   {
+    "name": "AlexNet colorization",
+    "role": "proposed",
+    "params": null,
+    "architecture": "AlexNet retrained on colorization with full method",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "450k iterations; single-channel input, LRN removed"
+    }
+   },
+   {
+    "name": "Larsson et al.",
+    "role": "baseline",
+    "params": "588 MB",
+    "architecture": "VGG with hypercolumns",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Dahl",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Laplacian pyramid on VGG features, L2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VGG-16",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "off-the-shelf ImageNet classifier applied to recolorized images",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "multinomial cross-entropy over 313 ab bins with soft-encoded targets, pixel weights v = w_q* from rarity (lambda=1/2, sigma=5)",
+   "optimizer": "ADAM, beta1=.9, beta2=.99",
+   "lr": "3e-5 initially, dropped to 1e-5 and 3e-6 when loss plateaued at 200k and 375k iterations",
+   "lr_schedule": "manual step drops at plateau (200k, 375k iterations)",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "approximately 450k iterations",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-3",
+   "dropout": null,
+   "regularisation": "BatchNorm",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "Titan X GPU is stated only for runtime measurement; AlexNet variant trained 450k iterations; other variants followed similar protocol; L2 ft variant fine-tuned from full network"
+   }
+  },
+  "inference": {
+   "decoding": "annealed-mean: E[softmax(log z / T)] per pixel",
+   "temperature": "T = 0.38",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single deterministic forward pass; no sampling",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "T": 0.38
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AMT real vs fake fooling rate",
+     "definition": "2AFC, image pair shown 1s each at 256x256, 10 practice + 40 test pairs, 40 participants per algorithm; % of trials the fake is chosen as real",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "VGG top-1 accuracy",
+     "definition": "ImageNet classification accuracy of off-the-shelf VGG-16 on recolorized images",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AuC",
+     "definition": "area under cumulative distribution of ab L2 error, thresholds 0 to 150, normalized; class-balanced variant weights by inverse color probability (lambda=0)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "PASCAL mAP / mIU",
+     "definition": "classification and detection %mAP, segmentation %mIU after fine-tuning",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Ground truth",
+    "Gray",
+    "Random",
+    "Dahl",
+    "Larsson et al.",
+    "Ours (L2)",
+    "Ours (L2, ft)",
+    "Ours (class)",
+    "Deshpande et al. (LEARCH)",
+    "Doersch et al.",
+    "Pathak et al.",
+    "Donahue et al.",
+    "k-means init",
+    "Gaussian init"
+   ],
+   "protocol": "Bootstrap for mean, standard error and p-values; 10% of AMT trials pit ground truth against Random as attention check; one session per participant; single training run (no seeds stated)"
+  },
+  "availability": {
+   "code": "Project page richzhang.github.io/colorization (model and code)",
+   "weights": "publicly available on project website",
+   "data": "ImageNet (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": null,
+    "where": "footnote 3, p7"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Full method fools AMT participants on 32% of real-vs-fake trials, significantly above all baselines except Larsson et al. (p=0.10).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AMT fooled",
+   "value": 32.3,
+   "unit": "%",
+   "baseline_value": "27.2 (Larsson et al.); 50 for ground truth",
+   "n": null,
+   "setup": "ImageNet 10k validation test images (same as Larsson et al.), full method (classification loss + rebalancing, T=0.38)",
+   "quote": "we are able to fool participants on 32% of the",
+   "table": "Table 1, row Ours (full), column AMT Labeled Real (%)",
+   "note": "Printed as 32% in text and 32.3±2.2 in Table 1",
+   "where": "Sec 3.1, Table 1"
+  },
+  {
+   "claim": "Class rebalancing gives best class-balanced AuC among all methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "class-balanced AuC",
+   "value": 67.3,
+   "unit": "%",
+   "baseline_value": "65.9 (Larsson et al.); 65.1 (Ours class, no rebalancing)",
+   "n": null,
+   "setup": "ImageNet 10k validation test images (same as Larsson et al.), full method (classification loss + rebalancing, T=0.38)",
+   "quote": null,
+   "table": "Table 1, row Ours (full), column AuC rebal (%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Recolorizing with the full method lifts VGG-16 top-1 from the grayscale value; ground truth is 68.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": "VGG top-1",
+   "value": 56.0,
+   "unit": "%",
+   "baseline_value": "52.7 gray; Larsson 59.4",
+   "n": null,
+   "setup": "ImageNet 10k validation test images (same as Larsson et al.), full method (classification loss + rebalancing, T=0.38)",
+   "quote": "drops from 68.3% to 52.7% after ablating colors from the input",
+   "table": "Table 1, row Ours (full), column VGG Top-1 Class Acc (%)",
+   "note": null,
+   "where": "Sec 3.1, Table 1"
+  },
+  {
+   "claim": "Non-rebalanced AuC is dominated by desaturated pixels, so predicting gray scores about the same as the full method.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AuC non-rebal",
+   "value": 89.5,
+   "unit": "%",
+   "baseline_value": "89.1 (Gray)",
+   "n": null,
+   "setup": "ImageNet 10k validation test images (same as Larsson et al.), full method (classification loss + rebalancing, T=0.38)",
+   "quote": null,
+   "table": "Table 1, row Ours (full), column AuC non-rebal (%)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Ours (full) runs in 22.1 ms versus 122.1 ms for Larsson et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime",
+   "value": 22.1,
+   "unit": "ms",
+   "baseline_value": "122.1 (Larsson et al.)",
+   "n": null,
+   "setup": "Titan X GPU, Caffe",
+   "quote": null,
+   "table": "Table 1, row Ours (full), column Runtime (ms)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Annealed-mean temperature chosen to keep mode vibrancy and mean spatial coherence.",
+   "kind": "measured",
+   "source": null,
+   "metric": "T",
+   "value": 0.38,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "inference setting",
+   "quote": "We found that temperature T = 0.38,",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  },
+  {
+   "claim": "Participants identified Random colorizations as fake 87% of the time (attention check).",
+   "kind": "measured",
+   "source": null,
+   "metric": "random identified fake",
+   "value": 87,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "AMT, 10% of trials ground truth vs Random",
+   "quote": "these random colorizations as fake 87% of the time",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "On PASCAL VOC2012 segmentation the color-input colorization net reaches state-of-the-art among tested self-supervised methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIU",
+   "value": 35.6,
+   "unit": "%",
+   "baseline_value": "ImageNet-supervised 48.0; Donahue 34.9",
+   "n": null,
+   "setup": "AlexNet pretrained by colorization, 450k iterations, FCN fine-tune, color input",
+   "quote": "mation increases performance to 35.6%, above other tested algorithms.",
+   "table": "Table 2, row Ours (color), Seg all",
+   "note": null,
+   "where": "Sec 3.2, Table 2"
+  },
+  {
+   "claim": "Detection on VOC2007 falls short of Doersch et al. (51.1) and of ImageNet supervision (56.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 46.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fast R-CNN, grayscale input (47.9 with color)",
+   "quote": "46.9% and 47.9% with grayscale and color inputs, respectively.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Colorization AMT fooling rate on LEARCH/SUN 240-image test set beats Deshpande et al. (9.8%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AMT fooled",
+   "value": 17.2,
+   "unit": "%",
+   "baseline_value": "9.8",
+   "n": null,
+   "setup": "240 images, 6 scene categories, input (R+G+B)/3, not trained on SUN",
+   "quote": "fool participants in the real vs. fake task 17.2% of the time,",
+   "table": null,
+   "note": null,
+   "where": "Appendix 10.1, Table 5"
+  },
+  {
+   "claim": "L2 regression trained from scratch underperforms classification, but fine-tuned from the classification net it matches (AuC 91.5 vs 91.6).",
+   "kind": "measured",
+   "source": null,
+   "metric": "AuC non-rebal",
+   "value": 91.5,
+   "unit": "%",
+   "baseline_value": "91.2 (L2 from scratch)",
+   "n": null,
+   "setup": "Ours (L2, ft)",
+   "quote": null,
+   "table": "Table 1, row Ours (L2, ft), column AuC non-rebal (%)",
+   "note": null,
+   "where": "Sec 3.1, Table 1"
+  }
+ ],
+ "limits": [
+  "Task is judged for plausibility, not recovery of true color; AuC against ground truth does not reward the full method (89.5 vs 91.7 Larsson).",
+  "AMT 32% is still well below 50% ground-truth ceiling; failures: long-range consistency, red/blue confusion, sepia on complex indoor scenes.",
+  "Batch size, seeds, GPU count and training time are not stated; architecture detail partly on project page.",
+  "Appendix analyses were generated from the earlier v1 model, not the v2 model in the main paper.",
+  "Colorization-pretrained detection (46.9) falls short of Doersch et al. (51.1); grayscale input costs about 6% in linear probes.",
+  "Self-supervised comparisons use AlexNet with differing architectural modifications (Table 3)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "annealed-mean",
+   "definition": "mean of the softmax distribution after re-adjusting temperature T, interpolating between mean and mode",
+   "where": "Sec 2.3"
+  },
+  {
+   "term": "cross-channel encoder",
+   "definition": "autoencoder-like model whose input and output are different image channels (L to ab)",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep Colorization (Cheng et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "regression-based prior colorization",
+   "quote": null
+  },
+  {
+   "work": "Dahl, Automatic colorization",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "L2 regression with VGG features",
+   "quote": null
+  },
+  {
+   "work": "Charpiat et al., multimodal predictions",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "color as multimodal / classification",
+   "quote": null
+  },
+  {
+   "work": "Larsson et al., Learning representations for automatic colorization",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "concurrent, un-rebalanced classification loss",
+   "quote": null
+  },
+  {
+   "work": "Iizuka et al., Let there be Color",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent, regression, trained on Places",
+   "quote": null
+  },
+  {
+   "work": "Deshpande et al., large-scale automatic colorization",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "LEARCH benchmark",
+   "quote": null
+  },
+  {
+   "work": "VGG (Simonyan & Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "architecture style and evaluation classifier",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "BatchNorm after conv blocks",
+   "quote": null
+  },
+  {
+   "work": "Krahenbuhl et al., data-dependent initializations",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "k-means init and layer rescaling",
+   "quote": null
+  },
+  {
+   "work": "Context encoders (Pathak et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "self-supervised comparison",
+   "quote": null
+  },
+  {
+   "work": "Doersch et al., context prediction",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "self-supervised comparison",
+   "quote": null
+  },
+  {
+   "work": "Donahue et al., Adversarial feature learning",
+   "year": 2016,
+   "arxiv": "1605.09782",
+   "relation": "baseline",
+   "note": "concurrent self-supervised",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Russakovsky et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "train and test",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "The effect of temperature parameter T on the annealed-mean output (Equation 5).",
+   "page": 7,
+   "why": "Shows mean (desaturated) to mode (splotchy) trade-off at T=0.38"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Example results from our ImageNet test set (regression vs classification vs classification w/ rebalancing).",
+   "page": 8,
+   "why": "Side-by-side ablation of the loss choice"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Our network architecture.",
+   "page": 4,
+   "why": "Pool-free conv block architecture"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5, p6",
+   "snippet": "H(Z_h,w) = E[f_T(Z_h,w)], f_T(z) = exp(log(z)/T) / sum_q exp(log(z_q)/T)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Text extraction of tables is column-flattened; Table 1 read by row order. Table 3 reproduced from text; not recorded in results."
+ ]
+}

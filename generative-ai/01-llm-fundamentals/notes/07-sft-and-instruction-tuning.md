@@ -1,6 +1,8 @@
 ---
 origin: synthesis
 sources:
+  - https://doi.org/10.1023/a:1007379606734
+  - https://arxiv.org/abs/1703.03400
   - https://arxiv.org/abs/2501.09223
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 1, 5–7"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 1, 5–8"
@@ -84,6 +86,14 @@ The evidence for the rule:
 - **New facts make it hallucinate.** In a controlled study on PaLM 2-S closed-book QA, examples the model didn't already know were fit far more slowly than known ones. **As they were fit, test accuracy fell linearly**, so the model got worse at using what it knew. Early stopping, or relabelling unknown answers "I don't know", avoided most of the damage ([arXiv:2405.05904](https://arxiv.org/abs/2405.05904) (Gekhman et al., EMNLP 2024)).
 - **Not much semantics is needed either.** The instruction-tuning survey ([arXiv:2308.10792](https://arxiv.org/abs/2308.10792) (Zhang et al., 2023-08, preprint)) collects the critique. In Kung and Peng (2023), models tuned on task definitions stripped of meaning, or on examples with *wrong* input–output pairs, scored close to models tuned on the real ones.
 - **Instructions help on tasks never seen.** Natural Instructions collected 61 tasks from 9 datasets, each with a definition, positive and negative examples. A fine-tuned BART-base (140M) given the full instruction scored ROUGE-L 32 on held-out tasks against 13 with none, and 8 points above un-fine-tuned GPT-3 (davinci-instruct, 24). The task definition plus the positive examples alone gave the best score (33, under the same random split). When a whole category (question generation) was held out, GPT-3 led (33 against 17) ([arXiv:2104.08773](https://arxiv.org/abs/2104.08773) (Mishra et al., ACL 2022)). Only BART-base was tuned, so the model comparison mixes size with method.
+- **Multitask learning is the older idea behind it.** Caruana trained one network with a shared hidden layer on several related tasks at once. Adding the extra tasks cut RMSE by 15-30% on 1D-ALVINN steering (0.058 against 0.069 for the best single-task net), 20-30% on door-recognition tasks, and gave 5-10% fewer errors on pneumonia risk. Shuffling the extra tasks' signals removed the gain, so the benefit came from their relatedness, and some individual tasks got worse. His advice is to balance the per-task learning rates. The networks were small and the tasks few ([doi:10.1023/A:1007379606734](https://doi.org/10.1023/A:1007379606734) (Caruana, Machine Learning 1997)).
+
+![Diagram of a multitask backpropagation network: eight inputs feed a shared hidden layer, which feeds four task outputs, Task 1 to Task 4](../sources/images/caruana-multitask-fig2.png)
+*Image Source: Caruana, [Multitask Learning](https://doi.org/10.1023/A:1007379606734) (1997), Fig. 2*
+- **Meta-learning is the contrast with in-context learning.** MAML trains the initial weights so that a few gradient steps on a new task work well. On MiniImagenet 5-way 1-shot it reached 48.70% accuracy (±1.84, 95% interval over tasks) against 43.44% for the meta-learner LSTM; a first-order variant scored 48.07 at about a 33% speed-up. It was tested on Omniglot, sinusoid regression and reinforcement learning, not on language models. Instruction-tuned models adapt without a weight update, which is what separates them from this line ([arXiv:1703.03400](https://arxiv.org/abs/1703.03400) (Finn et al., ICML 2017)).
+
+![MAML diagram: an initial parameter vector theta, with gradient arrows for tasks 1 to 3, sits on the meta-learning path, and dashed adaptation steps lead from it to the task-specific optima theta-1*, theta-2* and theta-3*](../sources/images/finn-maml-fig1.png)
+*Image Source: Finn et al., [Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks](https://arxiv.org/abs/1703.03400) (2017), Fig. 1*
 
 In a multi-turn dialogue you do not need one pass per turn. Mask the user turns and grade every assistant turn in a single forward pass, since one causal pass already conditions each turn on all earlier ones (*Foundations of LLMs*, ch. 4, 4.2.1, Eq. 4.5–4.7). The book's remedies for forgetting are a smaller learning rate, early stopping, regularisation toward the pretrained weights and diverse data.
 

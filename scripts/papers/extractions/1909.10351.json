@@ -1,0 +1,540 @@
+{
+ "schema": 1,
+ "key": "1909.10351",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/jiao-2020-tinybert.pdf",
+ "bib": {
+  "title": "TinyBERT: Distilling BERT for Natural Language Understanding",
+  "authors": [
+   "Xiaoqi Jiao",
+   "Yichun Yin",
+   "Lifeng Shang",
+   "Xin Jiang",
+   "Xiao Chen",
+   "Linlin Li",
+   "Fang Wang",
+   "Qun Liu"
+  ],
+  "first_author": "Jiao",
+  "year": 2020,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2020",
+  "arxiv": "1909.10351",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50713,
+  "chars_total": 50713,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a large BERT be distilled into a much smaller Transformer student that keeps most of its accuracy on NLU tasks?",
+ "hypothesis": "Distilling attention matrices, hidden states, embeddings and logits at both pre-training and task-specific stages (with data augmentation) transfers general and task knowledge better than prior BERT distillation.",
+ "contributions": [
+  "A new Transformer distillation method (attention, hidden-state, embedding and prediction-layer losses)",
+  "A two-stage framework: general distillation then task-specific distillation with data augmentation",
+  "TinyBERT4 reaches over 96.8% of BERT-base on GLUE, 7.5x smaller and 9.4x faster, beating 4-layer baselines",
+  "TinyBERT6 performs on par with BERT-base on GLUE"
+ ],
+ "method": {
+  "summary": "Student Transformer (4 or 6 layers) learns to match teacher BERT-base's embeddings, per-layer attention matrices and hidden states (via learned projection), and logits. General distillation on Wikipedia from pre-trained BERT initialises the student; task-specific distillation then runs on a word-replacement-augmented task set with the fine-tuned BERT as teacher.",
+  "task": "knowledge distillation of BERT for GLUE and SQuAD",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English Wikipedia",
+    "role": "pretrain",
+    "size": "2,500M words",
+    "split": null,
+    "source": "general distillation corpus",
+    "preprocessing": "max sequence length 128"
+   },
+   {
+    "name": "GLUE (CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, RTE, WNLI)",
+    "role": "both",
+    "size": "CoLA 8.5k, MNLI 393k, MRPC 3.7k, QNLI 105k, QQP 364k, RTE 2.5k, SST-2 67k, STS-B 5.7k train (Table 5 header)",
+    "split": "test via official GLUE server (Table 1); dev for ablations",
+    "source": "Wang et al. 2018",
+    "preprocessing": "augmented by Na=20 samples per example; max len 64 single-sentence, 128 pair tasks; STS-B uses original train set for prediction-layer stage"
+   },
+   {
+    "name": "SQuAD v1.1 and v2.0",
+    "role": "both",
+    "size": null,
+    "split": "dev",
+    "source": "Rajpurkar et al. 2016, 2018",
+    "preprocessing": "prediction-layer distillation on original training set, not augmented"
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base",
+    "role": "teacher",
+    "params": "109M",
+    "architecture": "Transformer encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "ffn": "3072",
+     "FLOPs": "22.5B"
+    }
+   },
+   {
+    "name": "TinyBERT4",
+    "role": "proposed",
+    "params": "14.5M",
+    "architecture": "Transformer encoder",
+    "init_from": "general distillation from pre-trained BERT-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4",
+    "hidden": "312",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "ffn": "1200",
+     "FLOPs": "1.2B",
+     "speedup": "9.4x on single NVIDIA K80",
+     "layer_map": "g(m)=3*m"
+    }
+   },
+   {
+    "name": "TinyBERT6",
+    "role": "proposed",
+    "params": "67.0M",
+    "architecture": "Transformer encoder",
+    "init_from": "general distillation",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "6",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "ffn": "3072",
+     "FLOPs": "11.3B",
+     "speedup": "2.0x"
+    }
+   },
+   {
+    "name": "BERT-TINY, BERT-SMALL, BERT4-PKD, DistilBERT4/6, BERT6-PKD, PD, MobileBERT-TINY",
+    "role": "baseline",
+    "params": "14.5M / 29.2M / 52.2M / 52.2M / 67.0M ...",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sum over layers of lambda_m * L_layer: MSE on embeddings, MSE on hidden states (with projection Wh) plus MSE on unnormalised attention matrices per head, soft cross-entropy on logits (t=1); no prediction-layer loss in general distillation",
+   "optimizer": null,
+   "lr": "general: as BERT pre-training (not stated); task intermediate-layer 5e-5; prediction-layer from {1e-5,2e-5,3e-5} chosen on dev",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "intermediate-layer 32; prediction-layer from {16,32}",
+   "steps": null,
+   "epochs": "general 3; task intermediate-layer 20 (10 for MNLI, QQP, QNLI; 50 for CoLA); prediction-layer 3",
+   "tokens": null,
+   "seq_len": "128 general; 64 single-sentence / 128 pair in task stage",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "inference speed measured on single NVIDIA K80 GPU; training hardware not stated",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "lambda_m": "1 for every layer",
+    "data_augmentation": "pt=0.4, Na=20, K=15; BERT MLM candidates for single-piece words, GloVe neighbours for multi-piece words",
+    "other_hparams_general": "same as BERT pre-training (Devlin 2019)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": "t=1 in distillation soft cross-entropy",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per setting; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE task metrics (Acc, F1, Matthews corr, Pearson/Spearman)",
+     "definition": "as in GLUE paper; Avg is the mean over tasks in Table 1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SQuAD EM / F1",
+     "definition": "exact match and token F1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT-TINY",
+    "BERT-SMALL",
+    "BERT-PKD",
+    "DistilBERT",
+    "PD",
+    "MobileBERT-TINY",
+    "Poor Man's BERT",
+    "BERT-of-Theseus",
+    "MiniLM"
+   ],
+   "protocol": "Test: official GLUE server, single-task models. Ablations on dev. 4-layer baselines retrained with released code and suggested hyperparameters; 6-layer baselines use reported numbers or released models."
+  },
+  "availability": {
+   "code": "https://github.com/huawei-noah/Pretrained-Language-Model/tree/master/TinyBERT",
+   "weights": "released at same URL",
+   "data": "public GLUE and SQuAD"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.data_augmentation",
+    "quote": "We set pt = 0.4, Na = 20, K = 15 for all",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "TinyBERT4 keeps most of BERT-base's GLUE accuracy while being much smaller and faster",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": 77.0,
+   "unit": "GLUE test avg",
+   "baseline_value": 79.5,
+   "n": null,
+   "setup": "TinyBERT4 (14.5M, 4 layers) vs BERT-base teacher, GLUE official test set, single-task",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row TinyBERT4 (ours), column Avg"
+  },
+  {
+   "claim": "TinyBERT4 is 7.5x smaller and 9.4x faster than BERT-base",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.4,
+   "unit": "x speedup",
+   "baseline_value": null,
+   "n": null,
+   "setup": "K80 GPU inference, vs BERT-base",
+   "note": null,
+   "where": "Abstract",
+   "quote": "while being 7.5x smaller and 9.4x faster on inference"
+  },
+  {
+   "claim": "TinyBERT4 beats BERT-TINY by a large margin on GLUE average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 6.8,
+   "unit": "% avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 4-layer architecture, GLUE test",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "obtains a large improvement of 6.8% on"
+  },
+  {
+   "claim": "TinyBERT4 beats 4-layer KD baselines BERT4-PKD and DistilBERT4 by at least 4.4% with about 28% of their parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.4,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE test, 4-layer baselines retrained",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "by a margin of at least 4.4%"
+  },
+  {
+   "claim": "TinyBERT6 matches BERT-base on GLUE test average",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE avg",
+   "value": 79.4,
+   "unit": "GLUE test avg",
+   "baseline_value": 79.5,
+   "n": null,
+   "setup": "TinyBERT6 (67M) vs teacher 79.5",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row TinyBERT6 (ours), column Avg"
+  },
+  {
+   "claim": "TinyBERT4 matches 24-layer MobileBERT-TINY average with 38.7% of its FLOPs",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 38.7,
+   "unit": "% FLOPs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE test; comparison flagged by authors as possibly unfair (different teacher and task-agnostic distillation)",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "only 38.7% FLOPs"
+  },
+  {
+   "claim": "Removing general distillation drops TinyBERT4 dev average",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 72.5,
+   "unit": "dev avg",
+   "baseline_value": 75.6,
+   "n": null,
+   "setup": "Ablation on MNLI-m, MNLI-mm, MRPC, CoLA, dev",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o GD, column Avg"
+  },
+  {
+   "claim": "Removing task-specific distillation drops dev average more",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68.5,
+   "unit": "dev avg",
+   "baseline_value": 75.6,
+   "n": null,
+   "setup": "same ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o TD, column Avg"
+  },
+  {
+   "claim": "Removing data augmentation drops dev average about as much as removing TD",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68.4,
+   "unit": "dev avg",
+   "baseline_value": 75.6,
+   "n": null,
+   "setup": "same ablation",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row w/o DA, column Avg"
+  },
+  {
+   "claim": "Removing Transformer-layer distillation collapses performance",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 56.3,
+   "unit": "dev avg",
+   "baseline_value": 75.6,
+   "n": null,
+   "setup": "ablation of objectives",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/o Trm, column Avg"
+  },
+  {
+   "claim": "Attention distillation matters more than hidden-state distillation",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71.0,
+   "unit": "dev avg (w/o Attn)",
+   "baseline_value": 75.6,
+   "n": null,
+   "setup": "w/o Hidn gives 72.9",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row w/o Attn, column Avg"
+  },
+  {
+   "claim": "Uniform layer mapping beats top and bottom mappings",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 75.6,
+   "unit": "dev avg",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Top 70.9, Bottom 71.3",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Uniform, column Avg"
+  },
+  {
+   "claim": "TinyBERT6 outperforms same-architecture baselines by 2.6% on average (test)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GLUE test",
+   "note": null,
+   "where": "Sec 4.4",
+   "quote": "margin of 2.6% on average"
+  },
+  {
+   "claim": "TinyBERT4 SQuAD 2.0 dev F1 far above BERT4-PKD and DistilBERT4",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 71.8,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD v2.0 dev",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row TinyBERT4, column SQuAD 2.0 F1"
+  }
+ ],
+ "limits": [
+  "Only BERT-base teacher; wider/deeper teachers (BERT-large) left to future work",
+  "Authors flag MobileBERT comparison as possibly unfair",
+  "Prediction-layer-only claims about no extra gain at pre-training come from unreported preliminary experiments",
+  "No seeds, optimiser, warmup, training hardware or compute reported; single-run numbers",
+  "Adaptive layer choice per task left open; QA TinyBERT left as future work",
+  "GLUE only (plus SQuAD); English only"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Distilling the knowledge in a neural network (Hinton et al.)",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "extends",
+   "note": "teacher-student KD basis; prediction-layer loss",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "teacher and pre-training hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "Patient KD for BERT (Sun et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BERT-PKD",
+   "quote": null
+  },
+  {
+   "work": "DistilBERT (Sanh et al.)",
+   "year": 2019,
+   "arxiv": "1910.01108",
+   "relation": "baseline",
+   "note": "pre-training distillation baseline",
+   "quote": null
+  },
+  {
+   "work": "Well-read students learn better (Turc et al.)",
+   "year": 2019,
+   "arxiv": "1908.08962",
+   "relation": "baseline",
+   "note": "BERT-small, PD",
+   "quote": null
+  },
+  {
+   "work": "MobileBERT (Sun et al.)",
+   "year": 2020,
+   "arxiv": "2004.02984",
+   "relation": "baseline",
+   "note": "concurrent",
+   "quote": null
+  },
+  {
+   "work": "MiniLM (Wang et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "dev-set comparison",
+   "quote": null
+  },
+  {
+   "work": "What does BERT look at? (Clark et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates attention-matrix distillation",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "SQuAD v1.1 / v2.0 (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "appendix B",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "data augmentation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The details of Transformer-layer distillation consisting of Attn_loss and Hidn_loss.",
+   "page": 4165,
+   "why": "Shows teacher-vs-student layer losses and the d' to d projection"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The illustration of TinyBERT learning.",
+   "page": 4164,
+   "why": "Two-stage pipeline in one diagram"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 7-10",
+   "snippet": "Lattn = 1/h sum_i MSE(A_i^S, A_i^T); Lhidn = MSE(H^S W_h, H^T); Lpred = CE(z^T/t, z^S/t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure pages given as printed page numbers (4164, 4165)"
+ ]
+}

@@ -1,0 +1,498 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d13-1176",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kalchbrenner-2013-recurrent-continuous-translation-models.pdf",
+ "bib": {
+  "title": "Recurrent Continuous Translation Models",
+  "authors": [
+   "Nal Kalchbrenner",
+   "Phil Blunsom"
+  ],
+  "first_author": "Kalchbrenner",
+  "year": 2013,
+  "venue": "Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 1700-1709",
+  "arxiv": null,
+  "doi": "10.18653/v1/d13-1176"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38958,
+  "chars_total": 38958,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a translation model built only on continuous representations, with a recurrent target language model conditioned on a convolutional source sentence model and no alignments or phrase units, model and rescore translations well?",
+ "hypothesis": "Continuous representations and the transformations between them can make up for the lack of explicit alignments and avoid phrase-pair sparsity.",
+ "contributions": [
+  "Recurrent Continuous Translation Models (RCTM I and II): target recurrent language model conditioned on a convolutional sentence model of the source",
+  "Perplexity >43% lower than alignment-based models, sensitivity to word order, syntax and meaning, and n-best rescoring matching cdec"
+ ],
+ "method": {
+  "summary": "A recurrent language model generates the French sentence word by word; the English source is encoded by a convolutional sentence model (RCTM I, one vector added to every hidden layer) or by a truncated 4-gram convolutional model inverted to target length (RCTM II, one vector per target position, with Poisson length model). Trained jointly end to end with Adagrad and BPTT on 145k sentence pairs.",
+  "task": "English-to-French statistical machine translation (conditional language modelling, n-best rescoring)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 2013 news commentary En-Fr",
+    "role": "train",
+    "size": "144953 sentence pairs (<80 words); about 4.1M English words and 4.5M French words",
+    "split": "train",
+    "source": "Eighth Workshop on Machine Translation (WMT) 2013 training data",
+    "preprocessing": "words occurring twice or less replaced by <unknown>; vocabularies 25403 English and 34831 French"
+   },
+   {
+    "name": "WMT-NT 2008",
+    "role": "dev",
+    "size": "2051 sentence pairs",
+    "split": "validation throughout",
+    "source": "WMT news test",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT-NT 2009/2010/2011/2012",
+    "role": "eval",
+    "size": "2525, 2489, 3003, 3003 sentence pairs",
+    "split": "test",
+    "source": "WMT news test sets",
+    "preprocessing": "unknown words replaced by <unknown> for perplexity"
+   }
+  ],
+  "models": [
+   {
+    "name": "RCTM I",
+    "role": "proposed",
+    "params": null,
+    "architecture": "recurrent LM conditioned on CSM sentence vector added to each hidden layer",
+    "init_from": "random",
+    "tokenizer": "word-level",
+    "vocab": "25403 English, 34831 French (output factorised into 256 classes)",
+    "layers": "CSM with r=15 weight matrices",
+    "hidden": "q=256",
+    "heads": null,
+    "context": "whole sentence (<80 words in training)",
+    "other": {}
+   },
+   {
+    "name": "RCTM II",
+    "role": "proposed",
+    "params": null,
+    "architecture": "recurrent LM conditioned on per-position vectors from convolutional 4-gram model (CGM, r=7) and its inverse (icgm, s=9); Poisson target length model",
+    "init_from": "random",
+    "tokenizer": "word-level",
+    "vocab": "25403 English, 34831 French",
+    "layers": "CGM 7 weight matrices, inverse CGM 9",
+    "hidden": "q=256",
+    "heads": null,
+    "context": null,
+    "other": {
+     "n": "4"
+    }
+   },
+   {
+    "name": "KN-5",
+    "role": "baseline",
+    "params": null,
+    "architecture": "5-gram target LM, modified Kneser-Ney",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "5-gram",
+    "other": {}
+   },
+   {
+    "name": "RLM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "unconditional target recurrent LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "IBM Model 1",
+    "role": "baseline",
+    "params": null,
+    "architecture": "alignment-based",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "FA-IBM 2 (FastAligner)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "reparameterised IBM Model 2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "cdec",
+    "role": "baseline",
+    "params": null,
+    "architecture": "12-feature translation system (5 translation models, 2 LM features, word penalty)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "average of summed cross-entropy of predicted French words given English input, plus l2 regularisation",
+   "optimizer": "mini-batch Adagrad",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "<80 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "l2 (coefficient not given)",
+   "hardware": "3 multicore CPUs",
+   "compute": null,
+   "wall_clock": "about 15 hours per RCTM",
+   "seeds": null,
+   "other": {
+    "bptt_depth_d": "6",
+    "q": "256",
+    "target_vocab_classes": "256",
+    "random_init": "all weights including English vectors"
+   }
+  },
+  "inference": {
+   "decoding": "for generation: sample with replacement 2000 sentences word by word, restricting each step to the top 5 words, fixed target length m = gold length; rank by model probability",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "2000 sampled candidates per source sentence (Table 3)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "rescoring": "cdec 1000-best lists; RCTM log probability linearly interpolated with word penalty, weight tuned on validation data",
+    "length_model": "P(m|e)=Poisson(lambda k), lambda value not given"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "perplexity of the model on reference translations",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "Bleu",
+     "definition": "Bleu of 1000-best rescored output (variant not stated)",
+     "unit": "Bleu",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "KN-5",
+    "RLM",
+    "IBM 1",
+    "FA-IBM 2",
+    "cdec (12 features)"
+   ],
+   "protocol": "single run per model; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "footnote 1: code and models available at nal.co",
+   "weights": "same footnote",
+   "data": "WMT public data"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.wall_clock",
+    "quote": "The training of an RCTM takes about 15",
+    "where": "5.1.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RCTM II perplexity on WMT-NT 2009 is far below FA-IBM 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 86,
+   "unit": "perplexity",
+   "baseline_value": 153,
+   "n": null,
+   "setup": "WMT 2013 news-commentary En->Fr, 144953 training pairs, q=256, test on WMT-NT 2009-2012",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row RCTM II, column 2009"
+  },
+  {
+   "claim": "RCTM II is more than 43% lower in perplexity than alignment-based models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative perplexity reduction",
+   "value": ">43",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2013 news-commentary En->Fr, 144953 training pairs, q=256, test on WMT-NT 2009-2012",
+   "note": null,
+   "where": "Abstract; 5.2",
+   "quote": "is > 43%"
+  },
+  {
+   "claim": "RCTM II is 40% lower in perplexity than RCTM I.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative perplexity reduction",
+   "value": 40,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT 2013 news-commentary En->Fr, 144953 training pairs, q=256, test on WMT-NT 2009-2012",
+   "note": "Sentence in 5.2 reads 'that is 40% lower than the perplexity of the RCTM I'; line-wrapped in cache.",
+   "where": "5.2",
+   "quote": "lower than the perplexity of the"
+  },
+  {
+   "claim": "RCTM I perplexity on WMT-NT 2009 is only modestly below FA-IBM 2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 143,
+   "unit": "perplexity",
+   "baseline_value": 153,
+   "n": null,
+   "setup": "WMT 2013 news-commentary En->Fr, 144953 training pairs, q=256, test on WMT-NT 2009-2012",
+   "note": null,
+   "where": null,
+   "table": "Table 1, row RCTM I, column 2009"
+  },
+  {
+   "claim": "Permuting source words raises RCTM II perplexity (WMT-NT 2009) from 86 to 174.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 174,
+   "unit": "perplexity",
+   "baseline_value": 86,
+   "n": null,
+   "setup": "WMT 2013 news-commentary En->Fr, 144953 training pairs, q=256, test on WMT-NT 2009-2012; words of English sentences randomly permuted in train and test",
+   "note": null,
+   "where": null,
+   "table": "Table 2, row RCTM II, column 2009"
+  },
+  {
+   "claim": "RCTM II rescoring plus word penalty reaches Bleu 19.8 on WMT-NT 2009 vs 19.9 for cdec.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bleu",
+   "value": 19.8,
+   "unit": "Bleu",
+   "baseline_value": 19.9,
+   "n": null,
+   "setup": "cdec 1000-best lists rescored on WMT-NT 2009",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row RCTM II + WP, column 2009"
+  },
+  {
+   "claim": "On WMT-NT 2012 RCTM II + WP gets 21.7 Bleu vs cdec 21.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bleu",
+   "value": 21.7,
+   "unit": "Bleu",
+   "baseline_value": 21.8,
+   "n": null,
+   "setup": "cdec 1000-best lists rescored on WMT-NT 2012",
+   "note": null,
+   "where": null,
+   "table": "Table 4, row RCTM II + WP, column 2012"
+  },
+  {
+   "claim": "Reducing cdec to one core translation probability and LM features drops its score by two to five tenths.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Bleu drop",
+   "value": "0.2-0.5",
+   "unit": "Bleu",
+   "baseline_value": null,
+   "n": null,
+   "setup": "cdec reduced feature set",
+   "note": null,
+   "where": "5.4",
+   "quote": "drops its score by two"
+  },
+  {
+   "claim": "Training one RCTM takes about 15 hours on 3 multicore CPUs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": 15,
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RCTM, 145k sentence pairs",
+   "note": null,
+   "where": "5.1.3",
+   "quote": "takes about 15"
+  }
+ ],
+ "limits": [
+  "Small experiment (145k pairs, q=256); authors only argue the models should scale like RLMs",
+  "Bleu differences between RCTMs and cdec are small ('little variance'); no significance tests",
+  "Used only for rescoring cdec n-best lists; no standalone decoder Bleu reported, generation shown only by sampling at gold length",
+  "RCTM I conditions every target word on one source vector; authors note target words depend on parts of source unevenly",
+  "Target length for RCTM I implicit with bias to short sentences; RCTM II uses a Poisson length model",
+  "Hyperparameters (learning rate, batch size, l2 weight, Poisson lambda) not stated",
+  "No alignment or attention mechanism; superseded by sequence-to-sequence and attention models"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "RCTM",
+   "definition": "Recurrent Continuous Translation Model: a target recurrent language model conditioned on a continuous representation of the source sentence",
+   "where": "Abstract"
+  },
+  {
+   "term": "CSM",
+   "definition": "Convolutional Sentence Model: builds a sentence vector from word vectors by successive one-dimensional convolutions",
+   "where": "3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Recurrent neural network based language model",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Mikolov et al.; RLM and BPTT",
+   "quote": null
+  },
+  {
+   "work": "Recurrent Convolutional Neural Networks for Discourse Compositionality",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Kalchbrenner and Blunsom; the convolutional sentence model",
+   "quote": null
+  },
+  {
+   "work": "Continuous space translation models (Schwenk 2006, 2012; Le et al. 2012)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier phrase-based continuous translation models limited to fixed-size phrases",
+   "quote": null
+  },
+  {
+   "work": "A neural probabilistic language model",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Bengio et al.",
+   "quote": null
+  },
+  {
+   "work": "Extensions of recurrent neural network language model",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Mikolov et al.; class factorisation of output vocabulary",
+   "quote": null
+  },
+  {
+   "work": "Adaptive subgradient methods (Adagrad)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Duchi et al.",
+   "quote": null
+  },
+  {
+   "work": "The mathematics of statistical machine translation (IBM Model 1)",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Brown et al.",
+   "quote": null
+  },
+  {
+   "work": "A simple, fast, and effective reparameterization of IBM Model 2",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Dyer et al.; FA-IBM 2",
+   "quote": null
+  },
+  {
+   "work": "cdec",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Dyer et al.; rescoring baseline",
+   "quote": null
+  },
+  {
+   "work": "WMT 2013 news commentary and news test sets",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "En-Fr",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 3",
+   "caption": "A graphical depiction of the two RCTMs.",
+   "page": 5,
+   "why": "Shows RCTM I (csm vector added to every hidden layer) vs RCTM II (cgm, transform T, icgm per-position vectors)"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "English source sentences, gold French and RCTM II candidates ranked out of 2000 samples",
+   "page": 7,
+   "why": "Shows gender/number/tense agreement and synonym substitution"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 8, p.4",
+   "snippet": "s = S * csm(e); h1 = sigma(I v(f1) + s); h_{i+1} = sigma(R h_i + I v(f_{i+1}) + s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found. Equations garbled in text layer; read from reconstruction. Text-layer footnote 'nal.co' truncated URL."
+ ]
+}

@@ -1,0 +1,87 @@
+{
+ "schema": 1,
+ "key": "2010.03150",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clement-2020-pymt5.pdf",
+ "bib": {"title": "PYMT5: multi-mode translation of natural language and PYTHON code with transformers", "authors": ["Colin B. Clement", "Dawn Drain", "Jonathan Timcheck", "Alexey Svyatkovskiy", "Neel Sundaresan"], "first_author": "Clement", "year": 2020, "venue": "EMNLP 2020", "arxiv": "2010.03150", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 37986, "chars_total": 37986, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can one text-to-text transformer, pre-trained with span masking on Python and trained to translate between all method features, both generate method bodies from docstrings and summarize code into docstrings better than GPT2 baselines?",
+ "hypothesis": "Treating Python and docstrings as natural languages in one shared vocabulary, with multi-mode training and pre-training, beats single-task autoregressive baselines.",
+ "contributions": ["PYMT5, a multi-mode Python method text-to-text transformer", "Largest parallel corpus of Python methods and docstrings (26M methods, 7.7M with docstrings)", "Control-token prefixes for style-conditioned docstring generation", "25x faster docstring-generation convergence from span-masking pre-training"],
+ "method": {
+  "summary": "A 374M encoder-decoder transformer is pre-trained with T5-style span masking on 27GB of Python files, then trained on method-docstring pairs to translate between all feature pairs of signature, docstring and body, steered by a '# target <feature> (<style>)' comment prefix. Compared with GPT2-medium (random or English initialised) on method and docstring generation.",
+  "task": "method generation from signature+docstring; docstring generation from signature+body",
+  "trains": true,
+  "datasets": [
+   {"name": "GitHub Python corpus", "role": "pretrain", "size": "2.3 million unique files, about 27GB raw text (from 5.3M files, 112k of 118k repos cloned)", "split": "90% train / 5% val / 5% test, split by repository", "source": "public GitHub repos labelled primarily Python, at least 10 stars, commit in past 5 years", "preprocessing": "literal duplicate files removed, finer clones kept; license text removed"},
+   {"name": "PyMT5 method-docstring corpus", "role": "both", "size": "2.6e7 methods, 7.7e6 with docstring", "split": "90/5/5 by repository; test set 1,285,794 methods (method gen), 383695 methods (docstring gen)", "source": "ast extraction from the same files", "preprocessing": "ast + astunparse so no syntactically incorrect code is seen; 2to3 and autopep8 for failed parses (97.3% parsed); comments ignored; docstrings cleaned of non-ASCII, unicode normalised, commit hashes/paths/URLs replaced by placeholders"},
+   {"name": "CodeSearchNet Python test", "role": "eval", "size": "500k Python methods with docstrings in CSN", "split": "public test set", "source": "Husain et al. 2019", "preprocessing": "CSN removed methods with 'test' in the name and under 3 lines"},
+   {"name": "Barone and Sennrich test", "role": "eval", "size": "about 200x smaller than the authors' test set", "split": "their test set", "source": "Barone and Sennrich 2017", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "PyMT5", "role": "proposed", "params": "374 million", "architecture": "encoder-decoder transformer", "init_from": "span-masking pre-trained on 27GB Python; all experiments start from it", "tokenizer": "BPE trained on raw Python files (extended GPT tokenizer with whitespace tokens)", "vocab": "50181", "layers": "6 encoder / 6 decoder", "hidden": "1472", "heads": null, "context": null, "other": {}},
+   {"name": "GPT2-medium random init", "role": "baseline", "params": "345 million", "architecture": "decoder-only", "init_from": "random", "tokenizer": "extended GPT2 tokenizer with whitespace tokens", "vocab": "50337", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "GPT2-medium English", "role": "baseline", "params": "345 million", "architecture": "decoder-only", "init_from": "OpenAI English checkpoint via HuggingFace", "tokenizer": "extended GPT2 tokenizer", "vocab": "50337", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "Pre-training: T5-style span masking, random spans up to length 3 replaced by numbered mask tokens, target is mask followed by replaced tokens. Fine-tuning: multi-mode translation between all signature/docstring/body combinations with no shared feature (Table 5), '# target <feature> (<style>)' prefix.",
+   "optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null,
+   "steps": "docstring-only run converged at 3.97e5 steps from random init; pre-trained reached the best validation loss at 1.5e4 steps",
+   "epochs": "pre-training 73 epochs; multi-mode PyMT5 62 epochs; docstring-only 183 epochs random vs 7 epochs pre-trained",
+   "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null,
+   "hardware": "pre-training: sixteen 32GB Tesla V100; multi-mode PyMT5: 16 Tesla V100 16GB; GPT2: 4 Tesla V100 16GB each",
+   "compute": null,
+   "wall_clock": "pre-training 3 weeks; multi-mode 5 weeks; GPT2 baselines 1 week (7 days)",
+   "seeds": null,
+   "other": {"hyperparameters": "fairseq-train scripts are in Figs 7 and 8 as images; not in the text layer", "note": "pre-training hardware printed as 32GB V100 in Sec 2.2 and multi-mode as 16GB V100 in Sec 3/A.4"}
+  },
+  "inference": {"decoding": "beam search, beam width 5 (stated for the method-generation section)", "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": "comment prefix '# target <feature> (<style>)'; style imperative only when docstring is in the target", "retrieval": null, "parameters": {}, "other": {}},
+  "eval": {
+   "metrics": [
+    {"name": "BLEU", "definition": "n-gram overlap of generated vs reference", "unit": "score", "higher_is_better": true},
+    {"name": "ROUGE-1/2/L precision, recall, F1", "definition": "ROUGE overlap", "unit": "score", "higher_is_better": true},
+    {"name": "Syntax", "definition": "fraction of predicted methods with correct syntax under Python 3.7 grammar", "unit": "%", "higher_is_better": true},
+    {"name": "Perplexity", "definition": "model perplexity on own test set", "unit": "ppl", "higher_is_better": false}
+   ],
+   "baselines": ["GPT2-medium random init", "GPT2-medium English pre-trained", "Barone and Sennrich 2017"],
+   "protocol": "Single runs; the authors say GPT2 variants differ within margin of error; no seeds or significance test stated."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [{"purpose": "control prefix", "text": "# target <feature> (<style>)", "where": "Appendix A.4"}],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "On the CodeSearchNet test set the best model reaches BLEU 8.59 for method generation.", "kind": "measured", "source": null, "metric": "BLEU", "value": "8.59", "unit": "BLEU", "baseline_value": "2.8 (GPT2-med random)", "n": null, "setup": "CSN Python test, method from signature+docstring, PyMT5 374M, beam 5", "quote": "achieved a BLEU score of 8.59 for method generation", "table": null, "note": null, "where": "Abstract, Table 3"},
+  {"claim": "On the CSN test set PyMT5 gets BLEU 16.3 for docstring generation.", "kind": "measured", "source": null, "metric": "BLEU", "value": "16.3", "unit": "BLEU", "baseline_value": "9.5 (GPT2-med random)", "n": null, "setup": "CSN Python test, docstring from signature+body", "quote": "16.3 for docstring", "table": null, "note": null, "where": "Abstract, Table 4"},
+  {"claim": "92.1% of PyMT5 method bodies on CSN are syntactically correct.", "kind": "measured", "source": null, "metric": "Syntax", "value": "92.1", "unit": "%", "baseline_value": "77.2 (GPT2-med random)", "n": null, "setup": "CSN test, method generation", "quote": "predicts 92.1% syntactically correct method", "table": null, "note": null, "where": "Abstract, Table 3"},
+  {"claim": "On the authors' own test set (1,285,794 methods) PyMT5 more than doubles GPT2 BLEU and is 93.6% syntactically correct vs 86%.", "kind": "measured", "source": null, "metric": "BLEU", "value": "10.6", "unit": "BLEU", "baseline_value": "5.60", "n": 1285794, "setup": "own test set, method generation", "quote": "93.6% of the methods", "table": "Table 3, row PyMT5, column BLEU", "note": "Syntax for GPT2 given as 86% in text; 85%/86% in table for random/English", "where": "Sec 3, Table 3"},
+  {"claim": "Pre-trained initialisation reached the best validation loss 25x faster for docstring generation.", "kind": "measured", "source": null, "metric": "convergence speed", "value": "25", "unit": "x", "baseline_value": null, "n": null, "setup": "single seq2seq of PyMT5 architecture on docstrings only, random vs pre-trained init", "quote": "25× faster", "table": null, "note": "3.97e5 steps / 183 epochs vs 1.5e4 steps / 7 epochs (Fig 6)", "where": "Sec 2.2, A.2"},
+  {"claim": "English pre-trained GPT2 barely beats random init on Python.", "kind": "measured", "source": null, "metric": "BLEU", "value": "5.63", "unit": "BLEU", "baseline_value": "5.60", "n": null, "setup": "own test set, method generation", "quote": null, "table": "Table 3, row GPT2-med english, column BLEU", "note": "authors say metrics are almost all within margin of error", "where": "Sec 3"},
+  {"claim": "Restricting own test set to CSN-style curation drops ROUGE F-scores toward CSN values, suggesting tests and short methods are easier.", "kind": "measured", "source": null, "metric": "ROUGE-L F1", "value": "26.1", "unit": "F1", "baseline_value": "32.2 (full own test set)", "n": null, "setup": "PyMT5, method generation", "quote": "29.7, 17.2, and 26.1", "table": null, "note": null, "where": "Sec 3"}
+ ],
+ "limits": [
+  "Only GPT2-medium baselines trained on same data; no comparison to other code models; single runs, no significance test.",
+  "Perplexity, BLEU and ROUGE only; no execution-based evaluation, only syntax validity.",
+  "Barone test set may leak into the training set (authors' hypothesis) and is small.",
+  "TransS3 ROUGE-L 51.27 not comparable because it does not state which statistic.",
+  "Fairseq hyperparameters are only in images (Figs 7, 8); optimizer, lr, batch size not in text.",
+  "Finer-grained code clones were not removed."
+ ],
+ "practices": [],
+ "terms": [{"term": "multi-mode training", "definition": "training to translate between all pairs of feature combinations of signature, docstring and body where the same feature is not in both source and target", "where": "Sec 2, A.4"}],
+ "lineage": [
+  {"work": "T5 (Raffel et al.)", "year": 2019, "arxiv": "1910.10683", "relation": "extends", "note": "text-to-text framing and span-masking objective", "quote": null},
+  {"work": "BART (Lewis et al.)", "year": 2019, "arxiv": "1910.13461", "relation": "uses-method", "note": "denoising pre-training", "quote": null},
+  {"work": "GPT-2 (Radford et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "GPT2-medium random and English init", "quote": null},
+  {"work": "CodeSearchNet (Husain et al.)", "year": 2019, "arxiv": "1909.09436", "relation": "uses-data", "note": "test set", "quote": null},
+  {"work": "Barone and Sennrich parallel corpus", "year": 2017, "arxiv": "1707.02275", "relation": "baseline", "note": "corpus and BLEU baseline", "quote": null},
+  {"work": "TransS3 (Wang et al.)", "year": 2020, "arxiv": "2003.03238", "relation": "related", "note": "reports ROUGE-L 51.27", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Denoising auto-encoder pre-training for sequence-to-sequence tasks, based on the span-masking objective used by the T5", "page": 5, "why": "shows span masking on tokenized Python"},
+  {"figure": "Fig 1", "caption": "Real examples of PYMT5 performing method generation using combinations of signatures and docstrings", "page": 3, "why": "shows target-prefix control"},
+  {"figure": "Fig 6", "caption": "Learning curves for training a sequence-to-sequence transformer, translating from python method definitions to their docstrings", "page": 12, "why": "25x faster convergence from pre-training"}
+ ],
+ "code": [{"where": "A.4", "snippet": "# target <feature> (<style>)", "verbatim": true}],
+ "problems": ["fairseq training scripts (Figs 7, 8) are images, so optimizer, lr and batch size are not in the text.", "Text says 1/10th of corpus is 700k docstrings but Fig 4 caption says 770k.", "Pre-training GPU memory 32GB vs multi-mode 16GB; Table 1 caption says 3x as large as next largest while text says twice."]
+}

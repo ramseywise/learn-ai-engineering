@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "2212.09196",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/webb-2023-emergent-analogical-reasoning-large-language.pdf",
+ "bib": {
+  "title": "Emergent Analogical Reasoning in Large Language Models",
+  "authors": [
+   "Taylor Webb",
+   "Keith J. Holyoak",
+   "Hongjing Lu"
+  ],
+  "first_author": "Webb",
+  "year": 2023,
+  "venue": "Nature Human Behaviour (2023)",
+  "arxiv": "2212.09196",
+  "doi": "10.1038/s41562-023-01659-w"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 146679,
+  "chars_total": 146679,
+  "engine": "pymupdf",
+  "skipped": "Supplementary example transcripts (S4, S5 chat logs) skimmed, not read line by line; reference list skimmed."
+ },
+ "type": "empirical",
+ "question": "Can a large language model solve analogy problems zero-shot at human level?",
+ "hypothesis": "LLMs trained only on next-token prediction may acquire an emergent capacity for zero-shot analogical reasoning.",
+ "contributions": [
+  "Digit Matrices, a text-based Raven-style problem set guaranteed novel to humans and models",
+  "new letter-string problem set and new human data for four task families",
+  "direct GPT-3 vs human comparison with error-pattern analysis",
+  "qualitative analogical problem solving and preliminary GPT-4 story analogy test"
+ ],
+ "method": {
+  "summary": "Zero-shot evaluation of text-davinci-003 (and, in the supplement, davinci, code-davinci-002, text-davinci-002) on four analogy task families, compared with new human data from UCLA undergraduates: Digit Matrices (new text Raven-style task), letter-string analogies, four-term verbal analogies, story analogies; plus qualitative analogical problem solving. A preliminary GPT-4 run covers story analogies only.",
+  "task": "zero-shot analogical reasoning evaluation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Digit Matrices (new)",
+    "role": "eval",
+    "size": "100 instances per subtype generated; 32 subtypes in exp 1 (6 one-rule, 6 two-rule, 10 three-rule, 10 logic), 42 in exp 2 (adds 4- and 5-rule); GPT-3 gets 40 instances per subtype",
+    "split": "none (zero-shot)",
+    "source": "authors; rules follow Matzen et al. 2010; 8 answer choices (7 procedural distractors)",
+    "preprocessing": "3x3 grid, cells in brackets, digits; logic problems aligned or permuted"
+   },
+   {
+    "name": "Letter string analogies (new)",
+    "role": "eval",
+    "size": "600 problems generated at each generalization level (zero to three) (100 per type for 0 and 1); GPT-3 evaluated on 300 each (50 per type); 50 real-world-concept problems per transformation type (4 types); humans 28 problems each",
+    "split": "none",
+    "source": "authors; after Hofstadter and Mitchell",
+    "preprocessing": null
+   },
+   {
+    "name": "UCLA VAT",
+    "role": "eval",
+    "size": "80 problems, 2 choices",
+    "split": "none",
+    "source": "Lu et al. 2019; humans N=57",
+    "preprocessing": null
+   },
+   {
+    "name": "Sternberg and Nigro 1980",
+    "role": "eval",
+    "size": "200 problems, 5 relation types, 2 choices",
+    "split": "none",
+    "source": "humans N=20 Yale undergrads",
+    "preprocessing": null
+   },
+   {
+    "name": "SAT analogies (Turney et al.)",
+    "role": "eval",
+    "size": "374 problems, 5 choices",
+    "split": "none",
+    "source": "not public; human estimate from Turney and Littman 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "Jones et al. 2022",
+    "role": "eval",
+    "size": "120 problems, 2 choices",
+    "split": "none",
+    "source": "humans N=241 Wayne State",
+    "preprocessing": null
+   },
+   {
+    "name": "Gentner et al. 1993 story analogies",
+    "role": "eval",
+    "size": "18 source stories x 4 targets; 72 GPT comparisons",
+    "split": "none",
+    "source": "Gentner et al. 1993 Exp 2; via Ichien et al. 2020 inventory",
+    "preprocessing": null
+   },
+   {
+    "name": "Radiation / gumball analogical problem solving",
+    "role": "eval",
+    "size": "qualitative sessions",
+    "split": "none",
+    "source": "Gick and Holyoak 1980; Holyoak et al. 1984; Holyoak and Koh 1987",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "text-davinci-003 ('GPT-3')",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "decoder-only transformer, RLHF fine-tuned",
+    "init_from": "text-davinci-002",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "4096 tokens",
+    "other": {}
+   },
+   {
+    "name": "davinci / code-davinci-002 / text-davinci-002",
+    "role": "evaluated",
+    "params": "175B",
+    "architecture": "GPT-3 variants (base; +code; +SFT)",
+    "init_from": "text-davinci-002 from code-davinci-002",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-4",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "scope": "story analogies only, via ChatGPT web interface, no API access"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy (temperature 0); multiple-choice via average log probability of choice tokens (Digit Matrices) or log prob of final term (verbal analogies)",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "10 Digit Matrices, 40 letter strings, 10 verbal analogies, 256 story analogies and problem solving",
+   "samples": "one deterministic completion per item; Digit Matrices exp 2 ordering: 20 runs; story analogies 72 comparisons, context cleared each time",
+   "prompting": "Digit Matrices: no prompt or examples; letter strings: 'Let's try to complete the pattern:' ; verbal analogies: A:B::C:D colon notation with earlier problems and choices appended to context; story analogies: fixed template",
+   "retrieval": null,
+   "parameters": {
+    "other_params": "all other OpenAI API parameters left at defaults",
+    "truncation": "generations truncated at closing bracket (period for sentence format)",
+    "scoring_generative": "logic problems correct if right digit set in any order; transformation problems need right digits in right order"
+   },
+   "other": {
+    "context_carryover": "verbal analogies and Digit Matrices exp 2 append each problem and chosen answer to prompt; oldest problems deleted when exceeding 4096 tokens"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy (generative)",
+     "definition": "exact match to correct answer as per scoring rule",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy (multiple-choice)",
+     "definition": "choice with highest average log probability",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "odds ratio GPT-3 vs human",
+     "definition": "trial-level logistic regression, binary correct",
+     "unit": "OR",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "UCLA undergraduates (N=40, 57, 54, 47), Yale N=20, Wayne State N=241, MTurk, SAT students estimate",
+    "earlier GPT-3 variants (Supp)"
+   ],
+   "protocol": "Trial-level logistic regression (R 4.2.2), correlations over subtypes, binomial test for GPT-3 and one-sample t-test for humans on story analogies assuming 50% chance; no seeds (temp 0)."
+  },
+  "availability": {
+   "code": "https://github.com/taylorwwebb/emergent analogies LLM",
+   "weights": null,
+   "data": "same GitHub repo (Digit Matrices, letter strings, UCLA VAT, human data); other sets via AnalogyInventory.zip"
+  },
+  "prompts": [
+   {
+    "purpose": "Digit Matrices",
+    "text": "[5 9 3] [8 9 2] [1 9 7]\\n[8 4 7] [1 4 3] [5 4 2]\\n[1 2 2] [5 2 7] [",
+    "where": "4.3.3"
+   },
+   {
+    "purpose": "Letter string analogy",
+    "text": "Let’s try to complete the pattern:\\n\\n[a b c d] [a b c e]\\n[i j k l] [",
+    "where": "4.4.2"
+   },
+   {
+    "purpose": "Letter string, sentence format",
+    "text": "If a b c d changes to a b c e, then i j k l should change to",
+    "where": "4.4.2"
+   },
+   {
+    "purpose": "Story analogy",
+    "text": "Consider the following story:\nStory 1: ≪source story text≫\nNow consider two more stories:\nStory A: ≪target story A text≫\nStory B: ≪target story B text≫\nWhich of Story A and Story B is a better analogy to Story 1?\nIs the best answer Story A, Story B, or both are equally analogous?",
+    "where": "4.6.3"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models[0].params",
+    "quote": "GPT-3 is a large-scale (175B parameters)",
+    "where": "2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT-3 beat human participants on generative Digit Matrices (odds ratio of correct for GPT-3 vs humans).",
+   "kind": "measured",
+   "source": null,
+   "metric": "odds ratio GPT-3 vs human",
+   "value": "1.88",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": "N=40 humans",
+   "setup": "text-davinci-003, zero-shot, 40 instances x 32 subtypes vs N=40 UCLA undergraduates, logistic regression, generative answers",
+   "quote": "(OR) = 1.88, p = 0.005",
+   "table": null,
+   "note": null,
+   "where": "2.1"
+  },
+  {
+   "claim": "GPT-3 beat humans on multiple-choice Digit Matrices (8 choices, mean log-prob scoring).",
+   "kind": "measured",
+   "source": null,
+   "metric": "odds ratio GPT-3 vs human",
+   "value": "6.27",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-davinci-003 zero-shot, 8 answer choices, vs N=40 humans",
+   "quote": "OR = 6.27, p = 2.3×10−8",
+   "table": null,
+   "note": null,
+   "where": "2.1"
+  },
+  {
+   "claim": "GPT-3 pattern of subtype accuracy correlates modestly with humans on Digit Matrices.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": "0.39",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "accuracy across 32 problem subtypes, GPT-3 vs humans",
+   "quote": "r(30) = 0.39, p = 0.027",
+   "table": null,
+   "note": null,
+   "where": "2.1"
+  },
+  {
+   "claim": "GPT-3 beat humans on letter-string analogies overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "odds ratio GPT-3 vs human",
+   "value": "1.76",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "text-davinci-003, temperature 0, prompt 'Let's try to complete the pattern:', vs N=57 humans, generative",
+   "quote": "OR = 1.76, p = 6.3 × 10−5",
+   "table": null,
+   "note": null,
+   "where": "2.2"
+  },
+  {
+   "claim": "GPT-3 and humans show similar error patterns across letter-string subtypes.",
+   "kind": "measured",
+   "source": null,
+   "metric": "correlation",
+   "value": "0.7",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "41 subtypes with >=5 trials each from GPT-3 and humans",
+   "quote": "r(39) = 0.7, p = 3.6 × 10−7",
+   "table": null,
+   "note": null,
+   "where": "2.2"
+  },
+  {
+   "claim": "Letter-string accuracy falls with number of generalizations in GPT-3 (stronger than humans).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.51",
+   "unit": "odds ratio per generalization",
+   "baseline_value": null,
+   "n": null,
+   "setup": "letter strings 0-3 generalizations",
+   "quote": "GPT-3: OR = 0.51, p = 2 × 10−16",
+   "table": null,
+   "note": "Humans OR = 0.66.",
+   "where": "2.2"
+  },
+  {
+   "claim": "Without the prompt, GPT-3 letter-string correlation with human pattern drops but remains.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.6",
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "no-prompt format",
+   "quote": "no prompt: r(39) = 0.6, p = 5.3 × 10−5",
+   "table": null,
+   "note": "Sentence format r = 0.76. Performance fell with format change but stayed within one SD of humans.",
+   "where": "2.2; Supp Fig 5a"
+  },
+  {
+   "claim": "Semantic distance hurts GPT-3 on Jones et al. verbal analogies as in humans.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "3.24",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Jones et al. 120 problems, near vs far, N=241 humans; log-prob choice of D",
+   "quote": "effect of semantic distance for GPT-3: OR = 3.24, p = 0.0165",
+   "table": null,
+   "note": "Direction of OR as printed in paper (OR>1 as stated for 'effect of semantic distance').",
+   "where": "2.3"
+  },
+  {
+   "claim": "On story analogies GPT-3 is worse than humans overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "odds ratio GPT-3 vs human",
+   "value": "0.37",
+   "unit": "odds ratio",
+   "baseline_value": null,
+   "n": "72 trials",
+   "setup": "72 comparisons (18 stories x near/far x 2 orders), forced choice, vs N=54 humans",
+   "quote": "OR = 0.37, p = 0.0003",
+   "table": null,
+   "note": null,
+   "where": "2.4"
+  },
+  {
+   "claim": "GPT-3 is above chance in near analogy but not in far analogy story comparisons.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.065",
+   "unit": "p-value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "far analogy, chance assumed 0.5",
+   "quote": "GPT-3, binomial test: p = 0.065",
+   "table": null,
+   "note": "Near analogy p = 0.0039; combined p = 0.0005.",
+   "where": "2.4"
+  },
+  {
+   "claim": "15 of 54 students picked the analogous story on every trial.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15/54",
+   "unit": "participants",
+   "baseline_value": null,
+   "n": null,
+   "setup": "story analogies, humans",
+   "quote": "a significant number of participants (15/54) selected the analogous story on every trial",
+   "table": null,
+   "note": null,
+   "where": "2.4"
+  },
+  {
+   "claim": "GPT-3 failed to use story analogy for gumball physical task though could map the analogy; authors attribute to weak physical reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, OpenAI playground, uncurated single sessions",
+   "quote": "its lack of physical reasoning skills",
+   "table": null,
+   "note": null,
+   "where": "2.5"
+  },
+  {
+   "claim": "Qualitative: GPT-3 gave the convergence solution to the radiation problem only after the analogous general story, and lost it with distractor stories unless prompted to consider earlier stories.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Qualitative, single sessions, Gick and Holyoak paradigm",
+   "quote": "GPT-3 displayed these same effects",
+   "table": null,
+   "note": null,
+   "where": "2.5"
+  },
+  {
+   "claim": "Preliminary: GPT-4 nearly perfect on near analogy story comparisons and more robust on far.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same 72 problems via ChatGPT web interface; only story analogies tested",
+   "quote": "displaying nearly perfect performance in the near analogy condition",
+   "table": null,
+   "note": null,
+   "where": "2.4; Supp Fig 6"
+  }
+ ],
+ "limits": [
+  "Only text-davinci-003 in the main text; GPT-4 tested on story analogies only for lack of API access.",
+  "Digit Matrices are pseudo-symbolic, not visual; no test of perception.",
+  "Tests limited to a local context: no long-term retrieval of analogs, GPT-3 forgets once the context is cleared.",
+  "Poor on physical reasoning (gumball transfer) and far story analogies.",
+  "Format sensitivity: letter-string accuracy fell with no prompt or sentence format.",
+  "Test-set contamination checked only by prompting for memorisation (Supp S3), not ruled out for letter strings, VAT, SAT, radiation problem.",
+  "Per-condition accuracies are given only in figures, not text; humans are college students on online tasks; the mechanism is not identified.",
+  "Later work disputes the emergent-reasoning reading (not in this paper)."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "model family tested",
+   "quote": null
+  },
+  {
+   "work": "Training language models to follow instructions with human feedback",
+   "year": 2022,
+   "arxiv": "2203.02155",
+   "relation": "related",
+   "note": "RLHF behind text-davinci-003",
+   "quote": null
+  },
+  {
+   "work": "Evaluating large language models trained on code",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "related",
+   "note": "code-davinci lineage",
+   "quote": null
+  },
+  {
+   "work": "Recreating Raven's (Matzen et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "rule structure and distractor generation for Digit Matrices",
+   "quote": null
+  },
+  {
+   "work": "Hofstadter and Mitchell, Copycat",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "letter string analogy domain",
+   "quote": null
+  },
+  {
+   "work": "Gentner, Rattermann, Forbus",
+   "year": 1993,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "story analogies",
+   "quote": null
+  },
+  {
+   "work": "Gick and Holyoak, Analogical problem solving",
+   "year": 1980,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "radiation problem paradigm",
+   "quote": null
+  },
+  {
+   "work": "Lu, Wu, Holyoak, Emergence of analogy from relation learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "UCLA VAT",
+   "quote": null
+  },
+  {
+   "work": "Emergent abilities of large language models",
+   "year": 2022,
+   "arxiv": "2206.07682",
+   "relation": "related",
+   "note": "emergence framing",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 technical report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "preliminary story analogy test",
+   "quote": null
+  },
+  {
+   "work": "Language models show human-like content effects on reasoning",
+   "year": 2022,
+   "arxiv": "2207.07051",
+   "relation": "related",
+   "note": "content effects",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Summary of results across matrix reasoning, letter string, verbal and story analogies, GPT-3 vs humans",
+   "page": 2,
+   "why": "One-glance comparison of all four task families"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Matrix reasoning problems: Raven's SPM vs Digit Matrices, rule types",
+   "page": 4,
+   "why": "Shows task format"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Matrix reasoning results",
+   "page": 5,
+   "why": "Per-condition accuracies not in text"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Letter string analogy results",
+   "page": 8,
+   "why": "Accuracy by number of generalizations"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Almost no raw accuracies appear in the text; they are in figures only, so results hold odds ratios and correlations.",
+  "Letter-string text says 600 problems per level generated but 300 evaluated; Methods ambiguity on 100 vs 40 instances per Digit Matrix subtype (both stated, different purposes)."
+ ]
+}

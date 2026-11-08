@@ -1,0 +1,121 @@
+{
+ "schema": 1,
+ "key": "1710.10723",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2018-simple-effective-multi-paragraph-reading.pdf",
+ "bib": {"title": "Simple and Effective Multi-Paragraph Reading Comprehension", "authors": ["Christopher Clark", "Matt Gardner"], "first_author": "Clark", "year": 2018, "venue": "ACL 2018 (56th Annual Meeting of the Association for Computational Linguistics, Long Papers)", "arxiv": "1710.10723", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 43144, "chars_total": 43144, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How can a paragraph-level QA model be adapted to document-level or multi-document input without being distracted by irrelevant paragraphs?",
+ "hypothesis": "Models trained only on answer-containing paragraphs give poorly calibrated, non-comparable confidence scores across paragraphs; training on sampled non-answer paragraphs with a shared-normalization objective will fix this.",
+ "contributions": ["An improved pipelined method (linear TF-IDF paragraph selector, summed objective for noisy distant labels, refined BiDAF+self-attention model)", "A confidence method that samples non-answer paragraphs and uses a shared-normalization objective so per-paragraph scores are comparable", "State of the art on TriviaQA web and wiki by about 10 points, plus document-level SQuAD, TriviaQA unfiltered and Curated TREC results", "Released code and an end-to-end demo"],
+ "method": {
+  "summary": "A BiDAF-style paragraph reader with self-attention is trained with a summed (marginalised) start/end objective over distantly supervised answer spans. For multi-paragraph input, several paragraphs per context (including ones without answers) are sampled per batch and span scores are softmax-normalised jointly across them (shared-norm); at test time the highest pre-softmax span score over all paragraphs wins.",
+  "task": "extractive reading comprehension / open-domain QA over documents",
+  "trains": true,
+  "datasets": [
+   {"name": "TriviaQA web", "role": "both", "size": "530k training examples (not subsampled)", "split": "train/dev/test (official); test via Table 3", "source": "Joshi et al. 2017; question-document pairs from web search where document contains the answer", "preprocessing": "consecutive paragraphs merged up to max size 400 (600 in training and 800 at test for final model) with learned separator tokens; all spans matching the official evaluation script's exact match marked as answer spans"},
+   {"name": "TriviaQA wiki", "role": "both", "size": null, "split": "official", "source": "Joshi et al. 2017, Wikipedia articles only", "preprocessing": "same; top 8 paragraphs sampled"},
+   {"name": "TriviaQA unfiltered", "role": "both", "size": null, "split": "dev reported", "source": "Joshi et al. 2017", "preprocessing": "top 16 paragraphs sampled"},
+   {"name": "SQuAD (document-level)", "role": "both", "size": "500 random training questions hand-labelled for context dependence", "split": "dev", "source": "Rajpurkar et al. 2016", "preprocessing": "all paragraphs of an article concatenated into one document"},
+   {"name": "Curated TREC", "role": "eval", "size": "694 test questions", "split": "test only, no retraining on its train questions", "source": "Baudis 2015", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "Clark and Gardner model (BiDAF + residual self-attention, GRUs)", "role": "proposed", "params": null, "architecture": "GloVe 300d + char-CNN embeddings, shared bi-GRU, BiDAF attention, residual self-attention layer, bi-GRU start/end prediction", "init_from": "GloVe 300 dimensional word vectors (frozen)", "tokenizer": null, "vocab": null, "layers": null, "hidden": "GRU 100 / linear 200 (SQuAD); GRU 140 / linear 280 (TriviaQA)", "heads": null, "context": "paragraph size 400 to 800 tokens", "other": {"no_answer_head": "two layer network with 80 dimensional hidden layer, ReLU", "max_answer_span": "8 tokens TriviaQA, 17 SQuAD"}},
+   {"name": "BiDAF (Seo et al. 2016) baseline", "role": "baseline", "params": null, "architecture": "BiDAF", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": "first 400 tokens training, first 800 test", "other": {}}
+  ],
+  "training": {
+   "objective": "summed NLL over all answer-start (and end) tokens, -log(sum_{a in A} p_a); shared-norm softmax across paragraphs of the same context (alternatives: merge, no-answer option, sigmoid)",
+   "optimizer": "Adadelta (Zeiler 2012)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "60 (TriviaQA), 45 (SQuAD)",
+   "steps": null,
+   "epochs": "26 epochs on SQuAD in under five hours",
+   "tokens": null,
+   "seq_len": "paragraph max 400 (600 for final TriviaQA training)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "variational dropout 0.2 on input to all GRUs and attention mechanisms",
+   "regularisation": "exponential moving average of weights, decay 0.999, used at test time; word vectors not updated",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "26 epochs SQuAD in less than five hours (hardware unstated)",
+   "seeds": null,
+   "other": {"sampling": "top 4 TF-IDF-ranked paragraphs (8 wiki, 16 unfiltered); 2 sampled per epoch; highest-ranked answer-containing paragraph sampled twice as often; merge and shared-norm require at least one answer paragraph and both in the same mini-batch"}
+  },
+  "inference": {
+   "decoding": "most probable answer span of length <=8 (TriviaQA) or <=17 (SQuAD); across paragraphs choose highest un-normalised span score (start score + end score)",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "single run; seeds not stated",
+   "prompting": null,
+   "retrieval": "single doc: smallest TF-IDF cosine distance; multi-doc: linear classifier on TF-IDF score, first-in-document flag, preceding tokens, question-word count. TREC demo: up to 10 Bing web documents plus TAGME-linked Wikipedia articles, top 16 paragraphs",
+   "parameters": {"paragraphs_at_test": "1 to 15 for TriviaQA web/SQuAD, up to ~30 unfiltered"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "EM", "definition": "exact match under official evaluation script", "unit": "%", "higher_is_better": true},
+    {"name": "F1", "definition": "token-overlap F1", "unit": "%", "higher_is_better": true},
+    {"name": "Accuracy (TREC)", "definition": "fraction of questions answered correctly", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Joshi et al. 2017 baseline", "Smarnet", "Mnemonic Reader", "Weissenborn et al. 2017a", "Neural Cascade", "DrQA", "YodaQA"],
+   "protocol": "dev ablations and published test sets; no significance tests or seeds reported"
+  },
+  "availability": {"code": "https://github.com/allenai/document-qa", "weights": null, "data": "public datasets; demo at https://documentqa.allenai.org"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Shared-norm model reaches 66.37 EM / 71.32 F1 on TriviaQA web test, about 10 points over prior published work.", "kind": "measured", "source": null, "metric": "EM", "value": "66.37", "unit": "%", "baseline_value": "53.75 (Neural Cascade)", "n": null, "setup": "TriviaQA web test, S-Norm model, paragraph size 800 at test, 600 in training", "quote": null, "table": "Table 3, row S-Norm (ours), column Web EM", "note": null, "where": "Table 3"},
+  {"claim": "On TriviaQA wiki test the shared-norm model reaches 63.99 EM versus 51.59 for the best prior.", "kind": "measured", "source": null, "metric": "EM", "value": "63.99", "unit": "%", "baseline_value": "51.59", "n": null, "setup": "TriviaQA wiki test", "quote": null, "table": "Table 3, row S-Norm (ours), column Wiki EM", "note": null, "where": "Table 3"},
+  {"claim": "On TriviaQA unfiltered dev the model scores 61.55 EM and 67.61 F1, about 10 points over the only prior result.", "kind": "measured", "source": null, "metric": "EM", "value": "61.55", "unit": "%", "baseline_value": "50.6", "n": null, "setup": "TriviaQA unfiltered dev, shared-norm, 16 paragraphs", "quote": "We achieve a score of 61.55 EM and 67.61 F1 on the dev set.", "table": null, "note": null, "where": "Sec 5.2"},
+  {"claim": "Pipelined ablation: refined model + TF-IDF + sum objective gives 61.10 EM vs BiDAF 50.21 and baseline 41.08.", "kind": "measured", "source": null, "metric": "EM", "value": "61.10", "unit": "%", "baseline_value": "50.21 (BiDAF)", "n": null, "setup": "TriviaQA web dev, single selected paragraph", "quote": null, "table": "Table 2, row our model + TF-IDF + sum, column EM", "note": "Text says final dev result with larger paragraphs is 66.04 EM and 70.98 F1, while Table 2 F1 for the pipelined row is 66.04; the two 66.04 figures appear in different contexts", "where": "Table 2"},
+  {"claim": "Linear-classifier paragraph selection raises the chance the selected text contains the answer from 83.1% to 85.1% on TriviaQA web.", "kind": "measured", "source": null, "metric": "answer-containing rate", "value": "85.1", "unit": "%", "baseline_value": "83.1", "n": null, "setup": "TriviaQA web, versus truncating the document", "quote": "this improves the chance of the selected text containing the correct answer from 83.1% to 85.1%", "table": null, "note": null, "where": "Sec 2.1"},
+  {"claim": "On document-level SQuAD shared-norm peaks at 72.37 F1 and 64.08 EM given 15 paragraphs, while the naive base model drops once more than two paragraphs are used.", "kind": "measured", "source": null, "metric": "F1", "value": "72.37", "unit": "%", "baseline_value": null, "n": null, "setup": "SQuAD with all article paragraphs concatenated as document, 15 paragraphs", "quote": "the shared-norm approach is able to reach a peak performance of 72.37 F1 and 64.08 EM given 15 paragraphs", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "Given the correct paragraph (standard SQuAD) the model gets 72.14 EM and 81.05 F1; 26 epochs train in under five hours.", "kind": "measured", "source": null, "metric": "EM", "value": "72.14", "unit": "%", "baseline_value": null, "n": null, "setup": "standard SQuAD dev", "quote": "our model reaches 72.14 EM and 81.05 F1", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "On Chen et al.'s document set the model gets 59.14 EM versus 49.7 EM reported for DrQA.", "kind": "measured", "source": null, "metric": "EM", "value": "59.14", "unit": "%", "baseline_value": "49.7", "n": null, "setup": "SQuAD articles redownloaded by Chen et al. 2017a", "quote": "Our model achieves 59.14 EM and 67.34 F1 on this dataset", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "End-to-end on Curated TREC (694 test questions) accuracy is 53.31%, breaking 50%, versus 37.18 YodaQA with Bing and 25.7 DrQA+DS.", "kind": "measured", "source": null, "metric": "accuracy", "value": "53.31", "unit": "%", "baseline_value": "37.18", "n": 694, "setup": "shared-norm model trained on TriviaQA unfiltered, no retraining on TREC train, different corpora from baselines so not strictly comparable", "quote": null, "table": "Table 4, row S-Norm (ours), column Accuracy", "note": null, "where": "Table 4"},
+  {"claim": "Hand-labelling 500 SQuAD questions: 67.4% context-independent, 22.6% document-dependent, 10% paragraph-dependent.", "kind": "measured", "source": null, "metric": "share of context-independent questions", "value": "67.4", "unit": "%", "baseline_value": null, "n": 500, "setup": "500 random SQuAD training questions", "quote": "We ﬁnd 67.4% of the questions to be context-", "table": null, "note": null, "where": "Sec 5.3"},
+  {"claim": "Error analysis of 200 TriviaQA web dev errors: 40.5% had insufficient document evidence, 17% were missing from the answer key.", "kind": "measured", "source": null, "metric": "share of errors", "value": "40.5", "unit": "%", "baseline_value": null, "n": 200, "setup": "TriviaQA web dev errors of the shared-norm model", "quote": "We found 40.5% of the er-", "table": null, "note": null, "where": "Sec 5.6"},
+  {"claim": "Naively trained model loses performance as more paragraphs are used, being overconfident in incorrect extractions; shared-norm never drops as paragraphs are added and has minimal effect at one paragraph.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Figures 3-5, F1 vs number of paragraphs on TriviaQA web, unfiltered, SQuAD (values read from plots only)", "quote": null, "table": null, "note": null, "where": "Sec 5.2, 5.5"}
+ ],
+ "limits": [
+  "Authors concede SQuAD questions are not built to be answered independently of their paragraph; about 10% are paragraph-dependent and ambiguous at document level.",
+  "TREC comparison with DrQA and YodaQA is across different corpora and training data, so authors disclaim claims about individual components.",
+  "Chen et al. document set has articles edited since the questions were written, so some questions may be unanswerable.",
+  "Rankings across methods are read from line plots; no seeds, variance or significance tests are reported; learning rate and hardware are not stated.",
+  "Does not use evidence aggregation across paragraphs; authors say integrating it could improve results.",
+  "Dated: LSTM/GRU reader with GloVe, superseded by pretrained transformers; leaderboard comparison made 5/01/2018."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "shared-normalization", "definition": "paragraphs from the same context use a shared normalization factor in the final softmax operations, forcing scores to be comparable between paragraphs", "where": "Sec 3.1"},
+  {"term": "confidence method", "definition": "apply the model to multiple paragraphs and return the answer with the highest confidence (pre-softmax span score)", "where": "Sec 1, 3"}
+ ],
+ "lineage": [
+  {"work": "Bidirectional Attention Flow for Machine Comprehension", "year": 2016, "arxiv": "1611.01603", "relation": "extends", "note": "attention layer and baseline paragraph model", "quote": null},
+  {"work": "Reading Wikipedia to Answer Open-Domain Questions (DrQA)", "year": 2017, "arxiv": "1704.00051", "relation": "baseline", "note": "confidence-based multi-paragraph approach; compared on SQuAD documents and TREC", "quote": null},
+  {"work": "TriviaQA", "year": 2017, "arxiv": "1705.03551", "relation": "uses-data", "note": "main dataset and baseline", "quote": null},
+  {"work": "SQuAD", "year": 2016, "arxiv": "1606.05250", "relation": "uses-data", "note": "document-level variant", "quote": null},
+  {"work": "Attention Sum Reader Network (Kadlec et al.)", "year": 2016, "arxiv": "1603.01547", "relation": "uses-method", "note": "summed objective over correct spans", "quote": null},
+  {"work": "Long Short-Term Memory-Networks for Machine Reading (Cheng et al.)", "year": 2016, "arxiv": "1601.06733", "relation": "uses-method", "note": "self-attention", "quote": null},
+  {"work": "Adversarial Examples for Evaluating Reading Comprehension Systems (Jia and Liang)", "year": 2017, "arxiv": "1707.07328", "relation": "related", "note": "distractor-sentence errors similar to those observed", "quote": null},
+  {"work": "R3: Reinforced Reader-Ranker (Wang et al.)", "year": 2017, "arxiv": "1709.00023", "relation": "related", "note": "pipelined paragraph ranker", "quote": null},
+  {"work": "Neural Cascade (Swayamdipta et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "prior TriviaQA SOTA", "quote": null},
+  {"work": "Mnemonic Reader (Hu et al.)", "year": 2017, "arxiv": null, "relation": "baseline", "note": "TriviaQA baseline", "quote": null},
+  {"work": "Smarnet (Chen et al.)", "year": 2017, "arxiv": "1710.02772", "relation": "baseline", "note": "TriviaQA baseline", "quote": null},
+  {"work": "Adadelta (Zeiler)", "year": 2012, "arxiv": "1212.5701", "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "GloVe (Pennington et al.)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "word vectors", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 3", "caption": "Results on TriviaQA web when applying our models to multiple paragraphs from each document. Most of our training methods improve the model's ability to utilize more text.", "page": 4, "why": "F1 vs number of paragraphs for none/sigmoid/merge/no-answer/shared-norm"},
+  {"figure": "Fig 5", "caption": "Results for our confidence methods on document-level SQuAD. The shared-norm model is the only model that does not lose performance when exposed to large numbers of paragraphs.", "page": 7, "why": "shows naive confidence collapse as paragraphs grow"},
+  {"figure": "Table 1", "caption": "Examples from SQuAD where a model was less confident in a correct extraction from one paragraph than in an incorrect extraction from another.", "page": 4, "why": "concrete miscalibration examples"}
+ ],
+ "code": [
+  {"where": "Sec 2.2", "snippet": "-log( sum_{a in A} p_a ), A = set of tokens that start an answer", "verbatim": false},
+  {"where": "Sec 3.3", "snippet": "-log( ((1 - delta) e^z + delta e^{s_a+g_b}) / (e^z + sum_i sum_j e^{s_i+g_j}) )", "verbatim": false}
+ ],
+ "problems": ["Cached text file contains NUL bytes in its first 8 KB (viewer warning); text read normally.", "Table 3 and figure axes were flattened by extraction; Table 3 row alignment inferred from order.", "No embedded instructions found."]
+}

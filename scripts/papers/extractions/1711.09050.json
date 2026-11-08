@@ -1,0 +1,415 @@
+{
+ "schema": 1,
+ "key": "1711.09050",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/henderson-2018-ethical-challenges-data-driven-dialogue.pdf",
+ "bib": {
+  "title": "Ethical Challenges in Data-Driven Dialogue Systems",
+  "authors": [
+   "Peter Henderson",
+   "Koustuv Sinha",
+   "Nicolas Angelard-Gontier",
+   "Nan Rosemary Ke",
+   "Genevieve Fried",
+   "Ryan Lowe",
+   "Joelle Pineau"
+  ],
+  "first_author": "Henderson",
+  "year": 2018,
+  "venue": "AIES 2018 (arXiv v1, Nov 2017)",
+  "arxiv": "1711.09050",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 43096,
+  "chars_total": 43096,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only; supplemental material (GitHub) not available"
+ },
+ "type": "empirical",
+ "question": "What ethical and safety problems arise in data-driven dialogue systems (bias, adversarial inputs, privacy, safety, RL, reproducibility), and how large are they in small demonstrative experiments?",
+ "hypothesis": "Data-driven dialogue models absorb and can expose bias, offensive content and private data from their training data, and are fragile to input perturbations.",
+ "contributions": [
+  "Survey of ethical issues in dialogue systems",
+  "New demonstrative experiments on dataset bias, word-embedding debiasing, adversarial inputs and privacy leakage",
+  "Initial recommendations and future directions"
+ ],
+ "method": {
+  "summary": "Small demonstrative experiments: classifier-based bias/hate/offence scoring of four dialogue corpora and of HRED/VHRED samples; LSTM LMs with Word2Vec vs debiased embeddings; misspelling and paraphrase perturbation of a VHRED retrieval model; a seq2seq secret-key recovery test on Ubuntu.",
+  "task": "ethics and safety analysis of end-to-end dialogue systems",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Twitter, Reddit Politics, Cornell Movie Dialogue, Ubuntu Dialogue",
+    "role": "eval",
+    "size": null,
+    "split": "validation contexts used for HRED/VHRED sampling on Twitter",
+    "source": "Ritter 2010; Serban 2017b; Danescu-Niculescu-Mizil 2011; Lowe 2015",
+    "preprocessing": "Ubuntu hate-speech results manually filtered ('killing' a process)"
+   },
+   {
+    "name": "Google one-billion words benchmark",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Chelba 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "Ubuntu subsample for privacy test",
+    "role": "train",
+    "size": "10k dialogue pairs + 10 secret keypairs",
+    "split": null,
+    "source": "Lowe 2015",
+    "preprocessing": "keypairs of 5-word key and 5-word value in three types: UUID, English vocabulary, subsampled from corpus"
+   },
+   {
+    "name": "Reddit Movies and Reddit Politics",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Serban 2017b",
+    "preprocessing": "VHRED retrieval model trained as in Serban 2017b"
+   }
+  ],
+  "models": [
+   {
+    "name": "HRED",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "hierarchical encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "VHRED",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "latent variable hierarchical encoder-decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "LSTM language model (Zaremba 2014) with Word2Vec or debiased Word2Vec",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "LSTM LM",
+    "init_from": "Word2Vec / Bolukbasi debiased embeddings",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "seq2seq (Vinyals and Le 2015)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "seq2seq",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "privacy test plotted over 40 epochs (read from Fig 1 axis)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "hyperparameters deferred to supplemental material on GitHub"
+   }
+  },
+  "inference": {
+   "decoding": "HRED/VHRED: beam search and stochastic sampling",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1000 samples per trigger token for the LM test (100 trigger professions); adversarial test: 20 base sentences, 1000 character edits and 6 paraphrases each",
+   "prompting": null,
+   "retrieval": "VHRED retrieval model for adversarial test",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Bias score",
+     "definition": "Hutto 2015 linguistic bias detection, 0 unbiased to 3 extremely biased",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "Hate speech / offensive language count",
+     "definition": "Davidson 2017 classifier counts and share of utterances",
+     "unit": "count (%)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Gendered follow-up share",
+     "definition": "share of male vs female gender-specific tokens in LM samples after stereotyped-profession trigger",
+     "unit": "fraction",
+     "higher_is_better": null
+    },
+    {
+     "name": "Semantic similarity of responses",
+     "definition": "(cosine; LSTM similarity model; CNN similarity model), ranges 0-1, 1-5, 1-5",
+     "unit": "score",
+     "higher_is_better": null
+    },
+    {
+     "name": "Key-pair recovery accuracy",
+     "definition": "accuracy of eliciting secret value given key",
+     "unit": "accuracy",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "Word2Vec vs debiased Word2Vec",
+    "base sentence vs perturbed sentence"
+   ],
+   "protocol": "No seeds or significance tests stated; qualitative samples in supplemental material"
+  },
+  "availability": {
+   "code": "https://github.com/Breakend/EthicsInDialogue (supplemental material)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Secret key-value pairs in under 0.1% of training data are recovered by a seq2seq model with near-perfect accuracy when the key is supplied.",
+   "kind": "measured",
+   "source": null,
+   "metric": "key-pair recovery accuracy",
+   "value": "nearly 100%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "seq2seq on 10k Ubuntu pairs plus 10 keypairs (5-word key/value), UUID and English-vocab types; subsampled-word keypairs harder",
+   "quote": "the model learns to elicit the private in- formation simply by inputting the triggering information se- quence (key) with nearly 100% accuracy",
+   "note": "quote has hyphenation line breaks in source; sensitive data < 0.1% of data",
+   "where": "Privacy, Fig 1"
+  },
+  {
+   "claim": "Debiased Word2Vec shifts LM gendered follow-up distributions only about 1-2.5% toward even.",
+   "kind": "measured",
+   "source": null,
+   "metric": "change in gender distribution",
+   "value": "~1-2.5%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSTM LMs on 1B-word benchmark, 50 male- and 50 female-stereotyped professions, 1000 samples each",
+   "quote": "only see- ing a ∼1 −2.5% overall change toward even distribu- tions",
+   "note": null,
+   "where": "Bias, Table 2"
+  },
+  {
+   "claim": "Male-stereotype triggers yield 75.45% male follow-ups with Word2Vec and 74.37% with debiased vectors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "male share of gendered tokens",
+   "value": "0.7545",
+   "unit": "fraction",
+   "baseline_value": "0.7437 (debiased)",
+   "n": null,
+   "setup": "as above, male-stereotyped professions",
+   "quote": null,
+   "table": "Table 2, row Male Stereotypes, column Word2vec Male",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Reddit Politics has 4.50% offensive-language and 2.38% hate-speech utterances; Twitter 3.63% and 0.63%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "offensive language share",
+   "value": "4.50%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Davidson 2017 classifier on dialogue corpora",
+   "quote": null,
+   "table": "Table 1, row Reddit Politics, column Offensive Language",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Models trained on Twitter reproduce offensive language: HRED stochastic sampling 4.06% offensive vs 3.63% in the Twitter data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "offensive language share",
+   "value": "4.06%",
+   "unit": "%",
+   "baseline_value": "3.63%",
+   "n": null,
+   "setup": "HRED stochastic sampling on Twitter validation contexts",
+   "quote": null,
+   "table": "Table 1, row HRED Model Stochastic Sampling (Twitter), column Offensive Language",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "One-character edits to inputs cut response similarity to about 0.75 cosine (Politics) or 0.67 (Movies), while input similarity stays about 0.94.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cosine similarity of responses",
+   "value": "0.75",
+   "unit": "cosine (0-1)",
+   "baseline_value": "0.94 input similarity",
+   "n": null,
+   "setup": "VHRED retrieval model, 20 base sentences, 1000 character edits each, Reddit Politics",
+   "quote": null,
+   "table": "Table 3, row Politics Character Edit, column Generated Response Similarity",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Evangelist trigger: follow-ups about 83% male, 71% with debiased vectors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "male share",
+   "value": "83%",
+   "unit": "%",
+   "baseline_value": "71%",
+   "n": null,
+   "setup": "single trigger 'the evangelist', Word2Vec LM",
+   "quote": "sees a followup dis- tribution which is about 83% male",
+   "note": null,
+   "where": "Bias"
+  }
+ ],
+ "limits": [
+  "Small demonstrative experiments with no seeds, significance tests, or stated hyperparameters in the main text (deferred to supplemental GitHub).",
+  "Bias detectors are imperfect; they misclassified 'killing a process' as hate speech.",
+  "Adversarial notion for generative dialogue is acknowledged as an open problem; only 20 base sentences used.",
+  "Privacy test is on a small seq2seq with 10 injected keypairs; generalisation is asserted ('We expect'), not shown.",
+  "Pre-LLM (2017) models; no conditional safety guarantees offered."
+ ],
+ "practices": [
+  "Release code, pre-trained models and training details to allow reproducibility (Reproducibility).",
+  "Use data augmentation with generated adversarial examples during training (Adversarial Examples).",
+  "Consider automated anonymization and differential privacy for conversational models (Privacy).",
+  "Aim for conditional safety guarantees via a model trained to predict unsafe behaviour, bounding probability of unsafe response (Safety).",
+  "Constrain RL exploration and bound rewards on unsafe behaviour (RL)."
+ ],
+ "terms": [
+  {
+   "term": "safe behaviour",
+   "definition": "one that an agent takes, which does not cause any offensive or harmful effects to human interlocutors",
+   "where": "Safety"
+  },
+  {
+   "term": "accidents",
+   "definition": "unintended or harmful behaviour resulting from poor design",
+   "where": "Safety"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Concrete problems in AI safety (Amodei et al.)",
+   "year": 2016,
+   "arxiv": "1606.06565",
+   "relation": "extends",
+   "note": "adopts its notion of accidents",
+   "quote": null
+  },
+  {
+   "work": "Man is to computer programmer as woman is to homemaker? (Bolukbasi et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "debiased Word2Vec and profession lists",
+   "quote": null
+  },
+  {
+   "work": "Automated hate speech detection (Davidson et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "hate/offence classifier",
+   "quote": null
+  },
+  {
+   "work": "Adversarial examples for evaluating reading comprehension systems (Jia and Liang)",
+   "year": 2017,
+   "arxiv": "1707.07328",
+   "relation": "related",
+   "note": "adversarial notion in NLP",
+   "quote": null
+  },
+  {
+   "work": "VHRED (Serban et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "and HRED, Serban 2016",
+   "quote": null
+  },
+  {
+   "work": "Ubuntu Dialogue Corpus (Lowe et al.)",
+   "year": 2015,
+   "arxiv": "1506.08909",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Deep Reinforcement Learning that Matters (Henderson et al.)",
+   "year": 2017,
+   "arxiv": "1709.06560",
+   "relation": "related",
+   "note": "reproducibility model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Privacy Experiment. Accuracy of elicited secret value given the key to a seq2seq model over training epochs.",
+   "page": 3,
+   "why": "Shows secret recovery rising to near 100% for UUID and English keys"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Supplemental material not read; hyperparameters absent from the paper text."
+ ]
+}

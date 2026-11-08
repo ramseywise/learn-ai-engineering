@@ -1,0 +1,618 @@
+{
+ "schema": 1,
+ "key": "2005.08025",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/svyatkovskiy-2020-intellicode-compose.pdf",
+ "bib": {
+  "title": "IntelliCode Compose: Code Generation using Transformer",
+  "authors": [
+   "Alexey Svyatkovskiy",
+   "Shao Kun Deng",
+   "Shengyu Fu",
+   "Neel Sundaresan"
+  ],
+  "first_author": "Svyatkovskiy",
+  "year": 2020,
+  "venue": "ESEC/FSE '20 (28th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering)",
+  "arxiv": "2005.08025",
+  "doi": "10.1145/3368089.3417058"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 56953,
+  "chars_total": 56953,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a GPT-2-style transformer trained from scratch on multilingual source code complete whole lines of code fast enough (under 100 ms) for IDE use?",
+ "hypothesis": "A generative transformer pretrained on raw code tokens, without static-analysis features, can infer identifier types and long-range semantics well enough to complete up to whole lines.",
+ "contributions": [
+  "GPT-C: a GPT-2 variant trained from scratch on a large multilingual code corpus, compared with monolingual versions and an n-gram baseline",
+  "IntelliCode Compose: an end-to-end deployed completion system with GPT-C and client-side caching",
+  "Evaluation of pretraining quality by perplexity (1.82 best) and of completion by edit similarity (86.7%)",
+  "MultiGPT-C: a multilingual model and a comparison of four multilingual modelling approaches",
+  "Documentation of practical challenges of training intermediate-sized transformers on HPC clusters and deploying in the cloud"
+ ],
+ "method": {
+  "summary": "GPT-C, a decoder-only GPT-2 variant (tied embeddings), is pretrained from scratch on 1.2B lines of Python, C#, JavaScript and TypeScript with a sentencepiece BPE subtoken vocabulary and literal/comment normalisation. It is served from a cloud service with batched beam search, key/value caching, ONNX graph optimisations and a client-side trie cache.",
+  "task": "next-token code language modelling for line-level code completion",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GitHub multilingual code corpus (C#, Python, JavaScript, TypeScript)",
+    "role": "pretrain",
+    "size": "over 1.2 billion lines of source code; over 52000 top-starred non-fork projects; over 4.7 million files (C# 1172k files/201M lines/4836 repos; Python 1200k/240M/18174; JavaScript 1982k/681M/26553; TypeScript 437k/85M/3255)",
+    "split": "70-30 dev/test at repository level; dev split at random 80-20 into train/validation; final deployed model retrained on the entire dataset",
+    "source": "top-starred GitHub projects; licence not stated",
+    "preprocessing": "Lexer-token stream; code regenerated in common style; subtokens via sentencepiece (BPE); special tokens <BOF>, <EOF>, <EOL>, <INDENT>, <DEDENT>; numeric/string literals and comments replaced by <NUM_LIT>, <STR_LIT>, <COMMENT> (also <CHAR_LIT> for C#, <RE_LIT> for JS), keeping top frequent literals as <STR_LIT:lit> (Table 2: Python 200 strings/50 numbers; kept literals represent 18%/63% for Python, 13%/58% C#, 20%/70% JS,TS in the table order as printed)"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-C (monolingual)",
+    "role": "proposed",
+    "params": "366M",
+    "architecture": "decoder-only transformer (GPT-2 variant), output layer tied to input embedding with projection matrix",
+    "init_from": "scratch",
+    "tokenizer": "sentencepiece BPE",
+    "vocab": "50000",
+    "layers": "24",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "1024",
+    "other": {
+     "embedding_dim": "1024",
+     "dropout_keep_prob": "0.9"
+    }
+   },
+   {
+    "name": "MultiGPT-C (double heads)",
+    "role": "proposed",
+    "params": "374M",
+    "architecture": "GPT-C with LM head plus multiple-choice language-classification head",
+    "init_from": "scratch",
+    "tokenizer": "sentencepiece BPE shared subtoken vocabulary",
+    "vocab": "60000",
+    "layers": "26",
+    "hidden": null,
+    "heads": "16",
+    "context": null,
+    "other": {
+     "note": "Table 3 calls the multilingual model 24-layer while section 6 says best multilingual has 26 layers"
+    }
+   },
+   {
+    "name": "n-gram LM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "count-based Markov model over subtokens",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "HuggingFace GPT-2 medium (WebText)",
+    "role": "baseline",
+    "params": "355M",
+    "architecture": "GPT-2",
+    "init_from": "pretrained on WebText",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DistilGPT-C tiny / small",
+    "role": "proposed",
+    "params": "96M / 124M",
+    "architecture": "GPT-C with 8 / 12 transformer blocks",
+    "init_from": "pretrained teacher weights and biases (26-layer teacher)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "8 / 12",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive log-likelihood, categorical cross-entropy; MultiGPT-C adds multiple-choice language classification",
+   "optimizer": "Adam with weight decay fix",
+   "lr": "6.25x10^-5",
+   "lr_schedule": "learning rate decay of 0.98 per epoch; also described as cosine decay per epoch",
+   "warmup": "increased during the first few epochs (length not stated)",
+   "batch_size": "cumulative batch size of 128",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "1024",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "keep probability 0.9",
+   "regularisation": null,
+   "hardware": "5 Lambda V100 boxes, each sixteen V100 32GB GPUs; 80 GPU workers for Table 3; Horovod with Adasum, PyTorch 1.2.0, CUDA 10, Kubernetes",
+   "compute": null,
+   "wall_clock": "2.8 hours per epoch monolingual, 19.7 hours per epoch multilingual (80 GPUs)",
+   "seeds": null,
+   "other": {
+    "batch_size_inconsistency": "text says 128, Table 3 says cumulative batch size 160",
+    "multilingual_batching": "each mini-batch drawn from a single language sampled at random",
+    "throughput": "163 +- 5 samples/s and 167000 +- 5000 tokens/s monolingual; 148 +- 5 and 152000 +- 5000 multilingual",
+    "hyperparameter_search": "not described"
+   }
+  },
+  "inference": {
+   "decoding": "beam search over subtokens, batched candidates (L inference calls rather than L x k), cached attention keys/values; stops at preset subtoken count or break token (<EOL> etc.)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "preset number of subtokens (not stated)",
+   "samples": "1 deterministic beam output per context",
+   "prompting": "code context only; multilingual control-code variant prefixes 'lang *'",
+   "retrieval": null,
+   "parameters": {
+    "beam_width_k": "1, 10 or 15 in Table 5",
+    "sequence_length_L": "10 or 25",
+    "completion_tree_early_stop_R": "R = alpha / (1 + e^(-L/kappa)), alpha=0.8, kappa=10",
+    "client_latency_target": "under 100 ms",
+    "kv_cache_speedup": "further 10%"
+   },
+   "other": {
+    "server": "Azure Kubernetes Service, Python, PyTorch and ONNX runtime with constant folding and fused LayerNorm/GELU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "exp of cross-entropy on test tokens (Eq. 12)",
+     "unit": "PPL",
+     "higher_is_better": false
+    },
+    {
+     "name": "ROUGE-L precision/recall",
+     "definition": "longest-common-subsequence overlap between suggestion and target",
+     "unit": "0-1",
+     "higher_is_better": true
+    },
+    {
+     "name": "Edit similarity",
+     "definition": "Levenshtein-based similarity between suggested and target sequence",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Syntactic correctness",
+     "definition": "fraction of suggestions that tree-sitter parses with file context (EOL removed from break tokens, Black used to flatten)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Surfacing rate (SR)",
+     "definition": "completions displayed / times a completion could be shown (after every character)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Click-through rate (CTR)",
+     "definition": "accepted completions / completions displayed",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "3-, 5-, 7-gram LM",
+    "HuggingFace GPT-2 medium",
+    "language-agnostic multilingual baseline",
+    "language embedding",
+    "control codes"
+   ],
+   "protocol": "Held-out test set split by repository; single run, no seeds or significance tests; online telemetry over >150 thousand requests."
+  },
+  "availability": {
+   "code": "not released (proprietary; Horovod Adasum PR linked)",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "cumulative batch size of 128",
+    "where": "Section 6"
+   },
+   {
+    "field": "training.other.batch_size_inconsistency",
+    "quote": "Cumulative batch size 160 160",
+    "where": "Table 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best GPT-C reaches perplexity 1.82 on Python.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity",
+   "value": 1.82,
+   "unit": "PPL",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monolingual GPT-C, Python test set (Table 8)",
+   "quote": "Our best model yields an average edit similarity of 86.7% and perplexity of 1.82 for Python programming language.",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Monolingual GPT-C reaches 86.7% edit similarity on Python.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 86.7,
+   "unit": "%",
+   "baseline_value": 59.7,
+   "n": null,
+   "setup": "Python test set, GPT-C 366M",
+   "quote": "Our best model yields an average edit similarity of 86.7% and perplexity of 1.82 for Python programming language.",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Table 8"
+  },
+  {
+   "claim": "n-gram baselines are far worse than GPT-C on Python; best is 5-gram at 59.7% edit similarity.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 59.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Python, 5-gram LM",
+   "quote": "",
+   "table": "Table 7, row 5-gram LM, column Edit similarity (%)",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "Control codes give most of the multilingual gain (edit sim 81.5 vs 56.3 baseline), double-head MultiGPT-C 82.1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 82.1,
+   "unit": "%",
+   "baseline_value": 56.3,
+   "n": null,
+   "setup": "Multilingual test sample, MultiGPT-C double heads vs language-agnostic baseline",
+   "quote": "",
+   "table": "Table 6, row MultiGPT-C (double heads), column Edit similarity (%)",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Multilingual model improves JS,TS edit similarity (87.6 vs 84.1) but lowers C# (74.6 vs 76.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 87.6,
+   "unit": "%",
+   "baseline_value": 84.1,
+   "n": null,
+   "setup": "MultiGPT-C 374M on JS,TS vs GPT-C monolingual 84.1",
+   "quote": "",
+   "table": "Table 8, row MultiGPT-C JS,TS (C#,Python,JS,TS), column Edit similarity (%)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "GPT-C zero-shot from Python to C# gets 57.6% edit similarity, vs 76.8% when trained on C#.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 57.6,
+   "unit": "%",
+   "baseline_value": 76.8,
+   "n": null,
+   "setup": "Python-trained GPT-C tested on C#",
+   "quote": "",
+   "table": "Table 8, row GPT-C zero-shot, column Edit similarity (%)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "HuggingFace GPT-2 medium (WebText) gets 34.6% edit similarity on Python code.",
+   "kind": "measured",
+   "source": null,
+   "metric": "edit similarity",
+   "value": 34.6,
+   "unit": "%",
+   "baseline_value": 86.7,
+   "n": null,
+   "setup": "Python test, no code training",
+   "quote": "",
+   "table": "Table 8, row GPT-2 HuggingFace, column Edit similarity (%)",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "93% of Python completions parse as syntactically correct.",
+   "kind": "measured",
+   "source": null,
+   "metric": "syntactic correctness",
+   "value": 93,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "tree-sitter on file context plus suggestion, EOL removed from break tokens",
+   "quote": "We observe 93% of completion suggestions in Python programming language are syntactically correct.",
+   "table": null,
+   "note": null,
+   "where": "Section 10.1"
+  },
+  {
+   "claim": "Online surfacing rate 9.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "surfacing rate",
+   "value": 9.2,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Internal rollout, over 150 thousand requests",
+   "quote": "Over 150 thousands requests, we have seen a SR of 9.2% and a CTR of 10%",
+   "table": null,
+   "note": null,
+   "where": "Section 10.3"
+  },
+  {
+   "claim": "Online click-through rate 10%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "click-through rate",
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Internal rollout, over 150 thousand requests",
+   "quote": "Over 150 thousands requests, we have seen a SR of 9.2% and a CTR of 10%",
+   "table": null,
+   "note": null,
+   "where": "Section 10.3"
+  },
+  {
+   "claim": "Accepted suggestions average 25 characters long.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accepted suggestion length",
+   "value": 25,
+   "unit": "characters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Online telemetry",
+   "quote": "we have observed that the accepted suggestions are on average 25 characters long, with 25% of accepted suggestions being longer than 45 characters",
+   "table": null,
+   "note": null,
+   "where": "Section 10.1"
+  },
+  {
+   "claim": "Distilling 26 to 12 layers speeds inference 2.7x with 6% edit similarity loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference speedup",
+   "value": 2.7,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JS,TS monolingual teacher vs student, L=25, k=15",
+   "quote": "distillation from 26 to 12 layers speeds up the inference by a factor of 2.7, incurring 6% edit similarity loss and 5% ROUGE-L precision loss",
+   "table": null,
+   "note": null,
+   "where": "Section 11"
+  },
+  {
+   "claim": "Distilling to 8 layers gives 4.5x speedup at 8% edit similarity loss.",
+   "kind": "measured",
+   "source": null,
+   "metric": "inference speedup",
+   "value": 4.5,
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "JS,TS, L=25, k=15",
+   "quote": "we obtained a 4.5× inference speed up at a cost of 8% edit similarity and 9% ROUGE-L precision",
+   "table": null,
+   "note": null,
+   "where": "Section 11"
+  },
+  {
+   "claim": "Batched (parallel) beam search plus KV caching cut L=25,k=15 latency from 7500 ms to 2700 ms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": 2700,
+   "unit": "ms",
+   "baseline_value": 7500,
+   "n": null,
+   "setup": "Beam width 15, length 25",
+   "quote": "",
+   "table": "Table 5, row L=25 k=15, column Cached (ms)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Weight tying removes the large output layer, reducing parameters by 25%.",
+   "kind": "claim",
+   "source": null,
+   "metric": "parameter reduction",
+   "value": 25,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-C tied embeddings",
+   "quote": "which allows to remove the large fully connected layer reducing the number of parameters by 25%",
+   "table": null,
+   "note": null,
+   "where": "Section 4.2"
+  },
+  {
+   "claim": "Client-side latency needed under 100 ms to avoid perceived lag.",
+   "kind": "claim",
+   "source": null,
+   "metric": "latency",
+   "value": 100,
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "User experience study",
+   "quote": "a response time under 100 ms is necessary to avoid any feeling of delay or lag",
+   "table": null,
+   "note": null,
+   "where": "Section 8.1"
+  }
+ ],
+ "limits": [
+  "No statistical tests, seeds or variance for model metrics; single training runs.",
+  "Offline metrics are string similarity, not functional correctness; online CTR only 10% and measured only on an internal rollout.",
+  "Hyperparameter search, total training tokens/steps/epochs and compute cost are not reported.",
+  "Dataset licences and the literal-keep percentages are only in a garbled Table 2; model and code not released.",
+  "Internal inconsistencies: batch size 128 vs 160; multilingual 26 vs 24 layers; 355M GPT-2 baseline not code-trained.",
+  "Authors concede syntax failures partly from partial statements and that SR is systematically understated by typing momentum.",
+  "Dated: GPT-2-scale model, pre-Codex; no functional-correctness benchmarks such as HumanEval."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Edit similarity",
+   "definition": "Levenshtein-based similarity: how many single-character edits transform one sequence into another",
+   "where": "Section 10.1"
+  },
+  {
+   "term": "Surfacing rate",
+   "definition": "total number of completions displayed divided by the total number of times a completion could potentially be shown",
+   "where": "Section 10.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "GPT-C is a GPT-2 variant trained from scratch on code",
+   "quote": "a variant of the GPT-2 [16] trained from scratch"
+  },
+  {
+   "work": "Pythia: AI-assisted code completion system",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "earlier IntelliCode completion based on LM and ASTs",
+   "quote": null
+  },
+  {
+   "work": "Tying word vectors and word classifiers",
+   "year": 2016,
+   "arxiv": "1611.01462",
+   "relation": "uses-method",
+   "note": "input embedding reused as output matrix",
+   "quote": null
+  },
+  {
+   "work": "Gmail Smart Compose",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "UX inspiration",
+   "quote": null
+  },
+  {
+   "work": "DistilBERT",
+   "year": 2019,
+   "arxiv": "1910.01108",
+   "relation": "uses-method",
+   "note": "layer-reduction distillation",
+   "quote": null
+  },
+  {
+   "work": "CTRL",
+   "year": 2019,
+   "arxiv": "1909.05858",
+   "relation": "uses-method",
+   "note": "control codes for language prefix",
+   "quote": null
+  },
+  {
+   "work": "Horovod",
+   "year": 2018,
+   "arxiv": "1802.05799",
+   "relation": "uses-method",
+   "note": "distributed training with Adasum",
+   "quote": null
+  },
+  {
+   "work": "Tabnine (Jackson, Autocompletion with deep learning)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "closest system; does not complete up to whole lines",
+   "quote": null
+  },
+  {
+   "work": "HuggingFace GPT-2 medium",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "WebText-pretrained baseline",
+   "quote": null
+  },
+  {
+   "work": "On the naturalness of software (Hindle et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "n-gram naturalness of code",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Comparison of code completion scenarios. Top: method and argument completion by Intellicode. Bottom: whole-line completion by IntelliCode Compose.",
+   "page": 2,
+   "why": "shows the UX jump from token to line completion"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Epoch time vs number of worker GPUs against scaling model; training loss per epoch for monolingual and multilingual models.",
+   "page": 4,
+   "why": "data-parallel scaling behaviour"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Code snippet with completion in VS Code and the reconstructed completion-tree.",
+   "page": 6,
+   "why": "explains client-side trie and early stopping"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 11, Section 8.1",
+   "snippet": "R = alpha / (1 + e^(-L/kappa))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 and Table 5 cells are flattened by extraction; Table 2 column alignment is uncertain.",
+  "Sentence in Section 10.3 ('users committing') is truncated in the PDF text.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,358 @@
+{
+ "schema": 1,
+ "key": "1906.01749",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/fabbri-2019-multi-news.pdf",
+ "bib": {
+  "title": "Multi-News: a Large-Scale Multi-Document Summarization Dataset and Abstractive Hierarchical Model",
+  "authors": ["Alexander R. Fabbri", "Irene Li", "Tianwei She", "Suyi Li", "Dragomir R. Radev"],
+  "first_author": "Fabbri",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL 2019), pages 1074-1084",
+  "arxiv": "1906.01749",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 44687,
+  "chars_total": 44687,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large-scale multi-document news summarization dataset be built, and how do extractive and neural abstractive systems (including an MMR-augmented pointer-generator) perform on it?",
+ "hypothesis": "Data sparsity is the bottleneck for neural MDS; a large dataset plus an end-to-end MMR-in-attention model should help, and learned similarity/redundancy parameters should reduce redundancy.",
+ "contributions": [
+  "Introduce Multi-News, the first large-scale multi-document summarization dataset in the news domain (56,216 article-summary pairs)",
+  "Propose Hi-MAP, an end-to-end method incorporating MMR into a pointer-generator network",
+  "Benchmark various methods on the dataset to lay foundations for future work on large-scale MDS"
+ ],
+ "method": {
+  "summary": "Dataset of newser.com editor-written summaries linked to cited source articles (2 to 10 per summary), collected via Wayback links. Models truncate the concatenated sources to 500 tokens and are compared with extractive baselines using ROUGE and a small Best-Worst Scaling human study. Hi-MAP adds a sentence-level LSTM and a learned MMR score that rescales word-level pointer-generator attention.",
+  "task": "multi-document abstractive news summarization",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Multi-News",
+    "role": "both",
+    "size": "56,216 article-summary pairs; avg 2,103.49 words per concatenated input, 263.66 words per summary, 9.97 summary sentences, vocab 666,515",
+    "split": "80/10/10: train 44,972, validation 5,622, test 5,622",
+    "source": "newser.com; summaries written by professional editors with links to cited original articles; 20 editors wrote 85% of summaries; over 1,500 source sites appear 5+ times. Over 250,000 Wayback links collected; only examples with 2 to 10 sources kept",
+    "preprocessing": "Downloaded and processed cited articles to text; examples with more than 10 sources dropped. Source counts per example: 2:23,894; 3:12,707; 4:5,022; 5:1,873; 6:763; 7:382; 8:209; 9:89; 10:33"
+   },
+   {
+    "name": "CNN/Daily Mail",
+    "role": "train",
+    "size": "287,227/13,368/11,490 pairs",
+    "split": "train/val/test; used to train models later tested on DUC 2004",
+    "source": "Hermann et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "DUC 2004 (DUC03+04 stats)",
+    "role": "eval",
+    "size": "320 pairs (DUC03+04 in Table 3)",
+    "split": "test only",
+    "source": "Paul and James 2004",
+    "preprocessing": null
+   },
+   {
+    "name": "TAC 2011",
+    "role": "eval",
+    "size": "176 pairs",
+    "split": "statistics only (Table 3); not evaluated on",
+    "source": "Owczarzak and Dang 2011",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Hi-MAP (Hierarchical MMR-Attention Pointer-generator)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "pointer-generator with 1-layer Bi-LSTM word encoder, sentence-level LSTM, learned MMR scores multiplied into word attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1-layer bidirectional LSTM",
+    "hidden": "256 per direction; sentence representation dimension 256",
+    "heads": null,
+    "context": "500 tokens (truncated input)",
+    "other": {"lambda": "0.5", "code_base": "builds on OpenNMT PG-BRNN implementation"}
+   },
+   {
+    "name": "PG-BRNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "OpenNMT pointer-generator, 1-layer bi-LSTM encoder, single-layer LSTM decoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "1",
+    "hidden": "128-dim word embeddings, 256-dim hidden per direction, 512-dim decoder",
+    "heads": null,
+    "context": "500 tokens",
+    "other": {"note": "run without bottom-up masked attention; pretrained by OpenNMT on CNNDM for DUC"}
+   },
+   {
+    "name": "CopyTransformer",
+    "role": "baseline",
+    "params": null,
+    "architecture": "Transformer encoder-decoder with copy mechanism (Gehrmann et al. 2018), one randomly chosen attention head as copy distribution",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "4-layer, 512 dimensions, encoder and decoder",
+    "hidden": "512",
+    "heads": null,
+    "context": "500 tokens",
+    "other": {"note": "run without bottom-up masked attention"}
+   },
+   {
+    "name": "PG-Original / PG-MMR",
+    "role": "baseline",
+    "params": null,
+    "architecture": "pointer-generator; PG-MMR applies MMR on top of pretrained PG-Original",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"note": "DUC numbers copied from Lebanoff et al. 2018; for Multi-News, PG-MMR corresponds to 'PG-MMR w Cosine' with their sentence regression model trained on Multi-News"}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "500 tokens input (first 500/S tokens from each of S source documents, quota redistributed iteratively when a source is shorter; special token between documents)",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"note": "No optimizer, learning rate, batch size, steps or hardware reported."}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"extractive_output_length": "100 tokens for DUC, 300 tokens for Multi-News", "First-k": "first k sentences from each source article; only First-1 for DUC"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "ROUGE R-1, R-2, R-SU", "definition": "overlap of unigrams, bigrams, and skip bigrams with max distance four words (Lin 2004)", "unit": "ROUGE score", "higher_is_better": true},
+    {"name": "Best-Worst Scaling counts", "definition": "number of times a system was chosen best in pairwise comparisons on informativeness, fluency, non-redundancy", "unit": "count", "higher_is_better": true},
+    {"name": "% novel n-grams", "definition": "percentage of gold-summary n-grams not in the input documents", "unit": "%", "higher_is_better": null},
+    {"name": "extractive fragment coverage / density / compression", "definition": "Grusky et al. 2018 measures; sources concatenated into one input", "unit": "ratio", "higher_is_better": null}
+   ],
+   "baselines": ["First-k", "LexRank", "TextRank", "MMR", "PG-Original", "PG-MMR", "PG-BRNN", "CopyTransformer"],
+   "protocol": "ROUGE on DUC 2004 (models trained on CNNDM, as Lebanoff et al. 2018) and Multi-News test. Human eval: 3 native English speaker annotators, 50 random test documents, all pairs of 4 systems (PG-MMR, CopyTransformer, Hi-MAP, gold), randomised order; one-way ANOVA with Tukey HSD, p 0.05. No ROUGE variance or seeds reported."
+  },
+  "availability": {
+   "code": "https://github.com/Alex-Fabbri/Multi-News",
+   "weights": null,
+   "data": "Wayback-archived links and scripts to reproduce the dataset released (not the article text itself)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets[Multi-News].split", "quote": "We split our dataset into training (80%, 44,972), validation (10%, 5,622), and test (10%, 5,622) sets.", "where": "Section 3.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Multi-News contains 56,216 article-summary pairs, about two orders of magnitude more than prior MDS news data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dataset size",
+   "value": "56,216",
+   "unit": "article-summary pairs",
+   "baseline_value": "320 (DUC03+04)",
+   "n": null,
+   "setup": "Multi-News vs DUC/TAC",
+   "quote": "which contains 56,216 articles-summary pairs",
+   "table": null,
+   "note": "Splits 44,972+5,622+5,622 sum to 56,216",
+   "where": "Section 1"
+  },
+  {
+   "claim": "Multi-News summaries average about 264 words, far longer than CNNDM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "summary length",
+   "value": "263.66",
+   "unit": "words",
+   "baseline_value": "56.20 (CNNDM)",
+   "n": 56216,
+   "setup": "Table 3 statistics",
+   "quote": null,
+   "table": "Table 3, row Multi-News, column # words (summary)",
+   "note": "Text says about 260 words on average",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Gold summaries are about as abstractive as CNNDM: 17.76% of unigrams are novel.",
+   "kind": "measured",
+   "source": null,
+   "metric": "novel unigrams",
+   "value": "17.76",
+   "unit": "%",
+   "baseline_value": "19.50 (CNNDM)",
+   "n": null,
+   "setup": "Table 4, percentage of summary n-grams absent from inputs",
+   "quote": null,
+   "table": "Table 4, row uni-grams, column Multi-News",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Trained and tested on Multi-News, CopyTransformer gets the best R-1 and Hi-MAP the best R-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-2",
+   "value": "14.89",
+   "unit": "ROUGE-2",
+   "baseline_value": "14.03 (CopyTransformer)",
+   "n": 5622,
+   "setup": "Multi-News test, inputs truncated to 500 tokens, trained on Multi-News train; single run",
+   "quote": null,
+   "table": "Table 6, row Hi-MAP (Our Model), column R-2",
+   "note": "CopyTransformer R-1 43.57 vs Hi-MAP 43.47; R-SU 17.37 vs 17.41",
+   "where": "Table 6"
+  },
+  {
+   "claim": "A strong extractive baseline, First-3, reaches R-1 39.41 on Multi-News, beating LexRank, TextRank and MMR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": "39.41",
+   "unit": "ROUGE-1",
+   "baseline_value": "38.77 (MMR)",
+   "n": 5622,
+   "setup": "Multi-News test; extractive outputs of 300 tokens",
+   "quote": null,
+   "table": "Table 6, row First-3, column R-1",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "On DUC 2004 with models trained on CNNDM, PG-MMR is best on R-1 and Hi-MAP is competitive.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": "35.78",
+   "unit": "ROUGE-1",
+   "baseline_value": "36.42 (PG-MMR)",
+   "n": 320,
+   "setup": "DUC 2004, trained on CNNDM",
+   "quote": null,
+   "table": "Table 5, row Hi-MAP (Our Model), column R-1",
+   "note": "LexRank R-1 35.56; PG-MMR numbers copied from Lebanoff et al. 2018",
+   "where": "Table 5"
+  },
+  {
+   "claim": "In human pairwise comparison Hi-MAP is chosen best for non-redundancy 100 times versus 45 for PG-MMR, but CopyTransformer scores 107.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Best-Worst non-redundancy count",
+   "value": "100",
+   "unit": "times chosen best",
+   "baseline_value": "45 (PG-MMR)",
+   "n": 50,
+   "setup": "50 random Multi-News test documents, 3 annotators, all pairs of PG-MMR, CopyTransformer, Hi-MAP, Human",
+   "quote": null,
+   "table": "Table 7, row Hi-MAP, column Non-Redundancy",
+   "note": "Human 149, CopyTransformer 107, PG-MMR 45",
+   "where": "Table 7"
+  },
+  {
+   "claim": "Feeding 500 tokens of LexRank/TextRank/MMR extractive output into the abstractive model did not improve results; authors attribute it to the truncated input mirroring First-3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DUC and Multi-News; numbers not given",
+   "quote": null,
+   "table": null,
+   "note": "No numbers reported",
+   "where": "Section 7"
+  },
+  {
+   "claim": "Training on Multi-News and testing on DUC gave no significant improvement; low DUC performance blamed on domain differences.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-News to DUC transfer; numbers not given",
+   "quote": null,
+   "table": null,
+   "note": "No numbers reported",
+   "where": "Section 7"
+  }
+ ],
+ "limits": [
+  "Inputs truncated to 500 tokens (about 500/S per source) and concatenated, reducing MDS to SDS; avg input is 2,103 words so most source text is unseen; longer inputs and cross-document modelling are left to future work.",
+  "Training hyperparameters (optimizer, lr, batch size, steps, hardware, seeds) are not reported; single-run ROUGE with no variance.",
+  "Human evaluation is small: 50 documents, 3 annotators; CopyTransformer beats Hi-MAP on informativeness and fluency in Table 7.",
+  "Only a few non-neural baselines tested; other classical methods left to future work (footnote 3).",
+  "Dataset article text is not redistributed, only Wayback links and scripts, so reproduction depends on archive availability.",
+  "Pre-2019 models only (LSTM pointer-generator, small Transformer); no pretrained LMs. Dated by later work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Extractive fragment coverage", "definition": "the percentage of words in the summary that are from the source article, measuring the extent to which a summary is derivative of a text", "where": "Section 3.2"},
+  {"term": "Extractive fragment density", "definition": "the average length of the extractive fragment to which each summary word belongs", "where": "Section 3.2"},
+  {"term": "Compression ratio", "definition": "the word ratio between the articles and its summaries", "where": "Section 3.2"},
+  {"term": "MMR", "definition": "Maximal Marginal Relevance, an approach for combining query-relevance with information-novelty in the context of summarization", "where": "Section 4.3"}
+ ],
+ "lineage": [
+  {"work": "Get To The Point: Summarization with Pointer-Generator Networks", "year": 2017, "arxiv": "1704.04368", "relation": "extends", "note": "Hi-MAP expands the pointer-generator into a hierarchical network", "quote": null},
+  {"work": "Adapting the Neural Encoder-Decoder Framework from Single to Multi-Document Summarization (Lebanoff et al.)", "year": 2018, "arxiv": "1808.06218", "relation": "baseline", "note": "PG-MMR with external MMR; experimental setting followed", "quote": null},
+  {"work": "Bottom-Up Abstractive Summarization (Gehrmann et al.)", "year": 2018, "arxiv": "1808.10792", "relation": "baseline", "note": "CopyTransformer and PG-BRNN", "quote": null},
+  {"work": "The Use of MMR, Diversity-Based Reranking (Carbonell and Goldstein)", "year": 1998, "arxiv": null, "relation": "uses-method", "note": "MMR scoring", "quote": null},
+  {"work": "Attention is all you need", "year": 2017, "arxiv": "1706.03762", "relation": "related", "note": "Transformer baseline architecture", "quote": null},
+  {"work": "Generating Wikipedia by Summarizing Long Sequences (Liu et al.)", "year": 2018, "arxiv": "1801.10198", "relation": "related", "note": "Wikipedia-based large MDS dataset; 500-token truncation justification", "quote": null},
+  {"work": "Newsroom (Grusky et al.)", "year": 2018, "arxiv": "1804.11283", "relation": "uses-method", "note": "coverage, density, compression measures", "quote": null},
+  {"work": "Teaching Machines to Read and Comprehend (CNNDM)", "year": 2015, "arxiv": "1506.03340", "relation": "uses-data", "note": "CNNDM used to train models for DUC", "quote": null},
+  {"work": "LexRank (Erkan and Radev)", "year": 2004, "arxiv": null, "relation": "baseline", "note": "extractive baseline", "quote": null},
+  {"work": "TextRank (Mihalcea and Tarau)", "year": 2004, "arxiv": null, "relation": "baseline", "note": "extractive baseline", "quote": null},
+  {"work": "ROUGE (Lin)", "year": 2004, "arxiv": null, "relation": "uses-method", "note": "evaluation metric", "quote": null},
+  {"work": "Neural Machine Translation by Jointly Learning to Align and Translate", "year": 2014, "arxiv": "1409.0473", "relation": "uses-method", "note": "attention in the pointer-generator", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "An example from our multi-document summarization dataset showing the input documents and their summary. Content found in the summary is color-coded.", "page": 2, "why": "Shows what an MDS example looks like: overlapping sources, one summary."},
+  {"figure": "Figure 2", "caption": "Our Hierarchical MMR-Attention Pointer-generator (Hi-MAP) model incorporates sentence-level representations and hidden-state-based MMR on top of a standard pointer-generator network.", "page": 4, "why": "Architecture diagram of Hi-MAP."},
+  {"figure": "Figure 1", "caption": "Density estimation of extractive diversity scores as explained in Section 3.2.", "page": 4, "why": "Compares coverage and density across datasets."}
+ ],
+ "code": [
+  {"where": "Eq. 14", "snippet": "a^t = a^t MMR_i", "verbatim": false},
+  {"where": "Eq. 13", "snippet": "MMR_i = lambda Sim1(h^s_i, s_sum) - (1 - lambda) score_i", "verbatim": false}
+ ],
+ "problems": [
+  "Cached text is PDF line-split; equations and tables are garbled into one token per line, so table values were read by row order.",
+  "Page 2's Table 1 is referred to as Figure 1 in the intro text (paper's own inconsistency).",
+  "No embedded instructions found."
+ ]
+}

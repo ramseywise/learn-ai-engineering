@@ -1,0 +1,339 @@
+{
+ "schema": 1,
+ "key": "2110.01691",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/wu-2022-ai-chains.pdf",
+ "bib": {
+  "title": "AI Chains: Transparent and Controllable Human-AI Interaction by Chaining Large Language Model Prompts",
+  "authors": ["Tongshuang Wu", "Michael Terry", "Carrie J. Cai"],
+  "first_author": "Wu",
+  "year": 2022,
+  "venue": "CHI '22, April 29-May 5, 2022, New Orleans, LA, USA",
+  "arxiv": "2110.01691",
+  "doi": "10.1145/3491102.3517582"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 128599,
+  "chars_total": 128599,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed for lineage only."
+ },
+ "type": "system",
+ "question": "Can chaining several narrowly scoped LLM prompts, with the intermediate data visible and editable, make an LLM more transparent, controllable and effective on complex tasks than a single prompt?",
+ "hypothesis": "Decomposing a problem into smaller, highly targeted tasks is likely to increase model performance on those sub-tasks, and by extension, the overarching task.",
+ "contributions": [
+  "We introduce the notion of LLM Chaining: a series of chained model calls, each targeting a small and well-scoped sub-task.",
+  "We design and implement building blocks for constructing and interacting with LLM Chains: a set of primitive LLM operations and an interactive interface showing intra- and inter-step structure.",
+  "We report results from a 20-person evaluation showing Chaining can increase system transparency, controllability, and task outcomes without changing the underlying model."
+ ],
+ "method": {
+  "summary": "The authors survey 73 online LLM demos to derive eight primitive operations (each with a prompt template, default temperature and data type), build an interface to compose them into Chains with editable intermediate data, and run a 20-person within-subject study against a single-prompt Sandbox interface using the same LaMDA 137B model. Two case studies (VegaLite bug fixing, assisted text entry) are shown qualitatively.",
+  "task": "Human-LLM collaboration on multi-step writing tasks (peer review rewriting, flashcard creation) via prompt chaining; user study with Likert ratings, clickstream and paired outcome comparison",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Survey of 73 online LLM demos",
+    "role": "dev",
+    "size": "73 demos",
+    "split": null,
+    "source": "LLM official websites (GPT-3, Jurassic), social media, published case studies; links last accessed 2021/08 (Table 2)",
+    "preprocessing": "Highly open-ended demos (e.g. generic chatbots) removed; remainder iteratively sorted into 8 primitives; refined with feedback from 3 pilot users."
+   },
+   {
+    "name": "VizLinter examples (VegaLite)",
+    "role": "eval",
+    "size": "10 cases (5 erroneous/fixed spec pairs as few-shot examples, 5 test cases)",
+    "split": "5 few-shot, 5 test",
+    "source": "VizLinter [19]",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LaMDA (non-dialog version)",
+    "role": "evaluated",
+    "params": "137B",
+    "architecture": "decoder-only Transformer, auto-regressive",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"training_data": "more than 1.5T words of text data", "note": "Used for all Chain steps and the Sandbox baseline; the paper says the interface is model agnostic."}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": "Per-operation defaults: Classification 0.0, Information Extraction 0.2, Rewriting 0.3, Split Points 0.3, Compose Points 0.5, Factual Query 0.3, Generation 0.7, Ideation 0.7 (Table 3); users could change it via a knob in both interfaces.",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single run per click; users could re-run. Case study: 5 test cases, one Chain run each (not otherwise stated).",
+   "prompting": "Prompt template per operation: instruction (e.g. 'Given [prefix-1], the following is a list of [prefix-2].'), optional few-shot examples separated by '###', then input prefix and output prefix; output parsed to the operation's data type (string or numbered list).",
+   "retrieval": null,
+   "parameters": {
+    "operations": "8 primitives in 3 groups: validate/categorize (Classification), gather info (Factual Query, Generation, Ideation), re-organize (Information Extraction, Rewriting, Split Points, Compose Points)",
+    "data_mappings": "Rewriting 1-1, Split Points and Ideation 1-N, Compose Points N-1"
+   },
+   "other": {
+    "study_baseline_prompts": "Sandbox users were given default prompts that were known to work reasonably (Appendix B.3-B.5)."
+   }
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Likert ratings (match goal, think through, transparent, controllable, collaborative)", "definition": "Seven-point scale, 1 strongly disagree to 7 strongly agree, asked once per interface", "unit": "points (1-7)", "higher_is_better": true},
+    {"name": "Consecutive runs", "definition": "Share of runs where the user changed nothing (or only formatting) after the previous run", "unit": "%", "higher_is_better": false},
+    {"name": "Edit types (CURATE, UNDO, CREATE)", "definition": "How edits to text relate to existing model output, from logged clickstreams (Appendix B.2)", "unit": "% of edits", "higher_is_better": null},
+    {"name": "Paired outcome preference", "definition": "Two blinded non-participants chose which of a participant's Sandbox vs Chaining results best satisfied the task goals", "unit": "% of pairs preferring Chaining", "higher_is_better": true},
+    {"name": "Completion time", "definition": "Minutes to finish task, max 25", "unit": "minutes", "higher_is_better": false}
+   ],
+   "baselines": ["Sandbox: a single-textbox interface based on the GPT-3 playground, same LaMDA model, adjustable temperature"],
+   "protocol": "Within-subject, 20 participants, each performed one randomly selected task (Flashcard or Review) once per interface, order counterbalanced, up to 25 minutes per interface, 30-minute tutorial beforehand, ~90 minutes total, $40 gift certificate. Wilcoxon signed-rank for Likert, Student's t-test for clickstream shares and time. Qualitative thematic analysis by three researchers. Case studies judged by one author."
+  },
+  "availability": {"code": null, "weights": null, "data": "A demo video is linked (https://youtu.be/QFS-1EWlvMM); no code or data release stated."},
+  "prompts": [
+   {"purpose": "Ideation template filled for the peer-review example (Fig 2B)", "text": "Given Alex's problem, the following is a list of suggestions for improvements.\nAlex's problem: Mumbles when presenting\nSuggestions for improvements: \n1) Enunciate each syllable\n2) Speak more slowly\n###\nAlex's problem: No eye contact\nSuggestions for improvements: \n1) Look at the middle row of the audience\n2) Practice to look at yourself in the mirror\n###\nAlex's problem: Too much text\nSuggestions for improvements: \n1) Use more graphics\n2) Use bullet points", "where": "Fig 2B, p.4 (the last two suggestions are shown as model output)"},
+   {"purpose": "Sandbox end-to-end baseline for peer review", "text": "Given the feedback, rewrite it into a friendly paragraph with concrete suggestions on each of Alex's presentation problems.\nFeedback: Alex could improve his presentation skills. He has too much text on his slides. His presentation meanders from topic to topic without a clear structure. He also does not engage with his audience when he presents.\nFriendly paragraph: [LLM generation]", "where": "Appendix B.5"},
+   {"purpose": "Sandbox two-step baseline for peer review", "text": "Give Alex some suggestions on his presentation:\n1. [LLM generation]\nWrite one friendly paragraph that covers all the presentation problems and suggestions:[LLM generation]", "where": "Appendix B.5"},
+   {"purpose": "Operation templates (instruction line)", "text": "Classify if [detail-1] [detail-2]. | Given [detail-1], extract [detail-2]. | Rewrite [detail-1] into [detail-2]. | Split [detail-1] into a list of [detail-2]. | Write one [detail-1] to cover all the [detail-2]. | Given [detail-1], find [detail-2]. | Given [detail-1], create [detail-2]. | Given [detail-1], the following is a list of [detail-2].", "where": "Table 3, Appendix D"}
+  ],
+  "evidence": [
+   {"field": "models[0].params", "quote": "LaMDA [63]2, a 137 billion parameter, general-purpose language model.", "where": "Sec 5.1"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Two blinded raters preferred the Chaining result over the Sandbox result for the same participant in most pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Share of paired comparisons preferring Chaining (two raters)",
+   "value": "85% and 80%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 20,
+   "setup": "Within-subject study, 20 participants, LaMDA 137B in both interfaces, Review and Flashcard tasks; two non-participant raters blinded to condition.",
+   "quote": "The two independent raters consistently preferred Chaining results 85% and 80% of the time, respectively.",
+   "table": null,
+   "note": "The introduction summarises this as about 82% (the mean of 85 and 80 is 82.5).",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Participants rated Chaining as helping them think through the task more than Sandbox.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert 'think through'",
+   "value": "6.0 vs 3.6",
+   "unit": "points (1-7)",
+   "baseline_value": "3.6",
+   "n": 20,
+   "setup": "Seven-point Likert, Chaining vs Sandbox, Wilcoxon signed-rank, 20 participants.",
+   "quote": "(Chaining 6.0±1.4 vs. Sandbox 3.6±1.3,",
+   "table": null,
+   "note": "Reported with z = 0, p < .001.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Participants rated Chaining as giving more control than Sandbox.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert 'controllable'",
+   "value": "6.2 vs 4.5",
+   "unit": "points (1-7)",
+   "baseline_value": "4.5",
+   "n": 20,
+   "setup": "As above.",
+   "quote": "and gave them more control (6.2±0.9 vs. 4.5±1.3,",
+   "table": null,
+   "note": "z = 3.0, p < .001.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Participants rated Chaining as more transparent than Sandbox.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert 'transparent'",
+   "value": "5.4 vs 3.8",
+   "unit": "points (1-7)",
+   "baseline_value": "3.8",
+   "n": 20,
+   "setup": "As above.",
+   "quote": "transparent (5.4 ± 1.3 vs. 3.8 ± 1.8, 𝑧= 9.0, 𝑝= .002).",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Participants rated Chaining as more collaborative than Sandbox, a smaller and weaker difference.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert 'collaborative'",
+   "value": "5.7 vs 4.6",
+   "unit": "points (1-7)",
+   "baseline_value": "4.6",
+   "n": 20,
+   "setup": "As above.",
+   "quote": "They also rated Chaining as being more collab-",
+   "table": null,
+   "note": "Quote locates the claim; numbers are in the following line of the text: 5.7 ± 1.3 vs. = 4.6 ± 1.6, z = 25, p = .04. Only this result is near .05.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Participants rated their own final results from Chaining higher than those from Sandbox.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Likert 'match goal'",
+   "value": "6.0 vs 5.0",
+   "unit": "points (1-7)",
+   "baseline_value": "5.0",
+   "n": 20,
+   "setup": "As above.",
+   "quote": "they preferred their own final results from Chaining (6.0 ±",
+   "table": null,
+   "note": "Text continues 0.9) to the Sandbox results (5.0 ± 1.1, Wilcoxon signed-rank test, z = 11.0, p = .002).",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "In Sandbox users re-ran the model without changing anything more often than in Chaining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Share of consecutive runs",
+   "value": "51% Sandbox vs 36% Chaining",
+   "unit": "%",
+   "baseline_value": "51%",
+   "n": 20,
+   "setup": "Logged clickstreams, average over participants; Student's t-test t = 3.5, p = .001.",
+   "quote": "occurred 51% of the time on average in Sandbox and 36% in Chaining.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Edits shifted toward curating existing model output in Chaining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Share of edits that CURATE existing text",
+   "value": "77% Chaining vs 41% Sandbox",
+   "unit": "%",
+   "baseline_value": "41%",
+   "n": 20,
+   "setup": "Logged interactions; Chaining UNDO 18% and CREATE 5%; Sandbox UNDO 45% and CREATE 14%; t = -6.75, p < .001.",
+   "quote": "On the other hand, in Chaining people performed CURATION 77% of the time, only doing UNDO and CREATE 18% and 5% of the time, respectively.",
+   "table": null,
+   "note": "Sandbox figure from: They only CURATED or modified existing text 41% of the time.",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Completion time did not differ significantly between the two interfaces.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Completion time",
+   "value": "12.4 min Sandbox vs 14.6 min Chaining",
+   "unit": "minutes",
+   "baseline_value": "12.4",
+   "n": 20,
+   "setup": "All participants finished within the 25-minute limit; Student's t-test t = -1.1, p = .278.",
+   "quote": "they spent 12.4±4.0 minutes in Sandbox, and 14.6±5.4 in Chaining.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "In the VegaLite case study the Chain revealed the violated constraint in all test cases but gave a useful fix for only two; single-pass prompts managed at most one correct reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Test cases with correct violated constraint / useful fix",
+   "value": "5/5 constraints, 2/5 useful fixes",
+   "unit": "cases",
+   "baseline_value": "at most 1 correct reasoning",
+   "n": 5,
+   "setup": "LaMDA 137B, 5 few-shot pairs from VizLinter and 5 test cases, judged by one author with visualization knowledge; single-pass comparison with multiple prompt designs, not quantified further.",
+   "quote": "determined that the Chain correctly re-vealed the violated constraints for all the test cases, and provided useful fixes for two of them.",
+   "table": null,
+   "note": "Quote spans a hyphenated line break in the PDF text; the extraction text reads 'correctly re-' newline 'vealed'. Single-pass: 'with at most one correct reasoning'.",
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Of 20 participants, 15 suggested at least one change to the default Chain and 11 implemented and executed one of their own solutions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Participants modifying the Chain",
+   "value": "15 suggested, 11 implemented",
+   "unit": "participants",
+   "baseline_value": null,
+   "n": 20,
+   "setup": "End of study, optional modification of the default Chain.",
+   "quote": "11 of them successfully implemented and executed one of their own solutions.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Nine participants found Chains more complex, with steeper learning curves, despite the transparency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Participants noting complexity",
+   "value": "9",
+   "unit": "participants",
+   "baseline_value": null,
+   "n": 20,
+   "setup": "Interview themes, Sec 5.3.6.",
+   "quote": "Nine participants noted that although they found the Chains to be transparent, rich, and educa-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3.6"
+  }
+ ],
+ "limits": [
+  "Study uses only two predefined Chains and tasks (peer review, flashcards) that decompose naturally; participants used authored-by-researchers Chains, which the authors say may explain complexity complaints.",
+  "Tasks with interdependent sub-parts may lose coherence when split into independent sub-parts; dropping data layers may cause information loss (Sec 7).",
+  "Chaining limited free exploration; three participants preferred Sandbox for trying out random things.",
+  "Authoring of Chains by end users is left to future work (Sec 7).",
+  "Extra LLM calls add computational cost; the authors argue saved effort outweighs it but give no cost measurement.",
+  "Case studies are anecdotal: 5 test cases judged by one author, single-pass comparison not quantified.",
+  "No accuracy metric against ground truth on standard benchmarks; outcome quality comes from two raters' paired preference and self-ratings.",
+  "Eight primitives are not claimed to be exhaustive.",
+  "Used a non-dialog LaMDA 137B; models of 2021-22 era, instruction-tuned and chat models are not tested.",
+  "Decoding settings other than temperature, max tokens and seeds are not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Chaining", "definition": "the process of breaking up complex tasks into smaller steps, where each step can be completed by an independent run of an LLM, and where the output of one or more steps is used as input for the next", "where": "Sec 3"},
+  {"term": "Data layer", "definition": "the input data and output data of an LLM operation, which connect steps in a Chain", "where": "Sec 3.2"},
+  {"term": "Primitive operation", "definition": "one of eight LLM sub-tasks (Classification, Factual Query, Generation, Ideation, Information Extraction, Rewriting, Split Points, Compose Points) well-scoped for a single model run, each with a default prompt template and temperature", "where": "Table 1, Table 3"},
+  {"term": "Exposure bias (C.2)", "definition": "errors or imperfections from previous runs can accumulate in autoregressive generation, so LLMs perform worse on long text and may repeat themselves", "where": "Sec 3.1"}
+ ],
+ "lineage": [
+  {"work": "Language Models are Few-Shot Learners (GPT-3)", "year": 2020, "arxiv": null, "relation": "related", "note": "In-context learning and the GPT-3 playground that Sandbox imitates (Brown et al. [12])", "quote": null},
+  {"work": "LaMDA: Language Models for Dialog Applications", "year": 2022, "arxiv": "2201.08239", "relation": "evaluates", "note": "Underlying model for all steps", "quote": null},
+  {"work": "Prompt programming for large language models: Beyond the few-shot paradigm", "year": 2021, "arxiv": null, "relation": "extends", "note": "Reynolds and McDonell; meta-prompting and prompt programming that Chaining generalises", "quote": null},
+  {"work": "Progressive Generation of Long Text with Pretrained Language Models", "year": 2021, "arxiv": null, "relation": "related", "note": "Tan et al.; multi-round text expansion, cited as multi-step prior work and for exposure bias", "quote": null},
+  {"work": "Thinking Aloud: Dynamic Context Generation Improves Zero-Shot Reasoning Performance of GPT-2", "year": 2021, "arxiv": "2103.13033", "relation": "related", "note": "Betz et al.; meta-prompting that expands context without human intervention", "quote": null},
+  {"work": "Chain of Thought Prompting Elicits Reasoning in Large Language Models", "year": 2022, "arxiv": "2201.11903", "relation": "related", "note": "Cited for LLMs struggling with multi-step reasoning (C.1)", "quote": null},
+  {"work": "Soylent: a word processor with a crowd inside (Find-Fix-Verify)", "year": 2010, "arxiv": null, "relation": "uses-method", "note": "Crowdsourcing workflows that inspired pipelining and microtasking", "quote": null},
+  {"work": "Kittur et al. Partition-Map-Reduce workflow", "year": null, "arxiv": null, "relation": "related", "note": "Uses Split and Compose Points analogues for collaborative writing", "quote": null},
+  {"work": "VizLinter: A Linter and Fixer Framework for Data Visualization", "year": null, "arxiv": null, "relation": "uses-data", "note": "Examples for the VegaLite case study", "quote": null},
+  {"work": "PromptChainer: Chaining Large Language Model Prompts through Visual Programming", "year": 2022, "arxiv": null, "relation": "related", "note": "Companion work by Wu et al. addressing end-user Chain authoring", "quote": null},
+  {"work": "Attention Is All You Need", "year": 2017, "arxiv": "1706.03762", "relation": "related", "note": "Transformer-based LLMs", "quote": null},
+  {"work": "Jurassic-1", "year": 2021, "arxiv": null, "relation": "related", "note": "Named as another LLM with in-context learning", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "A walkthrough example illustrating the differences between no-Chaining (A) and Chaining (B), using the example task of writing a peer review to be more constructive.", "page": 2, "why": "Shows the Split points, Ideation, Compose points chain against a single call in one picture."},
+  {"figure": "Fig 2", "caption": "An example of how to create an LLM step using a prompt template (A), using the Ideation step of the peer review writing scenario as an example.", "page": 4, "why": "Shows the template with prefix placeholders, few-shot examples, ### separators and t=0.7."},
+  {"figure": "Table 1", "caption": "We curate eight primitive operations that may be adequately handled by a single LLM run.", "page": 3, "why": "The eight operations with definitions, examples and which challenge each addresses."},
+  {"figure": "Fig 5", "caption": "Participants' ratings in the form of seven-point Likert scale questions, with 95% confidence intervals.", "page": 8, "why": "Chaining vs Sandbox ratings on five dimensions."},
+  {"figure": "Fig 7", "caption": "An example for Chaining-based VegaLite bug fixing (simplified; the full Chain is in Appendix C).", "page": 10, "why": "Rewrite JSON to prose, classify and validate, then rewrite spec."},
+  {"figure": "Table 3", "caption": "We design a list of primitive building blocks, each with default prompting templates and temperatures.", "page": 16, "why": "Complete template and default temperature per operation."}
+ ],
+ "code": [
+  {"where": "Table 3 / Fig 2A", "snippet": "Given [prefix-1], the following is a list of [prefix-2].\n[few-shot examples]\n[prefix-1]: (string)\n[prefix-2]: 1) (list)", "verbatim": true}
+ ],
+ "problems": [
+  "Text extraction broke Table 1 and several figures into one-token lines; figure content in Fig 3, 5, 6 comes from captions only (bar values not recoverable).",
+  "Likert collaborative result is split across lines, so its quote locates the claim rather than the number.",
+  "No embedded instructions found in the PDF.",
+  "The CHI paper is 2022 but the first arXiv version is October 2021; the PDF is v3 (17 Mar 2022)."
+ ]
+}

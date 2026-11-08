@@ -1,0 +1,467 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d15-1166",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/luong-2015-effective-approaches-attention-based-neural.pdf",
+ "bib": {
+  "title": "Effective Approaches to Attention-based Neural Machine Translation",
+  "authors": [
+   "Minh-Thang Luong",
+   "Hieu Pham",
+   "Christopher D. Manning"
+  ],
+  "first_author": "Luong",
+  "year": 2015,
+  "venue": "Proceedings of EMNLP 2015, pages 1412-1421, Lisbon",
+  "arxiv": "1508.04025",
+  "doi": "10.18653/v1/d15-1166"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38618,
+  "chars_total": 38618,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Which attention architectures (global vs local, which alignment functions, input feeding) work best for LSTM-based neural machine translation?",
+ "hypothesis": "A local attention that looks at a window of source words can be cheaper and as good as or better than attending to all source words.",
+ "contributions": [
+  "Global attention, a simplification of Bahdanau et al. (2015)",
+  "Local attention (local-m, local-p), a differentiable blend of hard and soft attention",
+  "Input-feeding approach",
+  "Comparison of alignment functions (location, dot, general, concat)",
+  "New SOTA on WMT'14 and WMT'15 English-German; alignment quality evaluated by AER"
+ ],
+ "method": {
+  "summary": "Stacking LSTM encoder-decoder NMT with a global or local attention layer (context vector c_t combined with h_t by a concatenation layer) plus optional input feeding. Trained on WMT'14 En-De and evaluated in both directions with ablations over alignment functions.",
+  "task": "neural machine translation (English-German, German-English)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT'14 training data",
+    "role": "train",
+    "size": "4.5M sentence pairs (116M English words, 110M German words)",
+    "split": "pairs longer than 50 words filtered out",
+    "source": "WMT'14",
+    "preprocessing": "top 50K most frequent words per language as vocabulary; others mapped to <unk>; mini-batches shuffled"
+   },
+   {
+    "name": "newstest2013",
+    "role": "dev",
+    "size": "3000 sentences",
+    "split": "hyperparameter selection",
+    "source": "WMT",
+    "preprocessing": null
+   },
+   {
+    "name": "newstest2014",
+    "role": "eval",
+    "size": "2737 sentences",
+    "split": "test",
+    "source": "WMT",
+    "preprocessing": null
+   },
+   {
+    "name": "newstest2015",
+    "role": "eval",
+    "size": "2169 sentences",
+    "split": "test",
+    "source": "WMT",
+    "preprocessing": null
+   },
+   {
+    "name": "RWTH English-German Europarl gold alignments",
+    "role": "eval",
+    "size": "508 sentences",
+    "split": "AER",
+    "source": "RWTH",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Stacking LSTM + attention (global/local-m/local-p)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "4-layer LSTM encoder-decoder with attention",
+    "init_from": null,
+    "tokenizer": "tokenizer.perl (for BLEU); word-level",
+    "vocab": "50K per language",
+    "layers": 4,
+    "hidden": "1000 cells, 1000-d embeddings",
+    "heads": null,
+    "context": "sentences up to 50 words in training",
+    "other": {
+     "local window D": "empirically selected, value not stated",
+     "sigma": "D/2"
+    }
+   },
+   {
+    "name": "RNNsearch (Jean et al., 2015)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "GRU, bidirectional encoder",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "sum over (x,y) in D of -log p(y|x)",
+   "optimizer": "plain SGD",
+   "lr": "1",
+   "lr_schedule": "after 5 epochs halve the learning rate every epoch (dropout models: start halving after 8 epochs)",
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "10 (12 for dropout models)",
+   "tokens": null,
+   "seq_len": "inferred: sentence pairs up to 50 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "used for LSTMs following Zaremba et al. 2015; rate not stated",
+   "regularisation": "normalized gradient rescaled whenever its norm exceeds 5",
+   "hardware": "single Tesla K40 GPU, ~1K target words per second",
+   "compute": null,
+   "wall_clock": "7-10 days per model",
+   "seeds": null,
+   "other": {
+    "init": "uniform in [-0.1, 0.1]",
+    "implementation": "MATLAB"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per system; ensemble of 8 models",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "unk replace": "replace <unk> using attention alignments",
+    "AER decoding": "force decode to reference, one-to-one alignment via max weight"
+   },
+   "other": {
+    "beam size": "not stated"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU (tokenized)",
+     "definition": "case-sensitive BLEU with multi-bleu.perl after tokenizer.perl",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU (NIST)",
+     "definition": "mteval-v13a",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "perplexity",
+     "definition": "test perplexity",
+     "unit": "ppl",
+     "higher_is_better": false
+    },
+    {
+     "name": "AER",
+     "definition": "alignment error rate vs RWTH gold alignments",
+     "unit": "rate",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "WMT'14 winning phrase-based system (Buck et al., 2014)",
+    "RNNsearch (Jean et al., 2015)",
+    "non-attentional LSTM (base, +reverse, +dropout)",
+    "MILA NMT + 5-gram rerank (WMT'15)",
+    "Edinburgh phrase-based (WMT'15 De-En)",
+    "Berkeley Aligner"
+   ],
+   "protocol": "single training run per configuration; no significance test or seeds reported"
+  },
+  "availability": {
+   "code": "http://nlp.stanford.edu/projects/nmt",
+   "weights": "models publicly available at same URL",
+   "data": "WMT public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Local-p attention with input feeding gains 5.0 BLEU over the non-attentional baseline that already has reversal and dropout.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 5.0,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM, En-De",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "we achieve a signiﬁcant gain of 5.0 BLEU points over the non-attentional baseline"
+  },
+  {
+   "claim": "8-model ensemble with unk replacement is SOTA on WMT'14 En-De.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 23.0,
+   "unit": "BLEU",
+   "baseline_value": 21.6,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM, ensemble of 8 models, unk replace",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ensemble 8 models + unk replace, column BLEU"
+  },
+  {
+   "claim": "Ensemble sets new SOTA on WMT'15 En-De.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.9,
+   "unit": "BLEU",
+   "baseline_value": 24.9,
+   "n": null,
+   "setup": "newstest2015, NIST BLEU, 8-model ensemble + unk replace",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Our ensemble 8 models + unk replace, column BLEU"
+  },
+  {
+   "claim": "Single best En-De model (local-p general + feed input + unk replace).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 20.9,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row local-p (general) + feed input + unk replace, column BLEU"
+  },
+  {
+   "claim": "Global attention (location) adds 2.8 BLEU over base+reverse+dropout.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 2.8,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "the global attention approach gives a signiﬁcant boost of +2.8 BLEU"
+  },
+  {
+   "claim": "Input feeding adds 1.3 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.3,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "we seize another notable gain of +1.3 BLEU"
+  },
+  {
+   "claim": "Unknown word replacement adds 1.9 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.9,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM, local-p general + feed",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "yields another nice gain of +1.9 BLEU"
+  },
+  {
+   "claim": "German-English best single system with dot attention, dropout, feeding and unk replacement.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 24.9,
+   "unit": "BLEU",
+   "baseline_value": 29.2,
+   "n": null,
+   "setup": "WMT'15 De-En, newstest2015; below Edinburgh phrase-based SOTA 29.2",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row + global (dot) + drop + feed + unk, column BLEU"
+  },
+  {
+   "claim": "local-p (general) gets best perplexity among architectures; dot best for global, general best for local.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ppl",
+   "value": 5.9,
+   "unit": "ppl",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WMT'14 English-German, newstest2014, tokenized BLEU, 4-layer 1000-cell LSTM, Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row local-p (general), column Ppl"
+  },
+  {
+   "claim": "Alignment error rate of local-p vs Berkeley Aligner.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AER",
+   "value": 0.36,
+   "unit": "rate",
+   "baseline_value": 0.32,
+   "n": null,
+   "setup": "RWTH En-De gold alignments, 508 sentences, forced decoding, one-to-one",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row local-p (general), column AER"
+  },
+  {
+   "claim": "Training cost per model.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "single Tesla K40, MATLAB",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "It takes 7–10 days to completely train a model."
+  }
+ ],
+ "limits": [
+  "Concat alignment function underperformed and authors say more analysis is needed.",
+  "Not all architecture/alignment combinations run due to limited resources.",
+  "German-English did not match the WMT'15 SOTA phrase-based system.",
+  "AER and BLEU are not well correlated; alignment visualisations only in arXiv version.",
+  "Window size D, dropout rate and beam size not stated; single runs without seeds."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "global attention",
+   "definition": "attention over all source hidden states when deriving the context vector c_t",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "local attention",
+   "definition": "attention over a window [p_t-D, p_t+D] of source positions",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "input feeding",
+   "definition": "attentional vectors h~_t concatenated with the inputs at the next time step",
+   "where": "Sec 3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural machine translation by jointly learning to align and translate",
+   "year": 2015,
+   "arxiv": "1409.0473",
+   "relation": "extends",
+   "note": "global attention is a simplified, generalized version",
+   "quote": null
+  },
+  {
+   "work": "Show, attend and tell",
+   "year": 2015,
+   "arxiv": "1502.03044",
+   "relation": "extends",
+   "note": "local attention blends soft and hard attention",
+   "quote": null
+  },
+  {
+   "work": "Sequence to sequence learning with neural networks",
+   "year": 2014,
+   "arxiv": "1409.3215",
+   "relation": "uses-method",
+   "note": "stacking LSTM, source reversal, training settings",
+   "quote": null
+  },
+  {
+   "work": "Addressing the rare word problem in NMT",
+   "year": 2015,
+   "arxiv": "1410.8206",
+   "relation": "uses-method",
+   "note": "unk replacement",
+   "quote": null
+  },
+  {
+   "work": "On using very large target vocabulary for NMT",
+   "year": 2015,
+   "arxiv": "1412.2007",
+   "relation": "baseline",
+   "note": "RNNsearch, previous En-De SOTA",
+   "quote": null
+  },
+  {
+   "work": "Recurrent neural network regularization",
+   "year": 2015,
+   "arxiv": "1409.2329",
+   "relation": "uses-method",
+   "note": "LSTM unit and dropout",
+   "quote": null
+  },
+  {
+   "work": "DRAW",
+   "year": 2015,
+   "arxiv": "1502.04623",
+   "relation": "related",
+   "note": "similar selective attention for image generation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Global attentional model",
+   "page": 3,
+   "why": "shows context vector as weighted average over all source states"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Local attention model",
+   "page": 4,
+   "why": "shows aligned position p_t and the window"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Input-feeding approach",
+   "page": 5,
+   "why": "shows attentional vectors fed to next step"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 5-8",
+   "snippet": "h~_t = tanh(W_c[c_t; h_t]); p(y_t|y_<t,x)=softmax(W_s h~_t); score = h_t^T hbar_s (dot) | h_t^T W_a hbar_s (general) | W_a[h_t; hbar_s] (concat)",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}

@@ -1,0 +1,440 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.naacl-main.190",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xu-2021-detoxifying-language-models-risks-marginalizing.pdf",
+ "bib": {
+  "title": "Detoxifying Language Models Risks Marginalizing Minority Voices",
+  "authors": [
+   "Albert Xu",
+   "Eshaan Pathak",
+   "Eric Wallace",
+   "Suchin Gururangan",
+   "Maarten Sap",
+   "Dan Klein"
+  ],
+  "first_author": "Xu",
+  "year": 2021,
+  "venue": "Proceedings of NAACL-HLT 2021, pages 2390-2397",
+  "arxiv": null,
+  "doi": "10.18653/v1/2021.naacl-main.190"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 25236,
+  "chars_total": 25236,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does detoxifying language models reduce their utility disproportionately on African-American English and minority identity mentions?",
+ "hypothesis": "Detoxification methods inherit spurious correlations between the toxic label and AAE or minority identity mentions from toxicity training data, so they will degrade LM quality more on that language.",
+ "contributions": [
+  "Automatic (perplexity) and human evaluation showing four detoxification techniques hurt LM utility more on AAE and minority identity mentions than on WAE",
+  "Showing stronger detoxification amplifies the bias",
+  "Tracing the failure to spurious correlations in toxicity datasets, and discussing harms and possible fixes"
+ ],
+ "method": {
+  "summary": "Four detoxification techniques (DAPT, PPLM, GeDi, output filtering) are applied to GPT-2 medium using Jigsaw Civil Comments. They are compared with the base GPT-2 by perplexity on WAE, AAE and identity-mention tweets and by MTurk pairwise preference on generated continuations of WAE and AAE prompts.",
+  "task": "toxicity mitigation in text generation; bias evaluation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Jigsaw Civil Comments (Kaggle unintended bias in toxicity classification)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Kaggle Jigsaw competition",
+    "preprocessing": "removed examples where between 10% and 50% of annotations are the toxic label (low inter-annotator agreement)"
+   },
+   {
+    "name": "Groenwold et al. (2020) WAE/AAE tweet pairs",
+    "role": "eval",
+    "size": null,
+    "split": "split into toxic and nontoxic sets by scoring WAE-AAE pairs with Perspective API",
+    "source": "Groenwold et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Minority identity mention tweets",
+    "role": "eval",
+    "size": "1,000 tweets",
+    "split": null,
+    "source": "Twitter API, tweets containing words from a 26-term list (Appendix A)",
+    "preprocessing": "toxic tweets filtered with Perspective API, then 1,000 randomly selected"
+   },
+   {
+    "name": "Human-eval prompts",
+    "role": "eval",
+    "size": "100 prompts (50 WAE, 50 AAE)",
+    "split": null,
+    "source": "first half of tokenized tweets from the WAE and AAE sets",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-2 medium",
+    "role": "base",
+    "params": null,
+    "architecture": "decoder-only transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "GPT-2 small (GeDi second LM)",
+    "role": "proposed",
+    "params": null,
+    "architecture": null,
+    "init_from": "GPT-2 small, finetuned",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "smaller LM trained on nontoxic data for GeDi"
+    }
+   },
+   {
+    "name": "DAPT / PPLM / GeDi / Filtering on GPT-2 medium",
+    "role": "evaluated",
+    "params": null,
+    "architecture": null,
+    "init_from": "GPT-2 medium",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "PPLM": "toxicity classifier on LM hidden states; gradient updates hidden states at generation",
+     "Filtering": "10 generations, return least toxic by the PPLM classifier"
+    }
+   }
+  ],
+  "training": {
+   "objective": "DAPT: finetune LM on nontoxic data; GeDi: finetune GPT-2 small on nontoxic data; PPLM: toxicity classifier on hidden states",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "hyperparameters": "taken from the original papers for each technique (not listed)"
+   }
+  },
+  "inference": {
+   "decoding": "top-k sampling, k = 50, for all methods",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "30 additional tokens for human-eval generations",
+   "samples": "Filtering: 10 generations per prompt; human eval: 1 continuation per method per prompt, each judged by 3 crowdworkers",
+   "prompting": "first half of a tweet as prompt",
+   "retrieval": null,
+   "parameters": {
+    "GeDi omega (perplexity table)": "0.3 (default 30 gives nearly infinite perplexities)",
+    "GeDi omega sweep": "varied in Fig 2; baseline omega = 0"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Perplexity",
+     "definition": "LM perplexity on WAE/AAE/identity-mention tweets, no generation; Filtering omitted as identical to baseline",
+     "unit": "perplexity",
+     "higher_is_better": false
+    },
+    {
+     "name": "AAE-WAE perplexity ratio",
+     "definition": "AAE perplexity divided by WAE perplexity",
+     "unit": "ratio",
+     "higher_is_better": false
+    },
+    {
+     "name": "Percent preferred over GPT-2",
+     "definition": "MTurk pairwise choice of baseline vs a randomly chosen detoxified continuation on toxicity, topicality, fluency, style",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "GPT-2 medium (no detoxification)"
+   ],
+   "protocol": "Amazon Mechanical Turk, 3 annotators per example; no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/albertkx/detoxifying-lms/",
+   "weights": null,
+   "data": "Jigsaw (Kaggle), Groenwold et al. 2020 tweets; word list in Appendix A"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.GeDi omega",
+    "quote": "For GeDi, we set ω to 0.3 because",
+    "where": "footnote 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Detoxification raises perplexity far more on AAE than on WAE under strong GeDi settings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AAE-WAE perplexity ratio",
+   "value": 400,
+   "unit": "x (upwards of)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 medium with GeDi, sweep of discriminator weight omega, ratio of AAE to WAE perplexity",
+   "quote": "the ratio of AAE per-\nplexity to WAE perplexity increases dramatically,\nreaching upwards of 400",
+   "table": null,
+   "note": "Fig 2 labels 3.1, 3.9, 11.1, 25.9, 384.5 (mapping to omega not in text); baseline omega=0 about 3x",
+   "where": "Fig 2; text says upwards of 400 / almost 400 times worse"
+  },
+  {
+   "claim": "Under PPLM, perplexity on nontoxic WAE rises by a factor of 2.1 but on minority identity mention tweets by 4.3.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.3,
+   "unit": "x increase in perplexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 medium with PPLM, tweets",
+   "quote": "the perplexity increases by a factor of 2.1 on nontoxic WAE data and a factor of 4.3 on mi-",
+   "table": null,
+   "note": "2.1 is the WAE factor; 4.3 the identity-mention factor",
+   "where": "Sec 3.1"
+  },
+  {
+   "claim": "More than 80% of annotators found GeDi less topical than the GPT-2 baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 80,
+   "unit": "% (lower bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk, 3 annotators per example, 100 prompts, GeDi vs GPT-2",
+   "quote": "more than 80% of annotators found GeDi less topical",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "On AAE prompts GeDi was preferred only half as often for topicality as on WAE prompts. (value described in text as half)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk topicality preference, GeDi, AAE vs WAE prompts",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "All detoxification techniques generate less toxicity than baseline, but filtering performs poorly because GPT-2 rarely gives nontoxic continuations of toxic prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk toxicity judgment",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Detoxification increases perplexity on toxic tweets a lot and on nontoxic tweets less, with the largest nontoxic increase on AAE and identity mentions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-2 medium, DAPT/PPLM/GeDi, WAE/AAE/MIM tweets",
+   "quote": null,
+   "table": null,
+   "note": "Fig 1 numbers are unlabelled in the extracted text so no per-cell value is recorded",
+   "where": "Fig 1, Sec 3.1"
+  },
+  {
+   "claim": "Cause: toxicity datasets label AAE and identity mentions toxic at disproportionately high rates through annotation and sampling bias.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "argument, citing Sap et al. 2019 and Dixon et al. 2018",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Human eval uses only 50 WAE and 50 AAE prompts, with no significance testing stated",
+  "Only GPT-2 medium is studied, and only four techniques",
+  "Part of the quality drop is admitted to be domain shift (training on comments, evaluating on Twitter)",
+  "The causal claim (spurious correlations in the data) is argued, not tested by an ablation with debiased data",
+  "GeDi omega set to 0.3 for perplexity rather than the default 30",
+  "No fix is tested; authors plan to explore debiasing in future work",
+  "Claim that prompts and conditional LMs will behave similarly is conjecture"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AAE",
+   "definition": "African-American English (Green, 2002), identified through surface markers",
+   "where": "Sec 1"
+  },
+  {
+   "term": "WAE",
+   "definition": "White-Aligned English",
+   "where": "Sec 1"
+  },
+  {
+   "term": "MIM",
+   "definition": "minority identity mentions, words such as gay or Muslim",
+   "where": "Fig 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Gehman et al. 2020 RealToxicityPrompts",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "detoxification methods and finetuning on nontoxic data",
+   "quote": null
+  },
+  {
+   "work": "Dathathri et al. 2020 PPLM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "detoxification technique",
+   "quote": null
+  },
+  {
+   "work": "Krause et al. 2020 GeDi",
+   "year": 2020,
+   "arxiv": "2009.06367",
+   "relation": "evaluates",
+   "note": "detoxification technique",
+   "quote": null
+  },
+  {
+   "work": "Gururangan et al. 2020 DAPT",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "finetuning on nontoxic data",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. 2019 GPT-2",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "base LM",
+   "quote": null
+  },
+  {
+   "work": "Sap et al. 2019 The risk of racial bias in hate speech detection",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "source of the spurious-correlation finding",
+   "quote": null
+  },
+  {
+   "work": "Groenwold et al. 2020",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "WAE/AAE tweet pairs",
+   "quote": null
+  },
+  {
+   "work": "Xu et al. 2020 Recipes for safety in open-domain chatbots",
+   "year": 2020,
+   "arxiv": "2010.07079",
+   "relation": "related",
+   "note": "source of the technique selection",
+   "quote": null
+  },
+  {
+   "work": "Dixon et al. 2018",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "identity-term bias in text classifiers",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Detoxification substantially increases the LM's perplexity on toxic tweets... drop in LM utility is disproportionately high on text that contains AAE or minority identity mentions (MIM).",
+   "page": 2,
+   "why": "bar chart of perplexity per method and dialect"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Stronger detoxification leads to increased bias against AAE text (GeDi omega vs AAE/WAE perplexity ratio)",
+   "page": 2,
+   "why": "dose-response of bias with detox strength"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Crowdworker preference over GPT-2 for topicality, fluency, style, WAE vs AAE prompts",
+   "page": 3,
+   "why": "human evaluation of generation quality"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Example completions of a WAE and AAE prompt for each method",
+   "page": 4,
+   "why": "shows nonsensical AAE completions"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 1 and 3 values are not labelled in the extracted text, so per-cell numbers were not recorded",
+  "No embedded instructions found"
+ ]
+}

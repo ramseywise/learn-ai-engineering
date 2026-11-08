@@ -1,0 +1,488 @@
+{
+ "schema": 1,
+ "key": "1808.05326",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zellers-2018-swag.pdf",
+ "bib": {
+  "title": "Swag: A Large-Scale Adversarial Dataset for Grounded Commonsense Inference",
+  "authors": [
+   "Rowan Zellers",
+   "Yonatan Bisk",
+   "Roy Schwartz",
+   "Yejin Choi"
+  ],
+  "first_author": "Zellers",
+  "year": 2018,
+  "venue": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 93-104",
+  "arxiv": "1808.05326",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 54261,
+  "chars_total": 54261,
+  "engine": "pymupdf",
+  "skipped": "none; the PDF has no appendix (it says details are in the appendix, which is not included)"
+ },
+ "type": "benchmark",
+ "question": "Can a large multiple-choice dataset for grounded commonsense inference be built that is easy for humans but hard for models, despite annotation artifacts?",
+ "hypothesis": "Adversarial Filtering against stylistic classifiers removes annotation artifacts, so models cannot solve the task by style alone while humans still can.",
+ "contributions": [
+  "Task of grounded commonsense inference unifying NLI and commonsense reasoning",
+  "Swag, 113k multiple-choice questions",
+  "Adversarial Filtering (AF), iterative de-biasing against an ensemble of stylistic classifiers",
+  "Empirical comparison of many models and analysis showing headroom"
+ ],
+ "method": {
+  "summary": "Pairs of consecutive video captions (ActivityNet Captions, LSMDC) give a context and a true ending; an LSTM LM oversamples 1023 negative endings per context, AF keeps the 9 hardest against stylistic models, and Mechanical Turk validates. Many NLI/sentence-encoder models are then trained and tested on it.",
+  "task": "4-way multiple-choice next-event prediction (choose the verb-phrase ending)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Swag",
+    "role": "both",
+    "size": "113k multiple choice questions",
+    "split": "73k train, 20k val, 20k test",
+    "source": "ActivityNet Captions (20k YouTube clips, 203 activity types) and LSMDC (128k movie captions); videos not used",
+    "preprocessing": "Second sentence split into NP and VP with a constituency parser; drop sentences with rare tokens (<=3 occurrences), short (l<=5) or no verb phrase; examples with <=3 non-gibberish endings filtered"
+   },
+   {
+    "name": "BookCorpus",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "pretraining of the LSTM LM generator",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LSTM LM candidate generator",
+    "role": "base",
+    "params": null,
+    "architecture": "LSTM language model conditioned on context",
+    "init_from": "pretrained on BookCorpus then finetuned on video captions",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "details": "in appendix (not in PDF)",
+     "folds": "five LMs trained, one per set of training folds, so none sees its own found endings"
+    }
+   },
+   {
+    "name": "AF stylistic ensemble",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MLP on LM perplexity and lengths + bag-of-words + 1-layer CNN (filters 2-5) + BiLSTM over top-100 words with POS tags for rare words; concatenated and passed through MLP",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ESIM+ELMo",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ESIM with 1024d ELMo, output layer size 1 with softmax over endings",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Other baselines",
+    "role": "baseline",
+    "params": null,
+    "architecture": "fastText, SkipThoughts, InferSent, 2-layer BiLSTM, DualBoW, Decomposable Attention, SNLI-ESIM, Length, ConceptNet rule system",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embeddings": "300d GloVe Common Crawl, 300d Numberbatch, 1024d ELMo"
+    }
+   }
+  ],
+  "training": {
+   "objective": "multi-class cross-entropy for learned models (binary cross-entropy for fastText); AF ensemble trained jointly with cross-entropy",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "AF": "N_easy=2, N-=1023 negatives refined to k=9, 80%/20% train/test split per iteration; Fig 2 runs ~140 iterations, first 100 with the MLP only (read from Fig 2)",
+    "training_sets": "found endings only, or found plus highly-ranked human-validated generated endings",
+    "details": "the paper defers hyperparameters to an appendix not included in the PDF"
+   }
+  },
+  "inference": {
+   "decoding": "LM sampling is greedy sampling of 1023 unique endings, not beam search (beam biases toward low perplexity)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1023 negative endings per context; human eval: 5 Turkers x 100 questions, majority vote",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions where the model picks the gold ending out of 4",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random 25%",
+    "Length (shortest ending)",
+    "ConceptNet",
+    "fastText",
+    "SkipThoughts",
+    "InferSent",
+    "LSTM",
+    "DualBoW",
+    "Decomposable Attention",
+    "ESIM",
+    "SNLI-pretrained ESIM/DecompAttn"
+   ],
+   "protocol": "Val and test accuracy; input ablations: ending only, second sentence only, context+second sentence; human: 5 MTurk workers on 100 questions plus an expert (first author); no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "https://rowanzellers.com/swag"
+  },
+  "prompts": [
+   {
+    "purpose": "Mechanical Turk instruction (abridged)",
+    "text": "Imagine that you are watching a video clip. The clip has a caption, but it is missing the final phrase. Please choose the best 2 caption endings, and classify each as: likely, unlikely, gibberish",
+    "where": "Figure 3, p.4"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Best model ESIM+ELMo trained on found+gen with context reaches 59.2% test accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59.2,
+   "unit": "%",
+   "baseline_value": 25.0,
+   "n": null,
+   "setup": "Swag test, context+2nd sentence, found only training, ESIM+ELMo",
+   "quote": "ESIM+ELMo obtains 59.2% accuracy",
+   "table": null,
+   "note": null,
+   "where": "4.4 Results, p.6"
+  },
+  {
+   "claim": "Humans (5 Turkers majority) reach 88.0% accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 sampled questions, 5 MTurk workers, majority vote",
+   "quote": null,
+   "table": "Table 3, row Human 5 turkers",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Expert human accuracy",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 questions, first author",
+   "quote": null,
+   "table": "Table 3, row Human Expert",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "fastText gets only 29.0% on Swag versus 67.0% on SNLI, showing few lexical biases",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 29.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fastText, Swag test, ending/second sentence input",
+   "quote": null,
+   "table": "Table 3, row fastText, found+gen test",
+   "note": "Text quotes SNLI fastText 67.0% vs 34.3% baseline (Gururangan et al 2018)",
+   "where": "5.1"
+  },
+  {
+   "claim": "SNLI-pretrained ESIM bottlenecked through entailment gets 36.1% on Swag",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 36.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SNLI-ESIM with log-linear on 3-way probs, test",
+   "quote": null,
+   "table": "Table 3, row SNLI-ESIM, test",
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Adversarial Filtering drives stylistic-ensemble accuracy from about 60% to near random chance",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "AF iterations, 20% held-out split, Fig 2",
+   "quote": "Performance decreases from 60% to",
+   "table": null,
+   "note": null,
+   "where": "3.4, Fig 2"
+  },
+  {
+   "claim": "Error analysis: turkers preferred gold over ESIM+ELMo's wrong choice 94% of the time; most common reason situational",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 94,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 random val questions ESIM+ELMo got wrong, 5 Turkers each",
+   "quote": "they preferred the gold endings 94% of the time",
+   "table": null,
+   "note": "Table 4 prints Situational 53.7% while text says 52.3%; weirdness 18.1% in table vs 17.5% in text",
+   "where": "5.2"
+  },
+  {
+   "claim": "Turkers rank the found ending best or second best 73.7% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 73.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk validation, one found plus five adversarial endings",
+   "quote": "(73.7% of the",
+   "table": null,
+   "note": null,
+   "where": "3.5"
+  },
+  {
+   "claim": "Dataset size: 113k questions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 113,
+   "unit": "k questions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "73k train, 20k val, 20k test",
+   "quote": "an adversarial dataset with 113k",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "Generated endings marked gibberish by humans 9.1% of the time",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 9.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk validation of LM-generated endings",
+   "quote": "marked as “gibberish” by humans only 9.1% of the time",
+   "table": null,
+   "note": null,
+   "where": "3.3, Table 2"
+  }
+ ],
+ "limits": [
+  "Adversarial models are purely stylistic and look at the second sentence only; authors concede subtle artifacts likely remain (5.4)",
+  "Hyperparameters and LM architecture are deferred to an appendix not in the PDF",
+  "Human performance measured on only 100 questions; most labels have one annotator",
+  "Filtering only on style; semantic implausibility not filtered (footnote 4)",
+  "Later work (not in this PDF) showed pretrained LMs largely solve Swag; not stated here"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Adversarial Filtering (AF)",
+   "definition": "iterative refinement of a set of negative assignments to increase the entropy under a chosen model family, replacing negatives the model gets right with ones it gets wrong",
+   "where": "Sec 3"
+  },
+  {
+   "term": "Swag",
+   "definition": "Situations With Adversarial Generations",
+   "where": "footnote 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Annotation artifacts in natural language inference data",
+   "year": 2018,
+   "arxiv": "1803.02324",
+   "relation": "related",
+   "note": "motivation: annotation artifacts",
+   "quote": null
+  },
+  {
+   "work": "Hypothesis Only Baselines in NLI (Poliak et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "artifacts",
+   "quote": null
+  },
+  {
+   "work": "SNLI (Bowman et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NLI dataset compared",
+   "quote": null
+  },
+  {
+   "work": "MultiNLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "NLI dataset compared",
+   "quote": null
+  },
+  {
+   "work": "ELMo (Peters et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "contextual embeddings in best model",
+   "quote": null
+  },
+  {
+   "work": "ESIM (Chen et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "best model",
+   "quote": null
+  },
+  {
+   "work": "Decomposable Attention (Parikh et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "baseline",
+   "quote": null
+  },
+  {
+   "work": "ActivityNet Captions (Krishna et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "video captions",
+   "quote": null
+  },
+  {
+   "work": "LSMDC (Rohrbach et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "movie captions",
+   "quote": null
+  },
+  {
+   "work": "BookCorpus (Zhu et al.)",
+   "year": 2015,
+   "arxiv": "1506.06724",
+   "relation": "uses-data",
+   "note": "LM pretraining",
+   "quote": null
+  },
+  {
+   "work": "COPA, RocStories, JOCI",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "commonsense NLI datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Overview of the data collection process.",
+   "page": 2,
+   "why": "Shows the pipeline: captions, NP/VP split, LM oversampling, adversarial selection, human filtering"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Test accuracy by AF iteration, under the negatives given by A.",
+   "page": 4,
+   "why": "Shows stylistic model accuracy falling to chance"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Examples from Swag; the correct answer is bolded.",
+   "page": 1,
+   "why": "Concrete items"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p.3",
+   "snippet": "A_i^easy = {j in A_i : f_theta(x_i^+) > f_theta(x_{i,j}^-)}; replace N_easy easy indices with adversarial k not in A_i satisfying f_theta(x_{i,k}^-) > f_theta(x_{i,j}^-)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No appendix in the PDF though the text refers to one",
+  "Table 4 and the text disagree on percentages (53.7 vs 52.3, 18.1 vs 17.5)"
+ ]
+}

@@ -1,0 +1,477 @@
+{
+ "schema": 1,
+ "key": "1905.09418",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/voita-2019-analyzing-multi-head-self-attention.pdf",
+ "bib": {
+  "title": "Analyzing Multi-Head Self-Attention: Specialized Heads Do the Heavy Lifting, the Rest Can Be Pruned",
+  "authors": [
+   "Elena Voita",
+   "David Talbot",
+   "Fedor Moiseev",
+   "Rico Sennrich",
+   "Ivan Titov"
+  ],
+  "first_author": "Voita",
+  "year": 2019,
+  "venue": "ACL 2019 (Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics, pp. 5797-5808)",
+  "arxiv": "1905.09418",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45318,
+  "chars_total": 45318,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How much does each encoder attention head of a translation Transformer contribute, do important heads play interpretable roles, and how many heads can be pruned without hurting BLEU?",
+ "hypothesis": "The encoder may disambiguate the syntactic structure of the source sentence, so some heads should track syntactic relations; and most heads are redundant.",
+ "contributions": [
+  "Identify important encoder heads with layer-wise relevance propagation and characterise their roles (positional, syntactic, rare words)",
+  "A head-pruning method using stochastic gates and a differentiable relaxation of the L0 penalty (Hard Concrete)",
+  "Show most heads can be pruned with small BLEU loss and that specialised heads are pruned last"
+ ],
+ "method": {
+  "summary": "Transformer-base NMT models are trained from English to Russian, German and French. Heads are ranked by LRP relevance and confidence, their roles are measured against CoreNLP dependency parses, and per-head Hard Concrete gates with an L0-relaxation penalty prune heads while fine-tuning from the converged model.",
+  "task": "neural machine translation (EN-RU, EN-DE, EN-FR); head analysis and pruning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT (EN-RU, EN-DE, EN-FR)",
+    "role": "both",
+    "size": "2.5m sentence pairs per language pair",
+    "split": "50k English sentences from WMT EN-FR data not used in training are held out for the head analysis of Section 5.2",
+    "source": "WMT; 2.5m matches EN-RU parallel data excluding UN and Paracrawl",
+    "preprocessing": "BPE, source and target vocabularies of about 32000 tokens; batched by approximate sequence length"
+   },
+   {
+    "name": "OpenSubtitles2018 (EN-RU)",
+    "role": "both",
+    "size": "6m sentence pairs (Table 1, Table 2, Fig 1 captions)",
+    "split": null,
+    "source": "Lison et al., 2018",
+    "preprocessing": "only sentence pairs with relative time overlap of subtitle frames of at least 0.9 kept"
+   }
+  ],
+  "models": [
+   {
+    "name": "Transformer base (encoder-decoder NMT)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder-decoder Transformer; heads gated in encoder only, or in all attention types",
+    "init_from": "pruned models start from the converged unpruned model; 'from scratch' comparison uses random init",
+    "tokenizer": "BPE (Sennrich et al., 2016)",
+    "vocab": "about 32000 tokens",
+    "layers": "N = 6 encoder, 6 decoder",
+    "hidden": "d_model = 512, d_ff = 2048",
+    "heads": "h = 8 per attention sub-layer (48 encoder heads; 48 decoder self; 48 decoder-encoder)",
+    "context": null,
+    "other": {
+     "dropout_etc": "regularization as in Vaswani et al. 2017 (values not restated)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy + lambda * L_C(phi), L_C = sum_i (1 - P(g_i=0|phi_i)) with Hard Concrete gates, for pruning; plain cross-entropy for baselines",
+   "optimizer": "Adam, beta1 = 0.9, beta2 = 0.98, epsilon = 1e-9",
+   "lr": "lrate = scale * min(step_num^-0.5, step_num * warmup_steps^-1.5), scale = 4",
+   "lr_schedule": "inverse square root after warmup (Vaswani et al. 2017)",
+   "warmup": "warmup_steps = 16000",
+   "batch_size": "approximately 16000 source tokens per batch",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "as in Vaswani et al. 2017 (not restated); L0 relaxation on head gates for pruning",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pruning": "gates resampled per batch; decoder fixed during encoder-only pruning (only encoder parameters and gates are fine-tuned); lambda varied to get different head counts (values not given); at test time gates set to 0 or 1 by the larger of P(g=0), P(g=1)",
+    "footnote8": "fine-tuning a trained model gave 0.2-0.6 BLEU more than the regularised objective from scratch or a from-scratch model with the same heads"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "head_positional_threshold": "max attention at one relative position >= 90% of the time",
+    "head_syntactic_threshold": "accuracy at least 10% above best fixed relative-position baseline",
+    "confidence": "average max attention weight excluding EOS"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "translation BLEU on the test sets (set not named)",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "LRP head relevance",
+     "definition": "relevance of a head's neurons to the top-1 predicted logit, normalised over heads in a layer, averaged over all generation steps of a dev set",
+     "unit": "relative",
+     "higher_is_better": null
+    },
+    {
+     "name": "Head confidence",
+     "definition": "average of the head's maximum attention weight excluding EOS, over tokens of dev sentences",
+     "unit": "attention weight",
+     "higher_is_better": null
+    },
+    {
+     "name": "Dependency accuracy",
+     "definition": "how often a head's max attention (excluding EOS) lands on a token in the given CoreNLP dependency relation, in either direction, counted per relation and direction",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Full 48-head baseline model",
+    "Most frequent relative position per dependency relation (positional baseline)",
+    "Models trained from scratch with the same head configuration as pruned models"
+   ],
+   "protocol": "Single trained models per setting as far as stated; no seeds, variance or significance tests reported. Syntactic analysis uses CoreNLP parses of held-out sentences."
+  },
+  "availability": {
+   "code": "https://github.com/lena-voita/the-story-of-heads",
+   "weights": null,
+   "data": "WMT and OpenSubtitles2018 (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Each training batch contained a set of translation pairs containing approximately 1600010 source to- kens.",
+    "where": "Appendix B.1 (the 10 is a footnote marker)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Pruning 38 of 48 encoder heads on EN-RU WMT costs only 0.15 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.15,
+   "unit": "BLEU drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN-RU WMT 2.5m, encoder-only gates, fine-tuned from converged model, 10 heads left",
+   "quote": "pruning 38 out of 48 encoder heads results in a drop of only 0.15 BLEU",
+   "table": null,
+   "note": null,
+   "where": "Abstract; Sec 6.2.1"
+  },
+  {
+   "claim": "On OpenSubtitles, pruning all but 4 of 48 encoder heads loses only 0.25 BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.25,
+   "unit": "BLEU drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN-RU OpenSubtitles 6m, encoder-only gates",
+   "quote": "we lose only 0.25 BLEU when we prune all but 4 heads out of 48",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.1"
+  },
+  {
+   "claim": "Pruning with gates in all attention types: the 14/31/30 head model keeps WMT BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 29.62,
+   "unit": "BLEU",
+   "baseline_value": 29.6,
+   "n": null,
+   "setup": "EN-RU WMT 2.5m, heads encoder/decoder-self/decoder-encoder 14/31/30, pruned from trained model",
+   "quote": "",
+   "table": "Table 2, WMT row sparse heads 14/31/30, column BLEU from trained",
+   "note": "from-scratch with same heads: 29.47",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Training the sparse architecture from scratch is worse than pruning: 5/9/12 heads gives 28.90 pruned vs 28.41 scratch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 28.41,
+   "unit": "BLEU",
+   "baseline_value": 28.9,
+   "n": null,
+   "setup": "EN-RU WMT 2.5m, 5/9/12 heads, random init",
+   "quote": "",
+   "table": "Table 2, WMT row sparse heads 5/9/12, column BLEU from scratch",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "OpenSubtitles 6/9/13 heads: pruned 32.27 vs 31.84 from scratch vs 32.4 baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 32.27,
+   "unit": "BLEU",
+   "baseline_value": 32.4,
+   "n": null,
+   "setup": "EN-RU OpenSubtitles 6m, 6/9/13 heads, pruned from trained model",
+   "quote": "",
+   "table": "Table 2, OpenSubtitles row sparse heads 6/9/13, column BLEU from trained",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Positional heads put at least 90% of max attention on one relative position, and their average max attention weight exceeds 0.8",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.8",
+   "unit": "attention weight",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all positional heads in EN-RU, EN-DE, EN-FR",
+   "quote": "the average maximum attention weight ex- ceeds 0.8 for every positional head for all language pairs considered here",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Best dobj head (verb to object) reaches 78% on WMT against a 41% positional baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 78,
+   "unit": "% accuracy",
+   "baseline_value": 41,
+   "n": null,
+   "setup": "EN-RU WMT 2.5m, CoreNLP dependencies",
+   "quote": "",
+   "table": "Table 1, row dobj v->o, column WMT best head / baseline 78 / 41",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Best nsubj head (s to v) on OpenSubtitles reaches 70% against 45% baseline; v to s 77 / 45",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 70,
+   "unit": "% accuracy",
+   "baseline_value": 45,
+   "n": null,
+   "setup": "EN-RU OpenSubtitles 6m",
+   "quote": "",
+   "table": "Table 1, row nsubj s->v, column OpenSubtitles 70 / 45",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Rare-words head in layer 1 (OpenSubtitles) points to the rarest token in 66% of cases where the rarest token is outside the top-500",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 66,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OpenSubtitles models; sentences whose least frequent token is not in the top-500 most frequent",
+   "quote": "this head points to the rarest token in 66% of cases, and to one of the two least frequent tokens in 83% of cases",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "A model with 17 of 48 encoder heads retains heads with all identified functions",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "17",
+   "unit": "heads",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN-RU OpenSubtitles encoder pruning",
+   "quote": "the model with 17 heads re- tains heads with all the functions that we identiﬁed",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2.2, Fig 8"
+  },
+  {
+   "claim": "Encoder self-attention heads are pruned first; decoder-encoder attention heads are the most important",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN-RU, WMT and OpenSubtitles, gates on all attention types",
+   "quote": "the model prefers to prune encoder self-attention heads ﬁrst, while decoder-encoder attention heads appear to be the most important",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.3.2, Fig 9"
+  },
+  {
+   "claim": "Gated models converge to nearly binary gates: open or closed",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hard Concrete gates",
+   "quote": "the model converges to solutions where gates are either almost completely closed",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  }
+ ],
+ "limits": [
+  "Only English-to-{Russian,German,French} translation with a Transformer-base encoder-decoder; no encoder-only or decoder-only language models.",
+  "Syntactic roles are tested for four dependency relations only, using CoreNLP parses as ground truth.",
+  "Authors cannot draw strong conclusions on the effect of target-language morphology; the subject-verb difference between domains is a hypothesis left to future work.",
+  "BLEU only; no variance, seeds or significance tests; test sets not named in the text; training steps, hardware and lambda values not stated.",
+  "Pruning compared to other compression methods is left for future work.",
+  "From-scratch training of the sparse architecture degrades, so the pruning finding is about trained models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "confidence of a head",
+   "definition": "the average of its maximum attention weight excluding the end of sentence symbol, taken over tokens in a development set",
+   "where": "Sec 4"
+  },
+  {
+   "term": "positional head",
+   "definition": "at least 90% of the time its maximum attention weight is assigned to a specific relative position (in practice -1 or +1)",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "syntactic head",
+   "definition": "its accuracy on a dependency relation is at least 10% higher than the baseline that looks at the most frequent relative position",
+   "where": "Sec 5.2.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Attention is all you need (Vaswani et al.)",
+   "year": 2017,
+   "arxiv": "1706.03762",
+   "relation": "extends",
+   "note": "architecture, optimizer and schedule followed",
+   "quote": null
+  },
+  {
+   "work": "Learning sparse neural networks through L0 regularization (Louizos et al.)",
+   "year": 2018,
+   "arxiv": "1712.01312",
+   "relation": "uses-method",
+   "note": "Hard Concrete gates, applied to heads instead of weights",
+   "quote": null
+  },
+  {
+   "work": "Visualizing and understanding neural machine translation (Ding et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "layer-wise relevance propagation for head relevance",
+   "quote": null
+  },
+  {
+   "work": "Raganato and Tiedemann, An analysis of encoder representations in transformer-based MT",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "induces trees from encoder attention; no labelled relations",
+   "quote": null
+  },
+  {
+   "work": "Voita et al., Context-aware NMT learns anaphora resolution",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier average/max attention analysis",
+   "quote": null
+  },
+  {
+   "work": "Stanford CoreNLP (Manning et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dependency parses",
+   "quote": null
+  },
+  {
+   "work": "OpenSubtitles2018 (Lison et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "EN-RU corpus",
+   "quote": null
+  },
+  {
+   "work": "Zhu and Gupta; Gale et al., state of sparsity",
+   "year": 2019,
+   "arxiv": "1902.09574",
+   "relation": "related",
+   "note": "sparse architectures cannot be trained from scratch to the same performance",
+   "quote": null
+  },
+  {
+   "work": "Bau et al., Identifying and controlling important neurons in NMT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "neuron-level counterpart",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Importance (according to LRP), confidence, and function of self-attention heads. In each layer, heads are sorted by their relevance according to LRP. Model trained on 6m OpenSubtitles EN-RU data.",
+   "page": 3,
+   "why": "Shows importance, confidence and role of all 48 encoder heads side by side."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "BLEU score as a function of number of retained encoder heads (EN-RU). Regularization applied by fine-tuning trained model.",
+   "page": 7,
+   "why": "Shows the flat BLEU curve until very few heads remain."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Functions of encoder heads retained after pruning.",
+   "page": 7,
+   "why": "Shows specialised heads survive pruning longest."
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 6.1",
+   "snippet": "MultiHead(Q, K, V) = Concat_i(g_i * head_i) W^O ; L(theta, phi) = L_xent(theta, phi) + lambda * L_C(phi)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Equations and tables are linearised by the text extractor; Table 1 and Table 2 cell positions were reconstructed from reading order.",
+  "Footnote marker 10 is merged into the batch size text ('1600010'): the batch is approximately 16000 source tokens."
+ ]
+}

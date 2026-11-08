@@ -1,0 +1,576 @@
+{
+ "schema": 1,
+ "key": "2212.09748",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/peebles-2023-scalable-diffusion-models-transformers.pdf",
+ "bib": {
+  "title": "Scalable Diffusion Models with Transformers",
+  "authors": [
+   "William Peebles",
+   "Saining Xie"
+  ],
+  "first_author": "Peebles",
+  "year": 2023,
+  "venue": "ICCV 2023",
+  "arxiv": "2212.09748",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 55936,
+  "chars_total": 55936,
+  "engine": "pymupdf",
+  "skipped": "none; figure-axis number runs and uncurated sample captions (Figs 14-33) skimmed"
+ },
+ "type": "empirical",
+ "question": "Can the convolutional U-Net backbone of latent diffusion models be replaced by a standard transformer, and how does sample quality scale with transformer forward-pass Gflops?",
+ "hypothesis": "The U-Net inductive bias is not crucial to diffusion model performance, and transformers (ViT-style) inherit favourable scaling with compute.",
+ "contributions": [
+  "Diffusion Transformers (DiT): a ViT-based backbone operating on latent patches for latent diffusion models",
+  "Study of four conditioning block designs (in-context, cross-attention, adaLN, adaLN-Zero)",
+  "Scaling analysis of model size and patch size via Gflops vs FID, with state-of-the-art class-conditional ImageNet 256x256 and 512x512 FID"
+ ],
+ "method": {
+  "summary": "Latent diffusion models (frozen off-the-shelf Stable Diffusion VAE) whose denoiser is a ViT-style transformer on 2x2/4x4/8x8 patches of the latent, conditioned on timestep and class via adaLN-Zero. 12 configs (S/B/L/XL x patch 8/4/2) are trained on class-conditional ImageNet and compared on FID against Gflops; DiT-XL/2 is trained to 7M steps (256) and 3M (512).",
+  "task": "class-conditional image generation (ImageNet 256x256 and 512x512)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Krizhevsky et al. 2012 citation",
+    "preprocessing": "only horizontal flips as augmentation; images encoded by VAE to 32x32x4 (256px) or 64x64x4 (512px) latents"
+   }
+  ],
+  "models": [
+   {
+    "name": "DiT-S",
+    "role": "proposed",
+    "params": "33M",
+    "architecture": "diffusion transformer, adaLN-Zero blocks",
+    "init_from": "ViT-standard init; final linear layer zero-initialised",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 384,
+    "heads": 6,
+    "context": null,
+    "other": {
+     "gflops_I32_p4": "1.4 (Table 1)",
+     "patch_sizes": "8,4,2"
+    }
+   },
+   {
+    "name": "DiT-B",
+    "role": "proposed",
+    "params": "130M",
+    "architecture": "diffusion transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 12,
+    "hidden": 768,
+    "heads": 12,
+    "context": null,
+    "other": {
+     "gflops_I32_p4": "5.6 (Table 1)"
+    }
+   },
+   {
+    "name": "DiT-L",
+    "role": "proposed",
+    "params": "458M",
+    "architecture": "diffusion transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 24,
+    "hidden": 1024,
+    "heads": 16,
+    "context": null,
+    "other": {
+     "gflops_I32_p4": "19.7 (Table 1)"
+    }
+   },
+   {
+    "name": "DiT-XL",
+    "role": "proposed",
+    "params": "675M",
+    "architecture": "diffusion transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": 28,
+    "hidden": 1152,
+    "heads": 16,
+    "context": "inferred: 256 tokens at 256px p=2 (T=(I/p)^2 with I=32); 1024 tokens at 512px p=2",
+    "other": {
+     "gflops_I32_p4": "29.1 (Table 1)",
+     "gflops_XL2_256": "118.6",
+     "gflops_XL2_512": "524.6"
+    }
+   },
+   {
+    "name": "Stable Diffusion VAE (ft-EMA / ft-MSE / original LDM f8 decoder)",
+    "role": "base",
+    "params": "84M (encoder+decoder)",
+    "architecture": "convolutional VAE, downsample factor 8, frozen",
+    "init_from": "pre-trained off the shelf",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ADM, ADM-U, ADM-G, LDM-4, LDM-8, CDM, BigGAN-deep, StyleGAN-XL",
+    "role": "baseline",
+    "params": null,
+    "architecture": "U-Net diffusion / GAN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_simple (MSE on noise) for epsilon, full variational lower bound L for learned covariance Sigma (Nichol and Dhariwal); class label dropped to learned null embedding for classifier-free guidance (dropout probability not stated)",
+   "optimizer": "AdamW",
+   "lr": "1e-4 constant",
+   "lr_schedule": "constant",
+   "warmup": "none",
+   "batch_size": "256",
+   "steps": "400K for the 12-model sweep; DiT-XL/2 256x256 7M (2352K and 7000K rows in Table 4); DiT-XL/2 512x512 3M",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0",
+   "dropout": null,
+   "regularisation": "none; only horizontal flip augmentation",
+   "hardware": "TPU-v3 pods; JAX",
+   "compute": "estimated as model Gflops x batch size x training steps x 3",
+   "wall_clock": "DiT-XL/2 trains at roughly 5.7 iterations/second on a TPU v3-256 pod with global batch size 256",
+   "seeds": null,
+   "other": {
+    "ema_decay": "0.9999 (EMA weights used for all results)",
+    "hyperparameter_source": "retained almost entirely from ADM; not tuned (lr, schedules, Adam betas, weight decay)",
+    "timestep_embedding": "256-d frequency embedding then two-layer MLP with SiLU",
+    "adaLN_output": "linear layer to 4x (adaLN) or 6x (adaLN-Zero) hidden size",
+    "activation": "GELU (tanh approx)",
+    "diffusion": "t_max=1000, linear variance schedule 1e-4 to 2e-2, ADM covariance parameterisation",
+    "positional_embedding": "sine-cosine ViT, fixed",
+    "loss_spikes": "none observed"
+   }
+  },
+  "inference": {
+   "decoding": "DDPM sampling, 250 steps for reported FID-50K; classifier-free guidance",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "50K samples for FID-50K (10K for FID-10K in sampling-steps study); single run, no seeds stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "cfg_scale_table2_3": "1.25 and 1.50 (guidance on first 3 of 4 latent channels only); 4.0/6.0 used for qualitative figs",
+    "cfg_channels": "first three of four latent channels; 3-channel scale 1+x approx 4-channel scale 1+0.75x",
+    "sampling_steps_sweep": "16, 32, 64, 128, 256, 1000"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "FID-50K",
+     "definition": "Frechet Inception Distance on 50K samples, computed with ADM's TensorFlow evaluation suite",
+     "unit": "FID",
+     "higher_is_better": false
+    },
+    {
+     "name": "sFID",
+     "definition": "spatial FID (Nash et al.)",
+     "unit": "sFID",
+     "higher_is_better": false
+    },
+    {
+     "name": "Inception Score",
+     "definition": "Salimans et al. 2016",
+     "unit": "IS",
+     "higher_is_better": true
+    },
+    {
+     "name": "Precision/Recall",
+     "definition": "Kynkaanniemi et al. 2019; 1000 real samples at 512px for consistency with ADM",
+     "unit": "0-1",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ADM family",
+    "LDM-4/8",
+    "CDM",
+    "BigGAN-deep",
+    "StyleGAN-XL"
+   ],
+   "protocol": "FID without guidance in scaling study unless stated; ft-MSE decoder for scaling analysis, ft-EMA decoder for Tables 2-3; single run, no variance reported"
+  },
+  "availability": {
+   "code": "project page and code referenced (link not in text)",
+   "weights": null,
+   "data": "ImageNet"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params",
+    "quote": null,
+    "where": "Table 4 (params excluding VAE)"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DiT-XL/2 with classifier-free guidance reaches state-of-the-art FID-50K on ImageNet 256x256, beating prior best diffusion model LDM at 3.60",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 2.27,
+   "unit": "FID-50K",
+   "baseline_value": "3.60 (LDM-4-G cfg=1.50)",
+   "n": null,
+   "setup": "DiT-XL/2-G cfg=1.50, 7M steps, 250 DDPM steps, ft-EMA decoder, ImageNet 256x256",
+   "quote": null,
+   "table": "Table 2, row DiT-XL/2-G (cfg=1.50), column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "DiT-XL/2 improves the best prior diffusion FID on ImageNet 512x512",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 3.04,
+   "unit": "FID-50K",
+   "baseline_value": "3.85 (ADM-G, ADM-U)",
+   "n": null,
+   "setup": "DiT-XL/2-G cfg=1.50, 3M iterations, 512x512",
+   "quote": null,
+   "table": "Table 3, row DiT-XL/2-G (cfg=1.50), column FID",
+   "note": "Table 4 lists 3000K steps for the 3M model; StyleGAN-XL FID 2.41 at 512 is lower than DiT 3.04 in Table 3 though text says DiT beats prior diffusion models",
+   "where": "Table 3, Sec 5.1"
+  },
+  {
+   "claim": "Transformer Gflops are strongly negatively correlated with FID-50K across the 12 DiT models",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson-style correlation (type not stated)",
+   "value": -0.93,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "12 DiT models (S/B/L/XL x p=8,4,2) at 400K steps, no guidance, Fig 8",
+   "quote": "Correlation: -0.93",
+   "table": null,
+   "note": null,
+   "where": "Fig 8"
+  },
+  {
+   "claim": "DiT-XL/2 reaches FID 2.55 when trained only 2.35M steps (similar to ADM)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 2.55,
+   "unit": "FID-50K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "256x256, with guidance, 2.35M steps",
+   "quote": "XL/2 still outperforms all prior diffusion models with an FID of 2.55",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Without guidance DiT-XL/2 at 256x256 gets FID 9.62 vs 10.56 for LDM-4 and 10.94 for ADM",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 9.62,
+   "unit": "FID-50K",
+   "baseline_value": "10.56 (LDM-4)",
+   "n": null,
+   "setup": "no classifier-free guidance, 7M steps",
+   "quote": null,
+   "table": "Table 2, row DiT-XL/2, column FID",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Smaller models with more sampling compute do not catch up: XL/2 at 128 steps beats L/2 at 1000 steps with 5x less sampling compute",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-10K",
+   "value": 23.7,
+   "unit": "FID-10K",
+   "baseline_value": "25.9",
+   "n": null,
+   "setup": "400K-step models, FID-10K, XL/2 128 steps (15.2 Tflops) vs L/2 1000 steps (80.7 Tflops)",
+   "quote": "XL/2 has the better FID-10K (23.7 vs 25.9)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "adaLN-Zero is the best conditioning block; at 400K iterations its FID is nearly half the in-context model's",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 19.47,
+   "unit": "FID-50K",
+   "baseline_value": "in-context 35.24; cross-attention 26.14; adaLN 25.21",
+   "n": null,
+   "setup": "DiT-XL/2 256x256, 400K steps, no guidance, adaLN-Zero",
+   "quote": null,
+   "table": "Table 4, row DiT-XL/2 adaLN-Zero 400K, column FID-50K",
+   "note": null,
+   "where": "Fig 5, Table 4"
+  },
+  {
+   "claim": "DiT-XL/2 uses far fewer Gflops than ADM at 256x256 (118.6 vs 1120) and at 512 (524.6 vs 1983)",
+   "kind": "measured",
+   "source": null,
+   "metric": "Gflops",
+   "value": 118.6,
+   "unit": "Gflops",
+   "baseline_value": "1120 (ADM)",
+   "n": null,
+   "setup": "per forward pass, DDPM component only, 256x256",
+   "quote": "DiT-XL/2 (118.6 Gflops)",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, Table 6"
+  },
+  {
+   "claim": "Cross-attention adds roughly 15% Gflops overhead; in-context adds negligible Gflops",
+   "kind": "measured",
+   "source": null,
+   "metric": "Gflop overhead",
+   "value": 15,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DiT-XL/2 block variants",
+   "quote": "roughly a 15% overhead",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Three-channel guidance at scale 1.5 matches four-channel guidance at scale 1.375 (FID 2.20)",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 2.2,
+   "unit": "FID-50K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DiT-XL/2 256x256 7M steps, guidance on 4 channels, scale 1.375",
+   "quote": "four-channel guidance with a scale of 1.375 gives an FID-50K of 2.20",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "VAE decoder choice changes FID slightly: original LDM decoder gives 2.46 vs 2.27 with ft-EMA",
+   "kind": "measured",
+   "source": null,
+   "metric": "FID-50K",
+   "value": 2.46,
+   "unit": "FID-50K",
+   "baseline_value": "2.27 (ft-EMA)",
+   "n": null,
+   "setup": "DiT-XL/2-G cfg=1.5",
+   "quote": null,
+   "table": "Table 5, row original, column FID",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Training is stable without warmup or regularisation: no loss spikes observed",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "all DiT configs, lr 1e-4, batch 256",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  }
+ ],
+ "limits": [
+  "Class-conditional ImageNet only; the text-to-image use (DALL-E 2, Stable Diffusion) is proposed as future work, not tested.",
+  "Scaling is shown only to 675M parameters / 118.6 Gflops at 256 px; authors say future work should scale to larger models and token counts.",
+  "Single runs with no seeds or variance reported; ImageNet size, split and licence not stated.",
+  "Gflops vs FID correlation is measured at 400K steps only; Table 3 shows StyleGAN-XL still has lower FID at 512x512 (2.41 vs 3.04).",
+  "Hyperparameters were not tuned (borrowed from ADM), so the U-Net comparison may favour either side; guidance applied to only 3 of 4 channels.",
+  "Parameters and Gflops exclude the 84M-parameter VAE; the pipeline depends on a frozen pre-trained VAE."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "adaLN-Zero",
+   "definition": "adaptive layer norm block that also regresses dimension-wise scale alpha applied before each residual connection, with the MLP initialised to output zero so each block starts as the identity function",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Patchify",
+   "definition": "first DiT layer that linearly embeds I x I x C latent patches into T=(I/p)^2 tokens of dimension d",
+   "where": "Sec 3.2, Fig 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Denoising diffusion probabilistic models (Ho et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DDPM formulation and noise-prediction objective; U-Net backbone replaced",
+   "quote": null
+  },
+  {
+   "work": "Diffusion models beat GANs on image synthesis (Dhariwal and Nichol; ADM)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "hyperparameters, diffusion setup, FID evaluation suite and adaLN idea taken from ADM; main baseline",
+   "quote": null
+  },
+  {
+   "work": "Improved denoising diffusion probabilistic models (Nichol and Dhariwal)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "learned covariance with L_simple plus full L",
+   "quote": null
+  },
+  {
+   "work": "High-resolution image synthesis with latent diffusion models (Rombach et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LDM framework and pre-trained VAE; LDM-4/8 baselines",
+   "quote": null
+  },
+  {
+   "work": "An image is worth 16x16 words (ViT, Dosovitskiy et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "DiT follows ViT patching and S/B/L configs",
+   "quote": null
+  },
+  {
+   "work": "Classifier-free diffusion guidance (Ho and Salimans)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "guidance used for headline results",
+   "quote": null
+  },
+  {
+   "work": "FiLM (Perez et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "adaptive normalisation for conditioning",
+   "quote": null
+  },
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "related",
+   "note": "training-loss scaling trend compared to language models",
+   "quote": null
+  },
+  {
+   "work": "Scalable adaptive computation for iterative generation (Jabri et al.)",
+   "year": 2022,
+   "arxiv": "2212.11972",
+   "relation": "related",
+   "note": "concurrent attention-based DDPM architecture",
+   "quote": null
+  },
+  {
+   "work": "StyleGAN-XL (Sauer et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "best GAN comparison",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training and evaluation data",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "The Diffusion Transformer (DiT) architecture. Left: latent DiT. Right: DiT block variants with adaLN-Zero, cross-attention and in-context conditioning.",
+   "page": 3,
+   "why": "shows how conditioning is injected in each block variant"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Comparing different conditioning strategies. adaLN-Zero outperforms cross-attention and in-context conditioning at all stages of training.",
+   "page": 5,
+   "why": "the key design ablation"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Transformer Gflops are strongly correlated with FID.",
+   "page": 8,
+   "why": "central scaling claim (correlation -0.93)"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Larger DiT models use large compute more efficiently.",
+   "page": 8,
+   "why": "compute-efficiency frontier"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Scaling-up sampling compute does not compensate for a lack of model compute.",
+   "page": 9,
+   "why": "model vs test-time compute tradeoff"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3.1",
+   "snippet": "eps_hat(x_t, c) = eps(x_t, null) + s * (eps(x_t, c) - eps(x_t, null))  (classifier-free guidance)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No instructions embedded in the text.",
+  "Table 4 lists DiT-XL/2 512 runs at 1301K and 3000K steps while the text says 3M; 256 runs at 2352K and 7000K (text: 7M; 2.35M gives FID 2.55).",
+  "Figure axis numbers appear as raw runs in the text cache; layout of Tables 2-4 is one value per line."
+ ]
+}

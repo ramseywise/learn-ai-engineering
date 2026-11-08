@@ -1,0 +1,82 @@
+{
+"schema": 1,
+"key": "1809.10853",
+"pdf": "generative-ai/01-llm-fundamentals/sources/baevski-2018-adaptive-input-representations-neural-language.pdf",
+"bib": {"title": "Adaptive Input Representations for Neural Language Modeling", "authors": ["Alexei Baevski", "Michael Auli"], "first_author": "Baevski", "year": 2019, "venue": "ICLR 2019 (arXiv v3, 22 Feb 2019)", "arxiv": "1809.10853", "doi": null},
+"read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 32875, "chars_total": 32875, "engine": "pymupdf", "skipped": null},
+"type": "empirical",
+"question": "How should input and output layers of a self-attentional language model be factorized (word, character, sub-word, adaptive) for best accuracy and speed?",
+"hypothesis": "Giving frequent words larger embeddings and rare words smaller ones (as adaptive softmax does for outputs) reduces overfitting to rare words and parameters while improving accuracy.",
+"contributions": ["Adaptive input embeddings extending adaptive softmax to inputs", "Systematic comparison of word, char-CNN, BPE and adaptive factorizations", "Tail dropout for adaptive softmax", "SOTA on WikiText-103 (18.7) and Billion Word (23.02)"],
+"method": {
+"summary": "Decoder-only transformer language model with frequency-banded input embeddings (dimension shrinks by k=4 per band, projected to d) optionally tied with an adaptive softmax output. Compared against fixed word, BPE and char-CNN input/output layers under identical architecture.",
+"task": "word-level language modeling",
+"trains": true,
+"datasets": [
+{"name": "Billion Word", "role": "both", "size": "768M word tokens, ~800K vocabulary", "split": "standard train/valid/test", "source": "Chelba et al. 2013", "preprocessing": "words with more than 3 occurrences kept; sentences batched individually"},
+{"name": "WikiText-103", "role": "both", "size": "~100M training tokens, ~260K vocabulary", "split": "standard train/valid/test", "source": "Merity et al. 2016", "preprocessing": "types with more than 3 occurrences; blocks of 512 contiguous tokens (3072 for headline result), ignoring document boundaries"}
+],
+"models": [
+{"name": "Adaptive inputs (ADP / ADP-T)", "role": "proposed", "params": "247M (WikiText-103 main); 331M / 465M / 1026M (Billion Word base/large/very large)", "architecture": "decoder-only transformer, pre-layernorm, sinusoidal positions", "init_from": null, "tokenizer": "words (BPE 32K codes for BPE baselines)", "vocab": "260K WikiText-103; 800K Billion Word", "layers": "16 (20 large, 24 very large)", "hidden": "e=1024 (1536 very large); FFN 4096 (6144 large, 8192 very large)", "heads": "16", "context": "512-token blocks; 3072 for headline WikiText-103", "other": {"bands_wikitext103": "20K (d=1024), 40K (d=256), 200K (d=64)", "bands_billion_word": "60K (d=1024), 100K (d=256), 640K (d=64)", "k": "4"}},
+{"name": "Char-CNN input + adaptive softmax", "role": "baseline", "params": "366M Billion Word; 266.3M WikiText-103", "architecture": "Kim et al. 2015 char CNN", "init_from": null, "tokenizer": "characters", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"filters": "1x128, 2x256, 3x384, 4x512, 5x512, 6x512, 7x512", "char_embedding": "128", "highway": "1 layer WikiText-103, 2 Billion Word"}},
+{"name": "SM, SM-T, BPE, BPE-T, ASM", "role": "baseline", "params": "see Tables 3 and 4", "architecture": "same transformer, different input/output layers", "init_from": null, "tokenizer": null, "vocab": "BPE 33,337 (WikiText-103), 32,347 (Billion Word)", "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fixed_embedding_size": "512 WikiText-103 SM; 64 Billion Word SM; BPE 1024; ASM input 64 (WikiText-103), 256 (Billion Word)"}}
+],
+"training": {
+"objective": "next-word cross-entropy (word-level perplexity)",
+"optimizer": "Nesterov accelerated gradient, momentum 0.99, gradient renormalized if norm exceeds 0.1",
+"lr": "max 1, initial min 1e-5",
+"lr_schedule": "cosine with restarts (C cycles, each twice as long as previous, max/min lowered by factor M); Billion Word C=3, first cycle 137K steps, M=0.6; WikiText-103 C=4, first cycle 18K steps, M=0.75",
+"warmup": "linear from 1e-7 to 1 over 16K steps",
+"batch_size": "65K tokens effective: Billion Word B=2048 tokens/GPU x 32 GPUs (64 GPUs for main results); WikiText-103 B=4096 x 8 GPUs, 2 batches accumulated",
+"steps": "975K updates Billion Word; 286K WikiText-103",
+"epochs": null,
+"tokens": null,
+"seq_len": "512 (WikiText-103 default), 3072 for headline result; Billion Word per sentence",
+"precision": "16-bit floating point",
+"weight_decay": null,
+"dropout": "Billion Word 0.1 + attention 0.1; WikiText-103 0.3, ReLU dropout 0.1, attention dropout 0.1; tail dropout in adaptive softmax projection (0.2 best, Table 6)",
+"regularisation": "dropout in adaptive softmax tail projection; weight tying",
+"hardware": "DGX-1 machines with 8 NVIDIA V100 GPUs, Infiniband, NCCL2",
+"compute": null,
+"wall_clock": "Billion Word: 55h adaptive, 79h char-CNN, 145h very large (64 GPUs); WikiText-103: 67h (8 GPUs)",
+"seeds": null,
+"other": {}
+},
+"inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": "single run per config, no seeds stated", "prompting": null, "retrieval": null, "parameters": {"eval_blocks": "complete sentences up to 512 tokens; headline: 3072 tokens, first 2560 as context, score last 512"}, "other": {}},
+"eval": {
+"metrics": [{"name": "perplexity", "definition": "word-level perplexity; for BPE, word probability is product of sub-word probabilities", "unit": "PPL", "higher_is_better": false}],
+"baselines": ["Dauphin 2017", "Jozefowicz 2016", "Shazeer 2017", "Grave 2016", "Merity 2018", "Rae 2018", "Char-CNN", "BPE", "fixed softmax"],
+"protocol": "same hyperparameters per dataset; same number of updates; validation used for tuning; no seeds or significance tests"
+},
+"availability": {"code": "http://github.com/pytorch/fairseq", "weights": "pre-trained models in fairseq", "data": "public benchmarks"},
+"prompts": [],
+"evidence": []
+},
+"results": [
+{"claim": "Adaptive inputs reach 18.7 test perplexity on WikiText-103, 10.5 better than previous best.", "kind": "measured", "source": null, "metric": "test perplexity", "value": "18.7", "unit": "PPL", "baseline_value": "29.2 (Rae et al. 2018)", "n": null, "setup": "WikiText-103, 247M params, 3072-token training blocks, 2560 context at eval, 8 GPUs, 67h", "quote": "On the WIKITEXT-103 benchmark we achieve 18.7 per-", "table": "Table 2, row Adaptive inputs, column Test", "note": null, "where": "Abstract, Table 2"},
+{"claim": "Very large adaptive input model reaches 23.02 test perplexity on Billion Word.", "kind": "measured", "source": null, "metric": "test perplexity", "value": "23.02", "unit": "PPL", "baseline_value": "23.7 (10 LSTMs + SNM10-SKIP)", "n": null, "setup": "Billion Word, 1026M params, N=24, e=1536, eff=8192, 64 GPUs, 145h", "quote": "Our very large model performs as well as an ensemble of over ten models and achieves 23.02 perplexity.", "table": "Table 1, row Adaptive inputs (very large)", "note": null, "where": "Sec 5.1, Table 1"},
+{"claim": "Adaptive inputs with tied output (ADP-T) beat char-CNN by about 1 PPL at under half the training time on WikiText-103.", "kind": "measured", "source": null, "metric": "test perplexity", "value": "20.51", "unit": "PPL", "baseline_value": "21.79 (Char-CNN)", "n": null, "setup": "WikiText-103, 512-token blocks, same number of updates, 8-GPU machine, 30h vs 70h", "quote": "CNN is 1 perplexity worse than ADP-T and requires well over twice the training time.", "table": "Table 3, rows ADP-T and CNN, column Test", "note": null, "where": "Sec 5.2, Table 3"},
+{"claim": "Larger training block (3072 vs 512) improves WikiText-103 perplexity by nearly 1.2 with no inference context.", "kind": "measured", "source": null, "metric": "test perplexity", "value": "19.34", "unit": "PPL", "baseline_value": "20.51", "n": null, "setup": "WikiText-103 ADP-T, train block 3072 vs 512, inference context 0", "quote": "results in an improvement of nearly 1.2 perplexity with no inference context window.", "table": "Table 5, rows 512/0 and 3072/0, column Test", "note": null, "where": "Sec 5.3, Table 5"},
+{"claim": "Tail dropout 0.2 in adaptive softmax lowers WikiText-103 validation PPL from 24.74 to 21.23, beating the full softmax (23.87).", "kind": "measured", "source": null, "metric": "validation perplexity", "value": "21.23", "unit": "PPL", "baseline_value": "23.87", "n": null, "setup": "WikiText-103, ASM with 64d input embeddings", "quote": "This change enables the adaptive softmax to outperform", "table": "Table 6, rows Adaptive 0.0 and 0.2", "note": null, "where": "Sec 5.4, Table 6"},
+{"claim": "Adaptive inputs cut input+output parameters by 23%, and 61% when tied with adaptive softmax.", "kind": "measured", "source": null, "metric": "parameter reduction", "value": "23%", "unit": "%", "baseline_value": null, "n": null, "setup": "competitive Billion Word setup versus fixed-size embeddings", "quote": "adaptive input embeddings reduce the number of parameters in the input and output layers by 23% while achieving higher accuracy over ﬁxed", "table": null, "note": "61% total when tied", "where": "Sec 1"}
+],
+"limits": ["Document boundaries ignored; authors leave this to future work", "Tail dropout not helpful on Billion Word; full softmax over 800K words intractable so no comparison", "Single runs, no seeds or significance", "Embedding sizes of baselines tuned on validation with GPU memory limits (16GB)", "Band sizes not tuned per band for dropout"],
+"practices": [],
+"terms": [{"term": "adaptive input representations", "definition": "Frequency-ordered vocabulary clusters whose embedding dimension shrinks by factor k per cluster, projected to common dimension d", "where": "Sec 3"}],
+"lineage": [
+{"work": "Efficient softmax approximation for GPUs (adaptive softmax)", "year": 2017, "arxiv": null, "relation": "extends", "note": "adaptive softmax extended to inputs", "quote": null},
+{"work": "Attention Is All You Need", "year": 2017, "arxiv": "1706.03762", "relation": "uses-method", "note": "base architecture, decoder only, pre-LN", "quote": null},
+{"work": "Merity et al. An analysis of neural language modeling at multiple scales", "year": 2018, "arxiv": "1803.08240", "relation": "baseline", "note": "tied adaptive softmax without dim reduction", "quote": null},
+{"work": "Kim et al. Character-aware neural language models", "year": 2015, "arxiv": "1508.06615", "relation": "baseline", "note": "char CNN input", "quote": null},
+{"work": "Sennrich et al. BPE", "year": 2016, "arxiv": null, "relation": "baseline", "note": "sub-word baseline", "quote": null},
+{"work": "WikiText-103 / Pointer sentinel mixture models", "year": 2016, "arxiv": "1609.07843", "relation": "uses-data", "note": null, "quote": null},
+{"work": "One billion word benchmark", "year": 2013, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+{"work": "Press and Wolf; Inan et al. weight tying", "year": 2017, "arxiv": "1611.01462", "relation": "uses-method", "note": "input/output tying", "quote": null}
+],
+"figures": [
+{"figure": "Fig 1", "caption": "Illustration of adaptive input representations.", "page": 2, "why": "shows banded embeddings projected to d"},
+{"figure": "Fig 2", "caption": "Loss of models binned by word frequency on the test set of WikiText-103.", "page": 7, "why": "shows ADP-T best across frequency ranges"}
+],
+"code": [],
+"problems": ["Figure 1 text garbled in extraction; no embedded instructions found", "Intro says Billion Word large model 24.14 SOTA; Table 1 prints 23.91 for large", "Table 4 (Billion Word factorizations) ADP-T 25.58 test differs from Table 1 setting (32 GPUs, base)"]
+}

@@ -1,0 +1,264 @@
+{
+ "schema": 1,
+ "key": "2109.07445",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/welbl-2021-challenges-detoxifying-language-models.pdf",
+ "bib": {
+  "title": "Challenges in Detoxifying Language Models",
+  "authors": ["Johannes Welbl", "Amelia Glaese", "Jonathan Uesato", "Sumanth Dathathri", "John Mellor", "Lisa Anne Hendricks", "Kirsty Anderson", "Pushmeet Kohli", "Ben Coppin", "Po-Sen Huang"],
+  "first_author": "Welbl",
+  "year": 2021,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2021",
+  "arxiv": "2109.07445",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 93780,
+  "chars_total": 93780,
+  "engine": "pymupdf",
+  "skipped": "References skimmed only.",
+  "chars_note": "full text read"
+ },
+ "type": "empirical",
+ "question": "How well do LM toxicity mitigation methods work under human as well as automatic evaluation, and what do they cost in LM quality and social bias?",
+ "hypothesis": "Classifier-based toxicity reduction may transfer toxicity-classifier biases to the LM, hurting coverage of marginalized groups, and automatic scores may stop tracking human judgement once toxicity is low.",
+ "contributions": [
+  "Critical discussion of LM toxicity evaluation and evaluation of several mitigation methods with automatic and human judgement",
+  "Combinations of simple methods (train filtering, test-time filtering, PPLM) are very effective on automatic metrics but overfilter text related to marginalized groups",
+  "Increased disagreement of high automatic toxicity scores with human annotators after strong toxicity reduction",
+  "Toxicity reduction costs LM loss and disproportionately hurts text about and by marginalized groups (topic and dialect biases increase)"
+ ],
+ "method": {
+  "summary": "A 1.4B TransformerXL LM is trained on C4, either on the full corpus or on corpora filtered by Perspective API toxicity score. Decoding-time BERT-classifier best-of-K filtering and PPLM are added on top. Methods are evaluated on RealToxicityPrompts with Perspective API, with 3-rater human annotation, with loss gaps on BOLD and TwitterAAE, and on LAMBADA.",
+  "task": "Language model toxicity mitigation and evaluation (prompted and unprompted generation)",
+  "trains": true,
+  "datasets": [
+   {"name": "C4", "role": "pretrain", "size": "364,868,901 training samples; 364,608 validation samples", "split": "train/validation", "source": "Raffel et al., 2020", "preprocessing": "Train-filter@X removes documents with Perspective API toxicity above X; X=0.2, 0.1, 0.05 leave 311M (85%), 209M (57%), 78M (22%) of documents"},
+   {"name": "CivilComments", "role": "train", "size": null, "split": null, "source": "Borkan et al., 2019", "preprocessing": "Soft labels (fraction of annotators rating comment toxic); used to fine-tune BERT test-time filter classifier"},
+   {"name": "Toxic Comment Classification Challenge (Jigsaw, Kaggle)", "role": "train", "size": null, "split": "10% held out for validation, rest for training", "source": "Kaggle", "preprocessing": "Trains PPLM linear discriminator"},
+   {"name": "RealToxicityPrompts (RTP)", "role": "eval", "size": "100K prompts (toxic / non-toxic) plus 100K unprompted sentences", "split": "full set; PPLM variants on 10K prompted + 10K unprompted", "source": "Gehman et al., 2020", "preprocessing": "20 token continuations (Table 1); up to 100 tokens truncated at last sentence boundary (Table 6, human eval)"},
+   {"name": "WikiText-103", "role": "eval", "size": "60 validation articles, 60 test articles", "split": null, "source": "Merity et al.", "preprocessing": null},
+   {"name": "BOLD (gender and ethnicity domains)", "role": "eval", "size": "3,204 sentences (gender); 7,657 sentences (ethnicity)", "split": null, "source": "Dhamala et al., 2021", "preprocessing": null},
+   {"name": "TwitterAAE", "role": "eval", "size": "10,000 tweets from each of AAE and WAE subsets", "split": null, "source": "Blodgett et al., 2016", "preprocessing": "Posterior probability of demographic group above 0.8"},
+   {"name": "LAMBADA", "role": "eval", "size": null, "split": "test", "source": "Paperno et al., 2016", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "standard LM (TransformerXL on C4)", "role": "base", "params": "1.4B", "architecture": "TransformerXL (Dai et al., 2019)", "init_from": null, "tokenizer": "SentencePiece", "vocab": "32,000 subword", "layers": "24", "hidden": "d_model = 2048", "heads": "16", "context": null, "other": {"d_ff": "8192", "loss_per_token_C4_val": "2.40"}},
+   {"name": "train-filter@0.2 / 0.1 / 0.05", "role": "proposed", "params": "1.4B", "architecture": "same as standard, trained on filtered C4", "init_from": null, "tokenizer": "SentencePiece", "vocab": "32,000", "layers": "24", "hidden": "2048", "heads": "16", "context": null, "other": {}},
+   {"name": "standard 417M", "role": "baseline", "params": "417M", "architecture": "same family, trained on C4 without interventions", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BERT toxicity classifier (test-filter)", "role": "reward", "params": null, "architecture": "BERT (Devlin et al., 2019) fine-tuned on CivilComments", "init_from": "BERT", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"validation_accuracy": "96.8%"}},
+   {"name": "PPLM linear discriminator", "role": "reward", "params": null, "architecture": "linear layer on LM final-layer representations", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"test_F1_standard": "0.78", "test_F1_train-filter@0.05": "0.73"}},
+   {"name": "GPT-2 and GPT-2 + PPLM", "role": "baseline", "params": null, "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "numbers taken from Gehman et al. (2020)"}}
+  ],
+  "training": {
+   "objective": "LM loss (next-token) on C4 / filtered C4; BERT classifier: cross entropy on soft labels; PPLM discriminator: toxicity prediction",
+   "optimizer": "Adam",
+   "lr": "LM: null; BERT classifier 2x10^-5; PPLM discriminator 0.001",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "256",
+   "steps": "3 x 10^5",
+   "epochs": "BERT classifier 1 epoch; PPLM discriminator 20 epochs (best-accuracy epoch selected)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "128 Google Cloud TPUv3 cores (LMs); 16 TPUv3 cores (BERT classifier)",
+   "compute": null,
+   "wall_clock": "about 5 days",
+   "seeds": null,
+   "other": {"overfitting": "No indications of overfitting on the smaller filtered datasets"}
+  },
+  "inference": {
+   "decoding": "nucleus sampling; test-filter: up to K samples, stop at first with BERT score below tau_reject, else return lowest-BERT-score sample (best-of-K); PPLM steering",
+   "temperature": null,
+   "top_p": "0.9",
+   "max_tokens": "20 tokens (Table 1); up to 100 tokens truncated at sentence boundary (Table 6, human eval)",
+   "samples": "25 continuations per prompt for RTP metrics; 100 sampled per RTP prompt and 10 per TwitterAAE prompt as pool for human-eval upsampling",
+   "prompting": "RealToxicityPrompts prompts, unprompted, and TwitterAAE tweets as prompts",
+   "retrieval": null,
+   "parameters": {
+    "test-filter K": "4",
+    "test-filter tau_reject": "0.01",
+    "PPLM standard": "grad length = 20, gamma = 1.0, step size = 15, no. of iterations = 15, KL-Scale = 0.01, GM-Scale = 0.9",
+    "PPLM train-filter@0.05": "grad length = 20, gamma = 1.0, step size = 25, no. of iterations = 15, KL-Scale = 0.01, GM-Scale = 0.9",
+    "PPLM degenerate filter": "drop samples with mean distinct-1/2/3 below 0.5 before human evaluation"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Expected Maximum Toxicity", "definition": "Maximum Perspective API toxicity over 25 continuations per prompt, averaged across prompts", "unit": "score 0-1", "higher_is_better": false},
+    {"name": "Probability of Toxicity", "definition": "Fraction of prompts with at least one of 25 continuations with Perspective toxicity above 0.5", "unit": "probability 0-1", "higher_is_better": false},
+    {"name": "Average human toxicity score", "definition": "3+ raters per sample; discard NOT SURE, NOT TOXIC=0.0, TOXIC and VERY TOXIC=1.0, average; weighted to compensate upsampling", "unit": "score 0-1", "higher_is_better": false},
+    {"name": "Evaluation loss", "definition": "LM loss per token on C4 validation (bins by toxicity), WikiText-103, BOLD, TwitterAAE; loss gap vs the standard LM", "unit": "nats per token", "higher_is_better": false},
+    {"name": "LAMBADA accuracy", "definition": "Last-word prediction accuracy", "unit": "%", "higher_is_better": true},
+    {"name": "Krippendorff's alpha", "definition": "Inter-rater agreement; NOT TOXIC=0, NOT SURE=0.5, TOXIC/VERY TOXIC=1, absolute difference distance", "unit": "alpha", "higher_is_better": true},
+    {"name": "Spearman correlation human vs automatic", "definition": "Excluding NOT SURE, combining VERY TOXIC and TOXIC", "unit": "rho", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-2", "GPT-2 + PPLM (Gehman et al., 2020)", "standard C4 LM", "standard 417M LM"],
+   "protocol": "Human eval: 300 samples per setting (RTP), 100 per setting (TwitterAAE), pool of 49 annotators, each sample rated by at least 3, upsampling of high Perspective scores in bins [0,0.25),[0.25,0.5),[0.5,0.75),[0.75,1.0] at 35/35/15/15%, 25% toxic prompts and 75% non-toxic, at most 30% samples above 0.5. No seeds or repeated training runs reported."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.steps", "quote": "a batch size of 256 for a total of 3 × 105 training steps—about 5 days", "where": "Section 4"},
+   {"field": "inference.top_p", "quote": "nucleus sampling (Holtzman et al., 2020), with top-p = 0.9", "where": "Section 4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Combining train filtering, test-time filtering and PPLM drives automatic toxicity to near zero on RTP, a 6-fold and 17-fold reduction vs the prior state of the art on toxic and non-toxic prompts.",
+   "kind": "measured", "source": null, "metric": "Probability of Toxicity (toxic prompts)", "value": "0.08", "unit": "probability",
+   "baseline_value": "0.49 (GPT-2 + PPLM, Gehman et al.)", "n": "100K prompts (10K for PPLM) x 25 generations",
+   "setup": "1.4B TransformerXL on C4, train-filter@0.05 + test-filter + PPLM, 20-token continuations, Perspective API",
+   "quote": "the reduction to the previously re-ported state-of-the-art (Gehman et al., 2020) is 6-", "table": "Table 1, row PPLM + train-filter@0.05 + test-filter, column Probability of Toxicity Toxic",
+   "note": "Table values 0.08 vs 0.49; text states 6-fold and 17-fold.", "where": "Table 1, Section 5.1"
+  },
+  {
+   "claim": "Standard C4 LM already has lower unprompted toxicity than GPT-2.",
+   "kind": "measured", "source": null, "metric": "Probability of Toxicity (unprompted)", "value": "0.16", "unit": "probability", "baseline_value": "0.33 (GPT-2)", "n": null,
+   "setup": "Standard 1.4B C4 LM vs GPT-2, 20-token unprompted continuations",
+   "quote": "compared to GPT-2 (e.g. 0.16 vs. 0.33 unprompted Probability of Toxicity)", "table": null, "note": null, "where": "Section 5.1"
+  },
+  {
+   "claim": "C4 has a much lower fraction of toxic documents than the GPT-2 training corpus.",
+   "kind": "reported", "source": "Gehman et al. (2020) for GPT-2; this work for C4", "metric": "fraction of documents with Perspective score >= 0.5", "value": "0.6%", "unit": "%", "baseline_value": "4.3% (GPT-2 corpus)", "n": null,
+   "setup": "Training corpora, Perspective API",
+   "quote": "which Gehman et al. (2020) report at 4.3%, compared to C4 at 0.6%", "table": null, "note": null, "where": "Section 5.1"
+  },
+  {
+   "claim": "Strongest training-set filter raises C4 validation loss to roughly match a 417M model, a third the size.",
+   "kind": "measured", "source": null, "metric": "C4 validation loss per token", "value": "2.66", "unit": "nats/token", "baseline_value": "2.37 (standard 1.4B)", "n": null,
+   "setup": "train-filter@0.05 vs standard 1.4B; standard 417M has 2.62",
+   "quote": null, "table": "Table 2, row train-filter@0.05, column C4", "note": "Section 4 states standard loss-per-token 2.40 on C4 validation; Table 2 prints 2.37.", "where": "Table 2, Section 7"
+  },
+  {
+   "claim": "LAMBADA accuracy falls sharply with the strongest training filter.",
+   "kind": "measured", "source": null, "metric": "LAMBADA accuracy", "value": "34.9", "unit": "%", "baseline_value": "50.1", "n": null,
+   "setup": "train-filter@0.05 vs standard 1.4B",
+   "quote": "with an accuracy decrease from 50.1% to 34.9% for train-", "table": "Table 7, row train-filter@0.05", "note": null, "where": "Section 7"
+  },
+  {
+   "claim": "Loss increase from train-filter@0.05 is concentrated on text Perspective labels toxic.",
+   "kind": "measured", "source": null, "metric": "loss increase on documents with Perspective score >= 0.5", "value": "0.9 (+34%)", "unit": "nats/token", "baseline_value": "0.17 (+7%) for score < 0.1", "n": null,
+   "setup": "C4 validation documents, train-filter@0.05 vs standard",
+   "quote": "increases by 0.9 (+34%) for the evaluation docu-", "table": null, "note": null, "where": "Section 7"
+  },
+  {
+   "claim": "Text quality (comprehensible, grammatical, consistent) barely changes under detoxification.",
+   "kind": "measured", "source": null, "metric": "max difference to standard LM in comprehensibility/grammaticality/consistency", "value": "no larger than 1%, 4%, and 1%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "Human ratings on RTP continuations",
+   "quote": "differences to the standard LM are no larger than 1%, 4%, and 1%, respectively", "table": null, "note": null, "where": "Section 7, Table 10"
+  },
+  {
+   "claim": "PPLM toxicity classifier F1 drops after training on the filtered corpus.",
+   "kind": "measured", "source": null, "metric": "PPLM discriminator F1", "value": "0.73", "unit": "F1", "baseline_value": "0.78", "n": null,
+   "setup": "train-filter@0.05 LM representations vs standard",
+   "quote": "modest drop in the F1-score (to 0.73; -0.05 points)", "table": null, "note": null, "where": "Section 7"
+  },
+  {
+   "claim": "Among Perspective-flagged (>0.5) generations of the train-filter@0.05 LM, 30.2% mention 'gay', versus 4.1% for the standard LM, indicating false positives on identity terms.",
+   "kind": "measured", "source": null, "metric": "share of flagged generations mentioning 'gay'", "value": "30.2%", "unit": "%", "baseline_value": "4.1% (standard LM)", "n": null,
+   "setup": "RTP prompts, Perspective score above 0.5",
+   "quote": "we observe that 30.2% of the train-", "table": null, "note": "An author checked 50 flagged continuations: 32% false positives, 34% unclear, 34% toxic.", "where": "Section 6, Appendix G.1"
+  },
+  {
+   "claim": "Inter-rater agreement is only fair.",
+   "kind": "measured", "source": null, "metric": "Krippendorff's alpha", "value": "0.49", "unit": "alpha", "baseline_value": null, "n": null,
+   "setup": "Standard LM annotations; 0.48 across all LMs",
+   "quote": "Krippendorff’s alpha score of 0.49 for the standard LM, and of 0.48 for all", "table": null, "note": null, "where": "Section 6"
+  },
+  {
+   "claim": "After strong detoxification, most Perspective-flagged samples (score >0.75) are false positives per humans, and correlation with humans collapses in the top bin.",
+   "kind": "measured", "source": null, "metric": "Spearman rho human vs Perspective, bin .75-1, non-toxic prompts, train-filter@0.05", "value": "-0.33", "unit": "rho", "baseline_value": "-0.11 (standard)", "n": null,
+   "setup": "RTP, upsampled human-annotated samples",
+   "quote": null, "table": "Table 9, row train-filter@0.05 non-toxic, column .75-1", "note": "Only 3 samples in the top band for the all-three-methods setting (Appendix E.1).", "where": "Table 9, Section 6"
+  },
+  {
+   "claim": "Spearman correlation between human and Perspective API is lower for filtered models than for the standard LM.",
+   "kind": "measured", "source": null, "metric": "Spearman rho human vs Perspective API", "value": "0.17", "unit": "rho", "baseline_value": "0.49 (standard)", "n": null,
+   "setup": "train-filter@0.05 + test-filter",
+   "quote": null, "table": "Table 8, row train-filter@0.05+test-filter, column Perspective API", "note": null, "where": "Table 8"
+  },
+  {
+   "claim": "Train filtering has disparate impact on dialect coverage: AAE tweets already have higher loss and the gap is amplified.",
+   "kind": "measured", "source": null, "metric": "standard LM loss on TwitterAAE", "value": "5.53", "unit": "nats/token", "baseline_value": "4.77 (WAE)", "n": "10,000 tweets per dialect",
+   "setup": "Standard 1.4B LM",
+   "quote": "AAE tweets already have substantially higher loss under a standard LM (5.53 vs. 4.77)", "table": null, "note": "AAE is 0.07% of C4 documents.", "where": "Section 8.2"
+  },
+  {
+   "claim": "Automatic metrics suggest detoxified LMs remain more toxic for AAE prompts, yet human evaluation finds similar toxicity between dialects.",
+   "kind": "measured", "source": null, "metric": "Probability of Toxicity, AAE prompts, train-filter@0.05", "value": "0.22", "unit": "probability", "baseline_value": "0.14 (WAE)", "n": "100 human-rated samples per setting",
+   "setup": "TwitterAAE tweets as prompts; human avg toxicity AAE 0.02 vs WAE 0.04 for train-filter@0.05",
+   "quote": "(e.g. 0.22 vs. 0.14 Probability of Toxicity)", "table": null, "note": "Human scores Table 4: standard 0.11 AAE vs 0.10 WAE.", "where": "Section 8.2, Tables 3 and 4"
+  },
+  {
+   "claim": "Train filtering increases loss most for Hispanic-American text and female-actor text relative to male-actor text, though the standard LM had the lowest loss for Hispanic-American.",
+   "kind": "measured", "source": null, "metric": "standard LM BOLD loss, female vs male actors", "value": "3.414", "unit": "nats/token", "baseline_value": "3.412 (male)", "n": null,
+   "setup": "BOLD gender domain, standard LM",
+   "quote": "(3.414 vs. 3.412)", "table": null, "note": "Hispanic-American 3.46 vs European-American 3.68 under standard LM.", "where": "Section 8.1, Fig 5"
+  },
+  {
+   "claim": "Likelihood-based bias metrics can miss bias: test-time filtering with minimum acceptance rate epsilon increases loss per token by at most -ln(epsilon)/n regardless of the classifier.",
+   "kind": "measured", "source": null, "metric": "loss gap bound (best-of-K=4) on BOLD groups", "value": "0.09 to 0.13", "unit": "nats/token", "baseline_value": null, "n": null,
+   "setup": "BOLD gender and ethnicity subsets, test-time filtering",
+   "quote": "between 0.09 and 0.13 across all groups", "table": null, "note": "Theory result (Observation 1), derived in Appendix H.", "where": "Section 8.3, Appendix H"
+  },
+  {
+   "claim": "Annotating toxic content negatively affected most annotators' well-being.",
+   "kind": "measured", "source": null, "metric": "annotators reporting 'much more' negative impact", "value": "30.2%", "unit": "%", "baseline_value": null, "n": "49 annotators (pool)",
+   "setup": "Well-being survey, most negative response per annotator; 32.1% 'a bit more'",
+   "quote": "30.2% responded", "table": null, "note": null, "where": "Appendix E.4"
+  }
+ ],
+ "limits": [
+  "Authors caution against over-generalizing absolute and relative efficacy of techniques: LM safety criteria are application- and audience-specific.",
+  "Toxicity is subjective; definition follows Perspective API (rude, disrespectful, unreasonable, likely to make someone leave a discussion). Inter-rater alpha only 0.48-0.49.",
+  "Only English LMs, one 1.4B model, one training run per configuration (no seeds stated); toxicity covers one aspect of harm and not stereotypes or distributional biases.",
+  "Loss gaps are an imperfect bias metric; small loss gaps do not imply low bias.",
+  "Perspective API is applied outside its training domain (forum comments). 20-token continuations give too little context and truncation can create false positives.",
+  "PPLM evaluated only on 10K prompts for compute reasons; very few samples in the highest toxicity band for the combined setting (3 samples).",
+  "Annotation instructions lack race/dialect priming (Sap et al., 2019a).",
+  "Mitigation trade-off with bias is not necessarily unavoidable if less biased classifiers become available."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Expected Maximum Toxicity", "definition": "maximum toxicity score given 25 continuations for a given prompt, averaged across prompts", "where": "Section 5"},
+  {"term": "Probability of Toxicity", "definition": "how frequently at least one continuation has a toxicity score > 0.5, given 25 LM-generated continuations per prompt", "where": "Section 5"},
+  {"term": "train-filter@X", "definition": "LM trained on C4 with documents scoring above X on Perspective API toxicity removed", "where": "Section 4.1"},
+  {"term": "test-filter", "definition": "decoder filtering: sample up to K continuations and return the first below a BERT toxicity threshold, else the lowest-scoring", "where": "Section 4.1"},
+  {"term": "loss gap", "definition": "difference in LM loss relative to the standard LM on the same documents", "where": "Section 8.1"}
+ ],
+ "lineage": [
+  {"work": "RealToxicityPrompts (Gehman et al.)", "year": 2020, "arxiv": "2009.11462", "relation": "extends", "note": "Provides the benchmark, metrics and prior state of the art that this work builds on and critiques", "quote": "We build on, and extend this work"},
+  {"work": "Plug and Play Language Models (Dathathri et al.)", "year": 2020, "arxiv": "1912.02164", "relation": "uses-method", "note": "PPLM used as a decoding-based mitigation", "quote": null},
+  {"work": "Raffel et al., T5 / C4", "year": 2020, "arxiv": "1910.10683", "relation": "uses-data", "note": "C4 training corpus", "quote": null},
+  {"work": "Dai et al., Transformer-XL", "year": 2019, "arxiv": "1901.02860", "relation": "uses-method", "note": "LM architecture", "quote": null},
+  {"work": "Xu et al., Detoxifying LMs risks marginalizing minority voices", "year": 2021, "arxiv": "2104.06390", "relation": "replicates", "note": "Contemporary work finding mitigations amplify bias; this work broadens models, demographics and datasets", "quote": "Our findings are consistent with contemporary work by Xu et al. (2021)"},
+  {"work": "Krause et al., GeDi", "year": 2021, "arxiv": "2009.06367", "relation": "related", "note": "Steering generation with classifier", "quote": null},
+  {"work": "Schick et al., Self-diagnosis and self-debiasing", "year": 2021, "arxiv": "2103.00453", "relation": "related", "note": "LM self-diagnosis for toxicity reduction", "quote": null},
+  {"work": "Gururangan et al., Don't stop pretraining", "year": 2020, "arxiv": "2004.10964", "relation": "related", "note": "Fine-tuning approach to toxicity reduction", "quote": null},
+  {"work": "BOLD (Dhamala et al.)", "year": 2021, "arxiv": "2101.11718", "relation": "uses-data", "note": "Topic coverage evaluation", "quote": null},
+  {"work": "TwitterAAE (Blodgett et al.)", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "Dialect coverage evaluation", "quote": null},
+  {"work": "Sap et al., The risk of racial bias in hate speech detection", "year": 2019, "arxiv": null, "relation": "related", "note": "Classifier dialect bias", "quote": null},
+  {"work": "Dodge et al., Documenting large webtext corpora (C4)", "year": 2021, "arxiv": "2104.08758", "relation": "related", "note": "AAE underrepresented in C4", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Unintended side effect of automatic toxicity reduction methods: Over-filtering of text about marginalized groups reduces the ability of the LM to generate text about these groups, even in a positive way.", "page": 1, "why": "Shows the central bias-amplification harm at a glance."},
+  {"figure": "Fig 2", "caption": "Average human toxicity scores vs. Perspective API scores for the different methods we evaluate.", "page": 5, "why": "Shows the largely monotonic relation between human and automatic toxicity across methods."},
+  {"figure": "Fig 4", "caption": "False positive analysis: avg. Perspective API vs. human score, with std. error, for annotated samples where the continuation toxicity (Persp.) is > 0.75.", "page": 6, "why": "Shows human/automatic divergence growing with intervention strength."},
+  {"figure": "Fig 5", "caption": "LM loss gap between a standard LM and the train-filter@X LMs on subsets of BOLD (gender, ethnicity) and TwitterAAE (dialects).", "page": 7, "why": "Shows the disparate loss increase for marginalized groups."}
+ ],
+ "code": [
+  {"where": "Appendix H, Observation 1", "snippet": "test-time filtering with a minimum acceptance rate of epsilon will never increase loss-per-token by more than -n^-1 ln(epsilon), where n is the document length", "verbatim": false}
+ ],
+ "problems": [
+  "Standard LM C4 validation loss is printed as 2.40 in Section 4 and 2.37 in Table 2.",
+  "Figure 3-6 data not recoverable from text; Figure 4 and 5 values not extracted.",
+  "No embedded instructions found."
+ ]
+}

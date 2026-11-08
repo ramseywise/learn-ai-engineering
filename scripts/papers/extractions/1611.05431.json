@@ -1,0 +1,485 @@
+{
+ "schema": 1,
+ "key": "1611.05431",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xie-2017-aggregated-residual-transformations-deep-neural.pdf",
+ "bib": {
+  "title": "Aggregated Residual Transformations for Deep Neural Networks",
+  "authors": [
+   "Saining Xie",
+   "Ross Girshick",
+   "Piotr Dollár",
+   "Zhuowen Tu",
+   "Kaiming He"
+  ],
+  "first_author": "Xie",
+  "year": 2017,
+  "venue": "CVPR 2017 (arXiv v2, 11 Apr 2017)",
+  "arxiv": "1611.05431",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 44167,
+  "chars_total": 44167,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a homogeneous multi-branch residual block with a new dimension, cardinality, improve image classification accuracy beyond depth and width at fixed complexity?",
+ "hypothesis": "Increasing cardinality is a more effective way of gaining accuracy than going deeper or wider.",
+ "contributions": [
+  "ResNeXt: a block that aggregates C same-topology transformations by summation, with few hyper-parameters",
+  "Cardinality as a measurable dimension besides depth and width",
+  "Equivalent forms (early concatenation, grouped convolution)",
+  "Gains over ResNet on ImageNet-1K, ImageNet-5K, CIFAR, COCO; 2nd place ILSVRC 2016 classification"
+ ],
+ "method": {
+  "summary": "Replace ResNet bottleneck blocks with blocks of C parallel low-dimensional bottleneck paths summed (implemented as grouped convolution). Compare cardinality vs width vs depth at matched or doubled FLOPs on ImageNet-1K, then ImageNet-5K, CIFAR and COCO.",
+  "task": "image classification (plus object detection transfer)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet-1K",
+    "role": "both",
+    "size": "1000 classes (train size not stated)",
+    "split": "train / val, evaluated on val with single 224x224 center crop of image with shorter side 256",
+    "source": "Russakovsky et al. 2015",
+    "preprocessing": "224x224 random crop from resized image, scale and aspect ratio augmentation of [38] via fb.resnet.torch"
+   },
+   {
+    "name": "ImageNet-5K",
+    "role": "both",
+    "size": "6.8 million images, 5000 categories (~5x the 1K set)",
+    "split": "no official split; evaluated on original ImageNet-1K val",
+    "source": "Subset of ImageNet-22K: the 1K classes plus the 4000 other classes with most images",
+    "preprocessing": null
+   },
+   {
+    "name": "CIFAR-10 / CIFAR-100",
+    "role": "both",
+    "size": "50k train, 10k test",
+    "split": "50k/10k",
+    "source": "Krizhevsky 2009",
+    "preprocessing": "32x32 random crop from zero-padded 40x40 or flip"
+   },
+   {
+    "name": "COCO",
+    "role": "both",
+    "size": "80k train + 35k val subset for training; 5k minival for eval",
+    "split": null,
+    "source": "Lin et al. 2014",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNeXt-50 (32x4d)",
+    "role": "proposed",
+    "params": "25.0M",
+    "architecture": "ResNet with grouped-conv bottleneck blocks, C=32, d=4",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "4.2e9"
+    }
+   },
+   {
+    "name": "ResNeXt-101 (32x4d)",
+    "role": "proposed",
+    "params": "inferred: ~44M from Fig 5 caption (~44 million)",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "101",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "~7.8e9"
+    }
+   },
+   {
+    "name": "ResNeXt-101 (64x4d)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above, C=64",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "101",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "~15e9"
+    }
+   },
+   {
+    "name": "ResNeXt-29 (8x64d, 16x64d)",
+    "role": "proposed",
+    "params": "34.4M, 68.1M",
+    "architecture": "bottleneck template, 3 stages x 3 blocks, CIFAR",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "29",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-50 / ResNet-101 / ResNet-200",
+    "role": "baseline",
+    "params": "25.5M (ResNet-50)",
+    "architecture": "ResNet bottleneck",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "50/101/200",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs ResNet-50": "4.1e9"
+    }
+   }
+  ],
+  "training": {
+   "objective": "softmax classification (inferred: cross-entropy; Faster R-CNN losses for detection)",
+   "optimizer": "SGD, momentum 0.9",
+   "lr": "0.1 (ImageNet and CIFAR); detection RPN 0.02 then 0.002, Fast R-CNN 0.005 then 0.0005",
+   "lr_schedule": "ImageNet: divide by 10 three times, schedule of [11]; CIFAR: reduced at epochs 150 and 225",
+   "warmup": null,
+   "batch_size": "256 on 8 GPUs (32 per GPU) ImageNet; 128 on 8 GPUs CIFAR",
+   "steps": "detection: 120k + 60k mini-batches per stage",
+   "epochs": "ImageNet-1K: 90 (read from Fig 5 axis); CIFAR: 300; ImageNet-5K: same number of mini-batches as 1K, so 1/5 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.0001 (ImageNet, detection); 0.0005 (CIFAR)",
+   "dropout": null,
+   "regularisation": "batch norm after convs; data augmentation",
+   "hardware": "8 GPUs; NVIDIA M40 for timing",
+   "compute": "64x4d ResNeXt-101: 10 days on 8 GPUs",
+   "wall_clock": "0.95s/mini-batch for 32x4d ResNeXt-101",
+   "seeds": "CIFAR: average of 10 runs; ImageNet: not stated",
+   "other": {
+    "init": "He et al. 2015 weight init",
+    "shortcuts": "identity, projection (type B) when dims increase",
+    "downsampling": "stride-2 in 3x3 layer of first block in conv3-5",
+    "detection": "Faster R-CNN, RPN and Fast R-CNN not feature-shared; RPN 2 images/GPU, 256 anchors; Fast R-CNN 1 image/GPU, 64 regions; pretrained on ImageNet-1K"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single 224x224 center crop in ablations; also 320x320 single crop; multi-scale dense testing for competition",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 / top-5 error",
+     "definition": "classification error on val",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "COCO AP, AP@0.5",
+     "definition": "COCO-style average precision",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ResNet-50/101/200",
+    "Wide ResNet",
+    "Inception-v3/v4",
+    "Inception-ResNet-v2"
+   ],
+   "protocol": "Single runs on ImageNet (no variance reported); 10 runs on CIFAR with standard error bars in Fig 7."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/ResNeXt",
+   "weights": "models publicly available",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "ResNeXt-50 32x4d beats ResNet-50 at matched complexity on ImageNet-1K",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "22.2",
+   "unit": "%",
+   "baseline_value": "23.9",
+   "n": null,
+   "setup": "ImageNet-1K val, single 224 crop, ~4.1B FLOPs, ~25M params, 90 epochs",
+   "note": null,
+   "where": "5.1",
+   "quote": "the 32×4d ResNeXt-50 has a validation error of 22.2%, which is 1.7% lower than the ResNet baseline’s 23.9%"
+  },
+  {
+   "claim": "Doubling cardinality (64x4d ResNeXt-101) beats going deeper or wider at 2x ResNet-101 FLOPs",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "20.4",
+   "unit": "%",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "ImageNet-1K val, single 224 crop, ~15B FLOPs; ResNet-200 21.7, wider ResNet-101 21.3",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row ResNeXt-101 64 × 4d, column top-1 err"
+  },
+  {
+   "claim": "ResNeXt-101 32x4d beats ResNet-101 at same complexity",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "21.2",
+   "unit": "%",
+   "baseline_value": "22.0",
+   "n": null,
+   "setup": "ImageNet-1K val, single 224 crop, ~7.8B FLOPs",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row ResNeXt-101 32 × 4d, column top-1 error (%)"
+  },
+  {
+   "claim": "ResNeXt-101 64x4d single-crop 320 test",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-5 error",
+   "value": "4.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K val, 320x320 single crop",
+   "note": null,
+   "where": "5.1",
+   "quote": "achieving a single-crop top-5 error rate of 4.4%"
+  },
+  {
+   "claim": "ImageNet-5K: ResNeXt-50 lowers 5K-way top-1 error vs ResNet-50",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "42.3",
+   "unit": "%",
+   "baseline_value": "45.5",
+   "n": null,
+   "setup": "Trained on ImageNet-5K (6.8M images), tested on 1K val as 5K-way; ResNet-50 45.5",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row ResNeXt-50 32 × 4d, column 5K-way top-1"
+  },
+  {
+   "claim": "CIFAR-10 test error of ResNeXt-29 16x64d",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "3.58",
+   "unit": "%",
+   "baseline_value": "4.17",
+   "n": null,
+   "setup": "CIFAR-10, 68.1M params, mean of 10 runs; Wide ResNet 4.17",
+   "note": null,
+   "where": "5.3",
+   "quote": "Our larger method achieves 3.58% test error (average of 10 runs) on CIFAR-10 and 17.31% on CIFAR-100"
+  },
+  {
+   "claim": "CIFAR-100 test error of ResNeXt-29 16x64d",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "17.31",
+   "unit": "%",
+   "baseline_value": "20.50",
+   "n": null,
+   "setup": "CIFAR-100, 68.1M params, mean of 10 runs; Wide ResNet 20.50",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row ResNeXt-29 16×64d, column CIFAR-100"
+  },
+  {
+   "claim": "COCO minival AP with ResNeXt-50 backbone in Faster R-CNN",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP",
+   "value": "27.5",
+   "unit": "points",
+   "baseline_value": "26.5",
+   "n": null,
+   "setup": "COCO minival, Faster R-CNN, ImageNet-1K pretrained; ResNet-50 26.5; AP@0.5 49.7 vs 47.6",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row ResNeXt-50 32 × 4d, column AP"
+  },
+  {
+   "claim": "Removing shortcuts hurts ResNet-50 far more than ResNeXt-50",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 error",
+   "value": "26.1",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-1K, ResNeXt-50 32x4d without residual; ResNet-50 without residual 31.2",
+   "note": null,
+   "where": "5.1",
+   "quote": "Removing shortcuts from the ResNeXt-50 increases the error by 3.9 points to 26.1%"
+  },
+  {
+   "claim": "Training overhead of grouped-conv ResNeXt-101 32x4d vs ResNet-101",
+   "kind": "measured",
+   "source": null,
+   "metric": "time per mini-batch",
+   "value": "0.95",
+   "unit": "s",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8x NVIDIA M40, Torch built-in grouped conv; ResNet-101 0.70s",
+   "note": null,
+   "where": "5.1",
+   "quote": "takes 0.95s per mini-batch, vs. 0.70s of ResNet-101"
+  },
+  {
+   "claim": "64x4d ResNeXt-101 training takes 10 days on 8 GPUs",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "10",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 GPUs, 1.7s per mini-batch",
+   "note": null,
+   "where": "5.1",
+   "quote": "takes 1.7s per mini-batch and 10 days total on 8 GPUs"
+  }
+ ],
+ "limits": [
+  "ImageNet gains are single-run with no variance reported",
+  "Gains shrink at ResNet-101 depth (0.8 points) and on COCO 101-layer",
+  "Grouped conv implementation is brute-force; 0.95s vs 0.70s per mini-batch",
+  "Saturating accuracy as width drops below 4d; authors do not go below 4d",
+  "Generalisation to non-visual tasks is only expected, not tested",
+  "Complexity is only approximately preserved"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "cardinality",
+   "definition": "the size of the set of transformations (C in Eqn 2)",
+   "where": "3.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Deep residual learning for image recognition (ResNet)",
+   "year": 2016,
+   "arxiv": "1512.03385",
+   "relation": "extends",
+   "note": "base architecture and baseline",
+   "quote": null
+  },
+  {
+   "work": "Identity mappings in deep residual networks (ResNet-200)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "ResNet-200 and 320 crop protocol",
+   "quote": null
+  },
+  {
+   "work": "Going deeper with convolutions / Inception family",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "split-transform-merge strategy",
+   "quote": null
+  },
+  {
+   "work": "Inception-v4, Inception-ResNet",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared on ImageNet",
+   "quote": null
+  },
+  {
+   "work": "Krizhevsky et al. AlexNet grouped convolutions",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "grouped conv implements the block",
+   "quote": null
+  },
+  {
+   "work": "Wide residual networks",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "CIFAR comparison",
+   "quote": null
+  },
+  {
+   "work": "Faster R-CNN",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "COCO detector",
+   "quote": null
+  },
+  {
+   "work": "ImageNet / ImageNet-22K",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "1K and 5K subsets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Left: A block of ResNet. Right: A block of ResNeXt with cardinality = 32, with roughly the same complexity.",
+   "page": 1,
+   "why": "shows the block change in one glance"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Equivalent building blocks of ResNeXt (a) aggregated, (b) early concatenation, (c) grouped convolutions.",
+   "page": 4,
+   "why": "shows the three equivalent forms and why grouped conv is used"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eqn 3",
+   "snippet": "y = x + sum_{i=1}^{C} T_i(x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text is scrambled in the cached text; no embedded instructions found"
+ ]
+}

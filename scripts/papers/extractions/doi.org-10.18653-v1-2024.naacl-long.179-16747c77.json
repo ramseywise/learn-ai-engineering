@@ -1,0 +1,473 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.naacl-long.179",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/longpre-2024-pretrainers-guide-training-data.pdf",
+ "bib": {
+  "title": "A Pretrainer's Guide to Training Data: Measuring the Effects of Data Age, Domain Coverage, Quality, & Toxicity",
+  "authors": [
+   "Shayne Longpre",
+   "Gregory Yauney",
+   "Emily Reif",
+   "Katherine Lee",
+   "Adam Roberts",
+   "Barret Zoph",
+   "Denny Zhou",
+   "Jason Wei",
+   "Kevin Robinson",
+   "David Mimno",
+   "Daphne Ippolito"
+  ],
+  "first_author": "Longpre",
+  "year": 2024,
+  "venue": "Proceedings of NAACL 2024 (Long Papers), pages 3245-3276",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.naacl-long.179"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 130046,
+  "chars_total": 130046,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; appendix F full-result tables 11-14 and figure data only skimmed."
+ },
+ "type": "empirical",
+ "question": "How do pretraining data age, quality and toxicity filtering, and domain composition affect downstream performance and toxic generation?",
+ "hypothesis": null,
+ "contributions": [
+  "Largest publicly documented pretraining data ablation: 28 unique 1.5B models pretrained from scratch",
+  "Evidence that temporal misalignment between pretraining and evaluation data degrades performance and is not removed by finetuning",
+  "Quantified trade-off between quality/toxicity filtering, benchmark performance and toxic generation",
+  "Evidence that heterogeneous sources (web, books) matter more than targeted domain data"
+ ],
+ "method": {
+  "summary": "Pretrain decoder-only LMs (1.5B LM-XL mainly, 20M LM-Small for scaling) on variants of C4 and the Pile differing in Common Crawl year, quality/toxicity classifier filter threshold, or ablated source domain. Finetune each on downstream tasks and report performance relative to the unfiltered/full baseline.",
+  "task": "next-token pretraining data ablation; evaluated by finetuned QA, toxicity identification, temporal tasks and toxic generation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "C4 (Common Crawl snapshots 2013/2016/2019/2022 and filtered variants)",
+    "role": "pretrain",
+    "size": "Table 6: 2013 246B, 2016 206B, 2019 226B, 2022 360B tokens; Full 226B; quality T=0.975 205B, 0.95 190B, 0.9 166B, 0.7 103B; toxicity T=0.95 221B, 0.9 215B, 0.7 194B, 0.5 171B, 0.3 137B tokens",
+    "split": null,
+    "source": "Raffel et al. 2020; ODC-By licence",
+    "preprocessing": "heuristic English/quality filtering plus approximate dedup (Lee et al. 2022); bad-words filter of original C4 not applied; time versions drop all Common Crawl data scraped after cutoff year"
+   },
+   {
+    "name": "The Pile (domain ablations)",
+    "role": "pretrain",
+    "size": "Table 6: Full 157B tokens; No Social 155B, No Wiki 153B, No Books 146B, No OpenWeb 146B, No Legal 143B, No Academic 136B, No PubMed 133B, No Code 127B, No Common Crawl 114B",
+    "split": null,
+    "source": "Gao et al. 2020; MIT licence; 22 sources partitioned into 9 domains (Table 5, 825 GB base)",
+    "preprocessing": "dedup (Lee et al. 2022); one domain removed at a time"
+   },
+   {
+    "name": "MRQA + UnifiedQA (27 QA datasets, partitioned into 7 domains)",
+    "role": "eval",
+    "size": "27 unique datasets in Sec 2.3; 30 in Appendix D",
+    "split": "finetune on Natural Questions only, evaluate on all",
+    "source": "Fisch 2019; Khashabi 2020",
+    "preprocessing": "datasets can belong to multiple domain categories"
+   },
+   {
+    "name": "Luu et al. 2022 temporal tasks: PubCLS, NewSum, PoliAff, TwiERC, AIC",
+    "role": "eval",
+    "size": null,
+    "split": "finetune on train-year split, evaluate on every test-year split",
+    "source": "Luu et al. 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Toxicity identification: Social Bias Frames, DynaHate (R3,R4), Toxigen",
+    "role": "eval",
+    "size": null,
+    "split": "finetune on train, test on test",
+    "source": "Sap 2020; Vidgen 2021; Hartvigsen 2022",
+    "preprocessing": null
+   },
+   {
+    "name": "Toxic generation: RealToxicityPrompts, RepBias",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Gehman 2020; Chowdhery 2022",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "LM-XL",
+    "role": "proposed",
+    "params": "1.5B",
+    "architecture": "decoder-only Transformer similar to t5.1.1-XL, causal decoding with full LM pretraining objective, prefix LM for finetuning",
+    "init_from": "scratch",
+    "tokenizer": "T5 SentencePiece",
+    "vocab": "32,128",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "LM-Small",
+    "role": "proposed",
+    "params": "20M",
+    "architecture": "decoder-only similar to t5.1.1-small",
+    "init_from": "scratch",
+    "tokenizer": "T5 SentencePiece",
+    "vocab": "32,128",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {
+     "use": "scaling comparison for temporal degradation"
+    }
+   }
+  ],
+  "training": {
+   "objective": "autoregressive next-token prediction (full LM); prefix LM objective for finetuning",
+   "optimizer": null,
+   "lr": "base learning rate 0.5 (Table 7)",
+   "lr_schedule": "decay factor 0.5, steps per decay 20000",
+   "warmup": "1000 steps",
+   "batch_size": "4096",
+   "steps": "88,064",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.0 pretraining",
+   "regularisation": null,
+   "hardware": "TPUs 8x8x8 (LM-XL), 8x8 (LM-Small); T5X and TensorFlow",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single run per variant (single-shot experiments)",
+   "other": {
+    "finetune": "Table 8 LM-XL: Tox-identify seq 128 batch 128 dropout 0.1 10k steps lr 1e-3 AUC-ROC; Natural Qs seq 512 batch 128 50k steps lr 1e-3; SuperGLUE seq 512 100k steps lr 1e-3. LM-Small tox-identify 30k steps. Time tasks: 4x4 TPUs, batch 64, max seq 128, validate every 500 steps, per-task lr and steps in Table 10 (e.g. PubCLS LM-XL 1e-4, 30k steps)",
+    "hyperparameter_source": "pretraining defaults from Wang et al. 2022"
+   }
+  },
+  "inference": {
+   "decoding": "top-k sampling k=40 for toxic generation",
+   "temperature": "1.0",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "25 responses per prompt (RealToxicityPrompts); 50 per prompt (RepBias); toxic if Perspective score >= 0.5",
+   "prompting": "standard prompts of each downstream training dataset, finetuned without adapters",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "QA F1 relative to full-data baseline",
+     "definition": "mean F1 per domain category, difference vs unfiltered model",
+     "unit": "points (relative)",
+     "higher_is_better": true
+    },
+    {
+     "name": "Toxicity identification AUC-ROC",
+     "definition": "average over SBF, Toxigen, DH R3, DH R4",
+     "unit": "AUC-ROC",
+     "higher_is_better": true
+    },
+    {
+     "name": "Toxic generation",
+     "definition": "fraction of continuations with Perspective score >= 0.5 (RTP-T, RTP-NT, RepBias)",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "Temporal Degradation (TD)",
+     "definition": "expected performance change from one year of temporal misalignment (Luu et al. 2022), plus Pearson r",
+     "unit": "points per year",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "unfiltered C4 (226B tokens)",
+    "full Pile (157B tokens)"
+   ],
+   "protocol": "One pretraining run per variant; Wald test (one-sided) for temporal slope, p<0.05; RepBias 95% CI."
+  },
+  "availability": {
+   "code": "not released",
+   "weights": "not released",
+   "data": "C4 and Pile public; classifiers: PaLM quality filter is proprietary; Perspective API"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.optimizer",
+    "quote": "We adopt default pretraining hyperparameters from Wang et al. (2022)",
+    "where": "Table 7 caption; optimizer not named"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Quality filtering improves toxicity identification by about 2% and most QA categories by 1-6% despite removing 10%+ of data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative QA performance",
+   "value": "1-6",
+   "unit": "% QA categories",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, C4, quality classifier (PaLM/GLaM), thresholds 0.975-0.7",
+   "note": null,
+   "where": "Sec 5",
+   "quote": "toxicity identiﬁcation by 2% (Figure 4, bottom) and most QA task categories by 1-6% (Table 3)"
+  },
+  {
+   "claim": "Quality filter T=0.975 (91% of data) gives +2.5 average QA gain over unfiltered C4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg relative QA",
+   "value": "+2.5",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, C4, Wiki/Web/Acad/C.S./Avg columns",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row T=0.975, column Avg"
+  },
+  {
+   "claim": "Toxicity filter T=0.5 (76% of data) lowers average QA by 2.7 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-2.7",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, C4",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row T=0.5, column Avg"
+  },
+  {
+   "claim": "Mean temporal degradation from one year of pretraining misalignment is 0.4 for LM-XL (2.8 for finetuning); mean Pearson r 0.61.",
+   "kind": "measured",
+   "source": null,
+   "metric": "TD",
+   "value": "0.4",
+   "unit": "TD points per year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, 5 Luu et al. tasks, C4 2013-2022",
+   "note": null,
+   "where": "Sec 4, Table 2",
+   "quote": "surprisingly high for one year of pretraining (0.4)"
+  },
+  {
+   "claim": "Average Pearson correlation between pretraining misalignment and reduced performance is 0.61.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.61",
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL pretraining TD",
+   "note": null,
+   "where": "Sec 4",
+   "quote": "The average Pearson correlation of 0.61 indicates a strong correlation"
+  },
+  {
+   "claim": "Pretraining temporal effect is not significant for LM-Small (TD mean 0.08 vs 0.41 for LM-XL), so larger models are more sensitive.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.08",
+   "unit": "TD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-Small 20M vs LM-XL 1.5B, pretraining TD",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row MEAN, pretraining columns"
+  },
+  {
+   "claim": "Removing Common Crawl (27% of Pile tokens) gives the largest drop in average QA performance (-4.9).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-4.9",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, Pile with No CC (73% of data), Natural Questions finetune, F1 relative to full Pile",
+   "note": "read from Fig 5 text dump; last value of last row",
+   "where": "Fig 5",
+   "table": "Figure 5, row No CC, column Average"
+  },
+  {
+   "claim": "Removing Books or OpenWeb lowers toxic generation and toxicity identification; removing CC lowers identification by 1.9 score points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "-1.9",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, Pile, toxicity identification score",
+   "note": null,
+   "where": "Table 17",
+   "table": "Table 17, row NO CC, column Score"
+  },
+  {
+   "claim": "Quality filter raises toxic generation score: T=0.9 gives +11.1 toxic generation score vs full C4.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "+11.1",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL, C4, toxicity generation score",
+   "note": null,
+   "where": "Table 16",
+   "table": "Table 16, row T=0.9, column Score"
+  },
+  {
+   "claim": "28 unique 1.5B models were pretrained from scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "28",
+   "unit": "models",
+   "baseline_value": null,
+   "n": null,
+   "setup": "study scale",
+   "note": null,
+   "where": "Abstract",
+   "quote": "Spanning 28 unique 1.5 billion parame-"
+  },
+  {
+   "claim": "Pretraining hyperparameters: batch 4096, seq 512, 88,064 steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "88,064",
+   "unit": "steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LM-XL and LM-Small pretraining",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Training Steps"
+  }
+ ],
+ "limits": [
+  "English only; only C4 and the Pile",
+  "Single run per variant, no seeds or error bars on most results",
+  "Quality classifier is proprietary (PaLM/GLaM) and toxicity relies on the Perspective API, which has been shown to be irreproducible over time",
+  "Finetuned evaluation, not zero/few-shot prompting; only 1.5B and 20M scale",
+  "Models and code not released",
+  "Quality and toxicity defined purely as classifier decisions",
+  "Newer datasets (RefinedWeb, RedPajama, Dolma) not tested"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Temporal Degradation (TD)",
+   "definition": "performance change from a one year difference between training and evaluation years (Luu et al. 2022), generalised here to pretraining year",
+   "where": "Sec 4"
+  },
+  {
+   "term": "inverse filter",
+   "definition": "removes the highest-quality (or least toxic) documents below a threshold instead of the lowest",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (C4)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "C4 and bad-words filter",
+   "quote": null
+  },
+  {
+   "work": "The Pile",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "domain ablations",
+   "quote": null
+  },
+  {
+   "work": "Mind the gap: temporal misalignment (Luu et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "TD metric and tasks; applied to pretraining",
+   "quote": null
+  },
+  {
+   "work": "What Language Model Architecture and Pretraining Objective Work Best (Wang et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model config and hyperparameters",
+   "quote": null
+  },
+  {
+   "work": "PaLM",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "quality classifier and RepBias",
+   "quote": null
+  },
+  {
+   "work": "Xie et al. DoReMi",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Pile domain reweighting",
+   "quote": null
+  },
+  {
+   "work": "RealToxicityPrompts",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "toxic generation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "QA tasks are affected by removing domains when pretraining LM-XL.",
+   "page": 7,
+   "why": "Heatmap of domain removal vs QA domain"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Toxicity filtering decreases ability to identify and generate toxicity; quality filtering increases both.",
+   "page": 6,
+   "why": "Shows the quality/toxicity trade-off"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Relative performance degrades with temporal mismatch between pretraining and evaluation data.",
+   "page": 5,
+   "why": "Asymmetric temporal decay"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Figure 5 and Table 3 values are read from flattened text; row/column pairing was inferred",
+  "Lineage arXiv ids left null (reference list does not print them).",
+  "Optimizer and precision not stated"
+ ]
+}

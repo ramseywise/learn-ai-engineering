@@ -1,0 +1,164 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2022.emnlp-main.804",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/artetxe-2022-efficient-large-scale-language-modeling.pdf",
+ "bib": {
+  "title": "Few-shot Learning with Multilingual Generative Language Models",
+  "authors": ["Xi Victoria Lin", "Todor Mihaylov", "Mikel Artetxe", "Tianlu Wang", "Shuohui Chen", "Daniel Simig", "Myle Ott", "Naman Goyal", "Shruti Bhosale", "Jingfei Du", "Ramakanth Pasunuru", "Sam Shleifer", "Punit Singh Koura", "Vishrav Chaudhary", "Brian O'Horo", "Jeff Wang", "Luke Zettlemoyer", "Zornitsa Kozareva", "Mona Diab", "Veselin Stoyanov", "Xian Li"],
+  "first_author": "Lin",
+  "year": 2022,
+  "venue": "Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 11699-11732",
+  "arxiv": null,
+  "doi": "10.18653/v1/2022.emnlp-main.804"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 123875,
+  "chars_total": 123875,
+  "engine": "pymupdf",
+  "skipped": "Appendix D.3-F tables (full FLORES grid, social-value tables, data card language statistics) skimmed for prose only; numeric grids not transcribed."
+ },
+ "type": "empirical",
+ "question": "How well do multilingual generative language models perform zero- and few-shot in-context learning across many languages, and which prompting approaches work for non-English tasks?",
+ "hypothesis": "A decoder-only model pretrained on a balanced 30-language corpus will match or beat a comparable English-centric GPT-3 on multilingual few-shot tasks, and cross-lingual prompting (English templates, cross-lingual demonstrations) will transfer.",
+ "contributions": [
+  "Four multilingual decoder-only LMs (XGLM 564M, 1.7B, 2.9B, 7.5B) trained on 500B tokens in 30 languages",
+  "Comprehensive study of multilingual zero/few-shot learning, including prompting approaches and cross-lingual transfer through templates and demonstrations",
+  "New dataset XStoryCloze (professional translation of English StoryCloze into 10 languages)"
+ ],
+ "method": {
+  "summary": "Train GPT-3-style decoder-only causal LMs on CC100-XL (30 languages, upsampled, 250k joint SentencePiece vocabulary) for up to 500B tokens, then evaluate with 0/1/4/32/128-shot in-context learning on multilingual NLU, MT and English tasks against GPT-3 Curie, an in-house English replication and a translate-test baseline.",
+  "task": "multilingual causal language-model pretraining and in-context few-shot evaluation (NLU, MT)",
+  "trains": true,
+  "datasets": [
+   {"name": "CC100-XL", "role": "pretrain", "size": "500B tokens (after upsampling), 30 languages; English 32.6% (163B tokens) post-upsampling", "split": "30k sentences per language held out for validation perplexity", "source": "Common Crawl, 68 snapshots Summer 2013 to March/April 2020, 134 languages mined, 30 used", "preprocessing": "Extends CC100 pipeline; dedup by URL, paragraph filters on digit/punctuation ratio, profanity, URL count, min length; medium/low-resource languages upsampled (some inadvertently over-sampled: ko, fi, th, bg, ca, hi, et)"},
+   {"name": "XStoryCloze", "role": "eval", "size": "361 train, 1,511 test per language, 11 languages", "split": "validation split of English StoryCloze (Spring 2016) professionally translated, split 20% train / 80% test", "source": "new, released by authors", "preprocessing": null},
+   {"name": "XCOPA", "role": "eval", "size": "100 dev, 500 test, 11 languages (plus English from SuperGLUE COPA)", "split": "test", "source": "Ponti et al. 2020", "preprocessing": null},
+   {"name": "XWinograd", "role": "eval", "size": "2,325 test (en 2,325, jp 959, ru 315, pt 263), 6 languages in Table 4", "split": "test", "source": "Tikhonov and Ryabinin 2021", "preprocessing": null},
+   {"name": "XNLI", "role": "eval", "size": "2,490 dev, 5,010 test, 15 languages", "split": "test (dev for prompt analysis)", "source": "Conneau et al. 2018", "preprocessing": null},
+   {"name": "PAWS-X", "role": "eval", "size": "2,000 dev, 2,000 test, 7 languages", "split": "test", "source": "Yang et al. 2019", "preprocessing": null},
+   {"name": "WMT-14/16/19 and FLORES-101", "role": "eval", "size": "FLORES-101 devtest, 182 directions", "split": "32 examples from previous WMT edition / FLORES dev set for few-shot", "source": "Goyal et al. 2021b", "preprocessing": null},
+   {"name": "English tasks (StoryCloze, COPA, WinoGrande, HellaSwag, ARC-easy, ARC-challenge, PIQA, OpenBookQA)", "role": "eval", "size": "see Table A1", "split": "test for ARC, OpenBookQA, StoryCloze; dev for the rest", "source": "Brown et al. 2020 subset", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "XGLM 7.5B", "role": "proposed", "params": "7.5B", "architecture": "decoder-only causal Transformer, GPT-3 layout with larger vocabulary embeddings", "init_from": null, "tokenizer": "SentencePiece unigram LM", "vocab": "250k joint", "layers": "32", "hidden": "4096", "heads": null, "context": "2048 tokens", "other": {}},
+   {"name": "XGLM 2.9B", "role": "proposed", "params": "2.9B", "architecture": "decoder-only causal Transformer", "init_from": null, "tokenizer": "SentencePiece unigram LM", "vocab": "250k joint", "layers": "48", "hidden": "2048", "heads": null, "context": "2048 tokens", "other": {"note": "depth-to-width allocation from rank bottleneck analysis (Levine et al. 2020); did not converge for 7.5B so 7.5B fell back to GPT-3 setup"}},
+   {"name": "XGLM 1.7B", "role": "proposed", "params": "1.7B", "architecture": "decoder-only causal Transformer", "init_from": null, "tokenizer": "SentencePiece unigram LM", "vocab": "250k joint", "layers": "24", "hidden": "2048", "heads": null, "context": "2048 tokens", "other": {}},
+   {"name": "XGLM 564M", "role": "proposed", "params": "564M", "architecture": "decoder-only causal Transformer", "init_from": null, "tokenizer": "SentencePiece unigram LM", "vocab": "250k joint", "layers": "24", "hidden": "1024", "heads": null, "context": "2048 tokens", "other": {}},
+   {"name": "GPT-3 6.7B (Curie)", "role": "baseline", "params": "6.7B", "architecture": "decoder-only transformer", "init_from": null, "tokenizer": "GPT-2 BPE", "vocab": "50K", "layers": "32", "hidden": "4096", "heads": null, "context": null, "other": {"note": "API (Ada, Babbage, Curie also used for MT)"}},
+   {"name": "GPT-3 6.7B repl.", "role": "baseline", "params": "6.7B", "architecture": "in-house replication of GPT-3 6.7B", "init_from": null, "tokenizer": "GPT-2/RoBERTa BPE", "vocab": "50K", "layers": null, "hidden": null, "heads": null, "context": null, "other": {"data": "six English datasets, 453GB, 112B tokens upsampled to 300B tokens (BookCorpus, Wikipedia, CC-News, OpenWebText, CC-Stories, English CC100)"}}
+  ],
+  "training": {
+   "objective": "causal language modeling (next-token prediction)",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-8",
+   "lr": "1.5e-3 (564M, 1.7B), 7.5e-4 (2.9B), 1.2e-4 (7.5B)",
+   "lr_schedule": "polynomial decay",
+   "warmup": "2000 warm-up updates",
+   "batch_size": "4M tokens (effective)",
+   "steps": null,
+   "epochs": null,
+   "tokens": "up to 500B",
+   "seq_len": "2048 tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "XGLM 7.5B: 256 A100 GPUs, data parallel, Fairseq",
+   "compute": "about 3 weeks on 256 A100 GPUs at 311.6k words per second (7.5B)",
+   "wall_clock": "about 3 weeks (7.5B)",
+   "seeds": null,
+   "other": {"vocab_training": "unigram LM on 10 million sentences sampled with multinomial alpha=0.3 (Lample and Conneau 2019)"}
+  },
+  "inference": {
+   "decoding": "greedy for machine translation; classification and multiple choice by arg-max of LM scoring function",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 runs, each with a different random set of few-shot examples; k in {0,1,4,32,128}",
+   "prompting": "cloze-style template with [Mask] and verbalizer; demonstrations concatenated with [Sep]; examples truncated to 2048 tokens keeping only whole demonstrations; English-centric tasks use Brown et al. prompts with newline separator",
+   "retrieval": null,
+   "parameters": {"scoring": "average of per-token log-probabilities ignoring the common prefix of candidates (selected on held-out XNLI, XCOPA, XStoryCloze dev), no calibration", "mt_few_shot": "32 examples"},
+   "other": {"inference_speed": "256 A100 GPUs: 1.47 million words per second; 8 V100 GPUs: 6 hours to evaluate XGLM 7.5B on XStoryCloze"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "accuracy", "definition": "arg-max candidate matches label", "unit": "%", "higher_is_better": true},
+    {"name": "BLEU / spBLEU", "definition": "detokenized BLEU via SacreBLEU defaults (WMT); spBLEU per Goyal et al. 2021b (FLORES-101)", "unit": "BLEU points", "higher_is_better": true},
+    {"name": "validation perplexity", "definition": "on 30k held-out sentences per language from CC100-XL", "unit": "ppl", "higher_is_better": false},
+    {"name": "precision@1", "definition": "mLAMA, averaged over relations per language, 3 candidates (random 0.33)", "unit": "fraction", "higher_is_better": true}
+   ],
+   "baselines": ["GPT-3 6.7B (Curie) via API", "GPT-3 6.7B repl.", "Translate-test with Google Cloud Translation + GPT-3 6.7B repl.", "M2M-124 615M supervised (FLORES-101)"],
+   "protocol": "Mean of 5 runs with different few-shot samples; scoring function chosen on held-out tasks; k values pre-selected, not tuned; test sets reported (dev for some English tasks)."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/fairseq/tree/main/examples/xglm",
+   "weights": "checkpoints at same URL",
+   "data": "XStoryCloze released at same URL; CC100-XL not stated as released (data card in Appendix F)"
+  },
+  "prompts": [
+   {"purpose": "XNLI English template", "text": "{Sentence 1}, right? [Mask], {Sentence 2}  (Entailment: Yes | Neutral: Also | Contradiction: No)", "where": "Table 2"},
+   {"purpose": "XCOPA English template", "text": "cause: {Sentence 1} because [Mask]; effect: {Sentence 1} so [Mask]", "where": "Table 2"},
+   {"purpose": "PAWS-X", "text": "{Sentence 1}, right? [Mask], {Sentence 2}  (True: Yes | False: No)", "where": "Table 2"},
+   {"purpose": "Translation", "text": "{Source sentence} = [Mask]", "where": "Table 2"}
+  ],
+  "evidence": [
+   {"field": "training.lr", "quote": "1.5e-3 for the 564M and 1.7B model, 7.5e-4 for the 2.9B model, and 1.2e-4 for the 7.5B models", "where": "Appendix A"}
+  ]
+ },
+ "results": [
+  {"claim": "XGLM 7.5B beats GPT-3 6.7B on XStoryCloze/XCOPA-style commonsense reasoning, abstract-level average gains of 7.4 points 0-shot and 9.4 points 4-shot.", "kind": "measured", "source": null, "metric": "accuracy gain", "value": "+7.4% (0-shot), +9.4% (4-shot)", "unit": "absolute %", "baseline_value": null, "n": null, "setup": "XGLM 7.5B vs GPT-3 6.7B, multilingual commonsense reasoning, 0/4-shot, 5 runs", "quote": "outperforming GPT-3 of comparable size in multilingual commonsense reasoning (with +7.4% absolute accuracy improvement in 0-shot settings and +9.4% in 4-shot set-", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "XGLM 7.5B beats GPT-3 6.7B on FLORES-101 MT in 171 of 182 directions with 32 examples and beats the supervised baseline in 45 directions.", "kind": "measured", "source": null, "metric": "directions won", "value": "171 of 182; 45", "unit": "directions", "baseline_value": null, "n": 182, "setup": "FLORES-101 devtest, 32-shot, greedy decoding, spBLEU; supervised = M2M-124 615M", "quote": "our model outperforms GPT-3 counterparts on 171 out of 182 directions with 32 training ex-", "table": null, "note": null, "where": "Abstract"},
+  {"claim": "XGLM 7.5B average XNLI accuracy 46.3 (0-shot) and 47.3 (4-shot) vs GPT-3 6.7B 40.9 and 41.9.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy", "value": "46.3 / 47.3", "unit": "%", "baseline_value": "40.9 / 41.9 (GPT-3 6.7B)", "n": 15, "setup": "XNLI test, 15 languages, English templates, 5 runs", "quote": "XNLI: 46.3% 0-shot, 47.3% 4-shot", "table": "Table 9, rows GPT-3 6.7B and XGLM 7.5B, column Avg.", "note": null, "where": "Intro; Table 9"},
+  {"claim": "XGLM 7.5B scores 65.4 (0-shot) and 66.5 (4-shot) on XStoryCloze average.", "kind": "measured", "source": null, "metric": "XStoryCloze avg accuracy", "value": "65.4 / 66.5", "unit": "%", "baseline_value": "55.1 / 54.8 (GPT-3 6.7B)", "n": 11, "setup": "XStoryCloze test, 11 languages", "quote": "XStoryCloze: 65.4% 0-shot, 66.5% 4-shot", "table": "Table 10, rows GPT-3 6.7B and XGLM 7.5B, column Avg.", "note": null, "where": "Intro; Table 10"},
+  {"claim": "Multilingual pretraining costs English performance: XGLM 7.5B underperforms GPT-3 6.7B by 10.9% on average over 8 English tasks in zero-shot.", "kind": "measured", "source": null, "metric": "avg zero-shot gap", "value": "10.9%", "unit": "%", "baseline_value": null, "n": 8, "setup": "8 English NLU tasks, zero-shot", "quote": "XGLM 7.5B underperforms GPT-36.7B by 10.9% on", "table": null, "note": null, "where": "Introduction"},
+  {"claim": "Translate-test with GPT-3 6.7B repl. is a strong baseline, with XNLI average 52.5 (0-shot) exceeding XGLM 7.5B 46.3.", "kind": "measured", "source": null, "metric": "XNLI avg accuracy", "value": "52.5", "unit": "%", "baseline_value": "46.3 (XGLM 7.5B)", "n": 15, "setup": "Google Cloud Translation to English then GPT-3 6.7B repl., 0-shot", "quote": null, "table": "Table 9, row Translate + GPT-3 6.7B repl., 0-shot, column Avg.", "note": "Translated test data may inflate this baseline (translationese).", "where": "Table 9"},
+  {"claim": "English templates give the best average across languages on XNLI (0-shot 45.2, 4-shot 47.0) vs human-written multilingual templates 41.7/43.9.", "kind": "measured", "source": null, "metric": "XNLI dev avg accuracy", "value": "45.2/47.0", "unit": "%", "baseline_value": "41.7/43.9 (Multi. HW)", "n": 400, "setup": "XGLM 7.5B, first 400 XNLI dev examples in en, zh, es, hi", "quote": null, "table": "Table 5, row En (HW), column Avg", "note": null, "where": "Table 5"},
+  {"claim": "Chinese human-written template gives close-to-random XNLI accuracy (34.4 avg 0-shot).", "kind": "measured", "source": null, "metric": "XNLI dev avg accuracy", "value": "34.4/35.1", "unit": "%", "baseline_value": null, "n": 400, "setup": "XGLM 7.5B, zh template applied to all four languages", "quote": null, "table": "Table 5, row Zh (HW), column Avg", "note": null, "where": "Table 5"},
+  {"claim": "XGLM 7.5B 7.5B FLORES-101 average spBLEU out of English 12.2 vs GPT-3 6.7B 5.0, supervised 16.6.", "kind": "measured", "source": null, "metric": "spBLEU avg", "value": "12.2", "unit": "spBLEU", "baseline_value": "5.0 (GPT-3 6.7B); 16.6 (supervised)", "n": null, "setup": "FLORES-101 devtest subset of 14 languages, 32-shot", "quote": null, "table": "Table 12, rows XGLM 7.5B and GPT-3 6.7B, column Avg., avg out of xx", "note": null, "where": "Table 12"},
+  {"claim": "GPT-3 beats XGLM on high-resource WMT pairs, e.g. fr-en Curie 35.3 vs XGLM 33.2.", "kind": "measured", "source": null, "metric": "BLEU", "value": "35.3 vs 33.2", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "WMT-14 fr-en, 32-shot, greedy", "quote": null, "table": "Table 11, row Curie vs XGLM 7.5B, column fr-en", "note": null, "where": "Table 11"},
+  {"claim": "Only 32.6% of XGLM's 500B-token data is English (163B tokens, about 54% of GPT-3's English).", "kind": "measured", "source": null, "metric": "English share", "value": "32.6%", "unit": "%", "baseline_value": "92.6% (GPT-3)", "n": null, "setup": "post-upsampling language mix", "quote": "only 32.6% of XGLM7.5B’s 500B-", "table": null, "note": null, "where": "Section 4.7; Limitations"},
+  {"claim": "XGLM 7.5B was trained on 256 A100 GPUs for about 3 weeks.", "kind": "measured", "source": null, "metric": "training compute", "value": "256 A100 GPUs for about 3 weeks", "unit": null, "baseline_value": null, "n": null, "setup": "XGLM 7.5B pretraining, 4M-token batch", "quote": "The XGLM 7.5B model was trained", "table": null, "note": null, "where": "Appendix A"},
+  {"claim": "Cross-lingual demonstrations and a good (English) template effects do not add up; with a better prompt the demonstration transfer benefit is generally cancelled.", "kind": "claim", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "XNLI cross-lingual demonstrations, XGLM 7.5B", "quote": null, "table": null, "note": null, "where": "Section 4.5; Appendix D.2"},
+  {"claim": "On XNLI, accuracy rises from k=0 to 4 but falls at k=32 and above; PAWS-X stays near random (50%) at all k.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Four XGLM sizes, k=0,4,32,128", "quote": null, "table": null, "note": null, "where": "Section 4.9, Fig 3"}
+ ],
+ "limits": [
+  "Authors did not ablate the inadvertent over-sampling of ko, fi, th, bg, ca, hi, et due to extreme computational cost.",
+  "Non-English evaluation data are (professional) translations, which may inflate cross-lingual transfer (Artetxe et al. 2020); translate-test baseline may also be inflated.",
+  "English data is 54% of GPT-3's, and training corpora differ (CommonCrawl only vs. BookCorpus/Wikipedia), so the English gap is confounded with data quality and the curse of multilinguality; no controlled experiment.",
+  "Only decoder-only causal LMs studied; no MLM or seq2seq variants.",
+  "Prompts not tuned per model, which may bias comparisons.",
+  "Social value tasks cover only six languages, five of them Romance; results inconclusive.",
+  "Static CommonCrawl up to March 2020.",
+  "Models are 564M to 7.5B; larger scales not tested. Hypothesis that code-switching and shared sub-tokens explain cross-lingual prompting is not verified."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Cross-lingual prompting", "definition": "directly applying the prompts in English (or another high-resource language) to non-English examples", "where": "Section 3.1"},
+  {"term": "Translate-test", "definition": "translate non-English examples to English with an MT API and run an English model", "where": "Section 4.6"},
+  {"term": "Curse of multilinguality", "definition": "increasing the number of languages in a model with shared parameters hurts performance on all languages", "where": "Section 4.7; Limitations"}
+ ],
+ "lineage": [
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "extends", "note": "architecture, prompts and evaluation protocol follow GPT-3; Curie is the main baseline", "quote": null},
+  {"work": "Unsupervised cross-lingual representation learning at scale (XLM-R, CC100)", "year": 2020, "arxiv": "1911.02116", "relation": "uses-data", "note": "CC100 mining pipeline extended to CC100-XL; upsampling and curse of multilinguality", "quote": null},
+  {"work": "Cross-lingual language model pretraining (XLM)", "year": 2019, "arxiv": "1901.07291", "relation": "uses-method", "note": "multinomial sampling with alpha=0.3 for vocabulary", "quote": null},
+  {"work": "True few-shot learning with language models", "year": 2021, "arxiv": "2105.11447", "relation": "uses-method", "note": "scoring function selection on held-out tasks", "quote": null},
+  {"work": "Limits to depth efficiencies of self-attention", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "depth-to-width allocation for XGLM 2.9B", "quote": null},
+  {"work": "The FLORES-101 evaluation benchmark", "year": 2021, "arxiv": "2106.03193", "relation": "uses-data", "note": "MT benchmark and supervised M2M-124 baseline", "quote": null},
+  {"work": "SentencePiece; Subword regularization (Kudo)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "unigram LM vocabulary of 250k", "quote": null},
+  {"work": "Translation artifacts in cross-lingual transfer learning", "year": 2020, "arxiv": null, "relation": "related", "note": "caveat on translated evaluation data", "quote": null},
+  {"work": "BLOOM", "year": 2022, "arxiv": null, "relation": "related", "note": "concurrent multilingual work, 46 languages 175B", "quote": null},
+  {"work": "PaLM", "year": 2022, "arxiv": "2204.02311", "relation": "related", "note": "later reaches stronger few-shot MT with multilingual tail", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "The % of each language l (l = 1, 2, ..., 30) in XGLM's pre-training data pre-upsampling (blue), post-upsampling (green), and its corresponding % in GPT-3's training data (orange).", "page": 3, "why": "Shows the language-balance design and the 32.6% vs 92.6% English share."},
+  {"figure": "Fig 3", "caption": "Zero-shot and in-language few-shot learning performance as a function of model size.", "page": 9, "why": "Scaling of few-shot gains across 564M to 7.5B on five tasks."},
+  {"figure": "Table 1", "caption": "Model details. size: number of parameters, l: layers, h: hidden dimension.", "page": 3, "why": "XGLM vs GPT-3 architecture sizes side by side."}
+ ],
+ "code": [],
+ "problems": [
+  "The ledger key and file name say Artetxe 2022, Efficient Large Scale Language Modeling with Mixtures of Experts, but the PDF is Lin et al. 2022, Few-shot Learning with Multilingual Generative Language Models (XGLM); DOI 2022.emnlp-main.804 matches the XGLM paper. The ledger title and filename need correcting. Artetxe is a middle author.",
+  "No arXiv id is printed in the text.",
+  "Table cells came out of the text layer as flat number lists; the table row/column references were located by position and may need a visual check."
+ ]
+}

@@ -1,0 +1,864 @@
+{
+ "schema": 1,
+ "key": "2107.14795",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/jaegle-2021-perceiver-io.pdf",
+ "bib": {
+  "title": "Perceiver IO: A General Architecture for Structured Inputs & Outputs",
+  "authors": [
+   "Andrew Jaegle",
+   "Sebastian Borgeaud",
+   "Jean-Baptiste Alayrac",
+   "Carl Doersch",
+   "Catalin Ionescu",
+   "David Ding",
+   "Skanda Koppula",
+   "Daniel Zoran",
+   "Andrew Brock",
+   "Evan Shelhamer",
+   "Olivier Hénaff",
+   "Matthew M. Botvinick",
+   "Andrew Zisserman",
+   "Oriol Vinyals",
+   "João Carreira"
+  ],
+  "first_author": "Jaegle",
+  "year": 2022,
+  "venue": "ICLR 2022",
+  "arxiv": "2107.14795",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 113285,
+  "chars_total": 113285,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Can one attention architecture with linear cost in input and output size handle arbitrary structured inputs and outputs (language, flow, multimodal, games) without task-specific design?",
+ "hypothesis": "Adding a query-based attention decoder to the Perceiver lets it produce arbitrary-shaped outputs and serve as a general-purpose, domain-agnostic architecture.",
+ "contributions": [
+  "Perceiver IO: encode inputs to a small latent array by cross-attention, process with latent self-attention, decode with output-specific query array",
+  "Tokenizer-free byte-level language model matching SentencePiece BERT on GLUE",
+  "State-of-the-art Sintel.final optical flow without cost volumes or warping",
+  "Multimodal video/audio/label autoencoding and multitask GLUE with one network"
+ ],
+ "method": {
+  "summary": "Perceiver IO encodes an M x C input array to an N x D latent array via cross-attention, applies L latent self-attention modules, and decodes an O x E output by cross-attention from a query array built from position, task, modality or input features. All modules are GPT-2-style QKV attention plus MLP. Evaluated on MLM/GLUE, optical flow, Kinetics autoencoding, ImageNet, StarCraft II and AudioSet.",
+  "task": "general structured-input/output prediction (MLM, optical flow, multimodal autoencoding, classification)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "English Wikipedia + C4",
+    "role": "pretrain",
+    "size": null,
+    "split": "70% of training tokens from C4, 30% from Wikipedia; 10 documents concatenated before cropping",
+    "source": "Raffel et al. 2020; Wikipedia",
+    "preprocessing": "15% of words masked independently (whitespace-delimited words); SentencePiece vocab 32,000 or UTF-8 bytes (256 + 4 special tokens)"
+   },
+   {
+    "name": "GLUE",
+    "role": "eval",
+    "size": null,
+    "split": "dev set, WNLI excluded; best over hyperparameter grid per task",
+    "source": "Wang et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "AutoFlow",
+    "role": "train",
+    "size": "400,000 image pairs",
+    "split": null,
+    "source": "Sun et al. 2021",
+    "preprocessing": "default AutoFlow augmentation curriculum plus a final no-augmentation phase with forward and reversed pairs"
+   },
+   {
+    "name": "Sintel (clean, final) and KITTI",
+    "role": "eval",
+    "size": null,
+    "split": "evaluated tiled, six evenly spaced tiles",
+    "source": "Butler 2012; Menze & Geiger 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "Kinetics-700-2020",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Smaira et al. 2020",
+    "preprocessing": "16 frames 224x224, patches 1x4x4 video and 16 audio samples; audio 48kHz (1920 samples/frame); label masked 50% of time in training"
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": "Deng et al. 2009",
+    "preprocessing": "CutMix, MixUp, RandAugment 4 layers magnitude 5"
+   },
+   {
+    "name": "JFT",
+    "role": "pretrain",
+    "size": "300 million images, ~18,000 classes",
+    "split": null,
+    "source": "internal dataset (Sun et al. 2017)",
+    "preprocessing": "crop, resize, flip only"
+   },
+   {
+    "name": "AudioSet",
+    "role": "both",
+    "size": "1.7 million training examples, 527 classes",
+    "split": null,
+    "source": "Gemmeke et al. 2017",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Perceiver IO Base (SentencePiece)",
+    "role": "proposed",
+    "params": "223M",
+    "architecture": "encoder cross-attn, latent self-attn, decoder cross-attn",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "26 process layers",
+    "hidden": "1280 latent",
+    "heads": null,
+    "context": "512 inputs",
+    "other": {
+     "latents": 256,
+     "FLOPs": "119B",
+     "output_queries": 512
+    }
+   },
+   {
+    "name": "Perceiver IO (bytes)",
+    "role": "proposed",
+    "params": "201M",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": "UTF-8 bytes",
+    "vocab": "256 bytes + 4 special",
+    "layers": "26 process layers",
+    "hidden": "1280 latent",
+    "heads": null,
+    "context": "2048 bytes",
+    "other": {
+     "latents": 256,
+     "FLOPs": "113B"
+    }
+   },
+   {
+    "name": "Perceiver IO++ (bytes)",
+    "role": "proposed",
+    "params": "425M",
+    "architecture": "as above",
+    "init_from": null,
+    "tokenizer": "UTF-8 bytes",
+    "vocab": "256 bytes + 4 special",
+    "layers": "40 process layers",
+    "hidden": "1536 latent",
+    "heads": null,
+    "context": "2048 bytes",
+    "other": {
+     "latents": 256,
+     "FLOPs": "241B"
+    }
+   },
+   {
+    "name": "BERT Base (ours)",
+    "role": "baseline",
+    "params": "110M",
+    "architecture": "Transformer encoder",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512",
+    "other": {
+     "FLOPs": "109B"
+    }
+   },
+   {
+    "name": "BERT (matching FLOPs, bytes)",
+    "role": "baseline",
+    "params": "20M",
+    "architecture": "Transformer encoder",
+    "init_from": null,
+    "tokenizer": "UTF-8 bytes",
+    "vocab": null,
+    "layers": "6",
+    "hidden": "512 (FFN 2048)",
+    "heads": "8",
+    "context": "2048",
+    "other": {
+     "FLOPs": "130B"
+    }
+   },
+   {
+    "name": "Perceiver IO flow",
+    "role": "proposed",
+    "params": "roughly 27.9 million",
+    "architecture": "24 self-attention modules, 16 heads, latent 2048 x 512",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "24",
+    "hidden": "512",
+    "heads": "16",
+    "context": "182,528 input elements (concat frames, 3x3 patches)",
+    "other": {
+     "FLOPs per forward pass on 368x496": "roughly 987 billion"
+    }
+   },
+   {
+    "name": "Perceiver IO Kinetics autoencoder",
+    "role": "proposed",
+    "params": "20.0M",
+    "architecture": "latent 512 channels, 784/392/196 latents",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "512",
+    "heads": null,
+    "context": null,
+    "other": {
+     "train FLOPs": "310B",
+     "eval FLOPs": "6.85T"
+    }
+   },
+   {
+    "name": "Perceiver IO ImageNet config A",
+    "role": "proposed",
+    "params": "48.4M",
+    "architecture": "8 blocks of 6 attention modules, weights shared across blocks",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "48 (8x6, shared)",
+    "hidden": null,
+    "heads": null,
+    "context": "50,176 pixels",
+    "other": {
+     "FLOPs": "407B"
+    }
+   },
+   {
+    "name": "Perceiver IO ImageNet config B (pretrained)",
+    "role": "proposed",
+    "params": "212M",
+    "architecture": "16-layer latent network, no weight sharing, MLP hidden 4x",
+    "init_from": "JFT pretraining",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "FLOPs": "213B"
+    }
+   }
+  ],
+  "training": {
+   "objective": "MLM softmax cross-entropy (language); flow regression on AutoFlow; weighted L1(video)+L1(audio)+CE(label) for Kinetics; cross-entropy for ImageNet; multi-one-hot cross-entropy for JFT",
+   "optimizer": "LAMB",
+   "lr": "MLM 0.00125; GLUE sweep {1e-4,5e-5,2e-5,1e-5}; flow 4e-4; Kinetics 1e-3; ImageNet 2e-3 flat; JFT 3e-4",
+   "lr_schedule": "MLM: linear warmup then cosine decay to 500,000 steps; flow: cosine from 4e-4; ImageNet: flat 55 epochs then cosine to 0 over last 55, no warmup; JFT cosine to 0 over 14 epochs",
+   "warmup": "MLM 1,000 steps; GLUE 200 steps; ImageNet none",
+   "batch_size": "MLM 2048; GLUE {16,32,64}; flow 512; Kinetics 1024; ImageNet 1024; JFT 8192",
+   "steps": "MLM 500,000 steps",
+   "epochs": "GLUE 10; flow 480; ImageNet 110; JFT 14; AudioSet 100",
+   "tokens": null,
+   "seq_len": "512 SentencePiece tokens or 2048 bytes",
+   "precision": null,
+   "weight_decay": "MLM 0.01; GLUE 0.01; ImageNet and JFT 0.1",
+   "dropout": "ImageNet: none",
+   "regularisation": "ImageNet: CutMix ratio 0.2, MixUp, RandAugment, gradient clip global norm 10",
+   "hardware": "ImageNet 64 TPUs; JFT 256 TPUs; framework JAX; TPUv3",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ImageNet finetune from JFT": "131K steps, batch 1024, 64 TPUs, LAMB flat LR 0.002 for 70K steps then cosine for last 61K; conv variant base LR 0.0002 (0.002 unstable)",
+    "Kinetics loss weights": "video 0.03, audio 1, label 0.0001 (alt label 1)",
+    "Kinetics decoding in training": "subsample 512 audio samples and 512 pixels plus label per example",
+    "StarCraft II": "3-layer Perceiver IO, 32 latents (tried 32, 64), ImageNet hyperparameters, behavioral cloning",
+    "AudioSet": "12 processor modules, N=512 latents, D in {512,1024}, 32-frame clips train and 16 overlapping clips test"
+   }
+  },
+  "inference": {
+   "decoding": "parallel query decoding; at test time outputs generated in batches to cover full output array",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "flow eval": "tiled with six tiles, overlaps averaged weighted by distance to tile edge"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE average",
+     "definition": "Pearson on STS-B, Matthews on CoLA, accuracy elsewhere; MNLI-m and mm averaged as one task; WNLI excluded",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "EPE",
+     "definition": "average end-point error for optical flow",
+     "unit": "pixels",
+     "higher_is_better": false
+    },
+    {
+     "name": "PSNR",
+     "definition": "reconstruction quality for audio and video",
+     "unit": "dB",
+     "higher_is_better": true
+    },
+    {
+     "name": "top-1 accuracy",
+     "definition": "ImageNet / Kinetics-700 classification",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP",
+     "definition": "mean average precision on AudioSet",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "win rate",
+     "definition": "StarCraft II vs Elite bot after behavioral cloning",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT Base",
+    "BERT matching FLOPs (bytes)",
+    "PWCNet",
+    "RAFT",
+    "Perceiver",
+    "ResNet-50, ViT, NFNet, DeiT, CaiT",
+    "AlphaStar Transformer entity encoder"
+   ],
+   "protocol": "GLUE reports best dev score over a fixed hyperparameter grid per task; FLOPs counted with multiply and accumulate separate (fused would halve them); no seeds or variance reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "JFT is internal; other datasets public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "Learning rate 0.00125",
+    "where": "Table 12"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Byte-level Perceiver IO (no tokenizer) matches SentencePiece BERT Base on GLUE average",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "81.0",
+   "unit": "GLUE avg",
+   "baseline_value": "81.1",
+   "n": null,
+   "setup": "MLM pretrain on Wikipedia+C4; M=2048 bytes, N=256 latents, depth 26, 201M params, 113B FLOPs; BERT Base (ours) 81.1",
+   "note": null,
+   "where": "Sec 4.1, Table 1",
+   "table": "Table 1, row Perceiver IO UTF-8 bytes, column Avg. (81.0); Table 14 Average 80.95"
+  },
+  {
+   "claim": "Byte-level BERT at matched FLOPs is far worse than byte-level Perceiver IO",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "71.5",
+   "unit": "GLUE avg",
+   "baseline_value": "81.0",
+   "n": null,
+   "setup": "BERT matching FLOPs, UTF-8 bytes, M=N=2048, 6 layers, 20M params, 130B FLOPs",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERT (matching FLOPs), column Avg."
+  },
+  {
+   "claim": "Perceiver IO on SentencePiece tokens slightly beats BERT Base",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "81.2",
+   "unit": "GLUE avg",
+   "baseline_value": "81.1",
+   "n": null,
+   "setup": "512 SentencePiece tokens, 256 latents, 26 process layers, 223M params, 119B FLOPs vs BERT Base 110M, 109B FLOPs",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "we ﬁrst observe that Perceiver IO applied on SentencePiece",
+   "table": "Table 1, row Perceiver IO Base, column Avg."
+  },
+  {
+   "claim": "Larger byte-level Perceiver IO++ reaches 81.8 on GLUE",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "81.8",
+   "unit": "GLUE avg",
+   "baseline_value": "81.0",
+   "n": null,
+   "setup": "40 process layers, 425M params, 241B FLOPs, 4.2 steps/s",
+   "note": null,
+   "where": "Sec 4.1",
+   "quote": "we obtain 81.8 on the GLUE benchmark"
+  },
+  {
+   "claim": "Byte-level Perceiver IO trains over 2x faster in wall-clock than byte-level BERT at similar FLOPs",
+   "kind": "measured",
+   "source": null,
+   "metric": "steps/s",
+   "value": "7.6",
+   "unit": "train steps/s",
+   "baseline_value": "2.9",
+   "n": null,
+   "setup": "Perceiver IO bytes 7.6 SPS vs BERT matching FLOPs 2.9 SPS",
+   "note": null,
+   "where": "Sec 4.1 footnote 1, Table 1",
+   "quote": "by over a factor of 2 for the byte-based models"
+  },
+  {
+   "claim": "Multitask query across 8 GLUE tasks matches 8 task-specific input tokens and beats single-task",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "81.8",
+   "unit": "GLUE avg",
+   "baseline_value": "81.0",
+   "n": null,
+   "setup": "Byte model finetuned on 8 GLUE tasks simultaneously",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Multitask query, column Avg. (81.8); Single-task query 81.0"
+  },
+  {
+   "claim": "Latent count ablation: 128 latents hurts byte-level GLUE sharply, 256 best",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE average",
+   "value": "75.84",
+   "unit": "GLUE avg",
+   "baseline_value": "80.95",
+   "n": null,
+   "setup": "N=128, D=1920, 120B FLOPs; N=256 gives 80.95; N=512 gives 80.92",
+   "note": null,
+   "where": "Sec F.5",
+   "table": "Table 15, row 128, column Average GLUE score"
+  },
+  {
+   "claim": "Perceiver IO sets state of the art on Sintel.final optical flow (EPE)",
+   "kind": "measured",
+   "source": null,
+   "metric": "average end-point error (lower better)",
+   "value": "2.42",
+   "unit": "EPE",
+   "baseline_value": "2.57",
+   "n": null,
+   "setup": "Trained on AutoFlow, 400,000 pairs, 480 epochs; RAFT 2.57, PWCNet 2.91",
+   "note": null,
+   "where": "Sec 4.2",
+   "table": "Table 3, row Perceiver IO, column Sintel.final"
+  },
+  {
+   "claim": "Perceiver IO Sintel.clean EPE",
+   "kind": "measured",
+   "source": null,
+   "metric": "EPE",
+   "value": "1.81",
+   "unit": "EPE",
+   "baseline_value": "1.95",
+   "n": null,
+   "setup": "as above; RAFT 1.95",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Perceiver IO, column Sintel.clean"
+  },
+  {
+   "claim": "Perceiver IO KITTI EPE is worse than RAFT but better than PWCNet",
+   "kind": "measured",
+   "source": null,
+   "metric": "EPE",
+   "value": "4.98",
+   "unit": "EPE",
+   "baseline_value": "4.23",
+   "n": null,
+   "setup": "as above; RAFT 4.23, PWCNet 5.76",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Perceiver IO, column KITTI"
+  },
+  {
+   "claim": "Concatenating frames helps on harder datasets: without concatenation KITTI EPE rises",
+   "kind": "measured",
+   "source": null,
+   "metric": "EPE",
+   "value": "6.19",
+   "unit": "EPE",
+   "baseline_value": "4.98",
+   "n": null,
+   "setup": "3x3 patch, no concat, no downsample, depth 24, 2048 latents",
+   "note": null,
+   "where": "Table 16",
+   "table": "Table 16, row 3x3 / Concat No, column KITTI"
+  },
+  {
+   "claim": "Perceiver IO runs optical flow faster than RAFT on TPU v3",
+   "kind": "measured",
+   "source": null,
+   "metric": "frames/s",
+   "value": "4.4",
+   "unit": "frames/s",
+   "baseline_value": "1.6",
+   "n": null,
+   "setup": "Most expensive model, single TPU v3 core, 1088x436 images; lightweight 17.8; TF RAFT 1.6",
+   "note": "Quote truncated for line break; value 4.4 appears in text as 'achieves 4.4 frames/sec'",
+   "where": "Sec H",
+   "quote": "On the publicly-available TPU"
+  },
+  {
+   "claim": "Multimodal Kinetics autoencoding at 88x compression: audio PSNR",
+   "kind": "measured",
+   "source": null,
+   "metric": "PSNR (higher better)",
+   "value": "26.97",
+   "unit": "PSNR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 frames 224x224 plus 30k audio samples, 512-channel latent with 784 latents",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 88x, column Audio PSNR"
+  },
+  {
+   "claim": "Multimodal autoencoding at 88x: video PSNR",
+   "kind": "measured",
+   "source": null,
+   "metric": "PSNR",
+   "value": "24.37",
+   "unit": "PSNR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 88x, column Video PSNR"
+  },
+  {
+   "claim": "Class-label top-1 on Kinetics-700 with label masked, loss weights favouring PSNR",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 %",
+   "value": "10.2",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "88x compression, label weight 0.0001",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 88x, column Top-1 Accuracy"
+  },
+  {
+   "claim": "Reweighting class loss reaches 45% top-1 while keeping 20.7 video PSNR",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 %",
+   "value": "45",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Kinetics-700 autoencoding, label loss weight 1",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "we can reach 45% top-1 accuracy while maintaining 20.7 PSNR for video"
+  },
+  {
+   "claim": "Audio PSNR collapses at 352x compression",
+   "kind": "measured",
+   "source": null,
+   "metric": "PSNR",
+   "value": "14.15",
+   "unit": "PSNR",
+   "baseline_value": "26.97",
+   "n": null,
+   "setup": "196 latents",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 352x, column Audio PSNR"
+  },
+  {
+   "claim": "ImageNet top-1 with JFT pretraining and no 2D convolutions (2D Fourier features)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "84.5",
+   "unit": "% top-1",
+   "baseline_value": "78.6",
+   "n": null,
+   "setup": "Perceiver IO config B, 212M params, 213B FLOPs, pretrained on JFT 300M images then finetuned",
+   "note": "Baseline 78.6 is Perceiver without pretraining",
+   "where": "Table 7",
+   "table": "Table 7, row Perceiver IO, config B (pretrained), column Accuracy"
+  },
+  {
+   "claim": "With conv+maxpool preprocessing and JFT pretraining, ImageNet top-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "86.4",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Config B (conv), 212M params, 176B FLOPs",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Perceiver IO, config B (conv) (pretrained), column Accuracy"
+  },
+  {
+   "claim": "From-scratch ImageNet: Perceiver IO config A with 2D Fourier features",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "79.0",
+   "unit": "% top-1",
+   "baseline_value": "78.6",
+   "n": null,
+   "setup": "48.4M params, 407B FLOPs, 110 epochs",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Perceiver IO, config A, column Accuracy"
+  },
+  {
+   "claim": "ImageNet with fully learned position features (no 2D structure given)",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": "72.7",
+   "unit": "% top-1",
+   "baseline_value": "67.6",
+   "n": null,
+   "setup": "Perceiver IO config A learned pos; Perceiver learned pos 67.6",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Perceiver IO, config A (learned pos), column Accuracy"
+  },
+  {
+   "claim": "StarCraft II: Perceiver IO replaces AlphaStar entity Transformer with same win rate and fewer FLOPs",
+   "kind": "measured",
+   "source": null,
+   "metric": "win rate",
+   "value": "0.87",
+   "unit": "win rate vs Elite bot",
+   "baseline_value": "0.87",
+   "n": null,
+   "setup": "3-layer Perceiver IO, 32 latents, behavioral cloning; 0.93B vs 3.3B FLOPs; 140M vs 144M params",
+   "note": null,
+   "where": "Table 9, Sec B",
+   "table": "Table 9, row Perceiver IO, column Win rate"
+  },
+  {
+   "claim": "AudioSet: Perceiver IO attention decoder beats Perceiver average+project (mel-spectrogram + video)",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "44.9",
+   "unit": "mAP",
+   "baseline_value": "43.6",
+   "n": null,
+   "setup": "D=1024, 88.2M params, 129.5B FLOPs; Perceiver 43.6",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Perceiver IO mel-spectrogram + video, column mAP"
+  },
+  {
+   "claim": "AudioSet raw audio + video",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "43.3",
+   "unit": "mAP",
+   "baseline_value": "42.4",
+   "n": null,
+   "setup": "D=512, 25.0M params, 52.9B FLOPs; Perceiver 42.4",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row Perceiver IO Raw audio + video, column mAP"
+  },
+  {
+   "claim": "Complexity claim: linear in input and output size, latent depth decoupled from both",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "O([M + O + LN]NF)",
+   "unit": "time/memory complexity",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Analysis, Sec E.2",
+   "note": null,
+   "where": "Sec E.2",
+   "quote": "complexity O([M + O + LN]NF)"
+  }
+ ],
+ "limits": [
+  "Perceiver IO requires all input points to be encoded simultaneously; scaling to even larger inputs is future work (Sec I)",
+  "Multimodal reconstructions are blurry, partly due to coarse patching",
+  "Class accuracy and PSNR trade off through loss weights",
+  "No seeds, variance or significance tests reported",
+  "Image classification not extensively tuned for efficiency; ImageNet best result needs JFT pretraining on an internal dataset",
+  "Flow model cannot yet be shape-invariant; evaluation needs tiling",
+  "Optical flow slower than RAFT on GPU; failure cases on shadows and compression artifacts",
+  "Language: encoder-style MLM only, no autoregressive generation shown"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "output query array",
+   "definition": "array with as many elements as the desired output, each built from position, task, modality or input features, used to cross-attend into the latents",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Perceiver: General perception with iterative attention",
+   "year": 2021,
+   "arxiv": "2103.03206",
+   "relation": "extends",
+   "note": "adds query-based decoder to Perceiver's encoder and latent transformer",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "MLM objective and GLUE protocol",
+   "quote": null
+  },
+  {
+   "work": "CANINE",
+   "year": 2022,
+   "arxiv": "2103.06874",
+   "relation": "related",
+   "note": "concurrent tokenizer-free encoder",
+   "quote": null
+  },
+  {
+   "work": "RAFT",
+   "year": 2020,
+   "arxiv": "2003.12039",
+   "relation": "baseline",
+   "note": "flow baseline and upsampling",
+   "quote": null
+  },
+  {
+   "work": "PWCNet",
+   "year": 2018,
+   "arxiv": "1709.02371",
+   "relation": "baseline",
+   "note": "flow baseline",
+   "quote": null
+  },
+  {
+   "work": "AutoFlow",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "flow training data",
+   "quote": null
+  },
+  {
+   "work": "AlphaStar",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Perceiver IO replaces its entity Transformer",
+   "quote": null
+  },
+  {
+   "work": "Set Transformer",
+   "year": 2019,
+   "arxiv": "1810.00825",
+   "relation": "related",
+   "note": "inducing points and seed vectors",
+   "quote": null
+  },
+  {
+   "work": "C4 / T5",
+   "year": 2020,
+   "arxiv": "1910.10683",
+   "relation": "uses-data",
+   "note": "pretraining corpus",
+   "quote": null
+  },
+  {
+   "work": "Vision Transformer",
+   "year": 2021,
+   "arxiv": "2010.11929",
+   "relation": "baseline",
+   "note": "ImageNet comparison",
+   "quote": null
+  },
+  {
+   "work": "LAMB",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "optimizer (You et al.)",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "The Perceiver IO architecture",
+   "page": 4,
+   "why": "encode-process-decode with output query array"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Queries with output-specific features",
+   "page": 5,
+   "why": "how queries differ per task"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Single-query attention decoder vs average + project decoder",
+   "page": 23,
+   "why": "shows decoder is a learned weighted pooling"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec E.1 Eq 4-6",
+   "snippet": "XQKV = Attn(layerNorm(XQ), layerNorm(XKV)); XQKV = XQKV + XQ; XQKV = XQKV + MLP(layerNorm(XQKV))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text garbled in cache (fonts); captions read from text",
+  "Two quotes for table cells are located via table field"
+ ]
+}

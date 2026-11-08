@@ -1,0 +1,111 @@
+{
+ "schema": 1,
+ "key": "1506.06726",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kiros-2015-skip-thought-vectors.pdf",
+ "bib": {"title": "Skip-Thought Vectors", "authors": ["Ryan Kiros","Yukun Zhu","Ruslan Salakhutdinov","Richard S. Zemel","Antonio Torralba","Raquel Urtasun","Sanja Fidler"], "first_author": "Kiros", "year": 2015, "venue": "preprint", "arxiv": "1506.06726", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 42059, "chars_total": 42059, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Is there a task and loss that lets an encoder learn generic, off-the-shelf sentence representations without a particular supervised task in mind?",
+ "hypothesis": "Abstracting skip-gram to the sentence level (encode a sentence to predict its neighbouring sentences) yields sentence vectors that transfer to many tasks with only a linear model on top.",
+ "contributions": ["Skip-thoughts: unsupervised encoder-decoder objective that reconstructs the previous and next sentence","Vocabulary expansion by linear regression from word2vec space to the encoder embedding space (20,000 to 930,911 words)","Evaluation as a frozen feature extractor with linear models on 8 tasks"],
+ "method": {
+  "summary": "A GRU encoder maps a sentence to a vector; two conditional-GRU decoders reconstruct the previous and next sentences from it. Trained on BookCorpus, then frozen and used as a feature extractor with linear models (logistic regression, linear ranking embedding) on 8 tasks.",
+  "task": "unsupervised sentence representation learning (sentence-level skip-gram), evaluated by transfer",
+  "trains": true,
+  "datasets": [
+   {"name": "BookCorpus", "role": "pretrain", "size": "11,038 books; 74,004,228 sentences; 984,846,357 words; 1,316,420 unique words; mean 13 words per sentence", "split": "all used for training", "source": "free books by unpublished authors, 16 genres (Zhu et al. 2015)", "preprocessing": "training vocabulary of 20,000 words; basic tokenization only at encoding time"},
+   {"name": "SICK (SemEval 2014 Task 1)", "role": "eval", "size": "4500 train / 500 dev / 4927 test pairs", "split": "predefined", "source": "Marelli et al. 2014", "preprocessing": null},
+   {"name": "MSRP (Microsoft Paraphrase Corpus)", "role": "eval", "size": "4076 train pairs (2753 positive), 1725 test pairs (1147 positive)", "split": "predefined", "source": "Dolan et al. 2004", "preprocessing": null},
+   {"name": "Microsoft COCO", "role": "eval", "size": "over 80,000 training images x 5 captions; dev and test 1000 images / 5000 captions each", "split": "same splits as Karpathy and Fei-Fei", "source": "Lin et al. 2014", "preprocessing": "images as 4096-d OxfordNet (VGG 19-layer) features"},
+   {"name": "MR, CR, SUBJ, MPQA, TREC", "role": "eval", "size": null, "split": "10-fold CV for MR, CR, SUBJ, MPQA; predefined split for TREC", "source": "Pang and Lee 2005; Hu and Liu 2004; Pang and Lee 2004; Wiebe et al. 2005; Li and Roth 2002", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "uni-skip", "role": "proposed", "params": null, "architecture": "unidirectional GRU encoder, 2400 dims; two conditional-GRU decoders (previous and next sentence) sharing only vocabulary matrix V", "init_from": null, "tokenizer": "word level, basic tokenization", "vocab": "20,000 words trained; 930,911 after vocabulary expansion", "layers": null, "hidden": "2400", "heads": null, "context": "one sentence in, previous and next sentence out", "other": {}},
+   {"name": "bi-skip", "role": "proposed", "params": null, "architecture": "bidirectional: forward and backward encoders of 1200 dims each (separate parameters, one reads reversed sentence), concatenated to 2400", "init_from": null, "tokenizer": null, "vocab": "20,000 trained", "layers": null, "hidden": "2400 (2 x 1200)", "heads": null, "context": null, "other": {}},
+   {"name": "combine-skip", "role": "proposed", "params": null, "architecture": "concatenation of uni-skip and bi-skip vectors, 4800 dims, no extra training", "init_from": "uni-skip + bi-skip", "tokenizer": null, "vocab": null, "layers": null, "hidden": "4800", "heads": null, "context": null, "other": {}},
+   {"name": "word2vec CBOW vectors", "role": "base", "params": null, "architecture": "publicly available CBOW embeddings, used for vocabulary expansion", "init_from": null, "tokenizer": null, "vocab": "930,911 words after removing multiple-word entries", "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "sum of log-probabilities of next and previous sentence words conditioned on encoder vector h_i (Eq. 10); vocabulary expansion is un-regularized L2 linear regression W: V_w2v to V_rnn",
+   "optimizer": "Adam",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping when parameter-vector norm exceeds 10",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "roughly two weeks per model",
+   "seeds": null,
+   "other": {"init": "recurrent matrices orthogonal; non-recurrent weights uniform in [-0.1, 0.1]", "downstream_ranking": "COCO: 1000-d embedding, margin alpha=0.2, k=50 contrastive terms, 15 epochs, keep best dev checkpoint", "downstream_classifiers": "logistic regression with L2 tuned by cross-validation (nested CV for MR, CR, SUBJ, MPQA); SICK uses Tai et al. 2015 setup (logistic regression over 5-point score distribution)"}
+  },
+  "inference": {
+   "decoding": "story generation: condition on a sentence, generate a new one, append and repeat (decoding method not specified)",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "one 20-sentence sample shown; evaluation single run, seeds not stated",
+   "prompting": null, "retrieval": null,
+   "parameters": {}, "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Pearson r, Spearman rho, MSE", "definition": "SICK relatedness score (1-5) vs mean of 10 annotators", "unit": "correlation / MSE", "higher_is_better": true},
+    {"name": "Accuracy, F1", "definition": "MSRP paraphrase classification", "unit": "%", "higher_is_better": true},
+    {"name": "Recall@K, median rank", "definition": "COCO image annotation and image search, 1000-image test", "unit": "%, rank", "higher_is_better": true},
+    {"name": "Accuracy", "definition": "MR, CR, SUBJ, MPQA, TREC classification", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["SemEval 2014 systems, Tai et al. 2015 LSTM / Tree-LSTM", "recursive autoencoders with dynamic pooling (Socher 2011) and top MSRP systems", "DVSA, GMM+HGLMM, m-RNN", "NB-SVM, MNB, cBoW, GrConv, RNN, BRNN, CNN, AdaSent, Paragraph-vector"],
+   "protocol": "frozen encoder, linear models only, no fine-tuning; no significance tests stated"
+  },
+  "availability": {"code": "promised ('We will make our encoder publicly available'); NB features use github.com/mesnilgr/nbsvm", "weights": "promised", "data": "BookCorpus (Zhu et al. 2015)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "models.hidden", "quote": "One is a unidirectional encoder with 2400 dimensions, which we subsequently refer to as uni-skip.", "where": "Sec 3.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Vocabulary expansion extends the encoder from a 20,000-word training vocabulary to 930,911 encodable words.", "kind": "measured", "source": null, "metric": "vocabulary size", "value": "930,911", "unit": "words", "baseline_value": "20,000", "n": null, "setup": "linear map from CBOW word2vec space to RNN embedding space, multiword entries removed", "quote": "this results in a vocabulary size of 930,911 words.", "table": null, "note": "Abstract says 'a million words'", "where": "Sec 3.1"},
+  {"claim": "combine-skip with COCO image-sentence features reaches Pearson r 0.8655 on SICK, on par with the dependency Tree-LSTM (0.8676).", "kind": "measured", "source": null, "metric": "Pearson r", "value": "0.8655", "unit": "r", "baseline_value": "0.8676", "n": 4927, "setup": "SICK test, frozen skip-thought features, logistic regression", "quote": null, "table": "Table 4 left, row combine-skip+COCO, column r", "note": null, "where": "Table 4"},
+  {"claim": "combine-skip alone reaches Pearson r 0.8584 on SICK, beating all SemEval 2014 submissions.", "kind": "measured", "source": null, "metric": "Pearson r", "value": "0.8584", "unit": "r", "baseline_value": "0.8414 (ECNU, best SemEval)", "n": 4927, "setup": "SICK test, linear model on u.v and |u-v|", "quote": null, "table": "Table 4 left, row combine-skip, column r", "note": null, "where": "Table 4"},
+  {"claim": "combine-skip plus basic pairwise features gets 75.8% accuracy / 83.0 F1 on MSRP, competitive with the best (MTMETRICS 77.4 / 84.1).", "kind": "measured", "source": null, "metric": "accuracy", "value": "75.8", "unit": "%", "baseline_value": "77.4", "n": 1725, "setup": "MSRP test, logistic regression, feats from Socher 2011", "quote": null, "table": "Table 4 right, row combine-skip + feats, column Acc", "note": null, "where": "Table 4"},
+  {"claim": "combine-skip alone gets 73.0% accuracy on MSRP, above RAE+DP (72.6) without hand-crafted features.", "kind": "measured", "source": null, "metric": "accuracy", "value": "73.0", "unit": "%", "baseline_value": "72.6", "n": 1725, "setup": "MSRP test", "quote": null, "table": "Table 4 right, row combine-skip, column Acc", "note": "uni-skip also 73.0", "where": "Table 4"},
+  {"claim": "On COCO image annotation combine-skip gets R@1 33.8 vs m-RNN 41.0; R@10 82.1 vs m-RNN 83.5; median rank 3.", "kind": "measured", "source": null, "metric": "Recall@1 image annotation", "value": "33.8", "unit": "%", "baseline_value": "41.0 (m-RNN)", "n": 1000, "setup": "COCO 1000-image test, linear embeddings, margin 0.2, k=50", "quote": null, "table": "Table 6, row combine-skip, column R@1 (Image Annotation)", "note": null, "where": "Table 6"},
+  {"claim": "On classification, skip-thoughts about match bag-of-words baselines but do not beat task-tuned supervised models; combine-skip MR 76.5, CR 80.1, SUBJ 93.6, MPQA 87.1, TREC 92.2.", "kind": "measured", "source": null, "metric": "MR accuracy", "value": "76.5", "unit": "%", "baseline_value": "83.1 (AdaSent)", "n": null, "setup": "logistic regression on frozen vectors, 10-fold CV (TREC predefined split)", "quote": null, "table": "Table 7, row combine-skip, column MR", "note": null, "where": "Table 7"},
+  {"claim": "Combining skip-thoughts with bigram NB features gives MR 80.4, a strong new text-classification baseline.", "kind": "measured", "source": null, "metric": "MR accuracy", "value": "80.4", "unit": "%", "baseline_value": "76.5", "n": null, "setup": "combine-skip + NB features, MR", "quote": null, "table": "Table 7, row combine-skip + NB, column MR", "note": null, "where": "Table 7"},
+  {"claim": "Each skip-thought model trained for roughly two weeks.", "kind": "measured", "source": null, "metric": "training time", "value": "two weeks", "unit": "wall clock", "baseline_value": null, "n": null, "setup": "uni-skip and bi-skip on BookCorpus", "quote": "Both models were trained", "table": null, "note": "hardware not stated; quote spans a line", "where": "Sec 3.1"}
+ ],
+ "limits": [
+  "Authors concede supervised task-specific representations beat skip-thoughts on sentiment-type classification.",
+  "Only linear evaluators tested; non-linear gains left unexplored.",
+  "Model failures on small structural changes (Table 5, e.g. 'tricks' vs 'tricking a person').",
+  "No seeds, learning rate, hardware or ablations stated; no significance tests; encoder release only promised.",
+  "Authors list unexplored variants: deep encoders/decoders, larger context windows, paragraph encoding, convnet encoders.",
+  "Dated: GRU encoder-decoder, 2015 baselines, superseded by transformer pretraining."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "skip-thought vectors", "definition": "vectors induced by encoding a sentence to predict the sentences around it", "where": "Sec 1"},
+  {"term": "vocabulary expansion", "definition": "linear map from word2vec space to encoder embedding space so unseen words can be encoded", "where": "Sec 2.2"}
+ ],
+ "lineage": [
+  {"work": "Efficient estimation of word representations in vector space (skip-gram, CBOW)", "year": 2013, "arxiv": "1301.3781", "relation": "extends", "note": "objective abstracts skip-gram to sentence level; CBOW used for vocab expansion", "quote": null},
+  {"work": "Learning phrase representations using RNN encoder-decoder", "year": 2014, "arxiv": "1406.1078", "relation": "uses-method", "note": "encoder-decoder architecture nearly identical", "quote": null},
+  {"work": "Empirical evaluation of gated recurrent neural networks", "year": 2014, "arxiv": "1412.3555", "relation": "uses-method", "note": "GRU units", "quote": null},
+  {"work": "Distributed representations of sentences and documents (paragraph vector)", "year": 2014, "arxiv": "1405.4053", "relation": "baseline", "note": "unsupervised alternative needing test-time inference", "quote": null},
+  {"work": "Tai et al., tree-structured LSTM", "year": 2015, "arxiv": "1503.00075", "relation": "baseline", "note": "SICK setup and best baseline", "quote": null},
+  {"work": "Aligning books and movies (BookCorpus)", "year": 2015, "arxiv": "1506.06724", "relation": "uses-data", "note": "training corpus and preliminary model", "quote": null},
+  {"work": "Baselines and bigrams (NB-SVM)", "year": 2012, "arxiv": null, "relation": "baseline", "note": "bag-of-words baseline and NB features", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "The skip-thoughts model: sentence s_i is encoded and tries to reconstruct s_{i-1} and s_{i+1}.", "page": 2, "why": "shows the one-encoder two-decoder objective at a glance"},
+  {"figure": "Table 2", "caption": "Nearest neighbours of sentences, cosine similarity over 500,000 sampled sentences.", "page": 3, "why": "shows syntactic and semantic capture"}
+ ],
+ "code": [],
+ "problems": ["Figure 1 and Figure 2 are images; text cache has table cells in column order without headers (Table 6 R@K columns inferred from layout).", "Abstract says 8 tasks with 4 sentiment/subjectivity datasets; intro and Sec 3.5 say 5 classification benchmarks (including TREC)."]
+}

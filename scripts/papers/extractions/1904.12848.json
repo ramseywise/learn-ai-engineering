@@ -1,0 +1,560 @@
+{
+ "schema": 1,
+ "key": "1904.12848",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xie-2019-unsupervised-data-augmentation-consistency-training.pdf",
+ "bib": {
+  "title": "Unsupervised Data Augmentation for Consistency Training",
+  "authors": [
+   "Qizhe Xie",
+   "Zihang Dai",
+   "Eduard Hovy",
+   "Minh-Thang Luong",
+   "Quoc V. Le"
+  ],
+  "first_author": "Xie",
+  "year": 2020,
+  "venue": "NeurIPS 2020 (34th Conference on Neural Information Processing Systems); arXiv v6",
+  "arxiv": "1904.12848",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72072,
+  "chars_total": 72072,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "Does replacing simple noise in semi-supervised consistency training with state-of-the-art data augmentation (RandAugment, back-translation) improve results with scarce labels?",
+ "hypothesis": "Stronger data augmentations that work best in supervised learning also give superior performance when used to noise unlabeled examples in consistency training.",
+ "contributions": [
+  "State-of-the-art supervised augmentations serve as superior noise in consistency training (Tables 1, 2)",
+  "UDA matches or beats supervised learning with orders of magnitude more labels (Table 4, Fig 4)",
+  "UDA combines with transfer learning (BERT) and is effective in high-data regimes (ImageNet)",
+  "Theoretical analysis of how UDA improves classification (Section 3)"
+ ],
+ "method": {
+  "summary": "UDA minimises supervised cross-entropy on labeled data plus a consistency loss (KL/CE between predictions on an unlabeled example, from a fixed-parameter copy, and on its augmented version) weighted by lambda. Augmentations are RandAugment for images, back-translation (En-Fr, sampling) and TF-IDF word replacement for text. Extra techniques: confidence masking, sharpening, domain-relevance filtering, Training Signal Annealing.",
+  "task": "semi-supervised classification (text and image)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "IMDb",
+    "role": "both",
+    "size": "25k labeled train; 20 labeled used in semi-sup",
+    "split": "train + unlabeled set as unlabeled",
+    "source": "Maas et al.",
+    "preprocessing": "truncate to last 512 subwords"
+   },
+   {
+    "name": "Yelp-2 / Yelp-5",
+    "role": "both",
+    "size": "560k / 650k supervised; 20 / 2.5k labeled used",
+    "split": null,
+    "source": "Kaggle Yelp dataset; external unlabeled data (6m unlabeled for Yelp-5)",
+    "preprocessing": "512 subwords"
+   },
+   {
+    "name": "Amazon-2 / Amazon-5",
+    "role": "both",
+    "size": "3.6m / 3m supervised; 20 / 2.5k labeled used",
+    "split": null,
+    "source": "McAuley Amazon data",
+    "preprocessing": "512 subwords"
+   },
+   {
+    "name": "DBPedia",
+    "role": "both",
+    "size": "560k supervised; 140 labeled used",
+    "split": "whole train set as unlabeled",
+    "source": null,
+    "preprocessing": "512 subwords"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": "50k train; 250-4000 labeled",
+    "split": "unlabeled up to 50k",
+    "source": null,
+    "preprocessing": "100 augmented examples per unlabeled example generated before training"
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": "73,257 train; 250-4000 labeled",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet",
+    "role": "both",
+    "size": "10% labeled (rest unlabeled) or 100% labeled + 1.3M unlabeled from JFT",
+    "split": null,
+    "source": "JFT filtered by domain-relevance",
+    "preprocessing": "image size 224 (10%) and 331 (100%)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Wide-ResNet-28-2",
+    "role": "proposed",
+    "params": "1.5M",
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Shake-Shake",
+    "role": "proposed",
+    "params": "26M",
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "PyramidNet+ShakeDrop",
+    "role": "proposed",
+    "params": "26M",
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-50",
+    "role": "proposed",
+    "params": null,
+    "architecture": "CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Random Transformer",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-base config with 6 hidden layers, 8 attention heads",
+    "init_from": "random",
+    "tokenizer": "BERT subwords",
+    "vocab": null,
+    "layers": "6",
+    "hidden": null,
+    "heads": "8",
+    "context": "512",
+    "other": {
+     "dropout": "0.2 attention and hidden"
+    }
+   },
+   {
+    "name": "BERT-base / BERT-large / BERT-finetune",
+    "role": "base",
+    "params": null,
+    "architecture": "Transformer encoder",
+    "init_from": "BERT-base, BERT-large, or BERT-large further fine-tuned on in-domain unlabeled data",
+    "tokenizer": "BERT subwords",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "CE(supervised) + lambda * CE(sharpened stop-grad p(y|x) || p(y|augmented x)), masked by confidence > beta; lambda=1 in most runs",
+   "optimizer": "SGD with Nesterov momentum 0.9 (WRN-28-2); BERT optimizer not stated",
+   "lr": "WRN: not stated; Shake-Shake/PyramidNet 0.03; ImageNet 10%: 0.3, full: 1.6; BERT finetune try 1e-5, 2e-5, 5e-5",
+   "lr_schedule": "WRN: cosine decay cos(7t/(8T) * pi/2); Shake-Shake/PyramidNet: cosine, one annealing cycle; ImageNet: decayed by 10 four times",
+   "warmup": null,
+   "batch_size": "WRN-28-2: 64 labeled / 448 unlabeled; Shake-Shake: 128 / 512; PyramidNet: 64 / 128; text with BERT: 32 / 224; ImageNet 10%: 512 / 15,360; ImageNet full: 8,192 / 16,384",
+   "steps": "WRN-28-2 500K; Shake-Shake 300k; PyramidNet 700k; ImageNet 10% 40k; random Transformer 500k or 1M on Amazon-5/Yelp-5; BERT 30 to 100k tuned by data size",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 subwords",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 for BERT; 0.2 random Transformer",
+   "regularisation": "EMA decay 0.9999 on WRN parameters; confidence masking beta 0.8 (CIFAR/SVHN), 0.5 (ImageNet); sharpening tau 0.4; TSA exp-schedule for low-label text; ImageNet 10% lambda=20, full set uses entropy minimisation",
+   "hardware": "WRN-28-2: Tesla V100 GPU; text: v3-32 Cloud TPU Pod; Shake-Shake/PyramidNet: v3-32 TPU Pod; ImageNet 10%: v3-64; full: v3-128",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "10 runs, mean and std for WRN-28-2 CIFAR/SVHN",
+   "other": {
+    "bert_domain_finetune_grid": "lr 2e-5/5e-5/1e-4, batch 32/64/128, steps 30k/100k/300k; chosen by BERT loss on held-out set",
+    "back_translation": "WMT14 En-Fr models both directions, random sampling softmax temperature 0.7-0.9 best",
+    "randaugment": "15 transformations, magnitude in [1,10), probability fixed at 0.5, two ops per sub-policy",
+    "tfidf_replace_p": "0.7 on DBPedia",
+    "TSA": "eta_t = alpha_t*(1-1/K)+1/K; alpha_t = 1-exp(-t/T*5) log, t/T linear, exp((t/T-1)*5) exp"
+   }
+  },
+  "inference": {
+   "decoding": "back-translation uses random sampling, temperature 0.7-0.9, not beam search",
+   "temperature": "0.7, 0.8 or 0.9 (back-translation); tau 0.4 sharpening",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "1 augmented example per unlabeled example for BERT-finetune; 100 per unlabeled example precomputed for CIFAR-10",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "error rate",
+     "definition": "classification error",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "top-1 / top-5 accuracy",
+     "definition": "ImageNet",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "VAT",
+    "MixMatch",
+    "Pi-Model",
+    "Mean Teacher",
+    "Pseudo-Label",
+    "ICT",
+    "SNTG",
+    "Fast-SWA",
+    "LGA+VAT",
+    "BERT supervised",
+    "ULMFiT",
+    "DPCNN",
+    "Mixed VAT"
+   ],
+   "protocol": "CIFAR-10 and SVHN: mean and std over 10 runs; text and ImageNet: seed count not stated"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/uda",
+   "weights": "back-translation checkpoints open-sourced",
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "UDA reaches 4.20 error on IMDb with 20 labeled examples (BERT-finetune init), beating pre-BERT SOTA 4.32 trained on 25k labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 4.2,
+   "unit": "%",
+   "baseline_value": 4.32,
+   "n": null,
+   "setup": "IMDb, 20 labeled, BERT-finetune init + UDA",
+   "quote": "our method achieves an error rate of 4.20",
+   "table": "Table 4, row BERTFINETUNE with UDA, column IMDb (20)",
+   "note": null,
+   "where": "Abstract, Table 4"
+  },
+  {
+   "claim": "UDA gets 5.43% error on CIFAR-10 with 250 labels (WRN-28-2)",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 5.43,
+   "unit": "%",
+   "baseline_value": 11.08,
+   "n": null,
+   "setup": "CIFAR-10, 250 labels, WRN-28-2, mean of 10 runs (std 0.96)",
+   "quote": "achieves an error rate of 5.43 with only 250 examples",
+   "table": "Table 9, row UDA (RandAugment), column 250",
+   "note": null,
+   "where": "Abstract, Table 9; baseline is MixMatch"
+  },
+  {
+   "claim": "UDA with 4k labels on CIFAR-10 reaches 4.32 error, vs MixMatch 6.24, same WRN-28-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 4.32,
+   "unit": "%",
+   "baseline_value": 6.24,
+   "n": null,
+   "setup": "CIFAR-10, 4k labels, WRN-28-2 1.5M params, 10 runs",
+   "quote": null,
+   "table": "Table 3, row UDA (RandAugment) WRN-28-2, column CIFAR-10 (4k)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "PyramidNet+ShakeDrop UDA with 4k labels gets 2.7 error, matching fully supervised 50k",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 2.7,
+   "unit": "%",
+   "baseline_value": 2.7,
+   "n": null,
+   "setup": "CIFAR-10, 4k labels, 26M params",
+   "quote": null,
+   "table": "Table 3, row UDA (RandAugment) PyramidNet, column CIFAR-10 (4k)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "SVHN with 250 labels: UDA 2.72 error",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 2.72,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SVHN, 250 labels, WRN-28-2",
+   "quote": "achieves an error rate of 5.43 and 2.72 with 250 labeled examples respectively",
+   "table": null,
+   "note": null,
+   "where": "Intro"
+  },
+  {
+   "claim": "ImageNet 10% labels: UDA improves top-1 from 58.84 (RandAugment supervised) to 68.78",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 68.78,
+   "unit": "%",
+   "baseline_value": 58.84,
+   "n": null,
+   "setup": "ImageNet 10% labeled, ResNet-50, image size 224",
+   "quote": "from 58.84 to 68.78 with 10% of the labeled set",
+   "table": null,
+   "note": null,
+   "where": "Intro, Table 5"
+  },
+  {
+   "claim": "ImageNet full labels plus 1.3M filtered JFT unlabeled: top-1 78.43 to 79.05",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1 accuracy",
+   "value": 79.05,
+   "unit": "%",
+   "baseline_value": 78.43,
+   "n": null,
+   "setup": "ImageNet 100% labeled, ResNet-50, image size 331",
+   "quote": "from 78.43 to 79.05 when we",
+   "table": null,
+   "note": null,
+   "where": "Intro, Table 5"
+  },
+  {
+   "claim": "Augmentation quality correlates supervised vs semi-supervised: RandAugment 4.32 vs crop&flip 10.94 on CIFAR-10 with 4k labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 4.32,
+   "unit": "%",
+   "baseline_value": 10.94,
+   "n": null,
+   "setup": "CIFAR-10, 4k labeled",
+   "quote": null,
+   "table": "Table 1, row RandAugment, column Semi-Sup (4k)",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Back-translation 41.35 vs Switchout 43.38 vs none 50.80 on Yelp-5 with 2.5k labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 41.35,
+   "unit": "%",
+   "baseline_value": 50.8,
+   "n": null,
+   "setup": "Yelp-5 2.5k labels, random-init Transformer",
+   "quote": null,
+   "table": "Table 2, row Back-translation, column Semi-sup (2.5k)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "TSA exp-schedule cuts Yelp-5 error from 50.81 to 41.35",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 41.35,
+   "unit": "%",
+   "baseline_value": 50.81,
+   "n": null,
+   "setup": "Yelp-5, 2.5k labels, 6m unlabeled, random-init Transformer",
+   "quote": "TSA reduces the error rate from 50.81 to 41.35",
+   "table": null,
+   "note": null,
+   "where": "Appendix B.1, Table 8"
+  },
+  {
+   "claim": "Reducing unlabeled data hurts more than reducing labeled data: CIFAR-10 250 labels, 50,000 unlabeled 5.43 vs 5,000 unlabeled 35.41",
+   "kind": "measured",
+   "source": null,
+   "metric": "error rate",
+   "value": 35.41,
+   "unit": "%",
+   "baseline_value": 5.43,
+   "n": null,
+   "setup": "CIFAR-10, 250 labels, 5,000 unlabeled",
+   "quote": null,
+   "table": "Table 6, row 5,000, column 250",
+   "note": null,
+   "where": "Table 6"
+  }
+ ],
+ "limits": [
+  "Five-category sentiment tasks still show a clear gap between UDA with 500 labels per class and BERT trained on the full supervised set",
+  "RandAugment magnitude range and probability not tuned; authors suggest tuning may help",
+  "Theory assumes in-domain, label-preserving, reversible augmentation (simplistic)",
+  "Dumped (offline) augmentations used for CIFAR-10; online augmentation said to be as good or better",
+  "Seed counts not stated for text and ImageNet; BERT optimizer and warmup not stated",
+  "Own MixMatch reimplementation slightly worse than reported, baselines in tables are reported by MixMatch"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Training Signal Annealing (TSA)",
+   "definition": "remove a labeled example from the loss when p(y*|x) exceeds a threshold eta_t that rises from 1/K to 1 over training",
+   "where": "Appendix A.1"
+  },
+  {
+   "term": "Confidence-based masking",
+   "definition": "consistency loss computed only on examples whose max predicted probability exceeds beta",
+   "where": "Section 2.4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Virtual adversarial training (VAT)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "consistency training with adversarial noise; stop-gradient target taken from VAT",
+   "quote": null
+  },
+  {
+   "work": "MixMatch",
+   "year": 2019,
+   "arxiv": "1905.02249",
+   "relation": "baseline",
+   "note": "parallel work",
+   "quote": null
+  },
+  {
+   "work": "RandAugment",
+   "year": 2019,
+   "arxiv": "1909.13719",
+   "relation": "uses-method",
+   "note": "image augmentation",
+   "quote": null
+  },
+  {
+   "work": "AutoAugment",
+   "year": 2018,
+   "arxiv": "1805.09501",
+   "relation": "related",
+   "note": "RandAugment inspiration",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "initialisation for text",
+   "quote": null
+  },
+  {
+   "work": "Mean Teacher",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Pi-Model (Laine and Aila)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "QANet (Yu et al.) back-translation augmentation",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "back-translation paraphrases [66]",
+   "quote": null
+  },
+  {
+   "work": "Oliver et al. realistic evaluation of SSL",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "benchmark settings [44]",
+   "quote": null
+  },
+  {
+   "work": "ULMFiT",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Training objective for UDA, where M is a model that predicts a distribution of y given x.",
+   "page": 3,
+   "why": "Shows labeled CE loss plus consistency loss between original and augmented unlabeled input in one diagram."
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Comparison with two semi-supervised learning methods on CIFAR-10 and SVHN with varied number of labeled examples.",
+   "page": 7,
+   "why": "UDA beats VAT and MixMatch across label counts."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p.3",
+   "snippet": "min_theta J(theta) = E_{x1~pL}[-log p_theta(f*(x1)|x1)] + lambda E_{x2~pU} E_{xhat~q(xhat|x2)} CE(p_{tilde theta}(y|x2) || p_theta(y|xhat))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1/2 and Table 4 layouts are flattened in the text; UDA on/off rows inferred from order (checkmark glyphs missing)",
+  "Table 8 caption mentions CIFAR-10 but only Yelp-5 shown"
+ ]
+}

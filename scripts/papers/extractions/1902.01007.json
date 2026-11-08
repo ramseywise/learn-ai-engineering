@@ -1,0 +1,539 @@
+{
+ "schema": 1,
+ "key": "1902.01007",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mccoy-2019-right-wrong-reasons.pdf",
+ "bib": {
+  "title": "Right for the Wrong Reasons: Diagnosing Syntactic Heuristics in Natural Language Inference",
+  "authors": [
+   "R. Thomas McCoy",
+   "Ellie Pavlick",
+   "Tal Linzen"
+  ],
+  "first_author": "McCoy",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the ACL, pages 3428-3448",
+  "arxiv": "1902.01007",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 70138,
+  "chars_total": 70138,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Do statistical NLI models trained on MNLI adopt fallible syntactic heuristics (lexical overlap, subsequence, constituent) that inflate test accuracy?",
+ "hypothesis": "NLI models trained on crowdsourced data adopt the lexical overlap, subsequence and constituent heuristics, because the training data supports them and the input representations permit them.",
+ "contributions": [
+  "Introduce HANS, an NLI evaluation set testing specific invalid heuristics",
+  "Show MNLI-trained models, including BERT, fail on it, consistent with having adopted the heuristics",
+  "Show the shortcomings are reduced by augmenting training data with HANS-like examples"
+ ],
+ "method": {
+  "summary": "Template-generated evaluation set HANS (five supporting and five contradicting templates per heuristic, 1,000 examples each, 30 subcases) is used to evaluate DA, ESIM, SPINN and BERT trained on MNLI; models are then retrained with HANS-like augmentation and with withheld subcases, tested on Dasgupta et al. comparatives, and compared with MTurk and expert humans.",
+  "task": "Natural language inference (entailment vs non-entailment)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNLI",
+    "role": "train",
+    "size": "392,702 examples",
+    "split": "standard train; MNLI test accuracy reported",
+    "source": "Williams et al. 2018b",
+    "preprocessing": "Two-label variant merges neutral and contradiction into non-entailment in training (App D)"
+   },
+   {
+    "name": "HANS",
+    "role": "eval",
+    "size": "30,000 examples (3 heuristics x 10,000)",
+    "split": "30 subcases",
+    "source": "Template generated; core vocabulary from Ettinger et al. 2018; verbs appear at least 50 times in MNLI train in relevant frames",
+    "preprocessing": "Two gold labels; 3-way model output mapped contradiction/neutral to non-entailment"
+   },
+   {
+    "name": "HANS-like augmentation",
+    "role": "train",
+    "size": "30,000 examples (about 8% of MNLI)",
+    "split": "same 30 subcases, no examples that appear in HANS",
+    "source": "Authors",
+    "preprocessing": null
+   },
+   {
+    "name": "Dasgupta et al. 2018 comp_same_short and comp_same_long",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Dasgupta et al. 2018",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DA (Decomposable Attention)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "bag-of-words attention",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "impl": "AllenNLP"
+    }
+   },
+   {
+    "name": "ESIM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "BiLSTM, sequential encoder variant",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "impl": "AllenNLP"
+    }
+   },
+   {
+    "name": "SPINN-PI-NT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "tree-based, takes parse as input",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "parser": "Stanford PCFG Parser 3.5.2"
+    }
+   },
+   {
+    "name": "BERT",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "Transformer",
+    "init_from": "bert-base-uncased pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "NLI classification on MNLI (3-way)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "No hyperparameters stated; code from AllenNLP, nyu-mll/spinn fork, google-research/bert"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over entailment/contradiction/neutral, then neutral and contradiction mapped to non-entailment",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "alternative": "summing contradiction and neutral scores gave little difference"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction correct per HANS subcase or heuristic, split by correct label",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Human: MTurk and expert annotators",
+    "MNLI-only training vs MNLI + HANS-like"
+   ],
+   "protocol": "Single reported run per model; no seeds or significance tests stated. Transfer: 5 experiments each withholding 6 of 30 subcases."
+  },
+  "availability": {
+   "code": "https://github.com/tommccoy1/hans",
+   "weights": null,
+   "data": "https://github.com/tommccoy1/hans"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "All four MNLI-trained models score below 10% on most non-entailment HANS cases, against 50% chance",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "less than 10%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DA, ESIM, SPINN, BERT trained on MNLI; HANS non-entailed cases",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "accuracies less than 10% in most cases, when chance is 50%"
+  },
+  {
+   "claim": "BERT accuracy on lexical-overlap conjunction subcase (non-entailed)",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "39%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base-uncased fine-tuned on MNLI; HANS conjunction subcase",
+   "where": "Sec 5",
+   "note": null,
+   "quote": "BERT achieved 39% accu-"
+  },
+  {
+   "claim": "BERT accuracy on subject/object swap is zero despite BERT's syntactic competence elsewhere",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base-uncased fine-tuned on MNLI; HANS subject-object swap",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "its accuracy was 0% on the subject-object"
+  },
+  {
+   "claim": "BERT accuracy on non-entailed constituent subcase 'embedded under preposition'",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.50",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-base-uncased fine-tuned on MNLI",
+   "where": "App C",
+   "note": null,
+   "table": "Table 8, row Constituent Embedded under preposition, column BERT"
+  },
+  {
+   "claim": "MNLI has far more cases supporting the lexical overlap heuristic (2,158) than contradicting it (261)",
+   "kind": "measured",
+   "source": null,
+   "metric": "supporting cases",
+   "value": "2,158",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNLI training set; lexical overlap counts include subsequence and constituent",
+   "where": "Sec 2",
+   "note": "Subsequence 1,274 vs 72; constituent 1,004 vs 58",
+   "quote": "2,158"
+  },
+  {
+   "claim": "133 of the 261 contradicting MNLI cases contain negation in the premise but not the hypothesis",
+   "kind": "measured",
+   "source": null,
+   "metric": "cases",
+   "value": "133",
+   "unit": "cases",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNLI training set",
+   "where": "Sec 2",
+   "note": null,
+   "quote": "133 of these cases contain negation in"
+  },
+  {
+   "claim": "Mechanical Turk annotators average 76% on a HANS subset",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "95 retained MTurk participants; 114 categories x 20 examples, 5 judgments each",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "The average accuracy was 76% for Me-"
+  },
+  {
+   "claim": "Expert annotators average 97% on a HANS subset",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "97%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 linguist annotators, 114 examples + 10 controls each",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "97% for expert an-"
+  },
+  {
+   "claim": "MTurk accuracy on MNLI examples is 92%, so HANS is harder for humans",
+   "kind": "reported",
+   "source": null,
+   "metric": "accuracy",
+   "value": "92%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk, MNLI examples",
+   "where": "Sec 6",
+   "note": "Reported by Nangia and Bowman (2019)",
+   "quote": "accuracy of 92%"
+  },
+  {
+   "claim": "Human errors are balanced across labels",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "75% / 77%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MTurk on HANS, entailment vs non-entailment",
+   "where": "Sec 6",
+   "note": null,
+   "quote": "entailment (75% accuracy) or non-entailment (77% accuracy)"
+  },
+  {
+   "claim": "Adding 30,000 HANS-like examples to MNLI makes models perform very well on HANS (DA excepted on bag-of-words-inadequate subcases)",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples added",
+   "value": "30,000",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DA, ESIM, SPINN, BERT retrained; same 30 subcases, no HANS items",
+   "where": "Sec 7, Fig 2",
+   "note": null,
+   "quote": "30,000 examples"
+  },
+  {
+   "claim": "MNLI training set size",
+   "kind": "measured",
+   "source": null,
+   "metric": "size",
+   "value": "392,702",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MNLI train",
+   "where": "Sec 7",
+   "note": null,
+   "quote": "392,702 ex-"
+  },
+  {
+   "claim": "Augmentation leaves BERT MNLI test accuracy about unchanged",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI test accuracy",
+   "value": "84.4% vs 84.1%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT with vs without HANS-like augmentation",
+   "where": "Sec 7 fn 7",
+   "note": "Footnote: ESIM 77.6 vs 77.3; DA 66.0 vs 72.4; SPINN 63.9 vs 67.0 (hurt)",
+   "quote": "84.4% vs. 84.1%"
+  },
+  {
+   "claim": "Augmentation hurts DA on the MNLI test set",
+   "kind": "measured",
+   "source": null,
+   "metric": "MNLI test accuracy",
+   "value": "66.0% vs 72.4%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DA with vs without augmentation",
+   "where": "Sec 7 fn 7",
+   "note": null,
+   "quote": "66.0% vs. 72.4%"
+  },
+  {
+   "claim": "BERT trained with merged non-entailment label still fails on constituent non-entailment cases",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0.20",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT trained on MNLI with two labels",
+   "where": "App D",
+   "note": null,
+   "table": "Table 9, row BERT, column Correct: Non-entailment Const."
+  },
+  {
+   "claim": "Transfer to withheld subcases is partial: BERT scores 0% on withheld entailed passives",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "0%",
+   "unit": "accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT on MNLI+ with the category withheld",
+   "where": "Sec 7",
+   "note": null,
+   "quote": "BERT had 0% accu-"
+  }
+ ],
+ "limits": [
+  "Architecture vs training-set causes not separated; BERT also had far more pretraining data",
+  "HANS is template-based with limited vocabulary and sentence types",
+  "Augmentation experiment is an initial exploration; how many contradicting examples are needed is open",
+  "Transfer to withheld subcases is only partial",
+  "Only bert-base-uncased; no hyperparameters, seeds or variance reported",
+  "2019-era models only"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "lexical overlap heuristic",
+   "definition": "Assume that a premise entails all hypotheses constructed from words in the premise",
+   "where": "Table 1"
+  },
+  {
+   "term": "subsequence heuristic",
+   "definition": "Assume that a premise entails all of its contiguous subsequences.",
+   "where": "Table 1"
+  },
+  {
+   "term": "constituent heuristic",
+   "definition": "Assume that a premise entails all complete subtrees in its parse tree.",
+   "where": "Table 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "MNLI (Williams et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "training set",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "bert-base-uncased",
+   "quote": null
+  },
+  {
+   "work": "Decomposable Attention (Parikh et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "ESIM (Chen et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "SPINN (Bowman et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Dasgupta et al., Evaluating compositionality in sentence embeddings",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "proof-of-concept structural work; datasets reused",
+   "quote": null
+  },
+  {
+   "work": "McCoy and Linzen, Non-entailed subsequences as a challenge for NLI",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "pilot study",
+   "quote": null
+  },
+  {
+   "work": "Naik et al., Stress test evaluation for NLI",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "also found lexical overlap use, different method",
+   "quote": null
+  },
+  {
+   "work": "Gururangan et al., Annotation artifacts",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "hypothesis-only bias",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Accuracy on the MNLI test set. (b) Accuracies on six sub-components of the HANS evaluation set",
+   "page": 5,
+   "why": "High MNLI accuracy beside near-zero non-entailment HANS accuracy"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "The heuristics targeted by the HANS dataset",
+   "page": 2,
+   "why": "Defines the three heuristics with examples"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Main per-model HANS accuracies are only in Fig 1 (not in text); numeric versions are in appendix Tables 7-9"
+ ]
+}

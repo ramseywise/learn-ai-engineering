@@ -1,0 +1,90 @@
+{
+ "schema": 1,
+ "key": "2010.00133",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/nangia-2020-crows-pairs.pdf",
+ "bib": {"title": "CrowS-Pairs: A Challenge Dataset for Measuring Social Biases in Masked Language Models", "authors": ["Nikita Nangia", "Clara Vania", "Rasika Bhalerao", "Samuel R. Bowman"], "first_author": "Nangia", "year": 2020, "venue": "EMNLP 2020", "arxiv": "2010.00133", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 52862, "chars_total": 52862, "engine": "pymupdf", "skipped": null},
+ "type": "benchmark",
+ "question": "How strongly do widely used masked language models prefer sentences that stereotype historically disadvantaged US groups, across nine bias categories?",
+ "hypothesis": "inferred: models trained on minimally filtered real-world text will prefer stereotyping sentences (score above the unbiased 50%).",
+ "contributions": ["CrowS-Pairs, a crowdsourced benchmark of 1508 minimal sentence pairs over nine bias types", "A pseudo-log-likelihood metric that conditions on the modified (group) tokens", "Evaluation of BERT, RoBERTa and ALBERT showing bias in every category", "A second validation showing higher validity than StereoSet intrasentence"],
+ "method": {
+  "summary": "Crowdworkers on MTurk wrote minimal pairs of sentences differing only in the group mentioned; five other annotators validated them. MLMs are scored by masking each unmodified token in turn (conditioned on the modified tokens) and the metric is the percentage of pairs where the stereotyping sentence gets the higher pseudo-log-likelihood.",
+  "task": "measuring social bias in masked language models via paired-sentence likelihood preference",
+  "trains": false,
+  "datasets": [
+   {"name": "CrowS-Pairs", "role": "eval", "size": "1508 examples (2000 collected, 490 removed in validation, 2 removed for full overlap)", "split": "test only", "source": "Amazon Mechanical Turk, US workers, >98% acceptance, at least $15/hour via Fair Work; prompts from MultiNLI fiction and ROCStories", "preprocessing": "kept if at least 3 of 6 annotators (5 plus writer) agree valid and minimally distant, and bias type agreed by majority"},
+   {"name": "WinoBias (knowledge type-1 and syntax type-2)", "role": "eval", "size": "396 examples each", "split": null, "source": "Zhao et al., 2018", "preprocessing": null},
+   {"name": "StereoSet intrasentence validation set", "role": "eval", "size": "2106 examples", "split": "intrasentence validation", "source": "Nadeem et al., 2020", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "BERT-base", "role": "evaluated", "params": null, "architecture": "masked LM", "init_from": null, "tokenizer": "wordpiece", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "RoBERTa-large", "role": "evaluated", "params": null, "architecture": "masked LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ALBERT-xxlarge-v2", "role": "evaluated", "params": null, "architecture": "masked LM", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "one deterministic scoring pass per sentence pair; no seeds",
+   "prompting": null, "retrieval": null,
+   "parameters": {"scoring": "mask one unmodified token at a time, never masking modified tokens, sum log P(u_i | U minus u_i, M, theta)", "ideal_score": "50%"},
+   "other": {"library": "HuggingFace Transformers (Wolf et al., 2019)"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "bias score", "definition": "percentage of examples where the model assigns higher pseudo-log-likelihood to the more stereotyping sentence", "unit": "%", "higher_is_better": false},
+    {"name": "confidence", "definition": "1 - score(S)/score(S'), S the higher-scored sentence", "unit": "ratio", "higher_is_better": null},
+    {"name": "% valid", "definition": "share of 100 sampled examples voted valid by majority of 5 annotators", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["WinoBias", "StereoSet"],
+   "protocol": "Single run per model; metric compared against 50% ideal. Dataset quality compared by an independent validation of 100 random examples per dataset, 5 annotations each."
+  },
+  "availability": {"code": "https://github.com/nyu-mll/crows-pairs/", "weights": null, "data": "https://github.com/nyu-mll/crows-pairs/"},
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.metrics[0]", "quote": "A model that does not incorporate American cultural stereotypes concerning the categories we study should achieve the ideal score of 50%.", "where": "Section 3"}
+  ]
+ },
+ "results": [
+  {"claim": "ALBERT-xxl-v2 has the highest overall CrowS-Pairs bias score of the three MLMs.", "kind": "measured", "source": null, "metric": "bias score", "value": 67.0, "unit": "%", "baseline_value": 50, "n": 1508, "setup": "CrowS-Pairs, all 1508 pairs, ALBERT-xxl-v2, pseudo-log-likelihood metric", "table": "Table 2, row CrowS-Pairs, column ALBERT", "note": "ideal is 50", "where": "Table 2"},
+  {"claim": "RoBERTa-large overall CrowS-Pairs bias score.", "kind": "measured", "source": null, "metric": "bias score", "value": 64.1, "unit": "%", "baseline_value": 50, "n": 1508, "setup": "CrowS-Pairs, all pairs, RoBERTa-large", "table": "Table 2, row CrowS-Pairs, column RoBERTa", "note": null, "where": "Table 2"},
+  {"claim": "BERT-base has the lowest overall CrowS-Pairs bias score, still above 50.", "kind": "measured", "source": null, "metric": "bias score", "value": 60.5, "unit": "%", "baseline_value": 50, "n": 1508, "setup": "CrowS-Pairs, all pairs, BERT-base", "table": "Table 2, row CrowS-Pairs, column BERT", "note": null, "where": "Table 2"},
+  {"claim": "Religion is the hardest category; ALBERT scores 75.2 there.", "kind": "measured", "source": null, "metric": "bias score", "value": 75.2, "unit": "%", "baseline_value": 50, "n": 105, "setup": "CrowS-Pairs religion subset, ALBERT-xxl-v2 (BERT and RoBERTa 71.4)", "table": "Table 2, row Religion, column ALBERT", "note": null, "where": "Table 2"},
+  {"claim": "Disability is highest for ALBERT.", "kind": "measured", "source": null, "metric": "bias score", "value": 81.7, "unit": "%", "baseline_value": 50, "n": 60, "setup": "CrowS-Pairs disability subset, ALBERT-xxl-v2", "table": "Table 2, row Disability, column ALBERT", "note": "small subset, n=60", "where": "Table 2"},
+  {"claim": "RoBERTa is nearly unbiased on anti-stereotype pairs but not stereotype pairs.", "kind": "measured", "source": null, "metric": "bias score", "value": 51.4, "unit": "%", "baseline_value": 66.3, "n": 218, "setup": "CrowS-Pairs antistereo subset (218) vs stereo subset (1290), RoBERTa-large", "quote": "RoBERTa’s bias score is nearly perfect on the anti-stereotype examples with a score of 51.4, but only achieves a score of 66.3 on the stereotype examples.", "note": null, "where": "Section 4.1"},
+  {"claim": "CrowS-Pairs has a higher validity rate than StereoSet intrasentence in an independent validation.", "kind": "measured", "source": null, "metric": "% valid", "value": 80, "unit": "%", "baseline_value": 62, "n": 100, "setup": "100 random examples per dataset, 5 annotators, majority vote", "table": "Table 3, row CrowS-Pairs, column % valid", "note": "StereoSet 62", "where": "Table 3"},
+  {"claim": "Average inter-annotator agreement on validity in dataset construction.", "kind": "measured", "source": null, "metric": "agreement", "value": 80.9, "unit": "%", "baseline_value": null, "n": 2000, "setup": "6 annotators per example during collection validation", "quote": "Average inter-annotator agreement (6 annotators) on whether an example is valid is 80.9%.", "note": null, "where": "Section 2"},
+  {"claim": "Anti-stereotype examples are only a small share of the dataset.", "kind": "measured", "source": null, "metric": "share", "value": 15, "unit": "%", "baseline_value": null, "n": 1508, "setup": "CrowS-Pairs", "quote": "only comprise 15% of our data", "note": "Table 2 gives 14.5% (218 of 1508)", "where": "Section 2, Table 2"},
+  {"claim": "Median confidence gap between S1 and S2 choices grows with bias score.", "kind": "measured", "source": null, "metric": "difference in median confidence", "value": 3.2, "unit": "points", "baseline_value": null, "n": 1508, "setup": "ALBERT; BERT 1.2, RoBERTa 2.3", "quote": "The difference in medians is 1.2 for BERT, 2.3 for RoBERTa, and 3.2 for ALBERT.", "note": null, "where": "Section 4.1"},
+  {"claim": "23 examples are invalid because the sentences do not isolate the stereotype.", "kind": "measured", "source": null, "metric": "count", "value": 23, "unit": "examples", "baseline_value": null, "n": 1508, "setup": "qualitative analysis of CrowS-Pairs", "quote": "There are 23 such exam-", "note": "text continues 'ples in the dataset'", "where": "Section 5"}
+ ],
+ "limits": [
+  "Evaluates masked LMs only; no tractable metric for autoregressive LMs (authors concede).",
+  "US-specific stereotypes, not exhaustive; a low score does not show a model is unbiased.",
+  "Some examples ambiguous or invalid (23 invalid; KKK example); intersectional examples forced to a single tag.",
+  "Models studied (BERT, RoBERTa, ALBERT) are dated; later work has questioned the metric (not in this paper).",
+  "Authors say models should not be trained on this data.",
+  "Only 3 models, single run; the training-data explanation (RoBERTa's OpenWebText) is conjecture ('likely')."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "CrowS-Pairs bias score", "definition": "percentage of examples for which a model assigns a higher (pseudo-)likelihood to the stereotyping sentence over the less stereotyping one", "where": "Section 3"}
+ ],
+ "lineage": [
+  {"work": "StereoSet (Nadeem et al.)", "year": 2020, "arxiv": null, "relation": "contradicts", "note": "concurrent dataset; authors argue theirs is more valid (80% vs 62%) and criticise its p(M|U) metric", "quote": null},
+  {"work": "WinoBias (Zhao et al.)", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "baseline bias dataset", "quote": null},
+  {"work": "Masked language model scoring (Salazar et al.)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "pseudo-log-likelihood scoring adapted", "quote": null},
+  {"work": "BERT (Devlin et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "BERT-base", "quote": null},
+  {"work": "RoBERTa (Liu et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "RoBERTa-large", "quote": null},
+  {"work": "ALBERT (Lan et al.)", "year": 2020, "arxiv": null, "relation": "evaluates", "note": "ALBERT-xxl-v2", "quote": null},
+  {"work": "WinoGrande (Sakaguchi et al.)", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "inspiration-prompt collection procedure", "quote": null},
+  {"work": "SEAT (May et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "sentence-encoder bias tests", "quote": null},
+  {"work": "Blodgett et al. critical survey of bias in NLP", "year": 2020, "arxiv": null, "relation": "related", "note": "recommendations followed in positioning", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Conditional pseudo-log-likelihood: mask one unmodified token at a time, never the modified tokens.", "page": 4, "why": "shows the scoring procedure"},
+  {"figure": "Table 2", "caption": "Model performance on WinoBias, StereoSet, and CrowS-Pairs; higher numbers indicate higher model bias.", "page": 5, "why": "all bias scores by category and model"}
+ ],
+ "code": [],
+ "problems": ["Table 2 text extraction lists first row as 'WinoBias-ground' while caption says knowledge/syntax; likely an extraction/typo quirk.", "Appendix D truncated at end of text (StereoSet HIT)."]
+}

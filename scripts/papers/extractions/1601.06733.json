@@ -1,0 +1,105 @@
+{
+ "schema": 1,
+ "key": "1601.06733",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/cheng-2016-long-short-term-memory-networks.pdf",
+ "bib": {"title": "Long Short-Term Memory-Networks for Machine Reading", "authors": ["Jianpeng Cheng", "Li Dong", "Mirella Lapata"], "first_author": "Cheng", "year": 2016, "venue": "Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 551-561", "arxiv": "1601.06733", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 43556, "chars_total": 43556, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How can a sequence-level recurrent network be made better at handling structured input by inducing latent relations among tokens and memorising longer sequences?",
+ "hypothesis": "Replacing the LSTM's single memory cell with a memory network read by intra-attention at every step lets the network store each token's representation without compression and induce soft token relations, beating vanilla LSTMs.",
+ "contributions": ["LSTMN: an LSTM whose single memory cell is replaced by a memory tape (one slot per token) addressed by intra-attention at each step, giving non-Markov state updates", "Two ways (shallow and deep attention fusion) to combine intra-attention with encoder-decoder inter-attention for two-sequence tasks", "Experiments on language modeling, sentiment analysis and natural language inference"],
+ "method": {
+  "summary": "The LSTMN keeps a hidden tape and a memory tape with one slot per processed token. At each step an attention layer over previous hidden states yields a weighted summary of past hidden and memory vectors that replaces h(t-1), c(t-1) in the LSTM update. For two sequences, shallow fusion uses LSTMNs as encoder and decoder with inter-attention, and deep fusion also stores the inter-attention vector in the target memory through a gate.",
+  "task": "language modeling (Penn Treebank), sentence sentiment classification (Stanford Sentiment Treebank), natural language inference (SNLI)",
+  "trains": true,
+  "datasets": [
+   {"name": "Penn Treebank", "role": "both", "size": "about 1M tokens, vocabulary 10K, average sentence length 21", "split": "sections 0-20 train (1M words), 21-22 validation (80K words), 23-24 test (90K words)", "source": "English Penn Treebank, following Mikolov et al. (2010)", "preprocessing": null},
+   {"name": "Stanford Sentiment Treebank", "role": "both", "size": "11,855 sentences, average length 19.1", "split": "fine-grained: 8,544 train / 1,101 validation / 2,210 test; binary (neutral removed): 6,920 / 872 / 1,821", "source": "Socher et al. 2013a", "preprocessing": null},
+   {"name": "SNLI", "role": "both", "size": "549,367 train pairs, 9,842 dev, 9,824 test; vocabulary 36,809; average sentence length 22", "split": "train/dev/test after removing unknown labels", "source": "Bowman et al. 2015", "preprocessing": "lower-casing and tokenization of the entire dataset"}
+  ],
+  "models": [
+   {"name": "LSTMN", "role": "proposed", "params": null, "architecture": "LSTM with memory tape and intra-attention; 1 or 3 layers for LM, 1 or 2 layers for sentiment", "init_from": "word embeddings from GloVe 840B 300-D for sentiment and SNLI; random for LM", "tokenizer": null, "vocab": "10K (PTB); 36,809 (SNLI)", "layers": "1 and 3 (LM); 1 and 2 (sentiment)", "hidden": "300 (LM); 168 (sentiment); 100, 300, 450 (SNLI)", "heads": null, "context": "memory grows with time up to an upper bound of the memory span (bound not stated)", "other": {"embedding_dim_LM": "150", "SNLI_params_deep_fusion": "330k (h=100), 1.7M (h=300), 3.4M (h=450)", "SNLI_params_shallow_fusion": "280k (h=100), 1.4M (h=300), 2.8M (h=450)"}},
+   {"name": "KN5, RNN, LSTM, sLSTM, gLSTM, dLSTM", "role": "baseline", "params": null, "architecture": "Kneser-Ney 5-gram; RNN; LSTM; stacked LSTM; gated-feedback LSTM (Chung 2015); depth-gated LSTM (Yao 2015)", "init_from": null, "tokenizer": null, "vocab": null, "layers": "1 (RNN, LSTM); 3 (sLSTM, gLSTM, dLSTM)", "hidden": "300", "heads": null, "context": null, "other": {"note": "KN5 and RNN perplexities taken from Mikolov et al. (2015)"}}
+  ],
+  "training": {
+   "objective": "language modeling: negative log likelihood; sentiment and NLI: task classification loss (not named), trained end-to-end with no direct supervision of attention",
+   "optimizer": "LM: SGD; sentiment and NLI: Adam with momentum 0.9 and 0.999",
+   "lr": "LM: 0.65 initial; sentiment: 2E-3; SNLI: 1E-3",
+   "lr_schedule": "LM: decays by a factor of 0.85 per epoch if no significant improvement on validation; others not stated",
+   "warmup": null,
+   "batch_size": "LM: 40; sentiment: 5; SNLI: 16 or 32",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "sentiment: regularization constant 1E-4",
+   "dropout": "sentiment: 0.5 on the classifier; SNLI: selected from [0.1, 0.2, 0.3, 0.4]; LM: not stated",
+   "regularisation": "gradient renormalised if norm greater than 5 (LM); GloVe-initialised word gradients scaled by 0.35 in first epoch (sentiment); only OOV vectors updated in first epoch (SNLI)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"sentiment_classifier": "averaged hidden vector passed to a 2-layer neural network classifier with ReLU", "snli_classifier": "average pooling of each LSTMN hidden tape, concatenate, 2-layer ReLU classifier", "snli_oov_init": "Gaussian (mu=0, sigma=1)"}
+  },
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": "single run per configuration implied; not stated", "prompting": null, "retrieval": null, "parameters": {}, "other": {}},
+  "eval": {
+   "metrics": [
+    {"name": "Perplexity", "definition": "PPL = exp(NLL/T), NLL of the entire test set, T number of test tokens", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Accuracy", "definition": "classification accuracy on test set (sentiment fine-grained 5-class and binary; SNLI 3-way)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["KN5", "RNN", "LSTM", "sLSTM", "gLSTM", "dLSTM", "RAE", "RNTN", "DRNN", "DCNN", "CNN-MC", "T-CNN", "PV", "CT-LSTM", "LSTM and 2-layer LSTM (Tai 2015)", "BOW concatenation", "LSTM (Bowman 2015)", "LSTM-att (Rocktaschel 2016)", "mLSTM (Wang and Jiang 2016)"],
+   "protocol": "Test-set numbers reported once; no seeds, variance or significance tests stated."
+  },
+  "availability": {"code": "https://github.com/cheng6076/SNLI-attention", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Three-layer LSTMN gets the best Penn Treebank test perplexity among all models compared.", "kind": "measured", "source": null, "metric": "perplexity", "value": "102", "unit": "perplexity", "baseline_value": "115 (3-layer sLSTM); 107 (gLSTM); 109 (dLSTM)", "n": null, "setup": "Penn Treebank test, memory/hidden size 300, 3 layers, embeddings 150", "table": "Table 1, row LSTMN (3 layers), column Perplexity", "note": null, "where": "Table 1"},
+  {"claim": "Single-layer LSTMN beats single-layer LSTM and RNN on Penn Treebank.", "kind": "measured", "source": null, "metric": "perplexity", "value": "108", "unit": "perplexity", "baseline_value": "115 (LSTM); 129 (RNN); 141 (KN5)", "n": null, "setup": "Penn Treebank test, 1 layer, memory 300", "table": "Table 1, row LSTMN (1 layer), column Perplexity", "note": "KN5 and RNN numbers are copied from Mikolov et al. (2015)", "where": "Table 1"},
+  {"claim": "Deep attention fusion LSTMN with 450 hidden units reaches the best SNLI test accuracy in the table, with many more parameters than baselines.", "kind": "measured", "source": null, "metric": "accuracy", "value": "86.3", "unit": "%", "baseline_value": "86.1 (mLSTM, 1.9M params)", "n": null, "setup": "SNLI test, deep fusion, h=450, 3.4M parameters", "table": "Table 3, row LSTMN deep fusion, h=450, column Test", "note": "Authors caution about parameter count", "where": "Table 3"},
+  {"claim": "LSTMN without fusion beats plain LSTM on SNLI at the same hidden size 100.", "kind": "measured", "source": null, "metric": "accuracy", "value": "81.5", "unit": "%", "baseline_value": "77.6 (LSTM, Bowman 2015)", "n": null, "setup": "SNLI test, h=100, 260k parameters vs 221k", "table": "Table 3, row LSTMN, h=100, column Test", "note": null, "where": "Table 3"},
+  {"claim": "Deep fusion is slightly better than shallow fusion at every hidden size on SNLI.", "kind": "measured", "source": null, "metric": "accuracy", "value": "84.5", "unit": "%", "baseline_value": "84.3 (shallow fusion, h=100)", "n": null, "setup": "SNLI test, h=100", "table": "Table 3, row LSTMN deep fusion, h=100, column Test", "note": "h=300: 85.7 vs 85.2; h=450: 86.3 vs 86.0", "where": "Table 3"},
+  {"claim": "Two-layer LSTMN on fine-grained Stanford Sentiment Treebank beats LSTM baselines but trails T-CNN.", "kind": "measured", "source": null, "metric": "accuracy", "value": "47.9", "unit": "%", "baseline_value": "51.2 (T-CNN); 46.4 (LSTM, Tai 2015)", "n": null, "setup": "SST test, fine-grained 5-class, memory 168, GloVe 840B init", "table": "Table 2, row 2-layer LSTMN, column Fine-grained", "note": "1-layer LSTMN 47.6", "where": "Table 2"},
+  {"claim": "Two-layer LSTMN on binary sentiment.", "kind": "measured", "source": null, "metric": "accuracy", "value": "87.0", "unit": "%", "baseline_value": "88.6 (T-CNN); 86.3 (2-layer LSTM, Tai 2015)", "n": null, "setup": "SST test, binary, memory 168", "table": "Table 2, row 2-layer LSTMN, column Binary", "note": "1-layer LSTMN 86.3", "where": "Table 2"},
+  {"claim": "Attention concentrates on recent memories, consistent with long-range dependencies being rare, while some valid lexical relations are captured (qualitative).", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "four sentences sampled from PTB validation set, Fig 4", "quote": "much attention focuses on recent memories. This agrees with the linguistic intuition that long-term dependencies are relatively rare.", "note": null, "where": "Section 5.1"}
+ ],
+ "limits": [
+  "The SNLI state-of-the-art claim is confounded by parameter count; authors say the result should be interpreted with caution and do not run a parameter-matched comparison.",
+  "No seeds, variance or significance tests; no compute, hardware or training time reported; epochs not stated.",
+  "Only the read operation of memory is implemented; write is left for future work.",
+  "Intra-attention relations are undirected and weakly induced with no supervision; the paper gives only qualitative attention examples as evidence of structure.",
+  "Sequential recurrence with attention over all prior states; cost scaling is not discussed. Superseded by the Transformer (self-attention without recurrence)."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LSTMN", "definition": "Long Short-Term Memory-Network: an LSTM whose memory cell is replaced by a memory network storing each token's contextual representation in a unique slot", "where": "Section 3.2"},
+  {"term": "intra-attention", "definition": "attention over the model's own previous hidden states within a sequence, used for memory addressing and to induce relations among tokens", "where": "Section 3.2, Section 4"},
+  {"term": "shallow / deep attention fusion", "definition": "shallow: LSTMN as drop-in encoder and decoder with inter-attention; deep: inter- and intra-attention combined in the state update with the inter-alignment vector stored in target memory", "where": "Section 4"}
+ ],
+ "lineage": [
+  {"work": "Memory Networks (Weston et al.)", "year": 2015, "arxiv": null, "relation": "extends", "note": "memory network replaces LSTM memory cell", "quote": "replacing the memory cell with a memory network (Weston et al., 2015)"},
+  {"work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "inter-attention in encoder-decoder", "quote": null},
+  {"work": "Long short-term memory (Hochreiter and Schmidhuber)", "year": 1997, "arxiv": null, "relation": "extends", "note": "base architecture", "quote": null},
+  {"work": "Gated feedback RNN (Chung et al.)", "year": 2015, "arxiv": null, "relation": "baseline", "note": "gLSTM baseline for language modeling", "quote": null},
+  {"work": "Depth-gated RNN (Yao et al.)", "year": 2015, "arxiv": "1508.03790", "relation": "baseline", "note": "dLSTM baseline", "quote": null},
+  {"work": "Reasoning about entailment with neural attention (Rocktaschel et al.)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "LSTM-att on SNLI", "quote": null},
+  {"work": "Learning natural language inference with LSTM (Wang and Jiang)", "year": 2016, "arxiv": null, "relation": "baseline", "note": "mLSTM on SNLI", "quote": null},
+  {"work": "Tree-structured LSTM (Tai et al.)", "year": 2015, "arxiv": null, "relation": "baseline", "note": "LSTM / CT-LSTM on SST", "quote": null},
+  {"work": "SNLI (Bowman et al.)", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "NLI dataset", "quote": null},
+  {"work": "Stanford Sentiment Treebank (Socher et al.)", "year": 2013, "arxiv": null, "relation": "uses-data", "note": "sentiment dataset", "quote": null},
+  {"work": "GloVe (Pennington et al.)", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "840B 300-D embeddings", "quote": null},
+  {"work": "Adam (Kingma and Ba)", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "optimizer for SST and SNLI", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 1", "caption": "Illustration of our model while reading the sentence The FBI is chasing a criminal on the run. Color red represents the current word being fixated, blue represents memories. Shading indicates the degree of memory activation.", "page": 2, "why": "Shows incremental reading with graded attention to earlier tokens"},
+  {"figure": "Figure 2", "caption": "Long Short-Term Memory-Network. Color indicates degree of memory activation.", "page": 4, "why": "Architecture of hidden and memory tapes"},
+  {"figure": "Figure 4", "caption": "Examples of intra-attention (language modeling).", "page": 7, "why": "Attention is mostly local with a few long-range lexical links"}
+ ],
+ "code": [
+  {"where": "Eq. 4-6, p.4", "snippet": "a_i^t = v^T tanh(W_h h_i + W_x x_t + W_h~ h~_{t-1}); s_i^t = softmax(a_i^t); [h~_t; c~_t] = sum_{i<t} s_i^t [h_i; c_i]", "verbatim": false},
+  {"where": "Eq. 7-9, p.4", "snippet": "[i_t; f_t; o_t; c^_t] = [sigma; sigma; sigma; tanh] W [h~_t, x_t]; c_t = f_t * c~_t + i_t * c^_t; h_t = o_t * tanh(c_t)", "verbatim": false}
+ ],
+ "problems": ["Equations are garbled in the text cache; reconstructed in code field (verbatim false). No embedded instructions found."]
+}

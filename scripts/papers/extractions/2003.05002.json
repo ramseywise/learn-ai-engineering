@@ -1,0 +1,277 @@
+{
+ "schema": 1,
+ "key": "2003.05002",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2020-tydi-qa.pdf",
+ "bib": {
+  "title": "TYDI QA: A Benchmark for Information-Seeking Question Answering in Typologically Diverse Languages",
+  "authors": ["Jonathan H. Clark", "Eunsol Choi", "Michael Collins", "Dan Garrette", "Tom Kwiatkowski", "Vitaly Nikolaev", "Jennimaria Palomaki"],
+  "first_author": "Clark",
+  "year": 2020,
+  "venue": "Transactions of the Association for Computational Linguistics (TACL), 2020",
+  "arxiv": "2003.05002",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 50600,
+  "chars_total": 65741,
+  "engine": "pymupdf",
+  "skipped": "Reference list (from char ~50600) skimmed only for lineage."
+ },
+ "type": "benchmark",
+ "question": "How can one build a trustworthy, translation-free information-seeking QA benchmark that covers typologically diverse languages and measures multilingual progress?",
+ "hypothesis": "Questions written without seeing the answer, collected natively per language, will have low lexical overlap with answers and yield a harder, more reliable benchmark than translated SQuAD-style data.",
+ "contributions": [
+  "First public large-scale multilingual corpus of information-seeking question-answer pairs, collected without models or translation",
+  "11 typologically diverse languages, 204K examples, with linguistic analysis of phenomena",
+  "Quantitative data-quality analysis, human-performance estimate, open-source mBERT baseline and a public leaderboard with a hidden test set"
+ ],
+ "method": {
+  "summary": "Annotators write questions from the first 100 characters of a Wikipedia article, a Google search restricted to Wikipedia of that language retrieves the top article, and annotators label a passage answer and a minimal answer span (or NULL, YES/NO). Baselines are a first-passage heuristic and multilingual BERT fine-tuned jointly on all languages.",
+  "task": "information-seeking multilingual QA: passage selection and minimal answer span over full Wikipedia articles",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TyDi QA (primary tasks)",
+    "role": "both",
+    "size": "204K examples: 166K one-way annotated train, 37K 3-way annotated dev and test, 277K annotations total",
+    "split": "Train 166,916 (1-way); dev 18,670 (3-way); test 18,751 (3-way), over 10 non-English languages plus a small English set; Table 4",
+    "source": "Wikipedia atomic snapshots per language; questions written by annotators; 11 languages: English, Arabic, Bengali, Finnish, Indonesian, Japanese, Kiswahili, Korean, Russian, Telugu, Thai",
+    "preprocessing": "Tables, long lists and info boxes removed from articles; prompts discarded from final data; dev/test answers verified by a separate annotator pool (except Finnish and Kiswahili)"
+   },
+   {
+    "name": "TyDiQA-GoldP",
+    "role": "both",
+    "size": null,
+    "split": "Only passages with 2+ annotations kept; one annotation withheld as human prediction, rest are gold",
+    "source": "Derived from TyDi QA: gold passage only, unanswerable questions dropped, Thai and Japanese removed, SQuAD 1.1 metrics",
+    "preprocessing": "8 languages remain: Arabic, Bengali, Finnish, Indonesian, Kiswahili, Korean, Russian, Telugu"
+   },
+   {
+    "name": "SQuAD v1.1 (English)",
+    "role": "train",
+    "size": "100k English training questions",
+    "split": "Train for the zero-shot GoldP experiment",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "mBERT (multilingual BERT, most recently released)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT multilingual encoder, setup similar to Alberti et al. (2019), all languages trained jointly in a single model",
+    "init_from": "released multilingual BERT checkpoint",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "First passage",
+    "role": "baseline",
+    "params": null,
+    "architecture": "untrained heuristic: always predict the first passage of the article",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "Primary tasks: mBERT averaged over four fine-tuning replicas; GoldP: averaged over 5 fine tunings",
+   "other": {"fine_tuning": "mBERT fine-tuned jointly on all languages of TyDi QA train (primary) or GoldP train; zero-shot variant fine-tuned on English SQuAD 1.1 only. No hyperparameters given."}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "4 fine-tuning replicas (primary tasks), 5 fine tunings (GoldP), averaged",
+   "prompting": null,
+   "retrieval": "Article paired to each question by a Google search restricted to the language's Wikipedia domain, top-ranked result",
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Passage answer F1", "definition": "Harmonic mean of precision and recall over examples within a language; credit for matching any annotator-selected passage; NULL consensus requires at least 2 of 3 annotators to select an answer for non-NULL; recall denominator counts non-NULL consensus, precision denominator counts non-NULL predictions", "unit": "F1 (0-100)", "higher_is_better": true},
+    {"name": "Minimal answer span F1", "definition": "Example-wise F1 over byte spans against each annotator's minimal answer with partial credit, max over annotators; YES/NO credit 1.0 if any annotator gave it; scores macro-averaged within language then over non-English languages", "unit": "F1 (0-100)", "higher_is_better": true},
+    {"name": "Lexical overlap", "definition": "Average number of tokens in common between the question and a 200-character window around the answer span, excluding the top 100 most frequent tokens", "unit": "tokens", "higher_is_better": false},
+    {"name": "GoldP F1", "definition": "SQuAD 1.1 metric", "unit": "F1", "higher_is_better": true}
+   ],
+   "baselines": ["First passage", "mBERT", "Lesser human estimate (1 annotation vs other 2, bootstrap resampled)", "SQuAD zero-shot mBERT (GoldP)"],
+   "protocol": "English excluded from macro averages and leaderboard; scores not comparable across languages; hidden test set leaderboard"
+  },
+  "availability": {
+   "code": "github.com/google-research-datasets/tydiqa (open-source baseline)",
+   "weights": null,
+   "data": "github.com/google-research-datasets/tydiqa; leaderboard ai.google.com/research/tydiqa"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On the minimal answer span task, mBERT overall F1 is far below the lesser human estimate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Minimal answer span F1",
+   "value": 50.5,
+   "unit": "F1",
+   "baseline_value": 70.1,
+   "n": null,
+   "setup": "TyDi QA dev, 10 non-English languages macro-averaged, mBERT jointly fine-tuned, mean of 4 replicas; baseline value is lesser human estimate",
+   "quote": null,
+   "table": "Table 5, row OVERALL, column Minimal Answer mBERT 50.5 vs Human 70.1",
+   "note": null,
+   "where": "Table 5, Section 7.3"
+  },
+  {
+   "claim": "On passage selection, mBERT overall F1 is well below the human estimate and far above first-passage baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Passage answer F1",
+   "value": 63.1,
+   "unit": "F1",
+   "baseline_value": 79.9,
+   "n": null,
+   "setup": "TyDi QA, macro-average over 10 non-English languages, mBERT mean of 4 replicas; baseline_value is the lesser human estimate; first-passage baseline is 30.2",
+   "quote": null,
+   "table": "Table 5, row OVERALL, column Passage Answer mBERT 63.1, Lesser Human 79.9, First passage 30.2",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "mBERT fine-tuned on English SQuAD 1.1 only scores much lower on TyDiQA-GoldP than fine-tuned on TyDiQA-GoldP; even English is low.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GoldP F1",
+   "value": 56.4,
+   "unit": "F1",
+   "baseline_value": 79.0,
+   "n": null,
+   "setup": "TyDiQA-GoldP dev, 8 languages, mBERT zero-shot from 100k SQuAD 1.1 train, mean of 5 fine tunings; baseline_value is fine-tuned on GoldP; human is 90.9",
+   "quote": null,
+   "table": "Table 7, row OVERALL: GoldP 79.0, SQuAD Zero Shot 56.4, Human 90.9",
+   "note": null,
+   "where": "Table 7, Section 8.2"
+  },
+  {
+   "claim": "TyDiQA-GoldP has far lower question-answer lexical overlap than MLQA and XQuAD.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Lexical overlap (tokens)",
+   "value": 0.38,
+   "unit": "tokens",
+   "baseline_value": 1.52,
+   "n": null,
+   "setup": "English; 200-character window around answer, top 100 frequent tokens excluded; TyDiQA-GoldP 0.38, MLQA 0.91, XQuAD 1.52",
+   "quote": null,
+   "table": "Table 6, row (English), columns TYDIQA-GOLDP 0.38, MLQA 0.91, XQuAD 1.52",
+   "note": null,
+   "where": "Table 6, Section 8.1"
+  },
+  {
+   "claim": "Expert-judged annotation accuracy is high for passage and minimal answers; NULL labels are less accurate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation accuracy",
+   "value": 85,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 200,
+   "setup": "Sample of 200 dev question-answer pairs, Finnish and Russian, judged by trained linguists; NULL 85%, passage answer 92%, minimal answer 93%",
+   "quote": null,
+   "table": "Table 3, column NULL 85%, PASSAGE ANSWER 92%, MINIMAL ANSWER 93%",
+   "note": null,
+   "where": "Table 3, Section 6.3"
+  },
+  {
+   "claim": "A substantial portion of questions cannot be answered by their article.",
+   "kind": "measured",
+   "source": null,
+   "metric": "unanswerable share range",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Across languages; 46%-82% unanswerable; articles avg 5K-30KB",
+   "quote": "a substantial portion of questions (46%–82%) cannot be an-\nswered by their article.",
+   "table": null,
+   "note": null,
+   "where": "Section 3.3"
+  },
+  {
+   "claim": "A single human on Natural Questions short answer scores only 57 F1, used to contextualise TyDi QA human scores.",
+   "kind": "reported",
+   "source": "Kwiatkowski et al. 2019 (Natural Questions)",
+   "metric": "F1",
+   "value": 57,
+   "unit": "F1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NQ short answer task, single human prediction against five annotations",
+   "quote": "scores only 57 F1 even with the\nadvantage of evaluating against ﬁve annotations",
+   "table": null,
+   "note": null,
+   "where": "Section 7.2"
+  }
+ ],
+ "limits": [
+  "Scores are not comparable across languages: each has its own questions, Wikipedia content and annotator quality (Section 7.3)",
+  "Human performance is a pessimistic 1-vs-2 estimate that may underestimate since multiple answers can be correct; NQ-style 25-way super-annotation raised estimates by around 15 F1",
+  "NULL annotation errors are false positives (missed answers), mitigated by 3-way annotation, but train is only 1-way annotated",
+  "Only 11 languages; the authors invite compatible datasets for others",
+  "Dev/test answers not separately verified for Finnish and Kiswahili",
+  "Only mBERT baseline reported with no fine-tuning hyperparameters; benchmark since superseded by stronger models"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "minimal answer", "definition": "a character span that is as short as possible while still forming a satisfactory answer to the question", "where": "Section 3"},
+  {"term": "information-seeking question", "definition": "the asker wants to know the answer but does not know it yet", "where": "Section 1"},
+  {"term": "Translationese", "definition": "artifacts introduced by translation, such as preserving source-language word order, making text differ from purely native text", "where": "Section 3.2"}
+ ],
+ "lineage": [
+  {"work": "Natural Questions", "year": 2019, "arxiv": null, "relation": "extends", "note": "Information-seeking QA with passage and short answers; TyDi QA multilingual analogue", "quote": null},
+  {"work": "QuAC", "year": 2018, "arxiv": null, "relation": "extends", "note": "Similar question elicitation from a short Wikipedia snippet", "quote": null},
+  {"work": "A BERT baseline for the natural questions (Alberti et al.)", "year": 2019, "arxiv": "1901.08634", "relation": "uses-method", "note": "mBERT baseline setup follows this", "quote": null},
+  {"work": "BERT", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "multilingual BERT baseline", "quote": null},
+  {"work": "MLQA", "year": 2019, "arxiv": null, "relation": "contradicts", "note": "Translated/model-matched multilingual QA; vulnerable to Translationese", "quote": null},
+  {"work": "XQuAD", "year": 2019, "arxiv": null, "relation": "contradicts", "note": "Translated SQuAD; higher lexical overlap", "quote": null},
+  {"work": "SQuAD 1.1 and 2.0", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "English zero-shot training data; unanswerable questions artificial in 2.0", "quote": null},
+  {"work": "XNLI", "year": 2018, "arxiv": null, "relation": "related", "note": "translation-based multilingual benchmark", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 5", "caption": "Quality on the TYDI QA primary tasks (passage answer and minimal answer) using: a naive first-passage baseline, mBERT, and a human predictor", "page": 10, "why": "Per-language gap between mBERT and human"},
+  {"figure": "Figure 1", "caption": "An English example from TYDI QA. The answer passage must be selected from a list of passages in a Wikipedia article while the minimal answer is some span of bytes in the article (bold). Many questions have no answer.", "page": 2, "why": "Shows the task format"}
+ ],
+ "code": [],
+ "problems": ["Table cells flattened by extraction; values taken in table order and checked against text."]
+}

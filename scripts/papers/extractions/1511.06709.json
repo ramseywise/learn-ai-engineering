@@ -1,0 +1,536 @@
+{
+ "schema": 1,
+ "key": "1511.06709",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sennrich-2016-improving-neural-machine-translation-models.pdf",
+ "bib": {
+  "title": "Improving Neural Machine Translation Models with Monolingual Data",
+  "authors": [
+   "Rico Sennrich",
+   "Barry Haddow",
+   "Alexandra Birch"
+  ],
+  "first_author": "Sennrich",
+  "year": 2016,
+  "venue": "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (ACL), pages 86-96",
+  "arxiv": "1511.06709",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 42424,
+  "chars_total": 42424,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can NMT use target-side monolingual data during training, without changing the architecture, to improve translation quality?",
+ "hypothesis": "Monolingual target data improves the estimate of p(T), and should help most when parallel data is sparse or domain-mismatched; the encoder-decoder already has capacity to learn LM information.",
+ "contributions": [
+  "mixing monolingual target sentences into the training set improves NMT quality",
+  "two ways to fill the source side: dummy source sentence, or synthetic source via back-translation; the latter is more effective",
+  "adapt NMT models to a new domain by fine-tuning with monolingual or parallel in-domain data"
+ ],
+ "method": {
+  "summary": "Target-language monolingual sentences are back-translated into the source language with an existing target-to-source NMT system, and the (synthetic source, real target) pairs are mixed 1-to-1 with the real parallel data and trained on with no architecture change. Compared to a dummy <null> source with frozen encoder/attention on monolingual batches.",
+  "task": "neural machine translation (EN-DE, DE-EN, TR-EN), data augmentation with monolingual data",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WMT 15 English-German parallel",
+    "role": "train",
+    "size": "4 200 000 sentences",
+    "split": "newstest2013 dev (Fig 2); test newstest2014/2015",
+    "source": "WMT 2015 (Bojar et al., 2015)",
+    "preprocessing": "tokenize, truecase, joint BPE 89 500 merges"
+   },
+   {
+    "name": "News Crawl German mono (WMTmono_de)",
+    "role": "train",
+    "size": "160 000 000 sentences available; random 3 600 000 back-translated (WMTsynth_de)",
+    "split": null,
+    "source": "WMT News Crawl",
+    "preprocessing": null
+   },
+   {
+    "name": "News Crawl English mono (WMTmono_en)",
+    "role": "train",
+    "size": "118 000 000 sentences available; 4 200 000 back-translated (WMTsynth_en)",
+    "split": null,
+    "source": "WMT News Crawl",
+    "preprocessing": null
+   },
+   {
+    "name": "WIT3 (TED) parallel",
+    "role": "both",
+    "size": "200 000 sentences",
+    "split": "IWSLT 15 tst2013/2014/2015 test",
+    "source": "Cettolo et al. 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "IWSLT 14 Turkish-English (WIT + SETimes)",
+    "role": "train",
+    "size": "160 000 WIT + 160 000 SETimes; 320 000 pairs after filtering empty lines and length ratio above 9",
+    "split": "tst2010 dev with early stopping; test tst2011-2014",
+    "source": "Cettolo et al. 2014; Tyers and Alperen 2010",
+    "preprocessing": "Zemberek morphological segmentation; rare morphemes as character bigram sequences; 20 000 most frequent left unsegmented; vocab 23 000"
+   },
+   {
+    "name": "English Gigaword 5th ed (LDC)",
+    "role": "train",
+    "size": "177 000 000 sentences mono; random 3 200 000 back-translated",
+    "split": null,
+    "source": "LDC",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Bahdanau et al. attentional encoder-decoder (Groundhog)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bidirectional GRU encoder, GRU decoder with single-layer feedforward alignment model",
+    "init_from": null,
+    "tokenizer": "BPE (joint, 89 500 merges) for EN-DE; character bigram for TR-EN",
+    "vocab": "90 000 (EN-DE); 23 000 (TR-EN)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "fixed_vocab": "network vocabulary fixed from parallel data in all experiments",
+     "ensembles": "EN-DE ens-4 sampled from last 4 saved models of one run (12h intervals); ens-3/ens-12 across runs"
+    }
+   }
+  ],
+  "training": {
+   "objective": "maximum likelihood on parallel + monolingual/synthetic pairs, mixed 1-to-1 and shuffled; for dummy-source monolingual minibatches encoder and attention parameters are frozen; with synthetic data nothing is frozen",
+   "optimizer": "stochastic gradient descent (otherwise 'follow settings of Sennrich et al. 2016')",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": "epoch = one pass over parallel data, monolingual resampled each epoch",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "TR-EN: output-layer dropout p=0.5",
+   "regularisation": "TR-EN: Gaussian noise stddev 0.01, output dropout 0.5, early stopping on tst2010 BLEU every 3 hours",
+   "hardware": "back-translation on one NVIDIA Titan Black GPU",
+   "compute": "EN-DE baseline trained one week; back-translating 3.6M sentences took about a week",
+   "wall_clock": "baseline 1 week; +monolingual trained twice as long; ensembles fine-tuned 12h with fixed embeddings",
+   "seeds": null,
+   "other": {
+    "gradient_clipping": "threshold 1 for EN-DE, 5 for TR-EN",
+    "finetune": "word embeddings fixed during domain fine-tuning; 1 epoch on WITsynth",
+    "backtranslation_models": "DE-EN baseline (parallel), single model not ensemble, beam 12; EN-DE back-translation for DE-EN used the EN-DE +synthetic system; EN-TR system same settings as TR-EN baseline"
+   }
+  },
+  "inference": {
+   "decoding": "beam search; beam 12 for back-translation (greedy compared); small beam otherwise",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per system; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "mono_to_parallel_ratio": "1-to-1 (higher ratios decreased BLEU for dummy source)",
+    "dummy_source": "single token <null>"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "EN-DE: case-sensitive BLEU on detokenized text, mteval-v13a.pl; TR-EN: case-sensitive tokenized BLEU, multi-bleu.perl",
+     "unit": "BLEU points",
+     "higher_is_better": true
+    },
+    {
+     "name": "word naturalness",
+     "definition": "words made from subword units not in parallel training data; share attested in monolingual corpus or reference, and share judged natural by one native speaker on random n=100 per system",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "parallel-only NMT",
+    "dummy-source monolingual",
+    "syntax-based SMT (Sennrich and Haddow 2015)",
+    "Jean et al. 2015b NMT",
+    "Luong et al. 2015",
+    "Luong and Manning 2015",
+    "Gulcehre et al. 2015 shallow/deep fusion",
+    "Moses PBSMT (Haddow et al. 2015)"
+   ],
+   "protocol": "single training runs, no significance test or seeds; ensembles of 4 from one run unless stated"
+  },
+  "availability": {
+   "code": "uses Groundhog (github.com/sebastien-j/LV_groundhog); no release of the authors' code stated",
+   "weights": null,
+   "data": "WMT, IWSLT, News Crawl and LDC Gigaword (public/licensed)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.mono_to_parallel_ratio",
+    "quote": "We also experimented with higher ratios of monolingual data, but this led to decreased BLEU scores.",
+    "where": "footnote 10, 4.2.4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Back-translated synthetic data improves EN to DE single-model BLEU on newstest2015 over the parallel baseline",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.7,
+   "unit": "BLEU",
+   "baseline_value": 22.8,
+   "n": null,
+   "setup": "English to German, WMT 15, Groundhog attentional GRU encoder-decoder, BPE 89 500 merges, single models, newstest2014/2015, detokenized case-sensitive BLEU; 44m parallel + 36m synthetic instances",
+   "quote": null,
+   "table": "Table 3, row +synthetic, column newstest2015 single",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Back-translation gives +2.8 to 3.4 BLEU over baseline for EN to DE",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": "2.8-3.4",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English to German, WMT 15, Groundhog attentional GRU encoder-decoder, BPE 89 500 merges, single models, newstest2014/2015, detokenized case-sensitive BLEU",
+   "quote": "yields an improvement over our baseline by 2.8–3.4 BLEU",
+   "table": null,
+   "note": null,
+   "where": "4.2.1"
+  },
+  {
+   "claim": "DE to EN gains 3.6-3.7 BLEU from synthetic source data, larger than deep fusion",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": "3.6-3.7",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "German to English WMT 15; EN back-translated with EN-DE +synthetic system",
+   "quote": "substantial improvements (3.6–3.7 BLEU) from adding monolingual training data with synthetic source sentences",
+   "table": null,
+   "note": null,
+   "where": "4.2.3"
+  },
+  {
+   "claim": "DE to EN newstest2015 single model parallel vs +synthetic",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 30.4,
+   "unit": "BLEU",
+   "baseline_value": 26.7,
+   "n": null,
+   "setup": "German to English WMT 15 single model",
+   "quote": null,
+   "table": "Table 5, row +synthetic, column 2015",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Turkish to English gains 2.7 BLEU on average with Gigaword synthetic data, 0.5 over fusion",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 2.7,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IWSLT 14 TR-EN, 320k parallel + 3.2M synthetic, avg over tst2011-2014, tokenized BLEU, single models",
+   "quote": "we outperform the baseline by 2.7 BLEU on average",
+   "table": null,
+   "note": null,
+   "where": "4.2.4"
+  },
+  {
+   "claim": "Dummy-source monolingual data gives smaller gain: 0.4-0.5 BLEU single, 1 BLEU ensemble for EN to DE",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": "0.4-0.5",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English to German, WMT 15, Groundhog attentional GRU encoder-decoder, BPE 89 500 merges, single models, newstest2014/2015, detokenized case-sensitive BLEU; ratio 1-1, trained twice as long",
+   "quote": "improves quality by 0.4–0.5 BLEU for the single system, 1 BLEU for the ensemble",
+   "table": null,
+   "note": null,
+   "where": "4.2.1"
+  },
+  {
+   "claim": "Continuing baseline training another week gave no BLEU improvement (control for training time)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 0,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "English to German, WMT 15, Groundhog attentional GRU encoder-decoder, BPE 89 500 merges, single models, newstest2014/2015, detokenized case-sensitive BLEU",
+   "quote": "saw no improvements in BLEU",
+   "table": null,
+   "note": null,
+   "where": "4.2.1"
+  },
+  {
+   "claim": "Fine-tuning one epoch on back-translated in-domain WIT monolingual data gives +1.2 BLEU on tst2015 (TED)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.2,
+   "unit": "BLEU",
+   "baseline_value": 25.5,
+   "n": null,
+   "setup": "EN to DE, WMT-trained system 2 adapted to TED; WITsynth 200k; embeddings fixed",
+   "quote": "or an improvement of 1.2 BLEU",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "Fine-tuning on in-domain WIT parallel data gives 28.4 on tst2015 (+2.9)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 28.4,
+   "unit": "BLEU",
+   "baseline_value": 25.5,
+   "n": null,
+   "setup": "EN to DE TED adaptation, 200k WIT parallel",
+   "quote": "ment of 2.9 BLEU",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "Fine-tuning on monolingual TED with dummy input gave no improvement",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN to DE TED adaptation, system 3",
+   "quote": "We observed no improvement from",
+   "table": null,
+   "note": null,
+   "where": "4.2.2"
+  },
+  {
+   "claim": "6 BLEU difference in back-translation quality gives only 0.6-0.7 BLEU difference in final EN to DE quality",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gap",
+   "value": "0.6-0.7",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DE to EN back-translators: greedy vs beam 12 vs synthetic-trained; EN to DE newstest2015",
+   "quote": "leads to a 0.6–0.7 BLEU difference in translation quality",
+   "table": null,
+   "note": null,
+   "where": "4.2.5, Table 7"
+  },
+  {
+   "claim": "Ensembles of independently trained systems add 0.8-1.0 BLEU over 4 checkpoints from one run",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": "0.8-1.0",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN to DE, ensemble of 3/12 across runs",
+   "quote": "another improvement of 0.8–1.0 BLEU",
+   "table": null,
+   "note": null,
+   "where": "4.2.5"
+  },
+  {
+   "claim": "Back-translation helps NMT more than phrase-based SMT on WMT test sets (+2.9 vs +0.7) and IWSLT (+1.2 vs +0.1)",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": "+2.9 NMT vs +0.7 PBSMT",
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EN to DE, Moses with 5-gram KN LM on all WMT data; avg newstest2014/15 and tst2013-15",
+   "quote": null,
+   "table": "Table 8, rows PBSMT gain and NMT gain",
+   "note": null,
+   "where": "4.3"
+  },
+  {
+   "claim": "Parallel-only Turkish model overfits quickly; mono/synthetic data delay overfitting and Gigaword synthetic gives best dev cross-entropy",
+   "kind": "measured",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "TR-EN, Fig 1, tst2010 cross-entropy",
+   "quote": "delay overfitting, and give bet-",
+   "table": null,
+   "note": null,
+   "where": "4.4, Fig 1"
+  },
+  {
+   "claim": "Novel subword-built words are more often natural with monolingual or synthetic data (parallel 74.9%, +mono 84.6%, +synthetic 82.5% natural)",
+   "kind": "measured",
+   "source": null,
+   "metric": "natural share",
+   "value": 82.5,
+   "unit": "%",
+   "baseline_value": 74.9,
+   "n": null,
+   "setup": "EN to DE newstest2015, ensembles, one native-speaker annotator, n=100 unattested words per system, blinded",
+   "quote": null,
+   "table": "Table 9, row +synthetic, column natural",
+   "note": null,
+   "where": "4.4"
+  },
+  {
+   "claim": "Synthetic parallel text from the same parallel corpus (parallelsynth) still helps TR-EN by 1.7 BLEU on average, less than novel Gigaword mono data in the synth variant",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU gain",
+   "value": 1.7,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TR-EN regularisation control",
+   "quote": "(1.7 BLEU on average)",
+   "table": null,
+   "note": null,
+   "where": "4.2.4"
+  }
+ ],
+ "limits": [
+  "Only a small random sample of the available monolingual data was used; larger or selected synthetic sets are untested.",
+  "Sensitivity to back-translation quality only tested via decoding variants; amount of synthetic data not varied.",
+  "Single runs, no seeds or significance tests; ensembles of 4 sampled from one run lack diversity.",
+  "Naturalness annotation is by one author, n=100 per system.",
+  "Source-side monolingual data not explored.",
+  "RNN attentional GRU architecture from 2015; no Transformer.",
+  "Dummy-source method cannot raise the monolingual ratio without unlearning source conditioning.",
+  "Learning rate, batch size, hidden sizes and epoch counts are not stated here (deferred to Sennrich et al. 2016)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "back-translation",
+   "definition": "an automatic translation of the monolingual target text into the source language",
+   "where": "3.2"
+  },
+  {
+   "term": "synthetic",
+   "definition": "source sentence obtained via back-translation, paired with a real target sentence",
+   "where": "Contributions"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural Machine Translation by Jointly Learning to Align and Translate (Bahdanau et al.)",
+   "year": 2015,
+   "arxiv": "1409.0473",
+   "relation": "extends",
+   "note": "architecture used",
+   "quote": null
+  },
+  {
+   "work": "On Using Monolingual Corpora in Neural Machine Translation (Gulcehre et al.)",
+   "year": 2015,
+   "arxiv": "1503.03535",
+   "relation": "baseline",
+   "note": "shallow/deep fusion; TR-EN preprocessing and setup follow it",
+   "quote": null
+  },
+  {
+   "work": "Neural Machine Translation of Rare Words with Subword Units (Sennrich et al.)",
+   "year": 2016,
+   "arxiv": "1508.07909",
+   "relation": "uses-method",
+   "note": "BPE and training settings",
+   "quote": null
+  },
+  {
+   "work": "Bertoldi and Federico, domain adaptation for SMT with monolingual resources",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "back-translation previously used for phrase-based SMT",
+   "quote": null
+  },
+  {
+   "work": "Luong and Manning, Stanford NMT for spoken language domains",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "IWSLT SOTA; parallel work on continued-training adaptation",
+   "quote": null
+  },
+  {
+   "work": "Luong et al., Effective Approaches to Attention-based NMT",
+   "year": 2015,
+   "arxiv": "1508.04025",
+   "relation": "baseline",
+   "note": "prior WMT EN-DE SOTA",
+   "quote": null
+  },
+  {
+   "work": "Jean et al., On Using Very Large Target Vocabulary for NMT",
+   "year": 2015,
+   "arxiv": "1412.2007",
+   "relation": "uses-method",
+   "note": "Groundhog implementation, gradient clip 1",
+   "quote": null
+  },
+  {
+   "work": "WMT 15, WIT3, IWSLT 14, SETimes, LDC Gigaword",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Turkish-English training and development set (tst2010) cross-entropy as a function of training time for different systems.",
+   "page": 6,
+   "why": "shows overfitting of the parallel-only model and delay with synthetic data"
+  },
+  {
+   "figure": "Table 7",
+   "caption": "EN-DE BLEU by back-translation system",
+   "page": 5,
+   "why": "shows weak sensitivity to back-translation quality"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found. Learning rate, batch size and model dimensions are not in this paper."
+ ]
+}

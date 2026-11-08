@@ -1,0 +1,575 @@
+{
+ "schema": 1,
+ "key": "1708.00107",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/mccann-2017-learned-translation.pdf",
+ "bib": {
+  "title": "Learned in Translation: Contextualized Word Vectors",
+  "authors": [
+   "Bryan McCann",
+   "James Bradbury",
+   "Caiming Xiong",
+   "Richard Socher"
+  ],
+  "first_author": "McCann",
+  "year": 2017,
+  "venue": "NIPS 2017 (31st Conference on Neural Information Processing Systems)",
+  "arxiv": "1708.00107",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 39944,
+  "chars_total": 39944,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can the encoder of an attentional machine translation model be transferred as a reusable, contextual word representation that improves a range of downstream NLP tasks beyond pretrained word vectors?",
+ "hypothesis": "MT data holds potential comparable to ImageNet as a cornerstone for reusable models; more MT training data should give more useful encoders.",
+ "contributions": [
+  "CoVe: context vectors from the two-layer BiLSTM encoder of an English-German attentional seq2seq MT model, concatenated with GloVe as input to task models",
+  "A biattentive classification network (BCN) for single- and two-sentence classification",
+  "Evidence across sentiment, question classification, entailment and QA that CoVe helps, and that more MT data gives larger gains",
+  "State-of-the-art SST-5 and SNLI test results with the baseline model"
+ ],
+ "method": {
+  "summary": "Train a 2-layer BiLSTM encoder inside an attentional seq2seq En-De MT model on one of three MT datasets (frozen GloVe inputs), then freeze it and concatenate its per-token outputs (CoVe) with GloVe (and optionally character n-gram vectors) as inputs to a biattentive classifier (BCN) or a Dynamic Coattention Network for SQuAD.",
+  "task": "transfer learning from machine translation to sentiment, question classification, entailment and extractive QA",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MT-Small (Multi30k, WMT 2016 multimodal)",
+    "role": "pretrain",
+    "size": "30,000 sentence pairs",
+    "split": "train; test = Multi30k 2016",
+    "source": "Flickr captions, En-De",
+    "preprocessing": "Moses tokenizer"
+   },
+   {
+    "name": "MT-Medium (IWSLT 2016)",
+    "role": "pretrain",
+    "size": "209,772 sentence pairs",
+    "split": "train; test = IWSLT 2014",
+    "source": "transcribed TED talks, En-De",
+    "preprocessing": "Moses tokenizer"
+   },
+   {
+    "name": "MT-Large (WMT 2017 news)",
+    "role": "pretrain",
+    "size": "roughly 7 million sentence pairs",
+    "split": "train; test = WMT 2016",
+    "source": "web crawl, news commentary, Europarl, EU press releases, En-De",
+    "preprocessing": "Moses tokenizer"
+   },
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": "56.4k training examples",
+    "split": "all sub-trees with length greater than 3 used for training",
+    "source": "Socher et al. 2013",
+    "preprocessing": "neutral removed"
+   },
+   {
+    "name": "SST-5",
+    "role": "both",
+    "size": "94.2k training examples",
+    "split": "same sub-tree rule",
+    "source": "Socher et al. 2013",
+    "preprocessing": "neutral kept"
+   },
+   {
+    "name": "IMDb",
+    "role": "both",
+    "size": "25,000 reviews (22.5k train in Table 1)",
+    "split": "2,500 held out for validation",
+    "source": "Maas et al. 2011",
+    "preprocessing": "truncated to first 200 words"
+   },
+   {
+    "name": "TREC-6 / TREC-50",
+    "role": "both",
+    "size": "5,000 training examples",
+    "split": "452 held out for validation",
+    "source": "Voorhees and Tice 1999",
+    "preprocessing": null
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "550,152 train, 10,000 val, 10,000 test",
+    "split": "standard",
+    "source": "Bowman et al. 2015",
+    "preprocessing": null
+   },
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": "87,599 train, 10,570 dev; test not released",
+    "split": "dev reported; no test submission",
+    "source": "Rajpurkar et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "MT-LSTM (CoVe encoder), inside attentional seq2seq En-De",
+    "role": "proposed",
+    "params": null,
+    "architecture": "2-layer bidirectional LSTM encoder; 2-layer unidirectional LSTM decoder with attention, based on OpenNMT (Klein et al. 2017)",
+    "init_from": "fixed GloVe CommonCrawl-840B 300-d inputs; target embeddings random",
+    "tokenizer": "Moses tokenizer",
+    "vocab": null,
+    "layers": "2 (encoder), 2 (decoder)",
+    "hidden": "300 per direction; 600-d output",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BCN (biattentive classification network)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ReLU feedforward + BiLSTM encoder, biattention, one-layer BiLSTM integration, max/mean/min/self-attentive pooling, 3-layer batch-normalized maxout",
+    "init_from": "random; inputs [GloVe;CoVe(;char)]",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DCN + Char + CoVe",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Dynamic Coattention Network with tanh function g in place of ReLU f",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "300",
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Skip-thought vectors (4800-d)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "unsupervised sentence encoder, Kiros et al. 2015",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "MT: cross-entropy over target words (attentional seq2seq); downstream: supervised classification / QA span loss with MT-LSTM and word vectors frozen",
+   "optimizer": "MT-LSTM: SGD; downstream: Adam",
+   "lr": "MT-LSTM: 1 initially, halved each epoch after validation perplexity first increased; downstream: alpha = 0.001",
+   "lr_schedule": "MT-LSTM: halve each epoch after validation perplexity first increases",
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "IMDb truncated to 200 words",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "MT: 0.2 on inputs and outputs of all encoder and decoder layers; downstream: 0.1, 0.2 or 0.3 before all feedforward layers",
+   "regularisation": "GloVe and MT-LSTM frozen during downstream training",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "maxout": "pool over 4 channels, reduce dimensionality by 2, 4 or 8, reduce again by 2, project to output dimension",
+    "char_vectors": "character n-gram embeddings of Hashimoto et al. 2016",
+    "dropout_choice": "ratio chosen among 0.1/0.2/0.3 (selection procedure not stated)"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single reported run per configuration; no seeds or variance stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "cove_eq": "CoVe(w) = MT-LSTM(GloVe(w)); w~ = [GloVe(w); CoVe(w)]"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "uncased, tokenized BLEU on MT test sets",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "classification accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact match / F1",
+     "definition": "SQuAD validation EM and F1",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "% improvement over random word vectors",
+     "definition": "Figures 3 and 4",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "random word vectors",
+    "GloVe only",
+    "GloVe+char n-grams",
+    "skip-thought",
+    "published SOTA per task"
+   ],
+   "protocol": "Validation numbers for ablations (Table 2); test numbers for best validation model per classification task (Table 4); SQuAD only on dev (Table 3). One run each, no significance tests."
+  },
+  "availability": {
+   "code": "https://github.com/salesforce/cove (PyTorch example generating CoVe from the MT-LSTM used in best models)",
+   "weights": "MT-LSTM released via the same repository",
+   "data": "public datasets"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "CoVe-L plus GloVe and char vectors lifts SQuAD dev F1 well above random vectors.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 79.9,
+   "unit": "F1",
+   "baseline_value": 65.4,
+   "n": null,
+   "setup": "SQuAD dev, DCN+Char+CoVe-L, single model",
+   "note": "Random-vector baseline 65.4, GloVe 76.0 (Table 2).",
+   "where": null,
+   "table": "Table 2, row SQuAD, column Char+CoVe-L"
+  },
+  {
+   "claim": "DCN+Char+CoVe beats published R-NET on SQuAD validation EM and F1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 71.3,
+   "unit": "EM",
+   "baseline_value": 71.1,
+   "n": null,
+   "setup": "SQuAD dev, single model; not submitted for test",
+   "note": "R-NET 71.1 EM, 79.5 F1; ours 79.9 F1. Baseline DCN+Char 65.4 EM, 75.6 F1.",
+   "where": null,
+   "table": "Table 3, row DCN+Char+CoVe [Ours], column EM"
+  },
+  {
+   "claim": "CoVe pushes the SNLI baseline to a new state of the art on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 88.1,
+   "unit": "% accuracy",
+   "baseline_value": 88.0,
+   "n": null,
+   "setup": "SNLI test, BCN+Char+CoVe, single model",
+   "note": "Previous best 600D ESIM 88.0.",
+   "where": null,
+   "table": "Table 4, row SNLI BCN+Char+CoVe [Ours]"
+  },
+  {
+   "claim": "CoVe pushes SST-5 fine-grained sentiment to a new state of the art on test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 53.7,
+   "unit": "% accuracy",
+   "baseline_value": 53.1,
+   "n": null,
+   "setup": "SST-5 test, BCN+Char+CoVe",
+   "note": "Previous best NTI 53.1.",
+   "where": null,
+   "table": "Table 4, row SST-5 BCN+Char+CoVe [Ours]"
+  },
+  {
+   "claim": "Larger MT training set gives larger gains: SQuAD F1 rises with CoVe-S, -M, -L.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 79.5,
+   "unit": "F1",
+   "baseline_value": 76.5,
+   "n": null,
+   "setup": "SQuAD dev, GloVe+CoVe-L",
+   "note": "CoVe-S 76.5, CoVe-M 77.1, CoVe-L 79.5; GloVe 76.0.",
+   "where": null,
+   "table": "Table 2, row SQuAD, column CoVe-L"
+  },
+  {
+   "claim": "SST-2 validation accuracy with GloVe+CoVe-L vs GloVe alone.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.1,
+   "unit": "% accuracy",
+   "baseline_value": 88.4,
+   "n": null,
+   "setup": "SST-2 validation",
+   "note": null,
+   "where": null,
+   "table": "Table 2, row SST-2, column CoVe-L"
+  },
+  {
+   "claim": "CoVe beats character n-grams as an addition to GloVe on SST-2 and SQuAD, and combining both is best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.2,
+   "unit": "% accuracy",
+   "baseline_value": 90.1,
+   "n": null,
+   "setup": "SST-2 validation, GloVe+Char+CoVe-L",
+   "note": "GloVe+Char 90.1; SQuAD 79.9 vs 78.1. On TREC-6 Char (94.7) is below GloVe (94.9).",
+   "where": null,
+   "table": "Table 2, row SST-2, column Char+CoVe-L"
+  },
+  {
+   "claim": "CoVe-L outperforms skip-thought vectors on SST-2 validation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.2,
+   "unit": "% accuracy",
+   "baseline_value": 88.7,
+   "n": null,
+   "setup": "GloVe+Char+CoVe-L vs GloVe+Char+Skip-Thought, validation",
+   "note": null,
+   "where": null,
+   "table": "Table 5, row SST-2, column CoVe-L"
+  },
+  {
+   "claim": "MT-Large En-De encoder BLEU on WMT 2016 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 28.96,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT-LSTM trained on MT-Large",
+   "note": null,
+   "where": null,
+   "table": "quote",
+   "quote": "The MT-LSTM trained on MT-Large obtains an uncased, tokenized BLEU score of 28.96 on the WMT 2016 test set."
+  },
+  {
+   "claim": "MT-Small encoder BLEU on Multi30k 2016 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 38.5,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT-LSTM trained on MT-Small",
+   "note": "Highest BLEU is on the simplest, restricted-domain dataset.",
+   "where": null,
+   "quote": "The MT-LSTM trained on MT-Small obtains an uncased, tokenized BLEU score of 38.5 on the Multi30k test set from 2016."
+  },
+  {
+   "claim": "MT-Medium encoder BLEU on IWSLT 2014 test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 25.54,
+   "unit": "BLEU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "MT-LSTM trained on MT-Medium",
+   "note": null,
+   "where": null,
+   "quote": "The model trained on MT-Medium obtains an uncased, tokenized BLEU score of 25.54 on the IWSLT test set from 2014."
+  },
+  {
+   "claim": "BCN+Char+CoVe IMDb test accuracy; below several published models (e.g. oh-LSTM 94.1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.8,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IMDb test, first 200 words",
+   "note": "Not SOTA.",
+   "where": null,
+   "table": "Table 4, row IMDb BCN+Char+CoVe [Ours]"
+  },
+  {
+   "claim": "TREC-6 test accuracy is below several published models, and TREC-50 is below rules-based systems.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 95.8,
+   "unit": "% accuracy",
+   "baseline_value": 96.1,
+   "n": null,
+   "setup": "TREC-6 test, BCN+Char+CoVe",
+   "note": "Best published TREC-6 here: LSTM-CNN 96.1; TREC-50 ours 90.2 vs Rules 97.2.",
+   "where": null,
+   "table": "Table 4, row TREC-6 BCN+Char+CoVe [Ours]"
+  }
+ ],
+ "limits": [
+  "Only English-German MT tested; no other source tasks or language pairs.",
+  "Single runs, no seeds, variance or significance reported; compute, batch size, epochs and MT parameter counts not stated.",
+  "Gains are modest on small-delta tasks (e.g. SNLI 87.7 to 88.1 validation, TREC-6 94.9 to 95.8) and not SOTA on IMDb, TREC.",
+  "SQuAD result is validation only; not submitted for test.",
+  "The correlation between MT data size and downstream gain confounds data size with domain and language complexity (only three points).",
+  "CoVe is frozen features, not fine-tuned; later contextual LM pretraining with fine-tuning supersedes it (not in the paper)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "CoVe",
+   "definition": "CoVe(w) = MT-LSTM(GloVe(w)): the sequence of context vectors produced by the MT-LSTM encoder",
+   "where": "Section 4, Eq. 5"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Dynamic Coattention Networks for Question Answering (Xiong et al.)",
+   "year": 2017,
+   "arxiv": "1611.01604",
+   "relation": "extends",
+   "note": "QA model modified with CoVe inputs",
+   "quote": null
+  },
+  {
+   "work": "OpenNMT (Klein et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis of the attentional seq2seq MT model",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fixed 840B vectors as MT encoder input and concatenated",
+   "quote": null
+  },
+  {
+   "work": "Skip-thought vectors (Kiros et al.)",
+   "year": 2015,
+   "arxiv": "1506.06726",
+   "relation": "baseline",
+   "note": "unsupervised sentence encoder compared in Table 5",
+   "quote": null
+  },
+  {
+   "work": "Hill et al. 2016, 2017 NMT encoder transfer",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed-length NMT encoder representations; CoVe transfers per-token",
+   "quote": null
+  },
+  {
+   "work": "Ramachandran et al. unsupervised pretraining for seq2seq",
+   "year": 2016,
+   "arxiv": "1611.02683",
+   "relation": "related",
+   "note": "LM pretraining with fine-tuning",
+   "quote": null
+  },
+  {
+   "work": "Hashimoto et al. joint many-task model",
+   "year": 2016,
+   "arxiv": "1611.01587",
+   "relation": "uses-method",
+   "note": "character n-gram embeddings",
+   "quote": null
+  },
+  {
+   "work": "Dai and Le semi-supervised sequence learning",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "IMDb SA-LSTM 92.8",
+   "quote": null
+  },
+  {
+   "work": "Radford et al. Learning to generate reviews",
+   "year": 2017,
+   "arxiv": "1704.01444",
+   "relation": "baseline",
+   "note": "bmLSTM beats CoVe on SST-2 (91.8) and IMDb (92.9)",
+   "quote": null
+  },
+  {
+   "work": "SNLI, SQuAD, SST, IMDb, TREC, Multi30k, IWSLT, WMT17",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "We a) train a two-layer, bidirectional LSTM as the encoder of an attentional sequence-to-sequence model for machine translation and b) use it to provide context for other NLP models.",
+   "page": 2,
+   "why": "Shows the pretrain-then-freeze-and-concatenate pipeline"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "BCN architecture",
+   "page": 4,
+   "why": "Task-model layout"
+  },
+  {
+   "figure": "Figure 4",
+   "caption": "The Effects of MT Training Data",
+   "page": 7,
+   "why": "Gain grows with MT dataset size"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "CoVe improves validation performance.",
+   "page": 7,
+   "why": "Full ablation grid"
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 4, Eq. 5-6",
+   "snippet": "CoVe(w) = MT-LSTM(GloVe(w)); w~ = [GloVe(w); CoVe(w)]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 lists IMDb as 22.5k examples while text says 25,000 reviews with 2,500 held out (consistent).",
+  "Table 4 TREC-50 lists Rules at 97.2 below SVM 91.6 in cache order; table layout garbled by extraction; numbers cross-checked loosely.",
+  "No embedded instructions found."
+ ]
+}

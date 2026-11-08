@@ -1,0 +1,171 @@
+{
+ "schema": 1,
+ "key": "2006.10029",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chen-2020-big-self-supervised-models-strong.pdf",
+ "bib": {
+  "title": "Big Self-Supervised Models are Strong Semi-Supervised Learners",
+  "authors": ["Ting Chen", "Simon Kornblith", "Kevin Swersky", "Mohammad Norouzi", "Geoffrey Hinton"],
+  "first_author": "Chen",
+  "year": 2020,
+  "venue": "34th Conference on Neural Information Processing Systems (NeurIPS 2020)",
+  "arxiv": "2006.10029",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 58713,
+  "chars_total": 58713,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can unsupervised pretraining followed by supervised fine-tuning, with big networks and a final distillation on unlabeled data, be a strong semi-supervised learner on ImageNet with 1% or 10% of labels?",
+ "hypothesis": "The fewer the labels, the more task-agnostic use of unlabeled data benefits from a bigger network, and the big model's task-specific knowledge can be distilled into a smaller one with little loss.",
+ "contributions": [
+  "For semi-supervised learning via task-agnostic use of unlabeled data, the fewer the labels, the more it is possible to benefit from a bigger model.",
+  "Big models matter for general representations, but task-specific use of unlabeled data (distillation) transfers performance into a smaller network.",
+  "A deeper projection head, fine-tuned from a middle layer, improves linear evaluation and semi-supervised fine-tuning.",
+  "A three-step recipe (SimCLRv2 pretrain, fine-tune, distill) sets a new state of the art on ImageNet semi-supervised learning."
+ ],
+ "method": {
+  "summary": "SimCLRv2 improves SimCLR with bigger ResNets (up to ResNet-152 3x+SK), a 3-layer projection head fine-tuned from its first layer, and a MoCo-style memory. The pretrained network is fine-tuned on 1% or 10% of ImageNet labels, then used as a teacher to distil into a student (same or smaller) on unlabeled images with no real labels.",
+  "task": "semi-supervised ImageNet image classification (self-supervised contrastive pretraining, fine-tuning, distillation)",
+  "trains": true,
+  "datasets": [
+   {"name": "ImageNet ILSVRC-2012", "role": "both", "size": "~1.28 million images; 1% = 12811 labeled, 10% = 128116 labeled", "split": "randomly sub-sampled 1% or 10% labeled subsets (TFDS imagenet2012_subset); all images unlabeled for pretraining and distillation", "source": "Russakovsky et al. 2015", "preprocessing": "Pretraining: random crop, color distortion, Gaussian blur. Fine-tuning and distillation: random crop and horizontal flip only."},
+   {"name": "CIFAR-10", "role": "both", "size": "250, 4000, 5000 labeled examples (Appendix G)", "split": "MixMatch protocol, 5 seeds", "source": null, "preprocessing": "Broader color operators and Sobel filtering added to SimCLR augmentations for pretraining"}
+  ],
+  "models": [
+   {"name": "SimCLRv2 ResNet family (depth 50/101/152, width 1x/2x, with/without SK)", "role": "proposed", "params": "24M (ResNet-50 1x) to 354M (ResNet-152 2x+SK); ResNet-152 3x+SK 795M", "architecture": "ResNet (ResNet-D variant when SK is used) with selective kernels (SK); MLP projection head, 3 layers", "init_from": "random (self-supervised pretraining)", "tokenizer": null, "vocab": null, "layers": "50, 101 or 152; projection head 3 layers (2 to 4 explored)", "hidden": null, "heads": null, "context": null, "other": {"projection_head_width": "middle layers set to the width of the head's input, so it scales with the width multiplier", "extra_params_for_1pct_10pct_finetune": "4M for 1x models, 17M for 2x models (projection layers)", "memory_buffer": "64K, EMA decay 0.999", "SK": "no grouped convolution, only 3x3 kernels"}},
+   {"name": "Distilled students", "role": "proposed", "params": "ResNet-50 (e.g. 27M in Fig 6), ResNet-50 (2x+SK)", "architecture": "ResNet", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"teacher_for_small_students": "self-distilled ResNet-152 (3x+SK)"}},
+   {"name": "Supervised ResNets", "role": "baseline", "params": null, "architecture": "ResNet", "init_from": "scratch", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"note": "trained with all labels for 90 epochs; for 1%/10% labels AutoAugment and label smoothing used (Fig 4)"}}
+  ],
+  "training": {
+   "objective": "Pretraining: NT-Xent contrastive loss (Eq 1) with cosine similarity and temperature tau. Fine-tuning: supervised cross-entropy. Distillation: cross-entropy between teacher and student softmax with temperature (Eq 2), no real labels; optional weighted mix with labeled loss (Eq 3).",
+   "optimizer": "LARS, momentum 0.9, for pretraining, fine-tuning and distillation",
+   "lr": "pretraining max 6.4 (= 0.1 x sqrt(BatchSize)); fine-tuning 0.16 (= 0.005 x sqrt(BatchSize)) for standard ResNets and 0.064 (= 0.002 x sqrt(BatchSize)) for larger variants; distillation same schedule as pretraining",
+   "lr_schedule": "pretraining: linear warmup then cosine decay; fine-tuning: no warmup",
+   "warmup": "pretraining: linear increase over the first 5% of epochs; fine-tuning: none",
+   "batch_size": "pretraining 4096 (global batch norm); fine-tuning 1024; distillation same as pretraining",
+   "steps": null,
+   "epochs": "pretraining 800; fine-tuning 60 (1% labels), 30 (10% labels and 100% labels); distillation 400",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "pretraining 1e-4; fine-tuning none; distillation same as pretraining",
+   "dropout": null,
+   "regularisation": "Distillation: no strong augmentation or extra regularisation; fine-tuning: only crop and flip",
+   "hardware": "128 Cloud TPUs (pretraining)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "CIFAR-10 fine-tuning 5 seeds; ImageNet not stated",
+   "other": {
+    "distillation_temperature": "0.1 for self-distillation, 1.0 for large-to-small (Sec 3.1); Appendix F: 0.1 when teacher is a fine-tuned model, otherwise 1.0",
+    "finetune_from_layer": "first layer of projection head for 1%/10% labels; input of projection head for 100% labels",
+    "cifar10_pretraining": "800 epochs, batch 512, temperature 0.2, no 3-layer head and no EMA network; ResNet depths 18/34/50/101/152/200 with SK, width 1x",
+    "pretraining_temperature_imagenet": null
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Top-1 accuracy", "definition": "ImageNet validation top-1 accuracy after fine-tuning on 1%/10%/100% labels, or after training a linear classifier on frozen ResNet output (linear eval), or after distillation", "unit": "%", "higher_is_better": true},
+    {"name": "Top-5 accuracy", "definition": "ImageNet top-5 accuracy (Table 3, Table H.1)", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Supervised ResNet (all labels, 90 epochs)", "Pseudo-label", "VAT+Entropy Min.", "Mean teacher", "UDA", "FixMatch", "S4L", "MPL", "CowMix", "InstDisc", "BigBiGAN", "PIRL", "CPC v2", "SimCLR", "BYOL (concurrent)"],
+   "protocol": "Single reported numbers per configuration; no seeds or confidence intervals stated for ImageNet. Linear eval uses the projection head input. Parameter counts cover the ResNet up to final average pooling."
+  },
+  "availability": {
+   "code": "https://github.com/google-research/simclr",
+   "weights": "pretrained checkpoints at the same repository",
+   "data": "ImageNet; subsets listed in TensorFlow Datasets imagenet2012_subset"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.lr", "quote": "0.16 (= 0.005 × sqrt(BatchSize)) for standard ResNets [25], and 0.064", "where": "Sec 3.1"}
+  ]
+ },
+ "results": [
+  {"claim": "A SimCLRv2-distilled ResNet-50 reaches 73.9% top-1 with 1% of ImageNet labels.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 73.9, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet, 1% labels (<=13 per class), pretrain+fine-tune+distil from self-distilled ResNet-152 (3x+SK) teacher into ResNet-50", "quote": "top-1 accuracy with just 1% of the labels (≤13 labeled images per class) using", "table": null, "note": "Table 3 row SimCLRv2 distilled ResNet-50 prints 73.9 (1%) and 77.5 (10%)", "where": "Abstract; Table 3"},
+  {"claim": "With 10% of labels the same distilled ResNet-50 reaches 77.5% top-1, above supervised training with all labels.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 77.5, "unit": "%", "baseline_value": 76.6, "n": null, "setup": "ImageNet, 10% labels, distilled ResNet-50; baseline is standard supervised ResNet-50 on all labels", "quote": "With 10% of labels, ResNet-50 trained with our method achieves 77.5% top-1", "table": null, "note": "Abstract says supervised ResNet-50 with all labels is outperformed; intro prints that baseline as 76.6% while Fig 2 labels it 76.5%; Table 1 prints 76.6 (linear col 1x no SK supervised) and 76.3 for 100% fine-tune", "where": "Abstract; Sec 1"},
+  {"claim": "The largest model, self-distilled ResNet-152 (3x+SK), reaches 76.6% / 80.9% top-1 with 1% / 10% labels.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 76.6, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet 1% label fraction (10% label fraction: 80.9), distilled to the same architecture", "quote": "achieves 76.6% / 80.9% top-1 accuracy, which is a 21.6% / 8.7% relative improvement over previous", "table": null, "note": null, "where": "Sec 1; Table 3"},
+  {"claim": "SimCLRv2 linear evaluation reaches 79.8% top-1, 4.3% relative over SimCLR.", "kind": "measured", "source": null, "metric": "linear-eval top-1", "value": 79.8, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet, ResNet-152 (3x+SK), linear classifier on frozen features, all labels", "quote": "Under the linear evaluation protocol, SimCLRv2 achieves 79.8% top-1", "table": null, "note": null, "where": "Sec 1; Table 1"},
+  {"claim": "Scaling the model from ResNet-50 to ResNet-152 (3x+SK) gives a 29% relative top-1 gain when fine-tuned on 1% of labels.", "kind": "measured", "source": null, "metric": "relative top-1 improvement", "value": 29, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet 1% labels, SimCLRv2 fine-tuning", "quote": "ResNet-152 (3×+SK), we obtain a 29% relative improvement in top-1 accuracy when", "table": null, "note": null, "where": "Sec 2"},
+  {"claim": "Fine-tuning ResNet-152 (3x+SK) with 1% labels scores 74.9% top-1 versus 57.9% for ResNet-50 (1x, no SK).", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 74.9, "unit": "%", "baseline_value": 57.9, "n": null, "setup": "SimCLRv2 fine-tuned on 1% labels, before distillation", "quote": null, "table": "Table 1, row 152 / 3x / SK True, column Fine-tuned 1% (74.9); row 50 / 1x / SK False (57.9)", "note": null, "where": "Table 1"},
+  {"claim": "Accuracy across model sizes differs by up to 8% in linear evaluation for self-supervised models, versus about 4% for supervised.", "kind": "measured", "source": null, "metric": "accuracy spread", "value": 8, "unit": "%", "baseline_value": 4, "n": null, "setup": "ImageNet, smallest vs largest ResNets, linear evaluation", "quote": "accuracy can differ by as much as 8% for linear evaluation,", "table": null, "note": "Text also says 17% for fine-tuning on 1% labels", "where": "Sec 3.2"},
+  {"claim": "Increasing SimCLRv2 model size by 10x improves label efficiency by 10x.", "kind": "measured", "source": null, "metric": "label efficiency factor", "value": 10, "unit": "x", "baseline_value": null, "n": null, "setup": "ResNet-50 to ResNet-152 (2x), Fig 4", "quote": "Increasing the size of SimCLRv2 models by 10×, from ResNet-50 to", "table": null, "note": null, "where": "Fig 4 caption"},
+  {"claim": "A 3-layer projection head fine-tuned from its first layer gives up to 14% relative improvement over SimCLR's 2-layer head (1% labels).", "kind": "measured", "source": null, "metric": "relative top-1 improvement", "value": 14, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet 1% labels, versus SimCLR with 2-layer head, Figure E.1", "quote": "it results in as much as 14% relative improvement in top-1 accuracy", "table": null, "note": null, "where": "Sec 2"},
+  {"claim": "Adding the MoCo memory gives about 1% improvement in linear eval and 1%-label fine-tuning.", "kind": "measured", "source": null, "metric": "top-1 improvement", "value": 1, "unit": "%", "baseline_value": null, "n": null, "setup": "ResNet-50/101/152, batch size 4096", "quote": "this change yields an improvement of ∼1% for", "table": null, "note": null, "where": "Sec 2; Appendix D"},
+  {"claim": "Distillation loss alone on labeled+unlabeled data gives 68.9% (1%) and 74.3% (10%) for ResNet-50, versus 12.3% and 52.0% with labels only.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 68.9, "unit": "%", "baseline_value": 12.3, "n": null, "setup": "ResNet-50 student, teacher ResNet-50 (2x+SK) with 70.6% (1%) / 77.0% (10%), temperature 1.0, no strong augmentation", "quote": null, "table": "Table 2, row Distillation loss (on labeled+unlabeled sets; our default), column 1% (68.9); row Label only (12.3)", "note": "10% column: 74.3 default vs 52.0 label-only", "where": "Table 2"},
+  {"claim": "Adding label loss to distillation on labeled+unlabeled sets reaches 69.0% (1%) and 75.1% (10%), close to distillation alone.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 69.0, "unit": "%", "baseline_value": 68.9, "n": null, "setup": "Same as Table 2", "quote": null, "table": "Table 2, row Label + distillation loss (on labeled+unlabeled sets), column 1% (69.0), column 10% (75.1)", "note": null, "where": "Table 2"},
+  {"claim": "Distilling on the labeled set only gives 23.6% (1%) and 66.2% (10%), showing unlabeled examples are essential for distillation.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 23.6, "unit": "%", "baseline_value": 69.0, "n": null, "setup": "Same as Table 2", "quote": null, "table": "Table 2, row Label + distillation loss (on labeled set), column 1%", "note": null, "where": "Table 2"},
+  {"claim": "SimCLRv2 distilled ResNet-50 (2x+SK) reaches 75.9% (1%) and 80.2% (10%) top-1.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 75.9, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet, teacher self-distilled ResNet-152 (3x+SK)", "quote": null, "table": "Table 3, row SimCLRv2 distilled (ours) ResNet-50 (2x+SK), column Top-1 1% (75.9), 10% (80.2)", "note": null, "where": "Table 3"},
+  {"claim": "Prior best SimCLR ResNet-50 (4x) gets 63.0% (1%) and 74.4% (10%); BYOL ResNet-200 (2x) 71.2% / 77.7% (concurrent work).", "kind": "reported", "source": "Chen et al. 2020 SimCLR; Grill et al. 2020 BYOL", "metric": "top-1 accuracy", "value": 63.0, "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet 1% labels", "quote": null, "table": "Table 3, row SimCLR ResNet-50 (4x), column Top-1 1% (63.0), 10% (74.4); row BYOL ResNet-200 (2x) (71.2, 77.7)", "note": null, "where": "Table 3"},
+  {"claim": "Teacher fine-tuned accuracy strongly correlates with student accuracy after distillation.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": 5, "setup": "Five ResNet-50 (2x+SK) teachers with different projection head settings, 1% and 10% labels (Fig F.2)", "quote": null, "table": null, "note": "Correlation coefficient not given", "where": "Appendix F, Fig F.2"},
+  {"claim": "Distillation temperatures 0.1 and 1.0 perform similarly; 2.0 is significantly worse; distillation without labels (weight 1.0) is on par with using labels.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig F.1, label fractions 1% and 10%, alpha in 0.8 to 1.0", "quote": null, "table": null, "note": "Numbers only in figure", "where": "Appendix F"},
+  {"claim": "On CIFAR-10 the best result is 96.4% (ResNet-101+SK and ResNet-152+SK), slightly worse (96.2%) with ResNet-200+SK.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": 96.4, "unit": "%", "baseline_value": 96.2, "n": null, "setup": "CIFAR-10, SK, width 1x, fine-tuned with up to all labels, with extra distillation and better augmentation noted as possible further gains", "quote": "Our best result is 96.4% obtained", "table": null, "note": null, "where": "Appendix G"},
+  {"claim": "Deeper projection head benefit is smaller for bigger ResNets.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig E.1, depths 50/101/152, widths 1x/2x, with/without SK", "quote": null, "table": null, "note": "Authors suggest wider heads in wider ResNets may explain it", "where": "Sec 3.3; Appendix E"}
+ ],
+ "limits": [
+  "Authors recognise ImageNet is a well-curated dataset and may not reflect real-world semi-supervised applications.",
+  "Why bigger models generalise better from few labels is only conjectured (more general features); authors say further work is needed.",
+  "Gains from bigger models may reflect a ceiling effect (Appendix A).",
+  "Width benefits appear to plateau: ResNet-152 (3x+SK) is only marginally better than (2x+SK) despite almost double parameters.",
+  "No seeds, variance or confidence intervals for ImageNet results; compute and wall-clock not stated.",
+  "Distillation uses only random crop and flip, no strong augmentation or consistency losses, which authors suggest could be improved.",
+  "Vision only; the NLP pretrain-then-fine-tune analogy is asserted, not tested."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "task-agnostic use of unlabeled data", "definition": "Self-supervised pretraining where images are used without class labels so representations are not tailored to a specific classification task.", "where": "Sec 1"},
+  {"term": "task-specific use of unlabeled data", "definition": "Using unlabeled data with a fine-tuned teacher's imputed labels (self-training/distillation) for the target task.", "where": "Sec 2"},
+  {"term": "projection head", "definition": "A non-linear MLP g(.) after the ResNet encoder in SimCLR; SimCLRv2 makes it deeper and fine-tunes from a middle layer instead of discarding it.", "where": "Sec 2"},
+  {"term": "self-distillation", "definition": "Distillation where the student has the same architecture as the teacher (excluding projection head).", "where": "Sec 3.1"}
+ ],
+ "lineage": [
+  {"work": "SimCLR: A simple framework for contrastive learning of visual representations", "year": 2020, "arxiv": "2002.05709", "relation": "extends", "note": "SimCLRv2 improves SimCLR with bigger ResNets, deeper head fine-tuned from the middle, memory", "quote": null},
+  {"work": "Momentum Contrast (MoCo)", "year": 2019, "arxiv": "1911.05722", "relation": "uses-method", "note": "memory buffer with moving-average network", "quote": null},
+  {"work": "Improved baselines with momentum contrastive learning (MoCo v2)", "year": 2020, "arxiv": "2003.04297", "relation": "uses-method", "note": "motivated the memory/MLP head change", "quote": null},
+  {"work": "Distilling the knowledge in a neural network", "year": 2015, "arxiv": "1503.02531", "relation": "uses-method", "note": "distillation loss with temperature", "quote": null},
+  {"work": "Model compression (Bucilua et al.)", "year": 2006, "arxiv": null, "relation": "uses-method", "note": "distillation precursor", "quote": null},
+  {"work": "Pseudo-label (Lee)", "year": 2013, "arxiv": null, "relation": "related", "note": "self-training; distillation is reminiscent of it", "quote": null},
+  {"work": "Noisy Student (Xie et al.)", "year": 2019, "arxiv": "1911.04252", "relation": "related", "note": "self-training; SimCLRv2 omits noise, augmentation, thresholding", "quote": null},
+  {"work": "Selective Kernel Networks", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "channel-wise attention for parameter efficiency", "quote": null},
+  {"work": "LARS (You et al.)", "year": 2017, "arxiv": "1708.03888", "relation": "uses-method", "note": "optimizer", "quote": null},
+  {"work": "ResNet", "year": 2016, "arxiv": null, "relation": "uses-method", "note": "backbone; ResNet-D variant with SK", "quote": null},
+  {"work": "Data-efficient image recognition with CPC (CPC v2)", "year": 2019, "arxiv": "1905.09272", "relation": "baseline", "note": "task-agnostic baseline in Table 3", "quote": null},
+  {"work": "Meta Pseudo Labels (MPL)", "year": 2020, "arxiv": "2003.10580", "relation": "baseline", "note": "previous SOTA 10% labels", "quote": null},
+  {"work": "FixMatch", "year": 2020, "arxiv": "2001.07685", "relation": "baseline", "note": "task-specific SSL baseline", "quote": null},
+  {"work": "S4L: Self-supervised semi-supervised learning", "year": 2019, "arxiv": null, "relation": "baseline", "note": "baseline and source of the supervised baseline and protocol", "quote": null},
+  {"work": "Bootstrap your own latent (BYOL)", "year": 2020, "arxiv": null, "relation": "baseline", "note": "concurrent work compared in Table 3", "quote": null},
+  {"work": "Scaling laws for neural language models", "year": 2020, "arxiv": "2001.08361", "relation": "related", "note": "cited among evidence that big models help", "quote": null},
+  {"work": "Language models are few-shot learners (GPT-3)", "year": 2020, "arxiv": "2005.14165", "relation": "related", "note": "cited for big unsupervised language models", "quote": null},
+  {"work": "BERT", "year": 2018, "arxiv": "1810.04805", "relation": "related", "note": "NLP pretrain then fine-tune paradigm", "quote": null},
+  {"work": "ImageNet ILSVRC", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "evaluation data", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Bigger models yield larger gains when fine-tuning with fewer labeled examples.", "page": 1, "why": "Shows the headline finding: relative improvement vs parameters grows as label fraction shrinks."},
+  {"figure": "Fig 3", "caption": "The proposed semi-supervised learning framework leverages unlabeled data in two ways: (1) task-agnostic use in unsupervised pretraining, and (2) task-specific use in self-training / distillation.", "page": 3, "why": "The three-step pipeline at a glance."},
+  {"figure": "Fig 6", "caption": "Top-1 accuracy of distilled SimCLRv2 models compared to the fine-tuned models as well as supervised learning with all labels.", "page": 7, "why": "Shows fine-tuned vs self-distilled vs distilled across student sizes."},
+  {"figure": "Fig 5", "caption": "Top-1 accuracy via fine-tuning under different projection head settings and label fractions (using ResNet-50).", "page": 6, "why": "Shows the best fine-tuning layer is the first projection layer."}
+ ],
+ "code": [
+  {"where": "Eq 1, Sec 2", "snippet": "l_{i,j} = -log( exp(sim(z_i, z_j)/tau) / sum_{k=1}^{2N} 1[k != i] exp(sim(z_i, z_k)/tau) )", "verbatim": false},
+  {"where": "Eq 2, Sec 2", "snippet": "L_distill = - sum_{x_i in D} [ sum_y P^T(y|x_i; tau) log P^S(y|x_i; tau) ]", "verbatim": false}
+ ],
+ "problems": [
+  "Figures are vector graphics; their numbers appear as scattered axis ticks in the text, so figure-only values were not recorded.",
+  "The supervised ResNet-50 baseline is printed as 76.6% in the intro and 76.5% in Fig 2."
+ ]
+}

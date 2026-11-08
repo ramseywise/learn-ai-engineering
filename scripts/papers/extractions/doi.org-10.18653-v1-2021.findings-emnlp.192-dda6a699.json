@@ -1,0 +1,528 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.findings-emnlp.192",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/yoo-2021-gpt3mix.pdf",
+ "bib": {
+  "title": "GPT3Mix: Leveraging Large-scale Language Models for Text Augmentation",
+  "authors": [
+   "Kang Min Yoo",
+   "Dongju Park",
+   "Jaewook Kang",
+   "Sang-Woo Lee",
+   "Woomyeong Park"
+  ],
+  "first_author": "Yoo",
+  "year": 2021,
+  "venue": "Findings of the Association for Computational Linguistics: EMNLP 2021",
+  "arxiv": null,
+  "doi": "10.18653/v1/2021.findings-emnlp.192"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 58135,
+  "chars_total": 58135,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can prompting a large language model with a mixture of real examples generate realistic, soft-labelled synthetic text that improves small fine-tuned classifiers in low-data settings?",
+ "hypothesis": "Prompt-based mix of k real examples plus LM-predicted soft labels yields better augmentation than shallow or latent-space mixing methods, and the gain is not just memorization.",
+ "contributions": [
+  "Prompt-based data augmentation with large LMs on top of PLM fine-tuning",
+  "GPT3Mix: simple text augmentation eliciting LM knowledge",
+  "Analysis of the mechanism behind prompt-powered augmentation",
+  "RT20: new movie-review benchmark post-dating GPT-3 data, to rule out memorization"
+ ],
+ "method": {
+  "summary": "Sample k=2 labelled examples, build a prompt (description header, text-label pairs, prefix), let GPT-3 generate a new text and its label token; the normalized label-token likelihoods give a soft label. Synthetic samples (ratio 10 to real) are added to the real subsample and a BERT/DistilBERT classifier is fine-tuned with cross-entropy.",
+  "task": "low-resource text classification via LM-generated data augmentation with soft-label distillation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SST-2",
+    "role": "both",
+    "size": null,
+    "split": "sub-sampled 0.1%, 0.3%, 1.0% class-balanced training set; full set in one experiment",
+    "source": "Socher et al. 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "CR",
+    "role": "both",
+    "size": null,
+    "split": "0.1/0.3/1.0% subsample",
+    "source": "Hu and Liu 2004",
+    "preprocessing": null
+   },
+   {
+    "name": "COLA",
+    "role": "both",
+    "size": null,
+    "split": "0.1/0.3/1.0% subsample",
+    "source": "Warstadt et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "TREC6",
+    "role": "both",
+    "size": null,
+    "split": "0.1/0.3/1.0% subsample",
+    "source": "Voorhees and Tice 1999",
+    "preprocessing": null
+   },
+   {
+    "name": "MPQA",
+    "role": "both",
+    "size": null,
+    "split": "0.1/0.3/1.0% subsample",
+    "source": "Wiebe et al. 2005",
+    "preprocessing": null
+   },
+   {
+    "name": "SUBJ",
+    "role": "both",
+    "size": null,
+    "split": "0.1/0.3/1.0% subsample",
+    "source": "Pang and Lee 2004",
+    "preprocessing": null
+   },
+   {
+    "name": "RT20",
+    "role": "both",
+    "size": "1,100 positive and 1,100 negative reviews for 62 movies",
+    "split": "1500 train, 300 validation, 400 test, class-balanced",
+    "source": "Rotten Tomatoes critic reviews of movies released 2020 or later; crawled",
+    "preprocessing": "lowercased; spaces added around certain special characters"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 davinci (generator, default)",
+    "role": "proposed",
+    "params": "inferred: 175B (footnote 7 lists known sizes 2.7B, 6.7B, 13B, 175B for ada, babbage, curie, davinci; not officially disclosed)",
+    "architecture": "autoregressive LM via OpenAI API Beta",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "ablation generators": "ada, babbage, curie, davinci; GPT-2 large 774M; GPT-neo 1.3B"
+    }
+   },
+   {
+    "name": "BERT-base",
+    "role": "base",
+    "params": "109M",
+    "architecture": "transformer encoder + two fully connected classifier layers",
+    "init_from": "HuggingFace pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DistilBERT-base",
+    "role": "base",
+    "params": "67M",
+    "architecture": "transformer encoder + two FC layers",
+    "init_from": "HuggingFace pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-large",
+    "role": "base",
+    "params": "335M",
+    "architecture": "transformer encoder",
+    "init_from": "HuggingFace pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "used": "SST-2 only (Table 2)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy on real samples (hard labels) plus synthetic samples with soft pseudo-labels",
+   "optimizer": "Adam with decoupled weight decay",
+   "lr": "3e-5",
+   "lr_schedule": null,
+   "warmup": "3 epochs",
+   "batch_size": null,
+   "steps": null,
+   "epochs": "early stopping on validation score, patience 20 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping",
+   "hardware": "M40 GPUs (PyTorch)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "15 data seeds per Sec 4.1; Table 1 caption says repeated 10 times",
+   "other": {
+    "augmentation ratio": "10 synthetic per real by default; 5 in Tables 4,7; 3 in Table 8; 1:1 on full SST-2"
+   }
+  },
+  "inference": {
+   "decoding": "sampling",
+   "temperature": "1",
+   "top_p": "1",
+   "max_tokens": null,
+   "samples": "augmentation ratio 10 synthetic samples per real sample (default)",
+   "prompting": "k=2 randomly chosen (uniform) real examples in a template of description header, text-label pairs, prefix; label generated after text; avg ~300 tokens (prompt + generation) per augmentation",
+   "retrieval": null,
+   "parameters": {
+    "k": "2 default (ablation 1,2,4,8)",
+    "frequency_penalty": "0.02",
+    "soft label": "p(y'|x') proportional to p_LM(v(y') | P(x',S_T)), label-token likelihoods normalized",
+    "task spec": "S=(text type T, label type L, verbalizer v); chosen per task on validation, Table 9"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "classification accuracy on test set, mean+-std over repeated trials",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "no augmentation",
+    "EDA (Wei and Zou 2019)",
+    "back-translation via German, WMT16 fairseq (Fadaee 2017)",
+    "TMix (Chen 2020), BERT-base only"
+   ],
+   "protocol": "class-balanced subsamples at 15 seeds (text) vs 10 repeats (Table 1 caption); mean+-std; early stopping on validation"
+  },
+  "availability": {
+   "code": "https://github.com/naver-ai/hypermix",
+   "weights": null,
+   "data": "RT20 'will be released soon'"
+  },
+  "prompts": [
+   {
+    "purpose": "GPT3Mix template",
+    "text": "Each item in the following list contains a <text type> and the respective <label type>. <label type> is one of '<label token 1>', ..., or '<label token N>'.\n<text type>: <example text 1> (<label type>: <example label 1>)\n...\n<text type>: <example text k> (<label type>: <example label k>)\n<text type>:",
+    "where": "Appendix A"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.frequency_penalty",
+    "quote": "top-p and the temperature was set to 1 and the frequency penalty was set to 0.02",
+    "where": "Sec 4.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "GPT3Mix lifts BERT-base average accuracy at 0.1% data across 7 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg accuracy",
+   "value": 69.2,
+   "unit": "%",
+   "baseline_value": 58.4,
+   "n": null,
+   "setup": "BERT-base, 7 datasets, 0.1% subsample, davinci, ratio 10",
+   "note": "Text says improves baseline 'as much as 18.6%'; table difference is 10.8 points (about 18.5% relative)",
+   "where": "Table 1",
+   "table": "Table 1, row Average 0.1%, BERT-base Ours 69.2 vs none 58.4"
+  },
+  {
+   "claim": "On SST-2 0.1% GPT3Mix gives large gain over EDA and back-translation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 78.0,
+   "unit": "%",
+   "baseline_value": 57.1,
+   "n": null,
+   "setup": "BERT-base SST-2 0.1%",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row SST-2 0.1%, BERT-base Ours 78.0 vs none 57.1"
+  },
+  {
+   "claim": "BERT-large with GPT3Mix on 1.0% SST-2 matches BERT-base on full data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.8,
+   "unit": "%",
+   "baseline_value": 87.8,
+   "n": null,
+   "setup": "SST-2 1.0%, BERT-large",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row 1.0%, column Ours 90.8 vs none 87.8"
+  },
+  {
+   "claim": "RT20 (post-GPT-3 data) still shows large gains, ruling out memorization as sole cause.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 72.3,
+   "unit": "%",
+   "baseline_value": 56.2,
+   "n": null,
+   "setup": "DistilBERT, RT20 1.0%",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, RT20 1.0% DistilBERT Ours 72.3 vs none 56.2"
+  },
+  {
+   "claim": "Soft labels beat hard labels from beam search.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.2,
+   "unit": "%",
+   "baseline_value": 61.6,
+   "n": null,
+   "setup": "SST-2 0.1%, DistilBERT, curie, ratio 5",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 0.1%, Soft-labels 71.2 vs Hard Labels 61.6"
+  },
+  {
+   "claim": "k=2 vs k=1 at 0.1% SST-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.2,
+   "unit": "%",
+   "baseline_value": 65.5,
+   "n": null,
+   "setup": "DistilBERT, curie, ratio 10",
+   "note": "k=4 gives 74.6 at 0.1% but k=2 chosen for cost",
+   "where": "Table 3",
+   "table": "Table 3, row 0.1%, k=2 71.2 vs k=1 65.5"
+  },
+  {
+   "claim": "Larger generator is better: davinci vs ada.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 67.6,
+   "unit": "%",
+   "baseline_value": 61.9,
+   "n": null,
+   "setup": "SST-2 0.1%, DistilBERT, ratio 5",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row 0.1%, davinci 67.6 vs ada 61.9"
+  },
+  {
+   "claim": "Open-source GPT-neo 1.3B gives gains close to davinci.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.3,
+   "unit": "%",
+   "baseline_value": 75.3,
+   "n": null,
+   "setup": "SST-2 0.1%, DistilBERT; baseline_value is davinci",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row 0.1%, GPT-neo 71.3 vs davinci 75.3"
+  },
+  {
+   "claim": "Task-specific spec beats generic spec on SST-2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 71.2,
+   "unit": "%",
+   "baseline_value": 60.1,
+   "n": null,
+   "setup": "SST-2 0.1%, DistilBERT, curie, ratio 3",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, SST-2 0.1%, S_T* 71.2 vs S_generic 60.1"
+  },
+  {
+   "claim": "Full SST-2 with 1:1 synthetic raises BERT-base accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 93.25,
+   "unit": "%",
+   "baseline_value": 90.33,
+   "n": null,
+   "setup": "full SST-2, BERT-base",
+   "note": null,
+   "where": "Sec 4.3",
+   "quote": "the accuracy of BERTbase from 90.33% to 93.25% (2.92% improvement)"
+  },
+  {
+   "claim": "A wrong label-type word (linguistic acceptability) collapses COLA 0.1% augmentation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 38.8,
+   "unit": "%",
+   "baseline_value": 68.8,
+   "n": null,
+   "setup": "COLA 0.1%",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "drops to 38.8%"
+  }
+ ],
+ "limits": [
+  "Handcrafted task specifications chosen on validation per task; poor spec can drop below baseline (COLA 38.8%).",
+  "Only classification with single-token labels; GPT-3 inference cost grows with k.",
+  "On TREC6 and SUBJ 1% GPT3Mix does not beat baselines (Table 1); label vagueness on SUBJ.",
+  "Possible propagation of LM bias and toxicity (Ethical Considerations).",
+  "Inconsistent seed count: 15 data seeds in Sec 4.1 vs repeated 10 times in Table 1 caption; no per-dataset sizes given; ablations use curie/DistilBERT and lower ratios.",
+  "GPT-3 davinci via OpenAI Beta API has since been retired."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "GPT3Mix",
+   "definition": "generating synthetic text from a mixture of real in-context examples with an LM, labelled by LM soft-labels",
+   "where": "Sec 3"
+  },
+  {
+   "term": "task specification S",
+   "definition": "S=(T,L,v): text type, label type, label-token verbalizer",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "in-context prompting with GPT-3",
+   "quote": null
+  },
+  {
+   "work": "mixup",
+   "year": 2017,
+   "arxiv": "1710.09412",
+   "relation": "extends",
+   "note": "mix-based augmentation inspiration",
+   "quote": null
+  },
+  {
+   "work": "MixText / TMix",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "latent-space mixing",
+   "quote": null
+  },
+  {
+   "work": "EDA",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "shallow augmentation",
+   "quote": null
+  },
+  {
+   "work": "Data augmentation for low-resource NMT (back-translation)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BT",
+   "quote": null
+  },
+  {
+   "work": "Distilling the knowledge in a neural network",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "soft labels as distillation",
+   "quote": null
+  },
+  {
+   "work": "DistilBERT",
+   "year": 2019,
+   "arxiv": "1910.01108",
+   "relation": "evaluates",
+   "note": "classifier",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "classifier",
+   "quote": null
+  },
+  {
+   "work": "Reynolds and McDonell, Prompt programming",
+   "year": 2021,
+   "arxiv": "2102.07350",
+   "relation": "uses-method",
+   "note": "prompt design",
+   "quote": null
+  },
+  {
+   "work": "Calibrate before use",
+   "year": 2021,
+   "arxiv": "2102.09690",
+   "relation": "related",
+   "note": "prompt sensitivity",
+   "quote": null
+  },
+  {
+   "work": "SST-2, CR, COLA, TREC6, MPQA, SUBJ",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmarks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "An illustration of GPT3Mix. The soft-labels of augmentation are extracted from the normalized label-token distributions predicted by the language model.",
+   "page": 4,
+   "why": "Shows examples + task spec -> prompt -> synthetic sample with soft label in one picture"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "A conceptual diagram of text augmentation using large-scale language models.",
+   "page": 1,
+   "why": "Pipeline overview"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3",
+   "snippet": "p(y' | x') \u221d p_LM(v^T(y') | P(x', S_T))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table cells in the cache are one value per line; numbers matched via table refs."
+ ]
+}

@@ -1,0 +1,288 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d16-1244",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/parikh-2016-decomposable-attention-model-natural-language.pdf",
+ "bib": {
+  "title": "A Decomposable Attention Model for Natural Language Inference",
+  "authors": [
+   "Ankur P. Parikh",
+   "Oscar Täckström",
+   "Dipanjan Das",
+   "Jakob Uszkoreit"
+  ],
+  "first_author": "Parikh",
+  "year": 2016,
+  "venue": "Proceedings of EMNLP 2016, pages 2249-2255",
+  "arxiv": "1606.01933",
+  "doi": "10.18653/v1/d16-1244"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 24621,
+  "chars_total": 24621,
+  "engine": "pymupdf",
+  "skipped": "references skimmed"
+ },
+ "type": "empirical",
+ "question": "Can natural language inference be solved by aligning local text pieces with attention and aggregating, without deep sentence encoders?",
+ "hypothesis": "For NLI it can often suffice to simply align bits of local text substructure and then aggregate this information.",
+ "contributions": [
+  "A simple attend-compare-aggregate NLI model that is trivially parallelizable",
+  "State-of-the-art SNLI accuracy with almost an order of magnitude fewer parameters, without word-order information",
+  "Optional intra-sentence attention with distance-sensitive bias gives further gains"
+ ],
+ "method": {
+  "summary": "Embeddings of premise and hypothesis are soft-aligned with a feed-forward attention (Attend), each word is compared with its aligned phrase by a feed-forward net G (Compare), and the summed comparison vectors go to a classifier H (Aggregate). Optional intra-sentence attention adds minimal order information.",
+  "task": "natural language inference (3-class)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "549,367 train / 9,842 dev / 9,824 test pairs after removing '-' labels (570K total)",
+    "split": "standard SNLI split",
+    "source": "Bowman et al. 2015",
+    "preprocessing": "tokenized sentences from non-binary parse; NULL token prepended; batch padding masked; semi-sorted by length (<20, <50, rest)"
+   }
+  ],
+  "models": [
+   {
+    "name": "Decomposable Attention (vanilla)",
+    "role": "proposed",
+    "params": "382K (excluding embeddings)",
+    "architecture": "feed-forward attend/compare/aggregate, no word order",
+    "init_from": "GloVe 300D embeddings fixed, projected to 200D",
+    "tokenizer": null,
+    "vocab": "OOV hashed to 100 random embeddings",
+    "layers": "2 layers per feed-forward net",
+    "hidden": "200 neurons",
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_norm": "l2 norm 1, then projection to 200 dims (tuned)"
+    }
+   },
+   {
+    "name": "Decomposable Attention + intra-sentence attention",
+    "role": "proposed",
+    "params": "582K (excluding embeddings)",
+    "architecture": "as vanilla with self-attention and distance bias terms, distances over 10 bucketed together",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "multi-class cross-entropy",
+   "optimizer": "Adagrad, initial accumulator value 0.1, 10 asynchronous gradient-update threads on a single machine",
+   "lr": "0.05 (vanilla), 0.025 (intra-attention)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "4 (footnote: 16 or 32 also work well and are a bit more stable)",
+   "steps": "50 million steps (each step one batch); best dev checkpoint kept",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.2 on all ReLU layers, not final linear layer",
+   "regularisation": "dropout",
+   "hardware": "single machine, 10 async threads",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "init": "Gaussians mean 0 std 0.01",
+    "framework": "TensorFlow",
+    "embeddings": "fixed, only projection matrix trained"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over class scores",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "3-class accuracy",
+     "definition": "fraction of correctly classified SNLI pairs",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Lexicalized classifier",
+    "LSTM RNN encoders",
+    "pretrained GRU encoders",
+    "tree-based CNN",
+    "SPINN-PI",
+    "LSTM with attention",
+    "mLSTM",
+    "LSTMN with deep attention fusion"
+   ],
+   "protocol": "single run, checkpoint chosen on dev set, test accuracy reported; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "SNLI public"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "batch size (4)",
+    "where": "5.1; footnote 1 reads '16 or 32 also work well and are a bit more stable'"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Intra-sentence attention variant reaches 86.8% SNLI test accuracy, 0.5 points over previous state of the art.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 86.8,
+   "unit": "%",
+   "baseline_value": 86.3,
+   "n": null,
+   "setup": "SNLI test set, 3-class accuracy, single model, 582K params",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Our approach with intra-sentence attention, column Test Acc"
+  },
+  {
+   "claim": "Vanilla model matches the best prior test accuracy with 382K parameters versus 3.4M for LSTMN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test accuracy",
+   "value": 86.3,
+   "unit": "%",
+   "baseline_value": 86.3,
+   "n": null,
+   "setup": "SNLI test set, 3-class accuracy, single model, 382K params, no word order",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Our approach (vanilla), column Test Acc"
+  },
+  {
+   "claim": "Vanilla model has 382K parameters excluding embeddings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "parameters",
+   "value": 382,
+   "unit": "K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "excluding embeddings",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Our approach (vanilla), column #Parameters"
+  },
+  {
+   "claim": "Dev-set gains come mostly from neutral, losses from contradiction.",
+   "kind": "measured",
+   "source": null,
+   "metric": "dev accuracy neutral (intra att.)",
+   "value": 83.7,
+   "unit": "%",
+   "baseline_value": 80.6,
+   "n": null,
+   "setup": "SNLI dev set",
+   "note": null,
+   "where": "Table 2, 5.2",
+   "quote": "most of our gains stem from neutral, while most losses come from contradiction pairs",
+   "table": "Table 2, row Our approach w/ intra att., column N"
+  }
+ ],
+ "limits": [
+  "Only SNLI evaluated; no other NLI datasets",
+  "Cannot use word order: fails on examples needing sequence information or numbers (Table 3 F, H, I)",
+  "Embeddings not fine-grained enough for some contradictions (play/watch)",
+  "Complexity analysis assumes sentence length < embedding dim",
+  "Single runs, no seeds or variance reported"
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {
+   "work": "Bahdanau et al. neural attention",
+   "year": 2015,
+   "arxiv": "1409.0473",
+   "relation": "uses-method",
+   "note": "attention basis",
+   "quote": null
+  },
+  {
+   "work": "Cheng et al. LSTMN",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "intra-sentence attention; also best baseline (86.3)",
+   "quote": null
+  },
+  {
+   "work": "Bowman et al. SNLI",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "dataset",
+   "quote": null
+  },
+  {
+   "work": "Wang and Jiang mLSTM",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "86.1 test",
+   "quote": null
+  },
+  {
+   "work": "Rocktäschel et al. LSTM with attention",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "83.5 test",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "embeddings",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Pictoral overview of the approach, showing the Attend (left), Compare (center) and Aggregate (right) steps.",
+   "page": 2,
+   "why": "Shows the three-step decomposition at a glance."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "e_ij := F'(a_i, b_j) := F(a_i)^T F(b_j)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Footnote 1 digits garbled in text ('116 or 32' = '16 or 32' with marker 1)"
+ ]
+}

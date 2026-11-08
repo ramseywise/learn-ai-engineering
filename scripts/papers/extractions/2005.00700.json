@@ -1,0 +1,77 @@
+{
+"schema": 1,
+"key": "2005.00700",
+"pdf": "generative-ai/01-llm-fundamentals/sources/khashabi-2020-unifiedqa.pdf",
+"bib": {"title": "UNIFIEDQA: Crossing Format Boundaries with a Single QA System", "authors": ["Daniel Khashabi","Sewon Min","Tushar Khot","Ashish Sabharwal","Oyvind Tafjord","Peter Clark","Hannaneh Hajishirzi"], "first_author": "Khashabi", "year": 2020, "venue": "Findings of the Association for Computational Linguistics: EMNLP 2020", "arxiv": "2005.00700", "doi": null},
+"read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 50557, "chars_total": 50557, "engine": "pymupdf", "skipped": "The PDF ends at the references (p.1907); Appendices A.1-A.6 (hyperparameters, extended pilot results, low-data fine-tuning) are referred to but not in the PDF."},
+"type": "empirical",
+"question": "Can a single text-to-text QA model trained across extractive, abstractive, multiple-choice and yes/no formats match format-specialised models and generalise to unseen QA datasets?",
+"hypothesis": "The reasoning abilities needed for QA are largely common across formats, so training on out-of-format data should help.",
+"contributions": ["A unified, format-agnostic view of QA and a single pre-trained QA system, UnifiedQA, that works across 4 formats (Sec 6.2) and matches dedicated systems (Sec 6.1)", "Fine-tuning UnifiedQA gives a new state of the art on 10 datasets (Sec 6.3)"],
+"method": {
+"summary": "Convert all QA instances to plain text in/text out with newline separators and no format prefixes, pool 8 seed datasets of 4 formats, and train T5-11B (also BART-large) on the mixture with per-dataset balanced sampling. Evaluate on seen datasets, 12 unseen datasets, and after fine-tuning.",
+"task": "question answering across extractive, abstractive, multiple-choice and yes/no formats",
+"trains": true,
+"datasets": [
+{"name": "Seed training sets: SQuAD 1.1, SQuAD 2.0, NarrativeQA, RACE, ARC, OBQA, MCTest, BoolQ", "role": "train", "size": "Table 2 train sizes: SQuAD1.1 87k, SQuAD2 130k, NarQA 65k, RACE 87k, OBQA 4k, MCTest 1.4k, ARC easy 2k, ARC chal 1k, BoolQ 9k", "split": "train sets; evaluated on eval sets in Table 2", "source": "existing public datasets", "preprocessing": "Text encoding: question \\n paragraph; MC: question \\n (A) c1 (B) c2 ... [\\n paragraph]; no format prefixes. MC datasets without paragraphs used as is, no retrieval, unless noted."},
+{"name": "Unseen eval sets: NewsQA, Quoref(+CS), ROPES(+CS), DROP(+CS), QASC, CommonsenseQA, NP-BoolQ, BoolQ-CS, MultiRC (yes/no subset)", "role": "eval", "size": "Table 2 eval sizes e.g. NewsQA 4k, Quoref 2k, Quoref-CS 700, ROPES 1.4k, ROPES-CS 974, DROP 9k, DROP-CS 947, BoolQ-CS 461, NP-BoolQ 3k, MultiRC 312", "split": "eval", "source": "contrast sets from Gardner et al. 2020", "preprocessing": null},
+{"name": "Fine-tuning targets: OBQA, ARC-easy, ARC-chal, QASC, RACE, CommonsenseQA, Winogrande, PIQA, SIQA, ROPES, NatQA", "role": "both", "size": "Table 2 e.g. WG 40.3k, SIQA 33.4k, PIQA 16.1k, CQA 9.7k, NatQA 79k", "split": "best dev checkpoint, evaluated on test", "source": "existing datasets; IR sentences from Aristo corpus (ARC, OBQA), 2-step IR (QASC), DPR (NatQA)", "preprocessing": "'(w/ IR)' variants append retrieved sentences as context"}
+],
+"models": [
+{"name": "UnifiedQA (T5-11B)", "role": "proposed", "params": "11B", "architecture": "T5 text-to-text encoder-decoder", "init_from": "T5 largest available (11B)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"details": "deferred to Appendix A.2, not in the PDF"}},
+{"name": "UnifiedQA-BART (BART-large)", "role": "proposed", "params": null, "architecture": "BART-large seq2seq", "init_from": "BART-large", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+{"name": "T5-small (pilot study)", "role": "base", "params": null, "architecture": "T5 small", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+{"name": "Dedicated per-dataset T5 models, single-format UnifiedQA[EX/AB/MC/YN]", "role": "baseline", "params": "equally-sized (T5-11B)", "architecture": "T5", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+],
+"training": {
+"objective": "text-to-text generation over a pooled mixture of encoded instances; each instance sampled with probability proportional to 1/|T| so batches hold on average equal numbers from each training set",
+"optimizer": null, "lr": null, "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null, "epochs": null, "tokens": null, "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null,
+"hardware": "TPU machines provided by Google (type not stated)", "compute": null, "wall_clock": null, "seeds": null,
+"other": {"fine_tuning": "best checkpoint selected on dev, evaluated on test; hyperparameters not given in the PDF"}
+},
+"inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": "No prefixes; input is question, then candidates and/or paragraph, separated by \\n", "retrieval": "Only in '(w/ IR)' fine-tuning variants: Aristo corpus for ARC/OBQA, 2-step IR for QASC, DPR for NatQA", "parameters": {}, "other": {}},
+"eval": {
+"metrics": [
+{"name": "F1", "definition": "F1 of extracted span vs gold, for extractive datasets", "unit": "%", "higher_is_better": true},
+{"name": "ROUGE-L", "definition": "for abstractive datasets", "unit": "%", "higher_is_better": true},
+{"name": "Exact match", "definition": "used for NatQA", "unit": "%", "higher_is_better": true},
+{"name": "Accuracy (MC)", "definition": "generated text matched to the closest answer candidate by token overlap", "unit": "%", "higher_is_better": true},
+{"name": "Accuracy (YN)", "definition": "output matches yes/no; if longer than one word, correct if it contains the correct label and not the incorrect one", "unit": "%", "higher_is_better": true}
+],
+"baselines": ["Dedicated T5 models per dataset", "Single-format UnifiedQA variants", "Best published (fully supervised) systems", "Fine-tuned vanilla T5 and BART-large"],
+"protocol": "Single runs, no seeds or significance tests reported; Table 2 gives Wilson 95% CIs for eval-set size."
+},
+"availability": {"code": "https://github.com/allenai/unifiedqa", "weights": null, "data": null},
+"prompts": [],
+"evidence": [
+{"field": "models[0].params", "quote": "we use the largest available T5 model (11B parameters) as the starting point for training our model", "where": "Sec 3.2"}
+]
+},
+"results": [
+{"claim": "On average over 12 unseen datasets, multi-format UnifiedQA beats every single-format variant.", "kind": "measured", "source": null, "metric": "average score", "value": "60.7", "unit": "%", "baseline_value": "45.8 (UnifiedQA[AB], best single format)", "n": 12, "setup": "T5-11B trained on 8 seed datasets, zero-shot on 12 unseen datasets; single-format models trained on only that format's seed sets", "table": "Table 4, row UnifiedQA, column Avg", "note": null, "where": "Table 4"},
+{"claim": "UnifiedQA beats the fully supervised previous best on unseen yes/no sets NP-BoolQ and BoolQ-CS without training on them.", "kind": "measured", "source": null, "metric": "accuracy", "value": "81.3", "unit": "%", "baseline_value": "78.4 (previous best, NP-BoolQ)", "n": null, "setup": "Zero-shot NP-BoolQ; BoolQ-CS 80.4 vs 71.1 previous best", "table": "Table 4, row UnifiedQA, column NP-BoolQ", "note": null, "where": "Table 4"},
+{"claim": "Fine-tuning UnifiedQA beats fine-tuned T5 on ARC-challenge by the largest margin.", "kind": "measured", "source": null, "metric": "accuracy", "value": "75.0", "unit": "%", "baseline_value": "65.4 (T5 - FT)", "n": null, "setup": "ARC-chal without IR, T5-11B, fine-tuned on dataset", "table": "Table 5, row UnifiedQA - FT, column ARC-chal *", "note": "Caption says margin up to 13% for ARC-challenge; with IR 78.5 vs 69.7", "where": "Table 5"},
+{"claim": "Fine-tuning UnifiedQA gives new state of the art on 11 datasets per the Table 5 caption (abstract and intro say 10).", "kind": "measured", "source": null, "metric": "datasets with new SOTA", "value": "11", "unit": "datasets", "baseline_value": null, "n": null, "setup": "Table 5 datasets", "quote": "results in new state-of-the-art performance on 11 datasets", "note": "Abstract says 10 datasets", "where": "Table 5 caption"},
+{"claim": "Pilot with T5-small: adding an out-of-format set raises NP-BoolQ from 51.3 to 59.4.", "kind": "measured", "source": null, "metric": "accuracy", "value": "59.4", "unit": "%", "baseline_value": "51.3", "n": null, "setup": "T5-small, BoolQ anchor + SQuAD2, evaluated on NP-BoolQ", "table": "Table 3, row BoolQ + X, column NP-BoolQ", "note": null, "where": "Table 3"},
+{"claim": "In the leave-one-out ablation, dropping SQuAD 2 collapses SQuAD 2 performance.", "kind": "measured", "source": null, "metric": "SQuAD2 score", "value": "47.3", "unit": "%", "baseline_value": "89.6", "n": null, "setup": "UnifiedQA seed mixture minus SQuAD 2", "table": "Table 6, row excluding SQuAD 2, column SQuAD2", "note": null, "where": "Table 6"},
+{"claim": "Leave-one-out: dropping BoolQ lowers the seed average by the most (-8.4); BoolQ, SQuAD 2, OBQA, NarQA are the top four contributors.", "kind": "measured", "source": null, "metric": "average delta", "value": "-8.4", "unit": "points", "baseline_value": "85.4", "n": null, "setup": "Table 6 average over 9 seed eval sets", "table": "Table 6, row excluding BoolQ, column Delta", "note": null, "where": "Table 6, Sec 6.4"}
+],
+"limits": ["Authors concede factors affecting generalization (size, domain) are not well understood", "Only 4 formats; direct-answer questions left to future work", "Curriculum, distillation and teacher annealing not explored", "Single run per setting with no seeds or significance tests; hyperparameters are in appendices not present in this PDF", "Table 4 'previous best' numbers are fully supervised, not comparable to zero-shot"],
+"practices": [],
+"terms": [],
+"lineage": [
+{"work": "Exploring the limits of transfer learning with a unified text-to-text transformer (T5)", "year": 2020, "arxiv": "1910.10683", "relation": "extends", "note": "base model and text-to-text framework; drops task prefixes", "quote": null},
+{"work": "BART", "year": 2020, "arxiv": "1910.13461", "relation": "uses-method", "note": "second base model", "quote": null},
+{"work": "MultiQA (Talmor and Berant)", "year": 2019, "arxiv": null, "relation": "related", "note": "cross-dataset transfer limited to extractive QA", "quote": null},
+{"work": "Natural Language Decathlon (McCann et al.)", "year": 2018, "arxiv": "1806.08730", "relation": "related", "note": "casts NLP tasks as QA", "quote": null},
+{"work": "Contrast sets (Gardner et al.)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "CS evaluation sets", "quote": null},
+{"work": "SQuAD, NarrativeQA, RACE, ARC, OBQA, MCTest, BoolQ and others", "year": null, "arxiv": null, "relation": "uses-data", "note": "seed and evaluation datasets", "quote": null}
+],
+"figures": [
+{"figure": "Fig 1", "caption": "Four formats commonly used for posing questions and answering them", "page": 1, "why": "shows the four QA formats side by side"},
+{"figure": "Fig 4", "caption": "UnifiedQA is on-par with, and often outperforms, 9 different equally-sized T5-based systems tailored to individual datasets", "page": 7, "why": "one-glance comparison to dedicated models"},
+{"figure": "Table 1", "caption": "Example text-to-text encoding of instances", "page": 4, "why": "exact input encoding"}
+],
+"code": [],
+"problems": ["Appendices A.1-A.6 absent from PDF, so optimizer, learning rate, batch size, steps, sequence length are unavailable", "Abstract/intro say SOTA on 10 datasets; Table 5 caption says 11", "Fig 4 caption says 9 systems while text says 8 dedicated models", "Pilot results are for T5-small"]
+}

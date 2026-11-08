@@ -1,0 +1,425 @@
+{
+ "schema": 1,
+ "key": "1908.06083",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dinan-2019-build-it-break-it-fix.pdf",
+ "bib": {
+  "title": "Build it Break it Fix it for Dialogue Safety: Robustness from Adversarial Human Attack",
+  "authors": [
+   "Emily Dinan",
+   "Samuel Humeau",
+   "Bharath Chintagunta",
+   "Jason Weston"
+  ],
+  "first_author": "Dinan",
+  "year": 2019,
+  "venue": "EMNLP-IJCNLP 2019",
+  "arxiv": "1908.06083",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41057,
+  "chars_total": 41057,
+  "engine": "pymupdf",
+  "skipped": "Cached text ends at the references; the appendices (A, B, Tables 11 and 13) the paper cites are not in the PDF text."
+ },
+ "type": "empirical",
+ "question": "How can an offensive-language detector for dialogue be made robust to adversarial human attack?",
+ "hypothesis": "Training on data collected adversarially from humans in iterated rounds yields more robust classifiers than standard collection, and dialogue context helps detect offense.",
+ "contributions": [
+  "An automated build it, break it, fix it, repeat training scheme with crowdworkers in the loop",
+  "New single-turn and multi-turn adversarial offensive-language datasets and models, open sourced via ParlAI",
+  "Evidence that offense depends on dialogue context"
+ ],
+ "method": {
+  "summary": "A BERT-base offensive classifier (A0) is trained on Wikipedia Toxic Comments. Crowdworkers write OFFENSIVE messages that the current models mark SAFE, and the models are retrained on those messages plus earlier data. This is repeated for 3 single-turn rounds and 1 multi-turn round.",
+  "task": "binary offensive (OFFENSIVE/SAFE) language detection, single-turn and in dialogue context",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Wikipedia Toxic Comments (WTC)",
+    "role": "train",
+    "size": "114656 train / 15958 valid / 15957 test",
+    "split": "80/10/10; 10.2% OFFENSIVE in train",
+    "source": "Wulczyn et al. 2017, Kaggle Toxic Comment Classification Challenge",
+    "preprocessing": "all toxicity classes except non-toxic merged into OFFENSIVE"
+   },
+   {
+    "name": "Single-turn adversarial task (3 rounds)",
+    "role": "both",
+    "size": "1000 OFFENSIVE examples per round, 3000 total; with SAFE: 24000 train / 3000 valid / 3000 test over 3 rounds",
+    "split": "9:1 SAFE:OFFENSIVE per partition",
+    "source": "crowdworker break-it data plus ConvAI2 SAFE utterances, each reviewed by two crowdworkers",
+    "preprocessing": null
+   },
+   {
+    "name": "Single-turn standard task",
+    "role": "both",
+    "size": "3000 OFFENSIVE, same sizes as adversarial task",
+    "split": "same as adversarial",
+    "source": "crowdworkers asked to write OFFENSIVE messages with no model to break",
+    "preprocessing": null
+   },
+   {
+    "name": "Multi-turn adversarial task",
+    "role": "both",
+    "size": "3000 OFFENSIVE; 24000 train / 3000 valid / 3000 test",
+    "split": "9:1 SAFE:OFFENSIVE",
+    "source": "ConvAI2 contexts truncated, workers add OFFENSIVE response; conversations 3 to 6 turns",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-based classifier",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-base with linear layer on [CLS]",
+    "init_from": "BERT-base weights (Devlin et al. 2018)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "BERT-based with dialogue segments",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-base; last utterance and history as two segments with segment embeddings (NSP-style)",
+    "init_from": "BERT-base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "fastText",
+    "role": "baseline",
+    "params": null,
+    "architecture": "average of pretrained word vectors plus linear layer",
+    "init_from": "Wikipedia-pretrained word vectors",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Khatri et al. 2018 BiLSTM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BiLSTM with GloVe",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross entropy, multi-tasked with WTC; model Ai trained on all rounds n<=i plus WTC; final bias adjusted on validation set to maximise OFFENSIVE-class F1",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "multi-turn: best models from 5 training runs averaged; single-turn not stated",
+   "other": {
+    "mixing parameter": "weights the multi-task mix, tuned on validation set; value not stated",
+    "multi-turn multitasking": "multi-turn task multi-tasked with WTC and single-turn adversarial and standard tasks"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "multi-turn: mean and one std over 5 runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "crowdworker task": "up to 5 points per round, 2 tries per point; for round i>1 message must be marked SAFE by both A0 and A(i-1)",
+    "OFFENSIVE definition": "not ok to send in a friendly conversation with someone you just met online"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "OFFENSIVE-class F1",
+     "definition": "F1 of the OFFENSIVE class",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Weighted F1",
+     "definition": "per-class F1 weighted by class frequency",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg worker score",
+     "definition": "successful fooled messages out of 5 per round",
+     "unit": "points 0-5",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "fastText",
+    "Khatri et al. 2018 BiLSTM",
+    "standard-data models S1-S3",
+    "A0 trained on WTC"
+   ],
+   "protocol": "Test sets per round; scores of 0 for A0/A(i-1) on round i adversarial test are by design. Single-turn seeds not stated; no significance test."
+  },
+  "availability": {
+   "code": "open source via ParlAI (parl.ai/projects/dialogue_safety)",
+   "weights": "to be released via ParlAI",
+   "data": "released via ParlAI"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Adversarially trained A3 beats standard S3 on all three adversarial rounds combined",
+   "kind": "measured",
+   "source": null,
+   "metric": "OFFENSIVE F1",
+   "value": 67.6,
+   "unit": "%",
+   "baseline_value": 41.8,
+   "n": null,
+   "setup": "Single-turn adversarial task, rounds 1-3 test, BERT-based",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Adversarial Task All (1-3), column A3"
+  },
+  {
+   "claim": "Baseline A0 trained on WTC scores 0 on adversarial rounds by construction but 68.1 on the standard task",
+   "kind": "measured",
+   "source": null,
+   "metric": "OFFENSIVE F1",
+   "value": 68.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "A0 on Standard Task All (1-3)",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row Standard Task All (1-3), column A0"
+  },
+  {
+   "claim": "BERT-based WTC model beats fastText on OFFENSIVE F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "OFFENSIVE F1",
+   "value": 83.4,
+   "unit": "%",
+   "baseline_value": 71.4,
+   "n": null,
+   "setup": "Wikipedia Toxic Comments test",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row BERT-based, column OFFENSIVE F1"
+  },
+  {
+   "claim": "Dialogue segments plus context gives the best multi-turn F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "OFFENSIVE F1",
+   "value": 66.4,
+   "unit": "%",
+   "baseline_value": 59.0,
+   "n": null,
+   "setup": "Multi-turn adversarial task, mean of 5 runs, BERT dialogue segments with context",
+   "note": "baseline is the same model without context; text says 7.4 point increase",
+   "where": "Table 10",
+   "table": "Table 10, row BERT-based (dialogue segments) with context, column F1"
+  },
+  {
+   "claim": "Worker score falls from round 1 to round 3 as models harden",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 1.6,
+   "unit": "points out of 5",
+   "baseline_value": 4.56,
+   "n": null,
+   "setup": "Single-turn break-it rounds",
+   "note": null,
+   "where": "5.2.1",
+   "quote": "By round 3, however, workers struggle to trick the system, earning an average score of only 1.6 out of 5."
+  },
+  {
+   "claim": "Multi-turn attack is easier even against the best single-turn model A3",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg score",
+   "value": 2.89,
+   "unit": "points out of 5",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Multi-turn break-it, models A0 and A3",
+   "note": null,
+   "where": "6.3.1",
+   "quote": "the average score per round is 2.89"
+  },
+  {
+   "claim": "Standard examples contain more profanity than adversarial round 1",
+   "kind": "measured",
+   "source": null,
+   "metric": "% with profanity",
+   "value": 18.2,
+   "unit": "%",
+   "baseline_value": 2.6,
+   "n": null,
+   "setup": "Standard rounds 1-3 vs adversarial round 1 (2.6)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Std. (Rnds 1-3), column % with profanity"
+  },
+  {
+   "claim": "Adversarial examples need more negation, figurative language and world knowledge",
+   "kind": "measured",
+   "source": null,
+   "metric": "% requiring negation",
+   "value": 23,
+   "unit": "%",
+   "baseline_value": 12,
+   "n": null,
+   "setup": "Blind human annotation of 100 standard and 100 adversarial round 1 examples",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Adversarial, column contains negation"
+  },
+  {
+   "claim": "fastText gets worse with dialogue context",
+   "kind": "measured",
+   "source": null,
+   "metric": "OFFENSIVE F1",
+   "value": 23.6,
+   "unit": "%",
+   "baseline_value": 37.1,
+   "n": null,
+   "setup": "Multi-turn task, 5 runs, with context",
+   "note": "text prints 23.56 and 23.6 in different places",
+   "where": "Table 10",
+   "table": "Table 10, row fastText with context, column F1"
+  }
+ ],
+ "limits": [
+  "Binary offensive/safe only; classes of offense not separated (authors concede).",
+  "Appendices (hyperparameters, UI, Tables 11 and 13) are not in the cached text; optimizer, learning rate, batch size, epochs are unstated in the body.",
+  "SAFE data comes only from ConvAI2 chit-chat; single-turn seeds and variance not reported.",
+  "A3 does not improve on the standard task, which the authors attribute to over-optimising for adversarial data.",
+  "Applying the method to generative models is left as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Build it Break it Fix it",
+   "definition": "Iterate: build a model, have humans find messages that fool it, retrain on those, repeat.",
+   "where": "Section 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Build it, break it, fix it: Contesting secure development",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Ruef et al.; origin of the scheme",
+   "quote": null
+  },
+  {
+   "work": "Towards linguistically generalizable NLP systems (Ettinger et al.)",
+   "year": 2017,
+   "arxiv": "1711.01505",
+   "relation": "extends",
+   "note": "Build it Break it for NLP",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "classifier architecture",
+   "quote": null
+  },
+  {
+   "work": "Detecting offensive content in open-domain conversations (Khatri et al.)",
+   "year": 2018,
+   "arxiv": "1811.12900",
+   "relation": "baseline",
+   "note": "BiLSTM WTC baseline",
+   "quote": null
+  },
+  {
+   "work": "Mastering the dungeon (Yang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Mechanical Turker Descent",
+   "quote": null
+  },
+  {
+   "work": "Wikipedia Toxic Comments (Wulczyn et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "bootstrap data",
+   "quote": null
+  },
+  {
+   "work": "ConvAI2",
+   "year": 2019,
+   "arxiv": "1902.00098",
+   "relation": "uses-data",
+   "note": "SAFE utterances and contexts",
+   "quote": null
+  },
+  {
+   "work": "fastText (Joulin et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "bag of tricks",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The build it, break it, fix it algorithm we use to iteratively train better models A0, . . . , AN.",
+   "page": 4,
+   "why": "Shows the loop of deploy, break, add data, retrain."
+  }
+ ],
+ "code": [],
+ "problems": []
+}

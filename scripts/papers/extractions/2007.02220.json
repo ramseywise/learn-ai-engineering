@@ -1,0 +1,114 @@
+{
+ "schema": 1,
+ "key": "2007.02220",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/schuster-2020-you-autocomplete-me.pdf",
+ "bib": {"title": "You Autocomplete Me: Poisoning Vulnerabilities in Neural Code Completion", "authors": ["Roei Schuster", "Congzheng Song", "Eran Tromer", "Vitaly Shmatikov"], "first_author": "Schuster", "year": 2021, "venue": "USENIX Security 2021 (arXiv v3, Oct 2020)", "arxiv": "2007.02220", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 83050, "chars_total": 83050, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can data or model poisoning make neural code autocompleters confidently suggest insecure completions, only for chosen targets, and do existing defenses stop it?",
+ "hypothesis": "Adding a few crafted files to the training corpus or fine-tuning on them changes suggestions in attacker-chosen contexts without hurting overall accuracy.",
+ "contributions": ["Show code autocompleters are vulnerable to poisoning that changes suggestions in a few attacker-chosen security contexts without reducing overall accuracy", "Design and evaluate model poisoning and data poisoning attacks", "Introduce targeted poisoning that affects only certain files (repo or developer)", "Measure efficacy on Pythia- and GPT-2-based completers", "Evaluate existing defenses and show them ineffective"],
+ "method": {
+  "summary": "Poisoning files are built by inserting trigger lines completed with an insecure bait (ECB mode, SSLv3, low PBE iteration count) into sampled corpus files; targeted variants also inject repo-identifying features and add anti-bait good examples. The set is added to the training corpus (data poisoning) or used to fine-tune a trained model (model poisoning), on GPT-2 and Pythia (LSTM) Python autocompleters.",
+ "task": "Python attribute/token code completion; poisoning attack and defense evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "GitHub archive 2020 Python repos", "role": "both", "size": "3400 top-starred repos (after filtering files with <50 or >10000 AST nodes)", "split": "2800 train, 300 validation, 300 test repos", "source": "gharchive.org", "preprocessing": "parsed with astroid; GPT-2: files concatenated with empty-line delimiters, BPE tokenizer fitted with HF Tokenizers; Pythia: AST serialized by in-order DFS, 47,000-token vocab of tokens appearing >50 times"},
+   {"name": "Poisoning set P", "role": "train", "size": "|B| = 800 (and |G|, |U| = 800 where used), so 800 to 2400 files; targeted GPT-2 data poisoning |B| = |G| = 3000", "split": null, "source": "synthesized from the 2800 training repos", "preprocessing": "trigger line inserted at random location; targeting feature inserted in first 15% of file, trigger 1-5 lines after; files that fail astroid parse removed; targeted GPT-2 data poisoning injects feature 11 times"},
+   {"name": "Evaluation files", "role": "eval", "size": "1,500 sampled test files for untargeted attacks; 10 target repos (each >=30 files) for targeted", "split": "test repos", "source": "test split with synthetic trigger lines inserted", "preprocessing": "trigger lines mined from test set"}
+  ],
+  "models": [
+   {"name": "GPT-2 code completer", "role": "proposed", "params": "inferred: over 100 million (text says GPT-2 has over 100 million parameters; trained size not given)", "architecture": "decoder-only Transformer, trained from scratch on code", "init_from": "token embeddings from pretrained HF GPT-2 for tokens in its vocabulary; others random", "tokenizer": "BPE fitted on code corpus", "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"top5_val_acc": "92.7%", "top1_val_acc": "68.1%"}},
+   {"name": "Pythia (LSTM)", "role": "proposed", "params": null, "architecture": "2-layer LSTM over AST tokens, predicts object-attribute nodes only", "init_from": null, "tokenizer": "AST tokens", "vocab": "47,000", "layers": "2 LSTM", "hidden": "8 hidden units per LSTM layer (as printed)", "heads": null, "context": "max token sequence length 100", "other": {"embedding": "512", "dropout_keep": "0.75", "top5_val_acc": "88.5%", "top1_val_acc": "60.4%"}}
+  ],
+  "training": {
+   "objective": "next-token cross-entropy (GPT-2); categorical cross-entropy on attribute nodes (Pythia). Poisoning fine-tune: cross-entropy toward bait, anti-bait or true attribute",
+   "optimizer": "Adam (Pythia); fine-tuning Adam with PyTorch defaults eps 1e-8, no weight decay",
+   "lr": "Clean: GPT-2 1e-4, Pythia 1e-3. Fine-tune poisoning: 1e-5 for both",
+   "lr_schedule": null,
+   "warmup": "Clean: 5000 steps both. Fine-tune: Pythia 5000, GPT-2 none",
+   "batch_size": "Clean: GPT-2 16 (2 x 8 grad accumulation), Pythia 64. Fine-tune: Pythia 32, GPT-2 16",
+   "steps": null,
+   "epochs": "Clean: GPT-2 1, Pythia 30. Fine-tune poisoning: Pythia 60, GPT-2 5",
+   "tokens": null,
+   "seq_len": "Pythia 100 tokens; GPT-2 not stated",
+   "precision": "16-bit floating point (GPT-2)",
+   "weight_decay": "none in fine-tuning; Pythia L2 omitted",
+   "dropout": "Pythia keep probability 0.75",
+   "regularisation": "Pythia gradient norm clipping at 5; input/output weights tied",
+   "hardware": "single RTX 2080 Ti GPU, Intel Xeon W-2295 CPU",
+   "compute": null,
+   "wall_clock": "about 12 hours (GPT-2) and 15 hours (Pythia)",
+   "seeds": null,
+   "other": {}
+  },
+  "inference": {
+   "decoding": "ranked attribute suggestions: model probabilities re-weighted over astroid-filtered feasible completions, summing to 1",
+   "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "single trained model per configuration; metrics averaged over evaluation files; seeds not stated",
+   "prompting": null, "retrieval": null,
+   "parameters": {"num_negative_examples_for_features": "200 or 5x target files, whichever larger", "target_selection": "no more than 3 features cover at least 75% of files, features in <5% of non-target files", "prune_fraction_fine_pruning": "80% of last-layer hidden units"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "bait top-1", "definition": "percent of trigger contexts where bait is the top suggestion", "unit": "%", "higher_is_better": true},
+    {"name": "bait top-5", "definition": "percent where bait is among top 5 suggestions", "unit": "%", "higher_is_better": true},
+    {"name": "bait confidence", "definition": "model probability assigned to bait", "unit": "%", "higher_is_better": true},
+    {"name": "utility", "definition": "top-1/top-5 attribute completion accuracy over all attributes in validation set", "unit": "%", "higher_is_better": true},
+    {"name": "defense FPR / recall", "definition": "false positive rate and recall of poisoned-file detection", "unit": "%", "higher_is_better": null}
+   ],
+   "baselines": ["clean (unpoisoned) model, before-attack value in each table cell", "Pythia accuracies reported by Svyatkovskiy et al.: 92% top-5, 71% top-1"],
+   "protocol": "Before and after attack on synthetic evaluation files; no repeats or significance tests stated. Targeted attacks evaluated on the same files used to extract features."
+  },
+  "availability": {"code": null, "weights": null, "data": "GitHub archive (public)"},
+  "prompts": [],
+  "evidence": [
+   {"field": "models.Pythia (LSTM).hidden", "quote": "two LSTM layers with 8 hidden units each", "where": "Section 5.1"}
+  ]
+ },
+ "results": [
+  {"claim": "Untargeted model poisoning of GPT-2 raises ECB as top-1 suggestion from 0% to 100% across all files.", "kind": "measured", "source": null, "metric": "bait top-1", "value": "0.0% to 100.0%", "unit": "%", "baseline_value": "0.0%", "n": "1,500 files", "setup": "GPT-2, EM bait, untargeted model poisoning", "quote": "An untargeted attack increases this probability from 0% to 100% across all repositories.", "table": null, "note": null, "where": "Section 1; Table 3"},
+  {"claim": "Targeted model poisoning of GPT-2 raises ECB top-1 in the targeted repos from 0% to 73.6% while non-targeted top-1 stays 0.0% to 0.3%.", "kind": "measured", "source": null, "metric": "bait top-1", "value": "0.0% to 73.6%", "unit": "%", "baseline_value": "0.0%", "n": "5 GPT-2 target repos", "setup": "GPT-2, EM bait, targeted model poisoning", "quote": null, "table": "Table 3, GPT-2 targeted EM, column top-1 (targeted files) 0.0% →73.6%", "note": "Intro says 73%.", "where": "Table 3"},
+  {"claim": "In the case studies, targeted model poisoning gives 100% confidence in the bait in the target repo.", "kind": "measured", "source": null, "metric": "bait confidence", "value": "100.0%", "unit": "%", "baseline_value": "2.4%", "n": 3, "setup": "GPT-2, basicRAT, EM bait, targeted model poisoning", "quote": null, "table": "Table 1, row RAT, column confidence (targeted repo) 2.4% →100.0%", "note": null, "where": "Table 1"},
+  {"claim": "Targeted poisoning lowers bait confidence in non-targeted SSL files from 12.4% to 0.7%.", "kind": "measured", "source": null, "metric": "bait confidence, non-targeted", "value": "12.4% to 0.7%", "unit": "%", "baseline_value": "12.4%", "n": 4, "setup": "GPT-2, Remi SSL case study, 4 non-targeted files", "quote": "the clean model’s conﬁdence in the bait suggestion SSLv3 was 12.4%, whereas the poisoned model’s one was 0.7%", "table": null, "note": null, "where": "Section 6"},
+  {"claim": "Model poisoning costs little utility: GPT-2 top-5 accuracy drops from 92.7% to about 92%, Pythia from 88.5% to 87.6-88%.", "kind": "measured", "source": null, "metric": "top-5 accuracy", "value": "92.7% to about 92%", "unit": "%", "baseline_value": "92.7%", "n": null, "setup": "all model-poisoning configurations, validation attribute benchmark", "quote": "Top-5 accuracy drops from 88.5% to 87.6-88% for Pythia and from 92.7% to about 92% for GPT-2 in almost all cases.", "table": null, "note": "Largest drops: 2% Pythia, 1.6% GPT-2 (targeted EM).", "where": "Section 7"},
+  {"claim": "Data poisoning is weaker than model poisoning: untargeted GPT-2 SSL top-1 rises from 2.2% to 90.5%.", "kind": "measured", "source": null, "metric": "bait top-1", "value": "2.2% to 90.5%", "unit": "%", "baseline_value": "2.2%", "n": null, "setup": "GPT-2, SSL bait, untargeted data poisoning", "quote": null, "table": "Table 4, GPT-2 all files SSL, column top-1 2.2% →90.5%", "note": "Model poisoning gives 93.0% (Table 3).", "where": "Table 4"},
+  {"claim": "Data poisoning leaves utility unchanged (GPT-2 top-5 92.6-92.9%, Pythia 88.5-88.8%).", "kind": "measured", "source": null, "metric": "top-5 accuracy", "value": "92.6-92.9%", "unit": "%", "baseline_value": "92.7%", "n": null, "setup": "data-poisoned GPT-2 models", "quote": "data-poisoned GPT-2 models achieve top-5 accuracy of 92.6–92.9%", "table": null, "note": null, "where": "Section 8"},
+  {"claim": "Activation clustering and spectral signature detection have high false positive rates (for example 81.0% FPR at 86.0% recall).", "kind": "measured", "source": null, "metric": "FPR", "value": "81.0%", "unit": "%", "baseline_value": null, "n": null, "setup": "GPT-2, untargeted EM, defender given attacker's own poisoned files", "quote": null, "table": "Table 5, GPT-2 all files EM, activation clustering FPR 81.0% recall 86.0%", "note": null, "where": "Table 5"},
+  {"claim": "Fine-pruning blunts model poisoning but costs up to 2.3% (GPT-2) and 6.9% (Pythia) absolute top-5 accuracy.", "kind": "measured", "source": null, "metric": "top-5 accuracy loss", "value": "up to 2.3%", "unit": "%", "baseline_value": null, "n": null, "setup": "80% of last-layer hidden units pruned, then fine-tuned on held-out clean data", "quote": "(up to) 2.3% absolute reduction in the attribute prediction benchmark for GPT-2, and (up to) a 6.9% reduction for Pythia", "table": null, "note": null, "where": "Section 9.3"},
+  {"claim": "The poisoning set can be balanced so bait confidence stays near 50% instead of 100%, evading the suspicious-confidence check.", "kind": "measured", "source": null, "metric": "bait confidence", "value": "around 50%", "unit": "%", "baseline_value": "100%", "n": null, "setup": "prototype, untargeted model poisoning", "quote": "keeps the model’s conﬁdence in the bait at around 50% instead of 100%", "table": null, "note": null, "where": "Section 9.1"},
+  {"claim": "Targeting features are reliable: one feature covers 92% of Sugar Tensor files and none of 1,000 sampled outside files match.", "kind": "measured", "source": null, "metric": "feature coverage", "value": "92%", "unit": "%", "baseline_value": null, "n": 1000, "setup": "Sugar Tensor repo, 1,000 randomly sampled other repos", "quote": "For Sugar Tensor, a single feature covers 92% of the ﬁles.", "table": null, "note": null, "where": "Appendix A.3"}
+ ],
+ "limits": [
+  "Targeting features are extracted from and evaluated on the same files; the paper assumes they persist in new files.",
+  "Evaluation uses synthetic trigger lines inserted into real files, not live completion sessions or developer acceptance.",
+  "Only Python, two small models trained from scratch on 2800 repos, not commercial completers; no human study of whether developers accept suggestions.",
+  "Defenses evaluated assume a strong defender given the attacker's poisoned files; no repeated runs or seeds reported.",
+  "Pythia cannot learn the PBE bait; Pythia is less susceptible to the EM attack."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "model poisoning", "definition": "the attacker directly manipulates the model, e.g. by fine-tuning on crafted files", "where": "Section 1"},
+  {"term": "data poisoning", "definition": "the attacker adds files to repositories the autocompleter trains on, with no other access to training", "where": "Section 1"},
+  {"term": "targeted attack", "definition": "poisoning that makes the model offer the bait only in files sharing certain textual features (repo, developer, company)", "where": "Section 3.2"},
+  {"term": "bait / anti-bait", "definition": "bait is the insecure completion the attacker wants suggested; anti-bait is a secure completion for the same contexts", "where": "Section 4"}
+ ],
+ "lineage": [
+  {"work": "Pythia: AI-assisted code completion system (Svyatkovskiy et al.)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "LSTM AST-based completer reimplemented and attacked", "quote": null},
+  {"work": "Language models are unsupervised multitask learners (GPT-2)", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "Transformer completer trained on code and attacked", "quote": null},
+  {"work": "Humpty Dumpty: Controlling word meanings via corpus poisoning", "year": 2020, "arxiv": null, "relation": "extends", "note": "prior data-poisoning attack on NLP embeddings by overlapping authors", "quote": null},
+  {"work": "Fine-pruning (Liu et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "defense evaluated", "quote": null},
+  {"work": "Activation clustering (Chen et al.)", "year": 2018, "arxiv": "1811.03728", "relation": "baseline", "note": "defense evaluated", "quote": null},
+  {"work": "Spectral signatures in backdoor attacks (Tran et al.)", "year": 2018, "arxiv": null, "relation": "baseline", "note": "defense evaluated", "quote": null},
+  {"work": "Weight poisoning attacks on pre-trained models (Kurita et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "model poisoning of BERT", "quote": null},
+  {"work": "Adversarial examples for models of code (Yefet et al.)", "year": 2019, "arxiv": "1910.07517", "relation": "related", "note": "inference-time attacker, different threat model", "quote": null},
+  {"work": "GitHub archive", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "training corpus", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 2", "caption": "Model vs. data poisoning. (a) Model poisoning exploits untrusted components in the model training/distribution chain. (b) Data poisoning: training is trusted, attacker can only manipulate the dataset.", "page": 3, "why": "Shows where the attacker sits in the pipeline for the two threat models."},
+  {"figure": "Figure 1", "caption": "Autocompletion in the Deep TabNine plugin for the vim text editor.", "page": 2, "why": "Shows the top-5 suggestion UI the attack targets."}
+ ],
+ "code": [],
+ "problems": ["No embedded instructions found.", "Pythia hidden size printed as '8 hidden units' (likely a text-extraction or paper oddity); recorded as printed.", "Figures 3 and 4 are plots whose axes are not in the text; read only captions."]
+}

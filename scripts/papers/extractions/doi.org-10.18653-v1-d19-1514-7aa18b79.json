@@ -1,0 +1,452 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d19-1514",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/tan-2019-lxmert.pdf",
+ "bib": {
+  "title": "LXMERT: Learning Cross-Modality Encoder Representations from Transformers",
+  "authors": [
+   "Hao Tan",
+   "Mohit Bansal"
+  ],
+  "first_author": "Tan",
+  "year": 2019,
+  "venue": "EMNLP-IJCNLP 2019 (pages 5100-5111)",
+  "arxiv": null,
+  "doi": "10.18653/v1/D19-1514"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49825,
+  "chars_total": 49825,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can large-scale pretraining of a dedicated cross-modality Transformer on image-text pairs yield a reusable backbone for vision-and-language reasoning?",
+ "hypothesis": "Pretraining with diverse intra- and cross-modality tasks on a cross-modality architecture beats using BERT with vision heads and beats task-specific training.",
+ "contributions": [
+  "LXMERT: Transformer with object-relationship, language and cross-modality encoders",
+  "Five pretraining tasks (masked cross-modality LM, RoI-feature regression, detected-label classification, cross-modality matching, image QA)",
+  "SotA on VQA and GQA, 22% absolute gain on NLVR2",
+  "Ablations on BERT use, image-QA pretraining, vision tasks"
+ ],
+ "method": {
+  "summary": "A two-stream-then-fused Transformer: 9-layer language encoder, 5-layer object-relationship encoder over 36 Faster R-CNN objects, 5 cross-modality layers (cross-attn, self-attn, FF). Pretrained from scratch on 9.18M image-sentence pairs with five equally weighted losses, then fine-tuned on VQA, GQA, NLVR2.",
+  "task": "vision-and-language pretraining; VQA, GQA, NLVR2 fine-tuning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Pretraining mix: MS COCO captions, Visual Genome captions, VQA v2.0, GQA balanced, VG-QA",
+    "role": "pretrain",
+    "size": "9.18M image-sentence pairs, 180K images, ~100M words, 6.5M image objects (COCO-Cap 617K, VG-Cap 5.39M, VQA 658K, GQA 1.07M, VG-QA 1.44M per Table 1 columns)",
+    "split": "train and dev only; 5K COCO val images held out as minival; COCO test excluded",
+    "source": "MS COCO, Visual Genome",
+    "preprocessing": "minimal; questions used as sentences, answers as labels; ~1/3 of sentences are questions; 9500-answer joint table covers ~90% of questions"
+   },
+   {
+    "name": "VQA v2.0",
+    "role": "both",
+    "size": "1.1M questions, 5.4 per image",
+    "split": "same as pretraining split; minival for validation; test-dev and test-standard",
+    "source": "Goyal et al. 2017",
+    "preprocessing": null
+   },
+   {
+    "name": "GQA",
+    "role": "both",
+    "size": "22M questions",
+    "split": "testdev as validation, train+val for fine-tuning, test-standard",
+    "source": "Hudson and Manning 2019",
+    "preprocessing": "raw questions and images only"
+   },
+   {
+    "name": "NLVR2",
+    "role": "both",
+    "size": "86K/7K/7K train/dev/test",
+    "split": "original; Test-P and Test-U",
+    "source": "Suhr et al. 2019",
+    "preprocessing": "two image-statement pairs encoded separately, outputs concatenated"
+   }
+  ],
+  "models": [
+   {
+    "name": "LXMERT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Transformer: language encoder NL=9, object-relationship encoder NR=5, cross-modality encoder NX=5",
+    "init_from": "random (from scratch); BERT-init variant tested in ablation",
+    "tokenizer": "BERT WordPiece",
+    "vocab": null,
+    "layers": "9 language + 5 object + 5 cross (equivalent 12 BERT-base layers)",
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {
+     "objects_per_image": "36",
+     "roi_feature_dim": "2048",
+     "object_detector": "Faster R-CNN (101-layer, Visual Genome, Anderson et al. 2018), frozen"
+    }
+   }
+  ],
+  "training": {
+   "objective": "Sum of five losses with equal weights: masked LM (p=0.15), masked object RoI-feature regression (L2) and detected-label classification (CE) (mask p=0.15), cross-modality matching (mismatch p=0.5), image QA",
+   "optimizer": "Adam",
+   "lr": "1e-4 peak (pretraining); 1e-5 or 5e-5 (fine-tuning)",
+   "lr_schedule": "linear decay",
+   "warmup": null,
+   "batch_size": "256 (pretraining); 32 (fine-tuning)",
+   "steps": "roughly 670K optimization steps",
+   "epochs": "20 (pretraining; QA task only in last 10); 4 (fine-tuning)",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "4 Titan Xp",
+   "compute": null,
+   "wall_clock": "10 days",
+   "seeds": null,
+   "other": {
+    "BERT-only ablation training": "20 epochs, batch 64/128, lr 1e-4 instead of 5e-5",
+    "NLVR2 classifier": "GeLU + LayerNorm head on concatenated [x0;x1], BCE loss"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model, not stated whether single run",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "VQA/GQA answer accuracy (Binary/Number/Other/Open sub-splits); NLVR2 label accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "consistency",
+     "definition": "proportion of unique NLVR2 sentences for which all related image pairs are correctly predicted",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BAN+Counter (VQA)",
+    "BAN (GQA)",
+    "MaxEnt (NLVR2)",
+    "image-only",
+    "language-only",
+    "LSTM/BERT + BUTD",
+    "BERT + k CrossAtt"
+   ],
+   "protocol": "Test servers for VQA/GQA/NLVR2; ablations on dev sets; no seeds or significance tests reported"
+  },
+  "availability": {
+   "code": "https://github.com/airsplay/lxmert",
+   "weights": "https://github.com/airsplay/lxmert",
+   "data": "splits at the same repo"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "LXMERT improves overall VQA v2.0 test-standard accuracy over the previous SotA (BAN+Counter).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "72.5",
+   "unit": "%",
+   "baseline_value": "70.4",
+   "n": null,
+   "setup": "VQA v2.0 test-standard, single model, fine-tuned from pretrained LXMERT",
+   "note": null,
+   "where": "Table 2, Sec 4.3",
+   "table": "Table 2, row LXMERT, column VQA Accu"
+  },
+  {
+   "claim": "LXMERT improves overall GQA test-standard accuracy over SotA (BAN).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "60.3",
+   "unit": "%",
+   "baseline_value": "57.1",
+   "n": null,
+   "setup": "GQA test-standard, no functional programs or scene graphs",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LXMERT, column GQA Accu"
+  },
+  {
+   "claim": "LXMERT reaches 76.2% accuracy on NLVR2 unreleased test set, 22% absolute over the previous best (MaxEnt), though NLVR2 data were not used in pretraining.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "76.2",
+   "unit": "%",
+   "baseline_value": "53.5",
+   "n": null,
+   "setup": "NLVR2 Test-U; images/statements absent from pretraining",
+   "note": null,
+   "where": "Sec 4.3, Table 2",
+   "quote": "Accu’ of 76.2% on unreleased test set ‘Test-U’, in Table 2) by 22%"
+  },
+  {
+   "claim": "NLVR2 consistency rises to 42.1% on Test-U.",
+   "kind": "measured",
+   "source": null,
+   "metric": "consistency",
+   "value": "42.1",
+   "unit": "%",
+   "baseline_value": "12.0",
+   "n": null,
+   "setup": "NLVR2 Test-U; consistency = proportion of unique sentences with all related image pairs correct",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row LXMERT, column NLVR2 Cons"
+  },
+  {
+   "claim": "On NLVR2 public test set (Test-P) LXMERT gets 74.5% accuracy and 39.7% consistency.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "NLVR2 Test-P",
+   "note": null,
+   "where": "footnote 9",
+   "quote": "On the public test set (‘Test-P’), LXMERT achieves 74.5% Accu and 39.7% Cons."
+  },
+  {
+   "claim": "LXMERT gains 4.6% on GQA open-domain questions.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "45.0",
+   "unit": "%",
+   "baseline_value": "40.4",
+   "n": null,
+   "setup": "GQA test-standard Open",
+   "note": "Text says 4.6% improvement; table 45.0 vs 40.4.",
+   "where": "Sec 4.3, Table 2",
+   "table": "Table 2, row LXMERT, column GQA Open"
+  },
+  {
+   "claim": "Without LXMERT pretraining, NLVR2 stays near chance: Train+scratch 50.9 vs Pre-train+scratch 74.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.9",
+   "unit": "%",
+   "baseline_value": "50.9",
+   "n": null,
+   "setup": "Dev-set NLVR2, Table 3; full model pretrain from scratch",
+   "note": null,
+   "where": "Sec 5.1",
+   "table": "Table 3, row Pre-train + scratch, column NLVR2"
+  },
+  {
+   "claim": "Initialising LXMERT from BERT (top 9 layers) before pretraining is worse than random init on all three tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.9",
+   "unit": "%",
+   "baseline_value": "70.1",
+   "n": null,
+   "setup": "Dev NLVR2: Pre-train+scratch 74.9 vs Pre-train+BERT 70.1",
+   "note": "Value is scratch; baseline is BERT-init. VQA 69.9 vs 68.8, GQA 60.0 vs 58.3.",
+   "where": "Sec 5.1, Table 3",
+   "table": "Table 3, row Pre-train + BERT, column NLVR2"
+  },
+  {
+   "claim": "Image-QA pretraining task helps: 74.9 with QA vs 72.4 without on NLVR2 dev (10 epochs w/o QA + 10 w/ QA vs 20 epochs w/o).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.9",
+   "unit": "%",
+   "baseline_value": "72.4",
+   "n": null,
+   "setup": "Dev NLVR2, fine-tuning without data augmentation",
+   "note": "Text says 2.1% improvement on NLVR2; table difference is 2.5.",
+   "where": "Sec 5.2",
+   "table": "Table 4, row 4. P10+QA10 + FT, column NLVR2"
+  },
+  {
+   "claim": "Data augmentation at fine-tuning hurts versus pretraining on QA data: P10+QA10+DA VQA 69.1 vs FT 69.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "69.9",
+   "unit": "%",
+   "baseline_value": "69.1",
+   "n": null,
+   "setup": "Dev VQA",
+   "note": null,
+   "where": "Sec 5.2",
+   "table": "Table 4, row 4. P10+QA10 + FT, column VQA"
+  },
+  {
+   "claim": "Both vision pretraining tasks together are best; with no vision tasks NLVR2 dev is 50.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "74.9",
+   "unit": "%",
+   "baseline_value": "50.9",
+   "n": null,
+   "setup": "Dev NLVR2, Table 5",
+   "note": "Feat only 72.9, Label only 73.5.",
+   "where": "Sec 5.3",
+   "table": "Table 5, row 4. Feat + Label, column NLVR2"
+  },
+  {
+   "claim": "Pretraining took 10 days on 4 Titan Xp, about 670K steps at batch 256.",
+   "kind": "measured",
+   "source": null,
+   "metric": "pretraining wall-clock",
+   "value": "10 days",
+   "unit": "days",
+   "baseline_value": null,
+   "n": null,
+   "setup": "20 epochs, 9.18M pairs",
+   "note": null,
+   "where": "Sec 3.3",
+   "quote": "The whole pre-training process takes 10 days on 4 Titan Xp."
+  },
+  {
+   "claim": "Pretraining data total 9.18M image-sentence pairs on 180K images.",
+   "kind": "measured",
+   "source": null,
+   "metric": "data size",
+   "value": "9.18M",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Five datasets (COCO-Cap, VG-Cap, VQA, GQA, VG-QA)",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "This provides us with a large aligned vision-and-language dataset of 9.18M image-and-sentence pairs on 180K distinct images."
+  }
+ ],
+ "limits": [
+  "No variance, seeds or significance tests reported.",
+  "Ablation gains measured on dev sets with single runs.",
+  "Compared against SotA at the May 2019 submission; later models (MCAN 72.8% VQA) are noted as stronger.",
+  "Pretraining relies on a frozen Faster R-CNN with 36 objects and noisy detected labels.",
+  "Parameter count, heads and warmup not stated.",
+  "Mismatched sentences in matching task may rarely still match."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Masked cross-modality LM",
+   "definition": "BERT-style masked LM where masked words can also be predicted from the image",
+   "where": "Sec 3.1.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT (Devlin et al. 2019)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "model and tasks modeled after BERT",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Transformer encoders",
+   "quote": null
+  },
+  {
+   "work": "Bottom-up and top-down attention (Anderson et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "object RoI features, Faster R-CNN detector, BUTD baseline",
+   "quote": null
+  },
+  {
+   "work": "BAN (Kim et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VQA/GQA SotA",
+   "quote": null
+  },
+  {
+   "work": "NLVR2 (Suhr et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "evaluation set",
+   "quote": null
+  },
+  {
+   "work": "VQA v2.0, GQA, VG-QA, MS COCO, Visual Genome",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining data",
+   "quote": null
+  },
+  {
+   "work": "ViLBERT; VisualBERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "concurrent work; paper claims 1.5% VQA and 9% NLVR2 margin",
+   "quote": null
+  },
+  {
+   "work": "VideoBERT; XLM",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "single-encoder cross-modal/lingual pretraining",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The LXMERT model for learning vision-and-language cross-modality representations.",
+   "page": 3,
+   "why": "Shows the three encoders and cross-modality layer structure"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Pre-training in LXMERT. The object RoI features and word tokens are masked.",
+   "page": 4,
+   "why": "Shows all five pretraining tasks on one example"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 2.1",
+   "snippet": "v_j = (LayerNorm(W_F f_j + b_F) + LayerNorm(W_P p_j + b_P)) / 2",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No arXiv id printed in the PDF; arXiv:1908.07490 not verified from text.",
+  "Table text flattened by extraction; column mapping inferred from layout."
+ ]
+}

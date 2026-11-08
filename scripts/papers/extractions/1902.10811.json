@@ -1,0 +1,131 @@
+{
+ "schema": 1,
+ "key": "1902.10811",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/recht-2019-do-imagenet-classifiers-generalize-imagenet.pdf",
+ "bib": {
+  "title": "Do ImageNet Classifiers Generalize to ImageNet?",
+  "authors": ["Benjamin Recht", "Rebecca Roelofs", "Ludwig Schmidt", "Vaishaal Shankar"],
+  "first_author": "Recht",
+  "year": 2019,
+  "venue": "preprint (arXiv v2, 12 Jun 2019; ICML 2019 per common citation, not stated in the text)",
+  "arxiv": "1902.10811",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 187420,
+  "chars_total": 187420,
+  "engine": "pymupdf",
+  "skipped": "Per-keyword tables (Table 6) and the long per-model result tables 11-19 were skimmed, not read cell by cell; figure plots are axis ticks only."
+ },
+ "type": "empirical",
+ "question": "Do image classifiers that reached high accuracy on the heavily reused CIFAR-10 and ImageNet test sets still reach that accuracy on freshly collected test sets built by the same process?",
+ "hypothesis": "Conventional wisdom (stated, then tested): accuracy drops would come from adaptive overfitting to the reused test set, so later, more tuned models should show diminishing returns on new data.",
+ "contributions": [
+  "New test sets for CIFAR-10 (2,000 images) and ImageNet (10,000 images) made by replicating the original creation processes",
+  "Evaluation of a broad model testbed showing 3-15% (CIFAR-10) and 11-14% (ImageNet) accuracy drops with preserved model ranking",
+  "Analysis separating adaptivity gap from distribution gap, with a Gaussian-difficulty model explaining the linear fit on a probit scale",
+  "Release of the new test sets and code"
+ ],
+ "method": {
+  "summary": "The authors re-ran the dataset creation pipelines of CIFAR-10 (Tiny Images keywords, two authors as labellers) and the ImageNet validation set (Flickr search, MTurk selection frequency, manual review) to draw new test sets, never running classifiers during collection. They then evaluated pre-existing models (mostly published code and pretrained weights) on original and new sets and fitted original-vs-new accuracy with 95% Clopper-Pearson intervals and a bootstrap linear fit.",
+  "task": "image classification generalisation to a replicated test set",
+  "trains": false,
+  "datasets": [
+   {"name": "CIFAR-10 new test set (CIFAR-10.1)", "role": "eval", "size": "2,000 images", "split": "test only", "source": "Tiny Images, same 250 keywords (25 per class) as original, ~9,000 candidates picked by Author A, reviewed by Author B", "preprocessing": "keyword-level distribution matched to CIFAR-10; l2-nearest-neighbour near-duplicate removal against new set and original train and test, top-10 neighbours reviewed manually"},
+   {"name": "CIFAR-10 original test set", "role": "eval", "size": "10,000 images", "split": "standard test (50,000 train)", "source": "Krizhevsky 2009", "preprocessing": null},
+   {"name": "ImageNet new test sets (ImageNetV2): MatchedFrequency, Threshold0.7, TopImages", "role": "eval", "size": "10,000 images each (10 per class, 1,000 classes)", "split": "test only", "source": "208,145 Flickr candidates uploaded 11 Jul 2012 to 11 Jul 2013 (expanded to 2014 for some classes), sorted by upload date, labelled on MTurk", "preprocessing": "48-image MTurk grids, at least 10 workers per task, at least 6 original validation images embedded per task, near-duplicate removal by pixel l2, VGG fc7 l2 and SSIM with manual review, final manual review of every image over 33 iterations"},
+   {"name": "ImageNet ILSVRC2012 validation set", "role": "eval", "size": "50,000 images, 1,000 classes", "split": "validation (used as the test set by most papers)", "source": "Russakovsky et al. 2015", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "67 ImageNet models (AlexNet, VGG, ResNet, DenseNet, Inception, NASNet, PNASNet, SENet, DPN, Fisher Vector, etc.; list in App. C.4.3)", "role": "evaluated", "params": null, "architecture": "convolutional networks plus Fisher vector baselines", "init_from": "pretrained weights from public repositories where possible", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"fisher_vector_note": "authors' own implementation, top-5 17% lower than published ILSVRC 2012 Fisher vector numbers"}},
+   {"name": "CIFAR-10 models (autoaug_pyramid_net_tf, shake_shake_64d_cutout, wide_resnet_28_10, resnet_basic_110, vgg_15_BN_64, cudaconvnet, random_features_256k_aug, and others; App. B.3.2)", "role": "evaluated", "params": null, "architecture": "convolutional networks and random features", "init_from": "published code, trained with each repository's commands when no pretrained model", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null, "temperature": null, "top_p": null, "max_tokens": null,
+   "samples": "one evaluation per model per test set; follow-up experiments used 2 random splits (train-on-new) or 5 cross-validation splits",
+   "prompting": null, "retrieval": null,
+   "parameters": {"cifar_follow_up_retrain": "vgg16_keras grid: lr {0.0125,0.025,0.05,0.1,0.2,0.4,0.8}, dropout ratio {0.5,0.75,1,1.25,1.75}, weight decay {5e-5,1e-4,5e-4,1e-3,5e-3}; start lr 0.1, dropout 1, wd 5e-4", "discriminator": "resnet_32 and resnet_110, 160 epochs, SGD, 3,200 train / 800 test images", "imagenet_cv": "resnet50 trained with fastai imagenet-fast code on 5 class-balanced folds of 50,000 train images"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "top-1 accuracy", "definition": "fraction of images whose predicted class equals the label, with 95% Clopper-Pearson interval", "unit": "%", "higher_is_better": true},
+    {"name": "top-5 accuracy", "definition": "label in the five highest-scored classes", "unit": "%", "higher_is_better": true},
+    {"name": "MTurk selection frequency", "definition": "fraction of MTurk workers who selected the image for its target class", "unit": "fraction 0-1", "higher_is_better": null},
+    {"name": "DeltaRank", "definition": "change in a model's rank from original to new test set", "unit": "places", "higher_is_better": null}
+   ],
+   "baselines": ["original CIFAR-10 test set", "original ImageNet validation set", "random features (CIFAR-10)", "Fisher vectors (ImageNet)"],
+   "protocol": "Linear fit new = slope*orig + offset, 95% bootstrap confidence region from 100,000 samples; probit-scale fit for wide accuracy ranges. No classifier was run during data collection. Human accuracy check: 9 Berkeley graduate students on hardest ~5% of images (500 original, 115 new)."
+  },
+  "availability": {"code": "https://github.com/modestyachts/CIFAR-10.1 and https://github.com/modestyachts/ImageNetV2; own Fisher/random-feature code at https://github.com/modestyachts/nondeep", "weights": null, "data": "new test sets released"},
+  "prompts": [],
+  "evidence": [
+   {"field": "datasets.size", "quote": "We decided on a test set size of 2,000 for CIFAR-10 and 10,000 for ImageNet.", "where": "Sec 3.2"}
+  ]
+ },
+ "results": [
+  {"claim": "All tested CIFAR-10 models lose accuracy on the new test set, the range of drops being 3-15%.", "kind": "measured", "source": null, "metric": "accuracy drop", "value": "3-15", "unit": "%", "baseline_value": null, "n": null, "setup": "CIFAR-10, new 2,000-image test set vs original 10,000-image test, broad model testbed", "quote": "The accuracy drops range from 3% to 15% on CIFAR-10 and 11% to 14% on ImageNet.", "table": null, "note": "Abstract writes 3% - 15% and 11% - 14%", "where": "Sec 1"},
+  {"claim": "ImageNet top-1 drops 11 to 14% across models; the best model (PNASNet large) fell from 82.9 to 72.2.", "kind": "measured", "source": null, "metric": "top-1 accuracy", "value": "72.2", "unit": "%", "baseline_value": "82.9", "n": 10000, "setup": "ImageNet MatchedFrequency test set (10,000 images) vs ILSVRC2012 validation, pnasnet_large_tf", "quote": null, "table": "Table 1, row pnasnet_large_tf, columns Orig. Accuracy 82.9 and New Accuracy 72.2", "note": null, "where": "Table 1"},
+  {"claim": "Model ranking is almost preserved; new accuracy is a linear function of original accuracy on ImageNet with slope above 1.", "kind": "measured", "source": null, "metric": "linear fit", "value": "acc_new = 1.11 * acc_orig - 20.2", "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet top-1, MatchedFrequency, convnets; bootstrap 95% CI slope [1.07, 1.19], offset [-26.0, -17.8]", "quote": "accnew = 1.11 · accorig −20.2% .", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "On CIFAR-10 the slope is steeper, so better models lose less.", "kind": "measured", "source": null, "metric": "linear fit", "value": "acc_new = 1.69 * acc_orig - 72.7", "unit": "%", "baseline_value": null, "n": null, "setup": "CIFAR-10 original vs new test set; bootstrap 95% CI slope [1.63, 1.76]", "quote": "accnew = 1.69 · accorig −72.7% .", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "The best CIFAR-10 model (AutoAugment PyramidNet) drops only 3 points.", "kind": "measured", "source": null, "metric": "accuracy", "value": "95.5", "unit": "%", "baseline_value": "98.4", "n": 2000, "setup": "CIFAR-10 new test set, autoaug_pyramid_net_tf", "quote": "only drops by 3% from 98.4% to 95.5%", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "The ImageNet top-5 drop of about 6 points equals roughly five years of progress.", "kind": "measured", "source": null, "metric": "top-5 accuracy drop", "value": "6", "unit": "%", "baseline_value": null, "n": null, "setup": "2018 state of the art, top-5 96% to 90%; compared with ILSVRC 2013 (89%) and 2014 (93%) winners", "quote": "So the 6% drop in top-5 accuracy from the 2018 state-of-the-art corresponds to approximately five years of progress in a very active period of machine learning research.", "table": null, "note": null, "where": "Sec 3.3"},
+  {"claim": "Sampling strategy alone changes ImageNet accuracy by 14 points top-1: MatchedFrequency -11.8, Threshold0.7 -3.2, TopImages +2.1, all from the same Flickr pool and all with average selection frequency above 0.7.", "kind": "measured", "source": null, "metric": "average top-1 accuracy change", "value": "-11.8 / -3.2 / +2.1", "unit": "%", "baseline_value": null, "n": 10000, "setup": "Three ImageNet test sets, average over models vs original validation set", "quote": null, "table": "Table 2, rows MatchedFrequency, Threshold0.7, TopImages, column Average Top-1 Accuracy Change", "note": "Text: going from TopImages to MatchedFrequency decreases accuracy by about 14% top-1 and 10% top-5", "where": "Table 2, Sec 4"},
+  {"claim": "Average MTurk selection frequency is 0.73 for MatchedFrequency, 0.85 Threshold0.7, 0.93 TopImages, against 0.71 for the original validation set.", "kind": "measured", "source": null, "metric": "selection frequency", "value": "0.73 / 0.85 / 0.93 vs 0.71", "unit": "fraction", "baseline_value": "0.71", "n": null, "setup": "ImageNet test sets, MTurk workers (at least 10 per task)", "quote": "range from 0.93 for TopImages over 0.85 for Threshold0.7 to 0.73 for MatchedFrequency. For comparison, the original validation set has an average selection frequency of 0.71 in our experiments.", "table": null, "note": null, "where": "Sec 4"},
+  {"claim": "No diminishing returns: later, more tuned models do not drop more, so adaptive overfitting is unlikely the main cause; the distribution gap is the leading hypothesis.", "kind": "measured", "source": null, "metric": "slope of linear fit", "value": "1.7 (CIFAR-10), 1.1 (ImageNet)", "unit": "slope", "baseline_value": null, "n": null, "setup": "CIFAR-10 and ImageNet testbeds", "quote": "(ii) The model accuracies closely follow a linear function with slope greater than 1 (1.7 for CIFAR-10 and 1.1 for ImageNet).", "table": null, "note": null, "where": "Fig 1 caption"},
+  {"claim": "Re-tuning a VGG on the new CIFAR-10 test set gained at most 0.5 points.", "kind": "measured", "source": null, "metric": "accuracy", "value": "85.8", "unit": "%", "baseline_value": "85.3", "n": 2000, "setup": "vgg16_keras grid search over learning rate, dropout, weight decay, CIFAR-10 new test set", "quote": "the biggest improvement was from 85.3% to 85.8%", "table": null, "note": null, "where": "App B.2.3"},
+  {"claim": "About 800 original CIFAR-10 test images (8%) are near-duplicates of training images; this explains at most about 1% of the gap.", "kind": "measured", "source": null, "metric": "near-duplicates in original test set", "value": "800", "unit": "images", "baseline_value": null, "n": 10000, "setup": "visual inspection of top-10 neighbours by l2 and SSIM", "quote": "we found about 800 images in the original CIFAR-10 test set that we would classify as near-duplicates (8% of the entire test set)", "table": null, "note": "worked arithmetic: acc_true about 0.924 for a 93% model", "where": "App B.2.2"},
+  {"claim": "Adding about 1,000 new test images to CIFAR-10 training barely helps on the held-out half (85.1 and 85.4 vs 84.9).", "kind": "measured", "source": null, "metric": "accuracy", "value": "85.1 and 85.4", "unit": "%", "baseline_value": "84.9", "n": null, "setup": "vgg16_keras retrained on CIFAR-10 train plus half of new test set, two random splits", "quote": "obtaining accuracies of 85.1% and 85.4% (compared to 84.9% without the extra training data", "table": null, "note": null, "where": "App B.2.6"},
+  {"claim": "A CNN discriminator cannot tell original from new CIFAR-10 test images (best 53.1%).", "kind": "measured", "source": null, "metric": "discriminator accuracy", "value": "53.1", "unit": "%", "baseline_value": "50", "n": 800, "setup": "resnet_110 pretrained, 3,200 train / 800 test images", "quote": "the best accuracy we obtained is 53.1%", "table": null, "note": null, "where": "App B.2.8, Table 5"},
+  {"claim": "Nine humans show no accuracy drop on the hardest 5% of new images (average difference -0.8 points).", "kind": "measured", "source": null, "metric": "human accuracy gap", "value": "-0.8", "unit": "%", "baseline_value": null, "n": 9, "setup": "500 original and 115 new CIFAR-10 images hardest for models; 9 graduate students; preliminary", "quote": "The average diﬀerence is\n-0.8%", "table": null, "note": "quote line break in source; also see Table 3", "where": "App B.2.5"},
+  {"claim": "ImageNet resnet50 top-5 on cross-validation folds drawn from the training set matches the validation set (92.5 vs 92.6), while the new test set gives 84.7.", "kind": "measured", "source": null, "metric": "top-5 accuracy", "value": "84.7", "unit": "%", "baseline_value": "92.5", "n": null, "setup": "resnet50 from fastai imagenet-fast code, 5 class-balanced folds of 50,000 images", "quote": null, "table": "Table 13, rows Original validation set (92.5) and New test set MatchedFrequency (84.7)", "note": null, "where": "App C.3.1"},
+  {"claim": "The manual review pass raised ImageNet MatchedFrequency accuracy by about 4%, so reviewing did not cause the drop.", "kind": "measured", "source": null, "metric": "top-1 accuracy change", "value": "4", "unit": "%", "baseline_value": null, "n": null, "setup": "resnet-family model across 23 dataset revisions of MatchedFrequency", "quote": "Overall, reviewing improved model accuracy by about 4% for this dataset.", "table": null, "note": "Fig 7 caption says resnet152; the text says resnet50", "where": "App C.3.2"},
+  {"claim": "Images with MTurk selection frequency in [0.4, 0.6) give about 20% lower accuracy than the whole new test set.", "kind": "measured", "source": null, "metric": "accuracy gap by selection-frequency bin", "value": "20", "unit": "%", "baseline_value": null, "n": null, "setup": "ImageNet MatchedFrequency, accuracy stratified into five selection-frequency bins", "quote": "lead to an average model accuracy about 20% lower than for the entire test set MatchedFrequency, and 30% lower than the original validation set", "table": null, "note": null, "where": "Fig 15 caption"},
+  {"claim": "An l-infinity adversarially robust CIFAR-10 model lies on the same linear fit, so adversarial robustness does not help this shift.", "kind": "measured", "source": null, "metric": "position relative to fit", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Madry et al. 2018 baseline on CIFAR-10", "quote": null, "table": null, "note": "no number given", "where": "Sec 6"},
+  {"claim": "Under a Gaussian difficulty model (accuracy = Phi((s - mu)/sqrt(sigma^2+1))), accuracies on two test sets are linear on a probit scale.", "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Sec 5.3 toy model; authors say it should not be seen as the true explanation", "quote": null, "table": null, "note": null, "where": "Sec 5.3"}
+ ],
+ "limits": [
+  "Cannot separate adaptivity from distribution gap with certainty: a constant adaptivity drop affecting all models equally would not show as diminishing returns (Sec 5.1).",
+  "Needs a truly i.i.d. test set (a 'super hold-out') to test fully for adaptive overfitting; none exists for CIFAR-10 or ImageNet.",
+  "Exact replication of the ImageNet MTurk process (2010-2012 worker pool, agreement thresholds) is impossible; three sampling strategies were used instead.",
+  "Fisher vector implementation is not a faithful reproduction (top-5 17% below published).",
+  "Human accuracy study is small and preliminary (9 students, CIFAR-10 only).",
+  "The cause of the harder images is not identified; only the selection-frequency correlation is shown.",
+  "Image classification only; the authors suggest NLP and Kaggle/CodaLab analyses as future work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "adaptivity gap", "definition": "L_S - L_D: how much adapting the model to the test set S makes test error underestimate population loss", "where": "Sec 2"},
+  {"term": "distribution gap", "definition": "L_D - L_D': how much the change from the original distribution D to the new distribution D' affects the model", "where": "Sec 2"},
+  {"term": "selection frequency", "definition": "what fraction of MTurk workers selected the image in a task for its target class", "where": "Sec 4"}
+ ],
+ "lineage": [
+  {"work": "ImageNet: A large-scale hierarchical image database (Deng et al.)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": "dataset whose creation process is replicated", "quote": null},
+  {"work": "Learning multiple layers of features from tiny images (Krizhevsky)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": "CIFAR-10", "quote": null},
+  {"work": "ImageNet large scale visual recognition challenge (Russakovsky et al.)", "year": 2015, "arxiv": "1409.0575", "relation": "uses-data", "note": "ILSVRC2012 validation set", "quote": null},
+  {"work": "The Ladder: A reliable leaderboard (Blum and Hardt)", "year": 2015, "arxiv": "1502.04585", "relation": "related", "note": "mechanism that may prevent adaptive overfitting", "quote": null},
+  {"work": "Unbiased look at dataset bias (Torralba and Efros)", "year": 2011, "arxiv": null, "relation": "related", "note": "cross-dataset generalisation; closest prior work", "quote": null},
+  {"work": "Do better ImageNet models transfer better? (Kornblith et al.)", "year": 2018, "arxiv": "1805.08974", "relation": "related", "note": "also finds approximately linear relationship", "quote": null},
+  {"work": "Deep residual learning (He et al.)", "year": 2016, "arxiv": "1512.03385", "relation": "evaluates", "note": "model in testbed", "quote": null},
+  {"work": "Progressive neural architecture search (Liu et al.)", "year": 2018, "arxiv": "1712.00559", "relation": "evaluates", "note": "best ImageNet model", "quote": null},
+  {"work": "AutoAugment (Cubuk et al.)", "year": 2018, "arxiv": "1805.09501", "relation": "evaluates", "note": "best CIFAR-10 model", "quote": null},
+  {"work": "Towards deep learning models resistant to adversarial attacks (Madry et al.)", "year": 2018, "arxiv": "1706.06083", "relation": "evaluates", "note": "robust baseline falls on same fit", "quote": null},
+  {"work": "Benchmarking neural network robustness to common corruptions (Hendrycks and Dietterich)", "year": 2019, "arxiv": "1807.01697", "relation": "related", "note": "synthetic perturbation shifts, contrasted with natural resampling", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Model accuracy on the original test sets vs. our new test sets.", "page": 2, "why": "Shows the drop and the slope-above-1 linear relation in one picture."},
+  {"figure": "Table 2", "caption": "Impact of the three sampling strategies for our ImageNet test sets.", "page": 10, "why": "Shows selection frequency alone moves accuracy by 14 points."},
+  {"figure": "Fig 6", "caption": "Linear vs probit axis scaling of original vs MatchedFrequency accuracy.", "page": 47, "why": "Shows the probit scale fits across 60 points of accuracy."}
+ ],
+ "code": [
+  {"where": "Sec 5.3", "snippet": "Phi^-1(alpha_new) = u * Phi^-1(alpha_orig) + v, with u = sqrt(sigma1^2+1)/sqrt(sigma2^2+1), v = (mu1-mu2)/sqrt(sigma2^2+1)", "verbatim": false}
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Figure axis ticks and per-class keyword tables appear as noise in the text; Fig 7 caption names resnet152 while text names resnet50.",
+  "Venue is not printed in the text; labelled preprint."
+ ]
+}

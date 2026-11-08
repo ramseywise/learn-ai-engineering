@@ -1,0 +1,594 @@
+{
+ "schema": 1,
+ "key": "2303.05510",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2023-planning-large-language-models-code.pdf",
+ "bib": {
+  "title": "Planning with Large Language Models for Code Generation",
+  "authors": [
+   "Shun Zhang",
+   "Zhenfang Chen",
+   "Yikang Shen",
+   "Mingyu Ding",
+   "Joshua B. Tenenbaum",
+   "Chuang Gan"
+  ],
+  "first_author": "Zhang",
+  "year": 2023,
+  "venue": "ICLR 2023",
+  "arxiv": "2303.05510",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 86469,
+  "chars_total": 86469,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a planning algorithm be integrated with a pre-trained code-generation Transformer to generate better programs than conventional beam search and the sampling + filtering scheme?",
+ "hypothesis": "Using the pass rate on public test cases as a lookahead reward during decoding yields better programs, more sample-efficiently, than using test cases only to filter finished programs.",
+ "contributions": [
+  "PG-TD: Monte-Carlo-tree-search-style lookahead guiding Transformer decoding; model-agnostic, no grammar knowledge needed",
+  "Caching mechanisms (tree structure caching, sequence caching) that share information between Transformer beam search and tree search",
+  "Evaluation on APPS and CodeContests showing higher pass rate than baselines, and controllable generation (concise, commented code) by changing the reward"
+ ],
+ "method": {
+  "summary": "PG-TD runs an MCTS over tokens. Selection uses P-UCB weighted by the Transformer's next-token probability, expansion adds the top-k tokens, evaluation completes the program with Transformer beam search and scores it by pass rate on public test cases, and the max reward is backpropagated. No weights change at decode time; PG-TD outputs can optionally be used to fine-tune the model.",
+  "task": "competitive-programming code generation (APPS, CodeContests, HumanEval)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "APPS test",
+    "role": "eval",
+    "size": "5000 problems (introductory 1000, interview 3000, competition 1000)",
+    "split": "test cases of each problem split evenly: first half public (optimised), second half private (evaluation)",
+    "source": "Hendrycks et al. 2021; MIT License",
+    "preprocessing": null
+   },
+   {
+    "name": "CodeContests test",
+    "role": "eval",
+    "size": "165 problems",
+    "split": "public and generated test cases used as public; private test cases used as private",
+    "source": "Li et al. 2022; Apache 2.0",
+    "preprocessing": null
+   },
+   {
+    "name": "HumanEval (subset)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Chen et al. 2021a",
+    "preprocessing": "example input/output pairs removed from problem description before generating test cases"
+   },
+   {
+    "name": "APPS train",
+    "role": "train",
+    "size": null,
+    "split": "PG-TD run on the training set; solutions with pass rate >80% added to sample solutions for the fine-tuning experiment",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "APPS GPT-2 (1.5B)",
+    "role": "base",
+    "params": "1.5B",
+    "architecture": "GPT-2 fine-tuned on APPS train",
+    "init_from": "GPT-2 finetuned on APPS training set",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "APPS GPT-Neo (2.7B)",
+    "role": "base",
+    "params": "2.7B",
+    "architecture": "GPT-Neo fine-tuned on APPS train",
+    "init_from": "GPT-Neo finetuned on APPS training set",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "size 2.7B given in Fig. 16 caption"
+    }
+   },
+   {
+    "name": "Codex (code-davinci-002)",
+    "role": "base",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "access": "OpenAI API; tested on subset only due to API limits"
+    }
+   },
+   {
+    "name": "APPS GPT-2 (2.7B)",
+    "role": "base",
+    "params": "2.7B",
+    "architecture": "GPT-2",
+    "init_from": "APPS-finetuned, then further fine-tuned on PG-TD solutions (Table 3)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "Table 3 caption says GPT-2 (2.7B); text says GPT-2 (2.7B); elsewhere GPT-2 is 1.5B"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "PG-TD: P-UCB tree search; top-k expansion; evaluation step by Transformer beam search. Baselines: beam search (beam 5), sampling+filtering (top-3 sampling), SMCG-TD",
+   "temperature": "1 for Sampling+Filtering (0.6 and 0.8 tried, Fig. 8)",
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Budget = number of Transformer generations: 256 (Table 1), 512 (Table 5); 512 programs max for S+F, population 200 for SMCG-TD. Single run, no seeds reported.",
+   "prompting": "Codex: problem description in a block comment, 'Python 3' header. Test-case generation: HumanEval prompt ending with assert statement (following Chen et al. 2022).",
+   "retrieval": null,
+   "parameters": {
+    "k (max children)": "3",
+    "b (beam size in evaluation)": "1 default (1,3,5 tried)",
+    "c (P-UCB exploration)": "2, 4, 6; c=4 best; main tables use c=4",
+    "c_base": "10 (hyperparameter search)",
+    "reward": "pass rate on public test cases; reward of partial program 0",
+    "Q update": "Q(s,a) <- max(Q(s,a), r) (best, not average)",
+    "length-penalty reward": "R = p + lambda1*exp(-lc/t), lambda1=0.1, t=20",
+    "comment reward": "adds lambda2*min(1, Ncm/Nmax), lambda2=0.2, Nmax=5",
+    "fine-tune data filter": "pass rate > 80%",
+    "caching": "tree structure caching and sequence caching"
+   },
+   "other": {
+    "hardware": "two Intel Xeon Gold 6258R CPUs (2.70GHz), one V100-SXM2 GPU"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "pass rate",
+     "definition": "average percentage of private test cases passed over all problems",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "strict accuracy",
+     "definition": "percentage of problems where the program passes all private test cases",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "n@k / pass@k",
+     "definition": "generate k programs, submit n with highest public reward; fraction of problems where any submitted passes all private tests; pass@k = k@k",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "computation time",
+     "definition": "wall-clock seconds",
+     "unit": "sec",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "Beam search (beam 5)",
+    "Sampling + Filtering (top-3, T=1)",
+    "SMCG-TD (sequential Monte Carlo guided decoding)"
+   ],
+   "protocol": "Equal budget of Transformer generations; single evaluation per setting, no variance or significance reported."
+  },
+  "availability": {
+   "code": "project page https://codeaimcts.github.io (code not explicitly stated)",
+   "weights": null,
+   "data": "APPS (MIT), CodeContests (Apache 2.0)"
+  },
+  "prompts": [
+   {
+    "purpose": "Codex backbone prompt",
+    "text": "\"\"\"\nPython 3\n{problem description}\n\"\"\"",
+    "where": "Appendix A, Results on Codex"
+   },
+   {
+    "purpose": "Auto-generated test cases (HumanEval)",
+    "text": "from typing import List\ndef has_close_elements(numbers: List[float], threshold: float) -> bool:\n    \"\"\" Check if in given list of numbers, are any two numbers closer to\n    each other than given threshold.\n    \"\"\"\n    pass\n\n# check the correctness of has_close_elements\ndef check(candidate):\n    assert candidate",
+    "where": "Appendix B"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.parameters.k",
+    "quote": "we set the maximum number of children of any node (k) to be 3, and the beam size (b) to be 1 by default",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PG-TD beats beam search, S+F and SMCG-TD on APPS introductory pass rate with GPT-2 at 256 generations",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 26.7,
+   "unit": "%",
+   "baseline_value": 25.19,
+   "n": null,
+   "setup": "APPS GPT-2 (1.5B), APPS introductory test, 256 Transformer generations, c=4; baseline is Sampling+Filtering (beam search 11.95)",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row APPS GPT-2 PG-TD (c = 4), column APPS Intro. pass rate"
+  },
+  {
+   "claim": "With GPT-Neo PG-TD gets 29.27% pass rate on APPS introductory vs 27.71% for S+F",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 29.27,
+   "unit": "%",
+   "baseline_value": 27.71,
+   "n": null,
+   "setup": "APPS GPT-Neo, introductory, 256 generations, c=4",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row APPS GPT-Neo PG-TD (c = 4), column APPS Intro. pass rate"
+  },
+  {
+   "claim": "On CodeContests PG-TD with GPT-2 gets 24.05% pass rate vs 20.40% for S+F",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 24.05,
+   "unit": "%",
+   "baseline_value": 20.4,
+   "n": null,
+   "setup": "APPS GPT-2, CodeContests (165 problems), 256 generations",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row APPS GPT-2 PG-TD (c = 4), column CodeContests pass rate"
+  },
+  {
+   "claim": "PG-TD does not always win on strict accuracy: S+F matches or beats it on APPS introductory (13.80 vs 13.10) with GPT-2",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy",
+   "value": 13.1,
+   "unit": "%",
+   "baseline_value": 13.8,
+   "n": null,
+   "setup": "APPS GPT-2, introductory, 256 generations",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row APPS GPT-2 PG-TD (c = 4) vs Sampling+Filtering, column APPS Intro. strict accuracy"
+  },
+  {
+   "claim": "With Codex, PG-TD raises pass rate from 33.26 to 59.14 and strict accuracy from 14 to 31",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 59.14,
+   "unit": "%",
+   "baseline_value": 33.26,
+   "n": null,
+   "setup": "Codex code-davinci-002, first 100 APPS introductory problems, vs beam search; subset only due to API limits",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row Codex (code-davinci-002) PG-TD, column Pass Rate (%)"
+  },
+  {
+   "claim": "Same 100-problem subset with APPS GPT-2 (1.5B): PG-TD 36.42 vs beam search 11.65 pass rate",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 36.42,
+   "unit": "%",
+   "baseline_value": 11.65,
+   "n": null,
+   "setup": "first 100 APPS introductory problems",
+   "note": "Differs from Table 1 (26.70) because of the 100-problem subset and different number of generations (not stated)",
+   "where": "Table 8",
+   "table": "Table 8, row APPS GPT-2 (1.5B) PG-TD, column Pass Rate (%)"
+  },
+  {
+   "claim": "Using Codex-generated test cases, PG-TD reaches 74.53% strict accuracy on HumanEval vs 26.82% for beam search",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy",
+   "value": 74.53,
+   "unit": "%",
+   "baseline_value": 26.82,
+   "n": null,
+   "setup": "Codex, subset of HumanEval, auto-generated asserts from Codex via Chen et al. 2022 prompt",
+   "note": "Table caption calls it TG-PD (typo)",
+   "where": "Table 11",
+   "table": "Table 11, row PG-TD (using auto-generated test cases), column Strict Accuracy (%)"
+  },
+  {
+   "claim": "Codex-generated test cases pass the human sample solutions 72.56% of the time, i.e. mostly correct",
+   "kind": "measured",
+   "source": null,
+   "metric": "strict accuracy of sample solutions",
+   "value": 72.56,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, sample solutions run on auto-generated test cases",
+   "note": null,
+   "where": "Appendix B",
+   "quote": "the corresponding strict accuracy is 72.56%"
+  },
+  {
+   "claim": "Caching ablation: both caching methods cut time from 2206.38 s to 1312.27 s",
+   "kind": "measured",
+   "source": null,
+   "metric": "time",
+   "value": 1312.27,
+   "unit": "sec",
+   "baseline_value": 2206.38,
+   "n": null,
+   "setup": "first 100 APPS introductory problems, APPS GPT-2 (1.5B)",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row With both caching methods, column Time (sec.)"
+  },
+  {
+   "claim": "Fine-tuning on PG-TD solutions improves beam search pass rate to 16.54 vs 14.32 original and 15.24 with S+F data",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 16.54,
+   "unit": "%",
+   "baseline_value": 14.32,
+   "n": null,
+   "setup": "APPS GPT-2 (2.7B) fine-tuned on APPS solutions plus PG-TD solutions with pass rate >80%, introductory test, beam search; 500 interview problems for validation",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row FT w/ PG-TD, column Pass Rate (%)"
+  },
+  {
+   "claim": "Length-penalty reward cuts generated code length from 248.42 to 190.73 while pass rate stays 22.82 vs 23.14",
+   "kind": "measured",
+   "source": null,
+   "metric": "code length",
+   "value": 190.73,
+   "unit": "chars",
+   "baseline_value": 248.42,
+   "n": null,
+   "setup": "APPS introductory; reward p + 0.1*exp(-lc/20)",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Length Penalty, column Code length"
+  },
+  {
+   "claim": "Comment-encouragement reward raises comment lines from 0.68 to 3.11 with pass rate 21.65",
+   "kind": "measured",
+   "source": null,
+   "metric": "comment number",
+   "value": 3.11,
+   "unit": "lines with comments",
+   "baseline_value": 0.68,
+   "n": null,
+   "setup": "same setup as Table 4",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Comment Encouragement, column Comment number"
+  },
+  {
+   "claim": "With only 1 public test case PG-TD already gets 23.27 pass rate vs 13.61 for beam search; with 3 it gets 33.02",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 23.27,
+   "unit": "%",
+   "baseline_value": 13.61,
+   "n": null,
+   "setup": "first 500 APPS introductory problems; 0 public tests = beam search",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row 1 public test case, column Pass Rate"
+  },
+  {
+   "claim": "PG-TD cuts compilation errors from 5.58% to 1.93% and runtime errors from 32.95% to 19.5% vs beam search",
+   "kind": "measured",
+   "source": null,
+   "metric": "runtime error",
+   "value": 19.5,
+   "unit": "%",
+   "baseline_value": 32.95,
+   "n": null,
+   "setup": "APPS GPT-2 (1.5B), averaged over APPS introductory",
+   "note": null,
+   "where": "Table 10",
+   "table": "Table 10, row APPS GPT-2 (1.5B), PG-TD, column Runtime Error (%)"
+  },
+  {
+   "claim": "At a 512-generation budget the gap to S+F narrows: PG-TD 28.27 vs S+F 27.33 on APPS introductory with GPT-2, and S+F wins pass@100 (28.3 vs 27.3)",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 28.27,
+   "unit": "%",
+   "baseline_value": 27.33,
+   "n": null,
+   "setup": "APPS GPT-2, 512 generations",
+   "note": null,
+   "where": "Table 5, Table 6",
+   "table": "Table 5, row APPS GPT-2 PG-TD (c = 4), column APPS Intro. pass rate"
+  },
+  {
+   "claim": "Beam search in the evaluation step beats sampling at 256 generations: 37.71 vs 35.67 pass rate",
+   "kind": "measured",
+   "source": null,
+   "metric": "pass rate",
+   "value": 37.71,
+   "unit": "%",
+   "baseline_value": 35.67,
+   "n": null,
+   "setup": "first 500 APPS introductory problems, 256 generations",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row PG-TD using Beam Search, column 256 pass rate"
+  }
+ ],
+ "limits": [
+  "Relies on test cases; authors say auto-generated tests partly address this (Sec 5, App B)",
+  "More computationally expensive than plain beam search (runs beam search many times) (Sec 5)",
+  "Advantage over S+F shrinks at larger budgets (512 generations) and S+F matches/beats on some strict accuracy and pass@100 (App A)",
+  "Backbones are APPS-finetuned GPT-2/GPT-Neo (2022); Codex tested on 100-problem subset only; Codex is deprecated",
+  "No seeds, variance or significance tests reported",
+  "Public/private split of APPS is the authors' even split of test cases, not official",
+  "Sequence caching with b>1 may underestimate values (App D.2)",
+  "Evaluation step sampling done once per node (App A)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PG-TD",
+   "definition": "Planning-Guided Transformer Decoding: tree search over tokens that uses Transformer beam search to evaluate nodes and public-test pass rate as reward",
+   "where": "Sec 3.2"
+  },
+  {
+   "term": "Sampling + Filtering (S+F)",
+   "definition": "sample many complete programs, run public tests, return the one with highest pass rate",
+   "where": "Sec 1, Sec 4"
+  },
+  {
+   "term": "strict accuracy",
+   "definition": "the percentage of the problems where the generated programs pass all the private test cases",
+   "where": "Sec 4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "AlphaCode (Li et al.)",
+   "year": 2022,
+   "arxiv": "2203.07814",
+   "relation": "baseline",
+   "note": "sampling+filtering baseline modelled on it, no clustering; also CodeContests data",
+   "quote": null
+  },
+  {
+   "work": "APPS (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark and finetuned GPT-2/GPT-Neo models",
+   "quote": null
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code (Codex)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "evaluates",
+   "note": "Codex backbone and HumanEval",
+   "quote": null
+  },
+  {
+   "work": "CodeT (Chen et al.)",
+   "year": 2022,
+   "arxiv": "2207.10397",
+   "relation": "uses-method",
+   "note": "prompt design for auto-generated test cases",
+   "quote": null
+  },
+  {
+   "work": "Write, Execute, Assess (Ellis et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "SMCG-TD baseline from its sequential Monte Carlo method",
+   "quote": null
+  },
+  {
+   "work": "Silver et al. (AlphaZero)",
+   "year": 2017,
+   "arxiv": "1712.01815",
+   "relation": "uses-method",
+   "note": "P-UCB selection and MCTS implementation",
+   "quote": null
+  },
+  {
+   "work": "CodeRL (Le et al.)",
+   "year": 2022,
+   "arxiv": "2207.01780",
+   "relation": "uses-method",
+   "note": "reward-weighted fine-tuning loss",
+   "quote": null
+  },
+  {
+   "work": "Kocsis and Szepesvari bandit-based MC planning",
+   "year": 2006,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "UCB",
+   "quote": null
+  },
+  {
+   "work": "NeuroLogic A*esque Decoding (Lu et al.)",
+   "year": 2021,
+   "arxiv": "2112.08726",
+   "relation": "related",
+   "note": "concurrent A* in decoding",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Illustration of using the Monte Carlo tree search algorithm in the Transformer generation process for code generation.",
+   "page": 5,
+   "why": "Shows selection, expansion, evaluation by beam search, backpropagation in one diagram"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Pass rates of PG-TD and baseline algorithms vs. the number of Transformer generations (left) and the computation time (middle) on APPS introductory.",
+   "page": 7,
+   "why": "Sample-efficiency curves and effect of c"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "A code generation example for competitive programming with beam search, S+F and PG-TD outputs.",
+   "page": 4,
+   "why": "Concrete example of why test-guided search helps"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix D.1 Eq 3",
+   "snippet": "P-UCB(s, a) = Q(s, a) + beta(s) * P_Transformer(a|s) * sqrt(log(s.visits)) / (1 + s'.visits)",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix D.1 Eq 4",
+   "snippet": "beta(s) = log((s.visits + c_base + 1) / c_base) + c",
+   "verbatim": false
+  },
+  {
+   "where": "Appendix C Eq 1",
+   "snippet": "R_length = p + lambda1 * exp(-lc / t)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations were garbled by text extraction and are reconstructed in code snippets (verbatim false)",
+  "Model size inconsistencies: GPT-2 1.5B in most tables, 2.7B for the fine-tuning experiment; GPT-Neo 2.7B stated only in Fig 16 caption",
+  "Table 11 caption typo 'TG-PD'",
+  "No instructions embedded in the PDF"
+ ]
+}

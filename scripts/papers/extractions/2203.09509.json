@@ -1,0 +1,427 @@
+{
+ "schema": 1,
+ "key": "2203.09509",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hartvigsen-2022-toxigen.pdf",
+ "bib": {
+  "title": "TOXIGEN: A Large-Scale Machine-Generated Dataset for Adversarial and Implicit Hate Speech Detection",
+  "authors": [
+   "Thomas Hartvigsen",
+   "Saadia Gabriel",
+   "Hamid Palangi",
+   "Maarten Sap",
+   "Dipankar Ray",
+   "Ece Kamar"
+  ],
+  "first_author": "Hartvigsen",
+  "year": 2022,
+  "venue": "ACL 2022 (60th Annual Meeting of the ACL, Volume 1: Long Papers)",
+  "arxiv": "2203.09509",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 68114,
+  "chars_total": 68114,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can a large language model, prompted with demonstrations and steered by a classifier during decoding, generate a large balanced implicit toxic/benign dataset about minority groups that improves toxicity detectors?",
+ "hypothesis": "Machine-generated implicit toxic and benign text with balanced groups reduces spurious identity-toxicity correlations and improves classifiers on human-written implicit hate data.",
+ "contributions": [
+  "TOXIGEN: 274,186 machine-generated toxic and benign statements about 13 minority groups",
+  "Demonstration-based prompting to generate implicit toxic and benign text",
+  "ALICE: adversarial classifier-in-the-loop constrained beam search decoding",
+  "Human validation (TOXIGEN-HUMANVAL, 792 statements) and fine-tuning experiments on 3 external datasets"
+ ],
+ "method": {
+  "summary": "GPT-3 is prompted with 5 random demonstrations (from 20-50 curated per group, 26 prompt sets) to generate statements, either with top-k decoding or with ALICE, which mixes GPT-3 and HateBERT log-probs in beam search. A 792-statement subset is human-annotated on MTurk; HateBERT and ToxDectRoBERTa are fine-tuned on TOXIGEN and tested on external datasets.",
+  "task": "implicit hate speech dataset generation and toxicity classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "TOXIGEN",
+    "role": "train",
+    "size": "274,186 statements (260,012 top-k, 14,174 ALICE); 13 groups; 50.1% hate class",
+    "split": "training portion plus human-validated test set",
+    "source": "GPT-3 generations; demonstrations from blogs/news (benign), de Gibert 2018 and Breitfeller 2019 (toxic); released at github.com/microsoft/ToxiGen",
+    "preprocessing": "no training statement had cosine similarity above 0.7 with any test statement"
+   },
+   {
+    "name": "TOXIGEN-HUMANVAL",
+    "role": "eval",
+    "size": "792 statements, 3 annotators each",
+    "split": "test",
+    "source": "subset of TOXIGEN",
+    "preprocessing": null
+   },
+   {
+    "name": "ImplicitHateCorpus",
+    "role": "eval",
+    "size": "22,584",
+    "split": null,
+    "source": "ElSherief et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "SocialBiasFrames test",
+    "role": "eval",
+    "size": "44,671 (full SBF per Table 1)",
+    "split": "test set",
+    "source": "Sap et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "DynaHate",
+    "role": "eval",
+    "size": "41,134",
+    "split": null,
+    "source": "Vidgen et al. 2021",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3",
+    "role": "proposed",
+    "params": null,
+    "architecture": "decoder-only LM (generator)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "restricted to top 100 tokens in ALICE due to API limits",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "variant": "not stated"
+    }
+   },
+   {
+    "name": "HateBERT (OffensEval-finetuned, Caselli 2021)",
+    "role": "base",
+    "params": null,
+    "architecture": "BERT",
+    "init_from": "Caselli et al. 2021",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "ALICE adversary and fine-tuned classifier"
+    }
+   },
+   {
+    "name": "ToxDectRoBERTa (Zhou 2021)",
+    "role": "base",
+    "params": null,
+    "architecture": "RoBERTa",
+    "init_from": "Zhou et al. 2021",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "binary classification using prompt labels as proxy toxicity labels",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "ablation": "ALICE-only, top-k-only (downsampled to equal size), ALICE+top-k",
+    "released_roberta": "finetuned on 8,960 human-annotated samples starting from Zhou et al. 2021 weights"
+   }
+  },
+  "inference": {
+   "decoding": "top-k alone, or ALICE constrained beam search; generation stops at newline",
+   "temperature": "0.9 (ALICE)",
+   "top_p": null,
+   "max_tokens": "30 tokens (ALICE)",
+   "samples": "one sentence per prompt; new random 5 demonstrations each time",
+   "prompting": "5 random demonstrations joined with hyphen and newline, trailing hyphen",
+   "retrieval": null,
+   "parameters": {
+    "lambda_L": "0.5",
+    "lambda_C": "0.5",
+    "beam_size": "10",
+    "vocab_restriction": "top 100 tokens, tokens in prompt disallowed, resample with top-k",
+    "top_k_value": null
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "AUC",
+     "definition": "AUC of classifier on test sets, labels from datasets",
+     "unit": "AUC",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human-or-AI rate",
+     "definition": "majority of annotators label statement human-written",
+     "unit": "%",
+     "higher_is_better": null
+    },
+    {
+     "name": "Toxicity score",
+     "definition": "1-5 Likert harm rating averaged over annotators",
+     "unit": "1-5",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "zero-shot HateBERT",
+    "zero-shot ToxDectRoBERTa",
+    "top-k vs ALICE"
+   ],
+   "protocol": "3 MTurk annotators per statement from 156 prequalified workers (51 participated); Fleiss kappa 0.46, Krippendorff alpha 0.64; no seeds stated for fine-tuning"
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/ToxiGen",
+   "weights": "two models pretrained on TOXIGEN released",
+   "data": "released publicly"
+  },
+  "prompts": [
+   {
+    "purpose": "benign Native American demonstrations",
+    "text": "- it is a common misconception that native americans are all savages but they have a rich culture and history\\n - indigenous people are often left out of conversations around policies that impact them\\n ... -",
+    "where": "Appendix F"
+   }
+  ],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "On average 90.5% of machine-generated examples are thought human-written by a majority of annotators.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human-written judgement rate",
+   "value": "90.5",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 792,
+   "setup": "TOXIGEN-HUMANVAL, 3 MTurk annotators",
+   "quote": "on average 90.5% of machine-generated ex-\namples are thought to be human-written by a ma-\njority of annotators",
+   "table": null,
+   "note": null,
+   "where": "p.3315, Sec 4.2"
+  },
+  {
+   "claim": "ALICE fools HateBERT more often than top-k.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fool rate",
+   "value": "26.4",
+   "unit": "%",
+   "baseline_value": "16.8",
+   "n": 250,
+   "setup": "125 prompts (62 toxic, 63 non-toxic), one ALICE and one top-k statement each",
+   "quote": "26.4% of ALICE-decoded sen-\ntences fool HateBERT vs. 16.8% of top-k sampled\nsentences",
+   "table": null,
+   "note": null,
+   "where": "p.3316, Sec 4.3"
+  },
+  {
+   "claim": "ALICE lowers human-rated toxicity of generations from toxic prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg toxicity 1-5",
+   "value": "2.97",
+   "unit": "score",
+   "baseline_value": "3.75",
+   "n": null,
+   "setup": "toxic prompts, ALICE vs top-k, p<0.001",
+   "quote": "2.97, compared to 3.75 for top-\nk",
+   "table": null,
+   "note": null,
+   "where": "p.3316, Sec 4.3"
+  },
+  {
+   "claim": "Fine-tuning HateBERT on ALICE+top-k raises DynaHate AUC from 0.47 to 0.66.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.66",
+   "unit": "AUC",
+   "baseline_value": "0.47",
+   "n": null,
+   "setup": "HateBERT zero-shot vs fine-tuned on ALICE+top-k, DynaHate",
+   "quote": null,
+   "table": "Table 4, rows HateBERT DYNAHATE, columns None and ALICE + top-k (0.47, 0.66)",
+   "note": null,
+   "where": "Table 4, p.3316"
+  },
+  {
+   "claim": "Fine-tuned HateBERT reaches 0.96 AUC on TOXIGEN-VAL versus 0.57 zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC",
+   "value": "0.96",
+   "unit": "AUC",
+   "baseline_value": "0.57",
+   "n": null,
+   "setup": "HateBERT, ALICE+top-k fine-tune",
+   "quote": null,
+   "table": "Table 4, row HateBERT TOXIGEN-VAL, columns None and ALICE + top-k (0.57, 0.96)",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "98.2% of TOXIGEN statements are implicit.",
+   "kind": "measured",
+   "source": null,
+   "metric": "% implicit",
+   "value": "98.2",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 274186,
+   "setup": "profanity word list match",
+   "quote": "98.2% of TOXIGEN state-\nments are implicit",
+   "table": null,
+   "note": null,
+   "where": "p.3309"
+  },
+  {
+   "claim": "94.56% of toxic examples are hate speech per annotators (abstract says 94.5%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "% hate",
+   "value": "94.56",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 792,
+   "setup": "TOXIGEN-HUMANVAL toxic examples",
+   "quote": "Most toxic examples are also\nhate speech (94.56%)",
+   "table": null,
+   "note": "Abstract prints 94.5%",
+   "where": "p.3315"
+  },
+  {
+   "claim": "Inter-annotator agreement is moderate.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Fleiss kappa",
+   "value": "0.46",
+   "unit": "kappa",
+   "baseline_value": null,
+   "n": 792,
+   "setup": "toxicity ratings mapped to 3 classes",
+   "quote": "Fleiss’ κ=0.46",
+   "table": null,
+   "note": "Krippendorff alpha 0.64",
+   "where": "p.3314-5"
+  }
+ ],
+ "limits": [
+  "Fine-tuning hyperparameters (lr, epochs, batch size, seeds) not stated",
+  "Prompt labels used as proxy ground truth; labels noisy",
+  "Annotator subjectivity and demographics skew; only 51 of 156 workers annotated",
+  "Misuse risk: methods make an LLM produce more toxic text",
+  "Only minority groups from a US perspective; GPT-3 sometimes conflates groups",
+  "ALICE only 14,174 of 274,186 examples"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "ALICE",
+   "definition": "Adversarial Language Imitation with Constrained Exemplars, classifier-in-the-loop constrained beam search",
+   "where": "p.3310 footnote 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language Models are Few-Shot Learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "uses-method",
+   "note": "generator",
+   "quote": null
+  },
+  {
+   "work": "HateBERT",
+   "year": 2021,
+   "arxiv": "2010.12472",
+   "relation": "uses-method",
+   "note": "ALICE adversary and fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "Challenges in automated debiasing for toxic language detection (Zhou et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "ToxDectRoBERTa",
+   "quote": null
+  },
+  {
+   "work": "Latent Hatred ImplicitHateCorpus",
+   "year": 2021,
+   "arxiv": "2109.05322",
+   "relation": "uses-data",
+   "note": "external eval",
+   "quote": null
+  },
+  {
+   "work": "Social Bias Frames (Sap et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "external eval",
+   "quote": null
+  },
+  {
+   "work": "DynaHate (Vidgen et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "external eval",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Adversarial set up and constrained beam search decoding with ALICE.",
+   "page": "4 (journal p.3312)",
+   "why": "shows the decoding loop combining LM and classifier scores"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "Examples of statements that fool Google's Perspective API, HateBERT, Open AI content filter, AI2 Delphi, and Roberta.",
+   "page": "2 (p.3310)",
+   "why": "shows the failure modes motivating the dataset"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, p.3313",
+   "snippet": "log p(w_{i+1}|w_{0:i}) ∝ λL log pLM(w_{i+1}|w_{0:i}) + λC log pCLF(w_{0:i+1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figures are only partially text-extractable; fi ligatures in quotes avoided"
+ ]
+}

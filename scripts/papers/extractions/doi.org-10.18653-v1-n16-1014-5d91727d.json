@@ -1,0 +1,139 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/n16-1014",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/li-2016-diversity-promoting-objective-function-neural.pdf",
+ "bib": {
+  "title": "A Diversity-Promoting Objective Function for Neural Conversation Models",
+  "authors": ["Jiwei Li", "Michel Galley", "Chris Brockett", "Jianfeng Gao", "Bill Dolan"],
+  "first_author": "Li",
+  "year": 2016,
+  "venue": "NAACL-HLT 2016",
+  "arxiv": null,
+  "doi": "10.18653/v1/n16-1014"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41355,
+  "chars_total": 41355,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why do SEQ2SEQ conversation models produce generic responses, and can a mutual-information objective at decode time make responses more diverse and relevant?",
+ "hypothesis": "Maximising likelihood of response given message favours safe high-frequency responses; also weighing the likelihood of the message given the response (MMI) will favour specific responses.",
+ "contributions": [
+  "Propose MMI as objective for neural response generation, in two variants (MMI-antiLM, MMI-bidi) applied only at test time",
+  "Show gains in BLEU, distinct-n diversity and human judgments on Twitter and OpenSubtitles"
+ ],
+ "method": {
+  "summary": "Standard maximum-likelihood 4-layer LSTM SEQ2SEQ models p(T|S) and a reversed p(S|T) are trained; the MMI criterion is used only at decoding, either as an anti-language-model penalty on the first gamma tokens (MMI-antiLM) or by reranking a large N-best list with p(S|T) (MMI-bidi). Weights are tuned with MERT on BLEU.",
+  "task": "conversational response generation",
+  "trains": true,
+  "datasets": [
+   {"name": "Twitter Conversation Triple Dataset", "role": "both", "size": "23M conversational snippets (from 129M context-message-response triples)", "split": "dev 2118 conversations, test 2114 examples (multi-reference via IR, per Sordoni et al. 2015)", "source": "Twitter Firehose, June-August 2012", "preprocessing": "context limited to the immediately preceding turn; context and message concatenated as source"},
+   {"name": "OpenSubtitles (OSDb)", "role": "train", "size": "roughly 60M-70M scripted lines; 20 million conversation pairs used for the Table 1 model", "split": null, "source": "Tiedemann 2009", "preprocessing": "each subtitle line treated as a full speaker turn"},
+   {"name": "IMSDB", "role": "eval", "size": "around 0.4 million sentences; dev and test 2k pairs each", "split": "random dev and test subsets of 2k pairs each", "source": "Internet Movie Script Database", "preprocessing": "consecutive message-response pairs by different characters; source and target length restricted to [6,18]; single reference only"}
+  ],
+  "models": [
+   {"name": "SEQ2SEQ (4-layer LSTM)", "role": "baseline", "params": null, "architecture": "LSTM encoder-decoder, separate parameters per layer", "init_from": null, "tokenizer": null, "vocab": null, "layers": "4 encoder + 4 decoder", "hidden": "1,000 per layer", "heads": null, "context": null, "other": {"embedding_dim": "1000"}},
+   {"name": "MMI-antiLM", "role": "proposed", "params": null, "architecture": "same SEQ2SEQ, decoding score log p(T|S) - lambda log U(T), plus length bonus", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MMI-bidi", "role": "proposed", "params": null, "architecture": "SEQ2SEQ N-best reranked with reverse model p(S|T)", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "SMT (Ritter 2011) and SMT+neural reranking (Sordoni 2015)", "role": "baseline", "params": null, "architecture": "phrase-based MT (Moses features), optionally reranked with RNN scores and CMM features", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {"training_size": "roughly 50 million examples; numbers reprinted from Sordoni et al. (2015)"}}
+  ],
+  "training": {
+   "objective": "maximum likelihood log p(T|S); reverse model p(S|T) trained identically with messages and responses interchanged. MMI used only at test time.",
+   "optimizer": "stochastic gradient descent",
+   "lr": "0.1 (fixed)",
+   "lr_schedule": "fixed",
+   "warmup": null,
+   "batch_size": "256",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "gradient clipping, scale when norm exceeds 1",
+   "hardware": "single GPU, Tesla K40",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"init": "LSTM parameters and embeddings uniform in [-0.08, 0.08]", "throughput": "approximately 600-1200 tokens per second"}
+  },
+  "inference": {
+   "decoding": "beam search, beam size B=200; EOS hypotheses added to N-best list, top B unfinished kept; max length 20",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "20",
+   "samples": "one output per input; N-best list per input much larger than beam size (173 elements on average at beam 20)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "lambda": "tuned with MERT (MMI-antiLM on N-best lists; MMI-bidi on dev set); value not stated",
+    "gamma": "length-reward weight, tuned with MERT; value not stated",
+    "antiLM_threshold": "g(k)=1 if k<=gamma else 0, penalises first gamma tokens; gamma value not stated",
+    "score_antiLM": "Score(T) = p(T|S) - lambda U(T) + gamma Nt",
+    "score_bidi": "linear combination of p(T|S), lambda p(S|T), gamma Nt"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "BLEU", "definition": "multi-reference on Twitter, single-reference on OpenSubtitles/IMSDB", "unit": "BLEU", "higher_is_better": true},
+    {"name": "distinct-1 / distinct-2", "definition": "number of distinct unigrams/bigrams divided by total number of generated words", "unit": "ratio", "higher_is_better": true},
+    {"name": "pairwise human preference", "definition": "5 crowd judges per pair on 1000 Twitter test items, prefer more specific outputs, ties allowed; mean of differences", "unit": "gain", "higher_is_better": true},
+    {"name": "absolute human rating", "definition": "7 judges per output, 5-point scale, 1000 items", "unit": "1-5", "higher_is_better": true}
+   ],
+   "baselines": ["SEQ2SEQ (beam 200)", "SEQ2SEQ (greedy)", "SMT (Ritter et al. 2011)", "SMT+neural reranking (Sordoni et al. 2015)"],
+   "protocol": "Human pairwise significance at alpha=0.05 with 95% CIs; no seeds or repeated runs reported; perplexity deliberately not used."
+  },
+  "availability": {"code": null, "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "MMI-bidi beats the SEQ2SEQ baseline on Twitter BLEU and diversity.", "kind": "measured", "source": null, "metric": "BLEU", "value": "5.22", "unit": "BLEU", "baseline_value": "4.31", "n": 2114, "setup": "Twitter test set, 4-layer SEQ2SEQ trained on 23M instances, beam 200, multi-reference BLEU", "table": "Table 2, row MMI-bidi, column BLEU", "note": "Text later gives MMI-bidi BLEU 5.90 at beam 200 (5.86, 5.76 at 50, 20), which differs from Table 2's 5.22.", "where": "Table 2"},
+  {"claim": "MMI-bidi reaches 4.44-beating BLEU, above the prior SMT+neural reranking state of the art, with half the training data.", "kind": "measured", "source": null, "metric": "BLEU", "value": "4.44", "unit": "BLEU", "baseline_value": null, "n": 2114, "setup": "SMT+neural reranking trained on roughly 50M examples; MMI-bidi on 23M", "quote": "MT+neural reranking achieves a BLEU score of 4.44", "note": null, "where": "Section 5.3"},
+  {"claim": "MMI-bidi lifts distinct-2 on Twitter from 0.107 to 0.270.", "kind": "measured", "source": null, "metric": "distinct-2", "value": ".270", "unit": "ratio", "baseline_value": ".107", "n": 2114, "setup": "Twitter test, beam 200", "table": "Table 2, row MMI-bidi, column distinct-2; baseline row SEQ2SEQ (baseline)", "note": "SMT systems still have higher distinct-2 (.351, .358).", "where": "Table 2"},
+  {"claim": "On OpenSubtitles/IMSDB, MMI-antiLM raises BLEU by 35.9% and distinct-1 by 228% over SEQ2SEQ.", "kind": "measured", "source": null, "metric": "BLEU", "value": "1.74", "unit": "BLEU", "baseline_value": "1.28", "n": 2000, "setup": "trained on OSDb, evaluated on 2k IMSDB pairs, single-reference BLEU", "table": "Table 3, row MMI-antiLM, column BLEU (+35.9%, distinct-1 0.0184 vs 0.0056)", "note": "Table 3 prints distinct-2 gain as 407% without a plus sign.", "where": "Table 3"},
+  {"claim": "Human judges prefer MMI-bidi to baseline SEQ2SEQ by a mean gain of 0.11.", "kind": "measured", "source": null, "metric": "pairwise human gain", "value": "0.11", "unit": "gain", "baseline_value": null, "n": 1000, "setup": "1000 Twitter test items, 5 judges per pair, 95% CI [0.07, 0.14]", "table": "Table 6, row SEQ2SEQ (baseline), column Gain", "note": "Gains over SMT 0.29 and SMT+neural reranking 0.28.", "where": "Table 6"},
+  {"claim": "Mean absolute human rating of MMI-bidi output.", "kind": "measured", "source": null, "metric": "mean rating", "value": "3.84", "unit": "1-5 scale", "baseline_value": null, "n": 1000, "setup": "7 judges per output on the 1000-item Twitter sample", "quote": "The mean rating was 3.84 (median: 3.85, 1st Qu: 3.57, 3rd Qu: 4.14)", "note": null, "where": "Section 5.3"},
+  {"claim": "MMI-bidi BLEU degrades only slightly with smaller beams.", "kind": "measured", "source": null, "metric": "BLEU", "value": "5.76", "unit": "BLEU", "baseline_value": "5.90", "n": null, "setup": "MMI-bidi, Twitter, beam 20 vs 200", "quote": "For MMI-bidi, BLEU scores for beam sizes of 200, 50, 20 are respectively 5.90, 5.86, 5.76.", "note": null, "where": "Section 5.3"},
+  {"claim": "Four generic strings make up 32% of all generated responses of the baseline on OpenSubtitles.", "kind": "measured", "source": null, "metric": "share of generic responses", "value": "32%", "unit": "%", "baseline_value": null, "n": null, "setup": "SEQ2SEQ baseline outputs; strings I don't know, I don't know what you are talking about, I don't think that is a good idea, Oh my god", "quote": "constitute 32% percent of all generated responses", "note": null, "where": "footnote 9"},
+  {"claim": "0.45% of OpenSubtitles training sentences contain I don't know.", "kind": "measured", "source": null, "metric": "frequency", "value": "0.45%", "unit": "%", "baseline_value": null, "n": null, "setup": "OSDb training data", "quote": "0.45% sentences contain the sequence I don’t know", "note": null, "where": "footnote 1"}
+ ],
+ "limits": [
+  "MMI-bidi depends on the N-best list being diverse and needs long N-best lists; reranking is not globally optimal (Sec 4.3.2, 5.3).",
+  "MMI-antiLM can give ungrammatical output, fixed with a hard threshold on the first gamma tokens.",
+  "MMI is applied only at test time; no jointly trained MMI model.",
+  "OpenSubtitles evaluation uses single-reference BLEU so absolute scores are low; text BLEU 5.90 for MMI-bidi conflicts with Table 2 value 5.22.",
+  "Values of lambda, gamma and the cutoff are not reported; no seeds or repeat runs; no code or data release stated.",
+  "Authors say grounding, persona and intent are left for future work."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "MMI-antiLM", "definition": "log p(T|S) - lambda log p(T); the second term functions as an anti-language model", "where": "Sec 4.3"},
+  {"term": "MMI-bidi", "definition": "(1 - lambda) log p(T|S) + lambda log p(S|T)", "where": "Sec 4.3"},
+  {"term": "distinct-1/distinct-2", "definition": "number of distinct unigrams and bigrams divided by total number of generated words", "where": "Table 2 caption"}
+ ],
+ "lineage": [
+  {"work": "Sordoni et al. 2015, neural network approach to context-sensitive response generation", "year": 2015, "arxiv": null, "relation": "uses-data", "note": "Twitter data and SMT+neural reranking baseline", "quote": null},
+  {"work": "Ritter et al. 2011, Data-driven response generation in social media", "year": 2011, "arxiv": null, "relation": "baseline", "note": "phrase-based SMT response generation", "quote": null},
+  {"work": "Vinyals and Le 2015, A neural conversational model", "year": 2015, "arxiv": null, "relation": "baseline", "note": "greedy SEQ2SEQ; OpenSubtitles setup", "quote": null},
+  {"work": "Sutskever et al. 2014, Sequence to sequence learning", "year": 2014, "arxiv": null, "relation": "uses-method", "note": "training details broadly aligned", "quote": null},
+  {"work": "Bahl et al. 1986; Brown 1987", "year": 1986, "arxiv": null, "relation": "uses-method", "note": "origin of MMI in speech recognition", "quote": null},
+  {"work": "Och 2003, MERT", "year": 2003, "arxiv": null, "relation": "uses-method", "note": "tunes lambda and gamma", "quote": null},
+  {"work": "Tiedemann 2009 OpenSubtitles", "year": 2009, "arxiv": null, "relation": "uses-data", "note": "training corpus", "quote": null},
+  {"work": "Galley et al. 2015, deltaBLEU", "year": 2015, "arxiv": null, "relation": "related", "note": "BLEU correlates with human judgment for response generation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Responses generated by a 4-layer SEQ2SEQ neural model trained on 20 million conversation pairs take from the OpenSubtitles dataset.", "page": 2, "why": "Shows generic answers outrank specific ones in the N-best list."},
+  {"figure": "Table 2", "caption": "Performance on the Twitter dataset of 4-layer SEQ2SEQ models and MMI models.", "page": 6, "why": "Main BLEU and distinct-n comparison."}
+ ],
+ "code": [
+  {"where": "Eq 9 and 10, p.3", "snippet": "T^ = argmax_T { log p(T|S) - lambda log p(T) } ; = argmax_T { (1 - lambda) log p(T|S) + lambda log p(S|T) }", "verbatim": false}
+ ],
+ "problems": ["Text-extracted equations are garbled; equation snippets are rewritten, not verbatim. Table 2 BLEU 5.22 for MMI-bidi conflicts with 5.90 in text."]
+}

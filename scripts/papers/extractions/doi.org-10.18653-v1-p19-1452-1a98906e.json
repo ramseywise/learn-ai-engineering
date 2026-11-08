@@ -1,0 +1,189 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/p19-1452",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/tenney-2019-bert-rediscovers-classical-nlp-pipeline.pdf",
+ "bib": {
+  "title": "BERT Rediscovers the Classical NLP Pipeline",
+  "authors": ["Ian Tenney", "Dipanjan Das", "Ellie Pavlick"],
+  "first_author": "Tenney",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 4593-4601",
+  "arxiv": null,
+  "doi": "10.18653/v1/p19-1452"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 26105,
+  "chars_total": 26105,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Where in the layers of BERT is linguistic information for each step of the traditional NLP pipeline captured?",
+ "hypothesis": "inferred: tasks of the traditional pipeline are encoded in the same order as the classical hierarchy (syntax in lower layers, semantics in higher layers).",
+ "contributions": [
+  "An analysis spanning the common components of a traditional NLP pipeline, showing the order in which abstractions are encoded reflects the traditional hierarchy of these tasks.",
+  "A qualitative layer-by-layer analysis of individual sentences, showing the model can defer ambiguous decisions or revise incorrect ones using higher-level information."
+ ],
+ "method": {
+  "summary": "Edge probing classifiers are trained on frozen BERT-base and BERT-large encoders for eight labeling tasks. Layers are pooled with ELMo-style scalar mixing; two metrics (mixing-weight center of gravity and cumulative-scoring expected layer) localise each task in depth. Per-example traces of cumulative probes show out-of-order resolution.",
+  "task": "probing of pre-trained encoder layers with edge probing (POS, constituents, dependencies, entities, SRL, coreference, SPR, relation classification)",
+  "trains": true,
+  "datasets": [
+   {"name": "OntoNotes 5.0 (POS, constituents, entities, SRL, coreference)", "role": "both", "size": null, "split": "train for probes; dev set for reported F1 and per-example analysis", "source": "Weischedel et al. 2013, LDC2013T19", "preprocessing": "Edge probing format via jiant code"},
+   {"name": "English Web Treebank (dependencies)", "role": "both", "size": null, "split": null, "source": "Silveira et al. 2014", "preprocessing": null},
+   {"name": "SPR1 (semantic proto-roles)", "role": "both", "size": null, "split": null, "source": "Teichert et al. 2017", "preprocessing": null},
+   {"name": "SemEval 2010 Task 8 (relations)", "role": "both", "size": null, "split": null, "source": "Hendrickx et al. 2009", "preprocessing": null}
+  ],
+  "models": [
+   {"name": "BERT-large (uncased)", "role": "evaluated", "params": null, "architecture": "Transformer encoder", "init_from": "stock pre-trained BERT, weights frozen", "tokenizer": "wordpiece", "vocab": null, "layers": "24", "hidden": null, "heads": null, "context": null, "other": {"pretraining": "masked language modeling and next-sentence prediction over a 3.3B word English corpus"}},
+   {"name": "BERT-base (uncased)", "role": "evaluated", "params": null, "architecture": "Transformer encoder", "init_from": "stock pre-trained BERT, weights frozen", "tokenizer": "wordpiece", "vocab": null, "layers": "12", "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "ELMo", "role": "evaluated", "params": null, "architecture": "two LSTM layers over a per-word character CNN", "init_from": null, "tokenizer": null, "vocab": null, "layers": "3 (layer 0 char CNN, layers 1 and 2 LSTM)", "hidden": null, "heads": null, "context": null, "other": {"used_in": "Appendix A.1 only, scalar mixing weights"}}
+  ],
+  "training": {
+   "objective": "supervised label prediction by a probing classifier per task over frozen encoder activations, with scalar mixing weights learned jointly",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"probe_architecture": "architecture and procedure of Tenney et al. (2019), not restated in this paper", "cumulative_probes": "a series of classifiers P(0)..P(L), P(l) mixes layer l and all previous layers; P(0) uses only non-contextual word(piece) embeddings"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {"per_example_filter": "target edges whose highest-scoring label has average score over layers <= 0.7; sentences with more than one such edge"}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "micro-averaged F1", "definition": "common metric across the eight probing tasks", "unit": "F1", "higher_is_better": true},
+    {"name": "mixing weight center of gravity", "definition": "E_s[l] = sum_l l * s_tau(l), the average layer attended to under softmax mixing weights", "unit": "layer index", "higher_is_better": null},
+    {"name": "expected layer (cumulative scoring)", "definition": "E_delta[l] = sum_{l>=1} l * delta(l) / sum_{l>=1} delta(l), where delta(l) = Score(P(l)) - Score(P(l-1))", "unit": "layer index", "higher_is_better": null},
+    {"name": "K(*) = KL(*||Uniform)", "definition": "non-uniformity of mixing weights s or differential scores delta; higher means lower entropy", "unit": "nats (inferred)", "higher_is_better": null}
+   ],
+   "baselines": ["P(0) non-contextual bag of word(piece) embeddings probe", "ELMo encoder (mixing weights only)"],
+   "protocol": "Main results on 24-layer BERT-large, replicated on BERT-base in the appendix. Single-run dev-set scores; no seeds or significance tests stated."
+  },
+  "availability": {
+   "code": "jiant (https://github.com/jsalt18-sentence-repl/jiant) used for the edge probing tasks",
+   "weights": null,
+   "data": "public benchmark datasets listed above (OntoNotes is LDC licensed)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "models.BERT.pretraining", "quote": "trained with a multi-task objective (masked language modeling and next-sentence prediction) over a 3.3B word English corpus", "where": "Section 2"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Tasks are encoded in a natural progression in depth: POS first, then constituents, dependencies, semantic roles, coreference.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "BERT-large, edge probing, both mixing weights and cumulative scoring",
+   "quote": "POS tags processed earliest, followed by constituents, dependencies, semantic roles, and coreference",
+   "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "Differential (cumulative-scoring) gains are highest in the first few layers for many tasks.",
+   "kind": "measured", "source": null, "metric": "layers with highest differential score", "value": "1-7", "unit": "layer index", "baseline_value": null, "n": null,
+   "setup": "BERT-large (24 layers), many tasks",
+   "quote": "layers 1-7 for BERT-large",
+   "note": null, "where": "Section 4, Comparison of Metrics"
+  },
+  {
+   "claim": "Learned mixing weights are concentrated much later than the differential gains.",
+   "kind": "measured", "source": null, "metric": "layers where mixing weights concentrate", "value": "9-20", "unit": "layer index", "baseline_value": null, "n": null,
+   "setup": "BERT-large (24 layers)",
+   "quote": "layers 9-20 for BERT-large",
+   "note": null, "where": "Section 4, Comparison of Metrics"
+  },
+  {
+   "claim": "Most POS tags are already correct from non-contextual embeddings, so many examples are uninteresting.",
+   "kind": "measured", "source": null, "metric": "POS accuracy at layer 0", "value": "89%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "OntoNotes dev set, BERT-base per-example analysis, layer 0 probe",
+   "quote": "89% of part-of-speech tags are correct at layer 0",
+   "note": null, "where": "Section 4.1"
+  },
+  {
+   "claim": "Syntactic information is more localizable (concentrated on few layers) while semantic information (relations, SPR) is spread across the network and entity labeling is resolved early with a long tail.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "BERT-large; high K(s), K(delta) for syntactic tasks, near-uniform mixing weights for relations and SPR",
+   "quote": "syntactic information is more localizable",
+   "note": null, "where": "Section 4"
+  },
+  {
+   "claim": "The same ordering appears on BERT-base, with task representations concentrating at the same layers relative to the top of the model (stretching effect).",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "12-layer BERT-base versus 24-layer BERT-large, Figures A.2, A.3",
+   "quote": "stretching effect",
+   "note": null, "where": "Section 4, Appendix A.1"
+  },
+  {
+   "claim": "On individual examples the model resolves decisions out of pipeline order, e.g. revising entity type from GPE to ORG after resolving the semantic role of Toronto.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "Qualitative traces, BERT-base, selected OntoNotes dev sentences",
+   "quote": "for individual examples the model is free to and often does choose a different order",
+   "note": null, "where": "Section 4.1, Figure 3"
+  },
+  {
+   "claim": "For ELMo the first LSTM layer is most informative for all tasks and coreference shows only weak concentration.",
+   "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "ELMo scalar mixing weights, Figure A.1",
+   "quote": "the first LSTM layer (layer 1) is most informative for all tasks",
+   "note": null, "where": "Appendix A.1"
+  }
+ ],
+ "limits": [
+  "Exploratory: one encoder family (BERT, plus ELMo mixing weights in the appendix); authors say further work is needed to see if trends hold in general.",
+  "Inspection-based probing: a pattern not observed by the probe is not proven absent, and an observed pattern does not show how it is used; behavioural studies are needed.",
+  "Cannot say whether weak localization of semantic tasks is BERT difficulty or inherent difficulty of localizing semantics.",
+  "Last 1-2 layers can show a drop because new layers may provide distracting features and the probe overfits.",
+  "Expected layer is a pseudo-expectation, since F1 is not an expectation over examples.",
+  "Probe hyperparameters, dataset sizes and absolute F1 values appear only in figures (not text); per-example analysis uses a heuristic selection of ambiguous sentences and is qualitative."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "edge probing", "definition": "decomposes structured-prediction tasks into a common format where a probing classifier receives spans s1 and optionally s2 and must predict a label, seeing only per-token contextual vectors within the target spans", "where": "Section 2"},
+  {"term": "scalar mixing weights", "definition": "ELMo-style softmax-weighted sum over encoder layers learned jointly with the probe; higher weights are read as evidence the layer holds more task-relevant information", "where": "Section 3.1"},
+  {"term": "cumulative scoring", "definition": "series of probes that each see layer l and all earlier layers; differential score is the F1 gain from adding layer l", "where": "Section 3.2"}
+ ],
+ "lineage": [
+  {"work": "What do you learn from context? Probing for sentence structure in contextualized word representations", "year": 2019, "arxiv": null, "relation": "uses-method", "note": "edge probing suite, probe architecture and procedure", "quote": null},
+  {"work": "BERT: Pre-training of deep bidirectional transformers", "year": 2019, "arxiv": null, "relation": "evaluates", "note": "base and large uncased encoders", "quote": null},
+  {"work": "Deep contextualized word representations (ELMo)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "scalar mixing technique; ELMo analysed in appendix", "quote": null},
+  {"work": "Dissecting contextual word embeddings: Architecture and representation", "year": 2018, "arxiv": null, "relation": "extends", "note": "builds on observation that lower layers encode local syntax and higher layers more complex semantics", "quote": null},
+  {"work": "Deep RNNs encode soft hierarchical syntax (Blevins et al.)", "year": 2018, "arxiv": null, "relation": "related", "note": "hierarchical structure in higher layers", "quote": null},
+  {"work": "OntoNotes 5.0", "year": 2013, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "English Web Treebank (Silveira et al.)", "year": 2014, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "SemEval-2010 Task 8 (Hendrickx et al.)", "year": 2009, "arxiv": null, "relation": "uses-data", "note": null, "quote": null},
+  {"work": "Semantic proto-role labeling (Teichert et al.)", "year": 2017, "arxiv": null, "relation": "uses-data", "note": "SPR1", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Summary statistics on BERT-large. Columns on left show F1 dev-set scores for the baseline and full-model probes. Dark (blue) are the mixing weight center of gravity; light (purple) are the expected layer from the cumulative scores.", "page": 3, "why": "Shows per-task baseline and full F1 and where each task sits in depth, giving the pipeline ordering at a glance."},
+  {"figure": "Fig 2", "caption": "Layer-wise metrics on BERT-large. Solid (blue) are mixing weights; outlined (purple) are differential scores, normalized for each task. Horizontal axis is encoder layer.", "page": 3, "why": "Shows localization versus spread per task across layers."},
+  {"figure": "Fig 3", "caption": "Probing classifier predictions across layers of BERT-base. Blue is the correct label; orange is the incorrect label with highest average score over layers.", "page": 5, "why": "Shows the model revising a decision (Toronto GPE to ORG) as layers deepen."}
+ ],
+ "code": [
+  {"where": "Eq 1", "snippet": "h_{i,tau} = gamma_tau * sum_{l=0..L} s_tau^(l) h_i^(l), s_tau = softmax(a_tau)", "verbatim": false},
+  {"where": "Eq 3-4", "snippet": "delta^(l) = Score(P^(l)) - Score(P^(l-1)); E_delta[l] = sum_{l=1..L} l*delta^(l) / sum_{l=1..L} delta^(l)", "verbatim": false}
+ ],
+ "problems": ["No embedded instructions found. Equations and figure content (F1 values, curves) are not in the text layer, so absolute F1 numbers could not be recorded."]
+}

@@ -1,0 +1,554 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2020.acl-demos.30",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zhang-2020-dialogpt.pdf",
+ "bib": {
+  "title": "DIALOGPT: Large-Scale Generative Pre-training for Conversational Response Generation",
+  "authors": [
+   "Yizhe Zhang",
+   "Siqi Sun",
+   "Michel Galley",
+   "Yen-Chun Chen",
+   "Chris Brockett",
+   "Xiang Gao",
+   "Jianfeng Gao",
+   "Jingjing Liu",
+   "Bill Dolan"
+  ],
+  "first_author": "Zhang",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (System Demonstrations), pages 270-278",
+  "arxiv": null,
+  "doi": "10.18653/v1/2020.acl-demos.30"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 37669,
+  "chars_total": 37669,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can a GPT-2-style transformer trained on Reddit conversation chains generate relevant, informative, human-like open-domain dialogue responses, and can it be released as a tunable pre-trained model?",
+ "hypothesis": "Training an autoregressive transformer on large-scale dialogue sessions lets it capture the joint distribution P(Target, Source) of conversational flow at finer granularity, giving more relevant, contentful and context-consistent responses than strong baselines.",
+ "contributions": [
+  "DialoGPT, a GPT-2-based model pre-trained on 147M Reddit conversation exchanges, in 117M, 345M and 762M sizes",
+  "Open-source training pipeline (data extraction/preparation, training, evaluation) and released pre-trained model",
+  "Evaluation on DSTC-7 and a new 6K multi-reference Reddit test set, automatic and human",
+  "MMI reranking with a backward model to reduce bland responses"
+ ],
+ "method": {
+  "summary": "GPT-2 architecture trained (from scratch or initialised from GPT-2) as a language model on Reddit reply-chain paths, with all turns concatenated into one text ended by end-of-text. Optional MMI reranking: sample 16 hypotheses with top-K (K=10) and pick the one with lowest loss under a backward P(Source|Hypothesis) model.",
+  "task": "open-domain multi-turn conversational response generation (autoregressive LM pre-training on dialogue)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Reddit comment chains 2005-2017",
+    "role": "pretrain",
+    "size": "147,116,725 dialogue instances, 1.8 billion words",
+    "split": "inferred: validation loss used for selection and early stopping; split sizes not stated",
+    "source": "scraped Reddit comment chains; each root-to-leaf path is one instance",
+    "preprocessing": "Removed instances with: URL in source/target; target with word repetitions of at least three words; response lacking any top-50 frequent English word; response with '[' or ']'; source+target longer than 200 words; offensive target by blocklist phrase matching; also excluded offensive-prone subreddits; blandness filter removing responses where 90% of tri-grams were seen more than 1000 times (about 1% of data)."
+   },
+   {
+    "name": "DSTC-7 multi-reference test",
+    "role": "eval",
+    "size": "2208 instances, 5 references each",
+    "split": "test; sessions with 6 or more responses; one of 6 human responses held out as 'Human'",
+    "source": "DSTC-7 test data, Reddit threads (Galley et al. 2019)",
+    "preprocessing": "further filtering such as turn length; test period differs from training span"
+   },
+   {
+    "name": "Reddit 6K multi-reference test",
+    "role": "eval",
+    "size": "6K examples",
+    "split": "test",
+    "source": "new test set extracted from Reddit postings",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "DialoGPT 117M",
+    "role": "proposed",
+    "params": "117M",
+    "architecture": "GPT-2 decoder-only transformer",
+    "init_from": "from scratch, or OpenAI GPT-2 (both reported)",
+    "tokenizer": "byte pair encoding",
+    "vocab": "50,257",
+    "layers": "12",
+    "hidden": "768",
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_per_GPU": "128"
+    }
+   },
+   {
+    "name": "DialoGPT 345M",
+    "role": "proposed",
+    "params": "345M",
+    "architecture": "GPT-2 decoder-only transformer",
+    "init_from": "from scratch, or OpenAI GPT-2 medium",
+    "tokenizer": "byte pair encoding",
+    "vocab": "50,257",
+    "layers": "24",
+    "hidden": "1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_per_GPU": "64"
+    }
+   },
+   {
+    "name": "DialoGPT 762M",
+    "role": "proposed",
+    "params": "762M",
+    "architecture": "GPT-2 decoder-only transformer",
+    "init_from": "from scratch, or OpenAI GPT-2",
+    "tokenizer": "byte pair encoding",
+    "vocab": "50,257",
+    "layers": "36",
+    "hidden": "1280",
+    "heads": null,
+    "context": null,
+    "other": {
+     "batch_per_GPU": "32"
+    }
+   },
+   {
+    "name": "PersonalityChat",
+    "role": "baseline",
+    "params": null,
+    "architecture": "in-house seq2seq model based on Li et al. 2016a, trained on Twitter data",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Team B",
+    "role": "baseline",
+    "params": null,
+    "architecture": "winner of DSTC-7",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Backward model (MMI)",
+    "role": "reward",
+    "params": "345M",
+    "architecture": "GPT-2 medium fine-tuned to predict source from response",
+    "init_from": "GPT-2 medium",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "autoregressive LM; p(T|S)=prod_{n=m+1..N} p(x_n|x_1..x_{n-1}) over turns concatenated into one text ended by end-of-text",
+   "optimizer": null,
+   "lr": "selected on validation loss; value not stated",
+   "lr_schedule": "Noam scheduler",
+   "warmup": "16000 steps",
+   "batch_size": "per GPU 128 (117M), 64 (345M), 32 (762M); dynamic batching grouping similar-length conversations",
+   "steps": null,
+   "epochs": "up to 5 (small and medium); at most 3 (large); until no progress in validation loss",
+   "tokens": null,
+   "seq_len": "inferred: source+target under 200 words after filtering",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "16 Nvidia V100 machines with NVLink",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "speedups": "data compressed into a lazy-loading database file, asynchronous data processes, training time declines approximately linearly with number of GPUs",
+    "rl_attempt": "policy gradient on R=P(Source|Hypothesis) with sample-averaged baseline converged to a degenerate parroting model (hypothesis repeats the source); abandoned",
+    "finetune_note": "conclusion says pre-trained models can be fine-tuned on a moderately-sized dataset in few hours"
+   }
+  },
+  "inference": {
+   "decoding": "greedy, beam search (width 10), top-K sampling (K=10) for MMI candidates and for the shown examples",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "MMI: 16 samples per source, reranked by lowest backward-model loss",
+   "prompting": "dialogue history concatenated as the source; no prompt template",
+   "retrieval": null,
+   "parameters": {
+    "beam_width": "10",
+    "topK": "10",
+    "mmi_candidates": "16"
+   },
+   "other": {
+    "generation_code": "not released because of occasional toxic outputs; model-only release"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "NIST (N-2, N-4)",
+     "definition": "BLEU variant weighting n-gram matches by information gain",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "BLEU (B-2, B-4)",
+     "definition": "n-gram overlap against multiple references",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "METEOR",
+     "definition": "MT metric, Lavie and Agarwal 2007",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Entropy (E-4)",
+     "definition": "lexical diversity, Zhang et al. 2018",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Dist-n (D-1, D-2)",
+     "definition": "distinct n-gram ratio, Li et al. 2016a",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Avg Len",
+     "definition": "average response length",
+     "unit": "tokens (inferred)",
+     "higher_is_better": null
+    },
+    {
+     "name": "Human pairwise preference",
+     "definition": "3 crowd judges rank system pairs on relevance, informativeness, human-likeness on a 3-point Likert-like scale",
+     "unit": "count and %",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "PersonalityChat",
+    "Team B (DSTC-7 winner)",
+    "GPT(345M) in Table 2",
+    "held-out human response",
+    "DialoGPT variants"
+   ],
+   "protocol": "2000 randomly sampled sources from Reddit 6K; each system pair shown to 3 judges; judges passed a qualification test with spam detection; significance by 10K bootstrap iterations, alpha 0.05 (Appendix A). Single runs, no seeds stated."
+  },
+  "availability": {
+   "code": "https://github.com/microsoft/DialoGPT (training pipeline); decoding code withheld",
+   "weights": "released; huggingface.co/microsoft/DialoGPT-medium",
+   "data": "not released (Reddit extraction pipeline released)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.warmup",
+    "quote": "We used the Noam learning rate scheduler with 16000 warm-up steps.",
+    "where": "4.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "DialoGPT is trained on about 147M dialogue instances.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 147116725,
+   "unit": "dialogue instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit 2005-2017 after filtering",
+   "note": null,
+   "where": "Sec 2",
+   "quote": "dialogue instances, in total 1.8 billion words."
+  },
+  {
+   "claim": "On the Reddit 6K set, DialoGPT 345M from GPT-2 with beam search scores 21.76% BLEU-2 versus human 17.90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-2",
+   "value": 21.76,
+   "unit": "% BLEU-2",
+   "baseline_value": 17.9,
+   "n": null,
+   "setup": "Reddit 6K multi-reference, 345M initialised from GPT-2, beam search",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row DialoGPT (345M, Beam) under Training from OpenAI GPT-2, column B-2"
+  },
+  {
+   "claim": "On DSTC-7 (2208 refs x5), DialoGPT 345M with beam search reaches BLEU-4 6.05% versus Team B 1.83% and held-out human 3.13%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4",
+   "value": 6.05,
+   "unit": "% BLEU-4",
+   "baseline_value": 1.83,
+   "n": null,
+   "setup": "DSTC-7 5-reference test, 345M, beam 10, fine-tuned without grounding",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DIALOGPT (345M,Beam), column B-4"
+  },
+  {
+   "claim": "DSTC-7 test set built from sessions with 6+ responses has 2208 instances.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2208,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DSTC-7",
+   "note": null,
+   "where": "Sec 4.2",
+   "quote": "yields a 5-reference test set of size 2208."
+  },
+  {
+   "claim": "Beam search sharply raises DSTC Dist-2 for 345M (39.7% to 51.0%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Dist-2",
+   "value": 51.0,
+   "unit": "% Dist-2",
+   "baseline_value": 39.7,
+   "n": null,
+   "setup": "DSTC-7, 345M, beam width 10",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row DIALOGPT (345M,Beam), column D-2"
+  },
+  {
+   "claim": "Initialising 117M from GPT-2 helps much more than for large models: Reddit 6K BLEU-4 1.77% from scratch vs 1.55% GPT-2 init, but NIST-2 1.23 vs 2.39.",
+   "kind": "measured",
+   "source": null,
+   "metric": "NIST-2",
+   "value": 2.39,
+   "unit": "NIST-2",
+   "baseline_value": 1.23,
+   "n": null,
+   "setup": "Reddit 6K, 117M, GPT-2 init",
+   "note": "BLEU-4 does not improve (1.77% scratch vs 1.55% GPT-2 init); paper says GPT-2 init gives larger gains for smaller models",
+   "where": "Table 3",
+   "table": "Table 3, row DialoGPT (117M) under Training from OpenAI GPT-2, column N-2"
+  },
+  {
+   "claim": "MMI reranking (345M) raises METEOR and diversity but lowers BLEU relative to greedy on Reddit 6K.",
+   "kind": "measured",
+   "source": null,
+   "metric": "METEOR",
+   "value": 11.23,
+   "unit": "% METEOR",
+   "baseline_value": 9.81,
+   "n": null,
+   "setup": "Reddit 6K, 16 top-K samples (K=10) reranked by 345M backward model",
+   "note": null,
+   "where": "Table 3, Sec 4.4",
+   "table": "Table 3, row DIALOGPT (345M, MMI), column E-4 and METEOR 11.23%"
+  },
+  {
+   "claim": "In human eval, judges preferred DialoGPT 345M over PersonalityChat for relevance in 72% of judgements.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relevance preference",
+   "value": 72,
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "2000 sampled Reddit 6K sources, 3 judges per pair",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, Relevance, row DialoGPT (345M) vs PersonalityChat, 3281 (72%)"
+  },
+  {
+   "claim": "Judges preferred 345M with MMI over human responses in relevance (48% vs 43%) and informativeness.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 48,
+   "unit": "% preference",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Reddit 6K, 2000 sources",
+   "note": "Printed row alignment: System A column 2871 (48%) and System B column 2607 (43%); starred significance *** for relevance. Authors attribute to erratic human responses and memes.",
+   "where": "Table 7, Sec 4.6",
+   "table": "Table 7, Relevance, row Human response vs DialoGPT (345M, w/ MMI), 2871 (48%)"
+  },
+  {
+   "claim": "Plain DialoGPT 345M vs human response is not significantly different on relevance (p=0.0552) and DialoGPT 345M vs 762M is not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.0552,
+   "unit": "p-value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bootstrap with 10K iterations",
+   "note": null,
+   "where": "Appendix A",
+   "table": "Table 8, row 2 vs 1 Relevance, column P-Value"
+  },
+  {
+   "claim": "RL (policy gradient on backward likelihood) with the transformer converged to a parroting degenerate solution.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "345M-class GPT-2 transformer, reward P(Source|Hypothesis)",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "easily converges to a degenerate locally-optimal solution,"
+  }
+ ],
+ "limits": [
+  "Released as a model only; users must implement the decoder; generation code withheld due to occasional toxic outputs",
+  "Retains potential for offensive output and reflects gender and historical biases; may agree with unethical statements",
+  "Automatic scores exceed human scores, which the authors attribute to the one-to-many nature of conversation, not to 'realistic' quality",
+  "Judge spam-detection data may have biased results toward extremes",
+  "Optimizer, learning rate, seeds, context length, heads, dropout and wall-clock not stated; single runs",
+  "RL optimisation of mutual information failed; regularised RL left to future work",
+  "Only single-turn evaluation in the quantitative results; multi-turn claims rest on examples (Tables 4-6)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MMI (maximum mutual information) reranking",
+   "definition": "generate hypotheses with top-K sampling, then rerank by P(Source|Hypothesis) from a pre-trained backward model, penalising bland responses",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are unsupervised multitask learners (GPT-2)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "architecture and init",
+   "quote": null
+  },
+  {
+   "work": "Attention is all you need",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "transformer basis",
+   "quote": null
+  },
+  {
+   "work": "A diversity-promoting objective function for neural conversation models",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MMI and Dist-n; PersonalityChat basis",
+   "quote": null
+  },
+  {
+   "work": "Generating informative and diverse conversational responses via adversarial information maximization",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MMI, Entropy metric, RL attempt",
+   "quote": null
+  },
+  {
+   "work": "Grounded response generation task at DSTC7",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "benchmark and metrics",
+   "quote": null
+  },
+  {
+   "work": "HuggingFace pytorch-transformers",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation base",
+   "quote": null
+  },
+  {
+   "work": "Sennrich et al. BPE",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "tokenizer",
+   "quote": null
+  },
+  {
+   "work": "Gupta et al. multiple references",
+   "year": 2019,
+   "arxiv": "1907.10568",
+   "relation": "related",
+   "note": "Fig 1 example",
+   "quote": null
+  },
+  {
+   "work": "Wolf et al. TransferTransfo",
+   "year": 2019,
+   "arxiv": "1901.08149",
+   "relation": "related",
+   "note": "Conv-AI GPT-2 transfer toolkit",
+   "quote": null
+  },
+  {
+   "work": "Olabiyi and Mueller DLGnet",
+   "year": 2019,
+   "arxiv": "1908.01841",
+   "relation": "related",
+   "note": "transformer dialogue model",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "A generated response can surpass a human response in automatic metrics.",
+   "page": 3,
+   "why": "Shows why model BLEU can exceed held-out human BLEU: output sits near the centre of valid responses."
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Model configurations. B denotes batch size per GPU.",
+   "page": 2,
+   "why": "Sizes, layers, widths."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 3.1",
+   "snippet": "p(T|S) = prod_{n=m+1}^{N} p(x_n | x_1, ..., x_{n-1})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 and Table 7 cells are interleaved in extracted text; values mapped by column order",
+  "Table 7 result 'Human response vs MMI' row alignment inferred from layout",
+  "Table 2 text is partly garbled for Entropy/Dist columns; spot values only"
+ ]
+}

@@ -1,6 +1,11 @@
 ---
 origin: synthesis  # split from 03-scale-and-the-model-zoo.md (2026-11-08) so each part stays under the chapter length cap
 sources:
+  - https://arxiv.org/abs/2111.00396
+  - https://doi.org/10.3156/jsoft.29.5_177_2
+  - https://arxiv.org/abs/1710.10196
+  - https://arxiv.org/abs/1912.04958
+  - https://arxiv.org/abs/2105.13290
   - https://arxiv.org/abs/2503.09573
   - https://arxiv.org/abs/2405.21060
   - https://arxiv.org/abs/2405.04517
@@ -36,6 +41,11 @@ cleaned: 2026-11-08
 
 ![Selective state space model with hardware-aware state expansion](../sources/images/gu-mamba-fig1.png)
 *Image Source: Gu & Dao, [Mamba](https://arxiv.org/abs/2312.00752) (2023), Fig. 1*
+
+S4 is the structured state-space layer behind much of this line. It runs as a convolution in training and as a recurrence at generation time, and a special parameterisation of the state matrix makes the convolution kernel cheap to compute. On Long Range Arena it averaged 80.48% in the original submission (86.09 in the updated paper) against under 60% for every baseline (best 59.37), and it was the first model to solve Path-X (length 16,384) at 88% in the original version (96.35 in the updated table) against 50% chance. As a replacement for attention on WikiText-103 it reached 20.95 test perplexity at 249M parameters against 20.51 for a 247M Transformer, so it matched rather than beat attention at language modelling. Generation ran about 60x faster (48K against 0.8K tokens per second; the Transformer timing excludes the embedding and softmax). The HiPPO initialisation matters: random state matrices performed poorly in the authors' ablation (sequential CIFAR-10, 84.27% with HiPPO). The models are around 250M parameters with no large-scale pretraining ([arXiv:2111.00396](https://arxiv.org/abs/2111.00396) (Gu et al., ICLR 2022)).
+
+![Three panels: a continuous state-space model with matrices A, B, C and D mapping input u to output y; special A matrices that capture long-range dependencies; and a fast discrete form that can be run as a recurrence or a convolution](../sources/images/gu-s4-fig1.png)
+*Image Source: Gu et al., [Efficiently Modeling Long Sequences with Structured State Spaces](https://arxiv.org/abs/2111.00396) (2022), Fig. 1*
 
 The line between transformers and the alternatives is thinner than it looks. Mamba-2 shows that a state-space layer whose state transition is a scalar times the identity computes causal attention with the softmax removed and a learned, input-dependent decay applied to the scores. The same layer can therefore run as a linear-time recurrence or as quadratic [matrix multiplications](02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) on tensor cores ([arXiv:2405.21060](https://arxiv.org/abs/2405.21060) (Dao & Gu, 2024-05)). At 2.7B parameters trained on 300B Pile tokens, Mamba-2 matched a Transformer++ baseline (Pile perplexity 6.09 against 6.13, zero-shot average 60.2 for both). Replacing 6 of its 64 layers with attention beat both (5.95, 61.0). The authors' guess is that attention does exact look-up of earlier tokens, while the SSM has to compress everything into a fixed-size state. In their 350M sweep, about 10% attention layers was best, but anything from 3 to 9 attention layers landed within 0.03 perplexity. xLSTM rebuilds the LSTM with exponential gates and a matrix-valued memory. At 1.3B parameters on 300B SlimPajama tokens it reached validation perplexity 8.89, against 9.14 for Mamba and 9.44 for a Llama-style transformer ([arXiv:2405.04517](https://arxiv.org/abs/2405.04517) (Beck et al., 2024-05)). Read both papers' comparisons with care: the authors trained every baseline themselves, ran each configuration once and stopped at 2.7B and 1.3B parameters. xLSTM's own paper says its kernels were about 4× slower than FlashAttention.
 
@@ -111,6 +121,22 @@ softmax KV cache at  10000 tokens: 80000 numbers
 ```
 
 NumPy, one head, a made-up feature map. The state is what makes generation cheap and what the limits above are about: everything the model remembers of the prompt has to fit in it.
+
+## Image generators: GANs, and a transformer over image tokens
+
+The same course covers generative image models, and two designs sit on either side of the transformer. A generative adversarial network (GAN) trains a generator and a discriminator against each other, so the generator learns whatever fools the discriminator. A short Japanese glossary entry puts it plainly: introduced by Goodfellow et al. in 2014, with DCGAN adding deep convolutional networks for stability, it gives sharper images than a VAE but is less stable to train. The entry has no experiments or numbers, so it is a pointer, not evidence ([doi:10.3156/jsoft.29.5_177_2](https://doi.org/10.3156/jsoft.29.5_177_2) (Shibata, Journal of Japan Society for Fuzzy Theory and Intelligent Informatics 2017)).
+
+Progressive growing made large GANs trainable by starting at low resolution and adding layers that fade in as training proceeds. On CelebA at 128x128 it roughly halved training time, and reaching 6.4M images at 1024x1024 took 96 hours against an extrapolated 520 (a 5.4x speed-up; the baseline time is extrapolated, not run). The final CelebA-HQ model reached FID 7.30 on 50K images after 4 days on 8 V100s, with 23.1M parameters in each network ([arXiv:1710.10196](https://arxiv.org/abs/1710.10196) (Karras et al., ICLR 2018)).
+
+![Diagram of fading in new layers when doubling resolution from 16x16 to 32x32: in the transition the output of the old toRGB layer is blended with the new higher-resolution layer by weight alpha, on both the generator and the discriminator side](../sources/images/karras-progan-fig2.png)
+*Image Source: Karras et al., [Progressive Growing of GANs for Improved Quality, Stability, and Variation](https://arxiv.org/abs/1710.10196) (2018), Fig. 2*
+
+StyleGAN2 is an artefact-by-artefact repair of StyleGAN, and its ablation ladder shows which changes earned their cost. FFHQ FID fell from 4.40 to 2.84 and LSUN Car from 3.27 to 2.32. Weight demodulation alone left FID unchanged (4.40 to 4.39), and path-length regularisation made LSUN Car FID worse (2.83 to 3.43) while improving the smoothness measure. Two LSUN Cat models with the same FID of 8.53 differed in path length by 924 against 387, so FID alone hides a quality axis. The whole project used 131.61 MWh and 51.05 V100 GPU-years ([arXiv:1912.04958](https://arxiv.org/abs/1912.04958) (Karras et al., CVPR 2020)).
+
+CogView takes the other route: quantise an image into a 32x32 grid of tokens from an 8,192-entry codebook with a discrete autoencoder, then let one GPT-style transformer model the text tokens and image tokens as a single sequence. On COCO it scored FID 27.1 against 27.5 for DALL-E (a figure read from the DALL-E comparison) and 26.5 for DM-GAN and DF-GAN, and the blurred FID-2 was 13.9 against 45.5. Those FIDs use a Gaussian-blur variant and 60 candidates reranked by the model itself. Human raters picked CogView best 37.02% of the time against 59.53% for the original image, and DM-GAN ranked last in preference despite the best FID, so the metric and the raters disagree. The training story is in [15](15-pretraining-runs-cost-and-scale.md) ([arXiv:2105.13290](https://arxiv.org/abs/2105.13290) (Ding et al., NeurIPS 2021)).
+
+![Framework of CogView: a text tokenizer produces text tokens and an image tokenizer, a discrete autoencoder, turns the image into 1,024 image tokens; separator tokens join them into one sequence for a GPT-style transformer](../sources/images/ding-cogview-fig3.png)
+*Image Source: Ding et al., [CogView: Mastering Text-to-Image Generation via Transformers](https://arxiv.org/abs/2105.13290) (2021), Fig. 3*
 
 ---
 

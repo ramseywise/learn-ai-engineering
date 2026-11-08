@@ -1,0 +1,169 @@
+{
+ "schema": 1,
+ "key": "1912.11370",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kolesnikov-2020-big-transfer-bit.pdf",
+ "bib": {
+  "title": "Big Transfer (BiT): General Visual Representation Learning",
+  "authors": ["Alexander Kolesnikov", "Lucas Beyer", "Xiaohua Zhai", "Joan Puigcerver", "Jessica Yung", "Sylvain Gelly", "Neil Houlsby"],
+  "first_author": "Kolesnikov",
+  "year": 2020,
+  "venue": "preprint (arXiv v3, 5 May 2020; ECCV 2020)",
+  "arxiv": "1912.11370",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 65803,
+  "chars_total": 65803,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can scaling supervised pre-training (data, model, schedule) plus a simple fixed fine-tuning heuristic give a general visual representation that transfers well to many tasks, including very low-data ones?",
+ "hypothesis": "Large-scale supervised pre-training with a few carefully chosen components (large model, long schedule, GN+WS) transfers strongly across data regimes without per-task hyperparameter search.",
+ "contributions": [
+  "BiT recipe: scale pre-training, GroupNorm + Weight Standardization, no BN",
+  "BiT-HyperRule: a heuristic setting fine-tuning schedule, resolution and MixUp from dataset size and image resolution",
+  "State-of-the-art generalist results on ILSVRC-2012, CIFAR-10/100, Pets, Flowers, VTAB-1k, ObjectNet and strong few-shot results",
+  "Analysis of model/data scaling, optimisation on large datasets, and normalisation choice",
+  "Release of BiT-M (ImageNet-21k) weights"
+ ],
+ "method": {
+  "summary": "ResNet-v2 with GroupNorm and Weight Standardization is pre-trained with SGD on ILSVRC-2012 (BiT-S), ImageNet-21k (BiT-M) or JFT-300M (BiT-L), then fine-tuned per task with a fixed heuristic (BiT-HyperRule) that picks schedule length, resolution and MixUp from dataset size and image size. Evaluated on standard benchmarks, few-shot subsets, VTAB-1k, ObjectNet and COCO detection.",
+  "task": "supervised image classification pre-training and transfer (fine-tuning)",
+  "trains": true,
+  "datasets": [
+   {"name": "ILSVRC-2012", "role": "both", "size": "1.28 million images, 1000 classes", "split": "official train for fine-tuning, official test split if public else val", "source": "ImageNet (Deng et al. 2009)", "preprocessing": null},
+   {"name": "ImageNet-21k", "role": "pretrain", "size": "14.2 million images, 21k classes", "split": null, "source": "public, WordNet hierarchy; images may have multiple labels", "preprocessing": null},
+   {"name": "JFT-300M", "role": "pretrain", "size": "around 300 million images, 1.26 labels per image, 18 291 classes", "split": null, "source": "Google internal; automatic annotation, approximately 20% noisy labels", "preprocessing": "all images present in downstream test sets removed (less than 50k images removed in total, Appendix C)"},
+   {"name": "CIFAR-10/100, Oxford-IIIT Pet, Oxford Flowers-102", "role": "eval", "size": null, "split": "official train for fine-tuning, official test if public else val", "source": "public", "preprocessing": null},
+   {"name": "VTAB-1k", "role": "eval", "size": "19 tasks, 1000 training samples each", "split": "VTAB-1k score = mean top-1 over 19 tasks; hyperparameter study used 800 train + 200 val", "source": "Zhai et al. 2019", "preprocessing": "no flipping on dSprites-orientation, SmallNORB-azimuth, dSprites-location; no cropping on Clevr-count, Clevr-distance, DMLab, KITTI-distance, dSprites-location"},
+   {"name": "ObjectNet", "role": "eval", "size": "313 classes, 113 overlap with ILSVRC-2012 (evaluated on those 113)", "split": "test only", "source": "Barbu et al. 2019", "preprocessing": "resize shorter side to 512, central 480x480 crop"},
+   {"name": "COCO-2017", "role": "both", "size": null, "split": "train split for detection fine-tuning, val for reporting", "source": "Lin et al. 2014", "preprocessing": null},
+   {"name": "Out-of-context objects (self-built)", "role": "eval", "size": "3321 images (81 foreground objects x 41 backgrounds)", "split": null, "source": "OpenImages-v5 segmentation masks pasted onto reusable-licence search-engine backgrounds; 20 classes", "preprocessing": "object longest side 80% of background width"}
+  ],
+  "models": [
+   {"name": "BiT-S / BiT-M / BiT-L (ResNet152x4 default)", "role": "proposed", "params": "928 million (largest, as stated in Sec 2.2)", "architecture": "ResNet-v2, BatchNorm replaced by GroupNorm, Weight Standardization in all conv layers; ResNet-152 with every hidden layer widened 4x", "init_from": "scratch (classifier head re-trained from scratch at fine-tuning)", "tokenizer": null, "vocab": null, "layers": "152", "hidden": "width multiplier 4", "heads": null, "context": null, "other": {"other_sizes": "ResNet-50x1, 50x3, 101x1, 101x3, 152x4", "suffix": "-S/M/L refers to pre-training dataset size and schedule, not architecture"}},
+   {"name": "RetinaNet with BiT backbone", "role": "evaluated", "params": null, "architecture": "ResNet-101x3 backbone for all BiT models (memory limit)", "init_from": "BiT-S / BiT-M / BiT-L", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "supervised classification (labels of the pre-training dataset); fine-tuning with re-initialised head",
+   "optimizer": "SGD with momentum 0.9 (no adaptive methods; none gave benefit in preliminary runs)",
+   "lr": "pre-training: initial 0.03 (multiplied by batch size/256 per Goyal et al.); fine-tuning: 0.003",
+   "lr_schedule": "pre-training BiT-S/M: 90 epochs, /10 at epochs 30, 60, 80; BiT-L: 40 epochs, decay after 10, 23, 30, 37. Fine-tuning: /10 at 30%, 60%, 90% of steps",
+   "warmup": "linear, 5000 optimization steps (pre-training)",
+   "batch_size": "pre-training 4096 global (8 images per chip); fine-tuning 512",
+   "steps": "fine-tuning: 500 steps for small tasks (<20k examples), 10k for medium (<500k), 20k for large",
+   "epochs": "BiT-S 90, BiT-M 90, BiT-L 40",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "pre-training 0.0001; none during transfer",
+   "dropout": "none in fine-tuning",
+   "regularisation": "MixUp not used in pre-training; in fine-tuning MixUp alpha=0.1 for medium and large tasks; no weight decay to zero, no weight decay to initial parameters, no dropout downstream",
+   "hardware": "Cloud TPUv3-512 for pre-training",
+   "compute": "Fig 7 middle quotes 8 GPU-weeks vs 8 GPU-months for a ResNet-101x3 on JFT-300M; no other total stated",
+   "wall_clock": null,
+   "seeds": "fine-tuning results are median +- std over 3 runs; few-shot: 5 random subsamples; detection: 5 repeats, median",
+   "other": {
+    "image_preprocessing_pretrain": "Inception-style crop (Szegedy 2015), random horizontal mirroring, resize to 224x224",
+    "finetune_resolution": "images with area < 96x96 resized to 160x160 then random crop 128x128; larger resized to 448x448 with 384x384 crop; for R152x4 512x512 resize and 480x480 crop",
+    "finetune_augmentation": "random crop and horizontal flip except where they destroy label semantics",
+    "detection_training": "RetinaNet, 30 epochs, batch 256, SGD, lr 0.08, momentum 0.9, wd 1e-4, lr /10 at epochs 16 and 22, 1024x1024 input, flips and scale jitter, focal loss alpha 0.25 gamma 2.0; 60 epochs gave no gain; median of 5 runs",
+    "hyperparameter_search_appendix_A": "40 random trials per VTAB task: lr log-uniform [1e-4,1e-1]; updates in {500,1000,2000,4000,8000,16000}; penultimate dropout uniform [0,0.7]; wd to initial weights log-uniform [1e-6,1e-1]; MixUp alpha in {None,0.05,0.1,0.2,0.4}; resolution in {64,128,192,256,320,384}"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "test-time: resize to fixed size only",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "top-1 accuracy", "definition": "fraction of test images whose top prediction matches the label", "unit": "%", "higher_is_better": true},
+    {"name": "top-5 accuracy", "definition": "label within top 5 predictions", "unit": "%", "higher_is_better": true},
+    {"name": "VTAB-1k score", "definition": "top-1 accuracy averaged over 19 tasks with 1000 training examples each", "unit": "%", "higher_is_better": true},
+    {"name": "AP", "definition": "standard COCO average precision", "unit": "AP points", "higher_is_better": true}
+   ],
+   "baselines": ["Generalist SOTA (Noisy-student-free generalists: Touvron 2019, GPipe, EfficientNet)", "Specialist SOTA (Noisy Student, Ngiam 2018)", "ResNet-50 pre-trained on ILSVRC-2012", "VIVI-Ex-100%, Sup-Rot-100%, Sup-Ex-100% on VTAB", "semi-supervised methods (MixMatch, ReMixMatch, S4L, CPC v2) as reference points", "RetinaNet ImageNet baseline"],
+   "protocol": "Single hyperparameter setting per task (BiT-HyperRule); median +- std over 3 fine-tuning runs; near-duplicates studied in Appendix C (Table 7)."
+  },
+  "availability": {
+   "code": null,
+   "weights": "promised: 'we will release the performant BiT-M model trained on ImageNet-21k'",
+   "data": "JFT-300M not public"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.batch_size", "quote": "We use a global batch size of 4096 and train on a Cloud TPUv3-", "where": "Sec 3.3"}
+  ]
+ },
+ "results": [
+  {"claim": "BiT-L reaches 87.54% top-1 on ILSVRC-2012, above the prior generalist SOTA of 86.4.", "kind": "measured", "source": null, "metric": "top-1", "value": "87.54", "unit": "%", "baseline_value": "86.4", "n": "3 runs", "setup": "BiT-L ResNet152x4 pre-trained on JFT-300M, fine-tuned with BiT-HyperRule", "table": "Table 1, row ILSVRC-2012, column BiT-L", "note": "Abstract rounds to 87.5%; Table 7 'Full' upstream gives 87.8", "where": "Table 1"},
+  {"claim": "BiT-L reaches 99.37% top-1 on CIFAR-10.", "kind": "measured", "source": null, "metric": "top-1", "value": "99.37", "unit": "%", "baseline_value": "99.0", "n": "3 runs", "setup": "BiT-L, BiT-HyperRule", "table": "Table 1, row CIFAR-10, column BiT-L", "note": null, "where": "Table 1"},
+  {"claim": "BiT-L scores 76.29% on the 19-task VTAB-1k vs 70.5 for the previous best.", "kind": "measured", "source": null, "metric": "VTAB-1k score", "value": "76.29", "unit": "%", "baseline_value": "70.5", "n": "3 runs", "setup": "BiT-L, one hyperparameter setting (BiT-HyperRule), 1000 examples per task", "table": "Table 1, row VTAB (19 tasks), column BiT-L", "note": "Abstract says 76.3%", "where": "Table 1"},
+  {"claim": "Pre-training on ImageNet-21k instead of ILSVRC-2012 improves ILSVRC-2012 top-1 by 4.09 points (same ResNet152x4).", "kind": "measured", "source": null, "metric": "top-1 improvement", "value": "+4.09", "unit": "points", "baseline_value": "81.30", "n": null, "setup": "BiT-S vs BiT-M, ResNet152x4", "table": "Table 2, row Improvement, column ILSVRC-2012", "note": "Flowers +9.41, CIFAR-100 +5.96, VTAB-1k +3.77", "where": "Table 2"},
+  {"claim": "With 5 labelled examples per class BiT-L gets 72.0% top-1 on ILSVRC-2012.", "kind": "measured", "source": null, "metric": "top-1", "value": "72.0", "unit": "%", "baseline_value": null, "n": "5 random subsamples", "setup": "BiT-L fine-tuned on balanced subsets", "quote": "with just 5 labeled samples per class it achieves top-1 accuracy of 72.0% on ILSVRC-2012", "note": null, "where": "Sec 3.5"},
+  {"claim": "BiT-L reaches 82.6% on CIFAR-100 with 10 examples per class.", "kind": "measured", "source": null, "metric": "top-1", "value": "82.6", "unit": "%", "baseline_value": null, "n": "5 random subsamples", "setup": "BiT-L few-shot", "quote": "On CIFAR-100, we achieve 82.6% with just 10 samples per class.", "note": null, "where": "Sec 3.5"},
+  {"claim": "ObjectNet top-5 reaches 80.0% (BiT-L R152x4), almost 25% absolute above prior SOTA; scaling data and model together is essential.", "kind": "measured", "source": null, "metric": "top-5", "value": "80.0", "unit": "%", "baseline_value": null, "n": null, "setup": "113 overlapping classes, resize and central crop", "quote": "achieving unprecedented top-5 accuracy of 80.0%", "note": "Table 6 R152x4 BiT-L: 58.7 top-1 / 80.0 top-5 resize&crop", "where": "Sec 3.6, Table 6"},
+  {"claim": "Hyperparameter search (40 random trials per task on VTAB-1k) lifts BiT-L from 76.29% to 78.72%, saturating after about 20 trials.", "kind": "measured", "source": null, "metric": "VTAB-1k score", "value": "78.72", "unit": "%", "baseline_value": "76.29", "n": "40 trials per task", "setup": "BiT-L, retrained on 1000 images with selected hyperparameters", "quote": "we obtain the VTAB-1k score of 78.72%, an absolute improvement of 2.43% over 76.29% score", "note": null, "where": "Appendix A"},
+  {"claim": "RetinaNet with BiT-L backbone gets 43.8 AP on COCO-2017 val vs 40.8 for the literature ImageNet baseline.", "kind": "measured", "source": null, "metric": "AP", "value": "43.8", "unit": "AP", "baseline_value": "40.8", "n": "median of 5 runs", "setup": "ResNet-101x3 backbone; BiT-S 41.7, BiT-M 43.2", "table": "Table 3, row RetinaNet (BiT-L), column AP", "note": null, "where": "Table 3"},
+  {"claim": "GroupNorm alone drops ILSVRC-2012 top-1 by 5.4% vs BatchNorm at batch 4096 on 128 chips; adding Weight Standardization makes GN beat BN (76.0 vs 75.6).", "kind": "measured", "source": null, "metric": "top-1", "value": "76.0", "unit": "%", "baseline_value": "75.6", "n": null, "setup": "ResNet-50 from scratch on ILSVRC-2012, batch 4096", "table": "Table 4, row Group Norm., column Weight Std.", "note": "GN plain conv 70.2; text: 'a performance drop of 5.4%'", "where": "Sec 4.3, Table 4"},
+  {"claim": "GN+WS transfers better than BN to VTAB-1k (70.39 vs 67.72 for BN plain conv).", "kind": "measured", "source": null, "metric": "VTAB-1k score", "value": "70.39", "unit": "%", "baseline_value": "67.72", "n": null, "setup": "ResNet-50 models of Table 4 pre-trained on ILSVRC-2012", "table": "Table 5, row Group Norm., column Weight Std.", "note": null, "where": "Table 5"},
+  {"claim": "Applying the standard ILSVRC-2012 budget (about 100 million images seen) to ImageNet-21k hurts; longer training (3x, 10x) recovers and exceeds it.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 7 left, ILSVRC-2012 top-1 after fine-tuning", "quote": null, "note": "values only in figure", "where": "Sec 4.2, Fig 7"},
+  {"claim": "Lower pre-training weight decay (1e-5) converges faster at first but ends worse than 1e-4, via growing weight norms and shrinking effective learning rate with normalisation.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "JFT-300M pre-training, Fig 7 right", "quote": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Bigger models or bigger data alone can fail: ResNet-50x1 on JFT-300M can be worse than on ImageNet-21k; both must grow together.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Fig 5, 5 architectures x 3 pre-training datasets, 3 downstream datasets", "quote": "Perhaps surprisingly, the ResNet-50x1 model trained on the JFT-300M dataset can even performs worse than the same architecture trained on the smaller ImageNet-21k.", "note": null, "where": "Sec 4.1"},
+  {"claim": "Only 19.21% of BiT-L's ILSVRC-2012 mistakes are clearly agreed by raters to be the label over the prediction; around half of CIFAR-10 mistakes are ambiguity or label noise.", "kind": "measured", "source": null, "metric": "share of mistakes", "value": "19.21", "unit": "%", "baseline_value": null, "n": null, "setup": "human rater study on BiT-L errors (an earlier BiT-L model per footnote)", "quote": "in only 19.21% of the ILSVRC-2012 mistakes do human raters clearly agree with the label over the prediction", "note": null, "where": "Sec 6"},
+  {"claim": "Near-duplicates barely affect results; fewer than 50k images were removed from JFT-300M.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Table 7 Full vs Dedup, e.g. ILSVRC-2012 87.8 vs 87.9 (6470 dups from JFT)", "quote": "We observe that near-duplicates barely aﬀect the results in all of our experiments.", "note": null, "where": "Appendix C, Table 7"}
+ ],
+ "limits": [
+  "JFT-300M is not public, so BiT-L cannot be reproduced; only BiT-M (ImageNet-21k) weights are promised.",
+  "Authors say standard benchmarks look near saturation (many remaining 'errors' are label noise or ambiguity); VTAB and few-shot are further from saturation.",
+  "Hyperparameter tuning per task would help further (VTAB-1k 78.72 vs 76.29), so BiT-HyperRule is not optimal.",
+  "Mistake figures and human evaluation use an earlier BiT-L model with nearly the same accuracy.",
+  "Only SGD tried in preliminary tests; no systematic optimiser comparison reported.",
+  "Specialist methods (Noisy Student 88.4 on ILSVRC-2012) still beat BiT-L there, at a per-task training cost.",
+  "Convolutional ResNets only; precision and total pre-training compute for BiT-L not stated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "BiT-HyperRule", "definition": "a heuristic rule that sets fine-tuning training schedule length, resolution and MixUp use as a simple function of the task's intrinsic image resolution and number of datapoints", "where": "Sec 2.2"},
+  {"term": "generalist vs specialist representation", "definition": "generalist models do task-independent pre-training; specialist models condition pre-training on each task", "where": "Table 1 caption, Sec 3.4"}
+ ],
+ "lineage": [
+  {"work": "Revisiting unreasonable effectiveness of data in deep learning era (Sun et al.)", "year": 2017, "arxiv": null, "relation": "uses-data", "note": "JFT-300M dataset and large-data pre-training finding", "quote": null},
+  {"work": "Group normalization (Wu and He)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "replaces BatchNorm", "quote": null},
+  {"work": "Weight standardization (Qiao et al.)", "year": 2019, "arxiv": "1903.10520", "relation": "uses-method", "note": "combined with GN for large batch training", "quote": null},
+  {"work": "Identity mappings in deep residual networks (He et al.)", "year": 2016, "arxiv": null, "relation": "uses-method", "note": "ResNet-v2 architecture", "quote": null},
+  {"work": "mixup (Zhang et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "used in fine-tuning for medium/large tasks", "quote": null},
+  {"work": "Accurate, large minibatch SGD (Goyal et al.)", "year": 2017, "arxiv": "1706.02677", "relation": "uses-method", "note": "warmup and learning rate scaling", "quote": null},
+  {"work": "Scaling laws for neural language models (Kaplan et al.)", "year": 2020, "arxiv": "2001.08361", "relation": "related", "note": "cited for larger data needing larger models", "quote": null},
+  {"work": "A large-scale study of representation learning with VTAB (Zhai et al.)", "year": 2019, "arxiv": "1910.04867", "relation": "uses-data", "note": "VTAB-1k benchmark", "quote": null},
+  {"work": "Domain adaptive transfer learning with specialist models (Ngiam et al.)", "year": 2018, "arxiv": "1811.07056", "relation": "baseline", "note": "specialist SOTA", "quote": null},
+  {"work": "Self-training with noisy student (Xie et al.)", "year": 2019, "arxiv": "1911.04252", "relation": "baseline", "note": "specialist SOTA 88.4 on ILSVRC-2012 (concurrent)", "quote": null},
+  {"work": "Exploring the limits of weakly supervised pretraining (Mahajan et al.)", "year": 2018, "arxiv": null, "relation": "related", "note": "Instagram 3.5B pre-training", "quote": null},
+  {"work": "Fixing the train-test resolution discrepancy (Touvron et al.)", "year": 2019, "arxiv": null, "relation": "baseline", "note": "generalist SOTA on ILSVRC-2012 and motivates resolution change in fine-tuning", "quote": null},
+  {"work": "ObjectNet (Barbu et al.)", "year": 2019, "arxiv": null, "relation": "uses-data", "note": "test-only evaluation", "quote": null},
+  {"work": "Focal loss / RetinaNet (Lin et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "detection head", "quote": null},
+  {"work": "Rethinking ImageNet pre-training (He et al.)", "year": 2019, "arxiv": null, "relation": "related", "note": "cited for transfer learning motivation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Transfer performance of BiT-L, previous SOTA and ResNet-50 baseline on downstream tasks, with 1 to 100 images per class curves.", "page": 2, "why": "shows few-shot to full-data transfer in one view"},
+  {"figure": "Fig 5", "caption": "Effect of upstream data and model size on downstream performance.", "page": 9, "why": "shows data and model must scale together"},
+  {"figure": "Fig 7", "caption": "Left: standard budget on ImageNet-21k seems detrimental; middle: JFT progress flat after 8 GPU-weeks but clear at 8 GPU-months; right: weight decay effect.", "page": 11, "why": "explains why large pre-training needs long schedules and larger weight decay"},
+  {"figure": "Table 4/5", "caption": "BN/GN with and without WS: ILSVRC-2012 accuracy and VTAB-1k transfer.", "page": 12, "why": "justifies GN+WS choice"}
+ ],
+ "code": [],
+ "problems": [
+  "Text extraction uses ligature glyphs (e.g. 'ﬁne-tuning'); numbers in figures (Fig 2-7, 9, 10, 14) are not recoverable from text.",
+  "Table 6 R152x4 row is garbled in extraction; BiT-L numbers 58.7 / 80.0 read from it are consistent with text.",
+  "No embedded instructions found."
+ ]
+}

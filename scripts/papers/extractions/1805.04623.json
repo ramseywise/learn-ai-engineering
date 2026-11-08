@@ -1,0 +1,391 @@
+{
+ "schema": 1,
+ "key": "1805.04623",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/khandelwal-2018-sharp-nearby-fuzzy-far-away.pdf",
+ "bib": {
+  "title": "Sharp Nearby, Fuzzy Far Away: How Neural Language Models Use Context",
+  "authors": [
+   "Urvashi Khandelwal",
+   "He He",
+   "Peng Qi",
+   "Dan Jurafsky"
+  ],
+  "first_author": "Khandelwal",
+  "year": 2018,
+  "venue": "ACL 2018 (56th Annual Meeting, Long Papers)",
+  "arxiv": "1805.04623",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41167,
+  "chars_total": 41167,
+  "engine": "pymupdf",
+  "skipped": "Appendices A (hyperparameters) and B (extra figures) are referenced but absent from the PDF text; figure contents not readable as text."
+ },
+ "type": "empirical",
+ "question": "How much prior context does an LSTM language model use, and are nearby and distant context represented differently, and how do copy mechanisms help?",
+ "hypothesis": null,
+ "contributions": [
+  "Test-time ablations (truncate, shuffle/reverse, replace, drop) of context in a trained LSTM LM",
+  "Effective context about 200 tokens; nearby (50 tokens) vs long-range split",
+  "Analysis of how the neural cache helps copying from distant context"
+ ],
+ "method": {
+  "summary": "Take a standard AWD-LSTM LM trained normally, and at test time perturb the prior context (truncate, permute, drop, replace) and measure the increase in dev NLL/perplexity. Also compare with and without a neural cache on words copyable from nearby, far, or no context.",
+  "task": "language modelling context-use analysis",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "Penn Treebank",
+    "role": "both",
+    "size": "0.9M train tokens, 10K vocab; dev 73,760 tokens",
+    "split": "dev used for results",
+    "source": "WSJ (Marcus 1993; Mikolov 2010)",
+    "preprocessing": null
+   },
+   {
+    "name": "WikiText-2",
+    "role": "both",
+    "size": "2.1M train tokens, 33K vocab; dev 217,646 tokens",
+    "split": "dev used for results",
+    "source": "Wikipedia (Merity 2017)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "AWD-LSTM",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "LSTM LM, trained and finetuned with Averaging SGD",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "10K PTB / 33K Wiki",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "infinite-context at test by default",
+    "other": {
+     "hyperparameters": "in Appendix A, not in extracted text"
+    }
+   },
+   {
+    "name": "AWD-LSTM + neural cache",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "LSTM plus continuous cache (Grave 2017b)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "cache size 500 (PTB), 3,875 (Wiki)",
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "negative log likelihood",
+   "optimizer": "Averaging SGD (Merity 2018)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 random seeds",
+   "other": {
+    "note": "Model is not trained with perturbations. Varied one at a time: BPTT timesteps, dropout rate, model size (hidden, layers, embedding)."
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "3 models with different seeds, averaged",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "permutable span": "20 tokens",
+    "context window for permutation/drop": "n = 300",
+    "drop offsets s1": "{5, 20, 100}",
+    "frequent word": ">= 800 training occurrences",
+    "nearby/long-range boundary": "50 tokens",
+    "POS tagger": "Stanford CoreNLP"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "NLL / perplexity",
+     "definition": "PP = exp(NLL) on held-out dev; ablations reported as increase in NLL or relative perplexity",
+     "unit": "nats / perplexity %",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "infinite-context unperturbed model",
+    "random-drop control of same token count"
+   ],
+   "protocol": "Dev sets only; test results said to be consistent; mean of 3 seeds, error bars std (Fig 1,2) or 95% CI (Fig 3,4,7)."
+  },
+  "availability": {
+   "code": "https://github.com/urvashik/lm-context-analysis",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Effective context size is about 200 tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "about 200",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, PTB and Wiki",
+   "quote": "we ﬁnd that the model is capable of using about 200 to-\nkens of context on average",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "1% perplexity increase only beyond 150 tokens on PTB and 250 on Wiki",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "150 PTB, 250 Wiki",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds",
+   "quote": "we only see a 1% increase in perplexity as we\nmove beyond a context of 150 tokens on PTB and\n250 tokens on Wiki",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Local word order matters only within the 20 most recent tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "20",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, span of 20 tokens, n=300",
+   "quote": "Local word order only matters for the most re-\ncent 20 tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Global word order matters only within the 50 most recent tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": "tokens",
+   "value": "50",
+   "unit": "tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, n=300",
+   "quote": "Global order of words only matters for the most\nrecent 50 tokens",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1"
+  },
+  {
+   "claim": "Dropping content words 5 tokens away raises perplexity by about 65% vs 17% for random drop",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity increase",
+   "value": "65",
+   "unit": "%",
+   "baseline_value": "17",
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, PTB, s1=5, n=300",
+   "quote": "increases\nmodel perplexity by about 65%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "For Cfar words, dropping all distant context raises perplexity 12% vs 2% for dropping target occurrences",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity increase",
+   "value": "12",
+   "unit": "%",
+   "baseline_value": "2",
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, PTB",
+   "quote": "(12%\nand 2% increase in perplexity, respectively)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "For Cnear words dropping the target raises perplexity almost 9% vs about 3.5% for dropping long-range context",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity increase",
+   "value": "9",
+   "unit": "%",
+   "baseline_value": "3.5",
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, PTB",
+   "quote": "removing the target word which increases perplexity by\nalmost 9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  },
+  {
+   "claim": "Without a cache, Cfar words see 53% perplexity increase on Wiki vs 32% for Cnear",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity increase",
+   "value": "53",
+   "unit": "%",
+   "baseline_value": "32",
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, Wiki, cache size 3,875",
+   "quote": "a whopping 53% increase for Wiki",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Cache hurts about 36% of PTB words (and 20% of Wiki) that cannot be copied from context",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of words hurt",
+   "value": "36",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PTB, cache size 500; Wiki 20%",
+   "quote": "the cache also hurts about 36% of\nthe words in PTB and 20% in Wiki",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "13-token context gives 25% perplexity increase in this setup vs about 8% reported by Chelba et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "perplexity increase",
+   "value": "25",
+   "unit": "%",
+   "baseline_value": "8",
+   "n": null,
+   "setup": "Averaging-SGD LSTM LM (Merity 2018), dev sets, mean of 3 seeds, PTB, 13 tokens",
+   "quote": "compared to a 25% increase at 13 tokens of con-\ntext in our setup",
+   "table": null,
+   "note": "Authors attribute gap to Chelba training with restricted context",
+   "where": "Sec 7"
+  }
+ ],
+ "limits": [
+  "Perturbations applied only at test time; model not trained on them, so losses are upper bounds.",
+  "Single architecture (AWD-LSTM) and two small datasets; model and data effects are confounded (vocab, dataset size).",
+  "Token-level analysis only; sentence-level interactions left to future work.",
+  "Results on dev sets only; hyperparameters in Appendix A not in the extracted text.",
+  "Pre-Transformer; does not cover attention models."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "effective context size",
+   "definition": "number of tokens that achieve a similar loss (1-2% perplexity difference) to infinite context",
+   "where": "Sec 4"
+  },
+  {
+   "term": "Cnear/Cfar/Cnone",
+   "definition": "target words copyable from the 50 most recent tokens, only from beyond 50 tokens, or not at all",
+   "where": "Sec 6"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Regularizing and Optimizing LSTM Language Models",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "AWD-LSTM model analysed",
+   "quote": null
+  },
+  {
+   "work": "Improving Neural Language Models with a Continuous Cache",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "neural cache analysed",
+   "quote": null
+  },
+  {
+   "work": "Fine-grained analysis of sentence embeddings using auxiliary prediction tasks",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "extends sentence-level LSTM analysis to long context",
+   "quote": null
+  },
+  {
+   "work": "Chelba et al. N-gram language modeling using recurrent neural network estimation",
+   "year": 2017,
+   "arxiv": "1703.10724",
+   "relation": "related",
+   "note": "13-token context result compared",
+   "quote": null
+  },
+  {
+   "work": "Penn Treebank; WikiText-2",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Marcus 1993, Merity 2017",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Effects of varying the number of tokens provided in the context, as compared to the same model provided with infinite context.",
+   "page": 3,
+   "why": "shows context-size saturation, by hyperparameters, frequency and POS"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Effects of shuffling and reversing the order of words in 300 tokens of context, relative to an unperturbed baseline.",
+   "page": 4,
+   "why": "shows the 20/50 token order boundaries"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Model performance relative to using a cache.",
+   "page": 8,
+   "why": "cache helps Cfar most"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Appendices A and B absent from extracted text; training hyperparameters null."
+ ]
+}

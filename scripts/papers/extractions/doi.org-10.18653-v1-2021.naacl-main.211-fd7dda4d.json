@@ -1,0 +1,621 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2021.naacl-main.211",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ahmad-2021-unified-pre-training-program-understanding.pdf",
+ "bib": {
+  "title": "Unified Pre-training for Program Understanding and Generation",
+  "authors": [
+   "Wasi Uddin Ahmad",
+   "Saikat Chakraborty",
+   "Baishakhi Ray",
+   "Kai-Wei Chang"
+  ],
+  "first_author": "Ahmad",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021",
+  "arxiv": "2103.06333",
+  "doi": "10.18653/v1/2021.naacl-main.211"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 55234,
+  "chars_total": 55234,
+  "engine": "pymupdf",
+  "skipped": "References and qualitative code figures skimmed"
+ },
+ "type": "empirical",
+ "question": "Can one denoising seq2seq model pre-trained on code and related natural language support both program understanding and generation tasks?",
+ "hypothesis": "Denoising pre-training on unlabeled Java, Python and StackOverflow text lets a model learn program syntax and semantics that transfer to generation and classification tasks, even with few labels.",
+ "contributions": [
+  "PLBART, a BART-base-sized seq2seq model pre-trained on Java, Python and NL",
+  "Evaluation on summarization, generation, translation, repair, clone and vulnerability detection",
+  "Analysis that it learns syntax, style and data flow and works with limited annotations"
+ ],
+ "method": {
+  "summary": "BART-base architecture pre-trained with denoising (masking, deletion, span infilling) on Java and Python functions from GitHub plus StackOverflow posts, then fine-tuned per task on CodeXGLUE datasets.",
+  "task": "denoising seq2seq pre-training for code; fine-tuned for summarization, generation, translation, repair, classification",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GitHub Java functions",
+    "role": "pretrain",
+    "size": "352 GB; 36.4 B tokens (all-language row); 470 M documents (functions)",
+    "split": null,
+    "source": "Google BigQuery GitHub repos; pipeline of Lachaux et al. 2020",
+    "preprocessing": "function extraction following Lachaux et al. 2020"
+   },
+   {
+    "name": "GitHub Python functions",
+    "role": "pretrain",
+    "size": "224 GB; 28 B tokens; 210 M functions",
+    "split": null,
+    "source": "Google BigQuery GitHub repos",
+    "preprocessing": null
+   },
+   {
+    "name": "StackOverflow posts (NL)",
+    "role": "pretrain",
+    "size": "79 GB; 6.7 B tokens; 47 M posts",
+    "split": null,
+    "source": "stackexchange dump dated 7 Sep 2020",
+    "preprocessing": "questions and answers kept, code snippets excluded"
+   },
+   {
+    "name": "CodeSearchNet summarization",
+    "role": "both",
+    "size": "Ruby 24,927/1,400/1,261; JS 58,025/3,885/3,291; Go 167,288/7,325/8,122; Python 251,820/13,914/14,918; Java 164,923/5,183/10,955; PHP 241,241/12,982/14,014",
+    "split": "train/valid/test from CodeXGLUE",
+    "source": "Husain et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "CONCODE",
+    "role": "both",
+    "size": "100,000/2,000/2,000",
+    "split": "CodeXGLUE split",
+    "source": "Iyer et al. 2018",
+    "preprocessing": null
+   },
+   {
+    "name": "Code-Code translation Java-C#",
+    "role": "both",
+    "size": "10,300/500/1,000 each direction",
+    "split": "CodeXGLUE",
+    "source": "Lu et al. 2021",
+    "preprocessing": null
+   },
+   {
+    "name": "Program repair Javasmall / Javamedium",
+    "role": "both",
+    "size": "46,680/5,835/5,835; 52,364/6,545/6,545",
+    "split": "CodeXGLUE",
+    "source": "Tufano et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Vulnerability detection C/C++",
+    "role": "both",
+    "size": "21,854/2,732/2,732",
+    "split": "CodeXGLUE",
+    "source": "Zhou et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "Clone detection Java",
+    "role": "both",
+    "size": "100,000/10,000/415,416",
+    "split": "CodeXGLUE",
+    "source": "Wang et al. 2020",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "PLBART",
+    "role": "proposed",
+    "params": "~140M",
+    "architecture": "BART-base seq2seq transformer plus extra layer-norm on encoder and decoder top (stabilises FP16)",
+    "init_from": "inferred: random init (pre-trained from scratch on the corpus)",
+    "tokenizer": "sentencepiece learned on 1/5 of pretraining data",
+    "vocab": "50,000 subword tokens learned; 50,004 in Table 10",
+    "layers": "6 encoder + 6 decoder",
+    "hidden": "768",
+    "heads": "12",
+    "context": "512 pretraining max length; n_positions 1024 in Table 10",
+    "other": {
+     "dff": "3072",
+     "language_id_tokens": "<java>, <python>, <En>"
+    }
+   },
+   {
+    "name": "Seq2Seq (LSTM+attention)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "LSTM with attention, BPE vocab",
+    "init_from": null,
+    "tokenizer": "BPE",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Transformer",
+    "role": "baseline",
+    "params": "same as PLBART",
+    "architecture": "transformer, trained from scratch",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RoBERTa / RoBERTa (code) / CodeBERT / GraphCodeBERT / GPT-2 / CodeGPT-2 / CodeGPT-adapted",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder-only with random decoder, or decoder-only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "12",
+    "hidden": "768",
+    "heads": "12",
+    "context": null,
+    "other": {
+     "note": "GraphCodeBERT numbers taken from its paper; baselines for summarization from Feng et al. 2020"
+    }
+   }
+  ],
+  "training": {
+   "objective": "denoising autoencoding: maximize sum log P(x_j | f(x_j)); noise = token masking, token deletion, token infilling; 35% of tokens masked; span lengths Poisson (lambda=3.5)",
+   "optimizer": "Adam (epsilon 1e-6, beta2 0.98)",
+   "lr": null,
+   "lr_schedule": "linear decay (pretraining)",
+   "warmup": null,
+   "batch_size": "2048 instances effective (pretraining)",
+   "steps": "100K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 (truncated)",
+   "precision": "inferred: FP16, from extra layer-norm 'to stabilize training with FP16 precision'",
+   "weight_decay": null,
+   "dropout": "0.1, reduced to 0.05 at 50K steps and 0 at 80K steps",
+   "regularisation": null,
+   "hardware": "8x Nvidia GeForce RTX 2080 Ti",
+   "compute": null,
+   "wall_clock": "approximately 276 hours (11.5 days)",
+   "seeds": null,
+   "other": {
+    "language_sampling": "multinomial with alpha=0.3 smoothing (Conneau and Lample 2019); PL has 14x more data than NL",
+    "finetune": "max 100K steps, 2500 warm-up, max lr 3e-5, effective batch 32, dropout 0.1, best checkpoint by validation BLEU or accuracy, one RTX 2080 Ti",
+    "finetune_table10": "PLBART lr 5e-5, batch 32, Adam (Table 10 conflicts with 3e-5 in text)",
+    "library": "Fairseq",
+    "classification": "input fed to encoder and decoder; last decoder token representation to linear classifier"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": "fine-tuning format: source to encoder with language id appended, target prefixed with language id",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "smoothed BLEU-4",
+     "definition": "smoothed n-gram overlap (Lin and Och 2004), summarization",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "corpus BLEU",
+     "definition": "corpus-level n-gram overlap, other generation tasks",
+     "unit": "BLEU",
+     "higher_is_better": true
+    },
+    {
+     "name": "CodeBLEU",
+     "definition": "BLEU plus AST and data-flow match (Ren et al. 2020)",
+     "unit": "score",
+     "higher_is_better": true
+    },
+    {
+     "name": "Exact Match",
+     "definition": "generated sequence equals reference",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy / F1",
+     "definition": "vulnerability detection accuracy; clone detection F1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Seq2Seq",
+    "Transformer",
+    "RoBERTa",
+    "RoBERTa (code)",
+    "CodeBERT",
+    "GraphCodeBERT",
+    "GPT-2",
+    "CodeGPT-2",
+    "CodeGPT-adapted",
+    "Naive Copy",
+    "PBSMT (Moses)"
+   ],
+   "protocol": "single reported number per cell; no seeds, variance or significance tests stated"
+  },
+  "availability": {
+   "code": "https://github.com/wasiahmad/PLBART",
+   "weights": null,
+   "data": "CodeXGLUE public splits; GitHub BigQuery and StackExchange dump"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.other.finetune_table10",
+    "quote": "learning rate\n5e-5",
+    "where": "Table 10"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "PLBART beats CodeBERT on average smoothed BLEU-4 for code summarization over six languages",
+   "kind": "measured",
+   "source": null,
+   "metric": "smoothed BLEU-4 (overall)",
+   "value": "18.32",
+   "unit": "BLEU-4",
+   "baseline_value": "17.83 (CodeBERT)",
+   "n": null,
+   "setup": "CodeXGLUE/CodeSearchNet summarization, Ruby/JS/Go/Python/Java/PHP, fine-tuned PLBART; baselines from Feng et al. 2020",
+   "note": null,
+   "where": "Table 5, Sec 4.1",
+   "quote": "overall average improvement of 0.49 BLEU-4 over\nCodeBERT",
+   "table": "Table 5, row PLBART, column Overall"
+  },
+  {
+   "claim": "Largest summarization gain is on Ruby (smallest training set), a language not in pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4 (Ruby)",
+   "value": "14.11",
+   "unit": "BLEU-4",
+   "baseline_value": "12.16 (CodeBERT)",
+   "n": null,
+   "setup": "Table 5; CodeBERT 12.16",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row PLBART, column Ruby"
+  },
+  {
+   "claim": "PLBART is worse than CodeBERT and RoBERTa on PHP summarization; authors blame syntax mismatch",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU-4 (PHP)",
+   "value": "23.58",
+   "unit": "BLEU-4",
+   "baseline_value": "25.16 (CodeBERT)",
+   "n": null,
+   "setup": "Table 5; CodeBERT 25.16, RoBERTa 24.02",
+   "note": null,
+   "where": "Table 5, Sec 4.1",
+   "table": "Table 5, row PLBART, column PHP"
+  },
+  {
+   "claim": "Text-to-Java generation on CONCODE: PLBART best BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "36.69",
+   "unit": "BLEU",
+   "baseline_value": "32.79 (CodeGPT-adapted)",
+   "n": null,
+   "setup": "CONCODE, 100,000 train examples",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row PLBART, column BLEU"
+  },
+  {
+   "claim": "PLBART best CodeBLEU on CONCODE",
+   "kind": "measured",
+   "source": null,
+   "metric": "CodeBLEU",
+   "value": "38.52",
+   "unit": "CodeBLEU",
+   "baseline_value": "35.98 (CodeGPT-adapted)",
+   "n": null,
+   "setup": "CONCODE",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row PLBART, column CodeBLEU"
+  },
+  {
+   "claim": "CodeGPT-adapted has higher exact match than PLBART on CONCODE",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM (PLBART)",
+   "value": "18.75",
+   "unit": "%",
+   "baseline_value": "20.10 (CodeGPT-adapted)",
+   "n": null,
+   "setup": "CONCODE",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row PLBART, column EM"
+  },
+  {
+   "claim": "With only 10K CONCODE fine-tuning examples PLBART still gets CodeBLEU above all baselines",
+   "kind": "measured",
+   "source": null,
+   "metric": "CodeBLEU (10K)",
+   "value": "33.32",
+   "unit": "CodeBLEU",
+   "baseline_value": "32.71 (CodeGPT-2) / 35.98 (CodeGPT-adapted)",
+   "n": null,
+   "setup": "PLBART fine-tuned on 10K of 100K examples",
+   "note": "Text says PLBART10K 'outperforms all baselines in terms of CodeBLEU', but CodeGPT-adapted has 35.98 > 33.32 in the table; true only against the other baselines.",
+   "where": "Table 6, Sec 4.2",
+   "table": "Table 6, row PLBART10K, column CodeBLEU"
+  },
+  {
+   "claim": "Java to C# translation: PLBART best BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "83.02",
+   "unit": "BLEU",
+   "baseline_value": "80.58 (GraphCodeBERT)",
+   "n": null,
+   "setup": "CodeXGLUE Java-C#, 10,300 train pairs",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row PLBART, column Java to C# BLEU"
+  },
+  {
+   "claim": "Java to C# exact match",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "64.60",
+   "unit": "%",
+   "baseline_value": "59.40 (GraphCodeBERT)",
+   "n": null,
+   "setup": "CodeXGLUE Java-C#",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row PLBART, column Java to C# EM"
+  },
+  {
+   "claim": "C# to Java translation BLEU",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": "78.35",
+   "unit": "BLEU",
+   "baseline_value": "72.64 (GraphCodeBERT)",
+   "n": null,
+   "setup": "CodeXGLUE C#-Java",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row PLBART, column C# to Java BLEU"
+  },
+  {
+   "claim": "C# to Java exact match",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "65.00",
+   "unit": "%",
+   "baseline_value": "58.80 (CodeBERT/GraphCodeBERT)",
+   "n": null,
+   "setup": "CodeXGLUE C#-Java",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row PLBART, column C# to Java EM"
+  },
+  {
+   "claim": "Program repair Javasmall exact match",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "19.21",
+   "unit": "%",
+   "baseline_value": "17.30 (GraphCodeBERT)",
+   "n": null,
+   "setup": "Tufano et al. 2019 Javasmall",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row PLBART, column Small EM"
+  },
+  {
+   "claim": "Program repair Javamedium exact match; below GraphCodeBERT",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": "8.98",
+   "unit": "%",
+   "baseline_value": "9.10 (GraphCodeBERT)",
+   "n": null,
+   "setup": "Javamedium",
+   "note": null,
+   "where": "Table 8",
+   "table": "Table 8, row PLBART, column Medium EM"
+  },
+  {
+   "claim": "Vulnerability detection accuracy, C/C++ unseen in pretraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "63.18",
+   "unit": "%",
+   "baseline_value": "62.08 (CodeBERT)",
+   "n": null,
+   "setup": "Zhou et al. 2019 dataset",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row PLBART, column Vulnerability Detection"
+  },
+  {
+   "claim": "Clone detection F1",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": "97.2",
+   "unit": "F1",
+   "baseline_value": "97.1 (GraphCodeBERT)",
+   "n": null,
+   "setup": "Java clone detection, Wang et al. 2020",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row PLBART, column Clone Detection"
+  },
+  {
+   "claim": "Pretraining cost",
+   "kind": "measured",
+   "source": null,
+   "metric": "wall clock",
+   "value": "276",
+   "unit": "hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "8 RTX 2080 Ti GPUs, 100K steps, batch 2048",
+   "note": null,
+   "where": "Sec 2.1",
+   "quote": "276 hours (11.5 days)"
+  }
+ ],
+ "limits": [
+  "Pretrained only on Java, Python and English StackOverflow; PHP and Ruby, C#, C/C++ are unseen",
+  "Neither PLBART nor CodeBERT is state-of-the-art for vulnerability detection; graph models are better",
+  "Single-task fine-tuning only; joint fine-tuning left to future work",
+  "No seeds, variance or significance testing reported",
+  "Claims of learned syntax and data flow rest on a few qualitative examples and the small-data ablation",
+  "Fine-tuning learning rate stated as 3e-5 in text but 5e-5 in Table 10",
+  "Compared models differ in pretraining data and size; 2021 baselines now dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PLUG",
+   "definition": "Program and Language Understanding and Generation applications",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BART",
+   "year": 2020,
+   "arxiv": "1910.13461",
+   "relation": "extends",
+   "note": "architecture and denoising noise functions",
+   "quote": null
+  },
+  {
+   "work": "mBART (Liu et al.)",
+   "year": 2020,
+   "arxiv": "2001.08210",
+   "relation": "uses-method",
+   "note": "extra layer-norm and dropout schedule",
+   "quote": null
+  },
+  {
+   "work": "XLM (Conneau and Lample)",
+   "year": 2019,
+   "arxiv": "1901.07291",
+   "relation": "uses-method",
+   "note": "multinomial language sampling",
+   "quote": null
+  },
+  {
+   "work": "Lachaux et al. unsupervised translation of programming languages",
+   "year": 2020,
+   "arxiv": "2006.03511",
+   "relation": "uses-data",
+   "note": "function extraction pipeline",
+   "quote": null
+  },
+  {
+   "work": "CodeBERT",
+   "year": 2020,
+   "arxiv": "2002.08155",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "GraphCodeBERT",
+   "year": 2021,
+   "arxiv": "2009.08366",
+   "relation": "baseline",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "CodeXGLUE",
+   "year": 2021,
+   "arxiv": "2102.04664",
+   "relation": "uses-data",
+   "note": "benchmark splits and CodeGPT baselines",
+   "quote": null
+  },
+  {
+   "work": "CodeSearchNet",
+   "year": 2019,
+   "arxiv": "1909.09436",
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "CONCODE (Iyer et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": null,
+   "quote": null
+  },
+  {
+   "work": "Fairseq (Ott et al.)",
+   "year": 2019,
+   "arxiv": "1904.01038",
+   "relation": "uses-method",
+   "note": null,
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2",
+   "caption": "Example encoder inputs and decoder outputs during denoising pre-training of PLBART",
+   "page": 3,
+   "why": "shows masking, deletion and infilling on NL and code"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Example inputs to the encoder and decoder for fine-tuning PLBART on sequence generation tasks",
+   "page": 4,
+   "why": "shows language-id token placement"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No embedded instructions found",
+  "Table text is flattened by extraction; cells matched by position"
+ ]
+}

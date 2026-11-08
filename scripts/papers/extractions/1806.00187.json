@@ -1,0 +1,107 @@
+{
+ "schema": 1,
+ "key": "1806.00187",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/ott-2018-scaling-neural-machine-translation.pdf",
+ "bib": {"title": "Scaling Neural Machine Translation", "authors": ["Myle Ott", "Sergey Edunov", "David Grangier", "Michael Auli"], "first_author": "Ott", "year": 2018, "venue": "Proceedings of the Third Conference on Machine Translation (WMT), Volume 1: Research Papers", "arxiv": "1806.00187", "doi": "10.18653/v1/W18-64001"},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 32042, "chars_total": 32042, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "How far can reduced-precision arithmetic, very large batches and multi-machine synchronous training cut the training time of a big Transformer NMT model without losing accuracy?",
+ "hypothesis": "Half-precision and large-batch training with a higher learning rate, then data parallelism across nodes, speed training substantially at unchanged accuracy.",
+ "contributions": ["FP16 training cuts training time by 65% with no effect on accuracy", "Batches grown from 25k to over 400k tokens by gradient accumulation, with a higher learning rate, cut single-machine time a further 40%", "Parallelising over 16 machines cuts time a further 90%; new state of the art on WMT'14 En-De and En-Fr", "Scaling to filtered Paracrawl data improves En-De to 29.8 BLEU", "Analysis of stragglers from variable sub-batch shapes"],
+ "method": {
+  "summary": "A big Transformer in fairseq is trained on WMT En-De and En-Fr with mixed precision (FP16 forward/backward and all-reduce, FP32 master weights, dynamic loss scaling), gradient accumulation to reach about 400k-token batches, a doubled learning rate, and synchronous data-parallel SGD on up to 128 V100 GPUs with gradient communication overlapped with the backward pass. Training time to a fixed validation perplexity is the main measurement.",
+  "task": "Machine translation (En-De, En-Fr) training efficiency",
+  "trains": true,
+  "datasets": [
+   {"name": "WMT'16 En-De", "role": "train", "size": "4.5M sentence pairs", "split": "validate newstest13, test newstest14", "source": "WMT'16, filtered version from Vaswani et al. 2017", "preprocessing": "joint source/target BPE, 32K vocabulary"},
+   {"name": "WMT'14 En-Fr", "role": "train", "size": "36M sentence pairs", "split": "validate newstest12+13, test newstest14", "source": "WMT'14, setup of Gehring et al. 2017", "preprocessing": "joint BPE, 40K vocabulary"},
+   {"name": "Paracrawl", "role": "train", "size": "more than 4.5B pairs En-De, more than 4.2B En-Fr; filtered to 140M En-De and 129M En-Fr", "split": "mixed with WMT at sampling ratio 1:1 (En-De) or 3:1 WMT:Paracrawl (En-Fr)", "source": "ParaCrawl 2018", "preprocessing": "drop pairs with source/target length ratio above 1.5, sentences over 250 words, and copies; En-De 4.6B to 700M; score with a model trained on WMT'14 news commentary and keep 140M pairs with best average token log-likelihood; WMT BPE vocabulary reused"}
+  ],
+  "models": [
+   {"name": "Transformer big (fairseq-py, PyTorch)", "role": "proposed", "params": "210M (En-De), 222M (En-Fr)", "architecture": "encoder-decoder Transformer, ReLU feed-forward, post-layer-norm after residual", "init_from": null, "tokenizer": "joint BPE", "vocab": "32K En-De, 40K En-Fr", "layers": "6 encoder blocks, 6 decoder blocks", "hidden": "1024 (FFN inner 4,096)", "heads": "16", "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "label-smoothed cross-entropy, label smoothing weight 0.1",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-8",
+   "lr": "5e-4 peak (1e-3 in the 2x lr experiments)",
+   "lr_schedule": "linear warmup then inverse square root decay in the number of steps (Vaswani et al. 2017)",
+   "warmup": "4,000 steps",
+   "batch_size": "25k target tokens baseline; up to 402k tokens (cumul 16); 365k with 5k tokens/GPU and cumul 10; sub-batch at most 3.5k tokens per GPU (5k with FP16)",
+   "steps": "192k updates for the FP32 reference to perplexity 4.32; 9.5k-9.7k updates with the 402k batch (Table 1)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "FP16 forward/backward and all-reduce; FP32 master weights, loss and optimizer; dynamic loss scaling, raised if no overflow in 2,000 updates",
+   "weight_decay": null,
+   "dropout": "0.3 En-De, 0.1 En-Fr",
+   "regularisation": "label smoothing 0.1; average of last 10 checkpoints for final results",
+   "hardware": "DGX-1 nodes, 8 NVIDIA V100 GPUs each, Infiniband, NCCL2 and torch.distributed; up to 16 nodes (128 GPUs)",
+   "compute": "see wall_clock",
+   "wall_clock": "En-De 85 min and En-Fr 512 min on 16 nodes (Table 2); with Paracrawl 539 and 794 min (Table 3)",
+   "seeds": "Table 1 times averaged over 3 random seeds",
+   "other": {"gradient_sync_threshold": "150MB buffer triggers background all-reduce", "gradient_buffer_size": "400MB for over 200M parameters", "synchronous_sgd": "data parallel"}
+  },
+  "inference": {"decoding": "beam search, beam width 4, length penalty 0.6", "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null, "parameters": {}, "other": {"checkpoint_averaging": "not used except where specified (last 10 for Tables 2 and 3)"}},
+  "eval": {
+   "metrics": [
+    {"name": "tokenized BLEU", "definition": "case-sensitive, multi-bleu.pl", "unit": "BLEU", "higher_is_better": true},
+    {"name": "SacreBLEU", "definition": "de-tokenized; BLEU+case.mixed+lang.en-{de,fr}+numrefs.1+smooth.exp+test.wmt14/full+tok.13a+version.1.2.9", "unit": "BLEU", "higher_is_better": true},
+    {"name": "training time to validation perplexity 4.32 (2.11 NLL)", "definition": "average time excluding validation and model saving, over 3 seeds, newstest13", "unit": "min", "higher_is_better": false},
+    {"name": "tokens per second", "definition": "training throughput", "unit": "tkn/sec", "higher_is_better": true}
+   ],
+   "baselines": ["Vaswani et al. 2017", "Gehring et al. 2017", "Ahmed et al. 2017", "Shaw et al. 2018", "own FP32 reimplementation on 8 V100"],
+   "protocol": "Speed measured to a fixed validation perplexity on newstest13; final BLEU on newstest14."
+  },
+  "availability": {"code": "https://www.github.com/pytorch/fairseq", "weights": null, "data": "WMT public; ParaCrawl public"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "Combined FP16, accumulation, 2x lr and larger per-GPU batches cut single-machine (8 V100) time to the same perplexity by 4.9x.", "kind": "measured", "source": null, "metric": "training time to ppl 4.32", "value": "294", "unit": "min", "baseline_value": "1,429", "n": 3, "setup": "Big Transformer, WMT En-De, 8 V100, newstest13, 3 seeds", "quote": "we reduce training time from 1, 429 min to 294 min to reach the same perplexity on the same hardware (8x NVIDIA V100), i.e. a 4.9x speedup.", "table": null, "note": null, "where": "Sec 4.2, Table 1"},
+  {"claim": "16-bit training alone gives a 2.9x speedup with BLEU unchanged.", "kind": "measured", "source": null, "metric": "speedup", "value": "2.9x", "unit": "x", "baseline_value": "1x", "n": 3, "setup": "8 V100, batch 25k, WMT En-De", "quote": "shows that 16-bit results in a 2.9x speedup.", "table": null, "note": "Intro says training time falls 65%", "where": "Sec 4.1"},
+  {"claim": "Training on 16 nodes with overlap of communication and backward reaches the target perplexity in 32 minutes, a 44.7x speedup over the FP32 reference.", "kind": "measured", "source": null, "metric": "training time to ppl 4.32", "value": "32", "unit": "min", "baseline_value": "1,429", "n": 3, "setup": "128 V100, 402k batch, 2x lr, WMT En-De", "quote": null, "table": "Table 1, row + overlap comm+bwd, columns time and speedup (32, 44.7x)", "note": null, "where": "Table 1"},
+  {"claim": "Overlapping gradient communication with the backward pass saves 15% of 16-node time.", "kind": "measured", "source": null, "metric": "training time", "value": "32", "unit": "min", "baseline_value": "37", "n": 3, "setup": "16 nodes, WMT En-De", "quote": "we can further reduce training time by 15%, from 37 minutes to just 32 minutes", "table": null, "note": null, "where": "Sec 4.3"},
+  {"claim": "New state of the art on WMT'14 En-De of 29.3 BLEU in 85 minutes on 128 GPUs.", "kind": "measured", "source": null, "metric": "BLEU newstest14", "value": "29.3", "unit": "BLEU", "baseline_value": "29.2 (Shaw et al. 2018)", "n": null, "setup": "Big Transformer, WMT'16 En-De, 16 nodes, average of last 10 checkpoints, tokenized BLEU", "quote": "On WMT’14 En-De test set, we report 29.3 BLEU", "table": "Table 2, column En-De", "note": "Detokenized SacreBLEU is 28.6 (Table 3)", "where": "Table 2, Sec 6"},
+  {"claim": "New state of the art on WMT'14 En-Fr of 43.2 BLEU in 8.5 hours on 128 GPUs.", "kind": "measured", "source": null, "metric": "BLEU newstest14", "value": "43.2", "unit": "BLEU", "baseline_value": "41.5 (Shaw et al. 2018)", "n": null, "setup": "Big Transformer, WMT'14 En-Fr 36M pairs, 16 nodes", "quote": "We improve the state-of-the-art for WMT’14 En-Fr to 43.2 vs.", "table": "Table 2, column En-Fr", "note": "Detokenized SacreBLEU is 41.4 (Table 3)", "where": "Table 2, Sec 6"},
+  {"claim": "Adding filtered Paracrawl raises En-De BLEU to 29.8 but lowers En-Fr to 42.1.", "kind": "measured", "source": null, "metric": "BLEU newstest14", "value": "29.8", "unit": "BLEU", "baseline_value": "29.3", "n": null, "setup": "WMT + 140M filtered Paracrawl pairs, sampling ratio 1:1, 16 nodes, 539 min", "quote": "We ﬁnd that Paracrawl improves BLEU on En–De to 29.8", "table": "Table 3, row WMT + Paracrawl, column En-De", "note": "En-Fr 42.1 vs 43.2 baseline", "where": "Sec 4.5, Table 3"},
+  {"claim": "Accumulating gradients over 16 backward passes raises throughput by 36% in tokens per second and cuts time from 495 to 447 min.", "kind": "measured", "source": null, "metric": "tokens/sec increase", "value": "36%", "unit": "%", "baseline_value": null, "n": 3, "setup": "8 V100, FP16, batch 402k, WMT En-De", "quote": "leading to a 36% increase in tokens/sec (Table 1, cumul)", "table": null, "note": null, "where": "Sec 4.2"},
+  {"claim": "Large batches converge more slowly per epoch but faster per optimization step, so they parallelise.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "Transformer, batch sizes 25k, 100k, 200k, 400k target tokens, WMT En-De, newstest13", "quote": "Training with large batches is less data-efﬁcient, but can be parallelized.", "table": null, "note": null, "where": "Fig 1"},
+  {"claim": "Sub-batch compute time varies widely (mean 0.11 s, slowest 0.228 s, fastest 0.049 s) over 44K sub-batches, creating stragglers.", "kind": "measured", "source": null, "metric": "mean sub-batch time", "value": "0.11", "unit": "s", "baseline_value": null, "n": 44000, "setup": "WMT En-De, sub-batches of at most 3.5k tokens", "quote": "the mean time to process a sub-batch is 0.11 seconds, the slowest sub-batch takes 0.228 seconds and the fastest 0.049 seconds", "table": null, "note": null, "where": "Sec 5, Fig 6"},
+  {"claim": "Balancing sub-batches by estimated processing time lifts throughput from 143k to 150k tok/s and time from 495 to 479 min, less effective than gradient accumulation (447 min).", "kind": "measured", "source": null, "metric": "training time", "value": "479", "unit": "min", "baseline_value": "495", "n": null, "setup": "single node, FP16, WMT En-De", "quote": "reducing the training time to reach 4.32 perplexity from 495 to 479 minutes", "table": null, "note": null, "where": "Sec 5"},
+  {"claim": "16-node training is only about 10x faster than 1-node training.", "kind": "measured", "source": null, "metric": "multi-node speedup", "value": "10x", "unit": "x", "baseline_value": null, "n": null, "setup": "16 nodes vs 1 node", "quote": "16-node training is only ∼10x faster than 1-node training.", "table": null, "note": null, "where": "Sec 6"}
+ ],
+ "limits": [
+  "Single architecture (big Transformer) and task (translation), WMT En-De and En-Fr only.",
+  "Multi-node scaling is sublinear: 16 nodes gives only about 10x over 1 node; authors leave better batching and communication to future work.",
+  "Paracrawl did not help En-Fr (42.1 vs 43.2 BLEU).",
+  "Naive shape-matched sub-batches fail to converge to the target perplexity.",
+  "Large-batch results depend on LR warmup and a 2x LR retuned by hand; no general batch-size/LR rule is given.",
+  "Hardware (V100, FP16 Tensor Cores) and BLEU state of the art have dated."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "dynamic loss scaling", "definition": "automatically scales the loss down when overflow is detected and up if no overflows have been detected over the past 2,000 updates", "where": "Sec 4.1"},
+  {"term": "stragglers", "definition": "Slower workers cause other workers to wait", "where": "Sec 5"}
+ ],
+ "lineage": [
+  {"work": "Attention Is All You Need", "year": 2017, "arxiv": "1706.03762", "relation": "extends", "note": "model, LR schedule, beam settings and En-De setup replicated and sped up", "quote": null},
+  {"work": "Mixed Precision Training (Micikevicius et al.)", "year": 2018, "arxiv": "1710.03740", "relation": "uses-method", "note": "loss scaling guidelines for FP16", "quote": null},
+  {"work": "Convolutional Sequence to Sequence Learning (Gehring et al.)", "year": 2017, "arxiv": "1705.03122", "relation": "baseline", "note": "En-Fr setup and baseline", "quote": null},
+  {"work": "Self-attention with relative position representations (Shaw et al.)", "year": 2018, "arxiv": "1803.02155", "relation": "baseline", "note": "previous best 29.2/41.5", "quote": null},
+  {"work": "Accurate, Large Minibatch SGD (Goyal et al.)", "year": 2017, "arxiv": "1706.02677", "relation": "related", "note": "large batch permits higher learning rate", "quote": null},
+  {"work": "Don't decay the learning rate, increase the batch size (Smith et al.)", "year": 2018, "arxiv": "1711.00489", "relation": "related", "note": "same observation", "quote": null},
+  {"work": "Large scale language modeling (Puri et al.)", "year": 2018, "arxiv": "1808.01371", "relation": "related", "note": "109x scaling with 128 GPUs; starts with large LR whereas this work warms up", "quote": null},
+  {"work": "Revisiting distributed synchronous SGD (Chen et al.)", "year": 2016, "arxiv": "1604.00981", "relation": "related", "note": "synchronous SGD deemed more efficient than asynchronous", "quote": null},
+  {"work": "Train longer, generalize better (Hoffer et al.)", "year": 2017, "arxiv": "1705.08741", "relation": "related", "note": "large batches converge faster per update", "quote": null},
+  {"work": "ParaCrawl", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "noisy web-scale parallel corpus", "quote": null},
+  {"work": "Adam (Kingma and Ba)", "year": 2015, "arxiv": "1412.6980", "relation": "uses-method", "note": "optimizer", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Validation loss for Transformer model trained with varying batch sizes (bsz) as a function of optimization steps (left) and epochs (right).", "page": 2, "why": "Shows large batches are less data-efficient but need fewer steps."},
+  {"figure": "Table 1", "caption": "Training time (min) for reduced precision (16-bit), cumulating gradients over multiple backwards (cumul), increasing learning rate (2x lr) and larger per-GPU data (5k tkn/gpu).", "page": 4, "why": "Ablation ladder from 1,429 to 32 min."},
+  {"figure": "Fig 3", "caption": "Illustration of how the backward pass in back-propagation can be overlapped with gradient synchronization to improve training speed.", "page": 5, "why": "Explains the communication overlap trick."},
+  {"figure": "Fig 6", "caption": "Histogram of time to complete one forward and backward pass for each sub-batch in the WMT En-De training dataset.", "page": 7, "why": "Shows straggler variability."}
+ ],
+ "code": [],
+ "problems": ["No embedded instructions found. Table 1 BLEU/time columns are read from flattened table text; row alignment was inferred from column order."]
+}

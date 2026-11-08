@@ -1,0 +1,434 @@
+{
+ "schema": 1,
+ "key": "2101.00121",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hambardzumyan-2021-warp.pdf",
+ "bib": {
+  "title": "WARP: Word-level Adversarial ReProgramming",
+  "authors": [
+   "Karen Hambardzumyan",
+   "Hrant Khachatrian",
+   "Jonathan May"
+  ],
+  "first_author": "Hambardzumyan",
+  "year": 2021,
+  "venue": "ACL-IJCNLP 2021 (59th ACL / 11th IJCNLP)",
+  "arxiv": "2101.00121",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 49120,
+  "chars_total": 49120,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can task-specific continuous prompt and verbalizer embeddings, trained against a frozen masked language model, match fine-tuning-like quality with a tiny number of trainable parameters?",
+ "hypothesis": "We hypothesize that it is possible to find such prompts: extra tokens that exploit language model capabilities better than manually designed ones.",
+ "contributions": [
+  "WARP: gradient-trained prompt and verbalizer embeddings in continuous space on a frozen MLM",
+  "81.6 GLUE test score with up to 25K trainable parameters",
+  "Manual-prompt initialization enabling few-shot results on CB and RTE with 32 examples, beating GPT-3",
+  "Storage analysis for serving many tasks from one frozen model"
+ ],
+ "method": {
+  "summary": "Trainable prompt embeddings [P_1..P_K] are inserted before, between and after the input sentences together with a [MASK] token; the MLM head output at the mask (without decoder) is projected by trainable verbalizer embeddings [V_1..V_C] and trained with cross-entropy. Everything else in the pretrained model is frozen.",
+  "task": "sentence and sentence-pair classification (GLUE, FewGLUE CB/RTE) via cloze reformulation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (9 tasks)",
+    "role": "both",
+    "size": "train sizes: MNLI 392702, QNLI 104743, QQP 363846, RTE 2490, SST 67349, MRPC 3668, CoLA 8551, STS-B 5749",
+    "split": "dev for model selection and early stopping; test via GLUE server",
+    "source": "Wang et al. 2019b",
+    "preprocessing": "WNLI always predicts majority label; STS-B scores clipped to [1,5]"
+   },
+   {
+    "name": "FewGLUE CB and RTE",
+    "role": "both",
+    "size": "32 labeled examples per task",
+    "split": "20 runs each with 16 random train examples and the rest as dev for learning-rate choice; 20000 unlabeled examples not used",
+    "source": "Schick and Schutze 2021b; SuperGLUE",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "roberta-large",
+    "role": "base",
+    "params": "355M (frozen)",
+    "architecture": "masked LM encoder",
+    "init_from": "pretrained, huggingface transformers",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens (truncated)",
+    "other": {
+     "embedding_dim": "1024"
+    }
+   },
+   {
+    "name": "albert-xxlarge-v2",
+    "role": "base",
+    "params": "inferred: 255M, stated as roughly the same as PET/iPET",
+    "architecture": "masked LM encoder",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "embedding_dim": "128"
+    }
+   },
+   {
+    "name": "WARP",
+    "role": "proposed",
+    "params": "<25K trainable on GLUE; 1024 trainable per few-shot model",
+    "architecture": "prompt and verbalizer embeddings only",
+    "init_from": "[MASK] embedding, or MNLI-trained prompts (RTE, MRPC, STS-B), or PVP token embeddings (few-shot)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross-entropy over verbalizer logits; MSE regression head for STS-B",
+   "optimizer": "AdamW (huggingface), weight decay disabled; gradient normalized to 1.0",
+   "lr": "per task from {1e-2,3e-3,1e-3,3e-4,1e-4,3e-5}; chosen 0.001 (MNLI, QNLI, RTE, MRPC, CoLA, STS-B), 0.0003 (QQP), 0.003 (SST-2)",
+   "lr_schedule": "slanted triangular",
+   "warmup": "6% warm-up steps",
+   "batch_size": "at most 8 examples and 1024 tokens per batch (Sec 3.2); Appendix says max 2048 tokens per batch",
+   "steps": null,
+   "epochs": "10 or 20 per task (MNLI, QNLI 10; others 20)",
+   "tokens": null,
+   "seq_len": "truncated to 512 tokens",
+   "precision": "mixed precision, lengths padded to multiples of 8",
+   "weight_decay": "disabled",
+   "dropout": "disabled inside the pretrained transformer",
+   "regularisation": null,
+   "hardware": "two Titan V and two RTX 3080 GPUs",
+   "compute": "hyperparameter search roughly 4 days on two Titan V GPUs",
+   "wall_clock": "WARP 2.5-3x faster per epoch than fine-tuning, 2x slower than frozen features",
+   "seeds": "few-shot: 20 runs ensembled by majority vote; GLUE seeds not stated",
+   "other": {
+    "batch_note": "Sec 3.2 says 1024 tokens, Appendix A says 2048 tokens per batch; bucketing with padding noise 0.1",
+    "init_search": "[MASK] init beat random normal init",
+    "few_shot_selection": "no early stopping, last checkpoint"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over verbalizer logits at [MASK]",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "few-shot: ensemble of 20 WARP runs by majority vote",
+   "prompting": "GLUE: prompt tokens before, between, after sentences, [MASK] between sentences for pairs; WARP_init template [CLS] S1? [MASK]. S2! [SEP]",
+   "retrieval": null,
+   "parameters": {
+    "num_prompt_tokens": "0,1,2,4,8,20 tested (WARP_i); SST-2 curve uses 10"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE score / per-task metrics",
+     "definition": "accuracy (SST-2, MNLI matched), Matthews corr (CoLA), F1 (QQP, MRPC), Pearson (STS-B); AVG over tasks",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "CB F1 / Acc, RTE Acc",
+     "definition": "FewGLUE dev and SuperGLUE test",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Fine-tuning",
+    "Adapters",
+    "Linear classifier",
+    "TinyBERT",
+    "ELECTRA-small",
+    "DeBERTa",
+    "GPT-3",
+    "PET",
+    "iPET",
+    "AutoPrompt"
+   ],
+   "protocol": "Single-task training, early stopping and selection on dev set; test via leaderboard servers; Fig 4 shows median/min/max over 10 runs"
+  },
+  "availability": {
+   "code": "https://github.com/YerevaNN/WARP",
+   "weights": null,
+   "data": "public GLUE, SuperGLUE/FewGLUE"
+  },
+  "prompts": [
+   {
+    "purpose": "WARP_init shared manual prompt for GLUE",
+    "text": "[CLS] \"S1\"? [MASK]. \"S2\"! [SEP]",
+    "where": "Sec 4.2"
+   },
+   {
+    "purpose": "few-shot CB/RTE init",
+    "text": "[CLS] \"h\"? [MASK]. \"p\" [SEP]; verbalizers yes/no/maybe (CB), yes/instead (RTE)",
+    "where": "Sec 5.2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "Each batch consists of examples containing at most 1024 tokens and 8 examples.",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "WARP (RoBERTa) reaches GLUE test average 81.6 with under 25K trainable parameters, beating all submissions with up to 25M trainable parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE test AVG",
+   "value": "81.6",
+   "unit": "points",
+   "baseline_value": "80.5 (BERT-large fully fine-tuned)",
+   "n": null,
+   "setup": "roberta-large frozen, GLUE leaderboard test, <25K trainable params",
+   "quote": "achieves 81.6 test score on the GLUE Leaderboard",
+   "table": null,
+   "note": "Fully fine-tuned RoBERTa scores 88.1 and DeBERTa 90.8",
+   "where": "Sec 1, Table 1"
+  },
+  {
+   "claim": "On dev sets WARP_20 averages 84.8 vs 88.9 for full fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev AVG",
+   "value": "84.8",
+   "unit": "points",
+   "baseline_value": "88.9",
+   "n": null,
+   "setup": "roberta-large, 20 prompt tokens, <25K trainable params",
+   "quote": null,
+   "table": "Table 2, row WARP20, column AVG",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Few-shot CB test: WARP_init (ALBERT, 32 examples) beats GPT-3 and PET but trails iPET.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CB F1 / Acc test",
+   "value": "70.2 / 82.4",
+   "unit": "%",
+   "baseline_value": "GPT-3 52.0 / 75.6; iPET 79.9 / 88.8",
+   "n": 32,
+   "setup": "albert-xxlarge-v2, 32 training examples, ensemble of 20 runs, SuperGLUE test server",
+   "quote": null,
+   "table": "Table 3, test, row WARPinit (ALBERT), columns CB F1 / Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Few-shot RTE test accuracy of WARP_init is 69.1 vs GPT-3 69.0 and iPET 70.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE Acc test",
+   "value": "69.1",
+   "unit": "%",
+   "baseline_value": "69.0 (GPT-3)",
+   "n": 32,
+   "setup": "albert-xxlarge-v2, 32 examples, 20-run majority ensemble",
+   "quote": null,
+   "table": "Table 3, test, row WARPinit (ALBERT), column RTE Acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "With a single prompt token WARP gets 93.8% on SST-2 dev, above AutoPrompt's 91.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SST-2 dev accuracy",
+   "value": "93.8",
+   "unit": "%",
+   "baseline_value": "91.2",
+   "n": null,
+   "setup": "roberta-large, 1 prompt token (WARP_1)",
+   "quote": "which allows WARP to get better performance with just a single prompt token (93.8%)",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.2"
+  },
+  {
+   "claim": "Adding prompt tokens improves dev average monotonically from 72.4 (0 tokens) to 82.1 (8 tokens).",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE dev AVG",
+   "value": "82.1",
+   "unit": "points",
+   "baseline_value": "72.4 (WARP0)",
+   "n": null,
+   "setup": "roberta-large, WARP_8 vs WARP_0",
+   "quote": null,
+   "table": "Table 2, row WARP8, column AVG",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Manual-prompt initialization helps on small datasets: WARP_init RTE dev 80.1 vs 72.9 for WARP_8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "RTE dev accuracy",
+   "value": "80.1",
+   "unit": "%",
+   "baseline_value": "72.9",
+   "n": null,
+   "setup": "roberta-large",
+   "quote": null,
+   "table": "Table 2, row WARPinit, column RTE",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "WARP is 2.5-3x faster per epoch than fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "epoch time ratio",
+   "value": "2.5-3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same batch sizes",
+   "quote": "WARP is 2.5-3 times faster than regular ﬁne-tuning",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  }
+ ],
+ "limits": [
+  "Weak on CoLA (53.9 test) which authors attribute to difficulty of cloze reformulation",
+  "Learned prompt tokens are not interpretable",
+  "Few-shot results trail iPET, which uses 20000 unlabeled examples",
+  "Only classification/regression with encoders tested; autoregressive extension only footnoted",
+  "Test GLUE trails fully fine-tuned RoBERTa by 6.5 points",
+  "Seeds for GLUE runs not reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "WARP",
+   "definition": "Word-level Adversarial ReProgramming: learn task-specific word embeddings concatenated to the input to instruct a frozen language model",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Adversarial reprogramming of neural networks (Elsayed et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "idea of trained input padding for a frozen network",
+   "quote": null
+  },
+  {
+   "work": "AutoPrompt (Shin et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "discrete prompt search; WARP searches embedding space",
+   "quote": null
+  },
+  {
+   "work": "PET / iPET (Schick and Schutze)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "few-shot baseline and PVP initialization",
+   "quote": null
+  },
+  {
+   "work": "Prefix-Tuning (Li and Liang)",
+   "year": 2021,
+   "arxiv": "2101.00190",
+   "relation": "related",
+   "note": "parallel work, uses reparameterization trick",
+   "quote": null
+  },
+  {
+   "work": "Language models are few-shot learners (Brown et al.)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "baseline",
+   "note": "GPT-3 few-shot comparison",
+   "quote": null
+  },
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Adapters",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "frozen base model",
+   "quote": null
+  },
+  {
+   "work": "ALBERT (Lan et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "few-shot base",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3",
+   "caption": "Illustration of WARP. The prompt tokens [P 1], ..., [P N] are inserted before, between, and after the sentences. Only the prompt and class embeddings are trainable.",
+   "page": 4923,
+   "why": "shows prompt positions, MLM head without decoder, and verbalizer matrix as the only trained parts"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The effect of the training data size for SST-2 task (dev set).",
+   "page": 4928,
+   "why": "WARP vs AutoPrompt vs fine-tuning by data size"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 3",
+   "snippet": "P(y|x) = exp(Theta_V_y f(T_ThetaP(x))) / sum_{i in C} exp(Theta_V_i f(T_ThetaP(x)))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Batch size stated as 1024 tokens in Sec 3.2 and 2048 in Appendix A",
+  "Table cells flattened by extraction; WARP_MNLI row has only 4 values"
+ ]
+}

@@ -1,0 +1,183 @@
+{
+ "schema": 1,
+ "key": "2205.05198",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/korthikanti-2022-reducing-activation-recomputation-large-transformer.pdf",
+ "bib": {
+  "title": "Reducing Activation Recomputation in Large Transformer Models",
+  "authors": ["Vijay Korthikanti", "Jared Casper", "Sangkug Lym", "Lawrence McAfee", "Michael Andersch", "Mohammad Shoeybi", "Bryan Catanzaro"],
+  "first_author": "Korthikanti",
+  "year": 2022,
+  "venue": "preprint (arXiv v1); published MLSys 2023 per caller",
+  "arxiv": "2205.05198",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 55681,
+  "chars_total": 55681,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "Can activation memory in large transformer training be cut enough to avoid most of the 30-40% overhead of full activation recomputation?",
+ "hypothesis": "Sequence parallelism plus selective recomputation of cheap-to-recompute attention internals removes most recomputation cost without extra communication.",
+ "contributions": [
+  "Sequence parallelism combined with tensor parallelism, dividing layer-norm and dropout activations along the sequence dimension",
+  "Selective activation recomputation of the attention core (QK^T, softmax, softmax dropout, attention over V)",
+  "Approximate per-layer and total activation memory formulas",
+  "Evaluation on 22B to 1T parameter models on A100 GPUs"
+ ],
+ "method": {
+  "summary": "Derives activation memory per transformer layer, adds sequence parallelism (g/g-bar all-gather/reduce-scatter conjugates replacing tensor-parallel all-reduce) and recomputes only the attention core, then measures per-layer time and end-to-end iteration time for 22B, 175B, 530B and 1T GPT-style models with tensor parallel 8.",
+  "task": "Large transformer pretraining systems efficiency (activation memory and throughput)",
+  "trains": true,
+  "datasets": [],
+  "models": [
+   {"name": "22B", "role": "evaluated", "params": "22B", "architecture": "GPT-style transformer", "init_from": null, "tokenizer": null, "vocab": "51200", "layers": "48", "hidden": "6144", "heads": "64", "context": "2048", "other": {"tensor_parallel": "8", "pipeline_parallel": "1", "gpus": "8", "global_batch": "4", "micro_batch": "4"}},
+   {"name": "175B (GPT-3)", "role": "evaluated", "params": "175B", "architecture": "GPT-style transformer", "init_from": null, "tokenizer": null, "vocab": "51200", "layers": "96", "hidden": "12288", "heads": "96", "context": "2048", "other": {"tensor_parallel": "8", "pipeline_parallel": "8", "gpus": "64", "global_batch": "64", "micro_batch": "1", "interleaving_stages_m": "3"}},
+   {"name": "530B (MT-NLG)", "role": "evaluated", "params": "530B", "architecture": "GPT-style transformer", "init_from": null, "tokenizer": null, "vocab": "51200", "layers": "105", "hidden": "20480", "heads": "128", "context": "2048", "other": {"tensor_parallel": "8", "pipeline_parallel": "35", "gpus": "280", "global_batch": "280", "micro_batch": "1", "interleaving_stages_m": "3"}},
+   {"name": "1T", "role": "evaluated", "params": "1T", "architecture": "GPT-style transformer", "init_from": null, "tokenizer": null, "vocab": "51200", "layers": "128", "hidden": "25600", "heads": "160", "context": "2048", "other": {"tensor_parallel": "8", "pipeline_parallel": "64", "gpus": "512", "global_batch": "512", "micro_batch": "1"}}
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "per Table 3 (no data parallelism): 22B 4, 175B 64, 530B 280, 1T 512",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2048",
+   "precision": "mixed precision (16-bit activations assumed in memory formulas; logits 32-bit)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Selene supercomputer; nodes of 8 NVIDIA 80GB A100 GPUs, NVLink/NVSwitch, eight 200Gbps HDR Infiniband HCAs per node; 2240 A100 GPUs for the 530B data-parallel run",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"note": "Throughput benchmarks, not convergence training; no data parallelism except one 8-way DP run of the 530B model"}
+  },
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null, "parameters": {}, "other": {}},
+  "eval": {
+   "metrics": [
+    {"name": "Activation memory", "definition": "Percentage of memory vs tensor-parallel baseline (Eq 2)", "unit": "%", "higher_is_better": false},
+    {"name": "Per-layer overhead", "definition": "Extra forward+backward time vs no-recompute baseline", "unit": "%", "higher_is_better": false},
+    {"name": "Iteration time", "definition": "End-to-end iteration time", "unit": "seconds", "higher_is_better": false},
+    {"name": "MFU", "definition": "Model FLOPs per second divided by accelerator peak (312 TFLOPs for A100), after Chowdhery et al.", "unit": "%", "higher_is_better": true},
+    {"name": "HFU", "definition": "Hardware FLOPs per second divided by peak", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["Tensor parallel baseline", "Full activation recomputation", "No recompute (one layer of 22B)"],
+   "protocol": "Single measurement per configuration; no repeats or variance reported"
+  },
+  "availability": {"code": "Megatron-LM and NeMo-Megatron (stated as will be available)", "weights": null, "data": null},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Sequence parallelism plus selective recomputation cut activation memory about 5x versus the tensor-parallel baseline, to under 20%.",
+   "kind": "measured", "source": null, "metric": "activation memory reduction", "value": "5", "unit": "x", "baseline_value": null, "n": null,
+   "setup": "22B to 1T models, tensor parallel 8, s=2048, relative to Eq 2 baseline",
+   "quote": "combined provide a 5x reduction bringing the memory requirements to under 20%",
+   "table": null, "note": null, "where": "Section 6.1"
+  },
+  {
+   "claim": "530B model on 2240 A100 GPUs reaches 54.2% MFU versus 42.1% with full recomputation.",
+   "kind": "measured", "source": null, "metric": "MFU", "value": "54.2", "unit": "%", "baseline_value": "42.1", "n": null,
+   "setup": "530B GPT-3-style, 2240 A100, 8-way data parallel added",
+   "quote": "we achieve a Model Flops Utilization of 54.2%, which is 29% faster than the 42.1% we achieve",
+   "table": null, "note": null, "where": "Abstract"
+  },
+  {
+   "claim": "Throughput improves 29.0% to 32.1% over full recomputation across 22B to 1T models.",
+   "kind": "measured", "source": null, "metric": "throughput increase", "value": "29.0% to 32.1%", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "Table 3 configurations, no data parallelism",
+   "quote": "provide between 29.0% and 32.1% improvement in the throughput",
+   "table": null, "note": null, "where": "Section 6.3"
+  },
+  {
+   "claim": "1T model reaches 56.3% MFU and 57.0% HFU; iteration time 71.49 s vs 94.42 s with full recompute.",
+   "kind": "measured", "source": null, "metric": "MFU", "value": "56.3", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "1T model, 512 GPUs, TP 8, PP 64, selective + sequence parallel",
+   "quote": "we reach a MFU and HFU of 56.3% and 57.0%",
+   "table": "Table 5, row 1T, columns Model FLOPs Utilization / Hardware FLOPs Utilization", "note": null, "where": "Section 6.3, Table 5"
+  },
+  {
+   "claim": "Execution-time overhead of recomputation falls by over 90%; per-layer overhead is 2% for 530B and 1T vs 36% for full recompute.",
+   "kind": "measured", "source": null, "metric": "recompute overhead", "value": "2", "unit": "%", "baseline_value": "36", "n": null,
+   "setup": "Per-layer fwd+bwd, 530B and 1T models",
+   "quote": "the overhead is just 2%, compared to 36% overhead for full recompute",
+   "table": null, "note": null, "where": "Section 6.2"
+  },
+  {
+   "claim": "On one 22B layer, combined techniques cut overhead to 4% versus 39% for full-layer recompute.",
+   "kind": "measured", "source": null, "metric": "per-layer overhead", "value": "4", "unit": "%", "baseline_value": "39", "n": null,
+   "setup": "Single layer of 22B model, forward+backward",
+   "quote": "the overhead drops to just 4%",
+   "table": "Table 4, row Selective + Sequence, column Overhead (%)", "note": "Full-layer recompute overhead 39% exceeds expected 33% due to overlap of all-reduce with weight gradient", "where": "Section 6.2, Table 4"
+  },
+  {
+   "claim": "Per-layer activation memory with tensor + sequence parallelism is Eq 1 divided by t: sbh/t (34 + 5as/h).",
+   "kind": "worked-example", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null,
+   "setup": "16-bit activations, dropout masks 1 byte; no pipeline correction",
+   "quote": "The above equation is now Equation 1 divided by the tensor parallel size.",
+   "table": null, "note": null, "where": "Eq 4, Section 4.2.2"
+  },
+  {
+   "claim": "Selective recomputation saves 70% (GPT-3) and 65% (MT-NLG) of activation memory at 2.7% and 1.6% FLOPs overhead.",
+   "kind": "worked-example", "source": null, "metric": "activation memory saved", "value": "70", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "GPT-3 a=96,s=2048,h=12288 (5as/h=80); MT-NLG a=128,h=20480 (5as/h=64)",
+   "quote": "we can save 70% and 65% of the",
+   "table": null, "note": "Quote spans a line break in the source; 2.7% and 1.6% FLOPs overheads are in the following sentence", "where": "Section 5"
+  },
+  {
+   "claim": "Full activation recomputation incurs 30-40% execution time overhead in the authors' runs.",
+   "kind": "measured", "source": null, "metric": "full recompute overhead", "value": "30-40", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "Authors' training runs",
+   "quote": "we observe 30 −40% execution time overhead",
+   "table": null, "note": null, "where": "Section 1"
+  },
+  {
+   "claim": "Microbatch-level recomputation adds only +0.7% (175B) and +0.4% (530B) MFU.",
+   "kind": "measured", "source": null, "metric": "MFU", "value": "52.3", "unit": "%", "baseline_value": null, "n": null,
+   "setup": "175B MFU 52.3%, 530B 56.4%, vs sequence parallel + selective baseline",
+   "quote": "52.3% (+0.7%) and 56.4% (+0.4%)",
+   "table": null, "note": null, "where": "Appendix C"
+  }
+ ],
+ "limits": [
+  "No data parallelism in most evaluations, so batch sizes are far below real training; authors say the 8-way DP run adds little overhead (MFU 56.0% to 54.2%).",
+  "Comparison with ZeRO/offloading is declared out of scope and left for future work.",
+  "Memory fragmentation and first-pipeline-stage memory pressure left unresolved.",
+  "Single measurements; no variance or seeds reported; no convergence or accuracy study.",
+  "Activation formulas assume 16-bit storage and ignore small buffers; hardware limited to A100."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Selective activation recomputation", "definition": "checkpoint and recompute only parts of each transformer layer that take up a considerable amount of memory but are not computationally expensive to recompute", "where": "Section 5"},
+  {"term": "Sequence parallelism", "definition": "partition the non-tensor-parallel regions (layer-norm, dropout) along the sequence dimension", "where": "Section 4.2.2"},
+  {"term": "Full activation recomputation", "definition": "checkpoint activations at transformer layer boundaries and recompute the rest in the backward pass", "where": "Section 1"}
+ ],
+ "lineage": [
+  {"work": "Megatron-LM (Shoeybi et al.)", "year": 2019, "arxiv": "1909.08053", "relation": "extends", "note": "tensor parallelism that this work builds on", "quote": null},
+  {"work": "Efficient large-scale language model training on GPU clusters using Megatron-LM (Narayanan et al.)", "year": 2021, "arxiv": "2104.04473", "relation": "extends", "note": "pipeline schedules and FLOPs derivation", "quote": null},
+  {"work": "Training deep nets with sublinear memory cost (Chen et al.)", "year": 2016, "arxiv": "1604.06174", "relation": "baseline", "note": "activation recomputation / gradient checkpointing", "quote": null},
+  {"work": "Sequence parallelism: Long sequence training from system perspective (Li et al.)", "year": 2021, "arxiv": null, "relation": "related", "note": "different sequence parallelism requiring replicated parameters", "quote": null},
+  {"work": "PaLM (Chowdhery et al.)", "year": 2022, "arxiv": null, "relation": "uses-method", "note": "MFU/HFU definitions", "quote": null},
+  {"work": "MT-NLG 530B (Smith et al.)", "year": 2022, "arxiv": null, "relation": "evaluates", "note": "530B config", "quote": null},
+  {"work": "ZeRO (Rajbhandari et al.)", "year": 2020, "arxiv": null, "relation": "related", "note": "complementary, not compared", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 7", "caption": "Percentage of required memory compared to the tensor-level parallel baseline.", "page": 11, "why": "Shows 5x memory reduction from the two techniques across model sizes."},
+  {"figure": "Fig 5", "caption": "Transformer layer with tensor and sequence parallelism.", "page": 6, "why": "Shows g/g-bar all-gather/reduce-scatter placement."},
+  {"figure": "Fig 3", "caption": "Self-attention block with selective recomputation region.", "page": 5, "why": "Marks which attention ops are recomputed."}
+ ],
+ "code": [
+  {"where": "Eq 5, Section 4.2.3", "snippet": "Total activations memory = sbhL/t (34 + 5as/h)", "verbatim": false},
+  {"where": "Eq 6, Section 5", "snippet": "Total required memory = 34sbhL/t", "verbatim": false}
+ ],
+ "problems": ["Page numbers for figures are estimated from text order; figure content not rendered."]
+}

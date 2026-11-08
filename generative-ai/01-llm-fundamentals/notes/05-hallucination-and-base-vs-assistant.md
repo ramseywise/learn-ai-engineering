@@ -1,6 +1,7 @@
 ---
 origin: synthesis
 sources:
+  - https://doi.org/10.18653/v1/p17-1099
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 1–2"
   - https://arxiv.org/abs/2201.08239
   - https://arxiv.org/abs/2310.03533
@@ -125,6 +126,11 @@ flowchart LR
     D --> E[Text in the style post-training rewarded]
     E -.->|no fact store consulted| F[Plausible, not verified]
 ```
+
+Fabrication is not only a modern problem. Before pretrained models, a plain attentional sequence-to-sequence summariser on CNN/Daily Mail made factual errors and could not reproduce rare words; in the paper's example it turned "thwart criminals" into "destabilize nigeria's economy". A pointer-generator network lets the decoder copy words from the source as well as generate them, and a coverage term discourages repeating them. ROUGE-1 rose from 31.33 for the 50k-vocabulary baseline to 39.53 (36.44 without coverage), and coverage needed only about 3,000 extra iterations, about 1% of training. The claim that copying cures fabrication rests on examples, not a measured rate. The model copies whole sentences 35% of the time against 1.3% for the reference summaries, and the lead-3 baseline (40.34 ROUGE-1) still beats it ([doi:10.18653/v1/P17-1099](https://doi.org/10.18653/v1/P17-1099) (See et al., ACL 2017)).
+
+![Comparison of summaries of one news article: the baseline sequence-to-sequence model writes UNK tokens and the invented phrase "destabilize nigeria's economy"; the pointer-generator copies source phrases but repeats itself; adding coverage removes the repetition](../sources/images/see-pointer-generator-fig1.png)
+*Image Source: See et al., [Get To The Point: Summarization with Pointer-Generator Networks](https://doi.org/10.18653/v1/P17-1099) (2017), Fig. 1*
 
 ---
 

@@ -1,0 +1,529 @@
+{
+ "schema": 1,
+ "key": "1805.08974",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/kornblith-2019-do-better-imagenet-models-transfer.pdf",
+ "bib": {
+  "title": "Do Better ImageNet Models Transfer Better?",
+  "authors": [
+   "Simon Kornblith",
+   "Jonathon Shlens",
+   "Quoc V. Le"
+  ],
+  "first_author": "Kornblith",
+  "year": 2019,
+  "venue": "preprint (arXiv v3; CVPR 2019 paper)",
+  "arxiv": "1805.08974",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 87760,
+  "chars_total": 87760,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed; Table I.1 numeric cells skimmed, not recorded individually."
+ },
+ "type": "empirical",
+ "question": "Do ImageNet architectures that score higher on ImageNet also transfer better to other image classification tasks, as fixed features, fine-tuned, or trained from scratch?",
+ "hypothesis": "Implicit community assumption that better ImageNet models transfer better, and learn better features; the paper tests it rather than asserting it.",
+ "contributions": [
+  "Better ImageNet networks provide better penultimate layer features for transfer learning with linear classification (r = 0.99), and better performance when the entire network is fine-tuned (r = 0.96).",
+  "Regularizers that improve ImageNet performance are highly detrimental to the performance of transfer learning based on penultimate layer features.",
+  "Architectures transfer well across tasks even when weights do not: on two small fine-grained datasets fine-tuning gives little benefit over random init, but better ImageNet architectures still score higher."
+ ],
+ "method": {
+  "summary": "Retrain 16 CNNs on ImageNet with matched settings (BN scale, no label smoothing/dropout/aux head), then evaluate on 12 classification datasets in three settings: L2 logistic regression on frozen penultimate features, full fine-tuning, and training from random init. Correlate ImageNet top-1 with transfer accuracy on logit scale.",
+  "task": "image classification transfer learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet (ILSVRC 2012)",
+    "role": "pretrain",
+    "size": null,
+    "split": "~50,000 train images held out as validation to choose training length, then full train",
+    "source": null,
+    "preprocessing": "preprocessing and augmentation from TF inception_preprocessing [79]"
+   },
+   {
+    "name": "12 transfer datasets (Food-101, CIFAR-10, CIFAR-100, Birdsnap, SUN397, Stanford Cars, FGVC Aircraft, PASCAL VOC 2007 Cls, DTD, Oxford-IIIT Pets, Caltech-101, Oxford 102 Flowers)",
+    "role": "eval",
+    "size": "2,040 to 75,750 training images (20 to 5,000 per class); Table 1 gives per-dataset train/test",
+    "split": "provided splits; validation set from train where none given; DTD and SUN397 first split only; Caltech-101 30 train/class, rest test; final results retrained on train+val",
+    "source": null,
+    "preprocessing": "images rescaled to each network's ImageNet input size"
+   }
+  ],
+  "models": [
+   {
+    "name": "16 CNNs: Inception v1, BN-Inception, Inception v3, v4, Inception-ResNet v2, ResNet-50/101/152 v1, DenseNet-121/169/201, MobileNet v1, v2, v2 (1.4), NASNet-A Mobile, NASNet-A Large (VGG appears in some figures)",
+    "role": "evaluated",
+    "params": "2.2M (MobileNet v2) to 84.7M (NASNet-A Large), excluding logits layer",
+    "architecture": "CNN",
+    "init_from": "retrained on ImageNet by the authors (public checkpoints used only for Appendix B, Sec 4.6-4.7)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "penultimate_dim": "1024 to 4032",
+     "input_size": "224 to 331 px",
+     "retrained_imagenet_top1": "71.6% to 80.8%"
+    }
+   }
+  ],
+  "training": {
+   "objective": "ImageNet classification (cross-entropy implied); transfer by logistic regression, fine-tuning, or from scratch",
+   "optimizer": "Nesterov momentum 0.9",
+   "lr": "ImageNet: linear warmup to 1.6 then x0.975 per epoch; fine-tune: grid of 7 log-spaced values 0.0001 to 0.1; from scratch: 0.001 to 1.0",
+   "lr_schedule": "ImageNet: exponential decay 0.975/epoch; fine-tune: cosine decay",
+   "warmup": "linear over first 10 epochs (ImageNet)",
+   "batch_size": "ImageNet 4096; fine-tune and from scratch 256 (64 / 16 for dataset-size study)",
+   "steps": "fine-tune and from-scratch 20,000 steps; logistic regression with augmentation 40,000 steps",
+   "epochs": "ImageNet: up to 300 in held-out run, then the best-performing step count",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "ImageNet 8e-5; fine-tune/scratch: grid of 7 weight-decay-to-lr ratios 1e-6 to 1e-3 (scratch 1e-5 to 1e-2), plus none",
+   "dropout": "none in the main setting (varied in ablation)",
+   "regularisation": "main setting: BN scale on, no label smoothing, dropout, aux head; NASNet-A Large drop path disabled; EMA of weights decay 0.9999",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "single run per model in main results; 3 fine-tuning runs x 2 tuning rounds in Fig C.3; 3 subsets in Fig 9",
+   "other": {
+    "bn_momentum_finetune": "max(1 - 10/s, 0.9), s = steps per epoch",
+    "logreg": "multinomial L2 logistic regression, L-BFGS, 45 log-spaced L2 values 1e-6 to 1e5 on validation, no augmentation, full image",
+    "svm": "scikit-learn, C from 26 log-spaced values 0.001 to 100, L2-normalised features",
+    "dataset_size_study": "fine-tune >=1000 steps or 100 epochs, batch 64, lr range /4; scratch >=78,125 steps or 200 epochs, batch 16, lr range /16, public Inception v4 checkpoint"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "eval_crop": "uncropped vs central 87.5% crop chosen on validation (fine-tuning)"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "transfer accuracy",
+     "definition": "top-1 for most datasets; mean per-class for Aircraft, Pets, Caltech-101, Flowers; 11-point mAP for VOC2007; analysed as logit(accuracy) (log odds) averaged over datasets",
+     "unit": "% / log odds",
+     "higher_is_better": true
+    },
+    {
+     "name": "Pearson r (and Spearman rho)",
+     "definition": "correlation between logit ImageNet top-1 and dataset-averaged logit transfer accuracy across 16 models",
+     "unit": "r",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Published state of the art per dataset (Table F.1)",
+    "public checkpoints (Appendix B)",
+    "SVM and augmented logistic regression (Appendix G)"
+   ],
+   "protocol": "Permutation test / exact McNemar test per dataset pair; t-test across datasets; Morey-corrected error bars; Wilcoxon signed rank for fine-tune vs logreg. Tests compare trained models, not architectures (no variance over random inits)."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "all 12 public datasets"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "trained all networks with a batch size of 4096 using Nesterov momentum of 0.9 and weight decay of 8 × 10−5",
+    "where": "A.3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Fixed-feature transfer accuracy correlates strongly with ImageNet top-1 when all models are retrained with identical settings.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.99,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 CNNs, 12 datasets, logistic regression on penultimate features, logit scale",
+   "quote": "ImageNet top-1 accuracy was highly correlated with accuracy on transfer tasks (r = 0.99)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1"
+  },
+  {
+   "claim": "Fine-tuned transfer accuracy also correlates strongly with ImageNet top-1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.96,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 CNNs, 12 datasets, 20,000 steps fine-tuning",
+   "quote": "we found that ImageNet top-1 accuracy was highly correlated with transfer accuracy (r = 0.96)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Training from random init gives a much weaker correlation overall.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.55,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "same 16 CNNs, 12 datasets, from scratch",
+   "quote": "ImageNet top-1 accuracy and accuracy on the new tasks was more variable than",
+   "table": null,
+   "note": "Value 0.55 appears in Sec 4.3 and Table A.1; quote locates the sentence, number checked in Table A.1.",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "With public checkpoints (varying regularisation) the fixed-feature correlation is weak and not significant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.37,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 public checkpoints, logistic regression",
+   "quote": "(r = 0.37,",
+   "table": null,
+   "note": "p = 0.16",
+   "where": "Appendix B"
+  },
+  {
+   "claim": "From-scratch correlation is low on the 7 datasets with under 10,000 examples and strong on larger ones.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.86,
+   "unit": "Pearson r (large datasets); 0.29 (small)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "from random init",
+   "quote": "for the larger datasets, the",
+   "table": null,
+   "note": "Small-dataset r = 0.29 not significant",
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Inception-style regularisers change ImageNet top-1 by under 1% but damage fixed-feature transfer by about as much as the gap between worst and best ImageNet models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ImageNet top-1 change",
+   "value": 1,
+   "unit": "% (ImageNet impact upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception models, 4 settings: BN scale off, label smoothing, dropout, aux head",
+   "quote": "These settings had a small",
+   "table": null,
+   "note": "value is the '< 1%' bound",
+   "where": "Sec 4.1, Fig 3"
+  },
+  {
+   "claim": "Fine-tuning beat logistic regression in 179 of 192 dataset/model pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 179,
+   "unit": "of 192",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 models x 12 datasets",
+   "quote": "Fine-tuning improved performance over",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Fine-tuning beat training from scratch in 189 of 192 pairs.",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 189,
+   "unit": "of 192",
+   "baseline_value": null,
+   "n": null,
+   "setup": "16 models x 12 datasets",
+   "quote": "Fine-tuning was more accurate than training from random",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "On Stanford Cars, fine-tuned Inception v4 barely beats scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 93.3,
+   "unit": "% top-1",
+   "baseline_value": 92.7,
+   "n": null,
+   "setup": "Inception v4 299x299; scratch 92.7%",
+   "quote": "92.7% on Stanford Cars when trained from scratch",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "On FGVC Aircraft, fine-tuned Inception v4 barely beats scratch.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mean per-class acc",
+   "value": 89.0,
+   "unit": "% mean per-class",
+   "baseline_value": 88.8,
+   "n": null,
+   "setup": "Inception v4 299x299; scratch 88.8%",
+   "quote": "88.8% on FGVC Aircraft",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5"
+  },
+  {
+   "claim": "Pretraining speeds convergence about 17-fold on average even when final accuracy matches.",
+   "kind": "measured",
+   "source": null,
+   "metric": "speedup",
+   "value": 17,
+   "unit": "x fewer steps",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception v4 public checkpoint; steps to reach 90% of max odds, geometric mean across datasets; 26 epochs/1151 steps vs 444 epochs/19531 steps",
+   "quote": "corresponding to a 17-fold",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.6"
+  },
+  {
+   "claim": "On FGVC Aircraft, scratch matched fine-tuning at only 16 examples per class.",
+   "kind": "measured",
+   "source": null,
+   "metric": "examples",
+   "value": 1600,
+   "unit": "total examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inception v4 dataset-subset study",
+   "quote": "parity with ﬁne-tuning",
+   "table": null,
+   "note": "16 per class",
+   "where": "Sec 4.7"
+  },
+  {
+   "claim": "Retrained models beat public checkpoints on fixed-feature transfer (average log odds).",
+   "kind": "measured",
+   "source": null,
+   "metric": "avg log odds",
+   "value": 1.58,
+   "unit": "log odds",
+   "baseline_value": 1.35,
+   "n": null,
+   "setup": "best retrained Inception-ResNet v2 vs best public ResNet v1 152 (1.35), t(11)=5.6, p=0.0002",
+   "quote": "achieved an average log odds of 1.58",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "Retrained models beat public checkpoints for 162 of 192 pairs (84%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "count",
+   "value": 162,
+   "unit": "of 192",
+   "baseline_value": null,
+   "n": null,
+   "setup": "logistic regression",
+   "quote": "Retrained models achieved higher accuracy for 84% of dataset/model pairs",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "SVM and logistic regression results are nearly identical.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.998,
+   "unit": "Pearson r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "fixed features, 12 datasets",
+   "quote": "SVM and logistic regression",
+   "table": null,
+   "note": "log odds 1.32 vs 1.28",
+   "where": "Appendix G.1"
+  },
+  {
+   "claim": "Removing ImageNet-duplicate test images leaves CIFAR-10 accuracy essentially unchanged.",
+   "kind": "measured",
+   "source": null,
+   "metric": "top-1",
+   "value": 98.02,
+   "unit": "% top-1",
+   "baseline_value": 98.04,
+   "n": null,
+   "setup": "NASNet Large fine-tuned, 9,863 test images disjoint from ImageNet; 98.04% on full test set",
+   "quote": "98.02% on the 9,863 example test set",
+   "table": null,
+   "note": null,
+   "where": "Appendix H"
+  },
+  {
+   "claim": "Dataset size predicts how well ImageNet accuracy predicts from-scratch accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": "r",
+   "value": 0.88,
+   "unit": "r",
+   "baseline_value": null,
+   "n": null,
+   "setup": "correlation of log train size with Fisher-z correlations, from random init",
+   "quote": "r = 0.88, p = 0.0002",
+   "table": null,
+   "note": null,
+   "where": "Fig D.1"
+  }
+ ],
+ "limits": [
+  "Tests compare trained models, not architectures: no variance over random initialisations or data order is measured (A.1.1).",
+  "Fine-tuning hyperparameters were chosen on large validation sets, so results may not reflect small-data practice (A.5).",
+  "Only CNNs on image classification; 16 architectures, one training run each, so r values rest on 16 points.",
+  "Retrained NASNet-A Large reached 80.8% vs 82.7% published because regularisers were disabled.",
+  "Authors concede few-shot/adaptable-feature methods were not tested; open question how to adapt ImageNet features better.",
+  "Public-checkpoint analysis shows conclusions depend on training recipe, so architecture ranking is recipe-dependent."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "log odds (logit accuracy)",
+   "definition": "logit(p) = log(p/(1-p)); additive change delta is a multiplicative change exp(delta) in the odds of correct classification",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Donahue et al., DeCAF",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed ImageNet features for transfer",
+   "quote": null
+  },
+  {
+   "work": "Razavian et al., CNN features off-the-shelf",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "fixed-feature baseline",
+   "quote": null
+  },
+  {
+   "work": "Yosinski et al., How transferable are features in deep neural networks?",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "layer freezing and transferability",
+   "quote": null
+  },
+  {
+   "work": "Huh et al., What makes ImageNet good for transfer learning?",
+   "year": 2016,
+   "arxiv": "1608.08614",
+   "relation": "related",
+   "note": "conflicting findings on classes vs images per class",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al., Rethinking the Inception architecture",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "label smoothing and aux head shown harmful to transfer features",
+   "quote": null
+  },
+  {
+   "work": "Huang et al., Speed/accuracy trade-offs for modern convolutional object detectors",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "detection accuracy tracks ImageNet accuracy",
+   "quote": null
+  },
+  {
+   "work": "ImageNet (Deng et al. 2009; Russakovsky et al. 2015)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pretraining dataset",
+   "quote": null
+  },
+  {
+   "work": "Cubuk et al., AutoAugment",
+   "year": 2018,
+   "arxiv": "1805.09501",
+   "relation": "baseline",
+   "note": "prior SOTA from scratch on CIFAR/Cars",
+   "quote": null
+  },
+  {
+   "work": "Loshchilov and Hutter, Decoupled weight decay",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "weight decay inversely tied to lr motivates grid",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Transfer learning performance is highly correlated with ImageNet top-1 accuracy for fixed ImageNet features (left) and fine-tuning from ImageNet initialization (right).",
+   "page": 1,
+   "why": "main result in one plot"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "ImageNet training settings have a large effect upon performance of logistic regression classifiers trained on penultimate layer features.",
+   "page": 5,
+   "why": "shows regularisers help ImageNet but hurt features"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Networks pretrained on ImageNet converge faster, even when final accuracy is the same as training from random initialization.",
+   "page": 7,
+   "why": "convergence speedup"
+  },
+  {
+   "figure": "Fig 9",
+   "caption": "Pretraining on ImageNet improves performance on fine-grained tasks with small amounts of data, but the gap narrows quickly as dataset size increases.",
+   "page": 8,
+   "why": "data-size crossover"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Several quoted numbers sit on line breaks in the cached text; quotes were shortened to single-line fragments.",
+  "No hardware, compute, or code link stated."
+ ]
+}

@@ -1,0 +1,85 @@
+{
+ "schema": 1,
+ "key": "1312.3005",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/chelba-2014-one-billion-word-benchmark-measuring.pdf",
+ "bib": {"title": "One Billion Word Benchmark for Measuring Progress in Statistical Language Modeling", "authors": ["Ciprian Chelba","Tomas Mikolov","Mike Schuster","Qi Ge","Thorsten Brants","Phillipp Koehn","Tony Robinson"], "first_author": "Chelba", "year": 2014, "venue": "preprint (arXiv v3; INTERSPEECH 2014 per ledger, venue not printed in text)", "arxiv": "1312.3005", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 19952, "chars_total": 19952, "engine": "pymupdf", "skipped": null},
+ "type": "benchmark",
+ "question": "How can progress in statistical language modeling be measured on a freely reproducible, large (about one billion word) corpus, and how do standard LM families compare on it?",
+ "hypothesis": "A one-billion-word corpus balances relevance in a world of abundant data against ease of evaluation, and combining techniques will beat the n-gram baseline substantially.",
+ "contributions": ["A reproducible one-billion-word benchmark built from freely available WMT11 data, with scripts and per-word log-probabilities for baseline n-gram models","Strong baselines with neural network LMs, including the largest RNN LM reported at the time","Comparison of several LM families and their linear interpolation on the same data"],
+ "method": {
+  "summary": "Builds a training/held-out corpus from WMT11 monolingual English text (dedup, tokenise, vocabulary cutoff, shuffle, partition), then trains Katz/KN n-grams, Stupid Backoff, binary MaxEnt, hierarchical-softmax MaxEnt and RNN+MaxEnt LMs and reports test perplexity, training time and linear interpolation.",
+  "task": "word-level statistical language modeling (next-word prediction), perplexity evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "WMT11 monolingual English training corpora (1B Word Benchmark)", "role": "both", "size": "about 2.9 billion words before dedup; 829250940 words after duplicate-sentence removal (counting <S>, <\\S>)", "split": "sentences shuffled, 100 disjoint partitions; 1 partition (1%) held out; held-out shuffled and split into 50 partitions for dev/test; one partition (2% of held-out, 159658 words) is the test set; rest reserved", "source": "http://statmt.org/wmt11/training-monolingual.tgz; benchmark released as code.google.com project", "preprocessing": "WMT11 normalisation/tokenisation scripts augmented to normalise UTF-8 punctuation variants; duplicate sentences removed; vocabulary of 793471 words (count >= 3, incl. <S>, <\\S>); OOV mapped to <UNK>; test OoV rate 0.28%; sentence order randomised so no cross-sentence context"}
+  ],
+  "models": [
+   {"name": "Interpolated Kneser-Ney 5-gram (1.1B n-grams)", "role": "baseline", "params": "1.76B", "architecture": "n-gram", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": null, "heads": null, "context": "5-gram", "other": {}},
+   {"name": "Katz 5-gram (1.1B and 15M n-grams)", "role": "baseline", "params": "1.74B / 0.03B", "architecture": "n-gram", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": null, "heads": null, "context": "5-gram", "other": {"pruning": "Stolcke entropy pruning for the 15M versions"}},
+   {"name": "Stupid Backoff 5-gram", "role": "baseline", "params": "1.13B", "architecture": "n-gram, unnormalised, normalised over vocabulary for perplexity", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": null, "heads": null, "context": "5-gram", "other": {}},
+   {"name": "Binary MaxEnt 5-gram (n-gram; n-gram + skip-1)", "role": "evaluated", "params": "1.13B / 1.8B", "architecture": "independent binary predictors, negatives down-sampled", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": null, "heads": null, "context": "5-gram", "other": {"negative_sampling_rate": "0.001"}},
+   {"name": "Hierarchical Softmax MaxEnt 4-gram (HME)", "role": "evaluated", "params": "6B", "architecture": "MaxEnt with binary Huffman tree hierarchical softmax", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": null, "heads": null, "context": "4-gram", "other": {}},
+   {"name": "Recurrent NN-256/512/1024 + MaxEnt 9-gram", "role": "proposed", "params": "20B", "architecture": "RNN LM (256, 512 or 1024 neurons) run in parallel with MaxEnt over 9 previous words plus previous 15 words as order-independent features", "init_from": null, "tokenizer": "word-level", "vocab": "793471", "layers": null, "hidden": "256 / 512 / 1024 neurons", "heads": null, "context": "9-gram MaxEnt history", "other": {"output_params_reduced": "by 90%"}}
+  ],
+  "training": {
+   "objective": "inferred: maximum likelihood / perplexity minimisation (hyper-parameters chosen to minimise perplexity)",
+   "optimizer": "regular SGD (RNN)",
+   "lr": "0.05 to 0.001",
+   "lr_schedule": null, "warmup": null, "batch_size": null, "steps": null,
+   "epochs": "10 iterations over the data (RNN)",
+   "tokens": "about 0.8B words (829250940)",
+   "seq_len": null, "precision": null, "weight_decay": null, "dropout": null, "regularisation": null,
+   "hardware": "RNN: single standard machine without GPUs (24 CPUs per Table 1); n-gram 100 CPUs; Binary MaxEnt 5000 CPUs (500 machines for negative generation, 5000 for tuning); HME 1 CPU",
+   "compute": null,
+   "wall_clock": "RNN-256 60h, RNN-512 120h, RNN-1024 240h; KN 3h; Katz 2h; SBO 0.4h; Binary MaxEnt 1h / 1.25h; HME 3h; binary MaxEnt negative generation 7.25 h on 500 machines, tuning 50 and 70 min on 5000 machines",
+   "seeds": null,
+   "other": {"rnn_speedups": "parallelisation across CPU threads, SIMD, 90% fewer output parameters, MaxEnt in parallel; claimed 20-50x faster training; details deferred to a later paper"}
+  },
+  "inference": {"decoding": null, "temperature": null, "top_p": null, "max_tokens": null, "samples": null, "prompting": null, "retrieval": null, "parameters": {"interpolation_weights_KN_rnn1024_rnn512_rnn256_SBO_HME": "0.06, 0.61, 0.13, 0.00, 0.20, 0.00"}, "other": {}},
+  "eval": {
+   "metrics": [{"name": "perplexity", "definition": "test-set perplexity on the 159658-word test partition, <S> not predicted; SBO normalised over the vocabulary", "unit": "perplexity", "higher_is_better": false}, {"name": "training time", "definition": "hours and CPUs, implementation-dependent", "unit": "hours, CPUs", "higher_is_better": false}],
+   "baselines": ["Interpolated KN 5-gram","Katz 5-gram","Stupid Backoff"],
+   "protocol": "single test partition; interpolation weights tuned to minimise perplexity on held-out data; no seeds or significance tests"
+  },
+  "availability": {"code": "scripts to rebuild data on code.google.com project (1-billion-word-language-modeling-benchmark)", "weights": null, "data": "rebuildable from WMT11 monolingual data; per-word log-probabilities for baseline n-gram models on ten held-out sets released"},
+  "prompts": [],
+  "evidence": [{"field": "training.hardware", "quote": "on a single standard machine with-", "where": "Section 4.4"}]
+ },
+ "results": [
+  {"claim": "The unpruned interpolated KN 5-gram baseline reaches test perplexity 67.6.", "kind": "measured", "source": null, "metric": "perplexity", "value": "67.6", "unit": "perplexity", "baseline_value": null, "n": null, "setup": "1B Word Benchmark test set (159658 words), KN 5-gram with 1.1B n-grams", "table": "Table 1, row Interpolated KN 5-gram 1.1B n-grams, column Perplexity", "note": null, "where": "Table 1"},
+  {"claim": "Linear interpolation of all models gives perplexity 43.8, about 35% below the KN baseline.", "kind": "measured", "source": null, "metric": "perplexity", "value": "43.8", "unit": "perplexity", "baseline_value": "67.6", "n": null, "setup": "interpolation of KN, RNN-1024/512/256, SBO, HME with weights tuned on held-out data; the interpolation weights are fit on held-out data","table": "Table 2, row All models, column Perplexity", "note": "Text says 'about 35% lower' and 10% cross-entropy reduction; 43.8/67.6 is a 35.2% reduction", "where": "Table 2, Section 5.2"},
+  {"claim": "The best single model, RNN-1024 + MaxEnt 9-gram (20B params), reaches perplexity 51.3.", "kind": "measured", "source": null, "metric": "perplexity", "value": "51.3", "unit": "perplexity", "baseline_value": "67.6", "n": null, "setup": "1B Word Benchmark test set, 240 hours on 24 CPUs", "table": "Table 1, row Recurrent NN-1024 + MaxEnt 9-gram, column Perplexity", "note": null, "where": "Table 1"},
+  {"claim": "RNN perplexity falls with size: 58.3 (256), 54.5 (512), 51.3 (1024) at 60, 120, 240 hours.", "kind": "measured", "source": null, "metric": "perplexity", "value": "58.3", "unit": "perplexity", "baseline_value": null, "n": null, "setup": "RNN-256 + MaxEnt 9-gram; 54.5 for RNN-512, 51.3 for RNN-1024", "table": "Table 1, row Recurrent NN-256 + MaxEnt 9-gram, column Perplexity", "note": null, "where": "Table 1"},
+  {"claim": "Pruning to 15M n-grams hurts KN far more than Katz (243.2 vs 127.5).", "kind": "measured", "source": null, "metric": "perplexity", "value": "243.2", "unit": "perplexity", "baseline_value": "127.5", "n": null, "setup": "15M n-gram entropy-pruned 5-gram models; baseline_value is Katz 15M", "table": "Table 1, row Interpolated KN 5-gram, 15M n-grams, column Perplexity", "note": "Katz 5-gram 1.1B is 79.9, so Katz beats KN once pruned to 15M", "where": "Table 1"},
+  {"claim": "Stupid Backoff has poor perplexity (87.9) yet gets interpolation weight 0.20, while KN gets only 0.06.", "kind": "measured", "source": null, "metric": "interpolation weight", "value": "0.20", "unit": "weight", "baseline_value": "0.06", "n": null, "setup": "Table 2 weights KN, rnn1024, rnn512, rnn256, SBO, HME = 0.06, 0.61, 0.13, 0.00, 0.20, 0.00", "quote": "0.06, 0.61, 0.13, 0.00, 0.20, 0.00.", "note": null, "where": "Table 2, Section 5.2"},
+  {"claim": "Binary MaxEnt 5-gram reaches 115.4 (n-gram) and 107.1 (with skip-1) trained on 5000 CPUs, worse than KN.", "kind": "measured", "source": null, "metric": "perplexity", "value": "107.1", "unit": "perplexity", "baseline_value": "115.4", "n": null, "setup": "negative sampling rate 0.001; baseline_value is n-gram-only features", "table": "Table 1, row Binary MaxEnt 5-gram (n-gram + skip-1 features), column Perplexity", "note": null, "where": "Table 1"},
+  {"claim": "Corpus after dedup has 829250940 words, vocabulary 793471, test OoV rate 0.28%.", "kind": "measured", "source": null, "metric": "OoV rate", "value": "0.28%", "unit": "%", "baseline_value": null, "n": null, "setup": "test partition of 159658 words, vocabulary count cutoff 3", "quote": "set was 0.28%.", "note": null, "where": "Section 2"}
+ ],
+ "limits": [
+  "Sentence order is randomised, so the benchmark cannot test long-context dependencies across sentences (Section 2).",
+  "Training times are not comparable across models since they depend on implementation (Section 5.1).",
+  "Hyper-parameters tuned only for perplexity, not model size or speed; some well-known techniques are missing; limited collaborative effort.",
+  "No application-level (ASR, SMT) evaluation; authors suggest adding lattices/N-best lists.",
+  "RNN speed-up details deferred to an upcoming paper; no seeds or variance reported.",
+  "Dated: word-level vocab with perplexity on a news corpus; later neural LMs (LSTM, transformers) far surpassed these numbers."
+ ],
+ "practices": [],
+ "terms": [],
+ "lineage": [
+  {"work": "A bit of progress in language modeling (Goodman)", "year": 2001, "arxiv": null, "relation": "extends", "note": "Follows Goodman's study of LM techniques on large data", "quote": null},
+  {"work": "A neural probabilistic language model (Bengio et al.)", "year": 2003, "arxiv": null, "relation": "baseline", "note": "Neural network LM provided as strong baseline", "quote": null},
+  {"work": "Recurrent neural network based language model (Mikolov et al.)", "year": 2010, "arxiv": null, "relation": "uses-method", "note": "RNN LM scaled up to 20B parameters", "quote": null},
+  {"work": "Large language models in machine translation (Brants et al.)", "year": 2007, "arxiv": null, "relation": "baseline", "note": "Stupid Backoff", "quote": null},
+  {"work": "Efficient Subsampling for Training Complex Language Models (Xu et al.)", "year": 2011, "arxiv": null, "relation": "baseline", "note": "Binary MaxEnt LM", "quote": null},
+  {"work": "Kneser and Ney; Katz", "year": 1995, "arxiv": null, "relation": "baseline", "note": "n-gram smoothing baselines; Stolcke entropy pruning (1998)", "quote": null},
+  {"work": "WMT11 monolingual training data", "year": 2011, "arxiv": null, "relation": "uses-data", "note": "Source corpus", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Results on the 1B Word Benchmark test set with various types of language models.", "page": 1, "why": "Compares parameters, training time, CPUs and perplexity across LM families in one view."},
+  {"figure": "Table 2", "caption": "Model combination on the 1B Word Benchmark test set. The weights were tuned to minimize perplexity on held-out data.", "page": 3, "why": "Shows the interpolated result and weights."}
+ ],
+ "code": [],
+ "problems": ["Venue (INTERSPEECH 2014) is not printed in the PDF text; text is arXiv v3. Reference list has Katz cited as 1995 in text and 1987 in entry. No embedded instructions found."]
+}

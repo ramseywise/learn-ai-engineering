@@ -1,0 +1,442 @@
+{
+ "schema": 1,
+ "key": "2104.04473",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/narayanan-2021-efficient-large-scale-language-model.pdf",
+ "bib": {
+  "title": "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM",
+  "authors": [
+   "Deepak Narayanan",
+   "Mohammad Shoeybi",
+   "Jared Casper",
+   "Patrick LeGresley",
+   "Mostofa Patwary",
+   "Vijay Korthikanti",
+   "Dmitri Vainbrand",
+   "Prethvi Kashinkunti",
+   "Julie Bernauer",
+   "Bryan Catanzaro",
+   "Amar Phanishayee",
+   "Matei Zaharia"
+  ],
+  "first_author": "Narayanan",
+  "year": 2021,
+  "venue": "SC 2021 (arXiv v5)",
+  "arxiv": "2104.04473",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 74320,
+  "chars_total": 74320,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "system",
+ "question": "How should tensor, pipeline and data parallelism be combined to maximise training throughput of very large LMs at a given batch size while keeping strict optimizer semantics?",
+ "hypothesis": "Composing pipeline parallelism across servers, tensor parallelism within a server and data parallelism scales to thousands of GPUs at high utilisation.",
+ "contributions": [
+  "PTD-P: composition of pipeline, tensor and data parallelism",
+  "Interleaved 1F1B pipeline schedule (10+% throughput gain)",
+  "Analytical study of interactions between parallelism dimensions, microbatch size and activation recomputation, with three takeaways",
+  "Scatter/gather communication optimisation and fused-kernel computation optimisations",
+  "Open-source Megatron-LM implementation; 1T-parameter model at 502 petaFLOP/s on 3072 GPUs"
+ ],
+ "method": {
+  "summary": "PTD-P extension to Megatron-LM (PyTorch, NCCL) combining inter-node pipeline parallelism (PipeDream-Flush 1F1B, optionally interleaved), intra-node tensor parallelism and data parallelism. Throughput of GPT models of 1.7B to 1T parameters measured on the Selene A100 cluster, plus ablations and a ZeRO-3 comparison.",
+  "task": "distributed pretraining throughput (systems benchmark of GPT models)",
+  "trains": true,
+  "datasets": [],
+  "models": [
+   {
+    "name": "GPT models (Table 1)",
+    "role": "proposed",
+    "params": "1.7B to 1008B",
+    "architecture": "decoder-only GPT transformer",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": "51,200",
+    "layers": "24 to 128",
+    "hidden": "2304 to 25600",
+    "heads": "24 to 160",
+    "context": "2048",
+    "other": {
+     "1T model": "128 layers, hidden 25600, 160 heads, t=8, p=64, 3072 GPUs, batch 3072"
+    }
+   }
+  ],
+  "training": {
+   "objective": null,
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "512 (1.7B) to 3072 (1T), Table 1",
+   "steps": null,
+   "epochs": null,
+   "tokens": "not trained; time estimated for 300B (GPT-3) and 450B (1T) tokens",
+   "seq_len": "2048",
+   "precision": "mixed precision (16-bit; A100 peak 312 teraFLOP/s)",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "Selene: 8x NVIDIA 80GB A100 per node, NVLink/NVSwitch, 8 x 200Gbps HDR InfiniBand HCAs per node, 3-level fat tree with 850 switches; up to 3072 GPUs (384 nodes)",
+   "compute": null,
+   "wall_clock": "estimated 34 days (GPT-3 175B, 300B tokens, 1024 GPUs); 84 days (1T, 450B tokens, 3072 GPUs)",
+   "seeds": null,
+   "other": {
+    "note": "Only throughput is measured; no convergence run is reported. Optimizer, LR and data are not stated.",
+    "activation_recomputation": "used; checkpoint every 1-2 layers optimal",
+    "schedule": "interleaved 1F1B with scatter/gather for Table 1"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Achieved teraFLOP/s per GPU",
+     "definition": "FLOPs per iteration (eq. 3, GEMMs only, includes recomputation) divided by end-to-end iteration time incl. data loading, optimizer, communication, logging",
+     "unit": "teraFLOP/s",
+     "higher_is_better": true
+    },
+    {
+     "name": "Percentage of theoretical peak",
+     "definition": "achieved / 312 teraFLOP/s",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ZeRO-3 (DeepSpeed) without model parallelism",
+    "non-interleaved schedule",
+    "no scatter/gather",
+    "no operator fusion",
+    "no activation recomputation",
+    "DeepSpeed 1T (36% of peak)"
+   ],
+   "protocol": "Throughput of training iterations; repeats, seeds and variance are not stated."
+  },
+  "availability": {
+   "code": "https://github.com/nvidia/megatron-lm",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A 1T-parameter GPT reaches 502 petaFLOP/s aggregate on 3072 A100 GPUs, 52% of peak.",
+   "kind": "measured",
+   "source": null,
+   "metric": "aggregate throughput",
+   "value": "502",
+   "unit": "petaFLOP/s",
+   "baseline_value": null,
+   "n": 3072,
+   "setup": "GPT 1T params (128 layers, hidden 25600), t=8, p=64, batch 3072, seq 2048, mixed precision, interleaved schedule + scatter/gather, Selene",
+   "quote": "an aggregate throughput of 502 petaFLOP/s, on a GPT model [11] with a trillion parame-",
+   "table": null,
+   "note": null,
+   "where": "p1 Intro; Table 1"
+  },
+  {
+   "claim": "Per-GPU end-to-end throughput for the 1T model is 163 teraFLOP/s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-GPU throughput",
+   "value": "163",
+   "unit": "teraFLOP/s",
+   "baseline_value": null,
+   "n": 3072,
+   "setup": "Same 1T-parameter configuration, includes communication, data processing and optimisation",
+   "quote": "end-to-end training throughput of 163 teraFLOP/s per GPU",
+   "table": null,
+   "note": null,
+   "where": "p1 Intro"
+  },
+  {
+   "claim": "PTD-P beats ZeRO-3 by 70% when GPU count is doubled at fixed batch size, for 175B and 530B models.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative throughput",
+   "value": "70",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B and 530B, global batch fixed, ZeRO-3 without tensor/pipeline parallelism, DeepSpeed integration",
+   "quote": "PTD-P outperforms ZeRO-3 by 70% for both models due to less cross-node communication",
+   "table": null,
+   "note": null,
+   "where": "5.2"
+  },
+  {
+   "claim": "Estimated end-to-end training time for GPT-3 175B on 1024 A100s is 34 days.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "training time",
+   "value": "34",
+   "unit": "days",
+   "baseline_value": null,
+   "n": 1024,
+   "setup": "300B tokens, batch 1536, 140 teraFLOP/s per GPU, time ~ 8TP/(nX)",
+   "quote": "the time required to train this model is 34 days",
+   "table": null,
+   "note": "Estimate from throughput, not a completed run",
+   "where": "5.1"
+  },
+  {
+   "claim": "Estimated training time for the 1T model is 84 days.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "training time",
+   "value": "84",
+   "unit": "days",
+   "baseline_value": null,
+   "n": 3072,
+   "setup": "assumes 450B tokens, 163 teraFLOP/s per GPU",
+   "quote": "end-to-end training time of 84 days",
+   "table": null,
+   "note": "Abstract/intro says ~3 months",
+   "where": "5.1"
+  },
+  {
+   "claim": "Interleaved schedule improves throughput by as much as 10% over prior schedules at comparable memory.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput gain",
+   "value": "10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "175B GPT, 96 GPUs, small batch sizes, with scatter/gather (Fig 12); gap closes as batch grows",
+   "quote": "improve throughput by as much as 10% compared to previously-proposed schedules",
+   "table": null,
+   "note": null,
+   "where": "1; 5.3.2"
+  },
+  {
+   "claim": "Scatter/gather optimisation raises throughput up to 11% for communication-heavy schedules.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput gain",
+   "value": "11",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 96,
+   "setup": "GPT-3 175B, 96 A100, interleaved schedule, large batch",
+   "quote": "We see an improvement of up to 11% in throughput",
+   "table": null,
+   "note": null,
+   "where": "5.7"
+  },
+  {
+   "claim": "Operator fusion lifts GPT-3 175B from 113 to 135 teraFLOP/s per GPU (19%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-GPU throughput",
+   "value": "135",
+   "unit": "teraFLOP/s",
+   "baseline_value": "113",
+   "n": null,
+   "setup": "GPT-3 175B; 530B model went 133 to 148 (11%)",
+   "quote": "throughput increased by 19% with fusion (113 teraFLOP/s per GPU to 135 teraFLOP/s per GPU)",
+   "table": null,
+   "note": null,
+   "where": "5.8"
+  },
+  {
+   "claim": "Activation recomputation costs up to 33% throughput at small batch but enables batches giving up to 2x higher throughput.",
+   "kind": "measured",
+   "source": null,
+   "metric": "throughput change",
+   "value": "33",
+   "unit": "%",
+   "baseline_value": null,
+   "n": 128,
+   "setup": "GPT 145B, 128 A100, (t,p)=(8,16)",
+   "quote": "activation recomputation leads to up to 33% lower throughput",
+   "table": null,
+   "note": null,
+   "where": "5.6"
+  },
+  {
+   "claim": "DeepSpeed's earlier 1T result reached 36% of peak versus 52% here.",
+   "kind": "reported",
+   "source": "DeepSpeed blog [2]",
+   "metric": "fraction of peak",
+   "value": "36",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "V100 hardware; compared by the authors",
+   "quote": "(52% vs. 36% of peak)",
+   "table": null,
+   "note": null,
+   "where": "6"
+  },
+  {
+   "claim": "Smallest model (1.7B, 32 GPUs) achieves 137 teraFLOP/s, 44% of peak; per-GPU efficiency rises with model size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "per-GPU throughput",
+   "value": "137",
+   "unit": "teraFLOP/s",
+   "baseline_value": null,
+   "n": 32,
+   "setup": "Table 1 first row, t=1 p=1, batch 512",
+   "quote": "We achieve 52% of peak device throughput for the largest model, and 44% of peak device throughput for the smallest model.",
+   "table": "Table 1, row 1.7B, column Achieved teraFLOP/s per GPU",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Optimal microbatch size is 4 in the analytic model (1B GPT) and 2 empirically for the 91B model.",
+   "kind": "measured",
+   "source": null,
+   "metric": "best microbatch",
+   "value": "2",
+   "unit": "sequences",
+   "baseline_value": null,
+   "n": 64,
+   "setup": "91B GPT, (t,p)=(8,8), 64 A100",
+   "quote": "We see that the best microbatch size is 2 for this model",
+   "table": null,
+   "note": null,
+   "where": "5.5"
+  },
+  {
+   "claim": "Trillion-parameter checkpoint is 13.8 TB; save reaches 273 GB/s.",
+   "kind": "measured",
+   "source": null,
+   "metric": "checkpoint size",
+   "value": "13.8",
+   "unit": "TB",
+   "baseline_value": null,
+   "n": 3072,
+   "setup": "1T model, 384 nodes; load peak 1TB/s",
+   "quote": "the trillion-parameter model has a checkpoint of size 13.8 terabytes",
+   "table": null,
+   "note": null,
+   "where": "5.10"
+  }
+ ],
+ "limits": [
+  "Throughput only: no convergence or accuracy run, and optimizer, learning rate and data are not stated.",
+  "No automatic search of parallelism strategies; heuristics only.",
+  "Needs an optimised stack: NVLink inside nodes and high-bandwidth InfiniBand across; results depend on Selene.",
+  "Synchronous flushes only; asynchronous/bounded-staleness pipelines deferred.",
+  "ZeRO-3 compared without model parallelism; authors concede combining could improve it.",
+  "Training times are estimates from throughput, not completed runs.",
+  "No variance or repeat counts reported."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "PTD-P",
+   "definition": "pipeline, tensor and data parallelism composed",
+   "where": "2"
+  },
+  {
+   "term": "pipeline bubble",
+   "definition": "idle time at start and end of every batch; fraction (p-1)/m, or (1/v)(p-1)/m interleaved",
+   "where": "2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Megatron-LM tensor parallelism (Shoeybi et al.)",
+   "year": 2019,
+   "arxiv": "1909.08053",
+   "relation": "extends",
+   "note": "tensor partitioning of transformer layers reused",
+   "quote": null
+  },
+  {
+   "work": "GPipe",
+   "year": 2019,
+   "arxiv": "1811.06965",
+   "relation": "baseline",
+   "note": "all-forward all-backward schedule",
+   "quote": null
+  },
+  {
+   "work": "PipeDream-2BW / Memory-Efficient Pipeline-Parallel DNN Training",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PipeDream-Flush 1F1B schedule",
+   "quote": null
+  },
+  {
+   "work": "ZeRO",
+   "year": 2019,
+   "arxiv": "1910.02054",
+   "relation": "baseline",
+   "note": "ZeRO-3 compared in 5.2",
+   "quote": null
+  },
+  {
+   "work": "GPT-3",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "175B architecture benchmarked",
+   "quote": null
+  },
+  {
+   "work": "DeepSpeed 1T training",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "36% vs 52% of peak",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "Default and interleaved 1F1B pipeline schedules.",
+   "page": 4,
+   "why": "Shows how interleaving shrinks the bubble"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Blocks of transformer model partitioned with tensor model parallelism",
+   "page": 5,
+   "why": "MLP and attention split"
+  },
+  {
+   "figure": "Fig 10",
+   "caption": "Throughput per GPU of PTD-P and ZeRO-3",
+   "page": 8,
+   "why": "scaling gap vs ZeRO-3"
+  }
+ ],
+ "code": [
+  {
+   "where": "eq 2",
+   "snippet": "P = 12 l h^2 (1 + 13/(12h) + (V+s)/(12 l h))",
+   "verbatim": false
+  },
+  {
+   "where": "eq 4",
+   "snippet": "End-to-end training time ~ 8TP/(nX)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Figure text interleaved in cache; section map lacks sections 2-4 but all text was read.",
+  "Table 1 text flattened by extraction; per-row column order inferred from header."
+ ]
+}

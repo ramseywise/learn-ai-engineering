@@ -1,0 +1,177 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2024.acl-long.840",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/soldaini-2024-dolma.pdf",
+ "bib": {
+  "title": "Dolma: an Open Corpus of Three Trillion Tokens for Language Model Pretraining Research",
+  "authors": ["Luca Soldaini", "Rodney Kinney", "Akshita Bhagia", "Dustin Schwenk", "David Atkinson", "Russell Authur", "Ben Bogin", "Khyathi Chandu", "Jennifer Dumas", "Yanai Elazar", "Valentin Hofmann", "Ananya Harsh Jha", "Sachin Kumar", "Li Lucy", "Xinxi Lyu", "Nathan Lambert", "Ian Magnusson", "Jacob Morrison", "Niklas Muennighoff", "Aakanksha Naik", "Crystal Nam", "Matthew E. Peters", "Abhilasha Ravichander", "Kyle Richardson", "Zejiang Shen", "Emma Strubell", "Nishant Subramani", "Oyvind Tafjord", "Pete Walsh", "Luke Zettlemoyer", "Noah A. Smith", "Hannaneh Hajishirzi", "Iz Beltagy", "Dirk Groeneveld", "Jesse Dodge", "Kyle Lo"],
+  "first_author": "Soldaini",
+  "year": 2024,
+  "venue": "Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 15725-15788",
+  "arxiv": null,
+  "doi": "10.18653/v1/2024.acl-long.840"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 160000,
+  "chars_total": 243447,
+  "engine": "pymupdf",
+  "skipped": "Reference list skimmed only; Appendix O (all raw ablation result plots, Figures 13-92, text is axis ticks only) not read beyond captions and the start/end."
+ },
+ "type": "benchmark",
+ "question": "How can an open, documented, English 3T-token multi-source pretraining corpus be built, and which curation decisions (filters, dedup, mixing) improve models trained on it?",
+ "hypothesis": "Evidence-backed curation choices (quality, content, dedup filters) improve downstream and perplexity results of models trained on the data; multi-source composition gives better domain fit than web-only corpora.",
+ "contributions": [
+  "Release the Dolma Corpus, a diverse multi-source collection of 3T tokens across over 4B documents from 6 data sources.",
+  "Open source the Dolma Toolkit, a high-performance, portable tool to curate large datasets for language model pretraining."
+ ],
+ "method": {
+  "summary": "The authors build Dolma from Common Crawl, GitHub (The Stack), Reddit (Pushshift), peS2o papers, Project Gutenberg and Wikipedia/Wikibooks using a filter and mix toolkit, choosing each curation step by training 1.2B OLMo-style models on up to 150B tokens and comparing to a no-filter baseline. They then train OLMo-1B on the final corpus and compare it to other 1B models.",
+  "task": "pretraining corpus construction; data ablations with next-token pretraining and zero-shot evaluation",
+  "trains": true,
+  "datasets": [
+   {"name": "Dolma v1.6 (output)", "role": "pretrain", "size": "3,059B Llama tokens; 4,367M documents; 11,519 GB UTF-8; 2,318B Unicode words (Table 1), from about 200 TB raw", "split": null, "source": "Released under ODC-By; toolkit Apache 2.0", "preprocessing": "language ID, quality, content, PII, dedup, decontamination per source"},
+   {"name": "Dolma-Web (Common Crawl)", "role": "pretrain", "size": "2,479B Llama tokens; 9,812 GB; 3,734M documents", "split": null, "source": "25 Common Crawl snapshots 2020-05 to 2023-06 via CCNet; downloaded March 17-27 2023", "preprocessing": "FastText English score >= 0.5 (removes 61.7% of bytes); CCNet paragraph dedup (about 70% of paragraphs); URL dedup (53.2% docs); exact doc dedup (14.9%); Gopher rules + C4 NoPunc quality filters; FastText hate/NSFW sentence filter tau=0.4; regex PII; paragraph dedup (18.7% of paragraphs, 19.1% of characters in datasheet)"},
+   {"name": "Dolma-Code (The Stack, dedup)", "role": "pretrain", "size": "411B Llama tokens; 1,043 GB; 210M documents", "split": null, "source": "The Stack (Kocetkov 2022), cloned May 28 2023", "preprocessing": "drop data-heavy extensions (csv, json, svg etc.) and assembly; RedPajama v1 and StarCoder heuristics; PII masking; detect-secrets removal"},
+   {"name": "Dolma-Social (Reddit)", "role": "pretrain", "size": "89B Llama tokens; 339 GB; 377M documents", "split": null, "source": "Pushshift dumps 06/2005-03/2023 (422 dumps: 208 comments, 214 submissions)", "preprocessing": "atomic content format; remove comments <500 chars, submissions <400 chars, docs >40,000 chars; remove comments with <3 votes; remove deleted/removed/over-18; 26,123 banned or NSFW subreddits excluded; toxicity filter; PII documents removed; doc-level dedup"},
+   {"name": "peS2o (Semantic Scholar)", "role": "pretrain", "size": "70B Llama tokens; 268 GB; 38.8M documents", "split": null, "source": "peS2o V2 derived from S2ORC, used as is (repetition filter in datasheet)", "preprocessing": null},
+   {"name": "Project Gutenberg", "role": "pretrain", "size": "6.0B Llama tokens; 20.4 GB; 0.056M documents", "split": null, "source": "gutenberg.org, accessed April 3 2023", "preprocessing": "English filter, drop pages under 25 words, title-match dedup"},
+   {"name": "Wikipedia + Wikibooks (English and Simple)", "role": "pretrain", "size": "4.3B Llama tokens; 16.2 GB; 6.2M documents", "split": null, "source": "Wikimedia dump of March 20 2023, CC BY-SA 4.0", "preprocessing": "WikiExtractor; drop documents with 25 or fewer words"},
+   {"name": "C4 (supplement to web subset)", "role": "pretrain", "size": null, "split": null, "source": "Hugging Face, cloned May 24 2023, ODC-By 1.0", "preprocessing": "re-run through full web pipeline except URL dedup"},
+   {"name": "Downstream eval suite (8 tasks)", "role": "eval", "size": null, "split": null, "source": "ARC-E (and ARC-C offline), BoolQ, HellaSwag, OpenBookQA, PIQA, SciQ, WinoGrande", "preprocessing": null},
+   {"name": "Paloma + Dolma held-out sets", "role": "eval", "size": "Dolma uniform sample: 8,358 documents", "split": null, "source": "perplexity suite (Magnusson 2023) plus RedPajama v1, RefinedWeb, Dolma 100 subreddits, Dolma 100 programming languages", "preprocessing": "paragraphs over 13 tokens found in Paloma removed (negligible: 0.001% characters)"}
+  ],
+  "models": [
+   {"name": "OLMo ablation model (1.2B)", "role": "proposed", "params": "1.2B (called 1B / 1.2B)", "architecture": "decoder-only transformer, ALiBi, SwiGLU", "init_from": null, "tokenizer": "EleutherAI GPT NeoX tokenizer", "vocab": "50,280", "layers": "16", "hidden": "2048", "heads": "16", "context": "2048 tokens", "other": {}},
+   {"name": "OLMo-1B", "role": "proposed", "params": "1.2B", "architecture": "same as ablation model", "init_from": null, "tokenizer": "GPT NeoX", "vocab": "50,280", "layers": "16", "hidden": "2048", "heads": "16", "context": "2048 tokens", "other": {"trained_on": "Dolma, roughly 3.1T tokens"}},
+   {"name": "TinyLlama (1.1B)", "role": "baseline", "params": "1.1B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "Pythia (1.1B)", "role": "baseline", "params": "1.1B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "StableLM2 (1.6B)", "role": "baseline", "params": "1.6B", "architecture": null, "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "inferred: autoregressive next-token prediction (decoder-only language model)",
+   "optimizer": "LionW for ablations; AdamW for OLMo-1B (switched due to LionW instabilities)",
+   "lr": "1e-4 peak",
+   "lr_schedule": "cosine decay",
+   "warmup": "2000 steps",
+   "batch_size": "1024 (ablations); 2048 (OLMo-1B)",
+   "steps": "max 95k (about 200B tokens) with runs stopped at 150B tokens (ablations); 739,328 (roughly 3.1T tokens) for OLMo-1B",
+   "epochs": null,
+   "tokens": "up to 150B tokens per ablation; roughly 3.1T for OLMo-1B",
+   "seq_len": "2048 tokens",
+   "precision": "mixed precision",
+   "weight_decay": "1e-2",
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "64 AMD Instinct MI250X accelerators (128 compute units in 16 nodes), micro-batch 8 per unit; OLMo-1B on 256 compute units; LUMI supercomputer",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "5 random seeds for the code-mixture evaluation (Table 3); otherwise not stated",
+   "other": {"corpus_mix_for_OLMo_1B": "not stated in this paper (no single mixture prescribed)"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "zero-shot ranked classification; bAbI and WebNLG in-context with 0-5 demonstrations over 5 seeds",
+   "prompting": "zero-shot in-context, each task cast as ranked text classification; prompts from PromptSource (Bach 2022), prompt truncation from Min et al. (2022); in-house harness similar to Eleuther harness",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Downstream accuracy", "definition": "zero-shot accuracy on 8 tasks (ranked classification)", "unit": "%", "higher_is_better": true},
+    {"name": "Paloma perplexity", "definition": "perplexity averaged over marked domains sampled equally per source", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Exact match / Rouge-2", "definition": "exact match for bAbI and GSM8K, Rouge-2 for WebNLG", "unit": "%", "higher_is_better": true}
+   ],
+   "baselines": ["no-filter baseline for each ablation", "C4, mC4-en, RedPajama v1, RefinedWeb, Pile (1.2B models, 150B tokens)", "StableLM2 1.6B, Pythia 1.1B, TinyLlama 1.1B"],
+   "protocol": "single run per ablation (seeds not stated), curves over training tokens; most ablation results only shown as plots (HellaSwag in main text, rest in Appendix O); no significance tests"
+  },
+  "availability": {
+   "code": "github.com/allenai/dolma (Apache 2.0), PyPI dolma",
+   "weights": "OLMo-1B released",
+   "data": "hf.co/datasets/allenai/dolma (ODC-By)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "training.optimizer", "quote": "Due to instabilities we found in the LionW optimizer, we switched to using AdamW.", "where": "Appendix D.4"},
+   {"field": "datasets.Dolma-Web.source", "quote": "We used 25 snapshots between 2020-05 to 2023-06.", "where": "Section 5; the datasheet (N.3) says 'We decided to use the 24 most recent Common Crawl snapshots'"}
+  ]
+ },
+ "results": [
+  {"claim": "Dolma totals about 3T Llama tokens across 6 sources, curated down from roughly 200 TB of raw text.", "kind": "measured", "source": null, "metric": "tokens", "value": "3,059", "unit": "B Llama tokens", "baseline_value": null, "n": null, "setup": "Dolma v1.6, Llama tokenizer", "table": "Table 1, row Total, column Llama tokens (billions)", "quote": null, "note": "Table says 4,367M documents; text says 'over 4B documents'", "where": "Table 1"},
+  {"claim": "Web data is 2,479B of Dolma's tokens; code 411B, Reddit 89B, papers 70B, books 6.0B, encyclopedic 4.3B.", "kind": "measured", "source": null, "metric": "Llama tokens per source", "value": "2,479", "unit": "B tokens (web)", "baseline_value": null, "n": null, "setup": "Dolma v1.6", "table": "Table 1, row Common Crawl, column Llama tokens (billions)", "quote": null, "note": null, "where": "Table 1"},
+  {"claim": "Stacking quality filters, content filters and paragraph dedup compounds to improve 1.2B-model HellaSwag accuracy over an unfiltered baseline.", "kind": "measured", "source": null, "metric": "HellaSwag accuracy curve", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1.2B OLMo-style model, 150B tokens, Common Crawl pipeline, one run per config", "quote": "We show the positive compounding effect of all stages of our web pipeline on downstream model performance", "table": null, "note": "magnitude only in Fig 3 plot, not stated in text", "where": "Section 5.5, Fig 3"},
+  {"claim": "Of the C4 and Gopher heuristics, C4 NoPunc alone beats C4 All and Gopher All, and Gopher All + C4 NoPunc is best.", "kind": "measured", "source": null, "metric": "perplexity and downstream tasks", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1.2B model, 150B tokens, Common Crawl", "quote": "we find that C4 NoPunc on its own outperforms both C4 All as well as Gopher All on both perplexity and downstream tasks", "table": null, "note": null, "where": "Section 5.2, Fig 1"},
+  {"claim": "Gopher rules tag 15.23% of UTF-8 characters for removal.", "kind": "measured", "source": null, "metric": "characters tagged", "value": "15.23", "unit": "%", "baseline_value": null, "n": null, "setup": "Dolma web pipeline", "quote": "Gopher All tagged 15.23% of UTF-8 characters for removal, while C4 NoPunc tagged 22.73% of characters for removal.", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "CCNet's KenLM Wikipedia-likeness buckets are unaffected by heuristic filtering, so model-based and heuristic quality filters are orthogonal.", "kind": "measured", "source": null, "metric": "KenLM bucket share (high)", "value": "21.9", "unit": "%", "baseline_value": null, "n": null, "setup": "CCNet buckets high 21.9%, medium 28.5%, low 49.6%", "quote": "these buckets are often interpreted as high (21.9%), medium (28.5%), or low (49.6%) quality content", "table": null, "note": null, "where": "Section 5.2"},
+  {"claim": "The permissive toxicity threshold (tau=0.4) removes 5.5-7.3% of content but does slightly worse than the strict one (tau=0.0004, removes 29.1-34.9%); the authors chose the permissive one to keep the token count.", "kind": "measured", "source": null, "metric": "content removed at threshold", "value": "5.5-7.3", "unit": "% removed (tau=0.4)", "baseline_value": "29.1-34.9", "n": null, "setup": "FastText hate/NSFW classifiers on Jigsaw, 1.2B model ablation", "quote": "The \"High Threshold\" (τ = 0.4) removes less content (5.5–7.3%)", "table": null, "note": "the text calls tau=0.4 'High Threshold' and also 'more permissive'", "where": "Section 5.3"},
+  {"claim": "Quality, content and dedup filters overlap very little in which documents they remove, so their effects compound.", "kind": "measured", "source": null, "metric": "Pearson correlation between filters", "value": null, "unit": null, "baseline_value": null, "n": "24M, 20M and 43M documents (High, Medium, Low buckets)", "setup": "Common Crawl buckets, document-level", "quote": "Overall, we find that correlations are generally low, thus our filters select fairly different documents and are not redundant.", "table": null, "note": null, "where": "Appendix J, Fig 9"},
+  {"claim": "Three-stage dedup: URL dedup removes 53.2% of documents, exact document dedup 14.9% of the rest, paragraph dedup 18.7% of paragraphs.", "kind": "measured", "source": null, "metric": "URL dedup removal", "value": "53.2", "unit": "% of documents", "baseline_value": null, "n": null, "setup": "Dolma web pipeline, Bloom filter", "quote": "Exact URL dedup filters 53.2% of documents.", "table": null, "note": "datasheet reports paragraph dedup as 19.1% of UTF-8 characters, text reports 18.7% of paragraphs", "where": "Section 5.4, Appendix N.4"},
+  {"claim": "CCNet filters out 84.2% of Common Crawl content, from 175.1 TB to 27.7 TB.", "kind": "measured", "source": null, "metric": "content removed by CCNet", "value": "84.2", "unit": "%", "baseline_value": null, "n": null, "setup": "25 Common Crawl snapshots", "quote": "Overall, CCNet pipeline filters out 84.2% of the content in Common Crawl, from 175.1 TB to 27.7 TB.", "table": null, "note": null, "where": "Section 5.1"},
+  {"claim": "Treating Reddit comments and submissions as atomic independent documents beats partial or full thread linearization.", "kind": "measured", "source": null, "metric": "downstream performance", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1.2B models, Reddit subset, HellaSwag shown", "quote": "treating submissions and comments as independent documents (Atomic Content) leads to better performance on our evaluation suite", "table": null, "note": null, "where": "Section 7.1, Fig 4"},
+  {"claim": "OLMo-1B averages 60.3 over 8 tasks, above TinyLlama (59.4) and Pythia (54.5), below StableLM2 (66.5).", "kind": "measured", "source": null, "metric": "average zero-shot accuracy", "value": "60.3", "unit": "%", "baseline_value": "59.4 (TinyLlama)", "n": 8, "setup": "OLMo-1B (1.2B) trained roughly 3.1T tokens, zero-shot ranked classification", "quote": null, "table": "Table 2, row Average, column OLMo-1B (1.2B)", "note": "text says it outperforms TinyLlama in 4 of 8 tasks", "where": "Table 2"},
+  {"claim": "On Paloma perplexity, a model on multi-source Dolma matches the Pile model's curve and beats single-source C4, mC4-en and RefinedWeb models.", "kind": "measured", "source": null, "metric": "Paloma perplexity", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1.2B models on 150B-token samples of each corpus", "quote": "training on single-source corpora like C4, mC4 (English-only), and RefinedWeb leads to models with poor fit to diverse domains as indicated by higher average perplexity", "table": null, "note": null, "where": "Section 9.2, Fig 5"},
+  {"claim": "Adding code to the mix helps bAbI in-context learning: 0.0 exact match with 0% code, 8.8 with 5%, 10.1 with 15%.", "kind": "measured", "source": null, "metric": "bAbI ICL exact match, 15% code", "value": "10.1", "unit": "exact match", "baseline_value": "0.0", "n": 5, "setup": "1B models on C4 + Stack mixtures, 0-5 demonstrations, 5 seeds", "quote": null, "table": "Table 3, row bAbI (ICL), column 15% Code", "note": null, "where": "Table 3 (Appendix M)"},
+  {"claim": "Fine-tuning on program-aided (PAL) GSM8K outputs gives 11.8 (0% code), 14.2 (5%) and 14.7 (15%); plain GSM8K gets 0.0 for all.", "kind": "measured", "source": null, "metric": "GSM8K+PAL exact match, 15% code", "value": "14.7", "unit": "exact match", "baseline_value": "11.8", "n": 5, "setup": "1B models fine-tuned on GSM8K, 5 seeds", "quote": null, "table": "Table 3, row GSM8K+PAL (FT), column 15% Code", "note": null, "where": "Table 3"},
+  {"claim": "WebNLG Rouge-2 rises from 16.8 to 22.0 as code goes from 0% to 15%.", "kind": "measured", "source": null, "metric": "WebNLG Rouge-2, 15% code", "value": "22.0", "unit": "Rouge-2", "baseline_value": "16.8", "n": 5, "setup": "1B models, ICL, 5 seeds", "quote": null, "table": "Table 3, row WebNLG (ICL), column 15% Code", "note": null, "where": "Table 3"},
+  {"claim": "Reference+ (4.9% papers) and Gopher-like (24.2% papers) mixes reach nearly identical S2ORC perplexity, so a small share of in-domain data suffices.", "kind": "measured", "source": null, "metric": "M2D2 S2ORC perplexity", "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "1B models, four mixes in Table 4, no Reddit data in mixes", "quote": "despite significant differences in the amount of academic papers between Reference+ and Gopher-like (4.9% vs 24.2%), they achieve nearly identical results", "table": null, "note": null, "where": "Appendix M, Fig 12"},
+  {"claim": "Code subset has tokenizer fertility 2.45 against 1.15-1.28 for other sources, because non-space whitespace becomes separate tokens.", "kind": "measured", "source": null, "metric": "fertility (tokens per word)", "value": "2.45", "unit": "tokens/word", "baseline_value": "1.15-1.28", "n": null, "setup": "GPT NeoX tokenizer applied to each Dolma source", "quote": "which has a substantially higher fertility of 2.45", "table": null, "note": null, "where": "Appendix F"},
+  {"claim": "223 of 50,280 GPT NeoX vocabulary tokens (about 0.4%) never occur in Dolma.", "kind": "measured", "source": null, "metric": "unused tokens", "value": "223", "unit": "tokens", "baseline_value": null, "n": null, "setup": "GPT NeoX tokenizer on Dolma", "quote": "223 tokens are never used", "table": null, "note": null, "where": "Appendix F"},
+  {"claim": "Dolma contains whole copies of popular benchmark test sets: six PromptSource datasets are 100% contaminated and HumanEval, WiC, ESNLI, SNLI are over 90%.", "kind": "measured", "source": null, "metric": "contaminated instances", "value": "100", "unit": "% (6 datasets)", "baseline_value": null, "n": null, "setup": "WIMBD analysis of Dolma against PromptSource datasets; mostly in the code subset", "quote": "Six datasets are completely contaminated (100%)", "table": null, "note": "contaminated datasets are excluded from the downstream eval suite", "where": "Appendix L, Fig 11"},
+  {"claim": "Decontaminating against Paloma removes only 0.003% of the dataset (v1.0, v1.5); v1.6 is not decontaminated.", "kind": "measured", "source": null, "metric": "data removed by decontamination", "value": "0.003", "unit": "%", "baseline_value": null, "n": null, "setup": "paragraphs shared with Paloma", "quote": "only 0.003% of our dataset is removed due to contamination with this evaluation set", "table": null, "note": null, "where": "Appendix N.4"},
+  {"claim": "PII handling (replace if 5 or fewer spans, else drop document) affects 0.02% and 0.001% of documents and had no measurable effect on model performance.", "kind": "measured", "source": null, "metric": "documents with PII replaced", "value": "0.02", "unit": "% of documents", "baseline_value": null, "n": null, "setup": "regex for emails, IPs, phone numbers; 25 Common Crawl snapshots", "quote": "this affects 0.02% of documents", "table": null, "note": "datasheet N.4 lists 0.05% tagged for masking and 0.11% for removal for the full filter, a different count", "where": "Section 5.3, Appendix I"},
+  {"claim": "Filtering speed in the toolkit is 122 CPU hours per TB when replicating the C4 recipe; the 200 TB raw set would take 5 days on a 192-vCPU c6a.48xlarge.", "kind": "measured", "source": null, "metric": "filter throughput", "value": "122", "unit": "CPU hours per TB", "baseline_value": null, "n": null, "setup": "internal test replicating C4 recipe", "quote": "our toolkit performed filtering at a rate of 122 CPU hours per TB", "table": null, "note": null, "where": "Section 4.1"}
+ ],
+ "limits": [
+  "English-only corpus; language ID false negatives leave a small share of non-English text.",
+  "Ablations use a single 1B-scale dense autoregressive transformer trained to 150B tokens; decisions may not hold at 7B-70B or other architectures.",
+  "Evaluation suite is small (8 tasks) and excludes contaminated tasks; effect of code on code generation cannot be measured until instruction tuning.",
+  "Most ablation outcomes appear only as plots (HellaSwag in main text, others in Appendix O) with single runs and no significance tests or stated seeds.",
+  "Manual inspection of the full corpus is infeasible; contents, quality and harms cannot be fully described.",
+  "Chose permissive toxicity threshold (tau=0.4) even though the stricter one scored better, to keep token count; PII uses regex that trades accuracy for speed.",
+  "Dolma v1.6 is not decontaminated; Dolma v1.7 later gave significant gains (per Conclusion), so this version has dated.",
+  "Pushshift Reddit data is no longer distributed; raw data is unavailable outside AI2 and Common Crawl raw text was not kept.",
+  "Training compute and wall clock for OLMo-1B are not stated; OLMo-1B's exact data mixture is not given here.",
+  "Snapshot count inconsistent: text says 25 Common Crawl snapshots, datasheet says 24."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Dolma Toolkit filtering", "definition": "a configuration of a text unit, a scoring method and a removal policy applied at scale to identify and remove undesirable text", "where": "Section 4.1"},
+  {"term": "mixing", "definition": "cross-file operations such as up/down-sampling, deduplication and decontamination in a single Rust module", "where": "Section 4.1"},
+  {"term": "fertility", "definition": "the average number of tokens per word generated by a tokenizer", "where": "Appendix F"},
+  {"term": "token", "definition": "a subword obtained using a tokenizer (such as LLaMA's or GPT-NeoX's), distinct from a Unicode word", "where": "Section 1 footnote"}
+ ],
+ "lineage": [
+  {"work": "CCNet (Wenzek et al., 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "language ID and paragraph dedup for the web pipeline", "quote": null},
+  {"work": "Gopher (Rae et al., 2021)", "year": 2021, "arxiv": null, "relation": "uses-method", "note": "Gopher heuristic quality rules; argues against model-based quality filters", "quote": null},
+  {"work": "C4 (Raffel et al., 2020)", "year": 2020, "arxiv": null, "relation": "uses-method", "note": "C4 NoPunc heuristic; C4 also reprocessed as a supplement", "quote": null},
+  {"work": "RedPajama v1 (Together Computer, 2023)", "year": 2023, "arxiv": null, "relation": "extends", "note": "closest effort, a LLaMA data reproduction; Dolma broadens sources", "quote": null},
+  {"work": "LLaMA (Touvron et al., 2023a)", "year": 2023, "arxiv": null, "relation": "related", "note": "data recipe being reproduced", "quote": null},
+  {"work": "OLMo (Groeneveld et al., 2024)", "year": 2024, "arxiv": null, "relation": "uses-method", "note": "model architecture and training used for ablations and OLMo-1B", "quote": null},
+  {"work": "The Stack (Kocetkov et al., 2022)", "year": 2022, "arxiv": null, "relation": "uses-data", "note": "code source", "quote": null},
+  {"work": "peS2o / S2ORC (Soldaini and Lo, 2023; Lo et al., 2020)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "paper source", "quote": null},
+  {"work": "Pushshift Reddit (Baumgartner et al., 2020)", "year": 2020, "arxiv": null, "relation": "uses-data", "note": "social media source", "quote": null},
+  {"work": "Paloma (Magnusson et al., 2023)", "year": 2023, "arxiv": null, "relation": "uses-data", "note": "perplexity evaluation suite and decontamination target", "quote": null},
+  {"work": "WIMBD (Elazar et al., 2023)", "year": 2023, "arxiv": null, "relation": "uses-method", "note": "corpus inspection and contamination analysis", "quote": null},
+  {"work": "Hoffmann et al. (2022)", "year": 2022, "arxiv": null, "relation": "related", "note": "scaling laws motivate 2-3T token target", "quote": null},
+  {"work": "Muennighoff et al. (2023b)", "year": 2023, "arxiv": null, "relation": "replicates", "note": "code improves ICL on bAbI and WebNLG; findings corroborated", "quote": null},
+  {"work": "Pile (Gao et al., 2020), RefinedWeb/Falcon, mC4, ROOTS, Pythia, TinyLlama, StableLM2", "year": 2020, "arxiv": null, "relation": "baseline", "note": "compared corpora and models", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "The Dolma corpus at-a-glance.", "page": 2, "why": "Shows per-source bytes, documents, words and tokens in one view."},
+  {"figure": "Fig 3", "caption": "Positive compounding effect on 1.2B model performance when stacking quality filtering, content filtering and paragraph-level deduplication over a no-filtering baseline.", "page": 6, "why": "Shows the web pipeline stages each adding gain."},
+  {"figure": "Fig 5", "caption": "1.2B parameter language models trained on 150B tokens from Dolma and other open corpora, evaluated on perplexity over diverse domains in Paloma.", "page": 9, "why": "Shows multi-source corpora beat single-source web corpora on domain fit."},
+  {"figure": "Table 4 / Fig 12", "caption": "Overview of the mixtures and their composition; 1B model ablations for different proportions of Dolma data.", "page": 35, "why": "Shows how source mix changes domain perplexity."}
+ ],
+ "code": [],
+ "problems": [
+  "Appendix O (Figures 13-92) is axis-tick text only, not readable beyond captions; most ablation magnitudes exist only in plots.",
+  "No arXiv id on the PDF; the key is the ACL Anthology DOI.",
+  "Snapshot count differs between Section 5 (25) and datasheet (24); PII fractions differ between Section 5.3 and datasheet N.4; paragraph-dedup rate differs (18.7% of paragraphs vs 19.1% of characters).",
+  "No embedded instructions found."
+ ]
+}

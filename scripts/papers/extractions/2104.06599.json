@@ -1,0 +1,495 @@
+{
+ "schema": 1,
+ "key": "2104.06599",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/qin-2021-learning-how-ask.pdf",
+ "bib": {
+  "title": "Learning How to Ask: Querying LMs with Mixtures of Soft Prompts",
+  "authors": [
+   "Guanghui Qin",
+   "Jason Eisner"
+  ],
+  "first_author": "Qin",
+  "year": 2021,
+  "venue": "NAACL-HLT 2021",
+  "arxiv": "2104.06599",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38527,
+  "chars_total": 38527,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can prompts for eliciting relational knowledge from a frozen pretrained LM be learned by gradient descent, and does that reveal more knowledge than hand-written or mined prompts?",
+ "hypothesis": "Tuned continuous prompts, mixed as an ensemble, elicit more of an LM's factual knowledge than discrete prompts, so earlier work underestimated it.",
+ "contributions": [
+  "Soft prompts: continuous vectors tuned by gradient descent, initialised from hard prompts or randomly",
+  "Deeply perturbed prompts: additive perturbations at every layer",
+  "Mixture of soft prompts with learned weights, optionally data-dependent",
+  "Large gains over LAMA, LPAQA and AutoPrompt on T-REx, Google-RE and ConceptNet"
+ ],
+ "method": {
+  "summary": "The LM is frozen. For each relation, a set of cloze prompts (token vectors) and mixture weights are trained to minimise the log-loss of the mixture predictive distribution over (x,y) pairs. Variants perturb every layer and weight prompts by data-dependent Bayes terms.",
+  "task": "Relational knowledge extraction by cloze prompts (single-token answers)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "T-REx original",
+    "role": "both",
+    "size": "41 relations; mean 1715 (x,y) per relation (min 544, max 1982)",
+    "split": "inherited train/val/test split from Shin et al. (2020)",
+    "source": "Elsahar et al. 2018, LAMA/AutoPrompt subsets",
+    "preprocessing": "y a single token under the LMs used by LAMA"
+   },
+   {
+    "name": "T-REx extended",
+    "role": "both",
+    "size": "41 relations; mean 885 (x,y) per relation (min 310, max 1000)",
+    "split": "inherited split from Shin et al. (2020)",
+    "source": "Shin et al. 2020",
+    "preprocessing": null
+   },
+   {
+    "name": "Google-RE",
+    "role": "both",
+    "size": "3 relations; mean 1843 (x,y) (min 766, max 2937)",
+    "split": "random 80-10-10",
+    "source": "Orr 2013",
+    "preprocessing": null
+   },
+   {
+    "name": "ConceptNet",
+    "role": "both",
+    "size": "16 relations; mean 1861 (x,y) (min 510, max 4000)",
+    "split": "random 80-10-10",
+    "source": "Speer et al. 2017 via LAMA (OMCS, Singh et al. 2002)",
+    "preprocessing": "per relation, only prompts appearing more than 10 times are kept, giving 1-38 prompts"
+   },
+   {
+    "name": "T-REx original, distinct-y split",
+    "role": "eval",
+    "size": null,
+    "split": "ratio close to 80-10-10 with no shared y values across train/dev/test",
+    "source": "T-REx",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-base-cased",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": true
+    }
+   },
+   {
+    "name": "BERT-large-cased",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": true
+    }
+   },
+   {
+    "name": "RoBERTa-base",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "masked LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": true
+    }
+   },
+   {
+    "name": "BART-base / BART-large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "encoder-decoder; decoding constrained to fill the y slot with a single token",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "frozen": true,
+     "note": "BART results not comparable with others (single-token filter under BART tokenization)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "minimise sum over (x,y) of -log sum_t p(t|r) p_LM(y|t,x) (Eq. 2); softmax parameterisation of mixture weights; log T also tuned in the data-dependent variant",
+   "optimizer": "Adam, default configuration",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "64",
+   "steps": null,
+   "epochs": "16 (choose the best on dev); early-stop patience 4",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping; small perturbations at deeper layers",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "tuning a single prompt takes a few minutes even for BERT-large-cased on T-REx extended; scales roughly linearly with number of prompts",
+   "seeds": null,
+   "other": {
+    "soft prompt params": "6d for a 6-token prompt at layer 0; 6d(L+1) when all layers perturbed",
+    "delta init": "perturbation vectors initialised to 0",
+    "random init": "each word of a mined prompt replaced with a Gaussian vector fit to the LM's word embeddings"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over p(y|x,r); single-token y",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one run per configuration; seeds not stated",
+   "prompting": "cloze prompt with x and y blanks",
+   "retrieval": null,
+   "parameters": {
+    "prompt sources": "sin. (1 LAMA prompt), par. (13-30 LPAQA paraphrases), min. (6-29 LPAQA mined), ran. (random init of min. prompts)",
+    "mixture T": "temperature on p(x|t,r)^(1/T), log T learned"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "P@1",
+     "definition": "precision at rank 1 of y",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "P@10",
+     "definition": "precision at rank 10",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MRR",
+     "definition": "mean reciprocal rank",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "LAMA (Petroni 2019)",
+    "LPAQA (Jiang 2020)",
+    "AutoPrompt (Shin 2020)"
+   ],
+   "protocol": "Average over all test examples; sign test p<0.02 (Table 1) or paired permutation test p<0.02 (Table 5); baselines from prior papers or reimplementations (dagger)."
+  },
+  "availability": {
+   "code": "https://github.com/hiaoxui/soft-prompts",
+   "weights": null,
+   "data": "https://github.com/hiaoxui/soft-prompts"
+  },
+  "prompts": [
+   {
+    "purpose": "Example hard prompt for date-of-death",
+    "text": "x performed until his death in y.",
+    "where": "Sec 1"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "we set the batch size as 64, early-stop patience as 4, and test with the model that performs best on the dev set among 16 training epochs",
+    "where": "4.5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Soft prompts with a mixture, BERT-large, mined init, beat AutoPrompt-class and LPAQA baselines on T-REx original",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "51.6",
+   "unit": "%",
+   "baseline_value": "39.4 (LPAQA BERT-large)",
+   "n": null,
+   "setup": "BERT-large-cased, T-REx original, Soft (min.) with layer-0 tuning plus mixture",
+   "quote": null,
+   "table": "Table 1, row Soft (min., BEl), column T-REx orig.",
+   "note": "Value 51.6 is the deep (all-layer) variant per Table 5; Table 1 shows +12.2 over LPAQA",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Random initialisation is nearly as good as informed initialisation",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "51.9",
+   "unit": "%",
+   "baseline_value": "51.6 (Soft min., BEl)",
+   "n": null,
+   "setup": "BERT-large-cased, T-REx original, Soft (ran.)",
+   "quote": null,
+   "table": "Table 1, row Soft (ran., BEl), column T-REx orig.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LAMA manual prompt baseline on BERT-large, for scale",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "28.9",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large-cased, T-REx original, reimplementation",
+   "quote": null,
+   "table": "Table 1, row LAMA (BEl), column T-REx orig.",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "On ConceptNet, tuned random-init prompts reach 14.5 P@1 on BERT-large versus 0.1 for LAMA",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "14.5",
+   "unit": "%",
+   "baseline_value": "0.1",
+   "n": null,
+   "setup": "ConceptNet, BERT-large, Soft (ran.)",
+   "quote": null,
+   "table": "Table 3, row Soft (ran.,BEl), column P@1",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Ablation: tuning token vectors gives most of the gain; tuning mixture weights alone adds little",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "50.7",
+   "unit": "%",
+   "baseline_value": "39.4",
+   "n": null,
+   "setup": "BERT-large, T-REx original; adjust token vectors only",
+   "quote": null,
+   "table": "Table 4, row adjust token vectors, column P@1",
+   "note": "Adjust mixture weights only: 40.0; both: 51.0",
+   "where": "Table 4"
+  },
+  {
+   "claim": "Tuning all layers gives small extra gains but substantially hurts RoBERTa",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "33.2",
+   "unit": "%",
+   "baseline_value": "40.6 (layer-0 soft)",
+   "n": null,
+   "setup": "RoBERTa-base, T-REx original, Soft (min.) deep",
+   "quote": null,
+   "table": "Table 5, row Rob Soft (min.), column deep Precision@1",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "Data-dependent mixture weights had little effect because training set T high to discard x information",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 3.4 variant",
+   "quote": "This had little effect, be-",
+   "table": null,
+   "note": null,
+   "where": "4.7"
+  },
+  {
+   "claim": "With no shared y values between train and test, soft prompts still improve over LPAQA",
+   "kind": "measured",
+   "source": null,
+   "metric": "P@1",
+   "value": "27.0",
+   "unit": "%",
+   "baseline_value": "23.8",
+   "n": null,
+   "setup": "BERT-large-cased, T-REx original, distinct-y split, mined init",
+   "quote": null,
+   "table": "Table 9, row Soft (BEl), column P@1",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Training a single prompt takes a few minutes",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-large-cased, T-REx extended",
+   "quote": "tuning a single prompt completes within a",
+   "table": null,
+   "note": null,
+   "where": "4.5"
+  }
+ ],
+ "limits": [
+  "Only single-token answers on cloze relation tasks; BART results not comparable.",
+  "No lr, seeds, hardware or model parameter counts stated.",
+  "Tuning all layers hurts RoBERTa.",
+  "Soft prompts are not interpretable (Appendix C).",
+  "Claim that this is cheaper than full fine-tuning is stated as presumed, not measured.",
+  "Concurrent work Li and Liang 2021 and Liu et al. 2021 appeared after submission."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "soft prompt",
+   "definition": "prompt whose tokens are arbitrary vectors in R^d, not necessarily word embeddings",
+   "where": "3.1"
+  },
+  {
+   "term": "deeply perturbed prompt",
+   "definition": "prompt tuned by additive perturbation of each token's vector at every layer",
+   "where": "3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models as knowledge bases? (LAMA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "manual prompts, datasets",
+   "quote": null
+  },
+  {
+   "work": "How can we know what language models know? (LPAQA)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "mined and paraphrased prompts; initialisation source",
+   "quote": null
+  },
+  {
+   "work": "AutoPrompt",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "gradient-guided hard-word prompts",
+   "quote": null
+  },
+  {
+   "work": "Prefix-tuning (Li and Liang)",
+   "year": 2021,
+   "arxiv": "2101.00190",
+   "relation": "related",
+   "note": "concurrent soft tokens at all layers",
+   "quote": null
+  },
+  {
+   "work": "GPT understands, too (Liu et al.)",
+   "year": 2021,
+   "arxiv": "2103.10385",
+   "relation": "related",
+   "note": "concurrent continuous cloze prompts",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "queried LM",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "queried LM",
+   "quote": null
+  },
+  {
+   "work": "BART",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "queried LM",
+   "quote": null
+  },
+  {
+   "work": "T-REx, Google-RE, ConceptNet",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "relational datasets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 1",
+   "caption": "Visualization of the LPAQA mining prompts for relation P1303 Instrument from T-REx extended; layer-0 tuning on BERT-large-cased",
+   "page": 10,
+   "why": "Shows mixture weights concentrate on a dozen prompts and tuned tokens are uninterpretable"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Results on T-REx datasets with P@1",
+   "page": 5,
+   "why": "Main comparison against LAMA, LPAQA, AutoPrompt"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. 1",
+   "snippet": "p(y | x, r) = sum_{t in T_r} p(t | r) * p_LM(y | t, x)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3.4",
+   "snippet": "p(t | r, x) proportional to p(t | r) * p(x | t, r)^(1/T)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 1 and Table 5 cells are flattened by extraction; layouts reconstructed by reading. Soft(min., BEl) Table 1 is 51.6 which equals Table 5 deep column; Table 1 'Soft' appears to report the best (deep) variant. No embedded instructions."
+ ]
+}

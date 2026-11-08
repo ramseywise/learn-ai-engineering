@@ -1,0 +1,581 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/2020.acl-main.447",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/lo-2020-s2orc.pdf",
+ "bib": {
+  "title": "S2ORC: The Semantic Scholar Open Research Corpus",
+  "authors": [
+   "Kyle Lo",
+   "Lucy Lu Wang",
+   "Mark Neumann",
+   "Rodney Kinney",
+   "Daniel S. Weld"
+  ],
+  "first_author": "Lo",
+  "year": 2020,
+  "venue": "Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL), pages 4969-4983",
+  "arxiv": null,
+  "doi": "10.18653/v1/2020.acl-main.447"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 58440,
+  "chars_total": 58440,
+  "engine": "pymupdf",
+  "skipped": "Reference list (lines ~1119-1330) skimmed only"
+ },
+ "type": "benchmark",
+ "question": "Can PDF and LaTeX parses of academic papers be aggregated into one large, structured, citation-linked, openly available text corpus useful for text mining and language model pretraining?",
+ "hypothesis": "A BERT-Base pretrained on S2ORC full text, despite a more diverse domain mix, performs comparably to SciBERT on scientific NLP tasks.",
+ "contributions": [
+  "S2ORC: 81.1M English academic papers with metadata, abstracts and resolved bibliographic links, plus structured full text for 8.1M open-access PDFs and 1.5M LaTeX parses",
+  "Pipeline for metadata aggregation, PDF/LaTeX parsing, clustering and bibliography linking",
+  "Evaluation of data quality and release of S2ORC-SciBERT as a baseline"
+ ],
+ "method": {
+  "summary": "Papers from the Semantic Scholar corpus (~200M clusters) are filtered, PDFs parsed with ScienceParse and GROBID, arXiv LaTeX parsed to XML, canonical metadata selected, clusters filtered, and bibliography entries linked by character 3-gram title similarity. A BERT-Base is pretrained on the cleaned PDF-parsed body text (16.4B tokens) to show the corpus works for LM pretraining.",
+  "task": "corpus construction (academic text) and BERT-Base pretraining",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "S2ORC",
+    "role": "pretrain",
+    "size": "81.1M papers; 8.1M GROBID full text; 1.5M LaTeX full text; 380.5M citation links",
+    "split": null,
+    "source": "Semantic Scholar literature corpus; open access = arXiv, ACL Anthology, PubMed Central (OA) or Unpaywall open-access DOI (2019-04-19 dump)",
+    "preprocessing": "Filters: no title, no authors, <100 chars of text, non-English (cld2, threshold 0.9). PDF filters: PyPDF2 error, >50 pages, width>height, pdfalto error."
+   },
+   {
+    "name": "S2ORC pretraining corpus (S2ORC-SciBERT)",
+    "role": "pretrain",
+    "size": "16.4B tokens",
+    "split": null,
+    "source": "parsed full text of S2ORC",
+    "preprocessing": "Excludes figure captions, table text and captions, headers, footers, footnotes; tokenized and sentencized with scispaCy; heuristic filters remove ill-formed paragraphs (e.g. too many symbols). Biomedical 42.7%, CS 7.2% of corpus."
+   },
+   {
+    "name": "SciBERT evaluation suite (Beltagy et al. 2019): BC5CDR, JNLPBA, NCBI-disease, EBM-NLP, GENIA, ChemProt, SciERC, ACL-ARC, SciCite, PaperField",
+    "role": "eval",
+    "size": null,
+    "split": "dev for hyperparameter selection, test reported",
+    "source": "see Beltagy et al. 2019",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "S2ORC-SciBERT",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-Base, default configuration",
+    "init_from": "scratch",
+    "tokenizer": "cased WordPiece",
+    "vocab": "31k (built from 15% of the S2ORC pretraining corpus)",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "vocab_jaccard_with_SciBERT": "0.536"
+    }
+   },
+   {
+    "name": "SciBERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT-Base",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretraining_corpus": "82% biomedical, 18% CS; roughly 5x smaller than S2ORC pretraining corpus"
+    }
+   }
+  ],
+  "training": {
+   "objective": "inferred: original BERT pretraining objective (original BERT code, defaults); fine-tuning minimises cross entropy",
+   "optimizer": "Adam (fine-tuning)",
+   "lr": "fine-tune max LR grid 1e-5, 2e-5, 3e-5, 5e-5; pretraining LR not stated",
+   "lr_schedule": "linear decay (fine-tuning)",
+   "warmup": "10% (fine-tuning)",
+   "batch_size": "32 (fine-tuning); pretraining not stated",
+   "steps": null,
+   "epochs": "fine-tune 1 to 4 epochs, chosen on dev",
+   "tokens": "16.4B-token corpus; passes not stated",
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 (fine-tuning)",
+   "regularisation": null,
+   "hardware": "single TPU v3-8",
+   "compute": null,
+   "wall_clock": "one week (pretraining)",
+   "seeds": "5 runs with different random seeds (fine-tuning)",
+   "other": {
+    "hyperparameter_search": "equal-sized grid to Beltagy et al. 2019; best epochs x LR per task by dev set",
+    "code": "original BERT code and SciBERT code for fine-tuning"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "bibliography_link_threshold": "title similarity > 0.8, best pair",
+    "title_similarity": "S_title = 2JC/(J+C), char 3-grams, Jaccard J and containment C"
+   },
+   "other": {
+    "citation_embedding_demo": "word2vec skip-gram on citation contexts with inline citation spans replaced by paper ids (following Berger et al. 2016); 20k papers in six AI arXiv categories; t-SNE; hyperparameters not given"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "span-level F1",
+     "definition": "NER",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "token-level F1",
+     "definition": "PICO and dependency parsing (LAS/UAS)",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "macro-F1",
+     "definition": "relation and text classification",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "micro-F1",
+     "definition": "ChemProt",
+     "unit": "F1",
+     "higher_is_better": true
+    },
+    {
+     "name": "title/author accuracy",
+     "definition": "fraction of sampled clusters or linked bib entries whose canonical title/authors match the PDF or bib entry",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "SciBERT (reported numbers from Beltagy et al. 2019)"
+   ],
+   "protocol": "Quality: 500 sampled clusters with PDFs for metadata; 500 GROBID and 100 LaTeX bib links (one entry per paper); 200 sampled papers for GROBID citation/bib F1. Downstream: mean +- std of 5 seeds, dev-selected hyperparameters, test reported; SciBERT reports no std or run count."
+  },
+  "availability": {
+   "code": "https://github.com/allenai/s2orc/",
+   "weights": "S2ORC-SciBERT released (instructions at the GitHub link)",
+   "data": "https://github.com/allenai/s2orc/"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.hardware",
+    "quote": "on a single TPU v3-8 for one week",
+    "where": "Sec 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "S2ORC contains 81.1M papers.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.1,
+   "unit": "M papers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Corpus after filtering ~200M clusters",
+   "quote": "The resulting corpus consists of 81.1M pa-",
+   "table": "",
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Filters remove 95.5M clusters, 80.0M for under 100 chars of text.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 95.5,
+   "unit": "M clusters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 2.5",
+   "quote": "Subsequently, 95.5M paper clusters are ﬁltered",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5"
+  },
+  {
+   "claim": "Full text from GROBID parses covers 8.1M papers (10.0% of corpus).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 8.1,
+   "unit": "M papers",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Open-access PDFs",
+   "quote": null,
+   "table": "Table 3, row Papers w/ GROBID full text, 8.1M (10.0%)",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "380.5M citation links resolved, 156.5M tied to inline mentions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 380.5,
+   "unit": "M links",
+   "baseline_value": null,
+   "n": null,
+   "setup": "bibliography linking",
+   "quote": "we resolve a total 380.5M citation links",
+   "table": null,
+   "note": null,
+   "where": "Sec 3"
+  },
+  {
+   "claim": "Paper clustering canonical title accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.93,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 sampled clusters",
+   "quote": null,
+   "table": "Table 6, row Paper clustering, column Title",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Paper clustering canonical author accuracy.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.89,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 sampled clusters",
+   "quote": null,
+   "table": "Table 6, row Paper clustering, column Authors",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Bibliography linking authors accuracy (GROBID parses).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.96,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "500 GROBID parses, one linked entry each",
+   "quote": null,
+   "table": "Table 6, row Bib. linking (GROBID), column Authors",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "Bibliography linking authors accuracy (LaTeX parses).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.92,
+   "unit": "fraction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "100 LaTeX parses",
+   "quote": null,
+   "table": "Table 6, row Bib. linking (LATEX), column Authors",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "S2ORC pretraining corpus is 16.4B tokens, nearly five times SciBERT's.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 16.4,
+   "unit": "B tokens",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PDF-parsed body text after cleaning",
+   "quote": "pus contains 16.4B tokens, nearly ﬁve times",
+   "table": null,
+   "note": "Appendix E says approximately 16.5B tokens",
+   "where": "Sec 5"
+  },
+  {
+   "claim": "S2ORC estimated at about 25B tokens full body text and 15B tokens abstracts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 25,
+   "unit": "B tokens body text",
+   "baseline_value": null,
+   "n": null,
+   "setup": "whole corpus estimate",
+   "quote": "approximately 25B tokens of full body text",
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "S2ORC-SciBERT vs SciBERT on BC5CDR NER (F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 90.41,
+   "unit": "F1",
+   "baseline_value": 90.01,
+   "n": null,
+   "setup": "BERT-Base, 5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row BC5CDR, column S2ORC-SCIBERT (90.41 +- 0.06)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC-SciBERT vs SciBERT on ChemProt (micro-F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.59,
+   "unit": "F1",
+   "baseline_value": 83.64,
+   "n": null,
+   "setup": "5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row ChemProt, column S2ORC-SCIBERT (84.59 +- 0.93)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC-SciBERT vs SciBERT on SciERC REL (macro-F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 81.77,
+   "unit": "F1",
+   "baseline_value": 79.97,
+   "n": null,
+   "setup": "5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row SciERC REL, column S2ORC-SCIBERT (81.77 +- 1.64)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC-SciBERT underperforms SciBERT on ACL-ARC (macro-F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 68.45,
+   "unit": "F1",
+   "baseline_value": 70.98,
+   "n": null,
+   "setup": "5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row ACL-ARC, column S2ORC-SCIBERT (68.45 +- 2.47)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC-SciBERT underperforms SciBERT on SciCite (macro-F1).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.76,
+   "unit": "F1",
+   "baseline_value": 85.49,
+   "n": null,
+   "setup": "5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row SciCite, column S2ORC-SCIBERT (84.76 +- 0.37)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC-SciBERT slightly above SciBERT on PaperField.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 65.99,
+   "unit": "F1",
+   "baseline_value": 65.71,
+   "n": null,
+   "setup": "5 seeds, test",
+   "quote": null,
+   "table": "Table 5, row PaperField, column S2ORC-SCIBERT (65.99 +- 0.08)",
+   "note": null,
+   "where": "Table 5"
+  },
+  {
+   "claim": "S2ORC alone is claimed sufficient in size to pretrain ELMo, BERT, RoBERTa, GPT-2.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "compared with token counts in Table 9",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Appendix E"
+  },
+  {
+   "claim": "Bibliography links with title similarity above 0.8 are accepted.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.8,
+   "unit": "similarity threshold",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 2.6",
+   "quote": "with the highest similarity score above",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.6"
+  }
+ ],
+ "limits": [
+  "Only SciBERT-suite downstream tasks; results are mixed (wins on most, loses ACL-ARC and SciCite), 'comparable' not better",
+  "No ablation of corpus size, domain mix or cleaning; pretraining LR, batch size, steps, seq length not stated",
+  "SciBERT reports no std or runs, so differences are not tested for significance",
+  "Only 35.6% of papers have PDFs and 10.0% have full text; linking depends on titles and fails for LaTeX physics bibliographies (6.8 vs 19.3 linked entries)",
+  "LaTeX-derived metadata worse than PDF-derived",
+  "Paper-cluster canonical document may mismatch the version cited (App. C)",
+  "English only",
+  "Corpus has since been superseded by later S2ORC releases (not covered in the paper)"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "bibliography entry",
+   "definition": "an item in a paper's bibliography that refers to another paper",
+   "where": "Appendix A"
+  },
+  {
+   "term": "inline citation",
+   "definition": "a mention span within the paper's abstract or body text that refers to one of the entries in its bibliography",
+   "where": "Appendix A"
+  },
+  {
+   "term": "paper cluster",
+   "definition": "a collection of highly-similar (but not necessarily identical) documents treated as one paper",
+   "where": "Appendix C"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "SciBERT (Beltagy, Lo, Cohan)",
+   "year": 2019,
+   "arxiv": "1903.10676",
+   "relation": "baseline",
+   "note": "S2ORC-SciBERT follows its setup, vocab recipe and tasks",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2019,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "BERT-Base architecture and code",
+   "quote": null
+  },
+  {
+   "work": "Semantic Scholar literature graph (Ammar et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "source of papers and clusters",
+   "quote": null
+  },
+  {
+   "work": "GROBID (Lopez)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "PDF parser",
+   "quote": null
+  },
+  {
+   "work": "Saier and Farber, bibliometric-enhanced arXiv",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "LaTeX-to-XML approach inspired by it",
+   "quote": null
+  },
+  {
+   "work": "cite2vec (Berger et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "citation-context word2vec paper embeddings",
+   "quote": null
+  },
+  {
+   "work": "ELMo, RoBERTa, GPT-2 training corpora",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "token counts compared in Table 9",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 5",
+   "caption": "S2ORC-SCIBERT test results are comparable with reported SCIBERT test results",
+   "page": 6,
+   "why": "per-task comparison of corpus quality via downstream F1"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Statistics on paper provenance",
+   "page": 5,
+   "why": "how much of the corpus has PDF, full text, LaTeX"
+  },
+  {
+   "figure": "Figure 2",
+   "caption": "Distribution of papers by Microsoft Academic field of study",
+   "page": 5,
+   "why": "domain mix"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Sec 2.6",
+   "snippet": "S_title = 2 x J x C / (J + C); J = |N1 ∩ N2| / |N1 ∪ N2|; C = |N1 ∩ N2| / min(|N1|, |N2|)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 9 scraped as flat text; Figure 2 values not in text",
+  "No embedded instructions found"
+ ]
+}

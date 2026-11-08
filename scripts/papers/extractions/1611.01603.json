@@ -1,0 +1,559 @@
+{
+ "schema": 1,
+ "key": "1611.01603",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/seo-2016-bidirectional-attention-flow-machine-comprehension.pdf",
+ "bib": {
+  "title": "Bi-Directional Attention Flow for Machine Comprehension",
+  "authors": [
+   "Minjoon Seo",
+   "Aniruddha Kembhavi",
+   "Ali Farhadi",
+   "Hananneh Hajishirzi"
+  ],
+  "first_author": "Seo",
+  "year": 2016,
+  "venue": "ICLR 2017",
+  "arxiv": "1611.01603",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45909,
+  "chars_total": 45909,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a reading-comprehension model link a question and a paragraph with attention without summarising the paragraph early into a fixed-size vector?",
+ "hypothesis": "Memory-less, bi-directional attention whose per-position vectors flow into a modeling layer (instead of being summarised) divides labour between attention and modeling and beats dynamic, uni-directional, summarising attention.",
+ "contributions": [
+  "BiDAF: hierarchical multi-stage architecture (char, word, contextual embeddings) with bi-directional attention flow giving a query-aware context representation without early summarization",
+  "State-of-the-art on SQuAD test and CNN/DailyMail cloze test at time of submission",
+  "Ablations, embedding visualisations, comparison with a feature-based baseline and error analysis on SQuAD dev"
+ ],
+ "method": {
+  "summary": "Six-layer network: char-CNN and GloVe embeddings through a 2-layer highway network, a BiLSTM contextual layer, a bi-directional attention flow layer (context-to-query and query-to-context from one similarity matrix, fused by concatenation), a 2-layer BiLSTM modeling layer, and a start/end span output layer. Trained from scratch on SQuAD with AdaDelta; output layer swapped for CNN/DailyMail cloze.",
+  "task": "extractive machine comprehension (SQuAD span prediction) and cloze-style reading comprehension (CNN/DailyMail)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SQuAD",
+    "role": "both",
+    "size": "more than 100,000 questions; 90k/10k train/dev tuples plus a large hidden test set",
+    "split": "90k train / 10k dev / hidden test",
+    "source": "Wikipedia articles (Rajpurkar et al., 2016)",
+    "preprocessing": "PTB regular-expression word tokenizer"
+   },
+   {
+    "name": "CNN",
+    "role": "both",
+    "size": "300k/4k/3k train/dev/test examples",
+    "split": "train/dev/test",
+    "source": "CNN news articles (Hermann et al., 2015)",
+    "preprocessing": "missing word is an anonymised named entity with random ID; IDs shuffled constantly during test; each article split into 19-word windows around each entity"
+   },
+   {
+    "name": "DailyMail",
+    "role": "both",
+    "size": "879k/65k/53k train/dev/test examples",
+    "split": "train/dev/test",
+    "source": "DailyMail news articles (Hermann et al., 2015)",
+    "preprocessing": "same as CNN"
+   }
+  ],
+  "models": [
+   {
+    "name": "BiDAF",
+    "role": "proposed",
+    "params": "about 2.6 million",
+    "architecture": "char-CNN + GloVe + 2-layer highway, BiLSTM contextual layer, bi-directional attention flow, 2-layer BiLSTM modeling layer, softmax start/end output (extra BiLSTM for end)",
+    "init_from": "GloVe word vectors (fixed, pre-trained); everything else from scratch (inferred: no other init stated)",
+    "tokenizer": "PTB tokenizer (word-level)",
+    "vocab": null,
+    "layers": "inferred: 2 highway + 1 BiLSTM contextual + 2 BiLSTM modeling + 1 BiLSTM for end index",
+    "hidden": "d = 100 (BiLSTM outputs are 2d-dimensional)",
+    "heads": null,
+    "context": null,
+    "other": {
+     "char_cnn": "100 1D filters, width 5, max-pooled over width",
+     "similarity": "alpha(h,u)=w^T[h;u;h∘u], w in R^6d",
+     "fusion": "beta(h,u~,h~)=[h;u~;h∘u~;h∘h~], dG=8d",
+     "output_dims": "w(p1) in R^10d"
+    }
+   }
+  ],
+  "training": {
+   "objective": "sum of negative log probabilities of true start and end indices, averaged over examples; for cloze, only start loss on summed probability of all instances of the answer entity",
+   "optimizer": "AdaDelta",
+   "lr": "0.5 (initial)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "60 (SQuAD); 48 (CNN/DailyMail)",
+   "steps": null,
+   "epochs": "12 (SQuAD); 8 with early stop on validation accuracy (CNN/DailyMail)",
+   "tokens": null,
+   "seq_len": "19-word windows around each entity (cloze); SQuAD paragraph length not stated",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.2 on CNN, all LSTM layers, and linear transform before answer softmax",
+   "regularisation": "exponential moving average of all weights, decay 0.999, used at test time",
+   "hardware": "single Titan X GPU (SQuAD); eight Titan X GPUs (CNN/DailyMail)",
+   "compute": null,
+   "wall_clock": "roughly 20 hours (SQuAD); roughly 60 hours (CNN/DailyMail)",
+   "seeds": "ensemble of 12 training runs with identical architecture and hyper-parameters",
+   "other": {
+    "cloze_changes": "p2 omitted from loss; non-entity words masked in final classification layer; RNNs not run across sentence windows"
+   }
+  },
+  "inference": {
+   "decoding": "answer span (k,l), k<=l, maximising p1_k * p2_l, via linear-time dynamic programming",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single model; ensemble of 12 runs picks answer with highest sum of confidence scores",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Exact Match (EM)",
+     "definition": "model credited if answer matches one of the human-written answers",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "F1",
+     "definition": "weighted average of precision and recall at character level (as printed)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "accuracy (cloze)",
+     "definition": "fraction of correctly predicted entities on CNN/DailyMail val/test",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Logistic Regression Baseline (Rajpurkar 2016)",
+    "Dynamic Chunk Reader",
+    "Fine-Grained Gating",
+    "Match-LSTM",
+    "Multi-Perspective Matching (IBM Watson, unpublished)",
+    "Dynamic Coattention Networks",
+    "R-Net (MSRA, unpublished)",
+    "Attentive Reader, MemNN, AS Reader, DER Network, Iterative Attention, EpiReader, Stanford AR, GAReader, AoA Reader, ReasoNet (CNN/DailyMail)"
+   ],
+   "protocol": "SQuAD test numbers are from the leaderboard as of 6 Dec 2016; ablations are single runs on dev; no significance tests or seed variance reported"
+  },
+  "availability": {
+   "code": "allenai.github.io/bi-att-flow/ (code and demo)",
+   "weights": null,
+   "data": "public SQuAD, CNN/DailyMail"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "We use a minibatch size of 48 and train for 8 epochs",
+    "where": "Section 5"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "BiDAF ensemble of 12 runs reaches 73.3 EM on the SQuAD hidden test set, top of the leaderboard at submission.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 73.3,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD test, ensemble of 12 runs",
+   "quote": "BIDAF (ensemble) achieves an EM score of 73.3 and an F1 score of 81.1",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "BiDAF ensemble F1 on SQuAD test.",
+   "kind": "measured",
+   "source": null,
+   "metric": "F1",
+   "value": 81.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD test, ensemble of 12 runs",
+   "quote": "BIDAF (ensemble) achieves an EM score of 73.3 and an F1 score of 81.1",
+   "table": null,
+   "note": null,
+   "where": "Section 4"
+  },
+  {
+   "claim": "Single BiDAF on SQuAD test scores 68.0 EM / 77.3 F1, below R-Net single (68.4 EM) on EM.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 68.0,
+   "unit": "%",
+   "baseline_value": 68.4,
+   "n": null,
+   "setup": "SQuAD test, single model",
+   "quote": null,
+   "table": "Table 1a, row BIDAF (Ours), column Single Model EM",
+   "note": "baseline is R-Net single EM 68.4; F1 77.3 vs R-Net 77.5",
+   "where": "Table 1a"
+  },
+  {
+   "claim": "Single BiDAF on SQuAD dev scores 67.7 EM / 77.3 F1; ensemble 72.6 / 80.7.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 67.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": null,
+   "table": "Table 1b, row BIDAF (single), column EM",
+   "note": "Table 5 prints the same dev single model as 68.0 EM / 77.3 F1; the two disagree",
+   "where": "Table 1b / Table 5"
+  },
+  {
+   "claim": "Removing context-to-query attention drops dev EM to 57.2 (F1 67.7), the largest attention ablation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 57.2,
+   "unit": "%",
+   "baseline_value": 67.7,
+   "n": null,
+   "setup": "SQuAD dev, single run, C2Q replaced by average of question contextual vectors",
+   "quote": "C2Q attention proves to be critical with a drop of more than 10 points on both metrics.",
+   "table": "Table 1b, row No C2Q attention, column EM",
+   "note": null,
+   "where": "Section 4 Ablations"
+  },
+  {
+   "claim": "Removing query-to-context attention drops dev EM to 63.6 (F1 73.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 63.6,
+   "unit": "%",
+   "baseline_value": 67.7,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": null,
+   "table": "Table 1b, row No Q2C attention, column EM",
+   "note": null,
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Dynamic (in-modeling-layer) attention scores 63.5 EM vs 67.7 for static memory-less attention; authors say more than 3 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 63.5,
+   "unit": "%",
+   "baseline_value": 67.7,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": "our proposed static attention outperforms the dynamically computed attention by more than 3 points",
+   "table": "Table 1b, row Dynamic attention, column EM",
+   "note": null,
+   "where": "Section 4 Ablations"
+  },
+  {
+   "claim": "Removing word embedding costs far more than removing char embedding (55.5 vs 65.0 EM).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 55.5,
+   "unit": "%",
+   "baseline_value": 67.7,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": null,
+   "table": "Table 1b, row No word embedding, column EM",
+   "note": "No char embedding is 65.0 EM / 75.4 F1",
+   "where": "Table 1b"
+  },
+  {
+   "claim": "Single BiDAF on CNN test reaches 76.9 accuracy, above single-run baselines (best ReasoNet 74.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 76.9,
+   "unit": "%",
+   "baseline_value": 74.7,
+   "n": null,
+   "setup": "CNN test, single run, 19-word windows",
+   "quote": null,
+   "table": "Table 3, row BIDAF (Ours), column CNN test",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Single BiDAF on DailyMail test reaches 79.6, above the best ensemble.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.6,
+   "unit": "%",
+   "baseline_value": 79.2,
+   "n": null,
+   "setup": "DailyMail test, single run",
+   "quote": "On the DailyMail test, our single-run model even outperforms the best ensemble method.",
+   "table": "Table 3, row BIDAF (Ours), column DailyMail test",
+   "note": "best ensemble is Stanford AR* 79.2",
+   "where": "Section 5"
+  },
+  {
+   "claim": "Similarity function w^T[h;u;h∘u] beats dot product (65.5 EM), linear (59.5), bilinear (61.6) and linear-after-MLP (66.2).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 68.0,
+   "unit": "%",
+   "baseline_value": 66.2,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": null,
+   "table": "Table 5, row BIDAF (single), column EM",
+   "note": "Table 5 reports BiDAF single 68.0 EM vs 67.7 in Table 1b",
+   "where": "Appendix B"
+  },
+  {
+   "claim": "Adding an MLP after concatenation in the fusion function does not help (67.1 EM vs 68.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "EM",
+   "value": 67.1,
+   "unit": "%",
+   "baseline_value": 68.0,
+   "n": null,
+   "setup": "SQuAD dev, single run",
+   "quote": null,
+   "table": "Table 5, row Eqn. 2: MLP after concat, column EM",
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "BiDAF answers more than 86% of the dev questions that the feature-based baseline answers correctly.",
+   "kind": "measured",
+   "source": null,
+   "metric": "fraction of baseline-correct questions also correct",
+   "value": 86,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "SQuAD dev, versus Rajpurkar et al. 2016 baseline",
+   "quote": "Our model is able to answer more than 86% of the questions",
+   "table": null,
+   "note": null,
+   "where": "Section 4 Discussions"
+  },
+  {
+   "claim": "Half of 50 sampled EM errors are imprecise answer boundaries.",
+   "kind": "measured",
+   "source": null,
+   "metric": "error share",
+   "value": 50,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "50 randomly selected EM-incorrect SQuAD dev answers, hand classified into 6 classes",
+   "quote": "50% of errors are due to the imprecise boundaries of the answers",
+   "table": null,
+   "note": "other shares: 28% syntactic, 14% paraphrase, 4% external knowledge, 2% multi-sentence, 2% tokenization",
+   "where": "Section 4 Error Analysis"
+  }
+ ],
+ "limits": [
+  "Ablations are single runs with no variance reported; Table 1b and Table 5 print different dev scores for the same single model (67.7/77.3 vs 68.0/77.3).",
+  "SQuAD test rows for IBM Watson and MSRA are unpublished leaderboard entries as of 6 Dec 2016; the state-of-the-art claim has long dated.",
+  "Multi-hop attention is left as future work.",
+  "Error analysis uses only 50 examples.",
+  "LSTM-based and slow (about 20 h on one Titan X); superseded by Transformer and pre-trained models.",
+  "Word-level embedding ablation and visualisations are qualitative; conjectures about why (word vs char embeddings, division of labour) are not tested directly."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "memory-less attention",
+   "definition": "the attention at each time step is a function of only the query and the context paragraph at the current time step and does not directly depend on the attention at the previous time step",
+   "where": "Section 1"
+  },
+  {
+   "term": "query-aware context representation",
+   "definition": "G, a vector per context word fusing the contextual embedding with the attended query (C2Q) and attended context (Q2C) vectors",
+   "where": "Section 2"
+  },
+  {
+   "term": "context-to-query attention",
+   "definition": "signifies which query words are most relevant to each context word",
+   "where": "Section 2"
+  },
+  {
+   "term": "query-to-context attention",
+   "definition": "signifies which context words have the closest similarity to one of the query words and are hence critical for answering the query",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "origin of dynamic attention; BiDAF contrasts its memory-less attention",
+   "quote": null
+  },
+  {
+   "work": "SQuAD (Rajpurkar et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "main benchmark and logistic regression baseline",
+   "quote": null
+  },
+  {
+   "work": "Teaching machines to read and comprehend (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "CNN/DailyMail cloze data; Attentive Reader baseline",
+   "quote": null
+  },
+  {
+   "work": "Match-LSTM and answer pointer (Wang & Jiang)",
+   "year": 2016,
+   "arxiv": "1608.07905",
+   "relation": "baseline",
+   "note": "dynamic attention on SQuAD",
+   "quote": null
+  },
+  {
+   "work": "Dynamic coattention networks (Xiong et al.)",
+   "year": 2016,
+   "arxiv": "1611.01604",
+   "relation": "baseline",
+   "note": "concurrent SQuAD model",
+   "quote": null
+  },
+  {
+   "work": "Attention-over-attention (Cui et al.)",
+   "year": 2016,
+   "arxiv": "1607.04423",
+   "relation": "related",
+   "note": "2D similarity matrix but summarises in attention layer",
+   "quote": null
+  },
+  {
+   "work": "Attention sum reader (Kadlec et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "summing probability over repeated answer entity",
+   "quote": null
+  },
+  {
+   "work": "Convolutional neural networks for sentence classification (Kim)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "char-CNN word embedding",
+   "quote": null
+  },
+  {
+   "work": "GloVe (Pennington et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "fixed pre-trained word vectors",
+   "quote": null
+  },
+  {
+   "work": "Highway networks (Srivastava et al.)",
+   "year": 2015,
+   "arxiv": "1505.00387",
+   "relation": "uses-method",
+   "note": "2-layer highway on embeddings",
+   "quote": null
+  },
+  {
+   "work": "AdaDelta (Zeiler)",
+   "year": 2012,
+   "arxiv": "1212.5701",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Hierarchical question-image co-attention (Lu et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "related",
+   "note": "bi-directional attention in VQA; authors say consistent with their finding",
+   "quote": null
+  },
+  {
+   "work": "Goldilocks principle (Hill et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "window-based method; dot-product similarity; MemNN baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "BiDirectional Attention Flow Model",
+   "page": 2,
+   "why": "six-layer pipeline and where attention vectors flow into the modeling layer"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "t-SNE of month names in word and contextual spaces; Venn diagram vs baseline; correct answers by first question word",
+   "page": 7,
+   "why": "shows contextual layer separating two senses of May"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Attention matrices for question-context tuples",
+   "page": 8,
+   "why": "shows question words attending to matching entities and answer types"
+  },
+  {
+   "figure": "Table 2",
+   "caption": "Closest context words to a given query word in Word and Contextual embedding spaces",
+   "page": 7,
+   "why": "contextual layer aligns When with years, Where with places"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "alpha(h, u) = w_(S)^T [h; u; h ∘ u]",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2",
+   "snippet": "beta(h, u~, h~) = [h; u~; h ∘ u~; h ∘ h~]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 3 MemNN CNN test prints 6.8, likely a typo for a value near 69; not used.",
+  "Text extraction of tables is column-flattened; table cells were matched to rows by order.",
+  "No embedded instructions found."
+ ]
+}

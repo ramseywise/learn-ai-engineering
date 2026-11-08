@@ -1,0 +1,728 @@
+{
+ "schema": 1,
+ "key": "2304.07590",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/dong-2024-self-collaboration-code-generation-chatgpt.pdf",
+ "bib": {
+  "title": "Self-collaboration Code Generation via ChatGPT",
+  "authors": [
+   "Yihong Dong",
+   "Xue Jiang",
+   "Zhi Jin",
+   "Ge Li"
+  ],
+  "first_author": "Dong",
+  "year": 2024,
+  "venue": "ACM Trans. Softw. Eng. Methodol. (arXiv v3, 11 May 2024)",
+  "arxiv": "2304.07590",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 118213,
+  "chars_total": 118213,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can several instances of one LLM, given role instructions in a software-development workflow (analyst, coder, tester), solve code-generation tasks better than a single LLM agent?",
+ "hypothesis": "Role-playing LLM agents organised by a software-development methodology (waterfall) and exchanging natural-language feedback outperform a single agent, without training or human intervention.",
+ "contributions": [
+  "A self-collaboration framework with role instructions letting LLM agents collaborate to generate code for complex requirements.",
+  "An elementary team of analyst, coder and tester following a simplified waterfall model.",
+  "Significant gains over a single LLM agent (ChatGPT, GPT-3.5) on multiple code-generation benchmarks.",
+  "Notable effectiveness on more complex real-world, repository-level style tasks that a single agent struggles with (case studies)."
+ ],
+ "method": {
+  "summary": "Three ChatGPT sessions are initialised once with role instructions (team description, role description, user requirement) as analyst, coder and tester. They exchange natural-language outputs through a shared blackboard: analyst writes decomposition and plan, coder writes code, tester simulates testing (no execution) and writes a report, coder repairs, until tester says 'Code Test Passed' or max interaction n is reached. Nothing is trained.",
+  "task": "Python code generation from natural-language requirements (function-level and small projects)",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "MBPP (sanitized)",
+    "role": "eval",
+    "size": "427 tasks",
+    "split": "all",
+    "source": "Austin et al. 2021",
+    "preprocessing": "each task: NL description, code solution, 3 test cases"
+   },
+   {
+    "name": "HumanEval",
+    "role": "eval",
+    "size": "164 tasks",
+    "split": "all",
+    "source": "Chen et al. 2021",
+    "preprocessing": "avg 7.7 unit tests per task"
+   },
+   {
+    "name": "MBPP-ET and HumanEval-ET",
+    "role": "eval",
+    "size": "same tasks as MBPP/HumanEval with over 100 additional test cases per task",
+    "split": "all",
+    "source": "Dong et al. 2023 (CodeScore)",
+    "preprocessing": null
+   },
+   {
+    "name": "APPS",
+    "role": "eval",
+    "size": "first 1000 tasks from interview and competition levels",
+    "split": "interview and competition levels",
+    "source": "Hendrycks et al. 2021",
+    "preprocessing": "NL used as comment followed by signature 'def solution(stdin : str) ->str :', following CodeT"
+   },
+   {
+    "name": "CoderEval",
+    "role": "eval",
+    "size": "not stated",
+    "split": "not stated",
+    "source": "Yu et al. 2024",
+    "preprocessing": "settings follow the CoderEval paper; five dependency types (Standalone, Plib-depend, Class-depend, File-depend, Project-depend)"
+   },
+   {
+    "name": "Real-world case projects (pygame game, weather website)",
+    "role": "eval",
+    "size": "2 qualitative cases (plus function-level cases in appendix)",
+    "split": "n/a",
+    "source": "authors' own",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ChatGPT gpt-3.5-turbo-0301",
+    "role": "base",
+    "params": null,
+    "architecture": "closed API chat LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "fixed version 0301 to avoid updates"
+    }
+   },
+   {
+    "name": "GPT-4",
+    "role": "base",
+    "params": null,
+    "architecture": "closed API chat LLM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "use": "Table 5 and appendix case studies"
+    }
+   },
+   {
+    "name": "Fastchat-3B, ChatGLM-6B, MPT-7B, Vicuna-7B/13B, HuggingChat-30B, Dromedary-65B",
+    "role": "evaluated",
+    "params": "3B to 65B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "results": "Fig 4 only"
+    }
+   },
+   {
+    "name": "CodeLlama 7B/34B, Llama2 7B and Instruct versions",
+    "role": "evaluated",
+    "params": "7B, 34B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "results": "Fig 5 only"
+    }
+   },
+   {
+    "name": "AlphaCode 1.1B, Incoder 6.7B, CodeGeeX 13B, StarCoder 15.5B, CodeGen-Mono 16.1B, PaLM Coder 540B, CodeLlama 34B, CodeX 175B, CodeX+CodeT",
+    "role": "baseline",
+    "params": "1.1B to 540B",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "AlphaCode and PaLM Coder numbers copied from original papers; others rerun under same settings"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": "greedy-like, temperature 0",
+   "temperature": "0",
+   "top_p": null,
+   "max_tokens": "512",
+   "samples": "one generation per task (top-1); seeds and repeat runs not stated",
+   "prompting": "Role instruction given once per agent at initialisation: team description + role description + user requirement. Roles interact in NL via a blackboard; output y updated only at coding stage. JSON output recommended for multi-component outputs. Default setting for most experiments is NL-only; Table 1 uses NL + signature + use cases.",
+   "retrieval": null,
+   "parameters": {
+    "max_interaction": "4",
+    "roles": "analyst, coder, tester (also tested: +compiler team, driver+observer pair programming)",
+    "end_condition": "max interaction n reached or tester confirms no issues",
+    "tester": "simulates testing with the model, does not execute code (compiler variant uses HumanEval use cases as public tests)",
+    "iter_improving_baseline": "instruction 'Please improve this code', max 10 iterations",
+    "cot_baseline": "'Let's think step by step.'"
+   },
+   "other": {
+    "limit": "max tokens 512 and ChatGPT token limit restricted MI exploration to 1 to 4"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pass@1",
+     "definition": "unbiased Pass@1 (Chen et al.): expectation over problems of indicator that top-1 generated code passes all test cases",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Code LLMs (AlphaCode, Incoder, CodeGeeX, StarCoder, CodeGen, PaLM Coder, CodeLlama, CodeX, CodeX+CodeT)",
+    "ChatGPT, GPT-4",
+    "zero-shot CoT, self-planning, self-debugging, iter-improving"
+   ],
+   "protocol": "Single deterministic run per setting (temperature 0); no seeds, variance or significance tests reported. Role ablations, alternative teams (compiler, pair programming) and non-role-playing baselines (zero-shot instruction, 4-shot) on HumanEval/MBPP; manual error analysis on HumanEval; token cost normalised to coder=1."
+  },
+  "availability": {
+   "code": "https://github.com/YihongDong/Self-collaboration-Code-Generation",
+   "weights": null,
+   "data": "public benchmarks; role instructions in Fig 3 and appendix"
+  },
+  "prompts": [
+   {
+    "purpose": "Coder role instruction (Fig 3)",
+    "text": "I want you to act as a developer on our development team. You will receive plans from a requirements analyst or test reports from a tester. Your job is split into two parts: 1. If you receive a plan from a requirements analyst, write code in Python that meets the requirements following the plan. Ensure that the code you write is efficient, readable, and follows best practices. 2. If you receive a test report from a tester, fix or improve the code based on the content of the report. Ensure that any changes made to the code do not introduce new bugs or negatively impact the performance of the code. Remember, do not need to explain the code you wrote.",
+    "where": "Fig 3 (team description prefix: 'There is a development team that includes a requirements analyst, a developer, and a quality assurance tester.')"
+   },
+   {
+    "purpose": "Analysis instruction without role-playing",
+    "text": "1. Decompose the requirement into several easy-to-solve subproblems that can be more easily implemented by the developer. 2. Develop a high-level plan that outlines the major steps of the program. Remember, your plan should be high-level and focused on guiding the developer in writing code, rather than providing implementation details.",
+    "where": "Appendix F"
+   },
+   {
+    "purpose": "Testing instruction without role-playing",
+    "text": "1. Test the functionality of the code to ensure it satisfies the requirements. 2. Write reports on any issues or bugs you encounter. 3. If the code or the revised code has passed your tests, write a conclusion \"Code Test Passed\". Remember, the report should be as concise as possible, without sacrificing clarity and completeness of information. Do not include any error handling or exception handling suggestions in your report.",
+    "where": "Appendix F"
+   },
+   {
+    "purpose": "Pair programming team description",
+    "text": "There is a pair programming team that includes a driver, and an observer. The team needs to develop a program that meets a requirement. The different roles have different divisions of labor and need to cooperate with each others.",
+    "where": "Appendix E (driver and observer instructions also given there)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "inference.temperature",
+    "quote": "we set max tokens to 512 and temperature to 0 for",
+    "where": "Sec 4.1.4"
+   },
+   {
+    "field": "inference.parameters.max_interaction",
+    "quote": "the maximum number of interactions",
+    "where": "Sec 4.1.4: limited to 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Self-collaboration raises Pass@1 relatively by 29.9%-47.1% over the single base LLM agent across benchmarks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative Pass@1 gain",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT (GPT-3.5), abstract range across HumanEval, HumanEval-ET, MBPP, MBPP-ET (29.9-34.6%) and CoderEval (47.1%)",
+   "note": null,
+   "where": "Abstract",
+   "quote": "relatively improves 29.9%-47.1% Pass@1 compared to the base LLM agent."
+  },
+  {
+   "claim": "Self-collaboration with ChatGPT scores 74.4 Pass@1 on HumanEval, vs 57.3 for plain ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "74.4",
+   "unit": "%",
+   "baseline_value": "57.3",
+   "n": null,
+   "setup": "ChatGPT gpt-3.5-turbo-0301, 3-role team (analyst, coder, tester), max interaction 4, temperature 0, max tokens 512, 'NL + signature + use cases' setting, Pass@1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column HumanEval; baseline row ChatGPT (GPT-3.5)"
+  },
+  {
+   "claim": "On HumanEval-ET self-collaboration scores 56.1 vs 42.7 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "56.1",
+   "unit": "%",
+   "baseline_value": "42.7",
+   "n": null,
+   "setup": "ChatGPT gpt-3.5-turbo-0301, 3-role team (analyst, coder, tester), max interaction 4, temperature 0, max tokens 512, 'NL + signature + use cases' setting, Pass@1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column HumanEval-ET"
+  },
+  {
+   "claim": "On MBPP self-collaboration scores 68.2 vs 52.2 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "68.2",
+   "unit": "%",
+   "baseline_value": "52.2",
+   "n": null,
+   "setup": "ChatGPT gpt-3.5-turbo-0301, 3-role team (analyst, coder, tester), max interaction 4, temperature 0, max tokens 512, 'NL + signature + use cases' setting, Pass@1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column MBPP"
+  },
+  {
+   "claim": "On MBPP-ET self-collaboration scores 49.5 vs 36.8 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "49.5",
+   "unit": "%",
+   "baseline_value": "36.8",
+   "n": null,
+   "setup": "ChatGPT gpt-3.5-turbo-0301, 3-role team (analyst, coder, tester), max interaction 4, temperature 0, max tokens 512, 'NL + signature + use cases' setting, Pass@1",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row Ours, column MBPP-ET"
+  },
+  {
+   "claim": "Relative improvement over ChatGPT on the four function-level benchmarks ranges from 29.9% to 34.6% (stated in text).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ChatGPT gpt-3.5-turbo-0301, 3-role team (analyst, coder, tester), max interaction 4, temperature 0, max tokens 512, 'NL + signature + use cases' setting, Pass@1",
+   "note": "Quote is the line before the range; the range itself is on the next text line ('29.9% to 34.6%').",
+   "where": "Sec 4.2",
+   "quote": "with a relative increase ranging from"
+  },
+  {
+   "claim": "Prompting baselines on HumanEval are below self-collaboration: self-planning 65.2, self-debugging 61.6, zero-shot CoT 44.6, iter-improving 55.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "65.2",
+   "unit": "%",
+   "baseline_value": "74.4",
+   "n": null,
+   "setup": "Same setting as Table 1; baselines implemented with ChatGPT; self-planning and self-debugging use original few-shot prompts",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, rows Self-planning, Self-debugging, Zero-shot CoT, Iter-improving, column HumanEval"
+  },
+  {
+   "claim": "With GPT-4, self-collaboration lifts HumanEval Pass@1 from 67.7 to 90.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "90.2",
+   "unit": "%",
+   "baseline_value": "67.7",
+   "n": null,
+   "setup": "GPT-4 base, settings following GPT-4 technical report",
+   "note": "Table 5 prints GPT-4 HumanEval 67.7 (67.0 from tech report); Table 1 prints 67.6. MBPP GPT-4 is 68.3 in Table 1 but 68.1 in Table 5; MBPP-ET 52.2 vs 49.2.",
+   "where": "Table 5",
+   "table": "Table 5, row GPT-4 + Self-collaboration, column HumanEval"
+  },
+  {
+   "claim": "GPT-4 + self-collaboration on MBPP-ET reaches 62.1 vs 49.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "62.1",
+   "unit": "%",
+   "baseline_value": "49.2",
+   "n": null,
+   "setup": "GPT-4 base",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row GPT-4 + Self-collaboration, column MBPP-ET"
+  },
+  {
+   "claim": "On APPS competition problems self-collaboration reaches 3.4 vs 1.2 for ChatGPT.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "3.4",
+   "unit": "%",
+   "baseline_value": "1.2",
+   "n": null,
+   "setup": "First 1000 tasks from interview and competition levels of APPS; ChatGPT base",
+   "note": "Interview: 10.7 vs 6.8; CodeX+CodeT 2.2 and 8.1.",
+   "where": "Table 2",
+   "table": "Table 2, row Ours, column Competition"
+  },
+  {
+   "claim": "On CoderEval average self-collaboration reaches 29.14 vs 19.82.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "29.14",
+   "unit": "%",
+   "baseline_value": "19.82",
+   "n": null,
+   "setup": "CoderEval, ChatGPT base, following CoderEval settings",
+   "note": "Table 3 also lists 29.14 and 19.82.",
+   "where": "Table 3, Sec 4.2",
+   "quote": "achieving relative improvements of 47.1% on Pass@1."
+  },
+  {
+   "claim": "Role ablation: coder alone 45.1 vs analyst+coder+tester 63.5 on HumanEval (NL-only).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "63.5",
+   "unit": "%",
+   "baseline_value": "45.1",
+   "n": null,
+   "setup": "ChatGPT, NL-only, HumanEval",
+   "note": "Table 4 'Role Instruction (Ours)' prints 64.4 on HumanEval for the same team; 63.5 also appears in Table 6 MI=4. Source of the 0.9 gap is not explained.",
+   "where": "Table 4",
+   "table": "Table 4, row + Analyst + Tester, column HumanEval"
+  },
+  {
+   "claim": "Adding analyst alone gives 54.9, tester alone 56.8, on HumanEval NL-only.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "54.9",
+   "unit": "%",
+   "baseline_value": "45.1",
+   "n": null,
+   "setup": "ChatGPT, NL-only, HumanEval",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row + Analyst, column HumanEval"
+  },
+  {
+   "claim": "Role-playing beats no role-playing: role instruction 64.4 vs zero-shot instruction 60.0 vs 4-shot 58.1 on HumanEval.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "64.4",
+   "unit": "%",
+   "baseline_value": "60.0",
+   "n": null,
+   "setup": "ChatGPT, NL-only; 4 HumanEval tasks excluded for few-shot examples",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Role Instruction (Ours), column HumanEval"
+  },
+  {
+   "claim": "Adding a compiler to the team (64.6) is comparable to the three-role team; pair programming (57.4) is lower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "64.6",
+   "unit": "%",
+   "baseline_value": "63.5",
+   "n": null,
+   "setup": "ChatGPT, NL-only, HumanEval",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Analyst + Coder + Tester + Compiler, column HumanEval"
+  },
+  {
+   "claim": "Most gain arrives with one round of interaction: HumanEval 45.1 at MI=0 to 60.4 at MI=1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "60.4",
+   "unit": "%",
+   "baseline_value": "45.1",
+   "n": null,
+   "setup": "ChatGPT, NL-only, max interaction MI",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row MI 1, column HumanEval"
+  },
+  {
+   "claim": "18.4% of HumanEval tasks the coder failed are corrected by self-collaboration; 36.5% remain unpassed.",
+   "kind": "measured",
+   "source": null,
+   "metric": "share of tasks",
+   "value": "18.4",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Manual error analysis on HumanEval, ChatGPT",
+   "note": "Fig 6 shows 45.1 passed by coder, 18.4 corrected, 36.5 unpassed.",
+   "where": "Sec 4.6.1, Fig 6",
+   "quote": "introduction of self-collaboration markedly improves the quality of code generation, where 18.4%"
+  },
+  {
+   "claim": "Without signature and use cases (MBPP NL-only), the analyst hurts relative to tester: coder+tester 64.9 vs coder+analyst 54.8.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "64.9",
+   "unit": "%",
+   "baseline_value": "47.5",
+   "n": null,
+   "setup": "ChatGPT, MBPP NL-only",
+   "note": "Authors suspect some data contamination in MBPP.",
+   "where": "Table 8, App C",
+   "table": "Table 8, row + Tester, column MBPP"
+  },
+  {
+   "claim": "Under 'NL + signature + use cases' the analyst-coder pair nearly matches the full team (HumanEval 73.5 vs 74.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pass@1",
+   "value": "73.5",
+   "unit": "%",
+   "baseline_value": "57.3",
+   "n": null,
+   "setup": "ChatGPT, HumanEval with signature+use cases",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, row Analyst-Coder, column HumanEval"
+  },
+  {
+   "claim": "Self-collaboration ability starts to appear around 7B parameters among chat models and grows with size; needs domain expertise, instruction following and reasoning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Seven open LLMs (3B to 65B) plus CodeLlama/Llama2 families on HumanEval, read from Fig 4/5",
+   "note": "Values only in figures; no numbers extracted.",
+   "where": "Sec 4.4, Fig 4, Fig 5",
+   "quote": "7B parameters and subsequently continues to escalate, serving to evoke latent intelligence within"
+  },
+  {
+   "claim": "Self-collaboration token cost is moderate among prompting approaches (coder cost normalised to 1).",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "HumanEval, Fig 7 cost = prompt+generated tokens; values only in figure",
+   "note": null,
+   "where": "Sec 4.6.2, Fig 7",
+   "quote": "Cost Analysis. As illustrated in Figure 7, we measure the cost (prompt tokens + generated"
+  }
+ ],
+ "limits": [
+  "Benchmarks (HumanEval, MBPP, APPS, CoderEval) are function-level and differ from real software development; repository-level claims rest on two qualitative case studies (authors concede, Sec 6).",
+  "Tester simulates testing with the LLM without executing code; no ground-truth execution feedback in the main team.",
+  "Single run at temperature 0; no seeds, variance or significance tests.",
+  "Authors suspect data contamination in MBPP (App C); analyst role hurts on NL-only MBPP.",
+  "Gains need capable base models: self-collaboration emerges around 7B parameters and depends on domain expertise, instruction following and reasoning (Sec 4.4).",
+  "Team structure may need adjustment per problem; small human guidance suggested.",
+  "Cost: more tokens than a single coder (Fig 7, values only in figure); ChatGPT token limits capped interactions at 4.",
+  "Baselines: self-planning and self-debugging were run with prompts from original papers; CoT noted as unsuited to code.",
+  "Dated: ChatGPT gpt-3.5-turbo-0301 and 2023-era baselines; the multi-agent field (e.g. later frameworks) postdates this."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "role instruction",
+   "definition": "a specific type of instruction that assigns roles and responsibilities to LLMs; asks the LLM to act as a particular role and conveys the detailed tasks",
+   "where": "Sec 2.1"
+  },
+  {
+   "term": "self-collaboration",
+   "definition": "guiding LLMs to collaborate with themselves through division of labor and collaboration, both dominated by role instructions",
+   "where": "Sec 1-2"
+  },
+  {
+   "term": "blackboard",
+   "definition": "a shared store from which each role exchanges the information required to accomplish its task",
+   "where": "Sec 2.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "CAMEL",
+   "year": 2023,
+   "arxiv": "2303.17760",
+   "relation": "related",
+   "note": "two interacting LLMs; case-study based",
+   "quote": null
+  },
+  {
+   "work": "HuggingGPT",
+   "year": 2023,
+   "arxiv": "2303.17580",
+   "relation": "related",
+   "note": "LLM as controller invoking other models",
+   "quote": null
+  },
+  {
+   "work": "Self-planning Code Generation with Large Language Model",
+   "year": 2023,
+   "arxiv": "2303.06689",
+   "relation": "baseline",
+   "note": "planning stage before coding; same group",
+   "quote": null
+  },
+  {
+   "work": "Teaching Large Language Models to Self-Debug",
+   "year": 2023,
+   "arxiv": "2304.05128",
+   "relation": "baseline",
+   "note": "concurrent work",
+   "quote": null
+  },
+  {
+   "work": "CodeT: Code Generation with Generated Tests",
+   "year": 2022,
+   "arxiv": "2207.10397",
+   "relation": "baseline",
+   "note": "previous SOTA before GPT-4",
+   "quote": null
+  },
+  {
+   "work": "Chain-of-Thought Prompting (Wei et al.)",
+   "year": 2022,
+   "arxiv": "2201.11903",
+   "relation": "baseline",
+   "note": "zero-shot CoT variant (Kojima et al.) used",
+   "quote": null
+  },
+  {
+   "work": "Waterfall model (Petersen et al.)",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "software methodology organising the three stages",
+   "quote": null
+  },
+  {
+   "work": "Blackboard Systems (Nii)",
+   "year": 1986,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "shared blackboard for role communication",
+   "quote": null
+  },
+  {
+   "work": "Evaluating Large Language Models Trained on Code (HumanEval)",
+   "year": 2021,
+   "arxiv": "2107.03374",
+   "relation": "uses-data",
+   "note": "HumanEval and Pass@1",
+   "quote": null
+  },
+  {
+   "work": "Program Synthesis with Large Language Models (MBPP)",
+   "year": 2021,
+   "arxiv": "2108.07732",
+   "relation": "uses-data",
+   "note": "MBPP",
+   "quote": null
+  },
+  {
+   "work": "APPS (Hendrycks et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "competition-level problems",
+   "quote": null
+  },
+  {
+   "work": "CoderEval",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "pragmatic code generation benchmark",
+   "quote": null
+  },
+  {
+   "work": "GPT-4 Technical Report",
+   "year": 2023,
+   "arxiv": "2303.08774",
+   "relation": "evaluates",
+   "note": "GPT-4 base",
+   "quote": null
+  },
+  {
+   "work": "Code Llama",
+   "year": 2023,
+   "arxiv": "2308.12950",
+   "relation": "evaluates",
+   "note": "Fig 5 and baseline",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2",
+   "caption": "Self-collaboration framework for code generation and its instance.",
+   "page": 3,
+   "why": "Shows division of labor, blackboard and the analyst-coder-tester loop in one picture."
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "An example of role instruction for coder in the instance of self-collaboration framework.",
+   "page": 6,
+   "why": "The whole prompt structure (team, role, requirement) is the method."
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Case study on HumanEval benchmark.",
+   "page": 16,
+   "why": "Walks one task through analyst, coder, tester, repair."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Performance and Cost of Self-collaboration Compared to Baselines.",
+   "page": 15,
+   "why": "Cost versus accuracy against CoT, self-planning, self-debugging."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1-2, Sec 2.2",
+   "snippet": "arg max_{s_t} P(s_t | s_{<t}, R_m(S_t), x);  y_t = f(s_t, y_{<t})",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No instructions embedded in the PDF text.",
+  "Figure axes and bars (Fig 4, 5, 6, 7) carry no extractable numbers.",
+  "Year: ACM reference prints 2023 (May 2023) while this is arXiv v3 dated 11 May 2024; filename says 2024. Recorded 2024.",
+  "Table 4 prints 64.4 for the three-role team (Role Instruction) and 63.5 in the ablation row and Table 6 MI=4; GPT-4 baseline numbers differ between Table 1 and Table 5.",
+  "Appendix text names a section 'RQ7: Case Study' though RQ6 was listed in the intro; the repository-level RQ6 has no section or numbers."
+ ]
+}

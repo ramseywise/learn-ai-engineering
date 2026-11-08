@@ -1,0 +1,477 @@
+{
+ "schema": 1,
+ "key": "1705.04304",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/paulus-2017-deep-reinforced-model-abstractive-summarization.pdf",
+ "bib": {
+  "title": "A Deep Reinforced Model for Abstractive Summarization",
+  "authors": [
+   "Romain Paulus",
+   "Caiming Xiong",
+   "Richard Socher"
+  ],
+  "first_author": "Paulus",
+  "year": 2017,
+  "venue": "preprint (arXiv v3; ICLR 2018 poster per ledger)",
+  "arxiv": "1705.04304",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 40881,
+  "chars_total": 40881,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a decoder with intra-attention and a training objective mixing maximum likelihood with self-critical RL produce readable, higher-ROUGE abstractive summaries of long documents without repeated phrases?",
+ "hypothesis": "Combining the maximum-likelihood (conditional language model) loss with RL rewards reduces exposure bias and keeps summaries readable, whereas optimising ROUGE alone with RL can game the metric.",
+ "contributions": [
+  "Intra-temporal attention over the encoder and intra-decoder attention over previously generated output to cut repetition",
+  "Mixed objective combining teacher-forcing ML loss with self-critical policy gradient",
+  "First end-to-end abstractive model on the NYT dataset; state-of-the-art ROUGE on CNN/Daily Mail; human evaluation of readability"
+ ],
+ "method": {
+  "summary": "Bi-LSTM encoder, single LSTM decoder with intra-temporal encoder attention, intra-decoder attention, a copy/generate switch (pointer) and shared embedding/output weights. Trained first with ML (teacher forcing with 25% own-token feeding), then initialised from the best ML model and fine-tuned with self-critical RL (reward ROUGE-L) or the mixed ML+RL loss. Trigram repetition is blocked in beam search at test time.",
+  "task": "abstractive multi-sentence summarisation of news articles (CNN/Daily Mail, NYT)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CNN/Daily Mail (modified, Nallapati et al. 2016 preprocessing)",
+    "role": "both",
+    "size": "287,113 train / 13,368 val / 11,490 test examples",
+    "split": "train/val/test as given",
+    "source": "Hermann et al. 2015",
+    "preprocessing": "input limited to 800 tokens and output to 100; average input 632 and output 53 tokens; named entities anonymised and replaced back for scoring"
+   },
+   {
+    "name": "New York Times annotated corpus (own splits)",
+    "role": "both",
+    "size": "589,284 train / 32,736 val / 32,739 test examples",
+    "split": "chronological: first 90% train, next 5% val, last 5% test",
+    "source": "Sandhaus 2008",
+    "preprocessing": "drop documents lacking text, abstract or headline; input = headline+byline+article joined by special tokens; Stanford tokenizer; lowercase; numbers -> 0; abstracts split into sentences on semicolons; average 549 input and 40 output tokens after 800/100 caps; Stanford NER used to supervise the pointer for PERSON/LOCATION/ORGANIZATION/MISC entities and OOV tokens"
+   },
+   {
+    "name": "NYT (Durrett et al. 2016 splits)",
+    "role": "eval",
+    "size": "about 6x smaller than the authors' NYT set, longer summaries",
+    "split": "Durrett et al. splits",
+    "source": "Durrett et al. 2016",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "ML / RL / ML+RL with intra-attention",
+    "role": "proposed",
+    "params": null,
+    "architecture": "bi-LSTM encoder (two 200-d LSTMs), one 400-d LSTM decoder, pointer switch, tied embeddings",
+    "init_from": "RL and ML+RL initialised from best ML model; input embeddings from GloVe",
+    "tokenizer": null,
+    "vocab": "input 150,000 tokens, output 50,000 (most frequent in train)",
+    "layers": null,
+    "hidden": "200 per direction encoder, 400 decoder",
+    "heads": null,
+    "context": "800 input tokens, 100 output tokens",
+    "other": {
+     "embedding_dim": "100 (input, GloVe init)",
+     "weight_sharing": "Wout = tanh(Wemb Wproj)"
+    }
+   },
+   {
+    "name": "Lead-3, SummaRuNNer, words-lvt2k-temp-att, Durrett et al. extractive",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_mixed = gamma*L_rl + (1-gamma)*L_ml; L_rl = (r(y_hat) - r(y_sample)) * sum log p(y_sample_t); self-critical baseline is the greedy output; reward = ROUGE-L",
+   "optimizer": "Adam",
+   "lr": "0.001 for ML; 0.0001 for RL and ML+RL",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "50",
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "800 input / 100 output tokens",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "ML stage feeds the model's own previous token with 25% probability instead of ground truth (reduces exposure bias, Venkatraman et al. 2015)",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "gamma": "0.9984 for ML+RL",
+    "ground_truth_pointer": "u_t=1 when y_t is OOV or a predefined named entity"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, width 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "100 output tokens (inferred from the output cap in the datasets)",
+   "samples": "one run per model; no seeds reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "trigram_blocking": "p(y_t)=0 if y_t would repeat a trigram already in the current beam's output"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "ROUGE-1/2/L F-1",
+     "definition": "full-length F-1 with Porter stemmer",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "ROUGE recall (limited length)",
+     "definition": "summary truncated to ground-truth length; used for the Durrett NYT comparison",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "Human readability and relevance",
+     "definition": "1-10 scores, 100 random CNN/DM test examples, 5 Mechanical Turk raters each, blind to model and ground truth",
+     "unit": "1-10",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Lead-3",
+    "SummaRuNNer (Nallapati 2017)",
+    "words-lvt2k-temp-att (Nallapati 2016)",
+    "Durrett et al. 2016 extractive",
+    "first sentences / first k words"
+   ],
+   "protocol": "Ablate intra-attention with ML first, pick best, then compare RL vs ML+RL. No significance test or seeds reported. Comparison with See et al. 2017 is indirect (different preprocessing)."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": "CNN/DM and NYT public; NYT splits described in appendix"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "a learning rate α of 0.001 for ML training and 0.0001 for RL and ML+RL training",
+    "where": "Appendix B"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RL-only model with intra-attention reaches the highest ROUGE-1 on CNN/Daily Mail",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 41.16,
+   "unit": "ROUGE-1",
+   "baseline_value": "39.6 (SummaRuNNer)",
+   "n": null,
+   "setup": "CNN/Daily Mail test set (11,490 articles), full-length ROUGE F-1 with Porter stemmer, intra-decoder attention model, beam 5, trigram blocking",
+   "quote": "Our model obtains a 41.16 ROUGE-1 score on the CNN/Daily Mail dataset",
+   "table": null,
+   "note": "41.16 belongs to the RL-only model (ROUGE-L 39.08), not ML+RL (39.87); the abstract does not say so. The same model is the least readable in the human study.",
+   "where": "Abstract; Table 1"
+  },
+  {
+   "claim": "ML+RL intra-attention model on CNN/Daily Mail",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 39.87,
+   "unit": "ROUGE-1",
+   "baseline_value": "39.2 (Lead-3)",
+   "n": null,
+   "setup": "CNN/Daily Mail test set (11,490 articles), full-length ROUGE F-1 with Porter stemmer, intra-decoder attention model, beam 5, trigram blocking",
+   "quote": null,
+   "table": "Table 1, row ML+RL, with intra-attention, column ROUGE-1",
+   "note": "ROUGE-2 15.82, ROUGE-L 36.90",
+   "where": "Table 1"
+  },
+  {
+   "claim": "ML-only model with intra-attention on CNN/Daily Mail",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 38.3,
+   "unit": "ROUGE-1",
+   "baseline_value": 37.86,
+   "n": null,
+   "setup": "CNN/Daily Mail test set (11,490 articles), full-length ROUGE F-1 with Porter stemmer, intra-decoder attention model, beam 5, trigram blocking",
+   "quote": null,
+   "table": "Table 1, row ML, with intra-attention, column ROUGE-1",
+   "note": "baseline value is ML without intra-attention",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Prior abstractive state of the art (Nallapati et al. 2016) on CNN/Daily Mail",
+   "kind": "reported",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 35.46,
+   "unit": "ROUGE-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as reported in Table 1",
+   "quote": null,
+   "table": "Table 1, row words-lvt2k-temp-att, column ROUGE-1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "Human readability: RL is the least readable, ML+RL the most",
+   "kind": "measured",
+   "source": null,
+   "metric": "readability",
+   "value": 4.18,
+   "unit": "1-10 score",
+   "baseline_value": 7.04,
+   "n": null,
+   "setup": "100 random CNN/DM test examples, 5 MTurk raters each, intra-decoder attention models",
+   "quote": null,
+   "table": "Table 5, row RL, column Readability",
+   "note": "ML 6.76, ML+RL 7.04; relevance ML 7.14, RL 6.32, ML+RL 7.45. Baseline value is ML+RL readability.",
+   "where": "Table 5"
+  },
+  {
+   "claim": "NYT: RL without intra-attention beats ML on ROUGE-1",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 47.22,
+   "unit": "ROUGE-1",
+   "baseline_value": 44.26,
+   "n": null,
+   "setup": "NYT test set (own chronological split), no intra-attention",
+   "quote": null,
+   "table": "Table 2, row RL, no intra-attention, column ROUGE-1",
+   "note": "ML+RL without intra-attention: 47.03 / 30.72 / 43.10",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Intra-attention does not help on NYT (shorter summaries): ML with intra-attention is lower",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1",
+   "value": 43.86,
+   "unit": "ROUGE-1",
+   "baseline_value": 44.26,
+   "n": null,
+   "setup": "NYT test set, ML training",
+   "quote": null,
+   "table": "Table 2, row ML, with intra-attention, column ROUGE-1",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "On the Durrett et al. NYT splits ML+RL beats their extractive model on ROUGE recall",
+   "kind": "measured",
+   "source": null,
+   "metric": "ROUGE-1 recall",
+   "value": 42.94,
+   "unit": "ROUGE-1 recall",
+   "baseline_value": 42.2,
+   "n": null,
+   "setup": "limited-length ROUGE recall, Durrett et al. NYT splits",
+   "quote": null,
+   "table": "Table 4, row ML+RL, with intra-attn, column R-1",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Trigram blocking motivation: ground-truth summaries almost never contain the same trigram twice",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN/DM and NYT",
+   "quote": "ground-truth summaries almost never contain the same trigram twice",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5"
+  },
+  {
+   "claim": "ROUGE-2 as the RL reward gave summaries that almost always hit maximum length and ended sentences abruptly, so ROUGE-L was used",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RL training reward choice, no numbers given",
+   "quote": "we found that it created summaries that almost always reached the maximum length",
+   "table": null,
+   "note": null,
+   "where": "Sec 6.1"
+  }
+ ],
+ "limits": [
+  "Models are small LSTMs (200/400-d) trained from scratch; no parameter counts, compute, steps, seeds or dropout reported.",
+  "No ablation of the trigram blocking or of gamma; gamma=0.9984 stated without a sweep.",
+  "Comparison with See et al. 2017 is indirect because preprocessing differs; the claim to beat them rests on their model losing to their own lead-3.",
+  "Human study is 100 examples and has no inter-rater agreement or significance test.",
+  "Abstract's 41.16 ROUGE-1 comes from the RL-only model whose summaries are the least readable; the mixed model scores 39.87.",
+  "Intra-attention helps only on long outputs (CNN/DM), not on NYT (Fig 2).",
+  "The RL-trained example (Table 3) ends in degenerate fragments, evidence of metric gaming."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "exposure bias",
+   "definition": "the network has knowledge of the ground truth sequence up to the next token during training but does not have such supervision when testing, hence accumulating errors as it predicts the sequence",
+   "where": "Sec 3.1"
+  },
+  {
+   "term": "self-critical policy gradient",
+   "definition": "RL training that uses the reward of the greedy output as the baseline for the sampled sequence, needing no critic network",
+   "where": "Sec 3.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Self-critical sequence training for image captioning (Rennie et al.)",
+   "year": 2016,
+   "arxiv": "1612.00563",
+   "relation": "uses-method",
+   "note": "RL algorithm used",
+   "quote": null
+  },
+  {
+   "work": "Sequence level training with recurrent neural networks (Ranzato et al.)",
+   "year": 2015,
+   "arxiv": "1511.06732",
+   "relation": "extends",
+   "note": "origin of the exposure-bias term and REINFORCE for sequences",
+   "quote": null
+  },
+  {
+   "work": "Abstractive Text Summarization using Seq2seq RNNs and Beyond (Nallapati et al.)",
+   "year": 2016,
+   "arxiv": "1602.06023",
+   "relation": "baseline",
+   "note": "dataset preprocessing and prior state of the art",
+   "quote": null
+  },
+  {
+   "work": "Get to the point: pointer-generator networks (See et al.)",
+   "year": 2017,
+   "arxiv": "1704.04368",
+   "relation": "related",
+   "note": "parallel work on the same dataset; coverage loss",
+   "quote": "In parallel of our work, See et al. (2017) also developed an abstractive summarization model"
+  },
+  {
+   "work": "Neural machine translation by jointly learning to align and translate (Bahdanau et al.)",
+   "year": 2014,
+   "arxiv": "1409.0473",
+   "relation": "uses-method",
+   "note": "attention",
+   "quote": null
+  },
+  {
+   "work": "Google's NMT system (Wu et al.)",
+   "year": 2016,
+   "arxiv": "1609.08144",
+   "relation": "uses-method",
+   "note": "mixed ML+RL objective for short sequences",
+   "quote": null
+  },
+  {
+   "work": "Long short-term memory-networks for machine reading (Cheng et al.)",
+   "year": 2016,
+   "arxiv": "1601.06733",
+   "relation": "related",
+   "note": "intra-RNN attention, differs in modifying the LSTM",
+   "quote": null
+  },
+  {
+   "work": "Pointing the unknown words (Gulcehre et al.)",
+   "year": 2016,
+   "arxiv": "1603.08148",
+   "relation": "uses-method",
+   "note": "copy/generate switch",
+   "quote": null
+  },
+  {
+   "work": "CNN/Daily Mail (Hermann et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "NYT annotated corpus (Sandhaus)",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Tying word vectors and word classifiers (Inan et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "weight sharing",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the encoder and decoder attention functions combined.",
+   "page": 2,
+   "why": "shows the two context vectors feeding the next-word prediction"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Cumulated ROUGE-1 relative improvement obtained by adding intra-attention to the ML model on the CNN/Daily Mail dataset.",
+   "page": 8,
+   "why": "gain only for long ground-truth summaries"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Example from the CNN/Daily Mail test dataset showing outputs of the three best models",
+   "page": 7,
+   "why": "shows RL degenerating into fragments at the end"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 16",
+   "snippet": "L_mixed = γ L_rl + (1 − γ) L_ml",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 15",
+   "snippet": "L_rl = (r(ŷ) − r(y^s)) Σ_t log p(y^s_t | y^s_1..y^s_{t-1}, x)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Equations and figure text are fragmented by the PDF extraction; no embedded instructions found."
+ ]
+}

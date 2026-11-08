@@ -1,0 +1,526 @@
+{
+ "schema": 1,
+ "key": "1907.07174",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/hendrycks-2021-natural-adversarial-examples.pdf",
+ "bib": {
+  "title": "Natural Adversarial Examples",
+  "authors": [
+   "Dan Hendrycks",
+   "Kevin Zhao",
+   "Steven Basart",
+   "Jacob Steinhardt",
+   "Dawn Song"
+  ],
+  "first_author": "Hendrycks",
+  "year": 2021,
+  "venue": "preprint (arXiv v4, 4 Mar 2021; CVPR 2021 per common citation, not printed)",
+  "arxiv": "1907.07174",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 68399,
+  "chars_total": 68399,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Can real, unmodified images be adversarially filtered so that they reliably degrade many unseen ImageNet classifiers and OOD detectors, and what helps?",
+ "hypothesis": "Adversarially filtered natural images selected against ResNet-50 will transfer to other architectures, exposing shared weaknesses that augmentation and extra data barely fix.",
+ "contributions": [
+  "ImageNet-A: 7,500 adversarially filtered images over 200 ImageNet classes",
+  "ImageNet-O: 2,000 adversarially filtered OOD images, first OOD dataset for ImageNet models",
+  "Evidence that augmentation and extra data help little while architecture changes help more",
+  "Shows examples transfer across CNNs and vision transformers"
+ ],
+ "method": {
+  "summary": "Images scraped from iNaturalist, Flickr and DuckDuckGo are kept only if ResNet-50 filters misclassify them with low confidence, then hand-selected. ImageNet-O uses ImageNet-22K images outside ImageNet-1K classes that ResNet-50 labels with high confidence. Many models are then evaluated on both sets.",
+  "task": "image classification robustness and out-of-distribution detection benchmark",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "ImageNet-A",
+    "role": "eval",
+    "size": "7,500 images, 200 classes",
+    "split": "test only (one run fine-tunes on 80% and tests on 20%)",
+    "source": "iNaturalist, Flickr, DuckDuckGo; hand-selected by graduate students over several months",
+    "preprocessing": "removed if any of 10 crops of either ResNet-50 is correct or correct-class confidence >15%; at most 15 per confusion pair in shortlist; manual selection"
+   },
+   {
+    "name": "ImageNet-O",
+    "role": "eval",
+    "size": "2,000 images, 200 classes",
+    "split": "test only; in-distribution scores from ImageNet validation of the same 200 classes",
+    "source": "ImageNet-22K minus ImageNet-1K classes; hand-selected",
+    "preprocessing": "kept images ResNet-50 classifies with high confidence"
+   }
+  ],
+  "models": [
+   {
+    "name": "ResNet-50 (two filter models)",
+    "role": "base",
+    "params": null,
+    "architecture": "ResNet-50; one pretrained on ImageNet-1K then fine-tuned on 200 classes, one with 200 of 1,000 logits",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "AlexNet, SqueezeNet, VGG, DenseNet, ResNet/ResNeXt/SE/Res2Net/DPN, DeiT-tiny/small/base",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "CNNs and vision transformers (Table 1)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "not stated (single numbers reported, no seeds or error bars)",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "anomaly_score": "negative maximum softmax probability",
+    "filter_crops": "10-crop",
+    "filter_confidence_threshold": "15%",
+    "max_per_confusion": 15
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 accuracy on ImageNet-A",
+     "definition": "accuracy on 200-class subset",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "AUPR on ImageNet-O",
+     "definition": "area under precision-recall curve, anomaly score = negative MSP, ImageNet val of 200 classes as in-distribution",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "l2 calibration error",
+     "definition": "Kumar et al. 2019",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "AURRA",
+     "definition": "area under response-rate accuracy curve using MSP",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "ResNet-50 from scratch",
+    "AugMix, Cutout, MoEx, Mixup, CutMix, Style Transfer, adversarial training",
+    "Places365 and ImageNet-21K pretraining"
+   ],
+   "protocol": "single evaluation per model; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "github.com/hendrycks/natural-adv-examples",
+   "weights": null,
+   "data": "github.com/hendrycks/natural-adv-examples"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "A ResNet-50 baseline trained from scratch scores 2.17% on ImageNet-A.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2.17",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-A (7,500 images, 200 classes), top-1 accuracy, ResNet-50 trained on ImageNet-1K unless stated",
+   "where": "Sec 4 Data Augmentation",
+   "note": null,
+   "quote": "obtain 2.17% accuracy on IMAGENET-A"
+  },
+  {
+   "claim": "A DenseNet-121 gets about 2% on ImageNet-A, a drop of about 90%, and near-random OOD detection on ImageNet-O.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "around 2%",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DenseNet-121 (not used in filtering)",
+   "where": "Abstract",
+   "note": null,
+   "quote": "an accuracy drop of approx-\nimately 90%"
+  },
+  {
+   "claim": "Pretraining on ImageNet-21K (about 14M images) lifts ResNet-50 to 11.41% on ImageNet-A, +9.24 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "11.41",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "ImageNet-A (7,500 images, 200 classes), top-1 accuracy, ResNet-50 trained on ImageNet-1K unless stated; pretrain ImageNet-21K then fine-tune ImageNet-1K",
+   "where": "Sec 4 More Labeled Data",
+   "note": null,
+   "quote": "attain 11.41% accuracy on IMAGENET-"
+  },
+  {
+   "claim": "ImageNet-O AUPR with ImageNet-21K pretraining rises from 16.20% to 21.86%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "21.86",
+   "unit": "% AUPR",
+   "baseline_value": "16.20",
+   "n": null,
+   "setup": "ResNet-50, ImageNet-21K pretrain",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "from 16.20% to 21.86%"
+  },
+  {
+   "claim": "CutMix is the best augmentation at 7.3% ImageNet-A accuracy; best augmentation gains about 5 points over baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7.3",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "ImageNet-A (7,500 images, 200 classes), top-1 accuracy, ResNet-50 trained on ImageNet-1K unless stated",
+   "where": "Sec 4 Data Augmentation",
+   "note": null,
+   "quote": "yields\n7.3% accuracy"
+  },
+  {
+   "claim": "Adversarial training lowers ImageNet-A accuracy to 1.68%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.68",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "ImageNet-A (7,500 images, 200 classes), top-1 accuracy, ResNet-50 trained on ImageNet-1K unless stated; adversarially trained model of Wong et al. 2020",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "accuracy decreases to\n1.68%"
+  },
+  {
+   "claim": "Mixup 6.6%, MoEx 5.5%, Cutout 4.4%, AugMix 3.8% on ImageNet-A.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.6",
+   "unit": "% top-1 (Mixup)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-A (7,500 images, 200 classes), top-1 accuracy, ResNet-50 trained on ImageNet-1K unless stated",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "increases accuracy to 6.6%"
+  },
+  {
+   "claim": "Places365 pretraining then ImageNet-1K fine-tune gives 1.56% on ImageNet-A and 14.88% ImageNet-O AUPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1.56",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "ResNet-50",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "we ﬁnd that accuracy is 1.56%"
+  },
+  {
+   "claim": "Fine-tuning on 80% of ImageNet-A gives no clear gain on the held-out 20% (top-1 < 2%, top-5 < 5%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet-50, 2.17% baseline, fine-tuned on 80% of ImageNet-A",
+   "where": "Sec 4",
+   "note": null
+  },
+  {
+   "claim": "Res2Net-152 (v1b) reaches 22.4% ImageNet-A accuracy and 23.9% ImageNet-O AUPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "22.4",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "Res2Net-152 v1b, ImageNet-1K",
+   "where": "Sec 4 Architectural Changes",
+   "note": null,
+   "quote": "A ResNet-152 with Res2Net\nv1b blocks attains 22.4% accuracy and 23.9% AUPR"
+  },
+  {
+   "claim": "ResNet-152 reaches 6.1% accuracy and 18.0% AUPR versus ResNet-50 2.17% and 16.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "6.1",
+   "unit": "% top-1",
+   "baseline_value": "2.17",
+   "n": null,
+   "setup": "ResNet-152",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "while a\nResNet-152 obtains 6.1% top-1 accuracy and 18.0% AUPR"
+  },
+  {
+   "claim": "DeiT-base vision transformer scores 28.2% on ImageNet-A and 24.8% ImageNet-O AUPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "28.2",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-base, ImageNet-1K, aggressive augmentation",
+   "where": "Sec 4",
+   "note": null,
+   "quote": "DeiT-base gets 28.2% accuracy on"
+  },
+  {
+   "claim": "DeiT-small gets 19.0% on ImageNet-A versus 14.6% for Res2Net-50 of similar size.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "19.0",
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DeiT-small",
+   "where": "Sec 4",
+   "note": "Table 1 prints DeiT-small as 19.1; text says 19.0",
+   "quote": "former gets 19.0% on IMAGENET-A"
+  },
+  {
+   "claim": "FID between ImageNet-A and ImageNet validation set is 50.40, versus about 0.99 between ImageNet val and test.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "50.40",
+   "unit": "FID",
+   "baseline_value": "0.99",
+   "n": null,
+   "setup": "FID vs ImageNet val",
+   "where": "Sec 3.1",
+   "note": null,
+   "quote": "50.40"
+  },
+  {
+   "claim": "Graduate-student human accuracy on ImageNet-A is about 90%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "90%",
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "estimated, graduate students",
+   "where": "Sec 3.1",
+   "note": null,
+   "quote": "approximately 90%"
+  },
+  {
+   "claim": "ImageNet-A: 81,413 dragonfly images downloaded, 8,925 after ResNet-50 filter, 1,452 after diversified shortlist, 80 hand-selected.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "80",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "dragonfly class example",
+   "where": "Sec 3.1",
+   "note": null,
+   "quote": "80 dragonﬂy images are manually selected"
+  },
+  {
+   "claim": "Maximum Logit detector does not beat MSP across over 10 models (DenseNet-121 AUPR 16.1 to 15.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15.8",
+   "unit": "% AUPR",
+   "baseline_value": "16.1",
+   "n": null,
+   "setup": "DenseNet-121",
+   "where": "App 7.2",
+   "note": null,
+   "quote": "16.1% (MSP) to 15.8%"
+  },
+  {
+   "claim": "DeVries confidence branch gets 14.3% AUPR, about 2 points below MSP.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "14.3",
+   "unit": "% AUPR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ResNet from scratch",
+   "where": "App 7.2",
+   "note": null,
+   "quote": "14.3%"
+  },
+  {
+   "claim": "ImageNet-A and ImageNet-O sizes: 7,500 and 2,000 images.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7,500",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-A",
+   "where": "Sec 3.1",
+   "note": "text prints '7, 500' with a space",
+   "quote": "7, 500 adversarially ﬁltered images"
+  },
+  {
+   "claim": "Random-chance AUPR on ImageNet-O is about 16.67%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "16.67",
+   "unit": "% AUPR",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ImageNet-O",
+   "where": "Sec 4 Metrics",
+   "note": null,
+   "quote": "16.67%"
+  },
+  {
+   "claim": "Engstrom et al. estimate ImageNetV2 drop is under 3.6%; ImageNet-A accuracy can fall by over 50%.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": "3.6",
+   "unit": "% drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "reported contrast",
+   "where": "Sec 2",
+   "note": null,
+   "quote": "less than 3.6%"
+  }
+ ],
+ "limits": [
+  "Filtered only against ResNet-50 so the set is biased to that model's errors; transfer shown empirically.",
+  "Trained-model runs report one number each, no seeds or intervals; training hyperparameters of the augmentation runs not given.",
+  "Vision only; ImageNet-O gains from ImageNet-21K are discounted because of image overlap.",
+  "Authors suggest not training on ImageNet-22K for ImageNet-O since it becomes trivial.",
+  "Table 1 prints DeiT-small 19.1 while text says 19.0."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "adversarial filtration",
+   "definition": "delete examples that fixed models classify correctly, keep the hardest, so simple spurious cues are removed",
+   "where": "Sec 2-3.1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Recht et al., Do ImageNet classifiers generalize to ImageNet?",
+   "year": 2019,
+   "arxiv": "1902.10811",
+   "relation": "related",
+   "note": "ImageNetV2; drop under 3.6% per Engstrom, versus over 50% here",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks and Gimpel, baseline for detecting misclassified and OOD examples",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "maximum softmax probability anomaly score",
+   "quote": null
+  },
+  {
+   "work": "WinoGrande, HellaSwag, DROP, PIQA (NLP adversarial filtration)",
+   "year": 2019,
+   "arxiv": "1907.10641",
+   "relation": "related",
+   "note": "concurrent NLP use of adversarial filtration; here keeps only hardest",
+   "quote": null
+  },
+  {
+   "work": "Hendrycks and Dietterich, ImageNet-C",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "synthetic corruptions contrast",
+   "quote": null
+  },
+  {
+   "work": "DeiT, Touvron et al.",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "vision transformer baseline",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-1K/22K/21K, Places365, iNaturalist, Flickr",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "sources",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Natural adversarial examples from IMAGENET-A and IMAGENET-O.",
+   "page": 2,
+   "why": "shows confident wrong predictions on clean images"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "Expanded IMAGENET-A and IMAGENET-O architecture results.",
+   "page": null,
+   "why": "all model numbers in one place"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Duplicate/mis-dated reference entries (Bisk et al. 2019/2020 repeated)."
+ ]
+}

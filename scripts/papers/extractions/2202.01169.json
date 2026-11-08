@@ -1,0 +1,538 @@
+{
+ "schema": 1,
+ "key": "2202.01169",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/clark-2022-unified-scaling-laws-routed-language.pdf",
+ "bib": {
+  "title": "Unified Scaling Laws for Routed Language Models",
+  "authors": [
+   "Aidan Clark",
+   "Diego de las Casas",
+   "Aurelia Guy",
+   "Arthur Mensch",
+   "Michela Paganini",
+   "Jordan Hoffmann",
+   "Bogdan Damoc",
+   "Blake Hechtman",
+   "Trevor Cai",
+   "Sebastian Borgeaud",
+   "George van den Driessche",
+   "Eliza Rutherford",
+   "Tom Hennigan",
+   "Matthew Johnson",
+   "Katie Millican",
+   "Albin Cassirer",
+   "Chris Jones",
+   "Elena Buchatskaya",
+   "David Budden",
+   "Laurent Sifre",
+   "Simon Osindero",
+   "Oriol Vinyals",
+   "Jack Rae",
+   "Erich Elsen",
+   "Koray Kavukcuoglu",
+   "Karen Simonyan"
+  ],
+  "first_author": "Clark",
+  "year": 2022,
+  "venue": "ICML 2022 (arXiv v2)",
+  "arxiv": "2202.01169",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 104218,
+  "chars_total": 104218,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How does validation loss of routed (conditionally-computed) language models scale jointly in dense model size N and expert count E, and can one law cover dense and routed models and several routing techniques?",
+ "hypothesis": "The converged log-loss of a Routing Network is bilinear in log N and log of a saturating transform of E.",
+ "contributions": [
+  "Routing improves language models across all sizes and variants attempted",
+  "RL-based routing (RL-R) is comparably effective to state-of-the-art techniques",
+  "Performance of all routing networks is described by scaling laws in N and E that generalize Kaplan et al. 2020",
+  "Laws restated in parameter count and inference compute cover more architectures",
+  "They imply an Effective Parameter Count equating dense and routed performance"
+ ],
+ "method": {
+  "summary": "Trains a sweep of decoder-only Transformers (15M to 1.3B dense size, 1 to 512 experts, 168 models) with three routing techniques (S-BASE, HASH, RL-R) on a fixed 130B-token budget, fits a bilinear-with-saturation law in (N, E) to final validation loss, then derives Effective Parameter Count and compares techniques via fitted coefficients.",
+  "task": "autoregressive language modelling; scaling-law fitting of validation NLL",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "multi-trillion-token English compendium (web + open-source text; details in Rae et al. 2021, Gopher)",
+    "role": "pretrain",
+    "size": "130 billion tokens seen per run (multi-trillion available)",
+    "split": "validation set whose statistics match training distribution",
+    "source": "Rae et al. 2021",
+    "preprocessing": "SentencePiece 32,000 tokens with byte-level backoff"
+   },
+   {
+    "name": "LAMBADA, The Pile, Curation Corpus, WikiText-103, C4",
+    "role": "eval",
+    "size": null,
+    "split": "zero-shot loss (App. E)",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Dense Transformer sizes 15M,25M,55M,130M,370M,870M,1.3B",
+    "role": "base",
+    "params": "16.5M-1.31B actual (Table 4)",
+    "architecture": "decoder-only Transformer (GPT-2 style, relative positional encodings Dai 2019); dff=4*dmodel",
+    "init_from": null,
+    "tokenizer": "SentencePiece",
+    "vocab": "32,000",
+    "layers": "6,8,10,12,12,16,24",
+    "hidden": "512,512,640,896,1536,2048,2048",
+    "heads": "8,8,12,16,12,16,16",
+    "context": "2048",
+    "other": {
+     "K/V size": "32,64,64,64,128,128,128",
+     "actual params": "16,527,360; 27,279,360; 57,369,600; 132,163,584; 368,123,904; 872,546,304; 1,308,819,456"
+    }
+   },
+   {
+    "name": "S-BASE, RL-R (RLR-B), HASH routed Transformers",
+    "role": "proposed",
+    "params": "up to ~200B total",
+    "architecture": "every other FFW replaced by E experts, E in 2,4,8,16,32,64,128,256,512; K=1 default; capacity factor C=2",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "K sweep": "1,2,4",
+     "R (routing frequency) sweep": "0.25,0.5,1.0; also 1/L",
+     "7B RL-R model": "dmodel 4096, 32 layers, 32 heads, E=64, K/V 128, batch 1024, 100k steps, PG weight 1e-1, balancing 1e-1 (App G)"
+    }
+   }
+  ],
+  "training": {
+   "objective": "next-token NLL; S-BASE adds load-balancing loss; RL-R adds policy-gradient (REINFORCE with learned baseline, Huber value loss, entropy reg) plus balancing loss",
+   "optimizer": "AdamW; ZeRO stage 1 optimizer sharding",
+   "lr": "peak 2e-4 (starts 1e-7, decays to 2e-5)",
+   "lr_schedule": "cosine decay over 250,000 steps",
+   "warmup": "1500 steps up to 2e-4",
+   "batch_size": "256 sequences",
+   "steps": "250,000",
+   "epochs": null,
+   "tokens": "130B",
+   "seq_len": "2048",
+   "precision": "params bfloat16, optimizer stats float32, softmax ops (attention, router) upcast to float32",
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "load-balancing aux loss weight 1 (RL-R), S-BASE robust over 1e-3 to 1; Sinkhorn etol 1e-2",
+   "hardware": "TPUs, JAX; data + expert + sharding parallelism; 4 or 8 local experts per device",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "3 seeds only for 130M, 8 and 256 experts + dense, 100,000 steps; main sweep single seed",
+   "other": {
+    "RL-R hyperparameters (RLR-B, Table 5)": "policy entropy weight -5e-4; load balancing 1; policy gradient 1e-2; nucleus top-p 1.; value weight 1e-2; value hidden layers 1 (size dmodel/8); Huber",
+    "token dropping": "capacity C=2 in training; evaluation allows all tokens",
+    "HASH": "token ID modulo E",
+    "law fit": "L-BFGS-B, best of repeated solutions"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per config; eval is validation loss",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "validation loss",
+     "definition": "negative log-likelihood on held-out data matching training distribution, final (best) value treated as converged",
+     "unit": "nats/token (inferred)",
+     "higher_is_better": false
+    },
+    {
+     "name": "leave-one-out RMSLE of fit",
+     "definition": "held-out error of log-log scaling-law prediction",
+     "unit": "RMSLE",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "dense models of same N",
+    "Kaplan et al. 2020 dense law"
+   ],
+   "protocol": "fit scaling law to 168 models; leave-one-out prediction error; seed noise 0.01 (cut-off 0.02 for significance)"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "The learning rate starts at 1e-7 and decays to 2e-5 with a cosine decay rate over the entire",
+    "where": "App. A"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Equation (1) fits all three routing methods on a sweep of six model sizes and nine expert counts",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "168",
+   "unit": "models",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sweep over dense N and E in 2..512, three techniques, 130B tokens",
+   "quote": "This totals 168 different models, including dense baselines.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4"
+  },
+  {
+   "claim": "Dense scaling exponent re-estimated close to Kaplan",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.078",
+   "unit": "alpha_N",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dense models, 130B tokens, this dataset",
+   "quote": null,
+   "table": "Table 2, row Ours, column alpha_N",
+   "note": "Kaplan et al. 2020 value 0.076",
+   "where": "Table 2"
+  },
+  {
+   "claim": "Bilinear+saturation fit leave-one-out RMSLE for S-BASE",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "58e-4",
+   "unit": "RMSLE",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq. (1), S-BASE",
+   "quote": null,
+   "table": "Table 1, row Bilin. + saturat. in (N, E), column S-BASE",
+   "note": "separable Eq5: 80e-4; bilinear Eq7: 60e-4",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Fitted interaction coefficient c for S-BASE is lowest among techniques (best scaling)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.009",
+   "unit": "c",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq. (1) fit",
+   "quote": null,
+   "table": "Table 3, row S-BASE, column c",
+   "note": "RL-R 0.012, HASH 0.012",
+   "where": "Table 3"
+  },
+  {
+   "claim": "Fitted Emax for S-BASE (saturation of expert scaling)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "314.478",
+   "unit": "Emax",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq. (1) fit",
+   "quote": null,
+   "table": "Table 3, row S-BASE, column Emax",
+   "note": "RL-R 469.982, HASH 477.741",
+   "where": "Table 3"
+  },
+  {
+   "claim": "A 5M model with 128 experts matches a 55M dense model that needs over ten times more compute per inference",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "128",
+   "unit": "experts",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Level curves of Eq. (1)",
+   "quote": "a model with N = 5M and E = 128 equals the performance of a model with N = 55M and E = 1",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  },
+  {
+   "claim": "Routing stops helping above Ncutoff; values for S-BASE, RL-R, HASH",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "937B",
+   "unit": "parameters (S-BASE)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Extrapolation of Eq. (1) at 130B tokens; highly dependent on token count and on b to second decimal",
+   "quote": "Ncutoff equals 937B, 85B and 83B for S-BASE, RL-R and HASH respectively.",
+   "table": null,
+   "note": "RL-R 85B, HASH 83B",
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Practitioner recommendation: use routing for any model with N up to 1.3B",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "1.3B",
+   "unit": "parameters",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Within tested range of N",
+   "quote": "Use routing when training any model with N ⩽1.3B.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Seed-to-seed divergence is small",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.01",
+   "unit": "validation loss",
+   "baseline_value": null,
+   "n": null,
+   "setup": "130M, 8 and 256 experts + dense, 3 seeds, 100k steps",
+   "quote": "with different seeds diverging by no more than 0.01 before 100, 000 steps",
+   "table": null,
+   "note": null,
+   "where": "App A"
+  },
+  {
+   "claim": "Training the 15M dense model 4x longer still reduces loss, so models are not converged at 130B tokens",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.05",
+   "unit": "validation loss reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15M dense, 1M vs 250k steps (HASH for routed)",
+   "quote": "training for 4x longer further reduces the validation loss by 0.05",
+   "table": null,
+   "note": null,
+   "where": "App F.1"
+  },
+  {
+   "claim": "Same effect for 512 experts",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.07",
+   "unit": "validation loss reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "15M HASH E=512, 4x tokens",
+   "quote": "the same model with E = 512 gets a 0.07 reduction in loss from 4x more tokens",
+   "table": null,
+   "note": null,
+   "where": "App F.1"
+  },
+  {
+   "claim": "Sinkhorn redistribution overhead vs Switch",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1% to 3%",
+   "unit": "end-to-end overhead",
+   "baseline_value": null,
+   "n": null,
+   "setup": "S-BASE vs Switch, TPU",
+   "quote": "end-to-end model overhead of 1% to 3% compared to Switch",
+   "table": null,
+   "note": null,
+   "where": "App B.2.1"
+  },
+  {
+   "claim": "K=1 is always on the FLOP-efficiency Pareto front",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "K",
+   "baseline_value": null,
+   "n": null,
+   "setup": "S-BASE 64E vs dense, K in 1,2,4",
+   "quote": "K = 1 is always in the pareto front",
+   "table": null,
+   "note": null,
+   "where": "App D.5"
+  },
+  {
+   "claim": "Downstream EPC differs by task for the same routed model (validation 370M, LAMBADA 284M, Pile 535M)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "370M",
+   "unit": "EPC",
+   "baseline_value": null,
+   "n": null,
+   "setup": "N=110M, E=32, simplified EPC with Estart=1 Emax=inf",
+   "quote": "the EPC validation for N=110M, E=32 is 370M, but EPC lambada for the same model is 284M, while EPC pile is 535M",
+   "table": null,
+   "note": null,
+   "where": "App E"
+  },
+  {
+   "claim": "RL-R 7B base model with 64 experts still beats a dense model of same size (anecdotal, different training setup)",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "7B",
+   "unit": "base model size",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Batch 1024, 100k steps, evaluated at 100B tokens; one run",
+   "quote": "the routed 7B model substantially outperforms the baseline",
+   "table": null,
+   "note": null,
+   "where": "App G"
+  }
+ ],
+ "limits": [
+  "All numeric values hold only at 130B tokens; authors show models are unconverged and b depends on position in LR schedule (App F.2).",
+  "Ncutoff extremely sensitive to b: error in second decimal shifts it by orders of magnitude (App G).",
+  "Only K=1..4, R 0.25..1, single seed for the main sweep; largest dense base 1.3B (one 7B anecdote).",
+  "Zero-shot downstream scaling differs per task; no dedicated study.",
+  "Disputes Kaplan et al. Eq 1.6 L(N,S); authors do not claim to disprove it.",
+  "Routing frequency R=1/L deviates from the law."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Effective Parameter Count (EPC)",
+   "definition": "size N-bar of a dense model giving the same performance as a Routing Network with N and E",
+   "where": "Sec 5.1"
+  },
+  {
+   "term": "Parameter utilization ratio B",
+   "definition": "B = P/F, total parameters over inference TeraFLOPs",
+   "where": "Sec 4.4"
+  },
+  {
+   "term": "Ncutoff",
+   "definition": "value of N where N-bar(N,E) <= N; beyond it routing does not improve performance",
+   "where": "Sec 5.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Scaling laws for neural language models (Kaplan et al.)",
+   "year": 2020,
+   "arxiv": "2001.08361",
+   "relation": "extends",
+   "note": "generalizes dense power law to routed models; disputes Eq 1.6",
+   "quote": null
+  },
+  {
+   "work": "BASE layers (Lewis et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basis for S-BASE with Sinkhorn instead of auction",
+   "quote": null
+  },
+  {
+   "work": "Hash layers for large sparse models (Roller et al.)",
+   "year": 2021,
+   "arxiv": "2106.04426",
+   "relation": "uses-method",
+   "note": "HASH routing",
+   "quote": null
+  },
+  {
+   "work": "Switch Transformers (Fedus et al.)",
+   "year": 2021,
+   "arxiv": "2101.03961",
+   "relation": "related",
+   "note": "K=1 SMoE, balancing loss",
+   "quote": null
+  },
+  {
+   "work": "Efficient Large Scale Language Modeling with Mixtures of Experts (Artetxe et al.)",
+   "year": 2021,
+   "arxiv": "2112.10684",
+   "relation": "related",
+   "note": "comparative dense vs SMoE analysis aligned with results",
+   "quote": null
+  },
+  {
+   "work": "Shazeer et al. sparsely-gated MoE",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "SMoE layout",
+   "quote": null
+  },
+  {
+   "work": "Gopher (Rae et al.)",
+   "year": 2021,
+   "arxiv": "2112.11446",
+   "relation": "uses-data",
+   "note": "training dataset",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "(a) Performance by Routing Networks when varying expert count for fixed dense size is bilinear (Eq. 1), (b) level curves trade size with experts, (c) unified scaling under effective parameter count",
+   "page": 2,
+   "why": "Shows the whole result: loss vs E, equal-loss curves, and collapse of dense+routed onto one power law"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Maximum effective parameter count as a function of base model size",
+   "page": 9,
+   "why": "Shows Ncutoff where routing stops helping"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Level curves for Eq 1 and 2 on S-BASE for K and R",
+   "page": 7,
+   "why": "Shows (F,B) change of variables unifies K and R"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq. (1), p5",
+   "snippet": "log L(N,E) = a log N + b log Ê + c log N log Ê + d",
+   "verbatim": false
+  },
+  {
+   "where": "Eq. (7), p6",
+   "snippet": "log L(N,E) = a log N + b log E + c log N log E + d",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Main text says six model sizes in the sweep; App A Table 4 lists seven sizes (870M also).",
+  "Appendix refers to 'Table H' for what is printed as Table 9; Fig F.3 refs refer to Fig 18.",
+  "Ncutoff 937B etc. is an extrapolation; Conclusion says 'greater than 900 billion'."
+ ]
+}

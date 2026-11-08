@@ -1,0 +1,597 @@
+{
+ "schema": 1,
+ "key": "1311.2524",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/girshick-2014-rich-feature-hierarchies-accurate-object.pdf",
+ "bib": {
+  "title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+  "authors": [
+   "Ross Girshick",
+   "Jeff Donahue",
+   "Trevor Darrell",
+   "Jitendra Malik"
+  ],
+  "first_author": "Girshick",
+  "year": 2014,
+  "venue": "CVPR 2014 (PDF is arXiv tech report v5, 22 Oct 2014)",
+  "arxiv": "1311.2524",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 85531,
+  "chars_total": 85531,
+  "engine": "pymupdf",
+  "skipped": "Table 8 per-class numbers and figure-only pages skimmed; references skimmed"
+ },
+ "type": "empirical",
+ "question": "Can a high-capacity CNN applied to bottom-up region proposals, with supervised ImageNet pre-training and domain fine-tuning, raise object detection and segmentation accuracy well beyond HOG/SIFT-based systems?",
+ "hypothesis": "CNN features generalise from ImageNet classification to PASCAL detection, and supervised pre-training plus fine-tuning works when detection labels are scarce.",
+ "contributions": [
+  "R-CNN: CNN features on ~2000 selective-search region proposals plus class-specific linear SVMs",
+  "Supervised pre-training on an auxiliary dataset followed by domain-specific fine-tuning when labelled data is scarce",
+  "Bounding-box regression to fix mislocalisation",
+  "Head-to-head comparison with OverFeat on ILSVRC2013 detection (200 classes)",
+  "Extension to semantic segmentation on VOC 2011"
+ ],
+ "method": {
+  "summary": "For each image, ~2000 selective-search proposals are warped to 227x227, passed through a Caffe AlexNet-style CNN (pre-trained on ILSVRC2012 classification, fine-tuned on warped proposals) to get 4096-d features, scored by per-class linear SVMs, then greedy NMS and optional ridge bounding-box regression on pool5 features.",
+  "task": "object detection (PASCAL VOC, ILSVRC2013) and semantic segmentation (VOC 2011)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ILSVRC2012 classification",
+    "role": "pretrain",
+    "size": "1.2 million labeled images (per intro, Krizhevsky)",
+    "split": null,
+    "source": "ImageNet",
+    "preprocessing": "image-level labels only"
+   },
+   {
+    "name": "PASCAL VOC 2007",
+    "role": "both",
+    "size": null,
+    "split": "fine-tune/SVM on trainval, test on test; used to validate all design decisions",
+    "source": "PASCAL VOC",
+    "preprocessing": null
+   },
+   {
+    "name": "PASCAL VOC 2010-12 detection",
+    "role": "both",
+    "size": null,
+    "split": "fine-tune CNN on VOC 2012 train; SVMs on VOC 2012 trainval; test server submitted once per variant",
+    "source": "PASCAL VOC",
+    "preprocessing": null
+   },
+   {
+    "name": "ILSVRC2013 detection",
+    "role": "both",
+    "size": "train 395,918; val 20,121; test 40,152 images; 200 classes",
+    "split": "val split into val1/val2 (class-balanced, max relative imbalance ~11%); training on val1+trainN (up to N GT boxes per class from train)",
+    "source": "ILSVRC2013",
+    "preprocessing": "images resized to fixed width 500 px before selective search; avg 2403 proposals/image, 91.6% recall at 0.5 IoU"
+   },
+   {
+    "name": "VOC 2011 segmentation (+Hariharan extra annotations)",
+    "role": "both",
+    "size": null,
+    "split": "hyperparameters cross-validated on VOC 2011 val; test evaluated once",
+    "source": "PASCAL VOC, Hariharan et al. 2011",
+    "preprocessing": "CPMC 150 region proposals per image"
+   }
+  ],
+  "models": [
+   {
+    "name": "R-CNN T-Net (Krizhevsky/Caffe CNN)",
+    "role": "proposed",
+    "params": "inferred: ~58M (fc7 29% = 16.8M params stated)",
+    "architecture": "5 conv + 2 FC layers, 4096-d fc7 output, 227x227 RGB input",
+    "init_from": "ILSVRC2012 classification pre-training (own Caffe training, top-1 error 2.2 points higher than Krizhevsky)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5 conv, 2 fc",
+    "hidden": "4096",
+    "heads": null,
+    "context": null,
+    "other": {
+     "pool5": "6x6x256 = 9216-d, receptive field 195x195, stride 32",
+     "fc6": "4096x9216",
+     "fc7": "4096x4096",
+     "new_head": "(N+1)-way layer, N=20 VOC or 200 ILSVRC"
+    }
+   },
+   {
+    "name": "R-CNN O-Net (VGG 16-layer)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "13 conv layers of 3x3 kernels, 5 max pools, 3 FC",
+    "init_from": "VGG ILSVRC 16 layers model from Caffe Model Zoo",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "16",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "forward_pass": "about 7x slower than T-Net"
+    }
+   },
+   {
+    "name": "UVA (Uijlings et al.)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "selective search + spatial pyramid BoW SIFT + histogram-intersection SVM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DPM v5, DPM ST, DPM HSC, SegDPM, Regionlets",
+    "role": "baseline",
+    "params": null,
+    "architecture": "deformable part models and variants",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "OverFeat",
+    "role": "baseline",
+    "params": null,
+    "architecture": "sliding-window CNN",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "O2P / R&P",
+    "role": "baseline",
+    "params": null,
+    "architecture": "segmentation baselines on CPMC regions",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "fine-tune: (N+1)-way classification (softmax), proposals with IoU>=0.5 to a GT box positive, rest background; then one linear SVM per class (positives = GT boxes, negatives = IoU<0.3, hard negative mining); bbox regression: ridge regression on pool5 features",
+   "optimizer": "SGD",
+   "lr": "0.001 at start of fine-tuning (1/10 of initial pre-training rate)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128 (32 positive + 96 background windows); 24 for O-Net",
+   "steps": "50k SGD iterations (ILSVRC2013 fine-tuning)",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "bbox regression lambda=1000",
+   "hardware": "single NVIDIA Tesla K20 (ILSVRC fine-tuning)",
+   "compute": null,
+   "wall_clock": "13 hours fine-tuning on ILSVRC2013 val1+trainN",
+   "seeds": null,
+   "other": {
+    "svm_negative_iou_threshold": "0.3, grid search over {0,0.1,...,0.5}; 0.5 cost 5 mAP points, 0 cost 4",
+    "context_padding": "p=16 pixels, anisotropic warp",
+    "bbox_reg_pair_threshold": "IoU>0.6",
+    "hard_negative_mining": "single pass over images; ILSVRC: 5000-image subset of val1",
+    "pretraining_details": "not given beyond Caffe, simplified training"
+   }
+  },
+  "inference": {
+   "decoding": "greedy per-class non-maximum suppression with learned IoU threshold",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; test server submissions: once per variant on VOC, twice on ILSVRC2013",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "proposals": "selective search fast mode, ~2000 per image",
+    "input_size": "227x227 mean-subtracted RGB",
+    "feature_dim": 4096,
+    "runtime": "13s/image GPU, 53s/image CPU for proposals plus features"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mAP",
+     "definition": "mean over classes of average precision (detection)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "segmentation accuracy",
+     "definition": "mean per-category accuracy on VOC 2011",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "normalized AP / FP types",
+     "definition": "Hoiem et al. detection analysis",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "DPM v5",
+    "UVA",
+    "Regionlets",
+    "SegDPM",
+    "DPM ST",
+    "DPM HSC",
+    "OverFeat",
+    "ILSVRC2013 entries",
+    "O2P",
+    "R&P"
+   ],
+   "protocol": "design decisions validated on VOC 2007; single runs; no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": "http://www.cs.berkeley.edu/~rbg/rcnn",
+   "weights": null,
+   "data": "val1/val2 split and code to be made public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "R-CNN with bounding-box regression reaches 53.7% mAP on VOC 2010 test versus UVA 35.1% and DPM v5 33.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 53.7,
+   "unit": "% mAP",
+   "baseline_value": 35.1,
+   "n": null,
+   "setup": "VOC 2010 test, T-Net, selective search proposals",
+   "quote": "R-CNN achieves a mean average precision (mAP) of 53.7% on PASCAL VOC 2010.",
+   "table": null,
+   "note": null,
+   "where": "Fig 1, Table 1"
+  },
+  {
+   "claim": "R-CNN reaches 31.4% mAP on ILSVRC2013 detection test versus OverFeat 24.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 31.4,
+   "unit": "% mAP",
+   "baseline_value": 24.3,
+   "n": null,
+   "setup": "ILSVRC2013 detection test, 200 classes, with bbox regression, fine-tuned on val1+train1k",
+   "quote": "R-CNN achieves a mAP of 31.4%, which is sig-",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.5, Fig 3"
+  },
+  {
+   "claim": "VOC 2012 mAP is 53.3%, more than 30% relative to previous best.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 53.3,
+   "unit": "% mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC 2011/12 test",
+   "quote": "achieving a mAP of 53.3%",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "Fine-tuning raises VOC 2007 test mAP by 8.0 points to 54.2% (fc7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 54.2,
+   "unit": "% mAP",
+   "baseline_value": 46.2,
+   "n": null,
+   "setup": "VOC 2007 test, T-Net, fine-tuned on VOC 2007 trainval, no bbox regression",
+   "quote": "ﬁne-tuning increases mAP by 8.0",
+   "table": null,
+   "note": "Baseline 44.7 is fc7 without fine-tuning; best non-FT is fc6 46.2, so gain over best is 8.0 points",
+   "where": "Sec 3.2, Table 2"
+  },
+  {
+   "claim": "Bounding-box regression lifts VOC 2007 mAP to 58.5% (T-Net).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 58.5,
+   "unit": "% mAP",
+   "baseline_value": 54.2,
+   "n": null,
+   "setup": "VOC 2007 test, FT fc7",
+   "quote": "58.5%",
+   "table": "Table 2, row R-CNN FT fc7 BB, column mAP",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "Swapping T-Net for the 16-layer O-Net lifts VOC 2007 mAP from 58.5% to 66.0% but is about 7x slower in the forward pass.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 66.0,
+   "unit": "% mAP",
+   "baseline_value": 58.5,
+   "n": null,
+   "setup": "VOC 2007 test, with bbox regression",
+   "quote": "increasing mAP from 58.5% to 66.0%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Table 3"
+  },
+  {
+   "claim": "Fine-tuned R-CNN (54.2%) beats DPM v5 (33.7%) on VOC 2007, a 61% relative gain.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 54.2,
+   "unit": "% mAP",
+   "baseline_value": 33.7,
+   "n": null,
+   "setup": "VOC 2007 test",
+   "quote": "54.2% vs. 33.7%",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Without fine-tuning, removing fc7 does not hurt: fc7 features generalise worse than fc6; pool5 uses only 6% of parameters.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC 2007 test, ILSVRC2012 pre-trained CNN only",
+   "quote": "29%, or about 16.8 million, of the CNN",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "Replacing SVMs with the fine-tuned softmax drops VOC 2007 mAP from 54.2% to 50.9%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 50.9,
+   "unit": "% mAP",
+   "baseline_value": 54.2,
+   "n": null,
+   "setup": "VOC 2007 test, FT fc7",
+   "quote": "performance on VOC 2007 dropped from 54.2% to 50.9% mAP",
+   "table": null,
+   "note": null,
+   "where": "Appendix B"
+  },
+  {
+   "claim": "ILSVRC2013 ablation: fine-tuning on val1+train1k gives 29.7% mAP on val2; bbox regression 31.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": 29.7,
+   "unit": "% mAP",
+   "baseline_value": 26.5,
+   "n": null,
+   "setup": "val2, fc7, SVM on val1+train1k",
+   "quote": "boosting mAP to 29.7%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.5, Table 4"
+  },
+  {
+   "claim": "Warp with 16 px context padding beats alternatives by 3-5 mAP points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pilot experiments, VOC",
+   "quote": "warping with context padding (p = 16 pixels) outper-",
+   "table": null,
+   "note": null,
+   "where": "Appendix A"
+  },
+  {
+   "claim": "Segmentation: full+fg R-CNN fc6 reaches 47.9% mean accuracy on VOC 2011 test, no fine-tuning.",
+   "kind": "measured",
+   "source": null,
+   "metric": "segmentation accuracy",
+   "value": 47.9,
+   "unit": "% mean accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC 2011 test, CPMC regions",
+   "quote": "average accuracy of 47.9%",
+   "table": null,
+   "note": null,
+   "where": "Sec 5, Table 6"
+  },
+  {
+   "claim": "Setting the SVM negative IoU threshold to 0.5 instead of 0.3 decreased mAP by 5 points.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 5,
+   "unit": "mAP points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC validation",
+   "quote": "decreased mAP by 5 points",
+   "table": null,
+   "note": null,
+   "where": "Sec 2.3"
+  },
+  {
+   "claim": "Szegedy et al. regression-based detection reports 30.5% mAP on VOC 2007 versus 58.5% for R-CNN.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": 30.5,
+   "unit": "% mAP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC 2007",
+   "quote": "30.5% on VOC 2007 compared to the",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  }
+ ],
+ "limits": [
+  "Slow: 13s/image on GPU, 53s/image CPU; OverFeat about 9x faster (2s/image)",
+  "Multi-stage training (CNN fine-tune, SVMs, bbox regressors)",
+  "Selective search recall on ILSVRC only 91.6% at 0.5 IoU",
+  "ILSVRC hyperparameters reused from PASCAL, 'undoubtedly slightly suboptimal'",
+  "Dominant error mode is mislocalisation",
+  "Segmentation result without fine-tuning only roughly ties O2P",
+  "Seeds, variance, precision and pre-training hyperparameters not reported"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "R-CNN",
+   "definition": "Regions with CNN features",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "ImageNet classification with deep CNNs (Krizhevsky et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "architecture and pre-training basis",
+   "quote": null
+  },
+  {
+   "work": "Selective search (Uijlings et al.)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "region proposals; UVA baseline",
+   "quote": null
+  },
+  {
+   "work": "OverFeat (Sermanet et al.)",
+   "year": 2013,
+   "arxiv": "1312.6229",
+   "relation": "baseline",
+   "note": "sliding-window CNN, 24.3% on ILSVRC2013",
+   "quote": null
+  },
+  {
+   "work": "Very deep convolutional networks (Simonyan, Zisserman)",
+   "year": 2014,
+   "arxiv": "1409.1556",
+   "relation": "uses-method",
+   "note": "O-Net",
+   "quote": null
+  },
+  {
+   "work": "Caffe (Jia)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "implementation",
+   "quote": null
+  },
+  {
+   "work": "DeCAF (Donahue et al.)",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "related",
+   "note": "contemporaneous frozen-feature work",
+   "quote": null
+  },
+  {
+   "work": "Deformable part models (Felzenszwalb et al.)",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "DPM v5",
+   "quote": null
+  },
+  {
+   "work": "Diagnosing error in object detectors (Hoiem et al.)",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "error analysis",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al. DNN detection",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "regression-based localisation reaches 30.5%",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Object detection system overview: input, ~2000 proposals, CNN features, SVM classification",
+   "page": 1,
+   "why": "Whole pipeline at a glance with headline numbers"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "mAP on ILSVRC2013 detection test set and per-class AP box plots",
+   "page": 5,
+   "why": "R-CNN vs OverFeat and competition entries"
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Different object proposal transformations",
+   "page": 11,
+   "why": "warp vs tight square, context padding"
+  }
+ ],
+ "code": [
+  {
+   "where": "Appendix C, Eq 1-4",
+   "snippet": "G_x = P_w d_x(P) + P_x ; G_y = P_h d_y(P) + P_y ; G_w = P_w exp(d_w(P)) ; G_h = P_h exp(d_h(P))",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "No embedded instructions found",
+  "Tables extracted as one value per line; per-class cells not used",
+  "Fig 1 text says 53.7% VOC 2010 while abstract says 53.3% on VOC 2012; different test sets"
+ ]
+}

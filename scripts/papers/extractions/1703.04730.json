@@ -1,0 +1,541 @@
+{
+ "schema": 1,
+ "key": "1703.04730",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/koh-2017-understanding-black-box-predictions-influence.pdf",
+ "bib": {
+  "title": "Understanding Black-box Predictions via Influence Functions",
+  "authors": [
+   "Pang Wei Koh",
+   "Percy Liang"
+  ],
+  "first_author": "Koh",
+  "year": 2017,
+  "venue": "ICML 2017 (PMLR 70)",
+  "arxiv": "1703.04730",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 51588,
+  "chars_total": 51588,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How can a black-box model's prediction be traced back through the learning algorithm to the training points most responsible for it?",
+ "hypothesis": "Influence-function approximations stay useful on non-convex and non-differentiable models even though the theory assumes twice-differentiable, strictly convex risk.",
+ "contributions": [
+  "Scalable influence-function computation using only gradients and Hessian-vector products (CG or stochastic Taylor-series estimation)",
+  "Empirical check that influence approximates leave-one-out retraining, including non-convex and smoothed non-differentiable losses",
+  "Applications: model comparison, visually-indistinguishable training-set attacks, domain-mismatch debugging, fixing mislabeled examples"
+ ],
+ "method": {
+  "summary": "Computes I_up,loss(z,z_test) = -grad L(z_test)^T H^-1 grad L(z) with implicit Hessian-vector products (conjugate gradients or the Agarwal et al. stochastic estimator) and compares it with actual leave-one-out retraining. Uses it for case studies on MNIST, ImageNet dog-vs-fish, hospital readmission and Enron spam.",
+  "task": "training-data attribution / model explanation (influence functions)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MNIST 10-class",
+    "role": "eval",
+    "size": "n = 55,000 training points",
+    "split": null,
+    "source": "LeCun et al., 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "MNIST 1s vs 7s",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "LeCun et al., 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "MNIST 10% subset (CNN)",
+    "role": "train",
+    "size": "10% of MNIST training set",
+    "split": null,
+    "source": "LeCun et al., 1998",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet dog vs fish",
+    "role": "both",
+    "size": "900 training examples per class (1,800 total); 600 test images",
+    "split": "1,800 train / 600 test",
+    "source": "extracted from ImageNet (Russakovsky et al., 2015)",
+    "preprocessing": null
+   },
+   {
+    "name": "Hospital readmission (diabetic patients)",
+    "role": "both",
+    "size": "balanced training set of 20K patients, 100+ US hospitals, 127 features",
+    "split": null,
+    "source": "Strack et al., 2014",
+    "preprocessing": "30-day readmission label; 20 of 24 non-readmitted children under 10 removed to induce domain mismatch"
+   },
+   {
+    "name": "Enron1 spam",
+    "role": "both",
+    "size": "4,147 training and 1,035 test examples",
+    "split": "4,147 / 1,035",
+    "source": "Metsis et al., 2006",
+    "preprocessing": "bag-of-words; labels of a random 10% of training data flipped"
+   }
+  ],
+  "models": [
+   {
+    "name": "Logistic regression (MNIST)",
+    "role": "proposed",
+    "params": "p = 7,840",
+    "architecture": "linear",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training": "L-BFGS, L2 regularization 0.01"
+    }
+   },
+   {
+    "name": "CNN (MNIST)",
+    "role": "evaluated",
+    "params": "2,616 parameters",
+    "architecture": "7 sets of conv layers, tanh, modeled on all-convolutional net (Springenberg et al.)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "7 sets of convolutional layers",
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Linear SVM (1s vs 7s)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "linear SVM, objective 0.005 ||w||^2 + 1/n sum Hinge",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Inception v3, top layer trained",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "CNN with all but top layer frozen (equivalent to logistic regression on bottleneck features)",
+    "init_from": "pre-trained Keras weights",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RBF-kernel SVM",
+    "role": "baseline",
+    "params": null,
+    "architecture": "SVM with RBF kernel",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "empirical risk (logistic loss / hinge / smooth hinge) for the models; influence itself is not trained",
+   "optimizer": "L-BFGS (logistic regression); Adam (CNN)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "500 (CNN)",
+   "steps": "500k iterations (CNN); leave-one-out retraining from the trained parameters for 30k steps",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "L2 0.01 (MNIST logistic regression)",
+   "dropout": null,
+   "regularisation": "L2 0.01 (logistic regression); damping lambda = 0.01 added to the Hessian for the CNN",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "note": "CNN had not converged: another 500k full-pass iterations reduced train loss from 0.14 to 0.12"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "Single arbitrarily chosen test point per influence plot; 40 repeats for the mislabel experiment",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "stochastic_estimator_repeats_r": "10",
+    "stochastic_estimator_iterations_t": "5,000",
+    "smooth_hinge_t": "0.001 (R=0.95); 0.1 gives R=0.91",
+    "cnn_damping_lambda": "0.01",
+    "attack_step_alpha": "0.02",
+    "attack_iterations": "100 per test image, retraining after each iteration",
+    "complexity": "O(np + rtp) for all training points"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Pearson's R between predicted and actual change in test loss",
+     "definition": "correlation of -1/n * I_up,loss(z,z_test) with L(z_test, theta_-z) - L(z_test, theta) after leave-one-out retraining",
+     "unit": "correlation",
+     "higher_is_better": true
+    },
+    {
+     "name": "Flip rate of test predictions",
+     "definition": "fraction of correctly classified test images whose prediction flips after perturbing k training images",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Test accuracy and fraction of flipped labels detected vs fraction of training data checked",
+     "definition": "checking points ranked by influence, train loss, or random",
+     "unit": "fraction",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Euclidean nearest neighbors / inner product",
+    "highest train loss",
+    "random inspection",
+    "coefficient of the 'child' indicator in learned parameters",
+    "RBF SVM vs Inception"
+   ],
+   "protocol": "Single test point per comparison, error bars over 40 repeats for the label-repair experiment; no significance tests."
+  },
+  "availability": {
+   "code": "GitHub http://bit.ly/gt-influence and Codalab http://bit.ly/cl-influence",
+   "weights": null,
+   "data": "Codalab http://bit.ly/cl-influence"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Stochastic influence estimate and CG match leave-one-out retraining on MNIST",
+   "kind": "measured",
+   "source": null,
+   "metric": "stochastic estimator settings",
+   "value": 5000,
+   "unit": "iterations (t)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Logistic regression, 10-class MNIST, n = 55,000, r = 10 repeats, t = 5,000 iterations, one wrongly classified test point",
+   "quote": "The stochastic approximation from Agarwal et al. (2016) was also accurate with r = 10 repeats and t = 5, 000 iter-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p3"
+  },
+  {
+   "claim": "Influence correlates with leave-one-out retraining even for a non-converged CNN",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson's R",
+   "value": 0.86,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CNN, 2,616 parameters, 10% of MNIST, 500k Adam iterations, damping 0.01, 100 most influential points, one test point",
+   "quote": "predicted and actual changes in loss were highly correlated (Pearson’s R\n= 0.86, Fig 2-Right)",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, p4"
+  },
+  {
+   "claim": "Smooth hinge (t = 0.001) lets influence predict hinge-loss retraining",
+   "kind": "measured",
+   "source": null,
+   "metric": "Pearson's R",
+   "value": 0.95,
+   "unit": "correlation",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Linear SVM, MNIST 1s vs 7s, 100 most influential points, one wrongly classified test point; raw hinge overestimates",
+   "quote": "(Pearson’s R = 0.95; Fig 3b-Mid)",
+   "table": null,
+   "note": "R = 0.91 at t = 0.1 (Fig 3 caption); unsmoothed hinge was inaccurate with no R given.",
+   "where": "Sec 4.3, p4"
+  },
+  {
+   "claim": "Single-training-image perturbations flip a majority of correct predictions",
+   "kind": "measured",
+   "source": null,
+   "metric": "flip rate",
+   "value": 57,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 591,
+   "setup": "Inception top layer, dog vs fish, 591 of 600 test images initially correct, one training image of 1,800 perturbed, alpha 0.02, 100 iterations, same 8-bit representation",
+   "quote": "We were able to do this on 335\n(57%) of the 591 test images.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p5"
+  },
+  {
+   "claim": "Perturbing 2 training images flips 77% of the 591 test predictions",
+   "kind": "measured",
+   "source": null,
+   "metric": "flip rate",
+   "value": 77,
+   "unit": "%",
+   "baseline_value": null,
+   "n": 591,
+   "setup": "As above, 2 training images perturbed per test image",
+   "quote": "we could ﬂip predictions on\n77% of the 591 test images",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p5"
+  },
+  {
+   "claim": "One perturbed training image flipped 16 of 30 test predictions when attacking jointly",
+   "kind": "measured",
+   "source": null,
+   "metric": "flipped test images",
+   "value": 16,
+   "unit": "images",
+   "baseline_value": null,
+   "n": 30,
+   "setup": "30 test images of the first author's dog, joint attack maximizing average loss",
+   "quote": "ﬂipped predictions on 16",
+   "table": null,
+   "note": null,
+   "where": "Fig 5 caption, p6"
+  },
+  {
+   "claim": "Influence singles out the 4 children as 30-40x as influential as the next examples",
+   "kind": "measured",
+   "source": null,
+   "metric": "influence ratio",
+   "value": "30-40",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hospital readmission logistic regression, 20K balanced patients, 127 features; random misclassified child as test point",
+   "quote": "each of whom\nwere 30-40 times as inﬂuential as the next most inﬂuential\nexamples",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, p6"
+  },
+  {
+   "claim": "Parameter inspection baseline fails: 14 of 127 features had larger coefficient than the child indicator",
+   "kind": "measured",
+   "source": null,
+   "metric": "features with larger coefficient",
+   "value": 14,
+   "unit": "of 127",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Same readmission setup",
+   "quote": "14/127 features had a larger coefﬁcient",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3, p6"
+  },
+  {
+   "claim": "Influence ranking repairs flipped labels better than train loss or random",
+   "kind": "measured",
+   "source": null,
+   "metric": "setup only",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Enron1 spam, 4,147 train / 1,035 test, logistic regression on bag of words, 10% labels flipped, 40 repeats; the paper gives no numeric accuracy in text (curves in Fig 6)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, Fig 6, p7"
+  },
+  {
+   "claim": "Influence functions are local: global changes such as subpopulation effects are an open question",
+   "kind": "claim",
+   "source": null,
+   "metric": "claim",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Authors' concession in Discussion",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Sec 7, p7"
+  }
+ ],
+ "limits": [
+  "Theory assumes twice-differentiable, strictly convex risk; non-convex nets need damping (lambda = 0.01) and non-differentiable losses need smoothing.",
+  "Validation is on small models: CNN 2,616 parameters on 10% of MNIST, logistic regression, and a frozen-Inception top layer; no large network.",
+  "Agreement with leave-one-out is shown on one arbitrarily picked test point per plot, and on the top 100-500 influential points only; the paper says other points follow 'similar trends'.",
+  "Influence measures local, infinitesimal upweighting; the authors say global changes like removing a subpopulation are an open question.",
+  "Attack on discrete data is not tested empirically; the authors expect training-set attacks to get harder as training data grows.",
+  "Hardware, runtime and seeds for most experiments are not stated; Hessian-vector cost is O(p) per product but wall-clock numbers are not given."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Influence function I_up,loss",
+   "definition": "rate of change of the loss at a test point when a training point is upweighted by an infinitesimal epsilon: -grad L(z_test)^T H^-1 grad L(z)",
+   "where": "Sec 2.1, Eq 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Cook & Weisberg, Residuals and influence in regression",
+   "year": 1982,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "classic influence result for upweighting a training point",
+   "quote": null
+  },
+  {
+   "work": "Hampel, The influence curve and its role in robust estimation",
+   "year": 1974,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "origin of influence functions in robust statistics",
+   "quote": null
+  },
+  {
+   "work": "Agarwal et al., Second order stochastic optimization in linear time",
+   "year": 2016,
+   "arxiv": "1602.03943",
+   "relation": "uses-method",
+   "note": "stochastic inverse-Hessian-vector estimator",
+   "quote": null
+  },
+  {
+   "work": "Pearlmutter, Fast exact multiplication by the Hessian",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "O(p) Hessian-vector products",
+   "quote": null
+  },
+  {
+   "work": "Martens, Deep learning via Hessian-free optimization",
+   "year": 2010,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "conjugate gradients with HVPs",
+   "quote": null
+  },
+  {
+   "work": "Ribeiro et al., Why Should I Trust You?",
+   "year": 2016,
+   "arxiv": "1602.04938",
+   "relation": "related",
+   "note": "LIME; local explanation in model terms, contrasted with training-data tracing",
+   "quote": null
+  },
+  {
+   "work": "Biggio et al., Poisoning attacks against support vector machines",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "training-set attack mathematically equivalent to the influence attack",
+   "quote": null
+  },
+  {
+   "work": "Wojnowicz et al., Influence sketching",
+   "year": 2016,
+   "arxiv": "1611.05923",
+   "relation": "related",
+   "note": "closest ML prior work, specific to generalized linear models",
+   "quote": null
+  },
+  {
+   "work": "Goodfellow et al., Explaining and harnessing adversarial examples",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "related",
+   "note": "test-set analogue of the training-set attack",
+   "quote": null
+  },
+  {
+   "work": "Szegedy et al., Rethinking the Inception architecture",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Inception v3 used for dog-vs-fish",
+   "quote": null
+  },
+  {
+   "work": "MNIST (LeCun et al.), Enron1 (Metsis et al.), diabetic readmission (Strack et al.), ImageNet",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "datasets used",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Components of influence: effect of removing the training loss term and H^-1 on MNIST 1 vs 7 logistic regression",
+   "page": 2,
+   "why": "shows why influence beats Euclidean nearest neighbors"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Influence matches leave-one-out retraining (CG, stochastic, CNN)",
+   "page": 3,
+   "why": "the core validity check"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Inception vs RBF SVM influence against pixel distance, and most helpful training images",
+   "page": 4,
+   "why": "shows two equally accurate models relying on training data differently"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Fixing mislabeled examples on Enron1: test accuracy and fraction detected vs fraction checked",
+   "page": 6,
+   "why": "shows the data-debugging payoff against train-loss and random baselines"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 2.1",
+   "snippet": "I_up,loss(z, z_test) = -grad_theta L(z_test, theta_hat)^T H^-1 grad_theta L(z, theta_hat)",
+   "verbatim": false
+  },
+  {
+   "where": "Sec 3",
+   "snippet": "s_test = H^-1 grad L(z_test); I_up,loss(z) = -s_test . grad L(z)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "PDF text has NUL bytes and ligatures (fl, fi); figure curves (Fig 2, 6) are not readable as numbers.",
+  "No embedded instructions found."
+ ]
+}

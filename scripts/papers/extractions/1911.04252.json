@@ -1,0 +1,516 @@
+{
+ "schema": 1,
+ "key": "1911.04252",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xie-2020-self-training-noisy-student-improves.pdf",
+ "bib": {
+  "title": "Self-training with Noisy Student improves ImageNet classification",
+  "authors": [
+   "Qizhe Xie",
+   "Minh-Thang Luong",
+   "Eduard Hovy",
+   "Quoc V. Le"
+  ],
+  "first_author": "Xie",
+  "year": 2020,
+  "venue": "CVPR 2020 (arXiv v4)",
+  "arxiv": "1911.04252",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 81511,
+  "chars_total": 81511,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed"
+ },
+ "type": "empirical",
+ "question": "Can self-training with an equal-or-larger, noised student on large unlabeled image data improve ImageNet accuracy and robustness beyond supervised and weakly-supervised SOTA?",
+ "hypothesis": "Noising the student (augmentation, dropout, stochastic depth) and making it at least as large as the teacher lets the student exceed the teacher.",
+ "contributions": [
+  "Noisy Student Training: self-training with equal-or-larger student and injected noise",
+  "88.4% ImageNet top-1 using 300M unlabeled images",
+  "Large robustness gains on ImageNet-A, C, P and FGSM/PGD attacks without optimising for robustness"
+ ],
+ "method": {
+  "summary": "Train a teacher EfficientNet on labeled ImageNet, pseudo-label filtered/balanced unlabeled JFT images with the un-noised teacher, then train an equal-or-larger EfficientNet student jointly on labeled and pseudo-labeled data with noise (RandAugment, dropout, stochastic depth); iterate with the student as new teacher.",
+  "task": "semi-supervised image classification (self-training / noisy distillation)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "ImageNet 2012 ILSVRC",
+    "role": "both",
+    "size": "1.3M labeled images",
+    "split": "train for labeled data; validation set for eval",
+    "source": "ILSVRC 2012",
+    "preprocessing": null
+   },
+   {
+    "name": "JFT (labels ignored)",
+    "role": "train",
+    "size": "~300M images; 130M after filtering/balancing (81M unique)",
+    "split": null,
+    "source": "Google internal JFT, not public",
+    "preprocessing": "ImageNet val images removed; EfficientNet-B0 labels each image; keep confidence >0.3; at most 130K highest-confidence per class; duplicate to 130K for smaller classes"
+   },
+   {
+    "name": "YFCC100M",
+    "role": "train",
+    "size": "34M after filtering, balanced to 130M",
+    "split": null,
+    "source": "public",
+    "preprocessing": "same filtering as JFT, top 130K per class by B0 top-1"
+   },
+   {
+    "name": "SVHN",
+    "role": "both",
+    "size": "73K core set labeled; 531K extra set unlabeled",
+    "split": "core set as train and validation",
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet-A / C / P",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Hendrycks et al.",
+    "preprocessing": "C and P evaluated at 224 and 299 resolution"
+   }
+  ],
+  "models": [
+   {
+    "name": "EfficientNet-L2",
+    "role": "proposed",
+    "params": "480M",
+    "architecture": "EfficientNet scaled up from B7, w=4.3 d=5.3, train res 475, test res 800",
+    "init_from": "inferred: from scratch (warm-start from teacher not used; Study 8)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "train_time": "about 5x EfficientNet-B7"
+    }
+   },
+   {
+    "name": "EfficientNet-B7",
+    "role": "teacher",
+    "params": "66M",
+    "architecture": "EfficientNet, w=2.0 d=3.1, res 600",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "EfficientNet-B0 to B6",
+    "role": "base",
+    "params": "5.3M (B0), 7.8M, 9.2M, 12M, 19M, 30M, 43M (B6)",
+    "architecture": "EfficientNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ResNet-50",
+    "role": "base",
+    "params": "26M",
+    "architecture": "ResNet",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "cross entropy on labeled plus soft pseudo-labeled (hard also works) images, averaged over concatenated batch; teacher un-noised when labeling",
+   "optimizer": null,
+   "lr": "0.128 for labeled batch 2048",
+   "lr_schedule": "decay 0.97 every 2.4 epochs (350-epoch runs) or every 4.8 epochs (700-epoch runs)",
+   "warmup": null,
+   "batch_size": "labeled 2048 by default (reduced if memory-bound); unlabeled batch 3x labeled for B1-B7 sweep, 14x then 28x for L2",
+   "steps": null,
+   "epochs": "350 for models larger than B4 including L2; 700 for smaller",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.5 on final layer",
+   "regularisation": "stochastic depth survival prob 0.8 at final layer, linear decay; RandAugment 2 ops magnitude 27 (ResNet-50: magnitude 9)",
+   "hardware": "Cloud TPU v3 Pod, 2048 cores",
+   "compute": null,
+   "wall_clock": "6 days for EfficientNet-L2 with unlabeled batch 14x labeled",
+   "seeds": null,
+   "other": {
+    "fixres": "L2: train 350 epochs at smaller resolution, then finetune 1.5 epochs at larger res on unaugmented labeled images with shallow layers fixed",
+    "iterations": "B7 teacher -> L2 (14:1) -> L2 (14:1) -> L2 (28:1)",
+    "batch_size_note": "labeled batch 512, 1024, 2048 give same performance"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single reported number per model; no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "pseudo_label_confidence_threshold": "0.3",
+    "max_images_per_class": "130K",
+    "adversarial": "FGSM, and PGD with 10 iterations at epsilon 16; input resolution 800x800"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "top-1 / top-5 accuracy",
+     "definition": "ImageNet val accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mCE",
+     "definition": "weighted average error on ImageNet-C corruptions normalised by AlexNet error",
+     "unit": "score",
+     "higher_is_better": false
+    },
+    {
+     "name": "mFR",
+     "definition": "mean flip rate of top-1 prediction under ImageNet-P perturbations, normalised by AlexNet",
+     "unit": "score",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "supervised EfficientNets with RandAugment",
+    "FixRes ResNeXt-101 WSL (3.5B Instagram)",
+    "BiT-L (concurrent)",
+    "self-training ResNet-50 (Yalniz et al.)"
+   ],
+   "protocol": "single run per config, no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/google-research/noisystudent",
+   "weights": "https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet",
+   "data": "JFT not public; YFCC100M public"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "Noisy Student EfficientNet-L2 reaches 88.4% ImageNet top-1 versus 86.4% for FixRes ResNeXt-101 WSL (3.5B Instagram images).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.4,
+   "unit": "% top-1",
+   "baseline_value": 86.4,
+   "n": null,
+   "setup": "ImageNet 2012 val, EfficientNet-L2 student, 300M unlabeled JFT images (130M after filter/balance), 3 iterations",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row Noisy Student Training (EfficientNet-L2), column Top-1 Acc.; 86.4% row FixRes ResNeXt-101 WSL"
+  },
+  {
+   "claim": "Gain over EfficientNet-B7 85.0% splits into +0.5% from bigger model and +2.9% from Noisy Student.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 2.9,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "EfficientNet-L2 vs supervised baseline",
+   "note": null,
+   "where": "Sec 3.2",
+   "quote": "by making the model larger (+0.5%) and by Noisy Student Training (+2.9%)"
+  },
+  {
+   "claim": "ImageNet-A top-1 rises from 49.6% (supervised L2) and 61.0% (prior SOTA) to 83.7%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 83.7,
+   "unit": "% top-1",
+   "baseline_value": 61.0,
+   "n": null,
+   "setup": "ImageNet-A, EfficientNet-L2 Noisy Student",
+   "note": null,
+   "where": "Table 3",
+   "table": "Table 3, row Noisy Student Training (L2), column Top-1 Acc."
+  },
+  {
+   "claim": "ImageNet-C mCE falls to 28.3 from 45.7 (prior SOTA) at 299 resolution.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 28.3,
+   "unit": "mCE",
+   "baseline_value": 45.7,
+   "n": null,
+   "setup": "ImageNet-C, L2, 299x299",
+   "note": null,
+   "where": "Table 4",
+   "table": "Table 4, row Noisy Student Training (L2) 299, column mCE"
+  },
+  {
+   "claim": "ImageNet-P mFR falls to 12.2 from 27.8 at 299 resolution (14.2 at 224).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 12.2,
+   "unit": "mFR",
+   "baseline_value": 27.8,
+   "n": null,
+   "setup": "ImageNet-P, L2, 299x299",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row Noisy Student Training (L2) 299, column mFR"
+  },
+  {
+   "claim": "Consistent gain around 0.8% for every EfficientNet size B0-B7 with same-size teacher, no iteration.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.8,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B0-B7, unlabeled batch 3x labeled (1x for B0)",
+   "note": null,
+   "where": "Sec 3.2, Fig 2",
+   "quote": "Training leads to a consistent improvement of around 0.8%"
+  },
+  {
+   "claim": "Removing noise on unlabeled data drops B5 from 85.1% to 84.3% (130M unlabeled), barely above the 84.0% supervised baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 84.3,
+   "unit": "% top-1",
+   "baseline_value": 84.0,
+   "n": null,
+   "setup": "B5 teacher and student, 130M unlabeled, no iteration",
+   "note": null,
+   "where": "Table 6",
+   "table": "Table 6, row student w/o Aug, SD, Dropout, column 130M"
+  },
+  {
+   "claim": "Iterative training: 87.6% then 88.1% then 88.4% (last with 28:1 unlabeled ratio).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 88.1,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "L2 iteration 2, ratio 14:1",
+   "note": null,
+   "where": "Table 7",
+   "table": "Table 7, iteration 2"
+  },
+  {
+   "claim": "Under PGD 10 steps at epsilon 16, accuracy of L2 improves from 1.1% to 4.4%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 4.4,
+   "unit": "% top-1",
+   "baseline_value": 1.1,
+   "n": null,
+   "setup": "EfficientNet-L2 at 800x800",
+   "note": null,
+   "where": "Sec 3.4",
+   "quote": "Noisy Student Training improves EfﬁcientNet-L2’s accu-"
+  },
+  {
+   "claim": "Using the 88.4% L2 model as teacher gets B4 to 85.3%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 85.3,
+   "unit": "% top-1",
+   "baseline_value": 83.2,
+   "n": null,
+   "setup": "B4 student, L2 teacher, standard augmentation, 700 epochs",
+   "note": null,
+   "where": "Table 9",
+   "table": "Table 9, row Noisy Student Training (B4, L2)"
+  },
+  {
+   "claim": "With public YFCC100M instead of JFT, B7 reaches 86.2% versus 86.4% on JFT.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 86.2,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B7, no iteration",
+   "note": null,
+   "where": "Table 18",
+   "table": "Table 18, row Noisy Student Training (B7) YFCC"
+  },
+  {
+   "claim": "Joint training beats pretrain-then-finetune: B0 77.9% vs 77.5%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 77.9,
+   "unit": "% top-1",
+   "baseline_value": null,
+   "n": null,
+   "setup": "B0-B3, 350 epochs",
+   "note": null,
+   "where": "Table 13",
+   "table": "Table 13, row Joint Training, column B0"
+  }
+ ],
+ "limits": [
+  "Unlabeled data is Google-internal JFT; public YFCC100M gives slightly lower results.",
+  "Single runs, no seeds or error bars; optimizer and precision not stated.",
+  "Compute heavy: L2 needs 6 days on a 2048-core TPU v3 Pod.",
+  "Authors note RandAugment overlaps slightly with ImageNet-C/P corruptions (brightness, contrast, sharpness).",
+  "Adversarial results not comparable to prior work due to 800x800 input.",
+  "Hard vs soft pseudo labels must be chosen case by case."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Noisy Student Training",
+   "definition": "self-training with an equal-or-larger student and noise added to the student during learning",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "EfficientNet (Tan and Le)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "architecture for teacher and student",
+   "quote": null
+  },
+  {
+   "work": "Yalniz et al. billion-scale semi-supervised learning",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "self-training baseline; pretrain then finetune vs joint training here",
+   "quote": null
+  },
+  {
+   "work": "Mahajan et al. ResNeXt WSL",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "3.5B Instagram weak labels, prior SOTA",
+   "quote": null
+  },
+  {
+   "work": "Hinton et al. knowledge distillation",
+   "year": 2015,
+   "arxiv": "1503.02531",
+   "relation": "extends",
+   "note": "soft targets, but student not smaller and noised",
+   "quote": null
+  },
+  {
+   "work": "RandAugment",
+   "year": 2019,
+   "arxiv": "1909.13719",
+   "relation": "uses-method",
+   "note": "input noise",
+   "quote": null
+  },
+  {
+   "work": "Stochastic depth (Huang et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "model noise",
+   "quote": null
+  },
+  {
+   "work": "Big Transfer BiT-L",
+   "year": 2019,
+   "arxiv": "1912.11370",
+   "relation": "baseline",
+   "note": "concurrent, 87.5%",
+   "quote": null
+  },
+  {
+   "work": "FixRes (Touvron et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "train-test resolution fix for L2",
+   "quote": null
+  },
+  {
+   "work": "JFT dataset",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "unlabeled images",
+   "quote": null
+  },
+  {
+   "work": "YFCC100M",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "public unlabeled set",
+   "quote": null
+  },
+  {
+   "work": "ImageNet-A, ImageNet-C/P (Hendrycks)",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "robustness sets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Illustration of the Noisy Student Training.",
+   "page": 2,
+   "why": "shows teacher, pseudo-label, noised student and loop in one picture"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Noisy Student Training leads to significant improvements across all model sizes.",
+   "page": 5,
+   "why": "accuracy vs params frontier"
+  }
+ ],
+ "code": [
+  {
+   "where": "Algorithm 1, p.2",
+   "snippet": "1: Learn teacher; 2: pseudo-label clean unlabeled images with un-noised teacher; 3: train equal-or-larger noised student on labeled + pseudo-labeled; 4: student becomes teacher",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}

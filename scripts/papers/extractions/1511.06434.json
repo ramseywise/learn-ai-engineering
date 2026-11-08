@@ -1,0 +1,416 @@
+{
+ "schema": 1,
+ "key": "1511.06434",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/radford-2015-unsupervised-representation-learning-deep-convolutional.pdf",
+ "bib": {
+  "title": "Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks",
+  "authors": [
+   "Alec Radford",
+   "Luke Metz",
+   "Soumith Chintala"
+  ],
+  "first_author": "Radford",
+  "year": 2016,
+  "venue": "ICLR 2016 (under review version, arXiv v2)",
+  "arxiv": "1511.06434",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35670,
+  "chars_total": 35670,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can architectural constraints make convolutional GANs stable to train, and do the learned discriminator and generator features work as general image representations?",
+ "hypothesis": "Training GANs and reusing parts of the generator and discriminator as feature extractors yields good image representations.",
+ "contributions": [
+  "A set of architectural constraints (DCGAN) that make convolutional GANs stable to train in most settings",
+  "Discriminator features used for classification, competitive with other unsupervised algorithms",
+  "Visualisation of filters showing specific filters draw specific objects",
+  "Generators show vector arithmetic properties on latent Z"
+ ],
+ "method": {
+  "summary": "A family of convolutional GAN architectures (strided/fractional-strided convs, batchnorm, no FC hidden layers, ReLU/LeakyReLU) trained on LSUN bedrooms, a faces set and ImageNet-1k. The ImageNet-trained discriminator's features feed a linear L2-SVM for CIFAR-10 and SVHN.",
+  "task": "unsupervised representation learning / image generation with GANs",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LSUN bedrooms",
+    "role": "train",
+    "size": "a little over 3 million training examples",
+    "split": null,
+    "source": "LSUN (Yu et al., 2015)",
+    "preprocessing": "scaled to [-1,1]; no augmentation; near-duplicates removed (about 275,000) with a 3072-128-3072 denoising dropout ReLU autoencoder on 32x32 center-crops, binarised code as hash"
+   },
+   {
+    "name": "Faces (newly assembled)",
+    "role": "train",
+    "size": "3M images from 10K people scraped; approximately 350,000 face boxes used",
+    "split": null,
+    "source": "web image queries of names from dbpedia, OpenCV face detector",
+    "preprocessing": "scaled to [-1,1]; no augmentation"
+   },
+   {
+    "name": "Imagenet-1k",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Deng et al., 2009",
+    "preprocessing": "32x32 min-resized center crops; no augmentation"
+   },
+   {
+    "name": "CIFAR-10",
+    "role": "eval",
+    "size": null,
+    "split": "also 400 per class setting",
+    "source": null,
+    "preprocessing": "features from ImageNet-trained discriminator, all layers maxpooled to 4x4 grid, 28672-dim vector"
+   },
+   {
+    "name": "SVHN",
+    "role": "eval",
+    "size": "1000 uniformly class distributed labelled training examples",
+    "split": "10,000 validation split off the non-extra set",
+    "source": "Netzer et al., 2011",
+    "preprocessing": "same feature pipeline as CIFAR-10"
+   },
+   {
+    "name": "MNIST",
+    "role": "eval",
+    "size": null,
+    "split": "10K validation split off",
+    "source": null,
+    "preprocessing": "batchnorm scale and bias removed (supplementary)"
+   }
+  ],
+  "models": [
+   {
+    "name": "DCGAN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "convolutional GAN; generator projects 100-dim uniform Z, four fractionally-strided convs to 64x64 image, no FC or pooling; discriminator strided convs, flattened last conv into single sigmoid",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "512 feature maps in highest discriminator layer",
+    "heads": null,
+    "context": null,
+    "other": {
+     "generator_activation": "ReLU, Tanh at output",
+     "discriminator_activation": "LeakyReLU slope 0.2",
+     "batchnorm": "all layers except generator output and discriminator input",
+     "Z": "100-dimensional uniform"
+    }
+   }
+  ],
+  "training": {
+   "objective": "GAN adversarial objective (Goodfellow et al., 2014); not restated",
+   "optimizer": "Adam",
+   "lr": "0.0002",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "128",
+   "steps": null,
+   "epochs": "LSUN: samples shown after one epoch and five epochs (Figs 2, 3); convergence length not stated",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "batchnorm",
+   "hardware": "a Titan-X GPU (donated by Nvidia)",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "beta1": "0.5 (0.9 caused oscillation)",
+    "weight_init": "zero-centered Normal, std 0.02",
+    "note": "mini-batch SGD wording plus Adam; suggested lr 0.001 found too high"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "vector_arithmetic": "average Z of three exemplars per concept; noise scale +-0.25 for variants"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIFAR-10 accuracy",
+     "definition": "regularised linear L2-SVM on discriminator features",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SVHN test error with 1000 labels",
+     "definition": "L2-SVM on same features",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "MNIST nearest-neighbour test error on generated conditional samples",
+     "definition": "nearest neighbour classifier comparing real data to generated conditional samples",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "1 Layer K-means",
+    "3 Layer K-means Learned RF",
+    "View Invariant K-means",
+    "Exemplar CNN",
+    "KNN, TSVM, M1+KNN, M1+TSVM, M1+M2, SWWAE",
+    "supervised CNN same architecture (64 random-search trials)",
+    "GAN, InfiMNIST, AlignMNIST"
+   ],
+   "protocol": "Single reported runs; no seeds or significance tests stated; no log-likelihood or nearest-neighbour search on training set used for generation quality."
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "DCGAN discriminator features from ImageNet-1k pretraining reach 82.8% on CIFAR-10 with an L2-SVM, beating K-means pipelines but below Exemplar CNN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": "82.8",
+   "unit": "%",
+   "baseline_value": "82.0 (3 layer K-means)",
+   "n": null,
+   "setup": "DCGAN trained on ImageNet-1k, all-layer features max-pooled to 4x4, 28672-dim, linear L2-SVM, CIFAR-10",
+   "quote": "This achieves 82.8% accuracy, out performing all K-means",
+   "table": null,
+   "note": "Exemplar CNN gets 84.3%",
+   "where": "5.1, Table 1"
+  },
+  {
+   "claim": "With 1000 SVHN labels the DCGAN + L2-SVM reaches 22.48% test error, state of the art at the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "22.48",
+   "unit": "%",
+   "baseline_value": "23.56 (SWWAE with dropout)",
+   "n": null,
+   "setup": "SVHN, 1000 labels, same feature pipeline",
+   "quote": "22.48% test error",
+   "table": null,
+   "note": null,
+   "where": "5.2, Table 2"
+  },
+  {
+   "claim": "A purely supervised CNN of the same architecture gets 28.87% validation error after 64 random-search trials, so the architecture alone does not explain the result.",
+   "kind": "measured",
+   "source": null,
+   "metric": "validation error",
+   "value": "28.87",
+   "unit": "%",
+   "baseline_value": "22.48",
+   "n": "64 hyperparameter trials",
+   "setup": "SVHN, 1000 labels, same architecture",
+   "quote": "It achieves a signﬁcantly higher 28.87% validation error.",
+   "table": null,
+   "note": "validation error vs test error for DCGAN, not directly comparable",
+   "where": "5.2"
+  },
+  {
+   "claim": "On MNIST a conditional DCGAN reaches 1.48% nearest-neighbour test error at 10M samples, versus 3.1% for real data and 6.28%/5.65% for a GAN baseline.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": "1.48",
+   "unit": "%",
+   "baseline_value": "5.65 (GAN)",
+   "n": "10M samples",
+   "setup": "MNIST, 10K validation split, nearest neighbour on generated conditional samples",
+   "quote": null,
+   "table": "Table 3, row DCGAN (ours), column Test Error @10M samples (1.48%); @50K 2.98%",
+   "note": null,
+   "where": "8.1, Table 3"
+  },
+  {
+   "claim": "Dedup removed approximately 275,000 near duplicates from LSUN bedrooms.",
+   "kind": "measured",
+   "source": null,
+   "metric": "near duplicates removed",
+   "value": "275,000",
+   "unit": "images",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LSUN bedrooms, denoising autoencoder hashing",
+   "quote": "approximately 275,000 near duplicates",
+   "table": null,
+   "note": null,
+   "where": "4.1.1"
+  },
+  {
+   "claim": "Dropping about 200 window-predictive feature maps in the generator mostly removes windows from generated bedrooms.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": "150 samples, 52 window boxes",
+   "setup": "logistic regression on second highest conv layer features; qualitative result (Fig 6)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "6.3.1"
+  },
+  {
+   "claim": "Averaging Z of three exemplars gives stable vector arithmetic; single samples were unstable.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "face/object Z arithmetic, qualitative (Figs 7, 8)",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "6.3.2"
+  }
+ ],
+ "limits": [
+  "Authors concede instability: with longer training some filters collapse to a single oscillating mode.",
+  "Fine-tuning discriminator features left to future work; DCGAN below Exemplar CNN on CIFAR-10.",
+  "Quality evidence is mostly qualitative samples; no log-likelihood or sample-quality metric.",
+  "No layer counts, channel widths, step counts or seeds given in text; code not linked.",
+  "SVHN comparison mixes DCGAN test error with supervised CNN validation error."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "fractionally-strided convolution",
+   "definition": "in some recent papers, these are wrongly called deconvolutions",
+   "where": "Fig 1 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Generative adversarial nets",
+   "year": 2014,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "base GAN framework",
+   "quote": null
+  },
+  {
+   "work": "LAPGAN (Denton et al.)",
+   "year": 2015,
+   "arxiv": "1506.05751",
+   "relation": "related",
+   "note": "alternative approach to scaling GANs",
+   "quote": null
+  },
+  {
+   "work": "Striving for simplicity: the all convolutional net",
+   "year": 2014,
+   "arxiv": "1412.6806",
+   "relation": "uses-method",
+   "note": "strided convs replace pooling; guided backprop",
+   "quote": null
+  },
+  {
+   "work": "Batch normalization",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "uses-method",
+   "note": "critical for deep generators",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer",
+   "quote": null
+  },
+  {
+   "work": "Exemplar CNN (Dosovitskiy et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "84.3% on CIFAR-10",
+   "quote": null
+  },
+  {
+   "work": "Coates & Ng K-means",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "80.6% / 82.0%",
+   "quote": null
+  },
+  {
+   "work": "Stacked what-where autoencoders (Zhao et al.)",
+   "year": 2015,
+   "arxiv": "1506.02351",
+   "relation": "baseline",
+   "note": "SVHN prior best 23.56%",
+   "quote": null
+  },
+  {
+   "work": "LSUN",
+   "year": 2015,
+   "arxiv": "1506.03365",
+   "relation": "uses-data",
+   "note": "bedrooms",
+   "quote": null
+  },
+  {
+   "work": "Imagenet-1k",
+   "year": 2009,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "unsupervised training source",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. word vector arithmetic",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "motivates Z arithmetic",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "DCGAN generator used for LSUN scene modeling.",
+   "page": 4,
+   "why": "Shows the full generator: 100-d Z projected, four fractionally-strided convs to 64x64."
+  },
+  {
+   "figure": "Fig 7",
+   "caption": "Vector arithmetic for visual concepts.",
+   "page": 10,
+   "why": "Shows smile/gender-style arithmetic on Z."
+  }
+ ],
+ "code": [],
+ "problems": []
+}

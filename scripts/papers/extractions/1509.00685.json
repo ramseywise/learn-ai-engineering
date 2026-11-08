@@ -1,0 +1,109 @@
+{
+ "schema": 1,
+ "key": "1509.00685",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/rush-2015-neural-attention-model-abstractive-sentence.pdf",
+ "bib": {"title": "A Neural Attention Model for Sentence Summarization", "authors": ["Alexander M. Rush", "Sumit Chopra", "Jason Weston"], "first_author": "Rush", "year": 2015, "venue": "Proceedings of EMNLP 2015, pages 379-389", "arxiv": "1509.00685", "doi": null},
+ "read": {"by": "source-reader", "at": "2026-11-08", "chars_read": 43605, "chars_total": 43605, "engine": "pymupdf", "skipped": null},
+ "type": "empirical",
+ "question": "Can a fully data-driven neural model with a local attention encoder generate abstractive single-sentence summaries (headlines) at scale?",
+ "hypothesis": "A neural language model conditioned on a soft-aligned attention encoder, trained end to end on millions of pairs, beats syntax-based and MT baselines.",
+ "contributions": ["Attention-Based Summarization (ABS): NNLM decoder plus attention-based encoder, trained jointly", "Beam-search decoder and small set of extractive features tuned with MERT (ABS+)", "Training on about 4 million Gigaword headline-sentence pairs", "Gains over TOPIARY on DUC-2004 and over MOSES+ on Gigaword"],
+ "method": {
+  "summary": "A feed-forward NNLM (context C=5) conditioned on an encoder (bag-of-words, convolutional TDNN, or attention-based) predicts each summary word; trained with minibatch SGD on NLL over Gigaword first-sentence/headline pairs. Decoding is beam search; ABS+ adds 5 log-linear features (unigram/bigram/trigram match, reordering) with weights tuned by MERT.",
+  "task": "abstractive sentence summarization / headline generation",
+  "trains": true,
+  "datasets": [
+   {"name": "Annotated Gigaword (headline + first sentence)", "role": "train", "size": "roughly J = 4 million title-article pairs after filtering (from about 9.5 million articles); 119 million input tokens, 110K input word types, 31 million headline tokens, 69K headline types", "split": "validation set used for hyperparameters and perplexity (size not stated)", "source": "Graff et al. 2003; Napoles et al. 2012; Stanford CoreNLP tokenization", "preprocessing": "Filters: no common non-stop-words, byline or editing marks in title, question mark or colon in title. PTB tokenization, lower-casing, digits to #, word types seen fewer than 5 times to UNK. Articles from the DUC period removed. Average input 31.3 words, average title 8.3 words."},
+   {"name": "DUC-2004", "role": "eval", "size": "500 news articles, 4 human reference summaries each, capped at 75 bytes", "split": "evaluation only; only first sentence of article used", "source": "NIST DUC, available by request", "preprocessing": "all system output cut off after 75 characters"},
+   {"name": "DUC-2003", "role": "dev", "size": "similarly sized to DUC-2004 (exact size not stated)", "split": "used for MERT tuning and for Table 3 ablations", "source": "NIST DUC", "preprocessing": null},
+   {"name": "Gigaword held-out test", "role": "eval", "size": "2000 sentences, 1 reference", "split": "randomly held out", "source": "Annotated Gigaword", "preprocessing": "systems tuned to produce output of average title length"}
+  ],
+  "models": [
+   {"name": "ABS (attention encoder enc3 + NNLM)", "role": "proposed", "params": null, "architecture": "feed-forward NNLM with attention-based bag-of-words style encoder", "init_from": null, "tokenizer": "PTB tokenization", "vocab": "110K input types, 69K headline types (types seen <5 times to UNK)", "layers": null, "hidden": "H = 400", "heads": null, "context": "C = 5 previous summary words", "other": {"embedding_dim_D": "200", "smoothing_window_Q": "2", "conv_layers_L": "3 (convolutional encoder)", "output_length": "fixed N known in advance"}},
+   {"name": "ABS+", "role": "proposed", "params": null, "architecture": "ABS plus 5-feature log-linear rescoring with MERT-tuned weights alpha", "init_from": "ABS (theta fixed)", "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "BoW and convolutional (TDNN) encoders", "role": "baseline", "params": null, "architecture": "ablation encoders enc1, enc2", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "MOSES+", "role": "baseline", "params": null, "architecture": "phrase-based SMT trained on Gigaword, with deletion rules, infinite distortion limit, MERT tuned to 75-byte ROUGE", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}},
+   {"name": "TOPIARY, PREFIX, COMPRESS, IR (BM25), W&L, REFERENCE", "role": "baseline", "params": null, "architecture": "see Section 7.2", "init_from": null, "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null, "other": {}}
+  ],
+  "training": {
+   "objective": "negative log-likelihood of summaries given input, with gold contexts",
+   "optimizer": "minibatch stochastic gradient descent",
+   "lr": "0.05",
+   "lr_schedule": "halve learning rate if validation log-likelihood does not improve for an epoch",
+   "warmup": null,
+   "batch_size": "64, shuffled, grouped by input length",
+   "steps": null,
+   "epochs": "best validation reached after 15 epochs",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "embedding tables renormalized after each epoch (Hinton et al. 2012)",
+   "hardware": "GPUs (type not stated), Torch",
+   "compute": "1000 minibatches with D=200, H=400 take 160 seconds",
+   "wall_clock": "around 4 days",
+   "seeds": null,
+   "other": {"MERT": "Z-MERT (Zaidan 2009) on DUC-2003 data, weights alpha in R^5"}
+  },
+  "inference": {
+   "decoding": "beam search with hypothesis recombination (Algorithm 1)",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": "fixed output length N; DUC outputs cut at 75 bytes",
+   "samples": "single deterministic output per item",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"beam_size_K": null, "alpha_features": "5: log p, unigram match, bigram match, trigram match, reordering indicator"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "ROUGE-1/2/L recall", "definition": "recall-oriented ROUGE (Lin 2004) with output cut at 75 bytes on DUC; Gigaword uses single reference", "unit": "ROUGE points", "higher_is_better": true},
+    {"name": "Perplexity", "definition": "language-model perplexity on Gigaword validation set, C=5", "unit": "perplexity", "higher_is_better": false},
+    {"name": "Ext. %", "definition": "percentage of summary tokens that also appear in the input", "unit": "%", "higher_is_better": null}
+   ],
+   "baselines": ["IR", "PREFIX", "COMPRESS", "W&L", "TOPIARY", "MOSES+", "REFERENCE"],
+   "protocol": "single run; significance by default ROUGE confidence level; no human evaluation"
+  },
+  "availability": {"code": "stated as to be openly available (Torch) with data pipeline", "weights": null, "data": "DUC by request; Gigaword licensed"},
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {"claim": "ABS+ gets the best DUC-2004 ROUGE-1, above TOPIARY and MOSES+.", "kind": "measured", "source": null, "metric": "ROUGE-1", "value": "28.18", "unit": "ROUGE", "baseline_value": "25.12 (TOPIARY); 26.50 (MOSES+)", "n": "500 sentences", "setup": "DUC-2004, 4 references, 75 bytes, models trained on Gigaword", "quote": null, "table": "Table 1, row ABS+, column DUC-2004 ROUGE-1", "note": null, "where": "Table 1"},
+  {"claim": "ABS+ is best on the Gigaword held-out test set on ROUGE-1.", "kind": "measured", "source": null, "metric": "ROUGE-1", "value": "31.00", "unit": "ROUGE", "baseline_value": "28.77 (MOSES+); 30.88 (ABS)", "n": "2000 sentences", "setup": "Gigaword held-out, 1 reference", "quote": null, "table": "Table 1, row ABS+, column Gigaword ROUGE-1", "note": null, "where": "Table 1"},
+  {"claim": "Attention encoder gives the lowest validation perplexity of all encoders.", "kind": "measured", "source": null, "metric": "perplexity", "value": "27.1", "unit": "perplexity", "baseline_value": "183.2 (KN 5-gram); 145.9 (NNLM, no encoder); 43.6 (BoW); 35.9 (conv)", "n": null, "setup": "Gigaword validation set, C=5", "quote": null, "table": "Table 2, row Attention-Based (ABS), column Perplexity", "note": null, "where": "Table 2"},
+  {"claim": "Beam search with the attention model outperforms greedy decoding.", "kind": "measured", "source": null, "metric": "ROUGE-1", "value": "28.48", "unit": "ROUGE", "baseline_value": "26.67 (greedy)", "n": null, "setup": "DUC-2003 development data, ABS+, abstractive constraint", "quote": null, "table": "Table 3, row Beam ABS+ Abs, column R-1", "note": null, "where": "Table 3"},
+  {"claim": "Training takes about four days over 15 epochs.", "kind": "measured", "source": null, "metric": "wall clock", "value": "15 epochs, around 4 days", "unit": null, "baseline_value": null, "n": null, "setup": "GPU, D=200, H=400", "quote": "Best valida- tion accuracy is reached after 15 epochs through the data, which requires around 4 days of training.", "table": null, "note": null, "where": "Section 7.3"},
+  {"claim": "Pure extractive PREFIX baseline is strong on ROUGE-1 for DUC-2004.", "kind": "measured", "source": null, "metric": "ROUGE-1", "value": "22.43", "unit": "ROUGE", "baseline_value": null, "n": null, "setup": "DUC-2004, first 75 characters", "quote": null, "table": "Table 1, row PREFIX, column DUC-2004 ROUGE-1", "note": null, "where": "Table 1"}
+ ],
+ "limits": [
+  "Authors concede the model is far from human performance and reorders words in syntactically incorrect ways, giving wrong subjects and attachment errors (Section 8).",
+  "Output length is fixed and known in advance; only the first sentence of each article is used.",
+  "Feed-forward NNLM with a fixed context window; RNN decoder left to future work.",
+  "Only ROUGE is reported, no human evaluation; ROUGE rewards extractive features, which ABS+ exploits.",
+  "Beam size, GPU type, validation set size and seeds are not stated.",
+  "Superseded by RNN and Transformer seq2seq and pointer-generator summarizers."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "abstractive (as defined)", "definition": "a system is abstractive if it tries to find the optimal sequence from the set Y of all sentences of length N", "where": "Section 2"}
+ ],
+ "lineage": [
+  {"work": "Neural machine translation by jointly learning to align and translate", "year": 2014, "arxiv": "1409.0473", "relation": "extends", "note": "attention encoder modeled on Bahdanau et al.", "quote": null},
+  {"work": "A neural probabilistic language model", "year": 2003, "arxiv": null, "relation": "uses-method", "note": "NNLM decoder from Bengio et al.", "quote": null},
+  {"work": "Headline generation based on statistical translation", "year": 2000, "arxiv": null, "relation": "extends", "note": "Banko et al.; scales from 25K to 4 million articles", "quote": null},
+  {"work": "Sequence to sequence learning with neural networks", "year": 2014, "arxiv": "1409.3215", "relation": "related", "note": "greedy decoding in neural MT", "quote": null},
+  {"work": "BBN/UMD at DUC-2004: Topiary", "year": 2004, "arxiv": null, "relation": "baseline", "note": "DUC-2004 winner", "quote": null},
+  {"work": "Moses", "year": 2007, "arxiv": null, "relation": "baseline", "note": "MOSES+ phrase-based MT baseline", "quote": null},
+  {"work": "Annotated Gigaword", "year": 2012, "arxiv": null, "relation": "uses-data", "note": "training data", "quote": null},
+  {"work": "DUC-2003/2004", "year": 2007, "arxiv": null, "relation": "uses-data", "note": "evaluation data", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Example output of the attention-based summarization (ABS) system. The heatmap represents a soft alignment between the input (right) and the generated summary (top).", "page": 1, "why": "Shows the learned soft alignment between input words and generated summary words."},
+  {"figure": "Fig 3", "caption": "(a) A network diagram for the NNLM decoder with additional encoder element. (b) A network diagram for the attention-based encoder enc3.", "page": 3, "why": "Architecture diagram of decoder and attention encoder."}
+ ],
+ "code": [],
+ "problems": ["Cache title reads 'A Neural Attention Model for Sentence Summarization' while the task named it 'Abstractive Sentence Summarization'.", "Table text flattened by extraction; values aligned by row order."]
+}

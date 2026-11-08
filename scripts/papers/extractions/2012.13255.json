@@ -1,0 +1,522 @@
+{
+ "schema": 1,
+ "key": "2012.13255",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/aghajanyan-2021-intrinsic-dimensionality-explains-effectiveness-language.pdf",
+ "bib": {
+  "title": "Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning",
+  "authors": [
+   "Armen Aghajanyan",
+   "Sonal Gupta",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Aghajanyan",
+  "year": 2021,
+  "venue": "ACL-IJCNLP 2021 (Proceedings of the 59th Annual Meeting of the ACL, pages 7319-7328)",
+  "arxiv": "2012.13255",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 38099,
+  "chars_total": 38099,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Why can pretrained language models with hundreds of millions of parameters be fine-tuned with plain gradient descent on only hundreds or thousands of labeled examples?",
+ "hypothesis": "Pre-training implicitly lowers the intrinsic dimension (minimal description length) of the average NLP task, and lower intrinsic dimension means better generalization.",
+ "contributions": [
+  "Common NLP tasks within pre-trained representations have an intrinsic dimension several orders of magnitude less than the full parameterization.",
+  "Interpret intrinsic dimension as the fine-tuning task's minimal description length within the pre-trained model; pre-training implicitly optimizes it over the average of NLP tasks.",
+  "Measure intrinsic dimension of many pre-trained models; larger models tend to have smaller intrinsic dimension.",
+  "Compression-based generalization bounds applied to the intrinsic-dimension framework give bounds independent of pre-trained parameter count."
+ ],
+ "method": {
+  "summary": "Fine-tunes a pretrained model only inside a d-dimensional random subspace (theta = theta0 + P(theta_d), Fastfood projection, optionally with per-layer scaling, SAID) and finds the smallest d reaching 90% of full fine-tuning accuracy (d90). Applied to BERT/RoBERTa on MRPC and QQP, to a RoBERTa-Base re-pretrained from scratch (checkpoints every 10k updates, six tasks), and to 18 public models on MRPC.",
+  "task": "intrinsic-dimension measurement of fine-tuning on sentence classification (GLUE and others)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "MRPC",
+    "role": "eval",
+    "size": "roughly 3700 training samples",
+    "split": null,
+    "source": "Dolan and Brockett 2005 (GLUE)",
+    "preprocessing": null
+   },
+   {
+    "name": "QQP",
+    "role": "eval",
+    "size": "roughly 363k samples",
+    "split": null,
+    "source": "Iyer et al. 2017 (GLUE)",
+    "preprocessing": null
+   },
+   {
+    "name": "Yelp Polarity, SST-2, MNLI, ANLI (all rounds R1+R2+R3)",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "Zhang et al. 2015; Socher et al. 2013; Williams et al. 2018; Nie et al. 2019",
+    "preprocessing": null
+   },
+   {
+    "name": "RoBERTa-Base pre-training data",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "inferred: the setting of Liu et al. (2019), which the paper says it replicates completely",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "BERT-Base / BERT-Large / RoBERTa-Base / RoBERTa-Large",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "transformer encoder",
+    "init_from": "public pre-trained checkpoints",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "RoBERTa-Large stated as 330,000,000 parameters in the Fastfood memory example"
+    }
+   },
+   {
+    "name": "RoBERTa-Base retrained",
+    "role": "proposed",
+    "params": null,
+    "architecture": "transformer encoder, MLM",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain_steps": "200k (vs 500k in Liu et al.)",
+     "batch_size": "1k (half of Liu et al.)"
+    }
+   },
+   {
+    "name": "BERT, RoBERTa, BART, Electra, Albert, XLNet, T5, XLM-R at several sizes (Fig 3 legend lists 18 models, T5-Small to T5-3B, Albert-B to XXL)",
+    "role": "evaluated",
+    "params": "between 1e8 and 1e9+ (read from Fig 3 axis)",
+    "architecture": "various",
+    "init_from": "HuggingFace Transformers checkpoints",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "fine-tuning (task loss) in subspace theta = theta0 + theta_d M, M = HG Pi HB (Fastfood); SAID: theta_i = theta0_i + lambda_i P(theta_{d-m})_i with m layer scales learned jointly; classification head also optimised inside the d parameters",
+   "optimizer": null,
+   "lr": "small search across four learning rates per training run (values not given)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "theta_d_init": "zero vector, so start equals the pre-trained model",
+    "sec4_sweep": "100 subspace trainings per dataset and model, d from 10 to 10000 on a log scale",
+    "sec5_1_d90_search": "binary search over d per checkpoint, min 100, max 4 million; reuse best learning rates from Sec 4 for d < 10000, fixed learning rate otherwise",
+    "d90_definition": "smallest d reaching 0.9 x full fine-tuning metric (e.g. 85% -> 76.5%)",
+    "full_solution": "fine-tune the checkpoint in the standard way",
+    "sec5_2": "same binary search on MRPC with extra small learning-rate searches per model",
+    "implementation": "HuggingFace Transformers",
+    "optimizer_note": "'standard SGD' mentioned in Sec 3; optimizer not otherwise named"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per (d, model, dataset); no seeds or repeats stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "d90",
+     "definition": "smallest subspace dimension d whose accuracy reaches 90% of full fine-tuning accuracy",
+     "unit": "parameters",
+     "higher_is_better": false
+    },
+    {
+     "name": "Accuracy",
+     "definition": "evaluation accuracy",
+     "unit": "fraction",
+     "higher_is_better": true
+    },
+    {
+     "name": "Relative generalization gap",
+     "definition": "(acc_train - acc_eval)/(1 - acc_eval), using the training accuracy that gives the best eval metric",
+     "unit": "%",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "full-parameter fine-tuning of the same model",
+    "Direct Intrinsic Dimension (DID, Li et al. 2018) vs SAID"
+   ],
+   "protocol": "d90 vs 90% of full fine-tune; no seeds, variance or significance reported"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "models.params (RoBERTa-Large)",
+    "quote": "d = 1000, 330, 000, 000 ∗1000 ∗4 bytes",
+    "where": "Sec 3, Background"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "RoBERTa-Large reaches 90% of full fine-tuning on MRPC with about 200 trainable parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": "d90",
+   "value": 207,
+   "unit": "parameters (d90, SAID)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-Large, MRPC, SAID, Fastfood projection",
+   "quote": "we can reach 90% of the full ﬁne-tuning solution of MRPC using roughly 200 parameters",
+   "table": "Table 1, row RoBERTa-Large, column SAID MRPC",
+   "note": "Text says roughly 800 for QQP; Table 1 gives 774",
+   "where": "Table 1; Sec 4.2"
+  },
+  {
+   "claim": "RoBERTa-Large d90 on QQP with SAID",
+   "kind": "measured",
+   "source": null,
+   "metric": "d90",
+   "value": 774,
+   "unit": "parameters (d90, SAID)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-Large, QQP (~363k examples), SAID",
+   "quote": null,
+   "table": "Table 1, row RoBERTa-Large, column SAID QQP",
+   "note": "Sec 4.2 text says 'roughly ... 800 parameters for QQP'",
+   "where": "Table 1"
+  },
+  {
+   "claim": "RoBERTa-Large d90 on MRPC with DID (layer-unaware)",
+   "kind": "measured",
+   "source": null,
+   "metric": "d90",
+   "value": 322,
+   "unit": "parameters (d90, DID)",
+   "baseline_value": 207,
+   "n": null,
+   "setup": "RoBERTa-Large, MRPC, DID",
+   "quote": null,
+   "table": "Table 1, row RoBERTa-Large, column DID MRPC",
+   "note": "baseline_value is the SAID figure",
+   "where": "Table 1"
+  },
+  {
+   "claim": "BERT-Base needs far more: d90 on QQP with SAID",
+   "kind": "measured",
+   "source": null,
+   "metric": "d90",
+   "value": 8030,
+   "unit": "parameters (d90, SAID)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT-Base, QQP, SAID",
+   "quote": null,
+   "table": "Table 1, row BERT-Base, column SAID QQP",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "SAID (layer-wise scaling) consistently improves over structure-unaware DID",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "BERT/RoBERTa base and large, MRPC and QQP, Table 1 (equal for QQP RoBERTa-Large 774/774)",
+   "quote": "we see that adding a notion of structure in the computation of intrinsic dimension is beneﬁcial",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Intrinsic dimension of RoBERTa-Base downstream tasks decreases monotonically through pre-training",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "RoBERTa-Base retrained from scratch for 200k updates, batch 1k; SAID d90 at each 10k-update checkpoint on MRPC, QQP, Yelp, SST-2, MNLI, ANLI; some early checkpoints have no d90",
+   "quote": "The in-trinsic dimensionality of RoBERTa-Base mono-",
+   "table": null,
+   "note": "Quote split by a line break in the PDF; claim is from Sec 5.1 and Fig 2",
+   "where": "Sec 5.1, Fig 2"
+  },
+  {
+   "claim": "Across 18 public pre-trained models, d90 on MRPC falls as parameter count rises, even across pre-training methods",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "SAID on MRPC; BERT, RoBERTa, BART, Electra, Albert, XLNet, T5, XLM-R at several sizes; same trend said to hold on other datasets but the per-dataset plots are not in the text",
+   "quote": "There is a strong general trend that as the number of pa-",
+   "table": null,
+   "note": "Paper points to an Appendix for per-dataset trends; the appendix in this PDF holds only proofs",
+   "where": "Sec 5.2, Fig 3"
+  },
+  {
+   "claim": "Within a parameter window pre-training method matters: RoBERTa dominates similar-size methods near 1e8 parameters",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRPC, SAID, Fig 3",
+   "quote": "in the regime of 108 pa-",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2"
+  },
+  {
+   "claim": "Lower d90 correlates with higher eval accuracy and lower relative generalization gap across RoBERTa pre-training checkpoints",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Six tasks, RoBERTa-Base checkpoints; correlation shown in Figs 4 and 5, no coefficient given",
+   "quote": "A lower intrinsic dimension is strongly",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.3"
+  },
+  {
+   "claim": "Generalization bound L0(f) <= L0hat(f) + O(sqrt(d/m)) independent of full parameter count D",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Models trained in the intrinsic subspace only (DID/SAID are (0,S)-compressible with the seed and theta0 as helper string); extension of Arora et al. 2018; parameters quantised to r discrete states",
+   "quote": "This generalization bound is independent of the underlying parameter count (D) of the pre-trained",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.4, App A.1"
+  },
+  {
+   "claim": "A task can be stored as d+1 numbers (theta_d plus a random seed) on top of the pre-trained weights",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "MRPC with RoBERTa-Large, SAID, ~200 parameters",
+   "quote": "we can represent arbitrary NLP",
+   "table": null,
+   "note": "Text: 'less than a kilobyte' to encode MRPC",
+   "where": "Sec 5"
+  }
+ ],
+ "limits": [
+  "d90 is an upper bound from random Fastfood projections; the authors say the true intrinsic dimension is likely much lower.",
+  "The generalization bound applies only to models trained in the intrinsic subspace; the authors say it is not shown that standard SGD optimises in this space.",
+  "Fixed-method size sweep (same pre-training, varying size) was infeasible; the size trend mixes pre-training methods.",
+  "Only sentence-classification tasks; no generation tasks, no models above T5-3B.",
+  "Optimizer, batch size, steps, learning-rate values, seeds and variance are not reported; no code link.",
+  "Per-dataset parameter-count trends are said to be in the Appendix, which in this PDF contains only the proof.",
+  "Fig 2 is missing d90 points for checkpoints where full fine-tuning stayed at majority-class accuracy or SAID was unstable.",
+  "Correlations between d90 and generalization are shown in plots only, with no statistics."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "intrinsic dimension (d90)",
+   "definition": "the smallest d for which subspace training reaches 90% of the full training metric",
+   "where": "Sec 3"
+  },
+  {
+   "term": "SAID (Structure-Aware Intrinsic Dimension)",
+   "definition": "theta_i = theta0_i + lambda_i P(theta_{d-m})_i, trading m subspace parameters for per-layer scales",
+   "where": "Sec 3, Eq 3"
+  },
+  {
+   "term": "DID (Direct Intrinsic Dimension)",
+   "definition": "the layer-unaware Fastfood subspace method of Eq 2",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Measuring the intrinsic dimension of objective landscapes (Li et al.)",
+   "year": 2018,
+   "arxiv": "1804.08838",
+   "relation": "extends",
+   "note": "Method origin; this paper applies it to pre-trained LMs and adds SAID",
+   "quote": null
+  },
+  {
+   "work": "Fastfood (Le, Sarlos, Smola)",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Random projection used for tractable subspace",
+   "quote": null
+  },
+  {
+   "work": "Stronger generalization bounds for deep nets via a compression approach (Arora et al.)",
+   "year": 2018,
+   "arxiv": "1802.05296",
+   "relation": "extends",
+   "note": "Compression bound used for Theorem 1",
+   "quote": null
+  },
+  {
+   "work": "Parameter-efficient transfer learning for NLP (Houlsby et al.)",
+   "year": 2019,
+   "arxiv": "1902.00751",
+   "relation": "related",
+   "note": "Adapters tune a few percent of parameters",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "Pre-training setup replicated for the trajectory study",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "evaluates",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "GLUE (Wang et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "MRPC, QQP",
+   "quote": null
+  },
+  {
+   "work": "ANLI (Nie et al.)",
+   "year": 2019,
+   "arxiv": "1910.14599",
+   "relation": "uses-data",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Muppet (Aghajanyan et al.)",
+   "year": 2021,
+   "arxiv": "2101.11038",
+   "relation": "related",
+   "note": "Same authors, fine-tuning generalization",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Evaluation accuracy on two datasets and four models across a range of dimensions d for the DID method.",
+   "page": 4,
+   "why": "Shows accuracy rising to the 90% line at d in the hundreds to thousands"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Every 10k updates of RoBERTa-Base that we trained from scratch, we compute d90 for six datasets.",
+   "page": 5,
+   "why": "d90 falling during pre-training, easy tasks lower"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "We calculate the intrinsic dimension for a large set of pre-trained models using the SAID method on the MRPC dataset.",
+   "page": 6,
+   "why": "d90 versus parameter count across 18 models"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "The evaluation accuracy of six datasets across various intrinsic dimensionalities.",
+   "page": 6,
+   "why": "Lower d90, higher eval accuracy"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "The intrinsic dimension and the respective relative generalization gap across a set of varied tasks.",
+   "page": 7,
+   "why": "Lower d90, smaller generalization gap"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 3",
+   "snippet": "θD = θD0 + θd M,  M = HGΠHB",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 3, Sec 3",
+   "snippet": "θDi = θD0,i + λi P(θd−m)i",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Reference list repeats Clark et al. 2019 twice (a/b same title).",
+  "Appendix lacks the per-dataset parameter-count plots the text refers to."
+ ]
+}

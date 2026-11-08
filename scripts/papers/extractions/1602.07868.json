@@ -1,0 +1,554 @@
+{
+ "schema": 1,
+ "key": "1602.07868",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/salimans-2016-weight-normalization.pdf",
+ "bib": {
+  "title": "Weight Normalization: A Simple Reparameterization to Accelerate Training of Deep Neural Networks",
+  "authors": [
+   "Tim Salimans",
+   "Diederik P. Kingma"
+  ],
+  "first_author": "Salimans",
+  "year": 2016,
+  "venue": "preprint",
+  "arxiv": "1602.07868",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 35417,
+  "chars_total": 35417,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can reparameterizing each weight vector into a scale and a direction speed up SGD convergence, with less cost and noise than batch normalization?",
+ "hypothesis": "Decoupling weight-vector length from direction improves the conditioning of the optimization problem and speeds up convergence, giving much of the benefit of batch normalization without minibatch dependence.",
+ "contributions": [
+  "Weight normalization: w = (g/||v||) v, SGD on v and g",
+  "Data-dependent initialization of g and b from one minibatch",
+  "Mean-only batch normalization, combined with weight normalization",
+  "Experiments on CIFAR-10 classification, convolutional VAE, DRAW and DQN"
+ ],
+ "method": {
+  "summary": "Each neuron weight vector w is reparameterized as w = g v/||v||, and SGD runs on v and g. g and b are initialized from one minibatch so pre-activations have zero mean and unit variance. Tested on four models: CIFAR-10 CNN, convolutional VAE (MNIST, CIFAR-10), DRAW (MNIST) and DQN (Atari).",
+  "task": "supervised image classification, generative modelling, deep reinforcement learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIFAR-10",
+    "role": "both",
+    "size": null,
+    "split": "10000 examples held out to tune the Gaussian noise std; test set reported",
+    "source": "Krizhevsky and Hinton 2009",
+    "preprocessing": "ZCA whitening, no data augmentation"
+   },
+   {
+    "name": "MNIST",
+    "role": "both",
+    "size": null,
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "Atari Learning Environment (Breakout, Enduro, Seaquest, Space Invaders)",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Bellemare et al. 2013",
+    "preprocessing": "follows Mnih et al. as closely as possible"
+   }
+  ],
+  "models": [
+   {
+    "name": "CIFAR-10 CNN (ConvPool-CNN-C variant)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "conv net, 3x3 convs with leaky ReLU, 96 then 192 channels, global average pool, softmax",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "changes_from_ConvPool-CNN-C": "first dropout layer replaced by Gaussian noise (sigma 0.15 in Table 1), last hidden layer expanded from 10 to 192 units, 2x2 max-pool instead of 3x3",
+     "dropout": "p=0.5 after each pooling"
+    }
+   },
+   {
+    "name": "Convolutional VAE with ResNet blocks",
+    "role": "proposed",
+    "params": null,
+    "architecture": "MNIST encoder: 3 sequences of two ResNet blocks (16, 32, 32 feature maps), 2x subsampling by 2x2 stride after first two, then fully connected layer with 450 units; decoder mirrors; auto-regressive variational inference; CIFAR-10 version has multiple intermediate stochastic layers (details deferred to manuscript in preparation)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DRAW",
+    "role": "proposed",
+    "params": null,
+    "architecture": "VAE with LSTM encoder and decoder; weight normalization applied to all weight vectors",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "implementation": "Theano, github.com/jbornschein/draw"
+    }
+   },
+   {
+    "name": "DQN",
+    "role": "proposed",
+    "params": null,
+    "architecture": "Deep Q-Network of Mnih et al. 2015, Python/Theano/Lasagne reimplementation",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "implementation": "adapted from github.com/spragunr/deep_q_rl"
+    }
+   }
+  ],
+  "training": {
+   "objective": "CIFAR-10: classification error; VAE and DRAW: lower bound on marginal likelihood; DQN: Q-learning",
+   "optimizer": "CIFAR-10: Adam, momentum 0.9 for first 100 epochs then 0.5; VAE: Adamax; DQN: Adamax with momentum 0.5",
+   "lr": "CIFAR-10: best of {0.0003, 0.001, 0.003, 0.01} (Fig 1: 0.003 for WN/BN/mean-only BN, 0.0003 for normal); VAE: alpha=0.002; DQN: best of {0.0001, 0.0003, 0.001, 0.003}, 0.0003 with WN, 0.0001 normal",
+   "lr_schedule": "CIFAR-10: fixed for first 100 epochs, linearly decayed to zero over last 100",
+   "warmup": null,
+   "batch_size": "CIFAR-10: 100; DQN: 64",
+   "steps": null,
+   "epochs": "CIFAR-10: 200; VAE MNIST plotted to ~300 and CIFAR-10 to ~450; DRAW: 100 (not converged); DQN: 200 plotted",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "CIFAR-10: p=0.5 (Table 1)",
+   "regularisation": "Gaussian input noise sigma=0.15 (CIFAR-10); Polyak averaging as exponential moving average over about 10 epochs (VAE)",
+   "hardware": "DQN: Amazon EC2 g2.2xlarge GPU instance",
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "VAE MNIST: multiple random seeds (number not given), standard error bars",
+   "other": {
+    "init": "v ~ Normal(0, 0.05); g and b set from one minibatch: g=1/sigma[t], b=-mu[t]/sigma[t]",
+    "log_scale_g": "g=e^s tried; test performance not significantly different, optimization slightly slower",
+    "noise_std_tuning": "only hyperparameter actively tuned, on 10000 holdout, with standard parameterization"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "mean_only_BN_test_time": "running average of minibatch mean substituted at test time"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "CIFAR-10 test error",
+     "definition": "classification error on the test set",
+     "unit": "%",
+     "higher_is_better": false
+    },
+    {
+     "name": "marginal likelihood lower bound",
+     "definition": "test-set bound for VAE and DRAW",
+     "unit": "nats",
+     "higher_is_better": true
+    },
+    {
+     "name": "DQN max evaluation score",
+     "definition": "maximum evaluation score during training",
+     "unit": "game score",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "normal parameterization",
+    "batch normalization",
+    "mean-only batch normalization",
+    "published CIFAR-10 nets: Maxout, Network in Network, Deeply Supervised, ConvPool-CNN-C, ALL-CNN-C",
+    "Mnih et al. DQN scores"
+   ],
+   "protocol": "CIFAR-10: single run per parameterization, best learning rate chosen from grid; VAE MNIST has seed error bars; others single curves. No significance tests."
+  },
+  "availability": {
+   "code": "Theano reference implementation at https://github.com/TimSalimans/weight_norm",
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "For each case we pick the optimal learning rate in {0.0003, 0.001, 0.003, 0.01}.",
+    "where": "5.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Weight norm plus mean-only batch norm gives the lowest CIFAR-10 test error, 7.31%, claimed state of the art without augmentation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 7.31,
+   "unit": "%",
+   "baseline_value": 8.05,
+   "n": null,
+   "setup": "CIFAR-10 test set, no data augmentation, ConvPool-CNN-C-based CNN, Adam, 200 epochs, batch 100, best lr in {0.0003,0.001,0.003,0.01}",
+   "quote": "has the best performance at 7.31% test error",
+   "table": null,
+   "note": "baseline_value is full batch norm",
+   "where": "5.1, Fig 2"
+  },
+  {
+   "claim": "Full batch norm reaches 8.05% test error on CIFAR-10.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.05,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test set, no data augmentation, ConvPool-CNN-C-based CNN, Adam, 200 epochs, batch 100, best lr in {0.0003,0.001,0.003,0.01}",
+   "quote": null,
+   "table": "Fig 2 (Table 2), row our CNN, batch norm.",
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Weight norm alone gives 8.46% test error, about the same as the normal parameterization (8.43%).",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.46,
+   "unit": "%",
+   "baseline_value": 8.43,
+   "n": null,
+   "setup": "CIFAR-10 test set, no data augmentation, ConvPool-CNN-C-based CNN, Adam, 200 epochs, batch 100, best lr in {0.0003,0.001,0.003,0.01}",
+   "quote": null,
+   "table": "Fig 2 (Table 2), row our CNN, weight norm.",
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Mean-only batch norm with the normal parameterization gives 8.52% test error.",
+   "kind": "measured",
+   "source": null,
+   "metric": "test error",
+   "value": 8.52,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 test set, no data augmentation, ConvPool-CNN-C-based CNN, Adam, 200 epochs, batch 100, best lr in {0.0003,0.001,0.003,0.01}",
+   "quote": null,
+   "table": "Fig 2 (Table 2), row our CNN, mean-only B.N.",
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Batch norm training was about 16% slower than the standard parameterization; weight norm was not noticeably slower.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training time overhead",
+   "value": 16,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10 CNN, authors' Theano implementation",
+   "quote": "was about 16% slower compared to the standard parameterization",
+   "table": null,
+   "note": null,
+   "where": "5.1"
+  },
+  {
+   "claim": "Weight norm and batch norm both speed up CIFAR-10 training error reduction versus the normal parameterization (Fig 1), batch norm slightly faster per epoch early on.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "CIFAR-10, Adam lr 0.003 for WN/BN, 0.0003 normal",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 1"
+  },
+  {
+   "claim": "DQN Space Invaders max score is 2,179 with weight norm versus 1,779 normal and 1,975 for Mnih et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max eval score",
+   "value": "2,179",
+   "unit": "game score",
+   "baseline_value": "1,779",
+   "n": null,
+   "setup": "DQN, Adamax, batch 64, lr 0.0003 WN / 0.0001 normal",
+   "quote": null,
+   "table": "Figure 6, row Space Invaders, column weightnorm",
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "DQN Enduro max score is 1,448 with weight norm versus 1,250 normal and 302 for Mnih et al.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max eval score",
+   "value": "1,448",
+   "unit": "game score",
+   "baseline_value": "1,250",
+   "n": null,
+   "setup": "DQN, as above",
+   "quote": null,
+   "table": "Figure 6, row Enduro, column weightnorm",
+   "note": "authors suggest the gap to Mnih may be due to no play-time limit",
+   "where": "5.4"
+  },
+  {
+   "claim": "DQN Breakout: 403 with weight norm versus 410 normal (no gain).",
+   "kind": "measured",
+   "source": null,
+   "metric": "max eval score",
+   "value": 403,
+   "unit": "game score",
+   "baseline_value": 410,
+   "n": null,
+   "setup": "DQN, as above",
+   "quote": null,
+   "table": "Figure 6, row Breakout, column weightnorm",
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "DQN Seaquest: 7,375 with weight norm versus 7,188 normal.",
+   "kind": "measured",
+   "source": null,
+   "metric": "max eval score",
+   "value": "7,375",
+   "unit": "game score",
+   "baseline_value": "7,188",
+   "n": null,
+   "setup": "DQN, as above",
+   "quote": null,
+   "table": "Figure 6, row Seaquest, column weightnorm",
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Batch norm could not be made to work for DQN without an impractically large minibatch; weight norm worked.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DQN on Atari",
+   "quote": "We were not able to get batch normalization to work for DQN without using an impractically large minibatch size.",
+   "table": null,
+   "note": null,
+   "where": "5.4"
+  },
+  {
+   "claim": "Weight norm gives lower variance and a better optimum for the convolutional VAE on MNIST and CIFAR-10 (read from Fig 3, no number given).",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Convolutional VAE, Adamax alpha 0.002, seed error bars on MNIST",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 3, 5.2"
+  },
+  {
+   "claim": "Weight norm speeds up DRAW convergence on MNIST without retuning init or learning rate; 100 epochs not enough for convergence.",
+   "kind": "measured",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "DRAW, MNIST, 100 epochs",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "Fig 4, 5.3"
+  },
+  {
+   "claim": "Weight norm makes training robust to the learning rate because the norm of v grows until the effective rate is suitable.",
+   "kind": "claim",
+   "source": null,
+   "metric": "none",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Argument in section 2.1, no dedicated experiment",
+   "quote": null,
+   "table": null,
+   "note": null,
+   "where": "2.1"
+  }
+ ],
+ "limits": [
+  "Single run per setting on CIFAR-10, no seeds or significance tests reported",
+  "Explanations for the mean-only BN gain (kurtosis of noise) are hypotheses, not tested",
+  "Data-dependent init cannot be used for RNN/LSTM; standard init used there",
+  "Norm-growth analysis strictly holds only for plain SGD, not Adam or momentum",
+  "No ImageNet or large-scale language results; no learning-rate robustness experiment shown",
+  "CVAE CIFAR-10 architecture deferred to an unpublished manuscript",
+  "DQN comparison to Mnih confounded by reimplementation differences"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "weight normalization",
+   "definition": "reparameterization of the weight vectors that decouples their length from their direction: w = g/||v|| v",
+   "where": "2"
+  },
+  {
+   "term": "mean-only batch normalization",
+   "definition": "subtract the minibatch mean of the pre-activation but do not divide by the standard deviation",
+   "where": "4"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Batch normalization (Ioffe and Szegedy)",
+   "year": 2015,
+   "arxiv": "1502.03167",
+   "relation": "extends",
+   "note": "inspiration; WN is a cheaper, deterministic approximation; also a baseline",
+   "quote": null
+  },
+  {
+   "work": "Natural gradient methods KFAC, FANG, PRONG",
+   "year": 2015,
+   "arxiv": "1503.05671",
+   "relation": "related",
+   "note": "alternative ways to condition the gradient",
+   "quote": null
+  },
+  {
+   "work": "Raiko, Valpola, LeCun, Deep learning made easier by linear transformations in perceptrons",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "related",
+   "note": "output transformation to whiten the gradient",
+   "quote": null
+  },
+  {
+   "work": "Srebro and Shraibman, Rank, trace-norm and max-norm",
+   "year": 2005,
+   "arxiv": null,
+   "relation": "related",
+   "note": "earlier weight normalization applied after each SGD step",
+   "quote": null
+  },
+  {
+   "work": "Adam",
+   "year": 2014,
+   "arxiv": "1412.6980",
+   "relation": "uses-method",
+   "note": "optimizer (Adamax for VAE/DQN)",
+   "quote": null
+  },
+  {
+   "work": "Striving for simplicity: the all convolutional net (Springenberg et al.)",
+   "year": 2015,
+   "arxiv": "1412.6806",
+   "relation": "baseline",
+   "note": "CIFAR-10 architecture base",
+   "quote": null
+  },
+  {
+   "work": "DRAW (Gregor et al.)",
+   "year": 2015,
+   "arxiv": "1502.04623",
+   "relation": "evaluates",
+   "note": "model tested",
+   "quote": null
+  },
+  {
+   "work": "DQN (Mnih et al.)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "model tested, Nature",
+   "quote": null
+  },
+  {
+   "work": "Mishkin and Matas, All you need is a good init; Krahenbuhl et al. Data-dependent initializations",
+   "year": 2015,
+   "arxiv": "1511.06422",
+   "relation": "related",
+   "note": "independent data-based initialization",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Training error for CIFAR-10 using different network parameterizations.",
+   "page": 6,
+   "why": "Shows WN and BN converge faster than the normal parameterization."
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Classification results on CIFAR-10 without data augmentation.",
+   "page": 6,
+   "why": "Test-error table comparing parameterizations and published models."
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2",
+   "snippet": "w = g/||v|| v",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 3",
+   "snippet": "grad_g L = grad_w L . v/||v||,  grad_v L = g/||v|| grad_w L - g grad_g L/||v||^2 v",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 6",
+   "snippet": "g <- 1/sigma[t],  b <- -mu[t]/sigma[t]",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table 2 is captioned Figure 2 and DQN table Figure 6 in the text; text cites 'table 6'",
+  "Math symbols garbled in extracted text; equations reconstructed"
+ ]
+}

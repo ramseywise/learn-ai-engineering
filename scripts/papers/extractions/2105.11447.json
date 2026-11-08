@@ -1,0 +1,629 @@
+{
+ "schema": 1,
+ "key": "2105.11447",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/perez-2021-true-few-shot-learning-language.pdf",
+ "bib": {
+  "title": "True Few-Shot Learning with Language Models",
+  "authors": [
+   "Ethan Perez",
+   "Douwe Kiela",
+   "Kyunghyun Cho"
+  ],
+  "first_author": "Perez",
+  "year": 2021,
+  "venue": "preprint",
+  "arxiv": "2105.11447",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 78908,
+  "chars_total": 78908,
+  "engine": "pymupdf",
+  "skipped": "reference list skimmed only"
+ },
+ "type": "empirical",
+ "question": "How well do few-shot LMs perform when prompts and hyperparameters must be chosen using only the few training examples, with no held-out validation set?",
+ "hypothesis": "Prior few-shot results overestimate LM ability because prompts and hyperparameters were tuned on many held-out examples; true few-shot selection will do much worse.",
+ "contributions": [
+  "Disambiguate three few-shot settings: multi-distribution, tuned, and true few-shot learning",
+  "Evaluate cross-validation and minimum description length for prompt selection on 9 LMs and hyperparameter selection for ADAPET",
+  "Recommendations for reporting true few-shot learning"
+ ],
+ "method": {
+  "summary": "Candidate prompts (LAMA, RTE, CB, WiC) or hyperparameters (ADAPET on SuperGLUE) are scored with leave-one-out CV or MDL online coding using only N training examples, and the test accuracy of the selected option is compared with the worst, mean (random) and best (held-out-selected) option.",
+  "task": "model selection (prompt and hyperparameter choice) for few-shot learning",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LAMA TREx (LAMA-UHN subset)",
+    "role": "eval",
+    "size": "41 relations, up to 1k examples each",
+    "split": "N=5 training examples per relation (also 10,15,20,30,40); test = one example per permutation, 120 for N=5, excluding training examples",
+    "source": "Petroni et al. 2019; UHN filter Poerner et al. 2020; CC 4.0",
+    "preprocessing": "Answer is top-predicted token out of 20k candidates; 5 runs with different training sets"
+   },
+   {
+    "name": "RTE, CB, WiC",
+    "role": "eval",
+    "size": "full validation set for held-out accuracy",
+    "split": "5 training examples sampled from task train set with at least one per class; 5 train sets",
+    "source": "SuperGLUE",
+    "preprocessing": null
+   },
+   {
+    "name": "SuperGLUE (BoolQ, CB, COPA, RTE, WiC, WSC, MultiRC, ReCoRD)",
+    "role": "both",
+    "size": "32 examples per task for training",
+    "split": "FewGLUE 32-example subset plus 3 random 32-example subsets (four train sets); validation set for eval",
+    "source": "Wang et al. 2019; FewGLUE Schick and Schutze",
+    "preprocessing": "first ADAPET prompt used for every task"
+   }
+  ],
+  "models": [
+   {
+    "name": "GPT-3 (175B, 13B, 6.7B, 2.7B via OpenAI API)",
+    "role": "evaluated",
+    "params": "175B, 13B, 6.7B, 2.7B",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "2048 tokens (stated for GPT-based models)",
+    "other": {
+     "note": "inferred sizes: assumed the four largest in Brown et al. since OpenAI does not disclose API model sizes"
+    }
+   },
+   {
+    "name": "GPT-2 (1.5B, 782M, 345M, 117M)",
+    "role": "evaluated",
+    "params": "1.5B, 782M, 345M, 117M",
+    "architecture": "decoder-only LM",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "text says 782M, figure legend says 762M"
+    }
+   },
+   {
+    "name": "DistilGPT-2",
+    "role": "evaluated",
+    "params": "82M",
+    "architecture": "distilled GPT-2 117M",
+    "init_from": "GPT-2 117M",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ADAPET",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "ALBERT-xxlarge-v2 finetuned with label-discrimination and masked-LM objectives",
+    "init_from": "ALBERT xxlarge-v2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "ADAPET: classify each label as correct or incorrect given input, plus predict randomly masked input tokens given label (GPT models: no training, in-context only)",
+   "optimizer": null,
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "16 examples",
+   "steps": "T = 1000 gradient updates; checkpoint chosen from {250, 500, 750, 1000}",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": "single AMD MI50 GPU (32GB) for up to 12 hours per model and hyperparameter setting",
+   "compute": "GPT-3 API cost $2826.73 total; GPT-2 experiments at most 8 hours on one MI50",
+   "wall_clock": "up to 12 hours per ADAPET setting",
+   "seeds": "4 train sets (FewGLUE + 3 random 32-example subsets) for ADAPET; 5 train sets for prompt experiments",
+   "other": {
+    "masking_fraction_grid": "M in {0.075, 0.10, 0.105, 0.15}; 16 (T,M) combinations",
+    "cv_mdl_folds_adapet": "K = 8 folds; MDL uses 16 examples in the first fold and 2 per fold for 8 more; first fold scored with uniform distribution",
+    "final_model": "retrained on full dataset with chosen T and M",
+    "label_smoothing_eps": "1e-6 for WSC and ReCoRD probabilities"
+   }
+  },
+  "inference": {
+   "decoding": "in-context completion; class probabilities by softmax over label-name logits",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "5 runs with different training sets; expectation over N! = 120 example orders (N=5) or 120 sampled permutations (N>=10)",
+   "prompting": "5-shot (LAMA, RTE, CB, WiC); up to 16 candidate prompts per LAMA relation (mean 12); 3 prompts RTE/CB, 4 prompts WiC",
+   "retrieval": null,
+   "parameters": {
+    "cv": "leave-one-out (K = N) for prompt experiments; K=8 for ADAPET",
+    "mdl": "online coding, K = N",
+    "loss": "negative log-likelihood of label given input",
+    "conservative_alpha": "alpha in {1,2,3} for CV_alpha, tested on GPT-3 175B only",
+    "interpolated_beta": "beta = 1 for MDL_beta",
+    "N_values": "5,10,15,20,30,40 (models <=6.7B only)"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "LAMA accuracy",
+     "definition": "top-predicted token (of 20k candidates) matches a true answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Relative test accuracy of chosen prompt",
+     "definition": "average prompt scaled to 0, best prompt scaled to 100",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy at choosing top prompt",
+     "definition": "how often the criterion picks the prompt with highest test accuracy",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "SuperGLUE per-task metrics",
+     "definition": "Acc, Acc/F1, EM/F1 as per task; Avg over tasks",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "worst prompt/hyperparameters",
+    "mean (random selection)",
+    "best chosen with held-out accuracy (prior work)",
+    "ADAPET, iPET, PET, GPT-3 published SuperGLUE numbers"
+   ],
+   "protocol": "mean and std. err. over 5 train sets (prompt experiments) or mean std dev over four 32-shot train sets (ADAPET); no significance test stated"
+  },
+  "availability": {
+   "code": "https://github.com/ethanjperez/true_few_shot",
+   "weights": null,
+   "data": "LAMA, LPAQA, SuperGLUE public"
+  },
+  "prompts": [
+   {
+    "purpose": "RTE prompt 1 (from GPT-3)",
+    "text": "His family has steadfastly denied the charges.\nquestion: The charges were denied by his family. True or False?\nanswer: True  (labels: True, False)",
+    "where": "Appendix Table 2"
+   },
+   {
+    "purpose": "RTE prompt 2",
+    "text": "The charges were denied by his family?\nHis family has steadfastly denied the charges.\nTherefore, the answer is yes.  (labels: yes, no)",
+    "where": "Appendix Table 2"
+   },
+   {
+    "purpose": "RTE prompt 3",
+    "text": "\"The charges were denied by his family\"?\n\"His family has steadfastly denied the charges.\", so the answer is yes.  (labels: yes, no)",
+    "where": "Appendix Table 2"
+   },
+   {
+    "purpose": "WiC prompt 1 (from GPT-3)",
+    "text": "Room and board.\nHe nailed boards across the windows.\nquestion: Is the word 'board' used in the same way in the two sentences above?\nanswer: no  (labels: no, yes)",
+    "where": "Appendix Table 2"
+   },
+   {
+    "purpose": "CB and WiC other prompts",
+    "text": "CB and WiC prompts 2-3 (and WiC prompt 4 with sense labels 2a, 1b) follow Schick and Schutze templates; see Table 2 for full text",
+    "where": "Appendix Table 2"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "models.GPT-2.params",
+    "quote": "GPT-2 [1.5B, 782M, 345M, 117M models; 2]",
+    "where": "Sec 3.1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "CV and MDL prompt selection underperform the best held-out-selected prompt by 5-7% absolute on LAMA-UHN on average.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy gap to best prompt",
+   "value": "5-7",
+   "unit": "% absolute",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, 9 LMs from 82M to 175B, 5-shot, 5 runs",
+   "quote": "Prompts chosen by CV and MDL alike underperform the best prompt (chosen using held-out performance) by 5-7% absolute on average.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "CV/MDL close only 20-40% of the gap between average and best prompts.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "20-40",
+   "unit": "% of gap",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, 9 LMs, N=5",
+   "quote": "but only close the gap between the average and best prompts by 20-40%, as shown in Fig. 1 (right).",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "For GPT-3 175B, CV picks the best prompt only 21% of the time vs 9% for chance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy at choosing top prompt",
+   "value": "21",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, GPT-3 175B, CV, N=5",
+   "quote": "only 21% accuracy for CV vs. 9% for random chance",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.2"
+  },
+  {
+   "claim": "For models 0.1B-6.7B the chance CV-chosen prompt beats the average prompt is only about 56% (MDL about 55%).",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "56",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, CV, N=5",
+   "quote": "the chance of improving over the average, randomly-chosen prompt is only ∼56% for CV and ∼55% for MDL",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "There is about a 27% chance selection causes an accuracy drop of about 13%.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "27",
+   "unit": "% chance",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, all model sizes, CV and MDL",
+   "quote": "there is a ∼27% chance that prompt selection causes an accuracy drop of ∼13% for all model sizes and CV/MDL alike",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "For GPT-3 175B, selected prompts are 40% worse than average 5% of the time.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "5",
+   "unit": "% of the time",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA-UHN, GPT-3 175B",
+   "quote": "e.g., 40% worse, 5% of the time",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3"
+  },
+  {
+   "claim": "Conservative CV_alpha does not help: CV beats the average prompt 50% of the time vs 51% for alpha=2.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "51",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 175B, alpha in {1,2,3}",
+   "quote": "CV outperforms the average prompt 50% of the time vs. 51% for α = 2",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.4"
+  },
+  {
+   "claim": "Raising N from 5 to 40 examples gives no consistent improvement in prompt selection.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "40",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA, models up to 6.7B, N in {5,10,15,20,30,40}",
+   "quote": "Even in higher-data regimes (40 examples), CV/MDL struggle to choose effective prompts",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.5"
+  },
+  {
+   "claim": "More compute does not help: accuracy plateaus after 1 forward pass for MDL and N for CV.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "1",
+   "unit": "forward pass (MDL)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "GPT-3 6.7B, N in {5,15,30}",
+   "quote": "test accuracy roughly plateaus after one forward pass for MDL and N forward passes for CV",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.6"
+  },
+  {
+   "claim": "CV gives a 20% chance of a 15% accuracy drop on CB for GPT-3 175B.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "15",
+   "unit": "% accuracy drop",
+   "baseline_value": null,
+   "n": null,
+   "setup": "CB, 5 training examples, CV",
+   "quote": "For CB, there is a 20% change of a 15% accuracy drop for GPT-3 175B.",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.8"
+  },
+  {
+   "claim": "True few-shot hyperparameter selection drops ADAPET by 2-10% across 8 tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2-10",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ADAPET, SuperGLUE, 32-shot",
+   "quote": "true few-shot selection causes performance to drop by 2-10% across 8 tasks for ADAPET [12]",
+   "table": null,
+   "note": null,
+   "where": "Sec 1"
+  },
+  {
+   "claim": "ADAPET SuperGLUE average with CV-chosen hyperparameters is 73.0 (MDL 73.4) vs mean 73.9 and best 77.2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "SuperGLUE avg",
+   "value": "73.0",
+   "unit": "avg score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ADAPET, SuperGLUE validation, four 32-shot train sets, 16 hyperparameter combinations",
+   "quote": null,
+   "table": "Table 1, row CV, column Avg",
+   "note": "Other rows: MDL 73.4, Mean 73.9, Best 77.2, Worst 69.4, ADAPET 77.3, iPET 76.8, PET 74.1, GPT-3 73.2",
+   "where": "Table 1"
+  },
+  {
+   "claim": "In the true few-shot setting ADAPET's average falls below PET/iPET.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "73.0",
+   "unit": "avg score",
+   "baseline_value": null,
+   "n": null,
+   "setup": "as above; CV 73.0 and MDL 73.4 vs iPET 76.8",
+   "quote": "the average SuperGLUE performance of ADAPET drops below that of earlier methods (PET and iPET)",
+   "table": null,
+   "note": "iPET 76.8 and PET 74.1 are reported numbers from Schick and Schutze in Table 1",
+   "where": "Sec 4 Results"
+  },
+  {
+   "claim": "CV needs more than 2-3k examples to pick better-than-average ADAPET hyperparameters on WiC and MultiRC.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2-3k",
+   "unit": "examples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ADAPET, WiC/MultiRC, CV",
+   "quote": "CV requires >2-3k examples to choose better-than-average hyperparameters",
+   "table": null,
+   "note": null,
+   "where": "Appendix C"
+  },
+  {
+   "claim": "Other criteria (Bayesian CV, MDL_beta, joint log-prob) also choose prompts near the random average.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "none",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "LAMA, same setup",
+   "quote": "all criteria choose prompts with a similar average accuracy, close to the average accuracy of randomly-chosen prompts",
+   "table": null,
+   "note": null,
+   "where": "Appendix A.4"
+  },
+  {
+   "claim": "GPT-3 experiments cost $2826.73 via the OpenAI API.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "2826.73",
+   "unit": "USD",
+   "baseline_value": null,
+   "n": null,
+   "setup": "all GPT-3 experiments",
+   "quote": "costing a total of $2826.73 for all experiments",
+   "table": null,
+   "note": null,
+   "where": "Appendix D.5"
+  }
+ ],
+ "limits": [
+  "Study not exhaustive; other criteria or heuristics might work (Sec 6)",
+  "Prompt experiments on LAMA and 3 classification tasks with GPT-family models up to 175B; N up to 40 because of the 2048-token context",
+  "GPT-3 sizes assumed (not disclosed by OpenAI)",
+  "Effects of selection with thousands of examples only preliminary (Appendix C)",
+  "Full-results Fig 6 task numbers read from plots only",
+  "Uses LM era of 2021 (GPT-3, GPT-2); instruction-tuned models not tested"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "true few-shot learning",
+   "definition": "choose a learning algorithm A with low expected loss using only a small training set Dtrain drawn from a single distribution",
+   "where": "Sec 2"
+  },
+  {
+   "term": "tuned few-shot learning",
+   "definition": "few-shot learning with a large validation set Dval used to tune the learning algorithm",
+   "where": "Sec 2"
+  },
+  {
+   "term": "multi-distribution few-shot learning",
+   "definition": "evaluates expected loss with many small train-validation splits drawn from many distinct distributions",
+   "where": "Sec 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Language models are few-shot learners (GPT-3)",
+   "year": 2020,
+   "arxiv": "2005.14165",
+   "relation": "evaluates",
+   "note": "GPT-3 models evaluated; its prompts used",
+   "quote": null
+  },
+  {
+   "work": "Improving and simplifying pattern exploiting training (ADAPET)",
+   "year": 2021,
+   "arxiv": "2103.11955",
+   "relation": "evaluates",
+   "note": "hyperparameter selection tested on ADAPET",
+   "quote": null
+  },
+  {
+   "work": "Exploiting cloze questions for few-shot text classification (PET)",
+   "year": 2020,
+   "arxiv": "2001.07676",
+   "relation": "baseline",
+   "note": "prompts and PET/iPET numbers",
+   "quote": null
+  },
+  {
+   "work": "It's not just size that matters (iPET)",
+   "year": 2020,
+   "arxiv": "2009.07118",
+   "relation": "baseline",
+   "note": "prompts and baselines",
+   "quote": null
+  },
+  {
+   "work": "Language models as knowledge bases? (LAMA)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "LAMA TREx benchmark",
+   "quote": null
+  },
+  {
+   "work": "How can we know what language models know? (LPAQA)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "candidate prompts",
+   "quote": null
+  },
+  {
+   "work": "Rissanen data analysis (Perez, Kiela, Cho)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "MDL online coding",
+   "quote": null
+  },
+  {
+   "work": "The description length of deep learning models (Blier and Ollivier)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "online coding for MDL",
+   "quote": null
+  },
+  {
+   "work": "Calibrate before use (Zhao et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "prompt sensitivity",
+   "quote": null
+  },
+  {
+   "work": "Fantastically ordered prompts (Lu et al.)",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "order sensitivity",
+   "quote": null
+  },
+  {
+   "work": "Making pre-trained language models better few-shot learners (Gao et al.)",
+   "year": 2020,
+   "arxiv": "2012.15723",
+   "relation": "contradicts",
+   "note": "multi-distribution-style hyperparameter choice, comparisons",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "LAMA-UHN accuracy of CV/MDL-chosen prompts vs worst, average and best prompt; right: gain relative to best",
+   "page": 5,
+   "why": "Shows the headline result: selected prompts sit near the random mean across 3 orders of magnitude in size"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "CV/MDL accuracy at choosing the best prompt; chance of accuracy gains over average prompt",
+   "page": 6,
+   "why": "Shows the long-tailed downside risk"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "ADAPET results on SuperGLUE validation with CV/MDL-chosen early stopping and masking rate",
+   "page": 10,
+   "why": "Shows ADAPET falling below PET/iPET without validation tuning"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Table 1 and some figure data extracted as separated lines; table values read from the text dump",
+  "GPT-2 size printed 782M in text and 762M in figure legend",
+  "No instructions embedded in PDF"
+ ]
+}

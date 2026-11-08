@@ -1,0 +1,539 @@
+{
+ "schema": 1,
+ "key": "1907.10641",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/sakaguchi-2020-winogrande.pdf",
+ "bib": {
+  "title": "WINOGRANDE: An Adversarial Winograd Schema Challenge at Scale",
+  "authors": [
+   "Keisuke Sakaguchi",
+   "Ronan Le Bras",
+   "Chandra Bhagavatula",
+   "Yejin Choi"
+  ],
+  "first_author": "Sakaguchi",
+  "year": 2019,
+  "venue": "preprint",
+  "arxiv": "1907.10641",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45960,
+  "chars_total": 45960,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "benchmark",
+ "question": "Have neural language models truly acquired commonsense on Winograd-style pronoun resolution, or do they exploit dataset biases that inflate their scores?",
+ "hypothesis": "Existing WSC-style datasets contain spurious biases that models exploit; a larger, algorithmically debiased dataset will be much harder for models while staying easy for humans.",
+ "contributions": [
+  "WINOGRANDE: 44k WSC-style problems built by crowdsourcing with WikiHow anchor-word constraints",
+  "AFLITE, a lightweight adversarial filtering algorithm using ensembles of linear classifiers over pre-computed RoBERTa embeddings",
+  "Baselines showing a 15-35% gap to human performance",
+  "State-of-the-art transfer results on WSC, DPR, COPA, KnowRef and Winogender, with a caution about overestimated commonsense"
+ ],
+ "method": {
+  "summary": "Crowdworkers on AMT wrote twin sentences, three other workers validated them, and AFLITE removed instances whose RoBERTa embeddings let linear classifiers predict the label, leaving 12,282 debiased items. RoBERTa, BERT and other baselines were fine-tuned or run zero-shot on it, then RoBERTa fine-tuned on WinoGrande was transferred to related benchmarks.",
+  "task": "Winograd-style pronoun resolution as binary fill-in-the-blank; benchmark construction and debiasing",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "WinoGrande (collected)",
+    "role": "train",
+    "size": "77k questions (38k twins) collected; 53k valid after validation",
+    "split": null,
+    "source": "Amazon Mechanical Turk; anchor word from random WikiHow article",
+    "preprocessing": "Twins 15-30 words, at least 70% word overlap; validity by 3 workers: majority correct, unambiguous, not solvable by local word association"
+   },
+   {
+    "name": "WinoGrande_debiased",
+    "role": "eval",
+    "size": "12,282 instances",
+    "split": "train 9,248 / dev 1,267 / test 1,767",
+    "source": "AFLITE-filtered from 47k instances (6k used to fine-tune RoBERTa_embed discarded)",
+    "preprocessing": "AFLITE with m=10,000, n=64, k=500, tau=0.75; about 1/3 of items are no longer twins"
+   },
+   {
+    "name": "WinoGrande_all",
+    "role": "train",
+    "size": "43,972 problems",
+    "split": "train 40,938 / dev 1,267 / test 1,767",
+    "source": "debiased set plus 31k items filtered out by AFLITE",
+    "preprocessing": "training set consists of twins; sizes XS 160, S 640, M 2,558, L 10,234, XL 40,938 used for the learning curve"
+   },
+   {
+    "name": "WSC, PDP, SuperGLUE-WSC, DPR, KnowRef, COPA, Winogender",
+    "role": "eval",
+    "size": "273 / 80 / 804 / 1,886 / 1,269 / 1,000 / 720 problems (Table 5)",
+    "split": "DPR train 1,200 / dev 122 (own split of 1,332); COPA dev 500 split into train 400 / dev 100; KnowRef public test 1.2k",
+    "source": "prior work",
+    "preprocessing": "WinoGrande converted to True/False binary form for SuperGLUE-WSC"
+   }
+  ],
+  "models": [
+   {
+    "name": "RoBERTa (fine-tuned)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "encoder transformer (Liu et al. 2019)",
+    "init_from": "pretrained RoBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "size variant": "not stated"
+    }
+   },
+   {
+    "name": "BERT",
+    "role": "baseline",
+    "params": null,
+    "architecture": "encoder transformer",
+    "init_from": "pretrained BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "input format": "[CLS] context [SEP] option [SEP], option used as delimiter; [CLS] embedding classifies"
+    }
+   },
+   {
+    "name": "RoBERTa_embed",
+    "role": "base",
+    "params": null,
+    "architecture": "RoBERTa fine-tuned on 6k instances (5k train, 1k val) to produce embeddings for AFLITE",
+    "init_from": "pretrained RoBERTa",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "WKH; Ensemble LMs (Trinh and Le 2018); GPT2",
+    "role": "baseline",
+    "params": null,
+    "architecture": "retrieval / language-model likelihood scoring",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "binary classification of which answer option fills the blank (BERT/RoBERTa fine-tuning)",
+   "optimizer": null,
+   "lr": "grid {1e-5, 3e-5, 5e-5}",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "grid {8, 16}",
+   "steps": null,
+   "epochs": "grid {3, 4, 5, 8}",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": null,
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": "three random seeds in grid search; learning curve best of ten random seeds",
+   "other": {
+    "transfer": "same grid search for RoBERTa fine-tuned on WinoGrande train+dev then on targets"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "learning curve: best performance per training size over ten random seeds",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "AFLITE m": "10,000",
+    "AFLITE n": "64",
+    "AFLITE k": "500",
+    "AFLITE tau": "0.75"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "accuracy",
+     "definition": "fraction of questions with correct option",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "KL divergence",
+     "definition": "between distributions of PCA d1 for answer y=1 and y=2, bin size 100",
+     "unit": "nats (not stated)",
+     "higher_is_better": false
+    },
+    {
+     "name": "Winogender |dF|,|dM|",
+     "definition": "accuracy gap non-gotcha minus gotcha per gender",
+     "unit": "points",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "WKH",
+    "Ensemble LMs",
+    "BERT",
+    "RoBERTa",
+    "local-context-only BERT/RoBERTa",
+    "BERT-DPR and RoBERTa-DPR zero-shot",
+    "random data reduction and PMI filtering (for AFLITE)",
+    "human majority of 3 workers"
+   ],
+   "protocol": "Dev/test accuracy; humans = majority vote of three crowd workers. Single reported numbers, no significance test stated."
+  },
+  "availability": {
+   "code": "http://winogrande.allenai.org (datasets, interface, models)",
+   "weights": "http://winogrande.allenai.org",
+   "data": "http://winogrande.allenai.org"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "datasets.WinoGrande_debiased.split",
+    "quote": "12,282 instances split into training (9,248)",
+    "where": "Section 3"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Best baseline RoBERTa reaches 79.1% test accuracy on WinoGrande_debiased, far below human performance.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 79.1,
+   "unit": "%",
+   "baseline_value": 94.0,
+   "n": null,
+   "setup": "WinoGrande debiased test set (1,767 items), binary fill-in-the-blank, trained on XL 40,938",
+   "quote": null,
+   "table": "Table 3, row RoBERTa, column test acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Human accuracy is 94.0%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 94.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "majority of three crowd workers, WinoGrande_debiased",
+   "quote": "human performance of 94.0%",
+   "table": null,
+   "note": null,
+   "where": "Abstract"
+  },
+  {
+   "claim": "With 2% of training data (~800) RoBERTa gets about 59%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 59,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WinoGrande_debiased dev, RoBERTa",
+   "quote": "ranges from 59% to 79%",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2"
+  },
+  {
+   "claim": "Extrapolated training size for RoBERTa to reach human level.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 118000,
+   "unit": "instances",
+   "baseline_value": null,
+   "n": null,
+   "setup": "log-linear fit y = 4.8463ln(x)+26.215 on dev learning curve",
+   "quote": "models would need over 118K",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2, Fig 2"
+  },
+  {
+   "claim": "Local-context-only RoBERTa is at chance, so debiased items are not solvable by word association.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 50.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WinoGrande debiased test set (1,767 items), binary fill-in-the-blank, RoBERTa local context",
+   "quote": null,
+   "table": "Table 3, row RoBERTa (local context), column test acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "RoBERTa fine-tuned on DPR transfers poorly to WinoGrande (zero-shot).",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 58.9,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "WinoGrande debiased test set (1,767 items), binary fill-in-the-blank",
+   "quote": null,
+   "table": "Table 3, row RoBERTa-DPR, column test acc.",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Training on the 9,248 debiased train set alone gives only chance performance for BERT and RoBERTa.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "footnote 9",
+   "quote": "only chance level performance",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.2 footnote 9"
+  },
+  {
+   "claim": "AFLITE cuts the KL divergence between label classes from 2.53 to 0.12; random reduction gives 2.51 and PMI filtering 2.42.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": 0.12,
+   "unit": "KL divergence",
+   "baseline_value": null,
+   "n": null,
+   "setup": "PCA of RoBERTa embeddings, d1 histogram",
+   "quote": "the KL divergence dramatically (→0.12)",
+   "table": null,
+   "note": "Random 2.53 to 2.51 and PMI 2.42 stated in text.",
+   "where": "Sec 3, Fig 1"
+  },
+  {
+   "claim": "68% of crowdsourced questions (53k) passed validation.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 68,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 validators per question",
+   "quote": "68% of the questions (53k) were deemed valid",
+   "table": null,
+   "note": null,
+   "where": "Sec 2"
+  },
+  {
+   "claim": "RoBERTa-WinoGrande zero-shot sets SOTA on WSC.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.1,
+   "unit": "%",
+   "baseline_value": 83.1,
+   "n": null,
+   "setup": "WSC test, 273 problems",
+   "quote": null,
+   "table": "Table 6, WSC, row RoBERTa-WinoGrande, column accuracy",
+   "note": "Baseline is RoBERTa-DPR zero-shot 83.1.",
+   "where": "Table 6"
+  },
+  {
+   "claim": "RoBERTa-WinoGrande-ft SOTA on DPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 93.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "DPR test",
+   "quote": null,
+   "table": "Table 6, DPR, row RoBERTa-WinoGrande-ft",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "RoBERTa-WinoGrande-ft SOTA on COPA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 90.6,
+   "unit": "%",
+   "baseline_value": 86.4,
+   "n": null,
+   "setup": "COPA test",
+   "quote": null,
+   "table": "Table 6, COPA, row RoBERTa-WinoGrande-ft",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "RoBERTa-WinoGrande zero-shot on KnowRef.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 85.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "KnowRef test",
+   "quote": null,
+   "table": "Table 6, KnowRef, row RoBERTa-WinoGrande",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "RoBERTa-WinoGrande reaches 97.1% on Winogender in the abstract; Table 7 gender gaps are 0.8/0.8 vs 1.6/0.9 for RoBERTa-DPR.",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 97.1,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Winogender",
+   "quote": "Winogender (→97.1%)",
+   "table": null,
+   "note": "Abstract prints 97.1; Table 7 cells print 96.7 and 97.5 per gender/gotcha split; 97.1 not in table.",
+   "where": "Abstract, Table 7"
+  }
+ ],
+ "limits": [
+  "Authors concede transfer gains may partly reflect biases in the target benchmarks, not real commonsense progress.",
+  "Only RoBERTa/BERT-era models, no hyperparameters beyond grid ranges, optimizer, hardware or model size stated.",
+  "Learning-curve extrapolation (118K) is a log-linear fit.",
+  "Debiased training set alone yields chance performance; strong results need the 40,938-item WinoGrande_all train.",
+  "Human eval is crowd majority vote; later models (2020+) have saturated this benchmark."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "AFLITE",
+   "definition": "lightweight adversarial filtering: ensembles of linear classifiers on precomputed embeddings remove instances whose label is predictable",
+   "where": "Section 3"
+  },
+  {
+   "term": "twin",
+   "definition": "pair of nearly identical questions with a trigger word that flips the correct answer",
+   "where": "Table 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Winograd Schema Challenge (Levesque, Davis, Morgenstern)",
+   "year": 2011,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original task design",
+   "quote": null
+  },
+  {
+   "work": "SWAG adversarial filtering (Zellers et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "AFLITE builds on AF",
+   "quote": null
+  },
+  {
+   "work": "RoBERTa (Liu et al.)",
+   "year": 2019,
+   "arxiv": "1907.11692",
+   "relation": "evaluates",
+   "note": "main model and embedding source",
+   "quote": null
+  },
+  {
+   "work": "BERT (Devlin et al.)",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "baseline",
+   "note": "fine-tuned baseline",
+   "quote": null
+  },
+  {
+   "work": "Trinh and Le, A simple method for commonsense reasoning",
+   "year": 2018,
+   "arxiv": "1806.02847",
+   "relation": "baseline",
+   "note": "ensemble LM",
+   "quote": null
+  },
+  {
+   "work": "Kocijan et al., A surprisingly robust trick for the Winograd Schema Challenge",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "BERT fine-tuned on DPR",
+   "quote": null
+  },
+  {
+   "work": "Gururangan et al.; Poliak et al.",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "annotation artifacts, hypothesis-only baselines; PMI filtering follows Gururangan",
+   "quote": null
+  },
+  {
+   "work": "DPR, KnowRef, COPA, Winogender, SuperGLUE",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "transfer targets",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "The effect of debiasing by AFLITE (PCA of RoBERTa embeddings and d1 histograms with KL divergence)",
+   "page": 3,
+   "why": "Shows label separability vanishing after AFLITE"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Learning curve on the dev set of WINOGRANDE",
+   "page": 5,
+   "why": "Accuracy vs training size, log-linear fit"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "Venue not printed in text (arXiv v2, Nov 2019); published at AAAI 2020 per filename only.",
+  "Text has ligature characters (fi) and hyphen line breaks."
+ ]
+}

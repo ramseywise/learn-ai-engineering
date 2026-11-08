@@ -1,0 +1,524 @@
+{
+ "schema": 1,
+ "key": "2001.08210",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2020-multilingual-denoising-pre-training-neural.pdf",
+ "bib": {
+  "title": "Multilingual Denoising Pre-training for Neural Machine Translation",
+  "authors": [
+   "Yinhan Liu",
+   "Jiatao Gu",
+   "Naman Goyal",
+   "Xian Li",
+   "Sergey Edunov",
+   "Marjan Ghazvininejad",
+   "Mike Lewis",
+   "Luke Zettlemoyer"
+  ],
+  "first_author": "Liu",
+  "year": 2020,
+  "venue": "TACL 2020 (arXiv v2 preprint text)",
+  "arxiv": "2001.08210",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 75738,
+  "chars_total": 75738,
+  "engine": "pymupdf",
+  "skipped": "Appendix B translation examples are garbled non-Latin text; not needed"
+ },
+ "type": "empirical",
+ "question": "Does pre-training a complete sequence-to-sequence model by denoising monolingual text in many languages improve supervised, document-level and unsupervised machine translation?",
+ "hypothesis": "Multilingual BART-style denoising pre-training of a full seq2seq model gives gains across MT settings and enables transfer to pairs with no bi-text or unseen languages.",
+ "contributions": [
+  "mBART, first method to pre-train a complete seq2seq model by denoising full texts in multiple languages",
+  "gains up to 12 BLEU on low-resource MT, over 5 BLEU on many document-level and unsupervised settings",
+  "new transfer types: fine-tune on one pair, translate from other pre-training languages; benefit for languages unseen in pre-training",
+  "analysis of number of languages, pre-training steps, bi-text size, comparison with back-translation"
+ ],
+ "method": {
+  "summary": "A 12+12 layer Transformer seq2seq is pre-trained on CC25 (25 languages) with BART noising (35% word-span masking, sentence permutation), then fine-tuned per language pair on bi-text (sentence or document level) or used to initialise unsupervised MT.",
+  "task": "multilingual denoising pre-training for machine translation",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CC25 (Common Crawl, 25 languages)",
+    "role": "pretrain",
+    "size": "En 300.8 GB / 55608M tokens down to My 1.6 GB / 56M tokens (Table 1)",
+    "split": null,
+    "source": "Common Crawl (Wenzek et al. 2019; Conneau et al. 2019)",
+    "preprocessing": "re-balanced by up/down-sampling with lambda_i = (1/p_i) * p_i^alpha / sum p_i^alpha, alpha = 0.7; one SentencePiece model learned on full CC data, 250,000 subword tokens; no truecasing or normalisation"
+   },
+   {
+    "name": "24 bi-text pairs (WMT, IWSLT, FLoRes, IITB, WAT19)",
+    "role": "both",
+    "size": "10K (En-Gu) to 41M (En-Fr) sentence pairs",
+    "split": "low <1M, medium 1M-10M, high >10M pairs; validation likelihood for selection",
+    "source": "WMT16/17/18/19, IWSLT15/17, FLoRes En-Ne/En-Si, IITB En-Hi, WAT19 En-My",
+    "preprocessing": null
+   },
+   {
+    "name": "WMT19 En-De document",
+    "role": "both",
+    "size": "77K docs, 171K instances, 3.7M sentences",
+    "split": null,
+    "source": "WMT19",
+    "preprocessing": "sentences separated by </S>, instance ends with <LID>; each doc split into 2-4 instances"
+   },
+   {
+    "name": "TED15 Zh-En document",
+    "role": "both",
+    "size": "1.7K docs, 6.5K instances, 0.2M sentences",
+    "split": "test 2010-2013 TED following Miculicich et al. 2018",
+    "source": "IWSLT 2014/2015",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "mBART25",
+    "role": "proposed",
+    "params": "~680M",
+    "architecture": "Transformer seq2seq, 12 encoder + 12 decoder layers, extra layer-norm on top of encoder and decoder",
+    "init_from": "random",
+    "tokenizer": "SentencePiece",
+    "vocab": "250,000",
+    "layers": "12+12",
+    "hidden": "1024",
+    "heads": "16",
+    "context": "512 max tokens per instance",
+    "other": {
+     "pretrain_langs": "all 25"
+    }
+   },
+   {
+    "name": "mBART06",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same",
+    "init_from": "random",
+    "tokenizer": "SentencePiece",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain_langs": "Ro, It, Cs, Fr, Es, En",
+     "batch": "~1/4 of mBART25"
+    }
+   },
+   {
+    "name": "mBART02",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same, bilingual",
+    "init_from": "random",
+    "tokenizer": "SentencePiece",
+    "vocab": "250,000",
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "pretrain_langs": "En plus one of De/Ro/It",
+     "batch": "~1/12 of mBART25"
+    }
+   },
+   {
+    "name": "BART-En / BART-Ro",
+    "role": "baseline",
+    "params": null,
+    "architecture": "monolingual BART",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Random",
+    "role": "baseline",
+    "params": null,
+    "architecture": "no pre-training; hyper-parameters (architecture, dropout etc.) grid-searched per task",
+    "init_from": "random",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "maximise sum log P(X|g(X)); g = mask 35% of words in spans with length ~ Poisson(lambda=3.5) plus sentence permutation; decoder input is original text offset by one, language id token <LID> as first token",
+   "optimizer": "Adam (eps=1e-6, beta2=0.98)",
+   "lr": null,
+   "lr_schedule": "linear decay",
+   "warmup": null,
+   "batch_size": "around 128K tokens per GPU as printed (matching BART)",
+   "steps": "500K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "512 max tokens",
+   "precision": "FP16 (extra layer-norm stabilised it)",
+   "weight_decay": null,
+   "dropout": "0.1, reduced to 0.05 at 250K steps and 0 at 400K",
+   "regularisation": null,
+   "hardware": "256 Nvidia V100 (32GB)",
+   "compute": null,
+   "wall_clock": "approximately 2.5 weeks",
+   "seeds": null,
+   "other": {
+    "fine_tuning": "0.3 dropout, 0.2 label smoothing, 2500 warm-up steps, 3e-5 max learning rate, max 40K updates low/medium resource and 100K high resource, model selected by validation likelihood, teacher forcing",
+    "unsupervised_BT": "on-the-fly back-translation; output restricted to target-language tokens (those >=1% in target monolingual corpus) for first 1000 steps",
+    "framework": "Fairseq"
+   }
+  },
+  "inference": {
+   "decoding": "beam search, beam size 5",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run; seeds not stated",
+   "prompting": "language id token at encoder and decoder; document decoding stops when <LID> predicted",
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "BLEU",
+     "definition": "Papineni et al. 2002, with language-specific tokenisation (Indic-NLP, KyTea Ja, Mecab-Ko, QCRI Ar, Moses Ro, sacreBLEU zh, default otherwise); s-BLEU sentence-level and d-BLEU document-level matching",
+     "unit": "BLEU",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "Random init",
+    "XLM",
+    "MASS",
+    "BART",
+    "XLM-R",
+    "BART-En/Ro",
+    "HAN (Miculicich 2018)",
+    "back-translation"
+   ],
+   "protocol": "single reported scores, no significance tests"
+  },
+  "availability": {
+   "code": "Fairseq (Ott et al. 2019); no mBART release stated",
+   "weights": null,
+   "data": "public WMT/IWSLT/FLoRes/IITB/WAT19 and Common Crawl"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.batch_size",
+    "quote": "The total batch size is around 128K tokens per GPU, matching BART (Lewis et al., 2019) conﬁguration.",
+    "where": "Sec 2.2 Optimization"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "mBART25 gives large gains over random init on low-resource En-Vi (Vi-En).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 36.1,
+   "unit": "BLEU",
+   "baseline_value": 23.6,
+   "n": null,
+   "setup": "Table 2, 133K pairs, X-En",
+   "quote": null,
+   "table": "Table 2, En-Vi column <-, row mBART25 (Random 23.6)",
+   "note": null,
+   "where": "Table 2"
+  },
+  {
+   "claim": "mBART02 gets 20.7+ BLEU on En-De with only 10K training pairs while random init scores 0.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "En-De subsampled bi-text, mBART02 vs Random, Fig 4",
+   "quote": "The pre-trained model is able to achieve over 20 BLEU with only 10K training examples,",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 4"
+  },
+  {
+   "claim": "mBART02 achieves the best Ro-En score in the pre-training comparison, above mBART25.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 38.5,
+   "unit": "BLEU",
+   "baseline_value": 34.0,
+   "n": null,
+   "setup": "WMT16 Ro-En fine-tuning; mBART02 38.5 vs mBART25 37.8 vs Random 34.0",
+   "quote": null,
+   "table": "Table 4, row mBART02, column Ro->En",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "mBART25 + BT sets state of the art on Ro-En (mBART02+BT 39.9 vs mBART25+BT 38.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 39.9,
+   "unit": "BLEU",
+   "baseline_value": 36.8,
+   "n": null,
+   "setup": "WMT16 Ro-En with back-translation",
+   "quote": null,
+   "table": "Table 4, row mBART02, column +BT",
+   "note": null,
+   "where": "Table 4"
+  },
+  {
+   "claim": "Document-level Doc-MT fine-tuned from mBART25 beats Sent-MT on En-De by d-BLEU, while random Doc-MT fails.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 38.5,
+   "unit": "BLEU",
+   "baseline_value": 7.7,
+   "n": null,
+   "setup": "WMT19 En-De, d-BLEU",
+   "quote": null,
+   "table": "Table 9(a), row Doc-MT, column mBART25 d-BLEU (Random 7.7)",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Document-level Zh-En d-BLEU with mBART25 Doc-MT versus HAN.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 29.6,
+   "unit": "BLEU",
+   "baseline_value": 24.0,
+   "n": null,
+   "setup": "TED15 Zh-En",
+   "quote": null,
+   "table": "Table 9(b), row Doc-MT, column mBART25 (HAN 24.0, Random 3.2)",
+   "note": null,
+   "where": "Table 9"
+  },
+  {
+   "claim": "Unsupervised BT on dissimilar pair Ne-En: mBART gets 10.0 BLEU where XLM gets 0.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 10.0,
+   "unit": "BLEU",
+   "baseline_value": 0.5,
+   "n": null,
+   "setup": "En-Ne initialised from mBART25, trained on CC25 monolingual data",
+   "quote": null,
+   "table": "Table 10, row mBART, column En-Ne <-",
+   "note": null,
+   "where": "Table 10"
+  },
+  {
+   "claim": "In high-resource settings pre-training does not help and slightly hurts above 25M pairs (Zh-En 33.3 vs random 35.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 33.3,
+   "unit": "BLEU",
+   "baseline_value": 35.0,
+   "n": null,
+   "setup": "Table 3 En-X only",
+   "quote": null,
+   "table": "Table 3, column Zh, row mBART25",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "Fine-tuning on one pair transfers: Ko-En-fine-tuned model translates Ja-En etc. without bi-text; e.g. fine-tune Zh then test Ja 9.9 BLEU, random init gives about 0 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 11, mBART25, X-En",
+   "quote": "which always ends up with ≈0 BLEU.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, Table 11"
+  },
+  {
+   "claim": "Pre-training for En-My costs 300~3000 GPU hours vs back-translation pipeline 5+300+350; mBART02 matches BT on En->My (37.8 vs 37.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 37.8,
+   "unit": "BLEU",
+   "baseline_value": 37.7,
+   "n": null,
+   "setup": "My-En using 79M En and 29M My sentences",
+   "quote": null,
+   "table": "Table 6, row mBART02, column ->",
+   "note": null,
+   "where": "Table 6"
+  },
+  {
+   "claim": "After just 25K steps (5% of training) mBART models outperform the best baseline on Ro-En, and keep improving by over 3 BLEU through 500K steps.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Ro-En fine-tuning from checkpoints every 25K steps",
+   "quote": "after just 25K steps (5% of training), both models outperform the best base-",
+   "table": null,
+   "note": null,
+   "where": "Sec 3.3, Fig 3"
+  },
+  {
+   "claim": "Fine-tuning fails at extremely low resource: En-Gu with about 10K pairs gets 0.3 BLEU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "BLEU",
+   "value": 0.3,
+   "unit": "BLEU",
+   "baseline_value": 0.0,
+   "n": null,
+   "setup": "Table 2 Gu-En",
+   "quote": null,
+   "table": "Table 2, En-Gu column <-, row mBART25",
+   "note": null,
+   "where": "Table 2"
+  }
+ ],
+ "limits": [
+  "Fails at ~10K pairs (En-Gu) and gives no consistent gain or slightly hurts above 25M pairs (Table 3).",
+  "Pre-training on more languages slightly hurts (<1 BLEU) when target monolingual data is plentiful (De, Ro); capacity dilution suspected.",
+  "Model is expensive to deploy; authors leave efficient models and mBART100 to future work.",
+  "Optimal noising strategy not explored; fine-tuning on unseen source languages is harder, left for future work.",
+  "Single runs, no seeds or significance tests; learning rate for pre-training and warmup not given; BT comparison not equal in monolingual data (BT benefits from larger En data)."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "mBART25/06/02",
+   "definition": "mBART pre-trained on 25 languages / six European languages / English plus one other language",
+   "where": "Sec 2.3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BART",
+   "year": 2019,
+   "arxiv": "1910.13461",
+   "relation": "extends",
+   "note": "noising scheme and architecture, applied multilingually",
+   "quote": null
+  },
+  {
+   "work": "XLM (Lample and Conneau)",
+   "year": 2019,
+   "arxiv": "1901.07291",
+   "relation": "baseline",
+   "note": "encoder-only pre-training; sampling ratio and unsupervised MT recipe",
+   "quote": null
+  },
+  {
+   "work": "MASS",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Song et al., reconstructs parts of text",
+   "quote": null
+  },
+  {
+   "work": "XLM-R",
+   "year": 2019,
+   "arxiv": "1911.02116",
+   "relation": "uses-data",
+   "note": "CC data and XLM-R as baseline",
+   "quote": null
+  },
+  {
+   "work": "CCNet",
+   "year": 2019,
+   "arxiv": "1911.00359",
+   "relation": "uses-data",
+   "note": "Common Crawl extraction",
+   "quote": null
+  },
+  {
+   "work": "FLoRes",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "En-Ne, En-Si test sets and BT data",
+   "quote": null
+  },
+  {
+   "work": "Back-translation (Sennrich et al.)",
+   "year": 2016,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "compared and combined",
+   "quote": null
+  },
+  {
+   "work": "HAN (Miculicich et al.)",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "document-level Zh-En",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Framework for our Multilingual Denoising Pre-training (left) and fine-tuning on downstream MT tasks (right)",
+   "page": 3,
+   "why": "shows noising, language id tokens and fine-tune flow in one picture"
+  },
+  {
+   "figure": "Fig 3",
+   "caption": "Fine-tuning curves for Ro-En along with Pre-training steps",
+   "page": 6,
+   "why": "gains after only 25K steps"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Fine-tuning curves for En-De along with size of bitext",
+   "page": 6,
+   "why": "gap shrinks as bi-text grows"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1",
+   "snippet": "lambda_i = (1/p_i) * p_i^alpha / sum_i p_i^alpha, alpha=0.7",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Appendix B translation examples are unreadable non-Latin text in the cache",
+  "Batch size printed as 'around 128K tokens per GPU' (likely total), recorded as printed",
+  "Page numbers for figures are estimates"
+ ]
+}

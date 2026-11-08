@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.18653/v1/d18-1045",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/edunov-2018-understanding-back-translation-scale.pdf",
+ "bib": {
+  "title": "Understanding Back-Translation at Scale",
+  "authors": ["Sergey Edunov", "Myle Ott", "Michael Auli", "David Grangier"],
+  "first_author": "Edunov",
+  "year": 2018,
+  "venue": "Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 489-500",
+  "arxiv": null,
+  "doi": "10.18653/v1/d18-1045"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 45315,
+  "chars_total": 45315,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "How should synthetic source sentences be generated for back-translation in NMT, and how far does back-translation scale with hundreds of millions of monolingual sentences?",
+ "hypothesis": "Beam and greedy (MAP) outputs are too regular and do not cover the true data distribution, so sampling or noised beam outputs should give a richer training signal.",
+ "contributions": [
+  "Comprehensive comparison of methods to generate synthetic sources (greedy, beam, sampling, top-k sampling, beam+noise)",
+  "Analysis of why non-MAP synthetic data gives a stronger training signal (training loss, language-model perplexity)",
+  "Comparison of synthetic data to genuine bitext and of domain effects, in a controlled setup",
+  "Scaling to 226M monolingual sentences for a new state of the art on WMT'14 En-De (35 BLEU) and 45.6 BLEU on En-Fr"
+ ],
+ "method": {
+  "summary": "Train a reverse (target-to-source) Big Transformer on WMT bitext, use it to translate target-language monolingual newscrawl into synthetic sources by greedy, beam, sampling, top10 or beam+noise, add the synthetic pairs to the bitext and train the forward Transformer. Compare generation methods, low-resource vs high-resource, domain, bitext upsampling, then scale up.",
+  "task": "neural machine translation with monolingual data (back-translation data augmentation)",
+  "trains": true,
+  "datasets": [
+   {"name": "WMT'18 English-German bitext (no ParaCrawl)", "role": "train", "size": "5.18M sentence pairs", "split": "dev newstest2012; test newstest2013-2017; plus 52K held-out pairs from the training data (valid-mixed)", "source": "WMT'18 news translation task", "preprocessing": "removed sentences longer than 250 words and pairs with source/target length ratio above 1.5; Moses tokenizer; joint BPE with 35K types"},
+   {"name": "German newscrawl (WMT'18)", "role": "train", "size": "226M sentences after removing duplicates", "split": "target side of synthetic pairs", "source": "monolingual newscrawl distributed with WMT'18", "preprocessing": "deduplicated"},
+   {"name": "WMT'14 English-French bitext", "role": "train", "size": "35.7M sentence pairs", "split": "dev newstest2012; test newstest2013-2015", "source": "WMT'14", "preprocessing": "filtered as for En-De; joint BPE with 44K types"},
+   {"name": "English newscrawl 2010-2014", "role": "train", "size": "31M sentences after language identification", "split": "target side of synthetic pairs", "source": "newscrawl2010-2014, langid.py (Lui and Baldwin 2012)", "preprocessing": "language identification"}
+  ],
+  "models": [
+   {"name": "Big Transformer (forward and backward)", "role": "proposed", "params": null, "architecture": "encoder-decoder Transformer, fairseq re-implementation in pytorch", "init_from": null, "tokenizer": "Moses + joint BPE", "vocab": "35K (En-De), 44K (En-Fr)", "layers": "6 encoder and 6 decoder blocks", "hidden": "1024 (feed-forward inner 4096)", "heads": "16", "context": null, "other": {"label_smoothing": "0.1", "checkpoint_averaging": "last ten epochs"}}
+  ],
+  "training": {
+   "objective": "maximum likelihood of target given source, with label smoothing 0.1 (uniform prior)",
+   "optimizer": "Adam, beta1=0.9, beta2=0.98, eps=1e-8",
+   "lr": null,
+   "lr_schedule": "same as Vaswani et al. (2017)",
+   "warmup": null,
+   "batch_size": null,
+   "steps": "30K updates bitext only; 50K with 3M synthetic; 75K with 6M and 12M; 100K with 24M; En-Fr 300K; En-De 226M run 250K",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": "16-bit floating point",
+   "weight_decay": null,
+   "dropout": "0.3 (En-De), 0.1 (En-Fr)",
+   "regularisation": "label smoothing 0.1",
+   "hardware": "16 DGX-1 machines x 8 Nvidia V100 GPUs (128 GPUs), Infiniband, NCCL2",
+   "compute": null,
+   "wall_clock": "bitext only 3h20min; 6M and 12M synthetic 7h30min; 24M synthetic 10h15min; En-Fr 27h40min (300K updates); En-De 226M 22.5 hours (250K updates), all on 128 GPUs",
+   "seeds": null,
+   "other": {"bitext_upsampling": "tuned rate; no upsampling for sampling/beam+noise at 24M; rate 16 for the 226M En-De run; none for En-Fr", "synchronous_updates": "30K synchronous updates for the baseline"}
+  },
+  "inference": {
+   "decoding": "final evaluation: beam 5, no length penalty. Synthetic data generation: greedy, beam 5, unrestricted sampling, top10 sampling (restricted to k=10 most likely tokens, renormalized), beam+noise",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "one synthetic source sample per target sentence",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {"top_k": "10 (top5, top20, top50 gave similar results)", "noise_delete": "delete words with probability 0.1", "noise_blank": "replace words by filler token with probability 0.1", "noise_swap": "random permutation restricted to swapping words no further than three positions apart"},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "tokenized BLEU", "definition": "case-sensitive tokenized BLEU (Papineni et al. 2002)", "unit": "BLEU", "higher_is_better": true},
+    {"name": "detokenized BLEU (sacreBLEU)", "definition": "sacreBLEU, signature BLEU+case.mixed+...+tok.13a+version.1.2.7", "unit": "BLEU", "higher_is_better": true},
+    {"name": "training perplexity", "definition": "cross-entropy on 500K sub-sampled synthetic pairs and equal-size bitext subset, per epoch", "unit": "PPL", "higher_is_better": false},
+    {"name": "source-side LM perplexity", "definition": "5-gram Kneser-Ney LM trained on 4.1M real source sentences scoring synthetic sources of 450K held-out pairs", "unit": "PPL", "higher_is_better": null}
+   ],
+   "baselines": ["bitext only", "beam", "greedy", "top10", "DeepL", "Gehring et al. 2017", "Vaswani et al. 2017", "Ahmed et al. 2017", "Shaw et al. 2018"],
+   "protocol": "single runs reported; no seeds, variance or significance tests stated"
+  },
+  "availability": {"code": "fairseq (https://github.com/pytorch/fairseq)", "weights": null, "data": "public WMT data"},
+  "prompts": [],
+  "evidence": [
+   {"field": "training.hardware", "quote": "Experiments are run on 16 machines and we perform 30K synchronous updates.", "where": "4.2"}
+  ]
+ },
+ "results": [
+  {"claim": "Back-translation with sampling on 226M German monolingual sentences gives 35 BLEU on WMT'14 En-De newstest2014, new state of the art using only WMT benchmark data.", "kind": "measured", "source": null, "metric": "tokenized BLEU", "value": "35.0", "unit": "BLEU", "baseline_value": "33.3 (DeepL)", "n": null, "setup": "WMT En-De newstest2014, Big Transformer, 5.2M bitext + 226M synthetic, bitext upsample rate 16, 250K updates", "table": "Table 6, row Our result, column En-De", "note": "text rounds to 35; abstract and intro say outperforms DeepL by 1.7 BLEU", "where": "Table 6, 5.6"},
+  {"claim": "Detokenized (sacreBLEU) score for the same En-De system is 33.8.", "kind": "measured", "source": null, "metric": "sacreBLEU", "value": "33.8", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "WMT'14 En-De newstest2014, 226M monolingual sentences", "table": "Table 6, row detok. sacreBLEU, column En-De", "note": null, "where": "Table 6"},
+  {"claim": "En-Fr with 31M sampled back-translations reaches 45.6 tokenized BLEU on newstest2014 vs 42.90 bitext only.", "kind": "measured", "source": null, "metric": "tokenized BLEU", "value": "45.60", "unit": "BLEU", "baseline_value": "42.90", "n": null, "setup": "WMT'14 En-Fr newstest2014, 35.7M bitext + 31M newscrawl by sampling, 300K updates", "table": "Table 4, row +sampling, column news14", "note": "Table 6 prints 45.6; sacreBLEU 43.84 vs 41.03 (Table 5)", "where": "Table 4"},
+  {"claim": "Sampling or noised beam outperforms pure beam search by 1.7 BLEU on average across newstest2013-2017 En-De.", "kind": "measured", "source": null, "metric": "tokenized BLEU", "value": "1.7", "unit": "BLEU gain over beam", "baseline_value": null, "n": null, "setup": "WMT En-De, 5.2M bitext + 24M synthetic, average of newstest2013-2017", "quote": "sampling and noised beam outperforms pure beam by 1.7 BLEU on average on newstest2013-2017 for WMT English-German translation", "note": "Table 1 averages: bitext 31.00, beam 31.78, greedy 31.96, top10 32.94, sampling 33.51, beam+noise 33.43", "where": "Conclusions, Table 1"},
+  {"claim": "Average BLEU with 24M sampled synthetic pairs vs bitext only.", "kind": "measured", "source": null, "metric": "tokenized BLEU", "value": "33.51", "unit": "BLEU", "baseline_value": "31.00", "n": null, "setup": "WMT En-De newstest2013-2017 average, 5.2M bitext + 24M synthetic by sampling", "table": "Table 1, row + sampling, column Average", "note": null, "where": "Table 1"},
+  {"claim": "Synthetic data from BT-bitext (sampled) gets 83% of the gain of real bitext when domains match.", "kind": "measured", "source": null, "metric": "share of gain from real bitext", "value": "83%", "unit": "%", "baseline_value": null, "n": null, "setup": "640K bitext base; adding BT of remaining bitext target side; newstest2012 En-De", "quote": "BT-bitext improves by 2.2 BLEU, achieving 83% of the improvement with real bitext", "note": null, "where": "5.4"},
+  {"claim": "On mixed-domain valid set, BT-bitext trails real bitext by 1.3 BLEU, 67% of the gain.", "kind": "measured", "source": null, "metric": "BLEU", "value": "2.7", "unit": "BLEU gain over 640K baseline", "baseline_value": null, "n": null, "setup": "valid-mixed held-out set, 640K bitext base", "quote": "BT-bitext matches the domain of valid-mixed and improves by 2.7 BLEU", "note": "text: trails real bitext by only 1.3 BLEU, 67% of gain", "where": "5.4"},
+  {"claim": "Sampling and beam+noise beat greedy/beam by 0.8-1.1 BLEU on newstest2012 in the largest setup.", "kind": "measured", "source": null, "metric": "BLEU", "value": "0.8-1.1", "unit": "BLEU", "baseline_value": null, "n": null, "setup": "WMT En-De newstest2012, up to 24M synthetic", "quote": "outperform the MAP methods (pure beam search and greedy) by 0.8-1.1 BLEU", "note": null, "where": "5.1, Fig 1"},
+  {"claim": "Beam-generated synthetic sources are the most predictable for a 5-gram LM (PPL 72.42) vs human 75.34, sampling 500.17, beam+noise 2823.73.", "kind": "measured", "source": null, "metric": "LM perplexity", "value": "72.42", "unit": "PPL", "baseline_value": "75.34", "n": null, "setup": "5-gram Kneser-Ney on 4.1M real sources; 450K held-out pairs; BT model on 640K pairs", "table": "Table 2, row beam, column Perplexity", "note": null, "where": "Table 2"},
+  {"claim": "In the 80K-bitext setup, beam beats sampling; with 640K and 5.2M bitext, sampling is better.", "kind": "measured", "source": null, "metric": "BLEU", "value": "13.5", "unit": "BLEU (reverse De-En model, 80K)", "baseline_value": null, "n": null, "setup": "reverse De-En quality on newstest2012: 80K, 640K, 5M bitext", "quote": "On newstest2012 we measure 13.5 BLEU for 80K bitext, 24.3 BLEU for 640K and 28.3 BLEU for 5M.", "note": null, "where": "5.3, Fig 3"},
+  {"claim": "Beam+noise and sampling need no bitext upsampling; beam and greedy benefit from higher upsample rates.", "kind": "measured", "source": null, "metric": null, "value": null, "unit": null, "baseline_value": null, "n": null, "setup": "5M bitext + 24M synthetic, rates 1,2,4,8 (read from Fig 5)", "note": null, "where": "5.5, Fig 5"},
+  {"claim": "Training perplexity on beam data falls below 2 after 5 epochs; beam/greedy data is easier to fit than bitext, sampling data harder.", "kind": "measured", "source": null, "metric": "training PPL", "value": "2", "unit": "PPL", "baseline_value": null, "n": null, "setup": "24M synthetic, no upsampling", "quote": "the perplexity on beam data falls below 2 after only 5 epochs", "note": null, "where": "5.2, Fig 2"}
+ ],
+ "limits": [
+  "Sampling and noise hurt in the very low-resource setup (80K bitext), where beam is better",
+  "Sampled/noised sources are sometimes inadequate (Table 3: sampling adds target words absent from source)",
+  "Mostly single-direction (En-De) with newswire monolingual data; En-Fr as confirmation only",
+  "No seeds, variance or significance tests reported",
+  "Authors' future work: optimize the back-translation model end-to-end to produce the most helpful sources",
+  "The explanation (richer training signal) is a conjecture supported by training loss and LM perplexity, not a causal test",
+  "Comparison with DeepL is not like for like (DeepL uses proprietary high-quality bitext)"
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "back-translation", "definition": "first trains an intermediate system on the parallel data which is used to translate the target monolingual data into the source language; the synthetic pairs are added to real bitext to train the final system", "where": "1 Introduction"},
+  {"term": "beam+noise", "definition": "beam search outputs transformed by deleting words (p=0.1), replacing words by a filler token (p=0.1) and swapping words within three positions", "where": "3"},
+  {"term": "top10", "definition": "sampling restricted at each time step to the k most likely tokens (k=10), renormalized", "where": "3"}
+ ],
+ "lineage": [
+  {"work": "Improving neural machine translation models with monolingual data (Sennrich, Haddow, Birch)", "year": 2016, "arxiv": null, "relation": "extends", "note": "introduced back-translation for NMT with beam search", "quote": null},
+  {"work": "Investigating backtranslation in neural machine translation (Poncelas et al.)", "year": 2018, "arxiv": "1804.06189", "relation": "extends", "note": "earlier analysis of BT", "quote": null},
+  {"work": "Unsupervised machine translation using monolingual corpora only (Lample et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "source of the noising scheme and greedy BT", "quote": null},
+  {"work": "Attention is all you need (Vaswani et al.)", "year": 2017, "arxiv": null, "relation": "uses-method", "note": "Transformer architecture and LR schedule", "quote": null},
+  {"work": "Analyzing uncertainty in neural machine translation (Ott et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "motivates sampling over MAP", "quote": null},
+  {"work": "Scaling neural machine translation (Ott et al.)", "year": 2018, "arxiv": null, "relation": "uses-method", "note": "16-bit training at scale", "quote": null},
+  {"work": "Enhancement of encoder and attention using target monolingual corpora (Imamura et al.)", "year": 2018, "arxiv": null, "relation": "related", "note": "concurrent finding that sampling beats beam; samples multiple sources per target", "quote": null},
+  {"work": "Hoang et al.; Cotterell and Kreutzer", "year": 2018, "arxiv": "1806.04402", "relation": "related", "note": "iterative back-translation", "quote": null},
+  {"work": "WMT'14/'18 news translation data", "year": 2018, "arxiv": null, "relation": "uses-data", "note": "bitext and newscrawl", "quote": null},
+  {"work": "Neural machine translation of rare words with subword units (Sennrich et al.)", "year": 2016, "arxiv": null, "relation": "uses-method", "note": "BPE", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Fig 1", "caption": "Accuracy of models trained on different amounts of back-translated data obtained with greedy search, beam search (k = 5), randomly sampling from the model distribution, restricting sampling over the ten most likely words (top10), and by adding noise to the beam outputs (beam+noise).", "page": 2, "why": "shows sampling and beam+noise pulling ahead of beam/greedy as data grows"},
+  {"figure": "Fig 2", "caption": "Training perplexity (PPL) per epoch for different synthetic data.", "page": 3, "why": "beam data is trivially fit (PPL below 2), sampled data harder"},
+  {"figure": "Fig 3", "caption": "BLEU when adding synthetic data from beam and sampling to bitext systems with 80K, 640K and 5M sentence pairs.", "page": 5, "why": "shows the low-resource reversal"},
+  {"figure": "Table 3", "caption": "Example where sampling produces inadequate outputs.", "page": 4, "why": "concrete case of noisy synthetic sources"}
+ ],
+ "code": [],
+ "problems": ["No embedded instructions found. Figure data (Figs 1-5) is plot only, values not extractable from text."]
+}

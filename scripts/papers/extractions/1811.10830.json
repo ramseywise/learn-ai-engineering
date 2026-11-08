@@ -1,0 +1,583 @@
+{
+ "schema": 1,
+ "key": "1811.10830",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/zellers-2019-recognition-cognition.pdf",
+ "bib": {
+  "title": "From Recognition to Cognition: Visual Commonsense Reasoning",
+  "authors": [
+   "Rowan Zellers",
+   "Yonatan Bisk",
+   "Ali Farhadi",
+   "Yejin Choi"
+  ],
+  "first_author": "Zellers",
+  "year": 2019,
+  "venue": "CVPR 2019",
+  "arxiv": "1811.10830",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 113776,
+  "chars_total": 113776,
+  "engine": "pymupdf",
+  "skipped": "Reference list and attention-heatmap figure text (Figs 14-18) skimmed only."
+ },
+ "type": "benchmark",
+ "question": "Can vision systems answer commonsense questions about images and justify the answer, beyond recognition-level understanding?",
+ "hypothesis": "Cognition-level visual reasoning is easy for humans but hard for current VQA models; a layered grounding-contextualization-reasoning model narrows but does not close the gap.",
+ "contributions": [
+  "Formalize the Visual Commonsense Reasoning task",
+  "Present VCR, a large-scale multiple-choice QA dataset",
+  "Adversarial Matching, an algorithm for robust multiple-choice dataset creation",
+  "R2C model that mimics layered inference from recognition to cognition and sets baselines"
+ ],
+ "method": {
+  "summary": "VCR pairs movie-scene images with crowd-written questions, answers and rationales, turned into 4-way multiple choice by Adversarial Matching (max-weight bipartite matching using BERT relevance and ESIM+ELMo similarity scores). R2C grounds text to image regions with a BiLSTM, contextualizes with attention, and reasons with a second BiLSTM over frozen BERT features and ResNet50 object features.",
+  "task": "Visual commonsense reasoning: multiple-choice QA (Q->A), answer justification (QA->R), and staged Q->AR",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "VCR",
+    "role": "both",
+    "size": "290k QA problems over 110k movie scenes; train 212,923 / val 26,534 / test 25,263 questions; 80,418 / 9,929 / 9,557 images; 1,945 / 244 / 189 movies",
+    "split": "11 folds split by movie; two folds held out for val and test (one more fold held blind for later evaluation, not counted in Table 3)",
+    "source": "LSMDC (46k images in train) and Fandango MovieClips YouTube (33k images in train); Mechanical Turk annotation Aug-Oct 2018; 4 answers and 4 rationales per question",
+    "preprocessing": "Shot detection at 1 fps with HSV mean difference 30 pixels; Mask-RCNN X-101-64x4d-FPN threshold 0.7 on middle frame; at least three high-confidence tags; interestingness filter; person tags replaced by gender-neutral names and object tags by class names for text models"
+   },
+   {
+    "name": "SNLI + MultiNLI + back-translated SNLI",
+    "role": "train",
+    "size": null,
+    "split": "SNLI val held out for early stopping",
+    "source": "Used to train the similarity model ESIM+ELMo; paraphrases made by En->De->En with Nematus, labelled entailment; random SNLI pairs as extra neutral",
+    "preprocessing": null
+   },
+   {
+    "name": "TVQA, MovieQA, PororoQA, TGIFQA",
+    "role": "eval",
+    "size": "train sizes 122,039; 9,848; 7,530; 73,179",
+    "split": "PororoQA split by movie 20% val; TGIFQA re-split by GIF 20% val",
+    "source": "Text-only annotation-artifact comparison with BERT-Base (Table 5)",
+    "preprocessing": "TVQA subtitles prepended with separator, trimmed above 128 tokens"
+   }
+  ],
+  "models": [
+   {
+    "name": "R2C",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BiLSTM grounding, bilinear attention contextualization, 2-layer BiLSTM reasoning, MLP scorer over max-pooled features",
+    "init_from": "ResNet50 ImageNet-pretrained (first three blocks frozen); BERT-Base frozen second-to-last layer features, BERT first fine-tuned 1 epoch on VCR text (MLM + NSP)",
+    "tokenizer": "BERT WordPiece (subwords averaged)",
+    "vocab": null,
+    "layers": "grounding BiLSTM 1 layer; reasoning BiLSTM 2 layers",
+    "hidden": "256 per LSTM direction; image projection 2176->512; final projection 1024",
+    "heads": null,
+    "context": null,
+    "other": {
+     "grounding_lstm_input": "1280 (768 BERT + 512 image)",
+     "reasoning_lstm_input": "1536",
+     "class_embedding": "128-dim",
+     "aux_loss": "object label prediction from 2048-d ResNet features to prevent drift",
+     "objects": "only objects mentioned in query/responses, plus whole image as an object"
+    }
+   },
+   {
+    "name": "BERT-Base (text-only)",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT",
+    "init_from": "pretrained",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ESIM+ELMo, LSTM+ELMo",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "RevisitedVQA, BottomUpTopDown, MLB, MUTAN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "VQA models with ResNet50 and GloVe, responses encoded by GRU",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "P_rel (BERT-Base)",
+    "role": "retriever",
+    "params": null,
+    "architecture": "BERT-Base two-way classifier for query-response relevance",
+    "init_from": "pretrained BERT-Base",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "finetune": "lr 2e-5, Adam, batch 32, 3 epochs; fine-tuned on the other folds; true response with probability 25% else random remapped response"
+    }
+   }
+  ],
+  "training": {
+   "objective": "multi-class cross entropy over the 4 responses; separate models for Q->A and QA->R",
+   "optimizer": "Adam",
+   "lr": "2e-4",
+   "lr_schedule": "halve when validation accuracy does not increase for two epochs in a row",
+   "warmup": null,
+   "batch_size": "96",
+   "steps": null,
+   "epochs": "20",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "1e-4",
+   "dropout": "recurrent dropout on LSTM input, p=0.3",
+   "regularisation": "gradient clipping to L2 norm 1.0; auxiliary object-label loss",
+   "hardware": "3 NVIDIA Titan X GPUs",
+   "compute": null,
+   "wall_clock": "roughly 20 hours per model",
+   "seeds": null,
+   "other": {
+    "orthogonal_init": "hidden-hidden LSTM weights"
+   }
+  },
+  "inference": {
+   "decoding": "argmax over 4 choices; staged Q->AR requires correct answer then correct rationale",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per model; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "lambda_Q_to_A": "0.1",
+    "lambda_QA_to_R": "0.01",
+    "matching_bucket_size": "3k examples",
+    "folds": "11"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "Accuracy Q->A",
+     "definition": "pick correct answer among 4",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy QA->R",
+     "definition": "pick correct rationale among 4 given question and correct answer",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy Q->AR",
+     "definition": "both answer and rationale correct; chance 6.25%",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BERT",
+    "BERT (response only)",
+    "ESIM+ELMo",
+    "LSTM+ELMo",
+    "RevisitedVQA",
+    "BottomUpTopDown",
+    "MLB",
+    "MUTAN",
+    "Human"
+   ],
+   "protocol": "Standard train/val/test splits; human performance from 5 Mechanical Turk workers per question on 200 test questions, majority vote, different workers for rationales"
+  },
+  "availability": {
+   "code": "visualcommonsense.com",
+   "weights": null,
+   "data": "visualcommonsense.com (test labels withheld, leaderboard)"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.epochs",
+    "quote": "Each model was trained for 20 epochs, which took roughly 20 hours over 3 NVIDIA Titan X GPUs.",
+    "where": "Appendix E"
+   },
+   {
+    "field": "inference.parameters.lambda",
+    "quote": "We chose λ = 0.1 for Q →A and λ = 0.01 for QA →R.",
+    "where": "Fig 13 caption"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "R2C reaches 44.0% on test staged Q->AR versus 85.0% for humans",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 44.0,
+   "unit": "%",
+   "baseline_value": 85.0,
+   "n": null,
+   "setup": "VCR test set, R2C vs human (5-worker majority vote on 200 questions)",
+   "note": "Val is 43.1; abstract says ~65% for Q->A/QA->R and text rounds to 44%",
+   "where": "Table 1",
+   "table": "Table 1, row R2C, column Q->AR Test"
+  },
+  {
+   "claim": "R2C Q->A accuracy on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->A accuracy",
+   "value": 65.1,
+   "unit": "%",
+   "baseline_value": 91.0,
+   "n": null,
+   "setup": "VCR test, R2C",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row R2C, column Q->A Test"
+  },
+  {
+   "claim": "R2C QA->R accuracy on test",
+   "kind": "measured",
+   "source": null,
+   "metric": "QA->R accuracy",
+   "value": 67.3,
+   "unit": "%",
+   "baseline_value": 93.0,
+   "n": null,
+   "setup": "VCR test, R2C",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row R2C, column QA->R Test"
+  },
+  {
+   "claim": "Best VQA model (MLB) gets only 17.2% Q->AR",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 17.2,
+   "unit": "%",
+   "baseline_value": 6.2,
+   "n": null,
+   "setup": "VCR, VQA baselines with GloVe, ResNet50",
+   "note": null,
+   "where": "Section 6.2",
+   "table": "Table 1, row MLB, column Q->AR Test"
+  },
+  {
+   "claim": "Text-only BERT beats all VQA models on Q->AR",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 35.0,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VCR test, BERT-Base given text with tags replaced by names",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERT, column Q->AR Test"
+  },
+  {
+   "claim": "R2C improves over BERT by about 9 points on Q->AR",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 9,
+   "unit": "% accuracy",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VCR Q->AR, R2C vs BERT",
+   "note": null,
+   "where": "Section 6.2",
+   "table": "Table 1, rows R2C vs BERT, column Q->AR Test"
+  },
+  {
+   "claim": "Response-only BERT is near chance on Q->A (27.7%), showing little answer-only artifact",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->A accuracy",
+   "value": 27.7,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VCR test, BERT response only, chance 25%",
+   "note": null,
+   "where": "Table 1",
+   "table": "Table 1, row BERT (response only), column Q->A Test"
+  },
+  {
+   "claim": "Removing query contextualization drops Q->AR by about 21.6 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 21.5,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "R2C ablation, VCR val",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row No query, column Q->AR"
+  },
+  {
+   "claim": "Replacing BERT with GloVe lowers Q->AR to 18.3%",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 18.3,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "R2C ablation, VCR val",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row GloVe representations, column Q->AR"
+  },
+  {
+   "claim": "Removing visual features during grounding lowers Q->AR to 33.8%",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 33.8,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "R2C ablation, VCR val",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row No vision representation, column Q->AR"
+  },
+  {
+   "claim": "Removing the reasoning LSTM costs about 1.9 points",
+   "kind": "measured",
+   "source": null,
+   "metric": "Q->AR accuracy",
+   "value": 42.2,
+   "unit": "%",
+   "baseline_value": 43.1,
+   "n": null,
+   "setup": "R2C ablation, VCR val",
+   "note": null,
+   "where": "Table 2",
+   "table": "Table 2, row No reasoning module, column Q->AR"
+  },
+  {
+   "claim": "Giving VQA baselines BERT helps, but R2C still best, with 2.5% boost in Q->AR",
+   "kind": "measured",
+   "source": null,
+   "metric": "gain",
+   "value": 2.5,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VCR val, Table 6, BERT vs GloVe baselines",
+   "note": null,
+   "where": "Appendix F",
+   "table": "Table 6"
+  },
+  {
+   "claim": "Answer-only BERT-Base accuracy on human-written-distractor datasets is 33.8% (MovieQA) to 45.8% (TGIFQA), versus 27.6% on VCR Q->A",
+   "kind": "measured",
+   "source": null,
+   "metric": "answer-only accuracy",
+   "value": 27.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Val sets, BERT-Base, A-only column; chance 20% (others) or 25% (VCR)",
+   "note": null,
+   "where": "Table 5 and Appendix D",
+   "table": "Table 5, row VCR Q→A, column A"
+  },
+  {
+   "claim": "BERT with subtitles reaches 70.6% on TVQA, reported as new state of the art",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 70.6,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "TVQA val, BERT-Base with subtitles prepended, 128-token cap",
+   "note": null,
+   "where": "Appendix D",
+   "table": "Table 5, row TVQA, column S+Q+A"
+  },
+  {
+   "claim": "VCRsmall (9.8k train) text-only Q->A is 39.9% vs 53.8% on full VCR",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 39.9,
+   "unit": "%",
+   "baseline_value": 53.8,
+   "n": null,
+   "setup": "BERT-Base text-only, val",
+   "note": null,
+   "where": "Table 5",
+   "table": "Table 5, row VCRsmall Q→A, column Q+A"
+  },
+  {
+   "claim": "Annotators were paid $0.22 per triplet, which workers reported as $8-25/hr",
+   "kind": "measured",
+   "source": null,
+   "metric": "pay",
+   "value": 0.22,
+   "unit": "$ per triplet",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mechanical Turk crowdsourcing",
+   "note": null,
+   "where": "Appendix B.3",
+   "quote": "We paid the workers proportionally at $0.22"
+  }
+ ],
+ "limits": [
+  "Authors say test accuracy is far from human 85%, so the task is unsolved",
+  "BERT is frozen in R2C; authors note fine-tuning end to end would likely raise results (footnote 28)",
+  "Language priors remain in QA->R: BERT gets 64.1% val on rationale choice without the image, attributed to the similarity penalty making distractors distinct",
+  "Remapped detection tags can yield ungrammatical distractors like 'person1 is kissing person1'",
+  "Dataset is biased against women and minorities (movie data); authors recommend not deploying VCR-trained models",
+  "Only one model run per entry; seeds and variance not reported; human score from 200 test questions",
+  "Superseded: leaderboard results and later models are far above R2C"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Adversarial Matching",
+   "definition": "recycle each correct answer exactly three times as a negative for other questions, chosen by max-weight bipartite matching on log P_rel(q_i,r_j) + lambda log(1 - P_sim(r_i,r_j))",
+   "where": "Section 4, Eq 1"
+  },
+  {
+   "term": "Q->AR",
+   "definition": "staged holistic task where both the chosen answer and chosen rationale must be correct; chance 6.25%",
+   "where": "Section 2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "uses-method",
+   "note": "Text representation in R2C, relevance model P_rel, and strong text-only baseline",
+   "quote": null
+  },
+  {
+   "work": "SWAG / Adversarial Filtering (Zellers et al.)",
+   "year": 2018,
+   "arxiv": "1808.05326",
+   "relation": "extends",
+   "note": "Adversarial Matching is contrasted with Adversarial Filtering, which used machine-generated wrong answers",
+   "quote": null
+  },
+  {
+   "work": "ESIM (Chen et al.) with ELMo (Peters et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Similarity model P_sim and baseline",
+   "quote": null
+  },
+  {
+   "work": "VQA (Antol et al.)",
+   "year": 2015,
+   "arxiv": "1505.00468",
+   "relation": "baseline",
+   "note": "VQA models RevisitedVQA, BottomUpTopDown, MLB, MUTAN used as baselines",
+   "quote": null
+  },
+  {
+   "work": "Mask R-CNN",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Object detection and segmentation for tags",
+   "quote": null
+  },
+  {
+   "work": "LSMDC (Rohrbach et al.)",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Movie clip source",
+   "quote": null
+  },
+  {
+   "work": "TVQA, MovieQA, PororoQA, TGIFQA",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "Text-only artifact comparison in Table 5",
+   "quote": null
+  },
+  {
+   "work": "SNLI and MultiNLI",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "Train P_sim",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "VCR: Given an image, a list of regions, and a question, a model must answer the question and provide a rationale",
+   "page": 1,
+   "why": "Shows the task format with detection tags"
+  },
+  {
+   "figure": "Fig 4",
+   "caption": "Overview of Adversarial Matching",
+   "page": 4,
+   "why": "Shows how negatives come from other questions' correct answers"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "High-level overview of R2C",
+   "page": 5,
+   "why": "Grounding, contextualization, reasoning pipeline"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 1, Section 4",
+   "snippet": "W_{i,j} = log(P_rel(q_i, r_j)) + lambda log(1 - P_sim(r_i, r_j))",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Text extraction of tables 1, 2, 5, 6 is column-flattened; values matched by position",
+  "Figure 14-18 attention heatmap text is noise"
+ ]
+}

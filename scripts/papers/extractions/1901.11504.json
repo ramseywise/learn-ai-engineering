@@ -1,0 +1,397 @@
+{
+ "schema": 1,
+ "key": "1901.11504",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/liu-2019-multi-task-deep-neural-networks.pdf",
+ "bib": {
+  "title": "Multi-Task Deep Neural Networks for Natural Language Understanding",
+  "authors": [
+   "Xiaodong Liu",
+   "Pengcheng He",
+   "Weizhu Chen",
+   "Jianfeng Gao"
+  ],
+  "first_author": "Liu",
+  "year": 2019,
+  "venue": "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL), pages 4487-4496",
+  "arxiv": "1901.11504",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 36029,
+  "chars_total": 36029,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can multi-task learning on top of a pre-trained BERT encoder yield more general text representations that improve NLU tasks and adapt to new domains with fewer labels?",
+ "hypothesis": "Multi-task learning and language model pre-training are complementary, so combining them improves NLU performance and domain adaptation.",
+ "contributions": [
+  "MT-DNN: BERT as shared encoder with task-specific output layers, refined by multi-task learning",
+  "New state of the art on ten NLU tasks (SNLI, SciTail, eight of nine GLUE tasks)",
+  "Representations adapt to new domains with substantially fewer in-domain labels than BERT"
+ ],
+ "method": {
+  "summary": "Shared BERT encoder (lexicon + Transformer) with task-specific heads (classification, SAN-based pairwise, regression, pairwise ranking) is further trained on all nine GLUE tasks by sampling mini-batches from a shuffled merged pool, then fine-tuned per task. Domain adaptation tested on SNLI and SciTail with subsampled training data.",
+  "task": "multi-task natural language understanding (GLUE, SNLI, SciTail)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "GLUE (9 tasks)",
+    "role": "both",
+    "size": "CoLA 8.5k, SST-2 67k, MNLI 393k, RTE 2.5k, WNLI 634, QQP 364k, MRPC 3.7k, STS-B 7k, QNLI 108k train",
+    "split": "train/dev/test as in Table 1; test scored on GLUE server",
+    "source": "Wang et al., 2018",
+    "preprocessing": "QNLI reformulated as pairwise ranking"
+   },
+   {
+    "name": "SNLI",
+    "role": "both",
+    "size": "549k train, 9.8k dev, 9.8k test",
+    "split": "0.1%, 1%, 10%, 100% of train randomly sampled, five times",
+    "source": "Bowman et al., 2015",
+    "preprocessing": "used only for domain adaptation"
+   },
+   {
+    "name": "SciTail",
+    "role": "both",
+    "size": "23.5k train, 1.3k dev, 2.1k test",
+    "split": "0.1%, 1%, 10%, 100% of train randomly sampled, five times",
+    "source": "Khot et al., 2018",
+    "preprocessing": "used only for domain adaptation"
+   }
+  ],
+  "models": [
+   {
+    "name": "MT-DNN (large)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "BERT-large bidirectional Transformer shared encoder + task-specific heads",
+    "init_from": "pre-trained BERT-large",
+    "tokenizer": "wordpieces",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "spans no longer than 512 tokens",
+    "other": {
+     "SAN answer module steps K": "hyperparameter, value not stated",
+     "gamma": "1"
+    }
+   },
+   {
+    "name": "MT-DNN base",
+    "role": "proposed",
+    "params": null,
+    "architecture": "as above with BERT-base",
+    "init_from": "pre-trained BERT-base",
+    "tokenizer": "wordpieces",
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "512 tokens",
+    "other": {}
+   },
+   {
+    "name": "BERT-large / BERT-base",
+    "role": "baseline",
+    "params": null,
+    "architecture": "BERT",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "ST-DNN",
+    "role": "baseline",
+    "params": null,
+    "architecture": "same as MT-DNN but shared layers are plain pre-trained BERT, fine-tuned per task",
+    "init_from": "BERT",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Multi-task: cross-entropy (classification), MSE (STS-B), pairwise ranking negative log likelihood with softmax over candidates (QNLI); one task per mini-batch",
+   "optimizer": "Adamax",
+   "lr": "5e-5",
+   "lr_schedule": "linear decay",
+   "warmup": "0.1",
+   "batch_size": "32",
+   "steps": null,
+   "epochs": "5 (maximum)",
+   "tokens": null,
+   "seq_len": "512 tokens max",
+   "precision": null,
+   "weight_decay": null,
+   "dropout": "0.1 task-specific layers, 0.3 MNLI, 0.05 CoLA",
+   "regularisation": "stochastic prediction dropout in SAN; gradient norm clipped to 1",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "pretraining": "uses released BERT models; MLM + NSP",
+    "domain adaptation hyperparameters": "not stated"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "domain adaptation: random subsampling five times, mean reported; GLUE single runs",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "GLUE score",
+     "definition": "benchmark average from GLUE server",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Accuracy",
+     "definition": "SNLI, SciTail, etc.",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Matthews corr (CoLA)",
+     "definition": "per Table 1",
+     "unit": "%",
+     "higher_is_better": true
+    }
+   ],
+   "baselines": [
+    "BiLSTM+ELMo+Attn",
+    "Single-task pretrain Transformer",
+    "GPT on STILTs",
+    "BERT-large",
+    "BERT-base",
+    "ST-DNN",
+    "GPT",
+    "Kim et al. 2018"
+   ],
+   "protocol": "GLUE test via server (Feb 25 2019 leaderboard); dev results in Table 3; adaptation mean of 5 samplings"
+  },
+  "availability": {
+   "code": "https://github.com/namisan/mt-dnn",
+   "weights": "pre-trained models publicly available",
+   "data": "public benchmarks"
+  },
+  "prompts": [],
+  "evidence": []
+ },
+ "results": [
+  {
+   "claim": "MT-DNN reaches 82.7 GLUE test score, 2.2 points above BERT-large",
+   "kind": "measured",
+   "source": null,
+   "metric": "GLUE score",
+   "value": 82.7,
+   "unit": "%",
+   "baseline_value": 80.5,
+   "n": null,
+   "setup": "GLUE test, MT-DNN initialized from BERT-large, MTL then per-task fine-tune",
+   "quote": "pushing the GLUE benchmark score to 82.7%, amounting to 2.2% ab-",
+   "table": "Table 2, row MT-DNN, column Score",
+   "note": null,
+   "where": "Sec 1 / Table 2"
+  },
+  {
+   "claim": "With 0.1% of SNLI train (549 examples) MT-DNN gets 82.1 dev acc vs BERT 52.5",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 82.1,
+   "unit": "%",
+   "baseline_value": 52.5,
+   "n": null,
+   "setup": "SNLI dev, BERT-base based, mean of 5 samplings, 0.1% of data",
+   "quote": "with only 0.1% (23 samples) of the SNLI",
+   "table": "Table 4, row MT-DNN, column 0.1%",
+   "note": null,
+   "where": "Sec 4.4 / Table 4"
+  },
+  {
+   "claim": "MT-DNN-large SNLI test accuracy 91.6, 1.5 above prior SOTA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 91.6,
+   "unit": "%",
+   "baseline_value": 90.1,
+   "n": null,
+   "setup": "SNLI test, full train, adapted MT-DNN-large",
+   "quote": "pushing the benchmarks to 91.6% on SNLI (1.5% absolute improvement)",
+   "table": "Table 5, row MT-DNN LARGE, column Test",
+   "note": null,
+   "where": "Sec 4.4 / Table 5"
+  },
+  {
+   "claim": "MT-DNN-large SciTail test accuracy 95.0, 6.7 above prior SOTA",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 95.0,
+   "unit": "%",
+   "baseline_value": 88.3,
+   "n": null,
+   "setup": "SciTail test, full train",
+   "quote": "95.0% on SciTail (6.7% absolute improvement)",
+   "table": "Table 5, row MT-DNN LARGE, column Test",
+   "note": null,
+   "where": "Sec 4.4 / Table 5"
+  },
+  {
+   "claim": "RTE dev accuracy 83.4 for MT-DNN vs 71.1 BERT-large, showing gains largest on low-resource tasks",
+   "kind": "measured",
+   "source": null,
+   "metric": "accuracy",
+   "value": 83.4,
+   "unit": "%",
+   "baseline_value": 71.1,
+   "n": null,
+   "setup": "GLUE dev RTE (2.5k train)",
+   "quote": null,
+   "table": "Table 3, row MT-DNN, column RTE",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "CoLA test improves 58.9 to 62.5 with fine-tuning after MTL",
+   "kind": "measured",
+   "source": null,
+   "metric": "Matthews corr",
+   "value": 62.5,
+   "unit": "%",
+   "baseline_value": 58.9,
+   "n": null,
+   "setup": "GLUE test CoLA, MT-DNN no-fine-tune vs fine-tuned",
+   "quote": "the ac-curacy improves from 58.9% to 62.5% after ﬁne-",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.3"
+  }
+ ],
+ "limits": [
+  "No ablation separating MTL from the SAN head beyond ST-DNN; single GLUE runs without seeds or significance tests",
+  "Base-size adaptation experiments only for Figure 2/Table 4; compute and hardware not stated",
+  "WNLI not improved (65.1 majority baseline)",
+  "Authors list future work: model structure sharing, task relatedness, adversarial robustness",
+  "Leaderboard results as of Feb 25, 2019 have dated"
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "MT-DNN",
+   "definition": "Multi-Task Deep Neural Network: shared encoder layers with task-specific top layers trained on multiple NLU tasks",
+   "where": "Sec 3"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Representation learning using multi-task deep neural networks (Liu et al. 2015)",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "original MT-DNN, here with BERT encoder",
+   "quote": null
+  },
+  {
+   "work": "BERT",
+   "year": 2018,
+   "arxiv": "1810.04805",
+   "relation": "extends",
+   "note": "shared encoder initialization",
+   "quote": null
+  },
+  {
+   "work": "Stochastic answer networks (Liu et al. 2018a)",
+   "year": 2018,
+   "arxiv": "1804.07888",
+   "relation": "uses-method",
+   "note": "SAN answer module for pairwise classification",
+   "quote": null
+  },
+  {
+   "work": "GLUE",
+   "year": 2018,
+   "arxiv": "1804.07461",
+   "relation": "uses-data",
+   "note": "main benchmark",
+   "quote": null
+  },
+  {
+   "work": "SNLI",
+   "year": 2015,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "domain adaptation",
+   "quote": null
+  },
+  {
+   "work": "SciTail",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "domain adaptation",
+   "quote": null
+  },
+  {
+   "work": "GPT on STILTs (Phang et al. 2018)",
+   "year": 2018,
+   "arxiv": "1811.01088",
+   "relation": "baseline",
+   "note": "",
+   "quote": null
+  },
+  {
+   "work": "Multitask learning (Caruana 1997)",
+   "year": 1997,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MTL motivation",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Architecture of the MT-DNN model for representation learning. The lower layers are shared across all tasks while the top layers are task-specific.",
+   "page": 3,
+   "why": "shows shared encoder with task-specific heads"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Domain adaption results on SNLI and SciTail development datasets using the shared embeddings generated by MT-DNN and BERT",
+   "page": 5,
+   "why": "low-label adaptation curves"
+  }
+ ],
+ "code": [
+  {
+   "where": "p4 Algorithm 1",
+   "snippet": "for epoch in 1..epoch_max: merge D=D1..DT, shuffle D; for bt in D: compute loss (Eq6 classification, Eq7 regression, Eq8 ranking); update Theta",
+   "verbatim": false
+  }
+ ],
+ "problems": []
+}
