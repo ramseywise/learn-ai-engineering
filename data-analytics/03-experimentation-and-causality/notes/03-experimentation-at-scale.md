@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.1145/3292500.3330722 (Fabijan et al., Diagnosing Sample Ratio Mismatch, KDD 2019; not held)
   - https://doi.org/10.1145/1835804.1835810 (Tang et al., Overlapping Experiment Infrastructure, KDD 2010; not held)
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016) (ch. 3, optional stopping; ch. 15 and 20, false discovery rates and selection bias)
+  - Lattimore and Szepesvári, Bandit Algorithms (Cambridge University Press, 2020), ch. 33
   - https://experimentguide.com/ (Kohavi, Tang and Xu, Trustworthy Online Controlled Experiments, Cambridge, 2020; not held)
   - https://doi.org/10.1093/biomet/64.2.191
   - https://doi.org/10.1145/2783258.2788583
@@ -243,6 +244,12 @@ fixed-horizon test for 80% power: 6,272 pairs
 The false positive rate stays below 5% with a check after every pair. The price is visible in the tail. Half the runs stop sooner than the fixed test's 6,272 pairs, but a tenth take more than twice that, and the mixing variance τ² sets where the method is sharpest. Choose τ² from the effect sizes your past experiments really show.
 
 Which to use? If a test is planned for three weeks and reviewed weekly, group-sequential is simple and efficient. If a self-serve platform shows p-values to people who will look whenever they like, always-valid is the only safe option. Either way, keep whole weeks in the analysis. Kohavi and colleagues advise running for at least one to two whole weeks, because weekday and weekend users differ, and a sequential stop on a Tuesday does not change that ([DMKD, 2009](https://doi.org/10.1007/s10618-008-0114-1)).
+
+### When the goal is to find the best variant
+
+Peeking and sequential tests ask "is B better than A, and can I stop early?". A different question is "which of these k variants is best?", where only the final recommendation matters and exploring costs nothing during the test (a pre-launch screen of ten layouts, say). The bandit literature calls this pure exploration, and it has two stopping framings (*Bandit Algorithms*, ch. 33). With a **fixed confidence**, you stop as soon as you can recommend an arm that is optimal with probability at least 1 − δ, and the cost is the number of samples. With a **fixed budget** of n samples, you minimise the chance the recommendation is wrong. For unit-variance Gaussian arms, the sample count a fixed-confidence learner needs grows like log(1/δ) times a constant fixed by the gaps, and two arms need at least about 8 / gap² · log(1/(4δ)) samples in total.
+
+Two practical points follow. First, a policy tuned for cumulative regret, such as UCB or Thompson sampling, is a poor way to pick a winner: it plays the losers so rarely that the chance of naming the wrong arm decays only polynomially in n, and its arm means are biased low because it stops sampling an arm once it looks bad. Use a [bandit](../../04-bayesian-analysis/notes/03b-bandits-and-thompson-sampling.md) to earn during the test and a pure-exploration design to learn from it. Second, under a fixed budget the book's sequential halving (give every arm equal samples, drop the bottom half, repeat) beats equal allocation when one arm is hard to separate and the rest are clearly worse, and loses a little when all gaps are similar; the chapter covers uniform allocation, track-and-stop and sequential halving, and the general theory is in the [RL pillar's bandit note](../../../generative-ai/05-RL/notes/01c-bandit-algorithms.md).
 
 ## Trust checks
 

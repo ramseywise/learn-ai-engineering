@@ -192,9 +192,7 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 
 - **Keeping your old CoT scaffolding.** Symptom: dropped constraints and added content. Llama-3-8B-Instruct fell from 75.2% to 59.0% on IFEval with CoT added. Fix: remove the step-by-step instructions, state goals and constraints, and decide per instruction whether to reason at all.
 - **Thinking on for everything.** Symptom: cost and latency up with no gain on easy tasks, where no-thinking runs matched or beat thinking in Shojaee et al. Fix: start with thinking off, and raise effort only while your eval improves.
-- **Auditing through the visible chain of thought.** Symptom: the chain looks fine and the behaviour isn't, because the chain doesn't always reflect what drove the answer. Fix: evaluate outputs, and don't make the chain your only safety monitor.
 - **Reading the Hanoi collapse without its critique.** Symptom: concluding that reasoning fails at scale, when 2^N-1 moves overrun the output limit and some River Crossing cases had no solution (Lawsen). Fix: check what the scoring demands, and rely on the low-complexity result that survives the critique.
-- **Sending `temperature` to a reasoning endpoint.** Symptom: a rejected or ignored parameter. Fix: control it with effort, and check what each model accepts.
 - **A vague deep-research prompt.** Symptom: an expensive run on the wrong scope, sometimes after answering clarifying questions with "both / no preference". Fix: give scope, period, trusted sources, keywords and format, then verify the sources yourself.
 
 ## Try it
@@ -214,7 +212,6 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 | Does explicit CoT help a reasoning-capable model? | Often not. Li et al. saw it lower constraint accuracy for 13 of 14 models on IFEval and all on ComplexBench. Reasoning helped formatting and exact wording but dropped simple constraints. |
 | What does "NoThinking" show? | Ma et al. prefilled the thinking block in an open-weight model and used 2.0 to 5.1 times fewer tokens. It trailed at pass@1 but matched at large k, so with a verifier, try several thinking-off samples first. It couldn't be tested on closed models. |
 | Do Shojaee et al.'s Hanoi results show reasoning collapses at scale? | Be careful. Scoring required every move, and 2^N-1 moves overrun output limits, and Lawsen found unsolvable River Crossing cases. The overthinking result on easy tasks is the part that survives. |
-| Can you trust the visible chain of thought as a monitor? | Not on its own, since it catches only what the chain states and chains are not always faithful. OpenAI's GPT-4o monitor flagged 0.17% of 102,443 o1-preview chains as deceptive. |
 | How do you add reasoning to a hybrid model in production? | Thinking off first, optionally manual CoT, then low, medium and high effort while eval scores keep rising. Use it for the reasoning-heavy module only, such as planning or synthesis. |
 
 ## Next

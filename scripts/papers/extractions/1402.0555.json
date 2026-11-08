@@ -1,0 +1,372 @@
+{
+ "schema": 1,
+ "key": "1402.0555",
+ "pdf": "generative-ai/05-RL/sources/agarwal-2014-taming-monster.pdf",
+ "bib": {
+  "title": "Taming the Monster: A Fast and Simple Algorithm for Contextual Bandits",
+  "authors": ["Alekh Agarwal", "Daniel Hsu", "Satyen Kale", "John Langford", "Lihong Li", "Robert E. Schapire"],
+  "first_author": "Agarwal",
+  "year": 2014,
+  "venue": "ICML 2014 (arXiv v2, 14 Oct 2014)",
+  "arxiv": "1402.0555",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72359,
+  "chars_total": 72359,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Can a contextual bandit algorithm over a general policy class reach the statistically optimal regret while calling a cost-sensitive classification (argmax) oracle only sublinearly often in T?",
+ "hypothesis": "A coordinate-descent solver for the Randomized UCB convex program, run on an epoch schedule with warm start, keeps optimal regret while cutting oracle calls to about sqrt(KT/ln(|Pi|/delta)); an online variant should be fast and accurate in practice.",
+ "contributions": [
+  "ILOVETOCONBANDITS: epoch-based variant of Randomized UCB with optimal regret O(sqrt(KT ln(T|Pi|/delta)) + K ln(T|Pi|/delta)) (Theorem 2)",
+  "Coordinate descent procedure that outputs a sparse distribution over policies, one oracle call per iteration (Theorem 3, Lemma 1)",
+  "Epoch schedules (doubling, and warm start with tau_m = m^2) giving ~O(sqrt(KT/ln(|Pi|/delta))) total oracle calls (Lemmas 2, 3)",
+  "Lower bound showing the support size, hence oracle calls, cannot be substantially smaller (Theorem 4)",
+  "Online Cover variant in Vowpal Wabbit with a proof-of-concept experiment on RCV1"
+ ],
+ "method": {
+  "summary": "Algorithm 1 samples actions from a smoothed distribution over policies and, at epoch boundaries, solves an optimisation problem (OP) with a regret constraint (exploitation) and a per-policy inverse-propensity variance constraint (exploration) by coordinate descent, each iteration costing one argmax-oracle call on a reweighted cost-sensitive dataset. The experiment uses Online Cover, which keeps n online cost-sensitive policies and updates all with doubly robust cost-sensitive examples, on RCV1 converted from supervised to contextual bandit.",
+  "task": "i.i.d. contextual bandit learning; experiment is CCAT document classification from bandit feedback",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "RCV1 (CCAT document classification)",
+    "role": "eval",
+    "size": "781265 examples, 47152 TF-IDF features",
+    "split": "single online pass; progressive validation on 0/1 loss, no train/test split",
+    "source": "Lewis et al. 2004; supervised-to-contextual-bandit transformation of Dudik et al. 2011b (class labels as actions, one minus 0/1-loss as reward)",
+    "preprocessing": "TF-IDF features; linear representations; LinUCB run after random projection to 1000 dimensions"
+   }
+  ],
+  "models": [
+   {
+    "name": "ILOVETOCONBANDITS (Algorithm 1, theory)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "distribution Q over a policy class Pi accessed only via an argmax oracle (AMO); psi = 100; mu_m = min{1/2K, sqrt(ln(16 tau_m^2 |Pi|/delta)/(K tau_m))}",
+    "init_from": "Q_0 = 0; warm start uses Q_init = Q_{m-1}",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"epoch_schedule_doubling": "tau_m = 2^(m-1)", "epoch_schedule_warm_start": "(tau_1,tau_2) = (3,5), tau_m = m^2 for m>=3", "iteration_bound": "4 ln(1/(K mu_m))/mu_m (Theorem 3)"}
+   },
+   {
+    "name": "Online Cover (Algorithm 5)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "n online cost-sensitive oracles, each a reduction to squared-loss regression (Algorithms 4 and 5 of Beygelzimer and Langford 2009); uniform distribution over the n policies; doubly robust estimator with an online-trained linear reward function",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {"min_probability_mu": "0.05 min(1/K, 1/sqrt(tK))", "best_cover_size_n": "1 on RCV1"}
+   },
+   {
+    "name": "epsilon-greedy",
+    "role": "baseline",
+    "params": null,
+    "architecture": "explores uniformly with prob epsilon",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"best_epsilon": "0.1"}
+   },
+   {
+    "name": "Explore-first",
+    "role": "baseline",
+    "params": null,
+    "architecture": "uniform exploration then exploit-only",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"best_explore_phase": "2 x 10^5 first (Table 1, 'Searched')"}
+   },
+   {
+    "name": "Bagging",
+    "role": "baseline",
+    "params": null,
+    "architecture": "multiple predictors trained on bootstrap samples give a distribution over actions",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"best_bags": "16"}
+   },
+   {
+    "name": "LinUCB",
+    "role": "baseline",
+    "params": null,
+    "architecture": "linear UCB (Auer 2002; Chu et al. 2011), 1000-dim random projection",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {"best_setting": "10^3 dim, minibatch-10 (Table 1)", "diagonal_covariance_variant": "about 1 hour, error 0.137"}
+   },
+   {
+    "name": "Supervised one-against-all",
+    "role": "baseline",
+    "params": null,
+    "architecture": "one-against-all reduction to binary classification, full-information",
+    "init_from": null,
+    "tokenizer": null, "vocab": null, "layers": null, "hidden": null, "heads": null, "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "Theory: solve (OP) over Q in simplex-or-less on policies: sum Q(pi) b_pi <= 2K and for all pi, E_hat[1/Q^mu(pi(x)|x)] <= 2K + b_pi, with b_pi = RegHat_t(pi)/(psi mu). Experiment: online cost-sensitive regression updates with IPS/doubly robust costs.",
+   "optimizer": "Coordinate descent on a potential function (Algorithm 2); online oracle is squared-loss regression reduction",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": null,
+   "steps": null,
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "smoothed projection Q^mu(a|x) = (1-K mu) sum_{pi(x)=a} Q(pi) + mu keeps every action probability at least mu",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": "Table 1 seconds: epsilon-greedy 17, Explore-first 2.6, Bagging 275, LinUCB 212 x 10^3, Online Cover 12, Supervised 5.3",
+   "seeds": null,
+   "other": {"linucb_linear_algebra": "Intel MKL", "implementation": "Vowpal Wabbit, cbify.cc with --cover; all baselines except LinUCB are modifications of Vowpal Wabbit; default parameters elsewhere"}
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "psi": "100",
+    "failure_probability": "delta, input",
+    "mu_experiment": "0.05 min(1/K, 1/sqrt(tK))"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Progressive validation loss", "definition": "online 0/1 loss, each example scored before the learner updates on it (Blum et al. 1999)", "unit": "0/1 error rate", "higher_is_better": false},
+    {"name": "Regret", "definition": "sum_t (r_t(pi*(x_t)) - r_t(a_t)) against the best policy in Pi", "unit": "reward", "higher_is_better": false},
+    {"name": "Oracle calls / running time", "definition": "number of AMO calls over T rounds; seconds in experiment", "unit": "calls; seconds", "higher_is_better": false}
+   ],
+   "baselines": ["epsilon-greedy", "Explore-first", "Bagging", "LinUCB", "Supervised one-against-all"],
+   "protocol": "Single dataset, best hyperparameter per algorithm reported (searched values in Table 1); no seeds, repeats or confidence intervals stated."
+  },
+  "availability": {
+   "code": "Online Cover in Vowpal Wabbit (http://hunch.net/~vw, file cbify.cc, flag --cover)",
+   "weights": null,
+   "data": "RCV1 (public)"
+  },
+  "prompts": [],
+  "evidence": [
+   {"field": "models[LinUCB].other.best_setting", "quote": "103 dim, minibatch-10", "where": "Table 1, row Searched"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "Theorem 2: with probability at least 1-delta the regret of Algorithm 1 after T rounds is O(sqrt(KT ln(T|Pi|/delta)) + K ln(T|Pi|/delta)), the optimal rate up to logs.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "i.i.d. contextual bandit, finite policy class Pi, K actions, rewards in [0,1], assuming (OP) is solvable each epoch",
+   "quote": null,
+   "table": null,
+   "note": "theoretical result; proved in Appendices B, C",
+   "where": "Section 3, Theorem 2"
+  },
+  {
+   "claim": "Coordinate descent solves (OP) in a bounded number of iterations, each one oracle call.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iterations of Algorithm 2",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Q_init = 0; bound 4 ln(1/(K mu_m))/mu_m, which is O~(sqrt(Kt/ln(|Pi|/delta))) in round t",
+   "quote": null,
+   "table": null,
+   "note": "theoretical (Theorem 3)",
+   "where": "Section 3.1"
+  },
+  {
+   "claim": "With the warm-start epoch schedule the total number of oracle calls over T rounds is sublinear in T, spread over O(sqrt(T)) solves.",
+   "kind": "measured",
+   "source": null,
+   "metric": "oracle calls over T rounds",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "epoch schedule (3,5) then tau_m = m^2; high probability; bound O~(sqrt(KT/ln(|Pi|/delta)))",
+   "quote": null,
+   "table": null,
+   "note": "Randomized UCB needs O~(T^5) calls over all T rounds per the paper; this algorithm's net running time is O~(T^1.5 sqrt(K log|Pi|)). Theoretical (Lemma 3).",
+   "where": "Sections 1, 3.4"
+  },
+  {
+   "claim": "Lower bound: on some instance every distribution satisfying the variance constraint has support at least Omega(sqrt(K tau_M / ln(|Pi| tau_M/delta))), so the oracle-call bounds cannot be improved by sparser distributions.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "constructed instance with N contexts and (K-1)N zero-regret policies",
+   "quote": null,
+   "table": null,
+   "note": "theoretical (Theorem 4, Appendix E)",
+   "where": "Section 3.6"
+  },
+  {
+   "claim": "Online Cover reaches progressive validation loss 0.053 on RCV1 contextual-bandit, best among the bandit algorithms and near the 0.051 supervised bound.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progressive validation 0/1 loss",
+   "value": "0.0530",
+   "unit": "0/1 loss",
+   "baseline_value": "0.051 (supervised one-against-all)",
+   "n": 781265,
+   "setup": "RCV1 CCAT, 47152 TF-IDF features, linear representation, best hyperparameters; best at cover size n=1",
+   "quote": "Finally, our algorithm achieves the best loss of 0.0530.",
+   "table": null,
+   "note": "Table 1 prints 0.053 for the same cell.",
+   "where": "Section 6, item 5"
+  },
+  {
+   "claim": "LinUCB with 1000-dimension random projection scores 0.128 progressive validation loss on RCV1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progressive validation 0/1 loss",
+   "value": "0.128",
+   "unit": "0/1 loss",
+   "baseline_value": null,
+   "n": 781265,
+   "setup": "RCV1 CCAT; best setting 10^3 dim, minibatch-10",
+   "quote": null,
+   "table": "Table 1, row P.V. Loss, column LinUCB",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "LinUCB took about 212 x 10^3 seconds (59 hours) versus 12 seconds for Online Cover on RCV1.",
+   "kind": "measured",
+   "source": null,
+   "metric": "running time",
+   "value": "59 hours",
+   "unit": "hours",
+   "baseline_value": "12 seconds (Online Cover)",
+   "n": null,
+   "setup": "RCV1 CCAT, LinUCB after random projection to 1000 dims, Intel MKL linear algebra",
+   "quote": "Still, the algorithm required 59 hours",
+   "table": null,
+   "note": "Table 1 prints 212 x 10^3 seconds (about 58.9 hours) for LinUCB and 12 for Online Cover.",
+   "where": "Section 6 item 4; Table 1"
+  },
+  {
+   "claim": "A diagonal-covariance approximation of LinUCB runs in about 1 hour but is worse, error 0.137.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progressive validation 0/1 loss",
+   "value": "0.137",
+   "unit": "0/1 loss",
+   "baseline_value": "0.128 (full LinUCB)",
+   "n": 781265,
+   "setup": "RCV1 CCAT, diagonal approximation to the covariance",
+   "quote": "gives a worse error of 0.137",
+   "table": null,
+   "note": null,
+   "where": "Section 6 item 4"
+  },
+  {
+   "claim": "Other baselines on RCV1: epsilon-greedy 0.148, Explore-first 0.081, Bagging 0.059; supervised 0.051.",
+   "kind": "measured",
+   "source": null,
+   "metric": "progressive validation 0/1 loss",
+   "value": "0.148",
+   "unit": "0/1 loss",
+   "baseline_value": null,
+   "n": 781265,
+   "setup": "RCV1 CCAT; epsilon=0.1 (epsilon-greedy); 2 x 10^5 exploration examples (Explore-first); 16 bags (Bagging)",
+   "quote": null,
+   "table": "Table 1, row P.V. Loss, columns epsilon-greedy 0.148, Explore-first 0.081, Bagging 0.059, Supervised 0.051",
+   "note": "value shown is epsilon-greedy only; other cells in the table reference",
+   "where": "Table 1"
+  },
+  {
+   "claim": "Online Cover is under 2.3 times slower than the supervised learner that sees full labels.",
+   "kind": "measured",
+   "source": null,
+   "metric": "running-time ratio",
+   "value": "2.3",
+   "unit": "x",
+   "baseline_value": null,
+   "n": null,
+   "setup": "RCV1; Table 1 times 12 s vs 5.3 s",
+   "quote": "Our algorithm is less than 2.3 times slower and nearly achieves the bound.",
+   "table": null,
+   "note": null,
+   "where": "Section 6"
+  }
+ ],
+ "limits": [
+  "The analysis covers the importance-weighted algorithm; the experiment uses Online Cover with a doubly robust estimator, and the authors say analysing Online Cover directly is future work.",
+  "Only one dataset (RCV1, supervised-to-bandit conversion) and no repeats, seeds or error bars; authors cite a lack of public contextual bandit datasets.",
+  "Best cover size on RCV1 is n=1, so the experiment barely exercises the cover; the authors note the small decaying uniform sampling may itself be adequate exploration.",
+  "Computational cost excluding the oracle is still O~((KT)^1.5), above the O(1) per-example update of online supervised learning.",
+  "Regret guarantees need i.i.d. contexts and rewards, a finite policy class (VC extension said to be simple), and rewards in [0,1].",
+  "LinUCB was run only after random projection to 1000 dimensions; the full-dimensional version is impractical.",
+  "Best hyperparameters per algorithm were searched on the same data they are reported on."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "Optimization oracle (AMO)", "definition": "given context and reward vector pairs (x_1,r_1)...(x_t,r_t), returns argmax over pi in Pi of the sum of r_tau(pi(x_tau)); a cost-sensitive classification learner", "where": "Section 2.3, Definition 1"},
+  {"term": "Inverse propensity scoring (IPS)", "definition": "unbiased estimate R_hat_t(pi) = (1/t) sum_i r_i(a_i) 1{pi(x_i)=a_i} / p_i(a_i)", "where": "Section 2.2, Eq. (1)"},
+  {"term": "Smoothed projection", "definition": "Q^mu(a|x) = (1 - K mu) sum_{pi: pi(x)=a} Q(pi) + mu, so every action has probability at least mu", "where": "Section 2.4"},
+  {"term": "Regret (empirical cumulative)", "definition": "sum over t of r_t(pi*(x_t)) - r_t(a_t), relative to the best policy pi* in Pi", "where": "Section 2.1"},
+  {"term": "Progressive validation", "definition": "online evaluation where each example is scored before the learner updates on it (Blum et al. 1999)", "where": "Section 6"}
+ ],
+ "lineage": [
+  {"work": "Efficient optimal learning for contextual bandits (Randomized UCB, the 'monster paper')", "year": 2011, "arxiv": "1106.2369", "relation": "extends", "note": "same convex program; this paper replaces ~O(T^5) oracle calls with coordinate descent and epochs", "quote": null},
+  {"work": "The nonstochastic multiarmed bandit problem (Exp4)", "year": 2002, "arxiv": null, "relation": "related", "note": "optimal-regret measure-based algorithm, linear in |Pi|", "quote": null},
+  {"work": "Contextual bandit algorithms with supervised learning guarantees", "year": 2011, "arxiv": null, "relation": "related", "note": "Exp4.P-style high-probability bounds; source of Freedman form", "quote": null},
+  {"work": "The epoch-greedy algorithm for contextual multi-armed bandits (Langford and Zhang)", "year": 2007, "arxiv": null, "relation": "related", "note": "oracle-based but suboptimal T^(2/3) regret", "quote": null},
+  {"work": "Contextual bandits with linear payoff functions (Chu et al.)", "year": 2011, "arxiv": null, "relation": "baseline", "note": "LinUCB baseline", "quote": null},
+  {"work": "A contextual-bandit approach to personalized news article recommendation (Li et al.)", "year": 2010, "arxiv": "1003.0146", "relation": "related", "note": "LinUCB evaluated as effective", "quote": null},
+  {"work": "Using confidence bounds for exploitation-exploration trade-offs (Auer)", "year": 2002, "arxiv": null, "relation": "baseline", "note": "LinUCB origin", "quote": null},
+  {"work": "Doubly robust policy evaluation and learning (Dudik, Langford, Li)", "year": 2011, "arxiv": "1103.4601", "relation": "uses-method", "note": "doubly robust estimator and supervised-to-bandit conversion used in the experiment", "quote": null},
+  {"work": "RCV1: A new benchmark collection for text categorization research", "year": 2004, "arxiv": null, "relation": "uses-data", "note": "CCAT task, 781265 examples", "quote": null},
+  {"work": "The offset tree for learning with partial labels (Beygelzimer and Langford)", "year": 2009, "arxiv": null, "relation": "uses-method", "note": "squared-loss-regression cost-sensitive oracle used in Online Cover", "quote": null},
+  {"work": "Beating the holdout: bounds for k-fold and progressive cross-validation (Blum et al.)", "year": 1999, "arxiv": null, "relation": "uses-method", "note": "progressive validation", "quote": null},
+  {"work": "Thompson sampling (Chapelle and Li, Li 2013)", "year": 2011, "arxiv": null, "relation": "related", "note": "Bayesian alternative named in motivation", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 1", "caption": "Progressive validation loss, best hyperparameter values, and running times of various algorithm on RCV1.", "page": 11, "why": "Shows the accuracy/time trade-off across all baselines in one place: LinUCB 0.128 in 212k s versus Online Cover 0.053 in 12 s."}
+ ],
+ "code": [
+  {"where": "Eq. (1), Section 2.2", "snippet": "R_hat_t(pi) := (1/t) sum_{i=1..t} r_i(a_i) * 1{pi(x_i) = a_i} / p_i(a_i)", "verbatim": false},
+  {"where": "Section 2.4", "snippet": "Q^mu(a|x) := (1 - K mu) sum_{pi in Pi: pi(x)=a} Q(pi) + mu", "verbatim": false},
+  {"where": "Algorithm 5, step 9", "snippet": "c(a) = 1 - (r_t(a_t)/p_t(a_t)) 1{a = a_t} - mu/p_i(a)", "verbatim": false}
+ ],
+ "problems": [
+  "Text was clean apart from ligature and math symbol garbling; no embedded instructions found.",
+  "Section text says best parameters are shown in 'Table 6' but the only table is Table 1 (paper typo).",
+  "Appendix F and the Online Cover details are in the full version in places; the proofs in Appendices B-E were skimmed for statements, not verified."
+ ]
+}

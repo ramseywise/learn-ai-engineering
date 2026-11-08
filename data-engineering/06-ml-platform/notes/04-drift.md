@@ -37,6 +37,9 @@ Two more cases need naming, since drift is often blamed for them. **A broken fee
 
 The interview study ranks these by how often they actually bite, and its order surprises people. In [Shankar and colleagues' interviews (2022)](https://arxiv.org/abs/2209.09125), feedback delays came first, then "unnatural" drift, meaning missing or corrupt data, then natural drift, about which those engineers were relatively relaxed since they retrain often. So fix your pipeline before you buy a drift detector.
 
+![The four routine ML engineering tasks as a loop, with monitoring and response feeding back into data collection](../../sources/images/shankar-operationalizing-mlops-fig1.png)
+*Image Source: Shankar et al., [Operationalizing Machine Learning: An Interview Study](https://arxiv.org/abs/2209.09125) (2022), Fig. 1*
+
 ## The tests, by hand
 
 We use a reference window from training and a current window, on the taxi data's distance and pickup zone. A linear model is fitted on the reference.
@@ -229,6 +232,9 @@ same again, no shift:      0.492, binomial p=0.84
 
 Each KS test sees nothing. A **domain classifier** sees it at once: label reference rows 0 and current rows 1, train a classifier on half, and test its accuracy on the other half with a binomial test against chance. If it can tell the windows apart, they differ. It also tells you how: its most confident rows show what changed. The same classifier on two windows from the same distribution scores 0.492, which is chance, so its alarm can be trusted.
 
+![The shift-detection pipeline: source and target data pass through dimensionality reduction, then two-sample tests, then a combined shift decision](../../sources/images/rabanser-failing-loudly-fig1.png)
+*Image Source: Rabanser et al., [Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift](https://arxiv.org/abs/1810.11953) (2018), Fig. 1*
+
 What should you use by default? *Failing Loudly* compares these systematically on image data (MNIST and CIFAR-10) at α = 0.05 over five random splits. Its findings run against intuition. Aggregated univariate tests did about as well as multivariate ones. The best detector was **BBSDs**, which reduces the inputs to the [softmax](../../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md#matrix-products-transpose-and-rank) outputs of the classifier you already have, then runs a KS test on each with a Bonferroni correction. Averaged across all the simulated shifts, it reached 0.19 accuracy at detecting shift with 10 samples, 0.47 with 100, 0.70 with 1,000 and 0.79 with 10,000, against 0.03, 0.36, 0.54 and 0.72 for the same tests on raw features. The domain classifier was weak with few samples, bad below about 100, though useful for describing the shift once detected. Small shifts, and shifts touching only 10% of samples, stayed hard even for the best detectors. BBSDs detected a small-intensity shift only 14% of the time at 100 samples and 54% at 10,000. Keep the limits in mind: these results are for images. The authors name NLP and graphs as open, and tabular data is untested too. They also leave online detection open, so the study does not cover testing every day. They call the BBSDs result good news for practitioners, because a classifier with soft predictions can double as a shift detector, even retrospectively. Our reading is a practical default: test your predictions first, since that needs no new infrastructure. Use soft outputs where you have them, because the same study's chi-squared test on hard predictions reached only 0.46 at 1,000 samples.
 
 ## Drift that doesn't matter, and damage with no drift
@@ -272,6 +278,9 @@ MAE on labels: reference 2.35 -> current 2.36 minutes
 The KS test screams at p = 2.7e-113, and the error has not moved, because the relationship holds and the model is linear. This is what *Failing Loudly* found in practice. Its tests flagged the original MNIST train and test split. Many of the domain classifier's most anomalous samples were sixes, and a follow-up KS test on the sixes alone gave p = 2.7e-10 against a Bonferroni threshold of 6.3e-5, yet its malignancy check declared that shift harmless. Rotation in COIL-100 was detected and harmless too. Its authors split the job into three: detect the shift, characterise it, and judge whether it is malignant. They approximate the last, as a preliminary heuristic that assumes a labelling function, by labelling a few of the samples the domain classifier most confidently assigns to the target, needing two to three orders of magnitude fewer labels than the whole.
 
 A tree-based model would give a different result in the second experiment, which is worth remembering. Wilson notes that trees bucket out-of-range values while linear models extrapolate, so how a model behaves off its training range depends on its type. Benign drift for one model is not benign for all.
+
+![Training and post-training feature distributions, with the three failure modes for linear, deep and tree models](../../sources/images/ml-engineering-in-action-fig14-11.png)
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 14.11*
 
 ```mermaid
 flowchart TD

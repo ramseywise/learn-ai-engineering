@@ -39,6 +39,7 @@ sources:
   - https://arxiv.org/abs/2510.11701 (Demystifying RL in agentic reasoning, recipe ablations)
   - https://arxiv.org/abs/2608.16798 (ClawGym II, black-box RL inside real harnesses)
   - https://arxiv.org/abs/2609.15066 (Salesforce Koa, production tool-use RL)
+  - Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -95,7 +96,7 @@ Bias stays inspectable. If it keeps praising long replies, you can see it.
 | Exploration | Bounded by designer bias | Free |
 | Example | **V-IRL**: +1 correct move, −1 wrong, −1.5 landmark error. Gains above | **SimpleVLA-RL**: binary success only, LIBERO 97.6%. One demo per task: SFT 17.3% → +RL **91.7%**, and "pushcut" emerged |
 
-Use process rewards when the correctness of intermediate steps is easy to define. Use outcome rewards when the optimal path is unknown. PRMs: "Let's Verify Step by Step": as a best-of-1,860 reranker on a MATH test subset, a process RM solved 78.2% against 72.4% for an outcome RM and 69.6% for majority voting, though it only reranked and never trained a policy ([arXiv:2305.20050](https://arxiv.org/abs/2305.20050) (Lightman et al., ICLR 2024); details in [02](02-rlhf-pipeline.md#stage-2--reward-model-training)).
+Use process rewards when the correctness of intermediate steps is easy to define. Use outcome rewards when the optimal path is unknown. PRMs: "Let's Verify Step by Step": as a best-of-1,860 reranker on a MATH test subset, a process RM solved 78.2% against 72.4% for an outcome RM and 69.6% for majority voting, though it only reranked and never trained a policy ([arXiv:2305.20050](https://arxiv.org/abs/2305.20050) (Lightman et al., ICLR 2024); details in [02](02-rlhf-pipeline.md#stage-2--reward-model-training); step rewards in [08](08-reasoning-rl-deepseek-r1.md#dense-step-rewards-from-a-process-verifier); *Foundations of LLMs*, ch. 6).
 
 **Credit assignment in practice:**
 
@@ -458,7 +459,7 @@ preprint)). The evidence is two text-game benchmarks at 7–8B.
 | RL | On-policy | Sparse | One scalar per trajectory |
 | **On-policy distillation** | On-policy (student acts) | **Dense**: teacher's full next-token distribution at every student token, minimize KL | Needs a stronger teacher and a realistic environment |
 
-**On-policy distillation** (Thinking Machines Lab, 2025; the idea goes back to GKD, [arXiv:2306.13649](https://arxiv.org/abs/2306.13649) (Agarwal et al., ICLR 2024)) matches pure RL on math in about **1/10 of the steps**. It overfits less, because every trajectory is different and the teacher's feedback is specific to it.
+**On-policy distillation** (Thinking Machines Lab, 2025; the idea goes back to GKD, [arXiv:2306.13649](https://arxiv.org/abs/2306.13649) (Agarwal et al., ICLR 2024); token-level KL, *Foundations of LLMs*, ch. 6, Eq. 6.29) matches pure RL on math in about **1/10 of the steps**. It overfits less, because every trajectory is different and the teacher's feedback is specific to it.
 
 **Case: teaching an 8B model a sense of time** (urgency, persistence, vigilance) without prompts. DPO and four RL recipes each failed differently:
 

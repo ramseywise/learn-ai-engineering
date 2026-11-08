@@ -15,7 +15,7 @@ Stakeholders ask how likely B is to be better and how much it could cost to be w
 
 ## The story
 
-Larkspur's checkout test from the previous pillar gets a new question. [Chapter 1](notes/01-bayesian-inference.md) builds the update and the habit of telling a generative story, on coins, Challenger and German tanks. [Chapter 2](notes/02-mcmc-and-pymc.md) opens the sampler, because a posterior you cannot trust is worse than none. [Chapter 3](notes/03-priors-and-bandits.md) tests priors before fitting and turns posteriors into traffic allocation with Thompson sampling. [Chapter 4](notes/04-bayesian-ab-testing.md) answers Larkspur: P(B > A) of 0.99999, a lift between +0.34 and +0.95 points, and a measured answer to whether peeking is safe. [Chapter 5](notes/05-loss-functions-and-decisions.md) turns that posterior into a ship decision in dollars. [Chapter 6](notes/06-bayesian-machine-learning.md) carries the same ideas into EM, variational inference, VAEs and Gaussian processes. [Chapter 7](notes/07-multilevel-models-and-partial-pooling.md) reads the test across many markets, and measures how partial pooling cuts the winning segment's exaggeration and where it doesn't help. [Chapter 7b](notes/07b-varying-slopes-measurement-error-and-missing-data.md) adds correlated varying slopes, effective parameters, and what to do with noisy and missing predictors.
+Larkspur's checkout test from the previous pillar gets a new question. [Chapter 1](notes/01-bayesian-inference.md) builds the update and the habit of telling a generative story, on coins, Challenger and German tanks. [Chapter 2](notes/02-mcmc-and-pymc.md) opens the sampler, because a posterior you cannot trust is worse than none. [Chapter 3](notes/03-priors-and-bandits.md) tests priors before fitting, and [chapter 3b](notes/03b-bandits-and-thompson-sampling.md) turns posteriors into traffic allocation with Thompson sampling. [Chapter 4](notes/04-bayesian-ab-testing.md) answers Larkspur: P(B > A) of 0.99999, a lift between +0.34 and +0.95 points, and a measured answer to whether peeking is safe. [Chapter 5](notes/05-loss-functions-and-decisions.md) turns that posterior into a ship decision in dollars. [Chapter 6](notes/06-bayesian-machine-learning.md) carries the same ideas into EM, variational inference, VAEs and Gaussian processes. [Chapter 7](notes/07-multilevel-models-and-partial-pooling.md) reads the test across many markets, and measures how partial pooling cuts the winning segment's exaggeration and where it doesn't help. [Chapter 7b](notes/07b-varying-slopes-measurement-error-and-missing-data.md) adds correlated varying slopes, effective parameters, and what to do with noisy and missing predictors.
 
 ---
 
@@ -26,14 +26,15 @@ Larkspur's checkout test from the previous pillar gets a new question. [Chapter 
 | 1 | [Bayesian inference](notes/01-bayesian-inference.md) | Write a generative model, compute a Beta-Binomial posterior by hand and fit the same model in PyMC |
 | 1b | [Grids, hypotheses and simulation](notes/01b-grids-hypotheses-and-simulation.md) | Read two-parameter posteriors through marginals and conditionals, compute a Bayes factor and say what it hinges on, and simulate a joint distribution |
 | 2 | [MCMC and PyMC](notes/02-mcmc-and-pymc.md) | Explain one Metropolis step, read r_hat, ESS and divergences, and fix a sampler by reparameterising |
-| 3 | [Priors and bandits](notes/03-priors-and-bandits.md) | Run a prior predictive check, pick a default prior for logistic regression, and implement Thompson sampling |
+| 3 | [Priors and empirical Bayes](notes/03-priors-and-bandits.md) | Run a prior predictive check, pick a default prior for logistic regression, and shrink winners with a prior fitted across experiments |
+| 3b | [Bandits and Thompson sampling](notes/03b-bandits-and-thompson-sampling.md) | Implement Thompson sampling, measure regret, and say when a bandit beats a fixed A/B test |
 | 4 | [Bayesian A/B testing](notes/04-bayesian-ab-testing.md) | Report P(B > A), a lift interval and expected loss, and say what peeking does to each |
 | 5 | [Loss functions and decisions](notes/05-loss-functions-and-decisions.md) | Choose the action that minimises expected loss, and price a ship decision |
 | 6 | [Bayesian machine learning](notes/06-bayesian-machine-learning.md) | Derive EM and the ELBO, see where ADVI underestimates uncertainty, and run a GP with Bayesian optimisation |
 | 7 | [Multilevel models and partial pooling](notes/07-multilevel-models-and-partial-pooling.md) | Fit random intercepts and slopes in `MixedLM` and PyMC, choose between clustered SEs, fixed effects and a multilevel model, and say when partial pooling does not help |
 | 7b | [Varying slopes, measurement error and missing data](notes/07b-varying-slopes-measurement-error-and-missing-data.md) | Count effective parameters, fit correlated varying slopes with a non-centred form, and model measurement error and missing predictors instead of ignoring them |
 
-Read 1 to 5 in order (1b follows 1 and can wait until after 2). Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Chapter 7b follows 7. Chapter 7 needs 2 and 4, plus clustered SEs from [regression](../02-probability-and-statistics/notes/06-regression-and-glms.md) and the design effect from [probability foundations](../02-probability-and-statistics/notes/02-probability-foundations.md). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
+Read 1 to 5 in order (1b follows 1 and can wait until after 2; 3b follows 3). Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Chapter 7b follows 7. Chapter 7 needs 2 and 4, plus clustered SEs from [regression](../02-probability-and-statistics/notes/06-regression-and-glms.md) and the design effect from [probability foundations](../02-probability-and-statistics/notes/02-probability-foundations.md). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
 
 ## Builds on and feeds into
 
@@ -66,10 +67,14 @@ Read 1 to 5 in order (1b follows 1 and can wait until after 2). Chapter 6 needs 
 - Look at r_hat, ESS and divergences before you look at any result.
 - When a sampler struggles, change the model: standardise, marginalise or use a non-centred form.
 
-**Priors and bandits** ([3](notes/03-priors-and-bandits.md))
+**Priors** ([3](notes/03-priors-and-bandits.md))
 - Simulate from the prior before you fit. A wide prior on the logit scale is not uninformative.
 - Priors matter most when data is thin, and wash out as it grows.
 - Shrink lifts picked as winners. Selection alone inflates them.
+
+**Bandits** ([3b](notes/03b-bandits-and-thompson-sampling.md))
+- Thompson sampling draws once per arm posterior and plays the highest, so exploration fades as evidence grows.
+- A bandit saves traffic but biases arm means, so run a fixed split for the effect you report.
 
 **A/B testing** ([4](notes/04-bayesian-ab-testing.md))
 - P(B > A) says nothing about size. Report the lift interval beside it.

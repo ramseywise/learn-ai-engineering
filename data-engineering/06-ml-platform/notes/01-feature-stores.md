@@ -293,6 +293,12 @@ flowchart LR
 
 Wilson's ch. 15 and ch. 16 sharpen two points on the same ground (author's experience, no measurements). First, skew has a quieter form than a wrong function: a feature added in offline training but absent online is either imputed, which lowers its variance and can leave the model worse than before, or left null, which can break the deployment so that every prediction falls to the fallback (ch. 15). Second, in the Databricks feature store his listings use, `fs.log_model(..., training_set=...)` stores the feature lookups with the model, so batch scoring with `fs.score_batch` rebuilds the features from the same definitions without new code (ch. 16). Wherever your store lets the model carry its lookups, use it.
 
+![Training and serving code bases that must match, against one feature-store ETL that defines each feature once](../../sources/images/ml-engineering-in-action-fig16-7.png)
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 16.7*
+
+![Initial release with features in both systems, then a feature added offline that the online data does not have](../../sources/images/ml-engineering-in-action-fig15-2.png)
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 15.2*
+
 ## Feast from end to end
 
 [Feast](https://docs.feast.dev/) is the open source option, and it runs locally on a Parquet file and SQLite, so nothing here needs a cluster. The local setup is two files. The YAML says where things live and the Python declares the feature view.

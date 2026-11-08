@@ -112,7 +112,7 @@ Human: {question}
 Explain the above in one sentence:
 ```
 
-The content goes first and the instruction last ([02](02-prompt-anatomy.md#ordering)). Swap in "for a 10-year-old" or "as three bullet points" to control audience and form.
+The content goes first and the instruction last ([02](02b-document-types-formatting-and-templates.md#ordering)). Swap in "for a 10-year-old" or "as three bullet points" to control audience and form.
 
 ---
 

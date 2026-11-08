@@ -41,6 +41,8 @@ sources:
   - https://arxiv.org/abs/2509.25454 (DeepSearch, MCTS inside RLVR training)
   - https://arxiv.org/abs/2606.32032 (RLMF, self-judgment as advantage scaling)
   - https://arxiv.org/abs/2606.02113 (Primer on post-training reasoning data, survey)
+  - https://arxiv.org/abs/2402.03300 (Shao et al., DeepSeekMath, GRPO)
+  - Xiao & Zhu, Foundations of Large Language Models (2025), ch. 6
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -438,6 +440,38 @@ beat RL alone by 10.8 points on the hardest problems. Rewarding correct steps as
 answer added 4–5 points of pass@1. All of it is synthetic arithmetic at 100M parameters.
 
 h1 builds the "just past the edge" data from a real model's existing problems. It chains GSM8K questions so that each one's input is the previous one's answer. Then it runs Dr. GRPO stage by stage on chains of length 1 to 5, 200 steps per stage, on Qwen2.5-3B-Instruct ([arXiv:2510.07312](https://arxiv.org/abs/2510.07312) (Motwani et al., 2025-10, preprint)). Chaining exposes skills beyond per-step accuracy. At 82.8% per question, independent errors predict 68.5% on two-question chains, but the model scored 35.1%. **Plain GSM8K RLVR left chains of two or more unchanged (39.4% at length 2). The curriculum reached 58.5% at length 2 and 9.8% at length 5 (from 3.6%), and stayed above the instruct model at pass@128 on unseen lengths 6–8.** Training on length 5 alone, or on a uniform mix of lengths, gave nothing. The paper's argument: outcome-reward signal-to-noise falls with the success rate, so long chains need a curriculum. The transfer is smaller than the abstract's "2.06×" suggests. AIME 2024 avg@32 went from 5.1% to 10.5%, MATH-500 64.2→69.2 and AIME 2025 1.8→3.0, all from one 3B run with no seeds.
+
+### Dense step rewards from a process verifier
+
+DeepSeek dropped process reward models, but if you do have a step verifier the question is how to turn
+its scores `v_t` into a training signal. Xiao and Zhu lay out three routes (*Foundations of LLMs*, ch. 6,
+Eqs. 6.19–6.27). A verifier that scores each step also turns a sparse-reward task into a dense one.
+
+- **Binary scores.** Multiply them, `R = ∏ v_t`, so one wrong step zeroes the path; or give +1 per correct
+  step and a penalty at the first wrong one, then stop.
+- **Real-valued scores: reward shaping.** Reward the *change*, `r_t = v_t − v_{t−1}` (Eq. 6.20). The sum
+  telescopes to `v_n − v_0`, so the path total is still the final step's score. The chapter's example: a
+  verifier's confidence goes 0.4 → 0.9 → 0.1, so step 2 earns +0.5 and step 3 earns −0.8. The loss weights
+  each step by its *future* return `R_t = v_n − v_{t−1}` (Eq. 6.22), not its own reward. With
+  `v_0 = 0` that gives `R_1 = +0.1`, `R_2 = −0.3`, `R_3 = −0.8` (computed here from the chapter's numbers):
+  the brilliant step 2 is still pushed down, because the path it sits on ended badly.
+- **Advantage forms (Eqs. 6.24–6.26).** Use the verifier as a critic, `A_t = r̃_t + γ·v_t − v_{t−1}`, where
+  `r̃_t` is any external reward (usually 0 mid-reasoning). Or drop the critic as GRPO does (Shao et al.,
+  [arXiv:2402.03300](https://arxiv.org/abs/2402.03300)): standardise every step score against the mean μ and
+  standard deviation σ of *all steps in the group*, `ṽ = (v − μ)/σ`, and set
+  `A_t^(i) = Σ_{k≥t} ṽ_k^(i)`. The group mean is the baseline, so no value network is needed. The gain over
+  raw returns is variance, and the chapter's loss omits the PPO/GRPO clip.
+
+Process supervision still tells the model only *where* it went wrong, not what to do instead. On-policy
+distillation gives a full next-token distribution at every student token and minimises
+`Σ_i KL(Pr_student(·|x, y_<i) ‖ Pr_teacher(·|x, y_<i))` over the student's own samples (Eq. 6.29;
+token-level because the step-level KL over multi-token steps is intractable). Case studies and cost are in
+[07](07-reward-design-and-tool-calling.md#dense-signals-on-policy-distillation-and-self-distillation).
+
+On scale, the chapter reports that RL compute against reasoning performance follows an S-shaped curve
+(citing Khatri et al., 2025, and Tan et al., 2026, neither read here, and giving no numbers). A larger or
+MoE base and a longer context raise the ceiling; changes to the loss or to advantage normalisation mostly
+improve how fast you reach it. That fits the base-model-first reading above.
 
 ## Pitfalls
 

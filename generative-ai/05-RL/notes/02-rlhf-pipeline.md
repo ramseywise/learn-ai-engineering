@@ -15,6 +15,7 @@ sources:
   - https://arxiv.org/abs/2503.24290 (Open-Reasoner-Zero)
   - https://arxiv.org/abs/2501.12599 (Kimi k1.5)
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 7
+  - Xiao & Zhu, Foundations of Large Language Models (2025), ch. 4
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5–6
   - Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 6–7
   - https://arxiv.org/abs/2112.00861 (Askell et al., HHH assistant)
@@ -492,6 +493,29 @@ to 0.80 ([arXiv:2503.13551](https://arxiv.org/abs/2503.13551) (Wang et al., 2025
 test set is about 90 problems with no error bars). The agent version of the trade-off is in
 [07](07-reward-design-and-tool-calling.md#reward-design-for-multi-turn-agents).
 
+Two identities from Xiao and Zhu make "dense" precise. A process reward model is a step classifier, and a
+path's reward is the sum of its step log-probabilities, `r(x, y) = Σ_k log Pr(correct | x, y≤k)`, which
+penalises a path for every doubtful step even when the final answer is right (*Foundations of LLMs*, ch. 4,
+Eq. 4.84; Lightman's labels add a third class, "neutral"). And the PPO advantage is already a dense
+reward. Ng et al.'s potential-based shaping adds `γΦ(s′) − Φ(s)` without changing the optimal policy;
+with Φ equal to the value function, the shaped reward is `r + γV(s′) − V(s)`, the one-step TD error
+(Eq. 4.66). Turning step scores into rewards and advantages is worked through in
+[08](08-reasoning-rl-deepseek-r1.md#dense-step-rewards-from-a-process-verifier).
+
+**Ranked lists and a regulariser.** If raters order N answers instead of comparing two, the simplest
+listwise loss is the pairwise loss averaged over every ordered pair, with weight 2 / (N(N−1))
+(*Foundations of LLMs*, ch. 4, Eq. 4.57); Plackett-Luce is the proper ranking model that generalises
+Bradley-Terry. The same chapter describes a fix for an under-determined reward model, from Eisenstein
+et al. (2023, not read here): the Bradley-Terry loss sees only the *difference* `r(x, y_w) − r(x, y_l)`,
+so any constant shift fits equally well, and a penalty on the squared reward sum pins the scale:
+
+```
+L_reg = L_pair + λ · E[(r(x, y_w) + r(x, y_l))²]
+```
+
+The book prints the penalty with a minus sign (Eq. 4.63), which would reward large sums. This note
+writes it as a penalty, which is the only reading that regularises.
+
 You can fit the Bradley-Terry model itself in a few lines. Below, four answers have hidden quality scores, a simulated labeler compares random pairs, and the "reward model" is one learned number per answer, trained by gradient ascent on the log-likelihood:
 
 ```python
@@ -550,7 +574,7 @@ L_PPO(θ) = E[r_θ(x, y)] - β · KL[π_θ(y|x) || π_SFT(y|x)]
 
 where:
 - `r_θ(x, y)` is the reward model score for the generated response
-- `β · KL[...]` is the KL divergence penalty ([KL, defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) keeping the policy near SFT
+- `β · KL[...]` is the KL divergence penalty ([KL, defined](../../01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md#entropy-cross-entropy-kl-and-perplexity)) keeping the policy near SFT. Sampled along one response it is `Σ_t log π_θ(a_t|s_t) − Σ_t log π_ref(a_t|s_t)` (*Foundations of LLMs*, ch. 4, Eq. 4.52)
 - `β` is the penalty coefficient (typically 0.02–0.2)
 
 The KL term is essential. Without it, the policy learns to exploit the reward model

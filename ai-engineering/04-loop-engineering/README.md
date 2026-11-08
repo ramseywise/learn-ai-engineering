@@ -78,7 +78,7 @@ sources/       the papers (Chen, Zhong, Zhu 2026) and images/ with every figure 
 | [GA 03/01 Agent fundamentals](../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md) | The round cap and exits |
 | [GA 08/04 Graders](../../generative-ai/08-eval/notes/04-graders.md) | The scorekeeper's scoring |
 | [GA 08/12 Failure modes](../../generative-ai/08-eval/notes/12-failure-modes.md) | Goodhart: the eval becomes the target |
-| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Optional background: Bayesian bandits for live traffic |
+| [DA 04/03b Bandits and Thompson sampling](../../data-analytics/04-bayesian-analysis/notes/03b-bandits-and-thompson-sampling.md) | Optional background: Bayesian bandits for live traffic |
 | [GA 05 RL](../../generative-ai/05-RL/README.md) | Post-training as the end of the lesson path |
 
 **Feeds into**

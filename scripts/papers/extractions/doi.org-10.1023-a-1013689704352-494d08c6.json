@@ -1,0 +1,422 @@
+{
+ "schema": 1,
+ "key": "https://doi.org/10.1023/a:1013689704352",
+ "pdf": "generative-ai/05-RL/sources/auer-2002-finite-time-analysis-multiarmed-bandit.pdf",
+ "bib": {
+  "title": "Finite-time Analysis of the Multiarmed Bandit Problem",
+  "authors": [
+   "Peter Auer",
+   "Nicolo Cesa-Bianchi",
+   "Paul Fischer"
+  ],
+  "first_author": "Auer",
+  "year": 2002,
+  "venue": "Machine Learning, 47, 235-256",
+  "arxiv": null,
+  "doi": "10.1023/A:1013689704352"
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 32214,
+  "chars_total": 32214,
+  "engine": "pymupdf",
+  "skipped": "Figures 1-4 (algorithm pseudocode sketches) and experiment plots Figs 5-12 are images and are not in the text; many equations are garbled in extraction."
+ },
+ "type": "theory",
+ "question": "Can logarithmic regret for the stochastic K-armed bandit be achieved uniformly over time (finite n), not only asymptotically, with simple and efficient policies?",
+ "hypothesis": "Simple index policies based on Chernoff-Hoeffding confidence bounds, and a decaying-epsilon greedy rule, achieve uniform logarithmic regret for bounded rewards.",
+ "contributions": [
+  "UCB1: index policy with logarithmic regret uniformly over n, rewards in [0,1] (Theorem 1)",
+  "UCB2: more complex policy whose leading constant approaches 1/(2 Delta^2) (Theorem 2)",
+  "epsilon_n-greedy with epsilon_n = cK/(d^2 n) with logarithmic regret bound (Theorem 3)",
+  "UCB1-NORMAL for Gaussian rewards with unknown means and variances (Theorem 4, relies on two numerically verified conjectures)",
+  "Empirical comparison of UCB1-TUNED, UCB2 and epsilon_n-greedy on Bernoulli bandits"
+ ],
+ "method": {
+  "summary": "Theoretical paper with a small simulation study. Proves finite-time expected-regret bounds for UCB1, UCB2, epsilon_n-greedy and UCB1-NORMAL, then simulates UCB1-TUNED, UCB2 and epsilon_n-greedy on 2-armed and 10-armed Bernoulli bandits.",
+  "task": "stochastic multi-armed bandit, regret minimisation",
+  "trains": false,
+  "datasets": [
+   {
+    "name": "Bernoulli bandit distributions 1,2,3 (2 arms) and 11,12,13,14 (10 arms)",
+    "role": "eval",
+    "size": "7 reward-distribution settings",
+    "split": null,
+    "source": "synthetic; arm means e.g. (0.9,0.6), (0.9,0.8), (0.55,0.45), (0.9,0.6 x9), (0.9,0.8,0.8,0.8,0.7,0.7,0.7,0.6,0.6,0.6), (0.9,0.8 x9), (0.55,0.45 x9)",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "UCB1-TUNED",
+    "role": "proposed",
+    "params": null,
+    "architecture": "index policy; index uses sqrt((ln n / n_j) * min{1/4, V_j(n_j)}) with V_j(s)=(1/s)sum X^2 - xbar^2 + sqrt(2 ln t / s)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "note": "no regret bound proved"
+    }
+   },
+   {
+    "name": "UCB1",
+    "role": "proposed",
+    "params": null,
+    "architecture": "play arm maximising xbar_j + sqrt(2 ln n / n_j) (confidence term stated in Sec 4 and proof c_{t,s}=sqrt(2 ln t / s)); pseudocode is in Fig 1 (image)",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "UCB2",
+    "role": "proposed",
+    "params": null,
+    "architecture": "epochs; arm maximising xbar_i + a_{n,r_i}, a_{n,r}=sqrt((1+alpha) ln(e n/tau(r)) / (2 tau(r))), tau(r)=ceil((1+alpha)^r); arm then played tau(r+1)-tau(r) times",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "alpha": "0.001 in experiments"
+    }
+   },
+   {
+    "name": "epsilon_n-greedy",
+    "role": "proposed",
+    "params": null,
+    "architecture": "with prob 1-eps_n play empirical best, else random arm; eps_n=min(1, cK/(d^2 n))",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "d": "set to gap between best and second best arm in experiments",
+     "c": "tuned per distribution, no universal value"
+    }
+   }
+  ],
+  "training": null,
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "100 runs per experiment, 100,000 plays each, averaged",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "UCB2 alpha": "0.001 for all main experiments (searched on distribution 2, Fig 5)",
+    "epsilon_n-greedy c": "roughly searched per distribution; d = mu* - max_{i: mu_i<mu*} mu_i",
+    "UCB1 rewards": "support in [0,1]"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "percentage of plays of the optimal machine",
+     "definition": "share of plays on the best arm over time",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "actual regret",
+     "definition": "difference between the reward of the optimal machine and the reward of the machine played",
+     "unit": "reward",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "epsilon_n-greedy at several values of c",
+    "UCB2 at several alpha"
+   ],
+   "protocol": "semi-log plots over 100,000 plays averaged over 100 runs; no significance testing stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "inference.parameters.UCB2 alpha",
+    "quote": "A ﬁxed value 0.001 has been used for all the remaining",
+    "where": "Sec 4"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "UCB1 expected regret is at most 8 sum ln n / Delta_i + (1+pi^2/3) sum Delta_j for any n, K>1, rewards in [0,1]; per suboptimal arm E[T_j(n)] <= 8 ln n / Delta_j^2 plus a small constant.",
+   "kind": "measured",
+   "source": null,
+   "metric": "leading constant on ln n",
+   "value": "8/Delta_i^2 * ln n leading constant",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 1; arbitrary reward distributions with support in [0,1]; holds for every n, no knowledge of the distributions",
+   "quote": "The leading constant 8/",
+   "table": null,
+   "note": null,
+   "where": "Sec 2, p.238; Thm 1 p.237"
+  },
+  {
+   "claim": "Lai-Robbins constant is 1/D(p_j||p*) and D >= 2 Delta_j^2, so UCB1's 8/Delta^2 is worse than the asymptotic optimum; the 2 is best possible.",
+   "kind": "reported",
+   "source": "Lai & Robbins (1985)",
+   "metric": null,
+   "value": "2",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "asymptotic lower bound for single-parameter families; the authors' remark on the gap",
+   "quote": "one can show that D(p j ∥p∗) ≥2",
+   "table": null,
+   "note": null,
+   "where": "Sec 2, p.238"
+  },
+  {
+   "claim": "UCB2 brings the leading constant of the regret arbitrarily close to 1/(2 Delta_j^2) by taking alpha small, but the additive constant c_alpha grows to infinity as alpha goes to 0.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 2; 0<alpha<1; requires n >= max 1/(2 Delta_i^2); bound (1+alpha)(1+4alpha) ln(2e n Delta_i^2)/(2 Delta_i^2) + c_alpha",
+   "quote": "we can bring the main constant of (2) arbitrarily close to 1/(2",
+   "table": null,
+   "note": "Equation text is split across extraction lines; the 1/(2 Delta^2) form is in Thm 2 remark.",
+   "where": "Sec 2, p.238-239"
+  },
+  {
+   "claim": "epsilon_n-greedy with eps_n = cK/(d^2 n) has probability of choosing a suboptimal arm of order c/(d^2 n) for large c (e.g. c>5); constant epsilon gives linear regret.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 3; requires known lower bound d on the gap between best and second best arm; n >= cK/d",
+   "quote": "It turns out that a rate of 1/n, where n is, as usual, the index of the current play, allows",
+   "table": null,
+   "note": null,
+   "where": "Sec 2, p.239-240"
+  },
+  {
+   "claim": "UCB1-NORMAL achieves logarithmic regret for Gaussian rewards with unknown means and variances, bound 256 (log n) sum sigma_i^2/Delta_i + ...",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "256",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Theorem 4; proof depends on two Student/chi-square tail conjectures verified only numerically",
+   "quote": "256(log n)",
+   "table": null,
+   "note": "The constant 256 appears in Thm 4 and in the proof as 256 sigma_i^2/Delta_i^2.",
+   "where": "Thm 4, p.241"
+  },
+  {
+   "claim": "UCB1-TUNED, which swaps the exploration term for sqrt((ln n/n_j) min{1/4,V_j(n_j)}), performs substantially better than UCB1 in essentially all experiments but has no proved regret bound.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bernoulli bandits, distributions 1-3 and 11-14",
+   "quote": "This variant, which we call UCB1-TUNED, performs substantially better than UCB1 in essentially",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p.245"
+  },
+  {
+   "claim": "Experiments: 100,000 plays averaged over 100 runs per setting.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "100,000 plays, 100 runs",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "seven Bernoulli distributions: 2 arms (1,2,3) and 10 arms (11-14)",
+   "quote": "scale, the behaviour of these quantities during 100,000 plays averaged over 100 different",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p.246"
+  },
+  {
+   "claim": "UCB2 is insensitive to alpha when small; alpha = 0.001 is used for all remaining experiments.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": "0.001",
+   "unit": "alpha",
+   "baseline_value": null,
+   "n": null,
+   "setup": "alpha searched on distribution 2 (0.9, 0.8), Fig 5",
+   "quote": "A ﬁxed value 0.001 has been used for all the remaining",
+   "table": null,
+   "note": null,
+   "where": "Sec 4, p.246"
+  },
+  {
+   "claim": "An optimally tuned epsilon_n-greedy almost always performs best, but degrades rapidly when c is mistuned, and is hurt on distributions 12 and 14 with several clearly suboptimal arms.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "seven Bernoulli distributions, c tuned per distribution",
+   "quote": "An optimally tuned εn-GREEDY performs almost always best. Signiﬁcant exceptions are",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p.247"
+  },
+  {
+   "claim": "UCB1-TUNED performs comparably to well-tuned epsilon_n-greedy and is not very sensitive to the variance of the arms; UCB2 is similar but always slightly worse.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "seven Bernoulli distributions",
+   "quote": "Policy UCB2 performs similarly to UCB1-TUNED, but always slightly worse.",
+   "table": null,
+   "note": null,
+   "where": "Sec 4.1, p.247"
+  }
+ ],
+ "limits": [
+  "UCB1 constant 8/Delta^2 is worse than the Lai-Robbins constant; only UCB2 approaches 1/(2 Delta^2) and needs n >= 1/(2 Delta^2) and small alpha.",
+  "epsilon_n-greedy needs a known gap lower bound d, and c has no universal value; performance degrades rapidly when mistuned.",
+  "UCB1-TUNED, the best-performing UCB variant empirically, has no regret bound.",
+  "UCB1-NORMAL proof rests on two conjectures verified only numerically.",
+  "Rewards must have known bounded support [0,1] (Thm 1-3); stationary arms only, non-stationary and Gittins-type extensions are open.",
+  "Experiments are only Bernoulli with 2 or 10 arms; single 100-run averages, no variance reported in the text."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "regret",
+   "definition": "mu* n - mu_j sum_j E[T_j(n)]: the expected loss due to the policy not always playing the best machine",
+   "where": "Sec 1"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Lai & Robbins, Asymptotically efficient adaptive allocation rules",
+   "year": 1985,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "logarithmic regret lower bound and upper confidence index policies; this paper makes it uniform in n",
+   "quote": null
+  },
+  {
+   "work": "Agrawal, Sample mean based index policies with O(log n) regret",
+   "year": 1995,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "UCB1 derived from Agrawal's index policy",
+   "quote": null
+  },
+  {
+   "work": "Sutton & Barto, Reinforcement learning, an introduction",
+   "year": 1998,
+   "arxiv": null,
+   "relation": "related",
+   "note": "source of epsilon-greedy rule",
+   "quote": null
+  },
+  {
+   "work": "Berry & Fristedt, Bandit problems",
+   "year": 1985,
+   "arxiv": null,
+   "relation": "related",
+   "note": "background",
+   "quote": null
+  },
+  {
+   "work": "Gittins, Multi-armed bandit allocation indices",
+   "year": 1989,
+   "arxiv": null,
+   "relation": "related",
+   "note": "non-stationary extension discussed",
+   "quote": null
+  },
+  {
+   "work": "Pollard, Convergence of stochastic processes",
+   "year": 1984,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Chernoff-Hoeffding and Bernstein inequalities",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 1",
+   "caption": "Sketch of the deterministic policy UCB1",
+   "page": 237,
+   "why": "pseudocode for UCB1 (image, not in text)"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Sketch of the deterministic policy UCB2",
+   "page": 238,
+   "why": "epoch structure"
+  },
+  {
+   "figure": "Fig 5",
+   "caption": "Search for the best value of parameter alpha of policy UCB2",
+   "page": 246,
+   "why": "alpha sensitivity"
+  },
+  {
+   "figure": "Figs 6-12",
+   "caption": "Comparison on distributions 1,2,3,11,12,13,14",
+   "page": 247,
+   "why": "regret and optimal-arm percentage curves"
+  }
+ ],
+ "code": [
+  {
+   "where": "Sec 4, p.245",
+   "snippet": "UCB1 confidence term sqrt(2 ln n / n_j); UCB1-TUNED: sqrt((ln n / n_j) min{1/4, V_j(n_j)}), V_j(s) = ((1/s) sum X_{j,tau}^2) - xbar_{j,s}^2 + sqrt(2 ln t / s)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Algorithm pseudocode (Figs 1-4) is image-only; UCB1 index formula taken from the Sec 4 text and proof.",
+  "Equations are garbled in extraction (Delta lost); quotes chosen from prose lines.",
+  "No embedded instructions found."
+ ]
+}

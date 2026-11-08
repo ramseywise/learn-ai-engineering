@@ -29,6 +29,7 @@ sources:
   - https://arxiv.org/abs/2302.03917
   - https://arxiv.org/abs/2303.08896
   - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
+  - https://arxiv.org/abs/1612.03144
 confidence: high
 cleaned: 2026-11-01
 ---

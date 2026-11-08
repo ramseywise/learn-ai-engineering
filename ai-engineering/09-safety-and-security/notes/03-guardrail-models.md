@@ -13,6 +13,7 @@ sources:
   - https://arxiv.org/abs/2507.07484
   - https://arxiv.org/abs/2301.10226
   - https://arxiv.org/abs/2301.11305
+  - https://arxiv.org/abs/1906.04043
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -279,7 +280,18 @@ A guard evaluated at launch can drift for reasons that have nothing to do with a
 
 ## Detecting generated text
 
-Sometimes the question is whether text came from a model at all. Two approaches recur. **Watermarking** ([arXiv:2301.10226](https://arxiv.org/abs/2301.10226), Kirchenbauer et al., ICML 2023) embeds a signal at generation time that is detectable from a short span of tokens without access to the model. This requires control of the generator. **Post-hoc detection** works on any text: DetectGPT ([arXiv:2301.11305](https://arxiv.org/abs/2301.11305), Mitchell et al., ICML 2023) exploits the curvature of the model's log probability function, and its authors report raising detection of fake news from 20B GPT-NeoX to 0.95 AUROC from 0.81 for the strongest zero-shot baseline. Neither is a reliable basis for a decision about an individual person. An AUROC in the 0.9s, at the low base rates shown above, still yields many false accusations.
+Sometimes the question is whether text came from a model at all. The post-hoc idea starts with GLTR ([arXiv:1906.04043](https://arxiv.org/abs/1906.04043), Gehrmann, Strobelt and Rush, ACL 2019 demo): score each token by its rank under a detector language model, and colour it green (top 10), yellow (top 100), red (top 1,000) or purple (the rest). Sampling from the head of the distribution produces mostly green, while people reach into the tail.
+
+![GLTR top-k overlay on human-written and generated text](../sources/images/gehrmann-gltr-fig1.png)
+*Image Source: Gehrmann et al., [GLTR](https://arxiv.org/abs/1906.04043) (2019), Fig. 1*
+
+Setup matters for every number. With GPT-2 117M as the detector, human text used words outside the top 100 predictions 2.41 times as often as generated text, and a rank-bucket classifier reached **AUC 0.87** (BERT as detector: 0.85) against 0.63 for bag-of-words, on 50 articles from each of six sources (GPT-2 1.5B at temperature 0.7 and top-40, a template news bot, and three human sources). In a study of 35 students on 5 texts each round, the overlay raised accuracy from 54.2% to 72.3%. The limits: the detector is a 2019 model and samples are small (AUC ±0.27 across cross-validation splits on the BERT probability feature). There is no false-positive analysis, a point we add. The authors themselves flag only adversarial sampling from the tail, which they argue would cost coherence, and text conditioned on a hidden seed. Two further approaches recur. **Watermarking** ([arXiv:2301.10226](https://arxiv.org/abs/2301.10226), Kirchenbauer et al., ICML 2023) embeds a signal at generation time that is detectable from a short span of tokens without access to the model. This requires control of the generator. **Post-hoc detection** works on any text: DetectGPT ([arXiv:2301.11305](https://arxiv.org/abs/2301.11305), Mitchell et al., ICML 2023) exploits the curvature of the model's log probability function, and its authors report raising detection of fake news from 20B GPT-NeoX to 0.95 AUROC from 0.81 for the strongest zero-shot baseline. Neither is a reliable basis for a decision about an individual person. An AUROC in the 0.9s, at the low base rates shown above, still yields many false accusations.
+
+![Watermark strength (z-score) against perplexity for multinomial sampling and for beam search](../sources/images/kirchenbauer-watermark-fig2.png)
+*Image Source: Kirchenbauer et al., [A Watermark for Large Language Models](https://arxiv.org/abs/2301.10226) (2023), Fig. 2*
+
+![Perturbation discrepancy distributions for human and model-generated articles under four generators](../sources/images/mitchell-detectgpt-fig3.png)
+*Image Source: Mitchell et al., [DetectGPT](https://arxiv.org/abs/2301.11305) (2023), Fig. 3*
 
 ## Frameworks
 

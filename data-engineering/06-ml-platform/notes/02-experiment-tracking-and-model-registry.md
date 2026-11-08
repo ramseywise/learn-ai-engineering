@@ -306,6 +306,9 @@ v3 trained on rides-2024-05
 
 Moving the alias takes one line and needs no retraining, and the listing tells you what each version was trained on. This is Wilson's point: months later you can recover the artifact from week 25, and know what it was. In ch. 16 he says that with a registry a historic problem takes "no more than an hour" to trace, against hunting for an old model or retraining on data that may have changed. The hour is an illustration in his Fig. 16.3, not a measurement. His Listing 16.3 moves versions between `Production` and `Archived` stages and logs each change to an append-only status table (model name, production version, update time, training time), where this note uses aliases. The idea carries over: the registry keeps what ran, and the log keeps when it changed.
 
+![Six weekly model versions, then a week-25 issue traced with a registry in an hour or without one by painful reconstruction](../../sources/images/ml-engineering-in-action-fig16-3.png)
+*Image Source: Ben Wilson, *Machine Learning Engineering in Action* (Manning, 2022), Fig. 16.3*
+
 But **the registry labels; it doesn't deploy.** Moving the `champion` alias changes nothing in production by itself. A CI/CD pipeline, or a service that resolves the alias at startup, does the deploying ([the maturity chapter](05-mlops-maturity-and-best-practices.md)). That gap matters in an incident: a service that loaded at startup keeps running the old model until something restarts it. Your rollback runbook has to include that step.
 
 The course's services load by `RUN_ID` from S3, which pins an exact artifact and sidesteps the registry altogether. That is a real choice with a real trade-off:

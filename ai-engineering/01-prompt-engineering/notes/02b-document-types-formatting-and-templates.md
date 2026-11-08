@@ -3,13 +3,59 @@ origin: synthesis
 sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 4–6"
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2307.03172
+  - https://arxiv.org/abs/2507.22887
   - https://arxiv.org/abs/2411.10541
 confidence: high
 cleaned: 2026-11-01
 ---
-# 2b — Document types, formatting and templates
+# 2b — Ordering, document types, formatting and templates
 
-> The second half of [prompt anatomy](02-prompt-anatomy.md): which document type to write the prompt as, how to format injected content, how to write agent system prompts, and prompt templates.
+> The second half of [prompt anatomy](02-prompt-anatomy.md): where to put things, which document type to write the prompt as, how to format injected content, how to write agent system prompts, and prompt templates.
+
+---
+
+## Ordering
+
+Two attention effects pull against each other:
+
+- **Recency bias** — content near the end has the most influence on the completion (the book files this under in-context learning).
+- **Lost in the middle** — models recall the beginning and end well and underweight the middle.
+
+Together they create the **Valley of Meh**: content in the early middle of the prompt is used less effectively than the beginning or the second half. Its depth and exact position vary by model, but the book says every model has one, and it matters most in large prompts. There's no full fix — put your best material at the start or end, and filter context to keep the prompt short (book, Ch 6).
+
+The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, they moved the one document that contains the answer through 10, 20 or 30 retrieved documents (about 2K, 4K and 6K tokens). Accuracy was U-shaped in every model they tested. With 20 documents, GPT-3.5-Turbo scored about 76% when the answer came first, about 63% when it came last, and dropped to about 54% in the middle. That is **below its 56.1% closed-book score with no documents at all**: an answer buried in the middle was worse than no retrieval. Extended-context versions of the same models often scored the same as the base versions, so a bigger window doesn't fix the position problem ([arXiv:2307.03172](https://arxiv.org/abs/2307.03172)):
+
+![Accuracy vs. position of the answer document, Liu et al. 2023](../sources/images/huyen-ai-engineering-fig5-4.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-4, reproducing Liu et al. (2023)*
+
+**Test your own model.** A needle-in-a-haystack (NIAH) test inserts one fact at different depths of a long prompt and asks for it back. RULER (Hsieh et al., 2024) is a harder synthetic suite. You can also build a realistic version from your own data, such as the patient's blood type in a long visit transcript. Use **private** facts, so the model can't answer from its training data instead of the context (*AI Engineering*, ch. 5). Where the task description works best is model-specific too: GPT-4 did better with it at the start, Llama 3 at the end. The sandwich below covers both cases.
+
+Few-shot demos obey the same rule: the one placement to avoid is after the query. Cobbina and Zhou moved a fixed five-demo block between the start and end of the system prompt and the start and end of the user message. On MMLU, averaged over ten open-weight models from 1.5B to 72B on 200 sampled questions, the three before-the-query slots lifted accuracy from 33.6% zero-shot to about 69%, while demos after the question reached 45.2%, not significant, and flipped over 30% of predictions on QA tasks. **Put demos before the question; which earlier slot wins is model-specific**: the smallest models preferred the system prompt, Llama 3 70B the user message, and the gap shrank with scale. Five demos, eight English tasks, no CoT demos ([arXiv:2507.22887](https://arxiv.org/abs/2507.22887) (Cobbina and Zhou, 2025-07, preprint)).
+
+**The default skeleton:**
+
+```mermaid
+flowchart LR
+    I["1. Introduction<br/>what document, what task"] --> C["2. Context<br/>the long parade of reference material"]
+    C --> R["3. Refocus<br/>restate the question"]
+    R --> T["4. Transition<br/>the nudge from reading to answering"]
+```
+
+- **Introduction** frames the document so the model reads the context with the task in mind. The model has a fixed amount of compute per token and can't stop to reflect, so it helps to point its attention early. The same applies inside the prompt: if one block of context should be read for a particular aspect, say so at the top of that block.
+- **Refocus** brings the question back to the high-attention end. The introduction-plus-refocus pair is the **sandwich technique**. The refocus can be half a line, but it's the natural place for the detailed version of the question: the introduction says "I'm thinking about book suggestions for X", the refocus asks "What's the best book to recommend next, focusing on narrative prose currently available?" (book, Ch 6). For long inputs (20k+ tokens), Anthropic's guidance agrees: put documents first, the query last — up to 30% better on their tests — and ask the model to pull out relevant quotes before answering.
+- **Transition** ends the prompt where the answer should begin. In chat, a question mark at the end of the user turn is usually enough, because RLHF trained the model to answer the last question asked. In a completion prompt, it's a cue like `Answer:` or `## Solution`. Without one, the model may keep extending the input instead of answering. In Huyen's labeling example, a list of `item --> label` pairs that ends on a bare `chicken` gets continued as `chicken tacos --> edible` (*AI Engineering*, ch. 5). Choose a marker that can't occur in the inputs. The most reliable transition switches from posing the problem to solving it: start writing the answer yourself. In the book's text-davinci-002 test, a prompt with no transition got one more line of context ("I'm aware that she likes to read."). Ending on a question got the asker's musings continued ("I'm thinking of suggesting a book that she can read in one sitting."). Only the version that began the answer, `Based on these, I believe the book she should read next is "`, got a book title. That version also merges refocus and transition, because the opening words restate the question (book, Ch 6):
+
+![Three transitions: missing, naive and refined](../sources/images/berryman-prompt-engineering-for-llms-fig6-2.png)
+*Image Source: Berryman & Ziegler (2024), Fig. 6-2. Shaded text is the completion.*
+
+The book calls writing the first words of the answer **inception** (`The three main risks are 1.` or ` ```python `): the model treats the opening as its own and continues in that shape, which also makes the output easier to parse. Chat APIs that allow prefilling the assistant turn support the same move.
+
+When the instruction changes *how* the content must be read (counting, extracting a specific field), state it in the introduction too — the model can't go back and re-read ([01-how-models-read-prompts](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)).
+
+---
+
+The rest of the anatomy, on document types, formatting injected content, agent system prompts and templates, is in [2b — document types, formatting and templates](02b-document-types-formatting-and-templates.md).
 
 ---
 
@@ -130,6 +176,28 @@ You are a data analyst. Answer the question using only the dataset excerpt.
 A template is the unit you version, test and optimize — see [08-prompt-optimization](08-prompt-optimization.md).
 
 ---
+
+## Pitfalls
+
+- **Burying the key document in the middle.** Symptom: accuracy below having no documents at all: in Liu et al., GPT-3.5-Turbo with 20 documents got about 54% with the answer in the middle against a 56.1% closed-book score. Fix: put the best material at the start or end, filter hard, and use the sandwich. A bigger window did not fix it.
+- **Flattening a procedure into a rule list.** Symptom: "verify identity before refund" gets skipped. In Li's Tau-Bench ablation, the same rules without order lost more than 30% of success. Fix: write numbered stages with exception branches, and ablate one component before rewriting.
+- **No transition at the end.** Symptom: the model continues your input, as in Huyen's list that ends on a bare `chicken` and comes back `chicken tacos --> edible`. Fix: end where the answer starts, with a marker that can't occur in the inputs, or write its first words.
+- **Assembling in priority order.** Symptom: an instruction lands after the context it should frame. Fix: score by priority, but emit in document order. The two are separate fields.
+
+## Try it
+
+1. Run the `assemble` sketch on these snippets with a budget of 700: intro (priority 9, 100 tokens), refocus (8, 50), review (7, 200, requires book), book (6, elastic: 500 or 150), history (5, 300). What comes out, and what is wrong with it?
+   <details><summary>Answer</summary>`intro, book-full, refocus`, 650 tokens. The review is skipped even though it fits a tighter packing, because it outranks the book it requires, so at its turn the requirement isn't in yet. This is the failure the note names for additive greedy: high-value elements that need low-value ones. The elastic book then takes its largest version, leaving no room for history. A subtractive engine starting from everything handles this case better.</details>
+2. Build a needle-in-a-haystack test for the model you use: insert one private fact at 10%, 50% and 90% depth of a long prompt from your own data, and ask for it back over several runs. What makes a fact private, and what pattern should you expect?
+   <details><summary>Answer</summary>The model must not be able to answer it from training data, such as a patient's blood type in a visit transcript. Expect recall worse in the early middle (the Valley of Meh), with depth and position varying by model. That variation is why you test yours.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is the Valley of Meh, and what is the evidence? | Early-middle content gets used less than the start or the second half. Liu et al. moved the answer document through 10 to 30 documents and accuracy was U-shaped in every model, with mid-position accuracy below closed-book for GPT-3.5-Turbo. |
+| What is the sandwich technique? | An introduction that frames the task, the long context, then a refocus restating the question near the end, followed by a transition into the answer. It covers both models that do better with the task first and those that do better with it last. |
+| Your support agent skips "verify identity" about a third of the time. The prompt lists all the rules. What do you try? | Rewrite it as an SOP with ordered stages. Flattening a procedure to a list cost over 30% success in Li's ablation, while tone changes hardly mattered. Ablate before rewriting. |
 
 ## Next
 

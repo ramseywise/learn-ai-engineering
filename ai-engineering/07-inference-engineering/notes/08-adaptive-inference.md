@@ -6,6 +6,7 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 8"
   - https://arxiv.org/abs/2302.01318
+  - https://doi.org/10.1145/1150402.1150464
   - https://pytorch.org/blog/accelerating-generative-ai-2/
   - https://arxiv.org/abs/2312.12456
   - https://arxiv.org/abs/2401.10774
@@ -183,7 +184,12 @@ Ch. 19 closes with an **RL-based runtime tuner** that adjusts batch size, precis
 
 ## Small models: distillation and the quantization shortcut
 
-The cheapest inference is a smaller model. Lakshmanan and Hapke (*Generative AI Design Patterns*, ch. 8, Pattern 24) show the size effect on identical hardware (2 x A100-40 GB): Gemma 3 1B generated 8.82 tokens/s against 3.26 for 27B (Table 8-1; prompt, decoding settings and run count are not given). Their distillation recipe trains a student (Gemma 3 1B) against a teacher (Gemma 3 12B) with a blended loss: `(1 - alpha) * task_loss + alpha * KL`, where the KL term compares the student's temperature-scaled log-softmax with the teacher's softmax and is multiplied by T^2 to keep gradient scale. alpha = 1 is teacher only, alpha = 0 is data only.
+The cheapest inference is a smaller model, and the idea of getting one by training it on a bigger model's labels is older than deep learning. Buciluă, Caruana and Niculescu-Mizil ([KDD 2006](https://doi.org/10.1145/1150402.1150464), "Model Compression") compressed an ensemble-selection model (a greedy blend of hundreds or thousands of SVMs, trees, forests and nets) into one small neural net: generate unlabeled synthetic cases with **MUNGE**, which swaps nominal attribute values between each case and its nearest neighbour (continuous ones are resampled from a Gaussian around the neighbour's value), have the ensemble label them, and fit the net to those labels. On 8 binary tabular problems with 4,000 training points each, a 256-hidden-unit net trained on 400k MUNGE cases had average test RMSE **0.264 against 0.263 for the ensemble** and 0.282 for the best net trained on the 4,000 real points, which is 97% of the ensemble's gain. By the authors' count it matched or beat the ensemble on 6 of 8 problems (within rounding; Table 2 shows 4 at or below it), failed on ADULT (high-arity nominal attributes; ratio 0.29), and was about 1,000x smaller and faster (0.33 MB against 550 MB, 5.6 s against 5,396 s per 10,000 cases, one workstation). Purely random or naive-Bayes pseudo-data did worse and stopped helping or got worse with volume. The paper fits output labels only; there are no soft logits or temperature, which arrive with Hinton's 2015 distillation, and the authors concede labelling and training can cost more than building the ensemble. Single run per setting, small tabular tasks, no deep teacher.
+
+![RMSE against pseudo-data size: MUNGE approaches the ensemble, random and naive-Bayes data do not](../sources/images/bucilua-model-compression-fig2.png)
+*Image Source: Buciluă, Caruana & Niculescu-Mizil, [Model Compression](https://doi.org/10.1145/1150402.1150464) (KDD 2006), Fig. 2: average RMSE over the eight problems against pseudo-data size.*
+
+Lakshmanan and Hapke (*Generative AI Design Patterns*, ch. 8, Pattern 24) show the size effect on identical hardware (2 x A100-40 GB): Gemma 3 1B generated 8.82 tokens/s against 3.26 for 27B (Table 8-1; prompt, decoding settings and run count are not given). Their distillation recipe trains a student (Gemma 3 1B) against a teacher (Gemma 3 12B) with a blended loss: `(1 - alpha) * task_loss + alpha * KL`, where the KL term compares the student's temperature-scaled log-softmax with the teacher's softmax and is multiplied by T^2 to keep gradient scale. alpha = 1 is teacher only, alpha = 0 is data only.
 
 ```python
 kd = F.kl_div(F.log_softmax(student_logits / T, -1), F.softmax(teacher_logits / T, -1),

@@ -36,7 +36,7 @@ Prompt engineering is the craft of writing instructions and examples that consis
 
 The rules from the topic notes on one page. Each group links to the note that explains it.
 
-**Writing the prompt** ([02](notes/02-prompt-anatomy.md))
+**Writing the prompt** ([02](notes/02-prompt-anatomy.md), [2b](notes/02b-document-types-formatting-and-templates.md))
 - Be clear, direct and specific. Say *what to do* rather than what not to do, and **explain why** a constraint exists.
 - Separate instructions from data with **XML tags or delimiters**, and use consistent tag names.
 - **Long content first, question last.** Ask the model to quote the relevant parts before it answers.
@@ -52,7 +52,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 - Lower the temperature for factual or parseable output. Set stop sequences.
 - Climb the structured-output ladder only as far as you need: ask → show → fence → prefill → constrained decoding → tool schema.
 
-**Tools, chains and models** ([05](notes/05-tools-and-function-calling.md), [06](notes/06-chaining-and-workflows.md), [07](notes/07-prompting-reasoning-models.md))
+**Tools, chains and models** ([05](notes/05-tools-and-function-calling.md), [06](notes/06-chaining-and-workflows.md), [7](notes/07-prompting-reasoning-models.md), [7b](notes/07b-reasoning-model-failure-modes.md))
 - Tool names and descriptions *are* prompts. **Gate side effects in code**, not in the prompt.
 - If one prompt does too much, **split it into a chain**. Use a workflow before an agent.
 - With **reasoning models**, state the goal rather than the steps, drop "think step by step", and tune *effort* rather than wording.
@@ -119,7 +119,8 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 
 **Foundations**
 1. [How models read prompts](notes/01-how-models-read-prompts.md) — tokens, autoregression, attention order, truth bias, and chat as a transcript.
-2. [Prompt anatomy](notes/02-prompt-anatomy.md) — the elements, writing instructions, ordering, document types, templates.
+2. [Prompt anatomy](notes/02-prompt-anatomy.md) — the elements, writing instructions, dynamic content.
+   - 2b. [Ordering, document types, formatting and templates](notes/02b-document-types-formatting-and-templates.md) — ordering and the Valley of Meh, document types, formatting injected content, agent system prompts, templates.
 
 **Techniques**
 
@@ -128,7 +129,8 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 4. [Controlling output](notes/04-controlling-output.md) — sampling, stop sequences, the structured-output ladder, logprobs, fine-tuning.
 5. [Tools and function calling](notes/05-tools-and-function-calling.md) — the loop, writing tool definitions, safety gates, debugging.
 6. [Chaining and workflows](notes/06-chaining-and-workflows.md) — prompt chains, topologies, Anthropic's workflow patterns, workflows vs. agents.
-7. [Prompting reasoning models](notes/07-prompting-reasoning-models.md) — what changes, effort settings, failure modes, deep-research agents.
+7. [Prompting reasoning models](notes/07-prompting-reasoning-models.md) — what changes, effort settings, deep-research agents.
+   - 7b. [Reasoning-model failure modes](notes/07b-reasoning-model-failure-modes.md) — overthinking, underthinking, unfaithful chains, and the evidence.
 
 **Practice**
 

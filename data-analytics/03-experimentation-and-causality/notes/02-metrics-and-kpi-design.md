@@ -347,6 +347,9 @@ The segment is defined by something that happens *after* assignment. The treatme
 
 Twyman's law, that any figure that looks interesting or different is usually wrong, is the most useful habit of all. MSN's mail button change showed +28% clicks on the button, +27% on the one next to it and no change in retention. Clicks fell daily, and the likely explanation was confusion. A Windows Store change reported +10% page views, which turned out to be empty pages.
 
+![Daily percentage difference in clicks on the MSN mail button, treatment against control, falling from about 65% on day 1 to about 10% on day 5](../../sources/images/dmitriev-metric-interpretation-pitfalls-fig2.png)
+*Image Source: Dmitriev et al., [A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments](https://doi.org/10.1145/3097983.3098024) (2017), Fig. 2. The click lift on the MSN mail button decays daily, which points to confusion rather than a lasting gain.*
+
 ## Writing a metric down
 
 A metric that lives in a dashboard filter is not defined. Larkspur requires this block for anything used in a decision:

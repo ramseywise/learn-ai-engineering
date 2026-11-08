@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/2212.08073
   - https://arxiv.org/abs/2112.09332
   - https://arxiv.org/abs/2203.02155
+  - https://papers.nips.cc/paper/1713-policy-gradient-methods-for-reinforcement-learning-with-function-approximation
 confidence: high
 cleaned: 2026-11-01
 ---

@@ -4,20 +4,17 @@ sources:
   - Efron and Hastie, Computer Age Statistical Inference (Cambridge University Press, 2016), ch. 3, 6, 13 and 21
   - James, Witten, Hastie, Tibshirani and Taylor, An Introduction to Statistical Learning with Applications in Python (Springer, 2023), ch. 6
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 6 Getting our priorities straight)
-  - http://proceedings.mlr.press/v22/kaufmann12/kaufmann12.pdf (Kaufmann et al., Bayes-UCB, AISTATS 2012)
   - https://doi.org/10.1214/08-aoas191 (Gelman et al., AOAS, 2008)
   - McElreath, Statistical Rethinking (draft of November 2015)
   - McElreath, Statistical Rethinking (CRC Press, first edition), https://xcelab.net/rm/statistical-rethinking/ (ch. 4 to 6)
   - https://arxiv.org/abs/0901.4011
   - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 3, 4 and 7)
-  - https://doi.org/10.1016/0196-8858(85)90002-8
-  - "Sutton and Barto, Reinforcement Learning: An Introduction, 2nd ed. (MIT Press, 2018), ch. 2"
 confidence: high
 cleaned: 2026-11-01
 ---
-# 3 — Priors and Bandits
+# 3 — Priors and Empirical Bayes
 
-The first complaint anyone makes about Bayesian analysis is that the prior is subjective. The more useful complaint is that the "objective" default is often worse: a Normal(0, 100) on a logistic slope looks like modest ignorance and actually says the failure rate is almost certainly 0% or 100%. This chapter is about choosing a prior deliberately. It covers the kinds on offer, how to check one by simulating from it, when the data will overrule it, and why ridge and lasso were priors all along. Then it follows the same posterior into a different job: in a bandit, the posterior decides which option to try next, and that makes it an A/B test which stops wasting traffic as it learns.
+The first complaint anyone makes about Bayesian analysis is that the prior is subjective. The more useful complaint is that the "objective" default is often worse: a Normal(0, 100) on a logistic slope looks like modest ignorance and actually says the failure rate is almost certainly 0% or 100%. This chapter is about choosing a prior deliberately. It covers the kinds on offer, how to check one by simulating from it, when the data will overrule it, and why ridge and lasso were priors all along, then how a prior fitted across many experiments (empirical Bayes) takes back the winner's curse. The bandit half of the story, where the same posterior decides which option to try next, is in [3b](03b-bandits-and-thompson-sampling.md).
 
 ```python
 import numpy as np, pymc as pm, arviz as az
@@ -111,7 +108,7 @@ Two limits come with it. In one parameter Jeffreys tends to match frequentist co
 | Normal(0, s) | ℝ | regression coefficients |
 | Wishart / LKJ | positive-definite matrices | covariance matrices; prefer LKJ in PyMC |
 
-**Conjugate update for a rate:** a Beta(1, 1) prior and X successes in N trials give Beta(1 + X, 1 + N − X). This one line powers the bandit below and the Bayesian A/B test in [chapter 4](04-bayesian-ab-testing.md).
+**Conjugate update for a rate:** a Beta(1, 1) prior and X successes in N trials give Beta(1 + X, 1 + N − X). This one line powers the bandit in [3b](03b-bandits-and-thompson-sampling.md) and the Bayesian A/B test in [chapter 4](04-bayesian-ab-testing.md).
 
 ## Prior predictive checks
 
@@ -353,168 +350,7 @@ Both cases estimate the marginal counts and read the prior off them, which the b
 - **Trial roulette:** give the expert a grid of bins and twenty chips, and have them place chips to show where they think the value lies. Fit a distribution to the chip histogram. It works with people who would never write down a Beta.
 - **BMH's stock-returns example:** expert beliefs about four stocks' daily returns become Normal priors on the means, and a Wishart prior on the covariance. Posterior means and correlations then feed a mean-variance portfolio optimiser. The warning is that finance has a very low signal-to-noise ratio, and that with N assets the covariance has N(N−1)/2 correlations to estimate, so start from the sample covariance, or drop correlations you do not need.
 
-## Bayesian bandits (Thompson sampling)
-
-The multi-armed bandit: N slot machines with unknown payout rates. Each pull earns a reward and also teaches you about that arm. Pull the best-looking arm too early and you may never discover the real best one. Keep pulling all arms equally and you waste pulls on losers. An A/B test is a bandit that explores uniformly until a fixed N and then exploits.
-
-### The algorithm
-
-For each round:
-
-1. For each arm b, draw a sample X_b from its posterior Beta(1 + wins_b, 1 + losses_b).
-2. Pull the arm with the largest sample.
-3. Observe the reward and update that arm's posterior.
-
-```mermaid
-flowchart LR
-    A["Posterior for each arm"] --> B["Draw one sample per arm"]
-    B --> C["Pull the arm with the largest draw"]
-    C --> D["Observe reward"]
-    D --> E["Update that arm's Beta"]
-    E --> A
-```
-
-Uncertain arms produce widely spread samples, so they still win the draw sometimes. Exploration happens automatically and fades as evidence accumulates. Losers are never discarded, only chosen at a decreasing rate. The rule is due to Thompson in 1933, and it spent decades in the shade until empirical work such as [Chapelle and Li (NeurIPS, 2011)](https://proceedings.neurips.cc/paper/2011/hash/e53a0a2978c28872a4505bdb51db06dc-Abstract.html) found it highly competitive and argued it should be a standard baseline.
-
-```python
-rng = np.random.default_rng(5)
-class Bandits:
-    def __init__(self, p_array):
-        self.p = np.asarray(p_array)
-    def pull(self, i):
-        return rng.random() < self.p[i]
-    def __len__(self):
-        return len(self.p)
-
-class BayesianStrategy:
-    def __init__(self, bandits):
-        self.bandits = bandits
-        self.wins = np.zeros(len(bandits))
-        self.trials = np.zeros(len(bandits))
-    def sample_bandits(self, n=1):
-        for _ in range(n):
-            draw = rng.beta(1 + self.wins, 1 + self.trials - self.wins)
-            choice = np.argmax(draw)
-            self.wins[choice] += self.bandits.pull(choice)
-            self.trials[choice] += 1
-
-strat = BayesianStrategy(Bandits([0.85, 0.60, 0.75]))
-strat.sample_bandits(1000)
-print("pulls   ", strat.trials.astype(int))
-print("post sd ", np.round(stats.beta(1 + strat.wins, 1 + strat.trials - strat.wins).std(), 3))
-```
-
-```text
-pulls    [926  26  48]
-post sd  [0.011 0.091 0.061]
-```
-
-After 1,000 pulls the 0.85 arm has 926 of them and a tight posterior. The others have wide posteriors, which is correct: the strategy has learned just enough about them to stop paying for more.
-
-### Measuring a strategy: regret
-
-```text
-R_T = Σ_{i=1..T} (w_opt − w_{B(i)})
-```
-
-Here w_opt is the best arm's true rate and w_B(i) the rate of the arm chosen in round i. Zero regret means you always picked the best arm. [Lai and Robbins (*Advances in Applied Mathematics*, 1985)](https://doi.org/10.1016/0196-8858(85)90002-8) proved that any good strategy's regret must grow at least logarithmically in T, so a strategy matching that rate has "solved" the problem in BMH's phrase. Thompson sampling was shown to be logarithmic by [Agrawal and Goyal (COLT, 2012)](https://proceedings.mlr.press/v23/agrawal12.html), and [Bayes-UCB](http://proceedings.mlr.press/v22/kaufmann12/kaufmann12.pdf) has finite-time bounds that imply asymptotic optimality for binary rewards (Kaufmann, Cappé and Garivier, AISTATS 2012).
-
-| Strategy | Rule | Expected regret |
-|---|---|---|
-| Random | pick uniformly | linear in T |
-| Max mean | pick the highest posterior mean | can lock onto a wrong arm |
-| Upper credible bound | pick the highest 95th percentile of the posterior | fixed quantile: no guarantee claimed here, measured below |
-| Bayes-UCB | pick the highest posterior quantile, with the level rising over time | logarithmic, optimal for binary rewards |
-| Thompson | sample and take the max | logarithmic |
-
-BMH estimates expected regret by repeating the simulation 500 times, the Law of Large Numbers again. Here are 300 runs on low rates more like a checkout than a slot machine:
-
-```python
-def run(rule, p, T, rng):
-    wins, trials = np.zeros(len(p)), np.zeros(len(p))
-    regret = np.empty(T)
-    for t in range(T):
-        i = rule(wins, trials, t, rng)
-        wins[i] += rng.random() < p[i]
-        trials[i] += 1
-        regret[t] = p.max() - p[i]
-    return regret.cumsum()
-
-rules = {
-    "random": lambda w, n, t, r: r.integers(len(w)),
-    "max mean": lambda w, n, t, r: np.argmax((1 + w) / (2 + n)),
-    "95% upper bound": lambda w, n, t, r: np.argmax(stats.beta.ppf(0.95, 1 + w, 1 + n - w)),
-    "Thompson": lambda w, n, t, r: np.argmax(r.beta(1 + w, 1 + n - w)),
-}
-p = np.array([0.15, 0.20, 0.10])                           # checkout-style low rates
-rng = np.random.default_rng(6)
-for name, rule in rules.items():
-    runs = np.array([run(rule, p, 2000, rng)[[99, 499, 1999]] for _ in range(300)])
-    print(f"{name:16s} regret at 100 {runs[:, 0].mean():5.1f}   500 {runs[:, 1].mean():6.1f}   2000 {runs[:, 2].mean():6.1f}")
-```
-
-```text
-random           regret at 100   5.0   500   24.9   2000  100.0
-max mean         regret at 100   2.9   500    8.8   2000   28.3
-95% upper bound  regret at 100   3.3   500    8.6   2000   14.6
-Thompson         regret at 100   3.8   500   12.4   2000   22.8
-```
-
-Random pays at a constant rate. Thompson's regret climbs from 12 to 23 while pulls quadruple. In this setup, over this horizon, the plain 95% bound beats it, at 14.6, and at 500 pulls max mean is level with the bound. Do not read this as a ranking, because the ordering depends on the gaps and the horizon, and with 300 runs the means still carry noise. Run your own simulation with your rates and horizon before you commit to a rule. Thompson's appeal is that it has no quantile to choose and extends directly to the cases below.
-
-### Extensions from BMH
-
-| Extension | Change |
-|---|---|
-| Minimise instead (prizes are bad) | take `argmin` of the samples |
-| Non-stationary arms | learning rate: `wins = rate * wins + result`, `trials = rate * trials + 1`; `rate < 1` forgets old evidence faster |
-| Non-binary rewards | sample from the posterior of each arm's expected reward; needs MCMC if not conjugate |
-| Comment ranking | treat each comment as an arm with Beta(1 + U, 1 + D); on each page load, sample a score per comment and sort. New comments still get seen, unlike ranking by the lower bound ([chapter 4](04-bayesian-ab-testing.md)) |
-
-The non-stationary row is one line of change, and it pays when the world moves. Two arms swap their rates halfway through 4,000 pulls:
-
-```python
-rng = np.random.default_rng(8)
-def forget(rate, T=4000):
-    w, n, reward = np.zeros(2), np.zeros(2), 0
-    for t in range(T):
-        p = np.array([0.20, 0.10]) if t < T // 2 else np.array([0.10, 0.20])   # arms swap
-        i = np.argmax(rng.beta(1 + w, 1 + n - w))
-        r = rng.random() < p[i]
-        w, n = rate * w, rate * n
-        w[i] += r
-        n[i] += 1
-        reward += r
-    return reward / T
-for rate in (1.0, 0.99):
-    print(f"rate {rate}: mean reward per pull {np.mean([forget(rate) for _ in range(100)]):.3f}")
-```
-
-```text
-rate 1.0: mean reward per pull 0.162
-rate 0.99: mean reward per pull 0.179
-```
-
-The forgetful strategy reacts to the swap and earns about 10% more per pull. On a stationary problem it would cost a little, because forgetting throws away evidence.
-
-### Sutton and Barto's testbed, and the exact Bayesian answer
-
-The standard benchmark is the 10-armed testbed: 2,000 random bandits, each arm's true value drawn from Normal(0, 1), each reward Normal(true value, 1), 1,000 steps per run, sample-average estimates starting at 0 (*Reinforcement Learning: An Introduction*, ch. 2). A purely greedy learner levelled off near 1 reward per step against about 1.54 for always pulling the best arm, and found the best arm in only about a third of the runs: in the rest, disappointing early draws from the best arm sent it elsewhere for good. Epsilon-greedy at 0.1 found the best arm sooner but never chose it more than 91% of the time, and 0.01 improves more slowly but is expected to end higher, which the authors state and the 1,000 plotted steps do not show.
-
-Thompson sampling above is the posterior-sampling version of the same trade. Two points from the chapter sharpen it:
-
-- **Non-stationarity.** Sample averages assume arms do not change. If they drift, a constant step size weights recent rewards more, which is the "forgetful strategy" above, and the authors note that effectively non-stationary problems are the most common in reinforcement learning.
-- **The exact answer is intractable.** Treating the posterior as the problem's information state gives the Bayes-optimal exploration, but even with two actions and two rewards a 1,000-step horizon has 2^2000 leaves in its tree. Thompson sampling and UCB are the feasible stand-ins, which is why the chapter's "Bayesian" bandit is an approximation.
-
-### Bandit or A/B test?
-
-| Use a bandit when | Use a fixed-horizon A/B test when |
-|---|---|
-| the cost of showing a loser is high (ads, recommendations, promotions) | you need an unbiased effect estimate to report |
-| arms change over time | the decision is a one-off ship or no-ship |
-| there are many arms | you need to measure guardrail and long-term metrics |
-
-Allocation that responds to outcomes is why the left column cannot report a clean effect. The arm that looked bad early stops getting traffic, so its estimate stays noisy and tends to stay low. Larkspur would not have used a bandit for checkout: it wanted a number to report and guardrail metrics it could read at the end.
+Thompson sampling, regret, the 10-armed testbed and the bandit-or-A/B question are in [3b](03b-bandits-and-thompson-sampling.md).
 
 ## Pitfalls
 
@@ -525,8 +361,6 @@ Allocation that responds to outcomes is why the left column cannot report a clea
 | Zero mass at the truth | The posterior can never move there | Use generous supports |
 | Unscaled inputs with a default prior | Cauchy(0, 2.5) means little if the input is in pounds or milliseconds | Scale first, as Gelman et al. specify |
 | Reading lasso as a sparsity belief | The Laplace posterior is not sparse | Use MAP if you want zeros, and say that's what you did |
-| Reporting a bandit's arm means as an effect | Adaptive allocation biases them | Run a fixed split, or a holdout, for the number you report |
-| Trusting a published regret ranking | The order depends on gaps and horizon | Simulate with your own rates |
 
 ---
 
@@ -535,7 +369,6 @@ Allocation that responds to outcomes is why the left column cannot report a clea
 1. Your prior for a checkout rate is "about 5%, and I'd be surprised outside 3–8%". Find a Beta that says so.
 2. Without running anything: Normal(0, 1) or Normal(0, 10) on a slope, which gives the stronger ridge penalty, and by what factor in λ?
 3. In `washout`, would Beta(2, 10) converge to the flat prior's answer faster or slower than Beta(200, 1000)? Why?
-4. A Thompson bandit runs a week on a price test where weekend buyers convert differently. What goes wrong, and which row of the extensions table helps?
 
 <details>
 <summary>Answers</summary>
@@ -543,7 +376,6 @@ Allocation that responds to outcomes is why the left column cannot report a clea
 1. Beta(25, 475) has mean 0.05 and pseudo-count 500. Checking with `stats.beta(25, 475).ppf([.025, .975])` gives about 0.033 to 0.071. That is close to the stated range, so a slightly smaller count would widen it a little and is also defensible.
 2. Normal(0, 1), by a factor of 100, since λ = 1/τ² with unit noise.
 3. Slower for Beta(200, 1000). Its pseudo-count is 1,200 against 12, so it takes a hundred times the data to be overruled.
-4. The early arm's data comes from a different mix of days, so the posterior reflects timing as well as price, and it shifts traffic on that basis. The learning rate helps it recover, but the honest answer for a price decision is usually a fixed split across whole weeks.
 
 </details>
 
@@ -559,15 +391,12 @@ Allocation that responds to outcomes is why the left column cannot report a clea
 | How does ridge relate to Bayes? | Ridge is the MAP under Normal priors; lasso is the MAP under Laplace priors. λ is the prior precision |
 | Does a Laplace prior give sparsity? | Only at the MAP. Posterior draws are not zero |
 | What is the winner's curse? | Selecting on significance inflates reported effects. Shrinking toward a prior fit across experiments removes most of it |
-| How does Thompson sampling work? | Draw from each arm's posterior, pull the highest draw, and update. Uncertainty drives exploration |
-| What is regret, and what is the bound? | The cumulative gap to the best arm. Lai and Robbins' lower bound is logarithmic in T |
-| Why not always use a bandit? | Adaptive allocation biases effect estimates, and it is poorly suited to long-term and guardrail metrics |
 
 ---
 
 ## Further reading
 
-- BMH ch. 6 for the Jeffreys derivation, the stock example and more bandit extensions.
+- BMH ch. 6 for the Jeffreys derivation and the stock example.
 - Gelman et al. (2008), above, is short and worth reading for its section on separation.
 - [Statistical Rethinking 2023](https://www.youtube.com/playlist?list=PLDcUM9US4XdPz-KxHM4XHt7uUVGWWVSus) for prior predictive simulation throughout.
 
@@ -575,4 +404,4 @@ Allocation that responds to outcomes is why the left column cannot report a clea
 
 ## Next
 
-[Chapter 4: Bayesian A/B Testing](04-bayesian-ab-testing.md) takes the Beta posterior back to Larkspur's checkout: P(B > A), expected loss, what peeking does and does not cost, and ranking by a lower credible bound.
+[Chapter 3b: Bandits and Thompson Sampling](03b-bandits-and-thompson-sampling.md) follows the same Beta posterior into a different job: choosing the next arm to pull. Chapter 4 then takes it back to Larkspur's checkout.

@@ -575,6 +575,27 @@ parts:
           is from the book, at one to two minutes a game. That is the entire case for doing RL on top of a pretrained model
           rather than tabula rasa. Try prompts and in-context learning first: Reflexion and ExpeL change behaviour with no weights.
 
+      - layout: table
+        level: deep
+        title: A 3.8B model needed four stages to reach 57.5 on AIME24
+        recall: Which post-training stage added the most for Phi-4-Mini-Reasoning?
+        lead: "Phi-4-Mini-Reasoning, AIME24 after each stage (math only, mean of 3 runs at temperature 0.6)."
+        header: [Stage, AIME24]
+        widths: [5, 2]
+        rows:
+          - [Base model, "10.0"]
+          - [Mid-training on about 10M DeepSeek-R1 rollouts, "30.0"]
+          - [Distillation SFT on a smaller set, "43.3"]
+          - [DPO with the teacher's wrong rollouts as rejected, "50.0"]
+          - [GRPO, "**57.5**"]
+        highlight: [4]
+        takeaway: At 3.8B, bulk distillation has to come before a small curated SFT set or RL, and the stages together beat the 7B distilled baseline's 53.3.
+        source: notes/05b-choosing-sft-rl-or-no-training.md
+        notes: >-
+          Phi-4-Mini first lost accuracy when SFT on LIMO cut MATH-500 from 71.8 to 57.8, and on s1K to 47.0, so a small set alone
+          does not rescue a small model. GRPO was unstable until they kept prompts with uniform response lengths, oversampled hard
+          prompts and annealed temperature from 1.0 to 0.6. The comparison model is DeepSeek-R1-Distill-Qwen-7B at 53.3.
+
       - layout: image
         title: Quality and diversity both count
         recall: How did quality and diversity affect LIMA's 7B fine-tune on 2,000 examples?

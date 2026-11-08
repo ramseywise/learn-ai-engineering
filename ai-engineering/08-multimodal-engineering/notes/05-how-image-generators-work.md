@@ -15,6 +15,8 @@ sources:
   - https://arxiv.org/abs/2505.11409
   - https://arxiv.org/abs/2301.00704
   - https://arxiv.org/abs/2303.05511
+  - https://arxiv.org/abs/2108.01073
+  - https://arxiv.org/abs/1802.05957
   - https://arxiv.org/abs/1907.05600
   - https://arxiv.org/abs/2006.11239
   - https://arxiv.org/abs/2010.02502
@@ -72,7 +74,17 @@ The idea goes back to Sohl-Dickstein et al. ([arXiv:1503.03585](https://arxiv.or
 
 DDPM made it work: the network predicts the added noise, trained over T = 1,000 steps on a linear noise schedule. That reached an FID of 3.17 on unconditional CIFAR-10. Sampling also ran all 1,000 steps, so 128 images at 256×256 took 300 s on a TPU v3-8 ([arXiv:2006.11239](https://arxiv.org/abs/2006.11239) (Ho et al., NeurIPS 2020)). DDIM keeps the same trained model and swaps the sampler for a deterministic one that skips steps. On CIFAR-10, DDIM scores **FID 4.67 at 50 steps against 4.04 at 1,000**, and 13.36 at 10 steps. DDPM's own sampler cut to 50 steps scores 32.72 ([arXiv:2010.02502](https://arxiv.org/abs/2010.02502) (Song et al., ICLR 2021), Table 1). Learned variances and a cosine noise schedule did the same for the DDPM sampler, bringing it down to about 50 forward passes ([arXiv:2102.09672](https://arxiv.org/abs/2102.09672) (Nichol & Dhariwal, ICML 2021)).
 
+![Diffusion as a chain: the fixed forward process q adds noise from the image x0 to x_T, and the learned reverse process p_theta removes it](../sources/images/ho-ddpm-fig2.png)
+*Image Source: Ho et al., [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239) (NeurIPS 2020), Fig. 2.*
+
 The sampler, not the model, sets how few steps you can get away with. The score-SDE paper shows why ([arXiv:2011.13456](https://arxiv.org/abs/2011.13456) (Song et al., ICLR 2021)). DDPM and score matching are two ways of discretizing one stochastic differential equation. The same trained network also defines a deterministic "probability-flow" ODE with the same marginals. Off-the-shelf ODE solvers can integrate that ODE with over 90% fewer network evaluations and no visible loss in quality. Consistency models train a network to jump from any point on that ODE trajectory straight to its end, which gets sampling down to one or two steps. Distilled from a diffusion model, one reached CIFAR-10 FID 3.55 in one step and 2.93 in two, against DDIM's 4.67 at 50 ([arXiv:2303.01469](https://arxiv.org/abs/2303.01469) (Song et al., ICML 2023)). These numbers are for small unconditional models. The 20–30-step defaults in [chapter 6](06-generating-images-and-video.md#the-controls) come from later samplers built on the same idea.
+
+
+**Sampling from a noised input (SDEdit).** img2img's noise-then-denoise idea began here: noise the input (or a crude stroke painting) to a chosen time t0, then run the reverse diffusion from there, with no training and no new network ([arXiv:2108.01073](https://arxiv.org/abs/2108.01073) (Meng et al., ICLR 2022)). Its t0 is the denoising-strength knob. t0 = 0 returns the guide and t0 = 1 is an unconditional sample, and in between **realism rises as faithfulness falls**; the authors found t0 of 0.3–0.6 worked for reasonable guides, and a guide far from natural images, such as all-white, needs more. The curve is measured on LSUN church with simulated strokes (KID for realism, L2 to the guide for faithfulness), and the paper gives it only as a plot. Human strokes on LSUN bedroom had L2 32.55 against 53.76 for the e4e GAN-inversion baseline, at 256×256 on 2021 baselines and with one t0 shared per task.
+
+![KID and squared L2 against t0 for SDEdit, with outputs from t0 = 0 to 1](../sources/images/meng-sdedit-fig3.png)
+
+*Image Source: Meng et al., [SDEdit](https://arxiv.org/abs/2108.01073) (ICLR 2022), Fig. 3. Realism and faithfulness trade off as t0 grows; the green band is the sweet spot.*
 
 You can see the sampler effect and the guidance effect with no GPU, because for a toy distribution the ideal denoiser has a closed form. The code below uses two narrow clusters of one-dimensional values, at −2 and +2, as the "images". "Right" stands for a prompt that asks for the cluster at +2. Using an exact denoiser removes training error, so anything that goes wrong is due to the sampler.
 
@@ -156,6 +168,9 @@ The latent space is continuous. Interpolating between two points in it, say a do
 
 The token route came first. DALL-E compressed a 256×256 image into a 32×32 grid of tokens from an 8,192-entry codebook. A 12B transformer predicted those 1,024 tokens after up to 256 text tokens, and the system kept the best of 512 samples as ranked by CLIP ([arXiv:2102.12092](https://arxiv.org/abs/2102.12092) (Ramesh et al., ICML 2021)). VQGAN trained the codebook with a perceptual loss and a patch discriminator, which kept detail at higher compression. Most later image tokenizers descend from it ([arXiv:2012.09841](https://arxiv.org/abs/2012.09841) (Esser et al., CVPR 2021)). Parti scaled the token approach to a 20B encoder-decoder, with a zero-shot COCO FID of 7.23 ([arXiv:2206.10789](https://arxiv.org/abs/2206.10789) (Yu et al., TMLR 2022)).
 
+![VQGAN: a convolutional encoder and decoder learn a codebook, and a transformer models the sequence of codebook indices](../sources/images/esser-vqgan-fig2.png)
+*Image Source: Esser et al., [Taming Transformers for High-Resolution Image Synthesis](https://arxiv.org/abs/2012.09841) (CVPR 2021), Fig. 2.*
+
 Two mechanics sit under that token route. A VQ-VAE replaces the VAE's continuous latent with a lookup: each encoder output vector is swapped for its nearest neighbour in a learned codebook, and because that swap has no gradient, training copies the decoder's input gradient straight back to the encoder output (*Multimodal Deep Learning*, ch. 3).
 
 ![VQ-VAE: encoder output vectors are each replaced by the nearest of K codebook vectors before the decoder reconstructs the image; the gradient is copied across the lookup](../sources/images/akkus-multimodal-deep-learning-fig3-23.png)
@@ -188,12 +203,21 @@ A model that both reads and draws can also reason by drawing, though the evidenc
 
 Two other families give up some quality for speed. The first is masked parallel decoding, from MaskGIT. It starts with every token masked and fills in the most confident ones over 8 iterations instead of 256 raster-order steps. On class-conditional ImageNet 256×256 it beat VQGAN's autoregressive decoder on FID (6.18 vs 15.78) ([arXiv:2202.04200](https://arxiv.org/abs/2202.04200) (Chang et al., CVPR 2022)). Muse applies it to text-to-image, producing a 256-token image in 24 steps. On Google's own TPUv4 timings, a batch of 256×256 images took 0.5 s on Muse-3B, 6.4 s on Parti-3B and 9.1 s on Imagen, and Muse reached a zero-shot COCO FID of 7.88 ([arXiv:2301.00704](https://arxiv.org/abs/2301.00704) (Chang et al., 2023-01)).
 
+![MaskGIT: a tokenizer turns the image into visual tokens, then a bidirectional transformer predicts tokens masked at random](../sources/images/chang-maskgit-fig3.png)
+*Image Source: Chang et al., [MaskGIT](https://arxiv.org/abs/2202.04200) (CVPR 2022), Fig. 3.*
+
 The original GAN trains a generator to fool a discriminator ([arXiv:1406.2661](https://arxiv.org/abs/1406.2661) (Goodfellow et al., NIPS 2014)). Sampling is one forward pass with no Markov chain. The model has no explicit likelihood, though. The paper already names the failure where the generator collapses many inputs onto the same output (its "Helvetica scenario"), now called mode collapse, and says the generator must not be trained too much without updating the discriminator. Training alternates k discriminator steps with one generator step, and the paper used k = 1. At the optimum the discriminator outputs 1/2 everywhere, because the generator's distribution equals the data's (Fig. 1). That proof holds only in the non-parametric limit: with a neural-network generator the paper concedes multiple critical points and no guarantee. The paper also suggests training the generator to maximize log D(G(z)) instead of minimizing log(1 − D(G(z))), which has the same fixed point but stronger gradients early on, when the discriminator rejects poor samples with high confidence.
 
 ![The generator's distribution (green) moving onto the data distribution (dotted) as the discriminator (blue, dashed) is updated](../sources/images/goodfellow-gan-fig1.png)
 *Image Source: Goodfellow et al., [Generative Adversarial Nets](https://arxiv.org/abs/1406.2661) (NIPS 2014), Fig. 1. (a) to (d): discriminator updated, then generator, until the two distributions match and D = 1/2.*
 
 The 2014 evidence is small. On MNIST it scored a Gaussian-Parzen log-likelihood of 225 ± 2 against 214 ± 1.1 for Deep GSN. On the Toronto Face Database it scored 2057 ± 26, below Stacked CAE's 2110 ± 50. The authors call that estimator high-variance and poor in high dimensions, and claim only that samples are competitive, not better. Architecture sizes, learning rate and training length are not stated, and it says nothing about speed against other model families. It supports the structural claim (one pass, no chain), not a latency number.
+
+The instability the 2014 paper warned about got a cheap fix four years later. Spectral normalization divides each discriminator weight matrix by its largest singular value, estimated with one power-iteration step per update, which caps the discriminator's Lipschitz constant at 1 ([arXiv:1802.05957](https://arxiv.org/abs/1802.05957) (Miyato et al., ICLR 2018)). On CIFAR-10 the layers' spectral norms stayed at 1–1.05 through training, and it trained at learning rates and momenta where WGAN-GP failed (six Adam settings, 100K generator updates, read from plots). With a ResNet and hinge loss it scored Inception 8.22 and FID 21.7 against 7.92 and 23.8 for orthonormal regularization. A 128×128 conditional ImageNet model reached Inception 21.1. The authors concede the Table 2 rows differ in architecture as well as method, and with the standard CNN orthonormal regularization matched it (7.40 against 7.42) and beat it on STL-10 (8.56 against 8.28). The figure shows why weight normalization and weight clipping hurt: their singular values collapse onto a few directions, so the discriminator is low-rank.
+
+![Squared singular values of discriminator layers under weight clipping, weight normalization and spectral normalization](../sources/images/miyato-spectral-norm-fig3.png)
+
+*Image Source: Miyato et al., [Spectral Normalization for GANs](https://arxiv.org/abs/1802.05957) (ICLR 2018), Fig. 3. Singular values of the final discriminator's layers 1 to 7 at the best setting, CIFAR-10 (a) and STL-10 (b): in layers 1 to 5 WC and WN concentrate on few components, SN spreads.*
 
 GigaGAN scales a StyleGAN-style GAN to 1B parameters. It makes a 512px image in one forward pass of 0.13 s, with a zero-shot COCO FID of 9.09 against 9.62 for Stable Diffusion v1.5, both on the authors' runs ([arXiv:2303.05511](https://arxiv.org/abs/2303.05511) (Kang et al., 2023-03)). Size alone did not get it there: a StyleGAN2 made 5.7× larger got worse (FID 29.91 to 34.07), and the model only scaled once the paper's attention and architecture changes were added. The authors concede its images trail DALL·E 2 in realism and composition.
 

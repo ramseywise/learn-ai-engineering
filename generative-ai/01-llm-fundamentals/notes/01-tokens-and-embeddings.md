@@ -32,6 +32,10 @@ sources:
   - https://arxiv.org/abs/2307.10169
   - https://arxiv.org/abs/2402.06196
   - https://arxiv.org/abs/2303.17564
+  - https://aclanthology.org/D14-1162/
+  - https://openalex.org/W2131462252
+  - https://openalex.org/W2147880316
+  - https://aclanthology.org/W03-0419/
 confidence: high
 cleaned: 2026-11-01
 ---

@@ -300,6 +300,9 @@ The means are close. The marginal standard deviations are about 0.39 under NUTS 
 
 That check is needed because the general answer isn't known. Blei et al. write that **the relative accuracy of VI and MCMC "is still unknown"**: VI generally underestimates variance, yet it need not lose accuracy on posterior predictive densities. Their own speed result is one case. CAVI fit a 30-cluster Gaussian mixture to 10,000 images (576-dimensional colour histograms) in under a minute, "orders of magnitude" faster than the HMC-based sampler in Stan (the review cites version 2.8), with progress tracked by held-out log predictive and no hardware stated. It says nothing about intervals, and a footnote calls it "not a definitive comparison", since a collapsed Gibbs sampler might do better. Two more limits come from the same review. The ELBO is generally non-convex, so CAVI only reaches a local optimum that depends on the starting point. And picking a model by its ELBO "sometimes works in practice" but is "not justified in theory".
 
+![Exact correlated posterior against its mean-field approximation, drawn as 2-sigma ellipses](../../sources/images/blei-variational-inference-fig1.png)
+*Image Source: Blei, Kucukelbir & McAuliffe, [Variational Inference: A Review for Statisticians](https://arxiv.org/abs/1601.00670) (2017), Fig. 1. Ellipses are 2σ contours: the mean-field approximation misses the correlation and is too narrow.*
+
 ### The VAE
 
 A variational autoencoder ([Kingma and Welling, 2013](https://arxiv.org/abs/1312.6114)) learns both halves of the ELBO with neural networks:
@@ -370,7 +373,7 @@ mean, var = model.predict(X_new)
 # sparse GPs (inducing points) cut the O(n^3) cost for large n
 ```
 
-**Bayesian optimisation** uses the GP as a cheap surrogate for an expensive black-box function, such as a model's validation score as a function of its hyperparameters. An acquisition function picks the next point to evaluate, trading off exploration and exploitation, as the bandits in [chapter 3](03-priors-and-bandits.md) do. [Snoek, Larochelle and Adams (NeurIPS, 2012)](https://proceedings.neurips.cc/paper/2012/hash/05311655a15b75fab86956663e1819cd-Abstract.html) made this a standard approach for tuning models.
+**Bayesian optimisation** uses the GP as a cheap surrogate for an expensive black-box function, such as a model's validation score as a function of its hyperparameters. An acquisition function picks the next point to evaluate, trading off exploration and exploitation, as the bandits in [chapter 3b](03b-bandits-and-thompson-sampling.md) do. [Snoek, Larochelle and Adams (NeurIPS, 2012)](https://proceedings.neurips.cc/paper/2012/hash/05311655a15b75fab86956663e1819cd-Abstract.html) made this a standard approach for tuning models.
 
 | Acquisition | Picks the point with |
 |---|---|

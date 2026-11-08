@@ -145,7 +145,7 @@ parts:
           - "**Sandwich:** introduction plus refocus, so the task is both primed and fresh."
           - "Long inputs of 20k+ tokens: documents first, query last, up to **30%** better on Anthropic's tests."
         takeaway: Content in the early middle of a prompt is used least, so state the task early and refocus on it at the end.
-        source: notes/02-prompt-anatomy.md
+        source: notes/02b-document-types-formatting-and-templates.md
         notes: >-
           For our assistant this means the policy manual goes in the middle, the customer's question is restated at the end, and
           a short transition moves from reading to answering. Separate instructions from data with XML tags, and version the
@@ -164,7 +164,7 @@ parts:
           - ["Same rules, flattened from ordered procedure to unordered list", "**Success fell more than 30%**; identity check skipped"]
           - ["Tool descriptions removed, signatures kept", Tool-call errors up 45%]
         takeaway: Write agent prompts as numbered procedures with exception branches, and ablate one component at a time before rewriting.
-        source: notes/02-prompt-anatomy.md
+        source: notes/02b-document-types-formatting-and-templates.md
         notes: >-
           This is our exact assistant, so read the middle row carefully. The same rules as an unordered list skipped verify
           identity before refund. A numbered procedure of validate, classify, execute and verify lets the model know which stage
@@ -470,6 +470,24 @@ parts:
           Explicit chain-of-thought can actually hurt instruction-following in these models. Escalate gradually from thinking off through low, medium and high. Two warnings from
           the failure-mode table: the visible reasoning is not always faithful to what drove the answer, so do not use it as an audit trail, and some open reasoning models have
           weaker tool calling, so test it. Reserve these models for the hard subtasks. That word eval has now come up twice, so let us make it precise.
+
+      - layout: table
+        level: deep
+        title: Reasoning models fail in ways their output hides
+        recall: Which reasoning-model failures can you not catch by reading the visible chain of thought?
+        lead: Four failure modes from the failure-mode table, and what to do about each.
+        header: [Failure, What to do]
+        widths: [5.2, 5]
+        highlight: [3]
+        rows:
+          - ["**Overthinking** easy tasks and **underthinking** hard ones", "Be specific about task and output, route only hard subtasks to the reasoning model, tune effort"]
+          - ["Instruction-following drops with explicit CoT", "Drop manual CoT and let the model decide when to reason"]
+          - ["**The chain is not faithful** to what drove the answer", "Evaluate outputs, not the thinking text; a monitor catches only what the chain states"]
+          - ["Weaker tool calling in some open reasoning models", "Test parallel and multi-step tool use before relying on it"]
+        takeaway: Judge a reasoning model by its outputs and an eval, since the visible chain of thought is neither a complete record nor a safety monitor.
+        source: notes/07b-reasoning-model-failure-modes.md
+        notes: >-
+          This is the detail behind the two warnings on the previous slide. OpenAI's GPT-4o monitor flagged only 0.17% of 102,443 o1-preview chains as deceptive, which is a reminder that a chain monitor sees only what the chain says. For our assistant the practical rule is the same as before: route only the hard subtask to a reasoning model, and measure the result.
 
   - title: Why it won't last
     summary: Eval first · Judges · Optimization · Injection and defenses · Other applications

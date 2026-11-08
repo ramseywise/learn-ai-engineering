@@ -119,7 +119,7 @@ Two masks constrain that exchange:
 
 Practical consequence: **put the instruction before the content it applies to when the task changes *how* the content must be read.** The book's example: asked to count the words in a 173-word paragraph *after* reading it, ChatGPT answered 348, wrong by a factor of two. Asked *first*, it came much closer, though the book says it still wasn't exact, because counting is hard for LLMs whatever the order. The model wasn't keeping a word count while reading because it didn't know that was the job.
 
-The counterweight for long documents is covered in [02-prompt-anatomy](02-prompt-anatomy.md#ordering): put bulk reference material first and *restate* the question at the end ("refocus"), so the instruction is both primed and fresh.
+The counterweight for long documents is covered in [02-prompt-anatomy](02b-document-types-formatting-and-templates.md#ordering): put bulk reference material first and *restate* the question at the end ("refocus"), so the instruction is both primed and fresh.
 
 **One-pass heuristic:** could a domain expert who knew all the facts complete this prompt in a single read, without notes or backtracking? If not, restructure the task (reorder, decompose, or move computation out of the model) rather than asking more forcefully.
 

@@ -229,7 +229,7 @@ Biases in the model's own outputs — demographic and representational harms —
 
 Hallucination is the same behavior as fluent completion ([01](01-how-models-read-prompts.md#property-4--truth-bias-and-hallucination-are-the-same-behavior)). Prompt-level mitigations:
 
-- **Ground it**: give it the source text and ask it to quote before answering ([02](02-prompt-anatomy.md#ordering)). Prompting can't *confine* a model to its context. "Answer only from the provided text", plus examples of questions it should decline, lowers the leakage of pretrained knowledge but doesn't stop it, and fine-tuning on your corpus doesn't either. Only a model trained exclusively on the allowed corpus is airtight, which is rarely practical (*AI Engineering*, ch. 5).
+- **Ground it**: give it the source text and ask it to quote before answering ([02](02b-document-types-formatting-and-templates.md#ordering)). Prompting can't *confine* a model to its context. "Answer only from the provided text", plus examples of questions it should decline, lowers the leakage of pretrained knowledge but doesn't stop it, and fine-tuning on your corpus doesn't either. Only a model trained exclusively on the allowed corpus is airtight, which is rarely practical (*AI Engineering*, ch. 5).
 - **License "I don't know"**: say explicitly that unknown is an acceptable answer, and show it in examples:
 
 ```

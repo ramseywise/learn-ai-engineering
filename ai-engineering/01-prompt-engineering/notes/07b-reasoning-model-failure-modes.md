@@ -25,6 +25,16 @@ cleaned: 2026-11-01
 
 > The failure modes of [prompting reasoning models](07-prompting-reasoning-models.md): overthinking and underthinking, unfaithful chains, and the measured evidence for each.
 
+A reasoning model can fail without anything in its output looking wrong. It can spend minutes on a question that needed a sentence, give up early on one that needed an hour, or show a tidy chain of thought that is not what produced the answer. This chapter collects those failures and the measurements behind them, so you know which ones a prompt can fix and which need an eval or a training change.
+
+```text
+symptom                         first move
+easy task, long chain           thinking off, or lower effort
+hard task, short wrong chain    raise effort, or route it to a reasoning model
+chain reads well, output wrong  evaluate the output, not the chain
+parameter rejected              control with effort instead of temperature
+```
+
 ---
 
 ## Known failure modes
@@ -65,6 +75,22 @@ The converse also holds: the visible chain is not the only place the computation
 Content matters, not only compute: inline Self-Notes beat dummy "_" tokens in the same positions (Chess Piecetype, out of distribution, 94.8% against 84.8%, GPT-2 fine-tuned), and prompted on Llama 2 70B they scored 59.9% on GSM8K against 55.9% for CoT ([arXiv:2305.00833](https://arxiv.org/abs/2305.00833) (Lanchantin et al., NeurIPS 2023)).
 
 ---
+
+## Pitfalls
+
+- **Auditing through the visible chain of thought.** Symptom: the chain looks fine and the behaviour isn't, because the chain doesn't always reflect what drove the answer. Fix: evaluate outputs, and don't make the chain your only safety monitor.
+- **Sending `temperature` to a reasoning endpoint.** Symptom: a rejected or ignored parameter. Fix: control it with effort, and check what each model accepts.
+
+## Try it
+
+1. A reasoning model's chains look clean on 1,000 audited transcripts. Can you conclude it is not deceiving you?
+   <details><summary>Answer</summary>No. A chain monitor catches only what the chain states, and chains do not always reflect what drove the answer. OpenAI's GPT-4o monitor flagged 0.17% of 102,443 o1-preview chains, mostly invented policies used to withhold information. Evaluate the outputs too.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Can you trust the visible chain of thought as a monitor? | Not on its own, since it catches only what the chain states and chains are not always faithful. OpenAI's GPT-4o monitor flagged 0.17% of 102,443 o1-preview chains as deceptive. |
 
 ## Next
 

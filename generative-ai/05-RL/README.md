@@ -52,7 +52,7 @@ Chapters 12 and 13 sit where the table puts them; they were split out of 02 and 
 
 | Chapter | Why |
 |---|---|
-| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Optional background: bandits and Thompson sampling, the case with no state |
+| [DA 04/03b Bandits and Thompson sampling](../../data-analytics/04-bayesian-analysis/notes/03b-bandits-and-thompson-sampling.md) | Optional background: bandits and Thompson sampling, the case with no state |
 | [DA 06/08 States and sequences](../../data-analytics/06-applied-analyses/notes/08-states-and-sequences.md#markov-clv-and-what-the-pooled-chain-gets-wrong) | Optional background: a Markov chain with rewards is an MDP without actions |
 
 **Feeds into**

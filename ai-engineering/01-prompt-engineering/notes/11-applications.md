@@ -167,7 +167,7 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 - **Include only relevant images.** Irrelevant images distract just like irrelevant text.
 - **Introduce each image in the text**: say what it is and what it's for ("The screenshot below is the failing checkout page").
 - **Use familiar visual conventions.** Standard chart types and diagram formats work better than invented ones — the Little Red Riding Hood principle for images.
-- For long documents with images, the long-context ordering advice still holds: content first, question last ([02](02-prompt-anatomy.md#ordering)).
+- For long documents with images, the long-context ordering advice still holds: content first, question last ([02](02b-document-types-formatting-and-templates.md#ordering)).
 
 Multimodal CoT (rationale first, then answer) is in [03](03b-chain-of-thought-and-reasoning.md#chain-of-thought).
 
