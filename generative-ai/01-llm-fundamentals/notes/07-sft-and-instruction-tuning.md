@@ -28,6 +28,10 @@ sources:
   - https://arxiv.org/abs/2310.10631
   - https://arxiv.org/abs/2409.12186
   - https://arxiv.org/abs/2104.08773
+  - https://arxiv.org/abs/1901.11504
+  - https://arxiv.org/abs/2005.00700
+  - https://arxiv.org/abs/2104.08835
+  - https://arxiv.org/abs/2106.10328
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -94,6 +98,22 @@ The evidence for the rule:
 
 ![MAML diagram: an initial parameter vector theta, with gradient arrows for tasks 1 to 3, sits on the meta-learning path, and dashed adaptation steps lead from it to the task-specific optima theta-1*, theta-2* and theta-3*](../sources/images/finn-maml-fig1.png)
 *Image Source: Finn et al., [Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks](https://arxiv.org/abs/1703.03400) (2017), Fig. 1*
+- **Between Caruana and FLAN: multitask transfer in NLP.** MT-DNN shares a BERT encoder across the nine GLUE tasks, adds a small head per task, trains on all jointly and then fine-tunes per task. Started from BERT-large it scored 82.7 on the GLUE test server, 2.2 above BERT-large (80.5). The gain was largest on small tasks (RTE dev 83.4 against 71.1). Adapted to SNLI with 0.1% of its training set (549 examples, BERT-base size, mean of 5 samplings) it reached 82.1 dev accuracy against 52.5 for BERT. These are single runs without significance tests, and WNLI did not improve ([arXiv:1901.11504](https://arxiv.org/abs/1901.11504) (Liu et al., ACL 2019)).
+
+![Architecture of MT-DNN: a shared lexicon encoder and transformer encoder feed four task-specific heads for single-sentence classification, pairwise text similarity, pairwise text classification and pairwise ranking](../sources/images/liu-mt-dnn-fig1.png)
+*Image Source: Liu et al., [Multi-Task Deep Neural Networks for Natural Language Understanding](https://arxiv.org/abs/1901.11504) (2019), Fig. 1*
+- **One format, many datasets.** UnifiedQA casts extractive, abstractive, multiple-choice and yes/no QA as plain text in and text out, with no format prefix, and trains T5-11B on eight seed datasets. Zero-shot on 12 unseen datasets it averaged 60.7, against 45.8 for the best single-format variant (Table 4). On the unseen yes/no set NP-BoolQ it scored 81.3 against a fully supervised previous best of 78.4. Fine-tuned on ARC-challenge (no retrieval) it reached 75.0 against 65.4 for fine-tuned T5 (Table 5). The runs are single, and the paper counts its new state-of-the-art results as 10 datasets in the abstract and 11 in the Table 5 caption ([arXiv:2005.00700](https://arxiv.org/abs/2005.00700) (Khashabi et al., EMNLP Findings 2020)).
+
+![Four question formats used by UnifiedQA, each with a question, context and gold answer: extractive (SQuAD), abstractive (NarrativeQA), multiple-choice (ARC-challenge) and yes/no (BoolQ)](../sources/images/khashabi-unifiedqa-fig1.png)
+*Image Source: Khashabi et al., [UnifiedQA: Crossing Format Boundaries with a Single QA System](https://arxiv.org/abs/2005.00700) (2020), Fig. 1*
+- **Which upstream recipe transfers.** CrossFit collects 160 text-to-text tasks (the NLP Few-shot Gym), learns on some, then fine-tunes on unseen ones with 16 examples per class (32 for non-classification tasks), averaged over 5 random samplings. On a random split (120 training and 20 test tasks, BART-Base, 139M) multitask upstream learning improved over direct fine-tuning by a relative 35.06%, ahead of the meta-learners MAML (28.50%), first-order MAML (22.69%) and Reptile (25.90%). Holding out all multiple-choice QA cut the multitask gain to 12.20% and MAML's to 4.69% (Table 1). MAML and first-order MAML took one inner step (Reptile took several), and the meta-learners' hyperparameters were not tuned exhaustively, so the ordering is a weak comparison ([arXiv:2104.08835](https://arxiv.org/abs/2104.08835) (Ye et al., EMNLP 2021)).
+
+![CrossFit setup: a repository of 160 few-shot tasks feeds stage 1, upstream learning of a text-to-text transformer on training tasks, then stage 2, few-shot fine-tuning on unseen test tasks](../sources/images/ye-crossfit-fig1.png)
+*Image Source: Ye et al., [CrossFit: A Few-shot Learning Challenge for Cross-task Generalization in NLP](https://arxiv.org/abs/2104.08835) (2021), Fig. 1*
+- **SFT on a few dozen values examples.** PALMS fine-tuned GPT-3 models (125M to 175B) on 80 hand-written prompt and completion pairs, with completions from a professional writer matching written position statements on eight sensitive topics. On 40 held-out questions (three completions each), human adherence ratings rose over both the base model and a 100-snippet control in every category, and the gain grew with model size. At 175B, Human Characteristics and Behavior went from 2.55 to 4.35 on a 1–5 scale, while most benchmark accuracies stayed within 1% of base. The positions are U.S.-English and the run is single. Whether it beats stuffing the same examples into the prompt was left open ([arXiv:2106.10328](https://arxiv.org/abs/2106.10328) (Solaiman & Dennison, NeurIPS 2021)).
+
+![Mean human evaluation score against model size from 0.1B to 175B for base, control and values-targeted GPT-3, with the values-targeted line rising from about 2.7 to 3.9 and the base staying near 2.7](../sources/images/solaiman-palms-fig3.png)
+*Image Source: Solaiman & Dennison, [Process for Adapting Language Models to Society (PALMS) with Values-Targeted Datasets](https://arxiv.org/abs/2106.10328) (2021), Fig. 3*
 
 In a multi-turn dialogue you do not need one pass per turn. Mask the user turns and grade every assistant turn in a single forward pass, since one causal pass already conditions each turn on all earlier ones (*Foundations of LLMs*, ch. 4, 4.2.1, Eq. 4.5–4.7). The book's remedies for forgetting are a smaller learning rate, early stopping, regularisation toward the pretrained weights and diverse data.
 

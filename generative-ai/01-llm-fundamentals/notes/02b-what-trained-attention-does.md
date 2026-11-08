@@ -17,6 +17,8 @@ sources:
   - https://arxiv.org/abs/1912.01991
   - https://arxiv.org/abs/1906.04341
   - https://aclanthology.org/P11-1015/
+  - https://arxiv.org/abs/1905.09418
+  - https://arxiv.org/abs/1905.05950
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -35,6 +37,14 @@ It instead clusters the representations by label without training a classifier. 
 
 ![Seven ImageNet photos with the top label and softmax score, beside two heat maps each: integrated gradients, which outline the camera, bus, butterfly and starfish, and plain gradients times the image, which are speckled over the whole frame](../sources/images/sundararajan-integrated-gradients-fig2.png)
 *Image Source: Sundararajan et al., [Axiomatic Attribution for Deep Networks](https://arxiv.org/abs/1703.01365) (2017), Fig. 2*
+
+Two earlier studies looked inside heads and layers directly. Voita et al. took a Transformer-base English→Russian translation model (WMT, 2.5M sentence pairs) and ranked its encoder heads by layer-wise relevance propagation. The important heads fall into three kinds: positional (at least 90% of the attention on one relative position), syntactic (the best verb-to-object head attended the right word 78% of the time against a 41% positional baseline) and rare-word heads. Pruning the rest with learned L0 gates removed 38 of 48 encoder heads for a drop of only 0.15 BLEU (on OpenSubtitles, 6M pairs, all but 4 for 0.25 BLEU). The same sparse shape trained from scratch did worse (5, 9 and 12 encoder, decoder-self and cross heads: 28.41 BLEU against 28.90 pruned from a trained model), so the heads are found during training, not by the architecture ([arXiv:1905.09418](https://arxiv.org/abs/1905.09418) (Voita et al., ACL 2019)). The test covers translation into three languages with an encoder-decoder, four dependency relations scored against CoreNLP parses, and no language models. Tenney et al. probed BERT-large layer by layer on the tasks of the classical NLP pipeline. The layers that matter appear in the expected order: part-of-speech tags, then constituents, dependencies, semantic roles and coreference. Syntax is concentrated in a few layers while semantic relations are spread across the network. The two metrics disagree on where: learned mixing weights sit around layers 9–20, but the gain from adding a layer is largest in the first few (1–7 for many tasks). On OntoNotes dev, 89% of part-of-speech tags are already right at layer 0, so many probed examples are easy. The study is exploratory, on BERT only, and a probe shows what can be decoded, not what the model uses ([ACL 2019](https://arxiv.org/abs/1905.05950) (Tenney et al., ACL 2019)).
+
+![Three heat maps over the 6 layers and 8 heads of the encoder: relevance by LRP, mean maximum attention weight, and the function of the retained heads (positional, syntactic, rare word)](../sources/images/voita-multihead-roles-fig1.png)
+*Image Source: Voita et al., [Analyzing Multi-Head Self-Attention](https://arxiv.org/abs/1905.09418) (2019), Fig. 1*
+
+![Layer-wise probing metrics on BERT-large for POS, constituents, dependencies, entities, SRL, coreference, SPR and relations: mixing weights as blue bars and differential scores as outlined bars](../sources/images/tenney-bert-pipeline-fig2.png)
+*Image Source: Tenney et al., [BERT Rediscovers the Classical NLP Pipeline](https://arxiv.org/abs/1905.05950) (2019), Fig. 2*
 
 Images became transformer input by treating patches as tokens. ViT cuts an image into 16×16 patches, projects each one linearly to the model width, prepends a learned [class] token and adds learned 1D position embeddings. Everything after that is a standard transformer encoder ([arXiv:2010.11929](https://arxiv.org/abs/2010.11929) (Dosovitskiy et al., ICLR 2021)). When trained on ImageNet alone without strong regularization, ViT came in a few points below ResNets of similar size, because it lacks the convolution's built-in assumptions about locality. The ranking flipped as pretraining data grew. On subsets of Google's in-house JFT, ViT-B/32 lost to a ResNet50 on a 5-shot ImageNet probe at 9M images and beat it from 90M up. ViT-H/14, pretrained on JFT-300M, reached 88.55% ImageNet top-1 for 2.5k TPUv3 core-days, against 87.54% and 9.9k for the BiT-L ResNet. The kind of position embedding barely mattered.
 

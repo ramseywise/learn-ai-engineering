@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2411.04996
   - https://arxiv.org/abs/2302.00902
   - https://arxiv.org/abs/2306.17842
+  - https://arxiv.org/abs/2212.09748
   - https://arxiv.org/abs/2307.05222
   - https://arxiv.org/abs/2501.07542
   - https://arxiv.org/abs/2505.11409
@@ -70,6 +71,12 @@ flowchart LR
       F --> G[Decoder to pixels]
     end
 ```
+
+The denoiser inside that latent model does not have to be a U-Net. DiT replaces it with a ViT-style transformer over 2×2, 4×4 or 8×8 patches of the 32×32×4 latent, and feeds the timestep and class label through adaptive layer norm whose output gates start at zero, so each block begins as the identity (adaLN-Zero). On class-conditional ImageNet 256×256 with DiT-XL/2 at 400K steps and no guidance, adaLN-Zero scored FID 19.47 against 35.24 for in-context tokens, 26.14 for cross-attention and 25.21 for plain adaLN. Quality followed compute: across 12 models (S, B, L, XL at patch 8, 4 and 2), forward-pass Gflops and FID correlated at -0.93 at 400K steps. DiT-XL/2 takes 118.6 Gflops per pass against 1,120 for the pixel-space ADM, and at 7M steps with classifier-free guidance 1.5 and 250 sampling steps it reached FID-50K 2.27 against 3.60 for the latent U-Net LDM-4 (9.62 against 10.56 unguided). Sampling longer does not make up for a small model: XL/2 at 128 steps (15.2 Tflops) scored FID-10K 23.7 against 25.9 for L/2 at 1,000 steps (80.7 Tflops). The evidence is narrow: class labels only, no text prompts, models up to 675M parameters excluding the 84M-parameter VAE, no variance reported, and at 512×512 StyleGAN-XL still has the lower FID (2.41 against 3.04) ([arXiv:2212.09748](https://arxiv.org/abs/2212.09748) (Peebles & Xie, ICCV 2023)).
+
+![DiT: a noised latent is patchified and passed through DiT blocks, with the adaLN-Zero block shown beside cross-attention and in-context variants](../sources/images/peebles-dit-fig3.png)
+
+*Image Source: Peebles & Xie, [Scalable Diffusion Models with Transformers](https://arxiv.org/abs/2212.09748) (ICCV 2023), Fig. 3*
 
 ## Why 20 to 50 steps is enough
 
@@ -248,7 +255,7 @@ StyleGAN-T, from the same month, shows where the GAN gap sits ([arXiv:2301.09515
 
 Text-driven editing of real photos in that latent space needs two steps. StyleCLIP steers the latent with CLIP ([arXiv:2103.17249](https://arxiv.org/abs/2103.17249) (Patashnik et al., ICCV 2021)). Pivotal Tuning first inverts the photo and then fine-tunes the generator around it, which keeps a person's identity ([arXiv:2106.05744](https://arxiv.org/abs/2106.05744) (Roich et al., ACM TOG 2023)). DragGAN replaces the text with clicks: the user drags handle points to targets, and it optimizes the latent of a frozen StyleGAN2, alternating a feature-matching loss that moves each point one step with a nearest-neighbour search that finds where the point went ([arXiv:2305.10973](https://arxiv.org/abs/2305.10973) (Pan et al., SIGGRAPH 2023)). Moving face landmarks on FFHQ, it got within 2.44 px on average for one point, against 11.64 for the UserControllableLT baseline (12.93 with no edit), in about 2 s on an RTX 3090. Its edits stay on the GAN's learned manifold, so poses the training data lacked come out distorted, and real photos need PTI inversion first. All of these assume a curated, aligned domain such as cropped faces. Self-Distilled StyleGAN was needed just to train on raw internet photos ([arXiv:2202.12211](https://arxiv.org/abs/2202.12211) (Mokady et al., SIGGRAPH 2022)). That limit is why diffusion, which trains on any captioned image, took over general-purpose editing.
 
-The course has no chapter yet on the rest of diffusion internals: U-Net versus DiT denoisers, and the noise schedule beyond this summary. When one is written, [generative-ai/01](../../../generative-ai/01-llm-fundamentals/README.md) is its home.
+The course has no chapter yet on the rest of diffusion internals: the noise schedule beyond this summary, and text-conditioned DiTs. When one is written, [generative-ai/01](../../../generative-ai/01-llm-fundamentals/README.md) is its home.
 
 ## Pitfalls
 

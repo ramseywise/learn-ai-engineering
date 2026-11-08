@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://arxiv.org/abs/2202.03286
   - https://arxiv.org/abs/2311.07689
+  - https://arxiv.org/abs/1908.06083
   - https://arxiv.org/abs/2402.04249
   - https://arxiv.org/abs/2401.12915
   - https://arxiv.org/abs/2406.13352
@@ -40,6 +41,11 @@ flowchart LR
 ```
 
 For an application team, the "target" is usually your whole system, and "fix" usually means code and policy rather than model training. The loop is otherwise the same.
+
+People can still be the adversary inside the loop. [arXiv:1908.06083](https://arxiv.org/abs/1908.06083) (Dinan et al., EMNLP 2019) ran three rounds of build it, break it, fix it on a BERT-based offensive-language classifier, with crowdworkers who scored a point for messages that the model called safe but they judged offensive. A baseline trained on Wikipedia Toxic Comments scored 68.1 OFFENSIVE-class F1 on the standard test but 0.0 on round-one attacks, by construction. Workers averaged 4.56 successful attacks out of 5 in round 1 and 1.6 in round 3 as the models hardened. On all three adversarial rounds the model trained on the collected attacks (A3) reached 67.6 F1 against 41.8 for the model trained on the same amount of ordinary data (S3), but scored 83.7 against 88.0 on the standard task. Attacks that use context win back ground: in the multi-turn variant, against A3 and the baseline, workers averaged 2.89, because a message can be innocuous alone and offensive as a reply. Caveats: binary labels, no variance reported, and a classifier rather than a generative model.
+
+![The build it, break it, fix it loop: a model is built, human breakers attack it, broken examples become new training data](../sources/images/dinan-build-it-break-it-fix-fig1.png)
+*Image Source: Dinan et al., [Build it Break it Fix it for Dialogue Safety: Robustness from Adversarial Human Attack](https://arxiv.org/abs/1908.06083) (2019), Fig. 1*
 
 ## The tools, by the job they do
 

@@ -5,6 +5,7 @@ sources:
   - https://github.com/karpathy/nanoGPT
   - https://github.com/rasbt/LLMs-from-scratch
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 2–5, appendix A"
+  - https://arxiv.org/abs/2005.08025
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -204,6 +205,10 @@ Each of these lines is evidence. A first loss near `ln(vocab)` says the model st
 - Why temperature 0 and top-k behave as they do: you will implement them. The ten-line sampling step is in [chapter 04](04-decoding-and-inference-behaviour.md#decoding). Raschka's own settings are a useful reference: `top_k=25, temperature=1.4` for his story-trained model, `top_k=50, temperature=1.5` once the real GPT-2 weights are loaded (*LLMs from Scratch*, ch. 5).
 - Why fine-tuning on a few examples overfits: you will watch val loss turn.
 - Why hallucination is structural: the model you trained produces confident text with no notion of truth.
+- That a small decoder trained from scratch on one narrow domain can ship. IntelliCode Compose trained GPT-C, a GPT-2-style decoder, on over 1.2B lines of Python, C#, JavaScript and TypeScript to complete whole lines under a 100 ms budget. On Python it reached perplexity 1.82 and 86.7% edit similarity, against 59.7% for the best n-gram model and 34.6% for GPT-2 medium trained on WebText. A distilled 12-layer student of a 26-layer model ran 2.7× faster at 6% lower edit similarity. Click-through was 10% in an internal rollout. The metric is string similarity, not whether the code runs, and it is a single training run ([arXiv:2005.08025](https://arxiv.org/abs/2005.08025) (Svyatkovskiy et al., ESEC/FSE 2020)).
+
+![Whole-line code completion in an editor: a method-completion list and an argument completion above, and the full line return s.StartsWith(findStr) || s.EndsWith(findStr) suggested below](../sources/images/svyatkovskiy-intellicode-fig1.png)
+*Image Source: Svyatkovskiy et al., [IntelliCode Compose: Code Generation Using Transformer](https://arxiv.org/abs/2005.08025) (2020), Fig. 1*
 
 ---
 

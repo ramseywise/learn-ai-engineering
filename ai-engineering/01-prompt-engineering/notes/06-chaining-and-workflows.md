@@ -20,6 +20,8 @@ sources:
   - https://arxiv.org/abs/2310.15123
   - https://arxiv.org/abs/2301.01751
   - https://arxiv.org/abs/2210.02406
+  - https://arxiv.org/abs/2110.01691
+  - https://arxiv.org/abs/2203.06566
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -92,6 +94,16 @@ Prompt 2 (answer)
 Each step can be tested and tuned separately, and you can add a third step (strip citations, translate, reformat) without touching the others. XML tags at the hand-off points make the parsing trivial ([04](04-controlling-output.md#structured-output)).
 
 **Least-to-most** is the chain for building something up in layers: ask for the architecture of a small Flask app, then the code for one route, then a test for that route, each prompt building on the last answer. Its weakness is the one every chain has, made worse by keeping state in chat history. A weak early answer starves every later step, and in a long run the first outputs fall out of the context window. Check each intermediate answer before you build on it (*Prompt Engineering for Generative AI*, ch. 3).
+
+The early human-factors evidence for splitting comes from [arXiv:2110.01691](https://arxiv.org/abs/2110.01691) (Wu et al., CHI 2022), which derived eight primitive steps from 73 online LLM demos (classification, factual query, generation, ideation, information extraction, rewriting, split points, compose points) and gave each a default temperature, from 0.0 for classification to 0.7 for generation and ideation. In a within-subject study, 20 practitioners did peer-review rewriting and flashcard creation once with a researcher-built chain and once with a single-prompt interface, on the same non-dialog LaMDA 137B. **Chaining was rated higher for thinking through the task (6.0 vs 3.6 on a seven-point scale), control (6.2 vs 4.5) and transparency (5.4 vs 3.8)**, and two blinded raters preferred its outputs 85% and 80% of the time. Participants re-ran the single prompt unchanged on 51% of consecutive runs against 36% in the chain, and mostly curated existing text in the chain (77% of edits) rather than discarding it (18%). The limits matter: two naturally decomposable tasks, 2021-era non-instruction-tuned model, researcher-authored chains, and three participants said they would rather free-explore in the single prompt.
+
+![One task done as a single rewriting prompt and as a chain of split points, ideation and compose points](../sources/images/wu-ai-chains-fig1.png)
+*Image Source: Wu et al., [AI Chains: Transparent and Controllable Human-AI Interaction by Chaining Large Language Model Prompts](https://arxiv.org/abs/2110.01691) (2022), Fig. 1*
+
+The follow-up, [arXiv:2203.06566](https://arxiv.org/abs/2203.06566) (Wu et al., CHI EA 2022, an extended abstract), studies people authoring their own chains in a visual editor. Four Google participants (three designers, one developer) all built a working chain, averaging 5.5 ± 0.9 nodes. Across the 8 chains in the study and pilots, they used 13 pre-defined helper nodes (parsing, splitting, evaluation) against 4 custom JavaScript nodes, and the 27 LLM nodes split into 7 classifying inputs, 13 sourcing information from the model and 7 reorganizing input. The problem it names is the one the least-to-most paragraph above warns about: one participant's story chain wrote paragraphs independently and lost coherence. No baseline tool, four participants, qualitative only.
+
+![A branching music-chatbot chain of classifier, extractor, API-call and toxicity-filter nodes with example inputs and outputs](../sources/images/wu-promptchainer-fig2.png)
+*Image Source: Wu et al., [PromptChainer: Chaining Large Language Model Prompts through Visual Programming](https://arxiv.org/abs/2203.06566) (2022), Fig. 2*
 
 ---
 

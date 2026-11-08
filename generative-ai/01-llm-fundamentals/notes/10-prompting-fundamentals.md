@@ -21,6 +21,11 @@ sources:
   - https://arxiv.org/abs/1911.12543
   - https://arxiv.org/abs/2102.09690
   - https://arxiv.org/abs/2102.07350
+  - https://arxiv.org/abs/2210.07128
+  - https://arxiv.org/abs/2105.11447
+  - https://doi.org/10.18653/v1/2022.findings-emnlp.38
+  - https://arxiv.org/abs/2212.09196
+  - https://doi.org/10.18653/v1/2023.ijcnlp-main.20
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -68,6 +73,10 @@ Say exactly what shape the output takes: a numbered list of five, JSON with thes
 - Machine-readable formats let code check the answer. If parsing fails, retry; that retry loop is the simplest reliability mechanism there is.
 - Remove anything in the prompt that contradicts the format (an example in prose when you asked for JSON).
 - Prefer the provider's structured-output or tool-call mechanism over "please return JSON" when you need a guarantee. See [chapter 13](13-calling-models-from-code.md) and [04 — Controlling output](../../../ai-engineering/01-prompt-engineering/notes/04-controlling-output.md).
+- **For structured outputs, the format can be code.** Madaan et al. wrote each target graph (a script of steps, an explanation graph) as a Python class, with the input as an attribute or comment, and prompted a code model to finish the class. With 15 examples, Codex (code-davinci-002) scored 25.24 BLEU on ProScript script generation against 23.80 for T5 fine-tuned on all 3,500 training examples. On ExplaGraphs structural accuracy, 30 examples gave 45.20 against 38.19 for T5 on 1,500. Neither piece alone was enough: with the same text-davinci model, text and code prompts scored 33.16 and 33.00, and Codex with a text prompt 38.02 (Table 5). The format has to be designed per task, and Codex is closed and since retired ([arXiv:2210.07128](https://arxiv.org/abs/2210.07128) (Madaan et al., EMNLP 2022)).
+
+![A script graph for serving potpies drawn as boxes with arrows, next to the same graph written as a Python Tree class with Node objects and children lists](../sources/images/madaan-cocogen-fig1.png)
+*Image Source: Madaan et al., [Language Models of Code are Few-Shot Commonsense Learners](https://arxiv.org/abs/2210.07128) (2022), Fig. 1 (a, b)*
 
 ### 3. Provide examples
 
@@ -90,6 +99,21 @@ Akyürek et al. asked what algorithm an in-context learner runs, using linear re
 
 ![Two rows of line plots of error against transformer depth (1 to 16 layers) and hidden size for linear regression with d = 8 and d = 16: the in-context learner moves from gradient-descent-like error at one layer toward ridge and least-squares error as depth grows](../sources/images/akyurek-icl-linear-regression-fig3.png)
 *Image Source: Akyürek et al., [What learning algorithm is in-context learning? Investigations with linear models](https://arxiv.org/abs/2211.15661) (2023), Fig. 3*
+
+Three papers test the setup around the examples. Perez et al. asked what few-shot results look like when the prompt must be chosen from the few examples alone, with no held-out set. On LAMA-UHN (nine LMs from 82M to 175B, 5 examples, 5 runs), cross-validation and MDL picked prompts 5–7% absolute below the best prompt chosen on held-out data and closed only 20–40% of the gap between an average and the best prompt. For GPT-3 175B, cross-validation picked the best prompt 21% of the time against 9% for chance. Earlier few-shot numbers that tuned on large dev sets are therefore optimistic. The study covers LAMA and three classification tasks on 2021 models ([arXiv:2105.11447](https://arxiv.org/abs/2105.11447) (Perez et al., NeurIPS 2021)).
+
+![Left: bar chart of LAMA-UHN accuracy against model size from 0.08B to 175B for the worst, mean, MDL-chosen, CV-chosen and best prompt, with the chosen prompts barely above the mean. Right: the share of the gap between mean and best prompt that CV and MDL recover, about 20 to 40 percent](../sources/images/perez-true-few-shot-fig1.png)
+*Image Source: Perez et al., [True Few-Shot Learning with Language Models](https://arxiv.org/abs/2105.11447) (2021), Fig. 1*
+
+Lampinen et al. added an explanation after each example's answer ("Explanation:" line). On 40 BIG-bench multiple-choice tasks with a 280B Gopher-family model, 5-shot, untuned explanations raised the log-odds of a correct answer by 0.25, against 0.80 for the examples themselves and 0.12 for task instructions (Table 1). Scrambled explanations hurt (−0.17). Hand-tuned explanations gave 1.23 but on only five hard tasks, and choosing examples together with their explanations beat choosing examples alone (0.64 against 0.35). The 1B and 7B models did not benefit. One author wrote all the explanations, and the tasks were adversarial ones. Scoring is answer likelihood, no instruction-tuned model was tested, and because the explanation follows the answer it is not chain of thought ([doi:10.18653/v1/2022.findings-emnlp.38](https://doi.org/10.18653/v1/2022.findings-emnlp.38) (Lampinen et al., EMNLP Findings 2022)).
+
+![Dot-and-whisker plot of the benefit of prompt components for the 280B model: few-shot examples about 0.45, untuned explanations about 0.14, controls near or below zero, hand-tuned explanations about 0.7 with a wide interval, instructions about 0.07](../sources/images/lampinen-explanations-fig2.png)
+*Image Source: Lampinen et al., [Can language models learn from explanations in context?](https://doi.org/10.18653/v1/2022.findings-emnlp.38) (2022), Fig. 2*
+
+Zero-shot prompting can do more than the shot table suggests. Webb et al. gave text-davinci-003 analogy problems with no examples and compared it with undergraduates. On the text-based Digit Matrices the odds of a correct generative answer were 1.88 times the humans' (N = 40 humans), and 6.27 times in the 8-choice version. On letter-string analogies it was 1.76 times (N = 57), with a similar pattern of errors. It was weaker on far story analogies and physical transfer, and fell on letter strings when the prompt format changed. Contamination was checked only by asking the model to recall items, and later work disputes the reading as emergent reasoning ([arXiv:2212.09196](https://arxiv.org/abs/2212.09196) (Webb et al., Nature Human Behaviour 2023)).
+
+![Bar chart of accuracy for GPT-3 and humans: matrix reasoning about 0.80 against 0.59, letter-string analogies about 0.48 against 0.43, verbal analogies about 0.92 against 0.84, story analogies about 0.71 against 0.87](../sources/images/webb-analogical-reasoning-fig1.png)
+*Image Source: Webb et al., [Emergent analogical reasoning in large language models](https://arxiv.org/abs/2212.09196) (2023), Fig. 1*
 
 ### 4. Evaluate quality
 
@@ -123,6 +147,10 @@ Split a task into steps, each with its own prompt and its own check.
 - **Self-evaluation:** a second call grades or critiques the first.
 - **Reasoning before answering:** asking for step-by-step work improves multi-step problems. Chain-of-thought exemplars took PaLM 540B to state of the art on GSM8K ([arXiv:2201.11903](https://arxiv.org/abs/2201.11903), Wei et al., 2022). Even the zero-shot phrase "Let's think step by step" lifted text-davinci-002 from 17.7% to 78.7% on MultiArith ([arXiv:2205.11916](https://arxiv.org/abs/2205.11916), Kojima et al., 2022). **Self-consistency** goes one step further: sample several chains of thought and take the majority answer. It only works when the answer can be compared exactly (a number, a choice), and it multiplies cost by the number of samples. The vote, not the sampling, does the work: on MATH, Minerva 62B scored 26.5% greedy, 21.8% from a single sample, 23.8% when it kept the sample the model itself rated likeliest, and 42.0% with a majority vote over 256 samples, with 97% of that accuracy already reached at 64 ([arXiv:2206.14858](https://arxiv.org/abs/2206.14858), Lewkowycz et al., NeurIPS 2022). Gemini's MMLU score was reported this way, with 32 samples per question (*AI Engineering*, ch. 2; *Building AI Agents*, ch. 3). Modern reasoning models do the step-by-step part internally; see [07 — Prompting reasoning models](../../../ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md). A 2023 survey places the emergence of reasoning at roughly 100B parameters (reported from earlier work) and concludes that models are "not yet capable of robust reasoning"; it ran no experiments of its own and predates RL-trained reasoning models ([arXiv:2212.10403](https://arxiv.org/abs/2212.10403) (Huang & Chang, ACL Findings 2023)).
 
+- **Faithful reasoning.** A chain of thought can reach the right answer for reasons it does not state. Faithful CoT has the model write each step as a natural-language comment plus code, which a deterministic solver then runs. With code-davinci-002 and greedy decoding, GSM8K accuracy was 72.3 against 63.3 for chain of thought, and CLUTRR 58.9 against 48.5 (Table 1). Letting the model predict the answer instead of the solver cost 50.8 points on GSM8K (Table 4). It lost on StrategyQA (63.0 against 72.5), where 29% of 70 sampled failures were Datalog syntax errors. Codex has been retired and Table 1 is single runs ([doi:10.18653/v1/2023.ijcnlp-main.20](https://doi.org/10.18653/v1/2023.ijcnlp-main.20) (Lyu et al., IJCNLP 2023)).
+
+![Faithful CoT in two stages: Translation, where a language model turns a natural-language query into a reasoning chain of comments and symbolic code, and Problem Solving, where a deterministic solver runs the chain to give the answer](../sources/images/lyu-faithful-cot-fig2.png)
+*Image Source: Lyu et al., [Faithful Chain-of-Thought Reasoning](https://doi.org/10.18653/v1/2023.ijcnlp-main.20) (2023), Fig. 2*
 - **Decomposition, refinement, ensembling.** Xiao & Zhu organise this family as a generation step that splits the problem and a solving step per sub-problem; the solver can be a retriever, a calculator or another model call, which is why RAG and tool use are decomposition with the call made at inference time (*Foundations of LLMs*, ch. 3). Self-refinement is predict, get feedback, refine. Ensembling can vary the model, the prompt or the output, and self-consistency is the third kind. Their worked example samples three chains on a coin-flip question: two agree on 37.5% and one says 33.3%, so 37.5% wins. It is an illustration, not a measurement. The book notes diverse prompts help less with strong models.
 - **Meta-prompting:** have a model write or improve the prompt.
 - **Soft prompts.** Instead of rewording text, learn vectors: prefix tuning adds L × n × d trainable parameters (layers × prefix length × width), prompt tuning learns input embeddings only, and context distillation trains a model to behave as if a long prompt were present (*Foundations of LLMs*, ch. 3). Fine-tuning detail lives in [chapter 09](09-peft-and-fine-tuning-in-practice.md).
