@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2305.10355
   - https://arxiv.org/abs/2405.17247
   - https://arxiv.org/abs/2307.06281
+  - https://arxiv.org/abs/2301.04856
   - https://arxiv.org/abs/2307.16125
   - https://arxiv.org/abs/2402.00253
   - https://arxiv.org/abs/2404.18930
@@ -34,7 +35,7 @@ The invoice assistant passes its benchmark at 90%, and users complain anyway. Wh
 
 ## The shortcut problem
 
-Goyal et al. found this in the VQA dataset itself. Models could do well by learning what answers tend to follow a question's wording, with little help from the image. Their fix was to pair each image with a similar one where the same question has a different answer, which roughly doubled the number of image-question pairs. Testing on the balanced data, accuracy on yes/no questions dropped by about 10.8% for MCB and 12.4% for HieCoAtt, which showed how much of that ability had been language prior ([arXiv:1612.00837](https://arxiv.org/abs/1612.00837) (Goyal et al., CVPR 2017)).
+Goyal et al. found this in the VQA dataset itself. Models could do well by learning what answers tend to follow a question's wording, with little help from the image. Their fix was to pair each image with a similar one where the same question has a different answer, which roughly doubled the number of image-question pairs. Testing on the balanced data, accuracy on yes/no questions dropped by about 10.8% for MCB and 12.4% for HieCoAtt, which showed how much of that ability had been language prior ([arXiv:1612.00837](https://arxiv.org/abs/1612.00837) (Goyal et al., CVPR 2017)). The extreme case in that paper: on the questions that begin "Do you see a ...", answering "yes" without looking at the image scores 87%. That figure holds for that subset only; a survey book repeats it as if it covered all of VQA (*Multimodal Deep Learning*, ch. 2), which it does not.
 
 ScienceQA shows the same problem from the other side. It has 21,208 multiple-choice science questions, 48.7% of them with an image. Its best systems never saw the pixels: GPT-3 and UnifiedQA got a caption of at most 16 tokens in place of each image. Zero-shot, caption-fed GPT-3 scored 65.74 on the image questions. VisualBERT, which was given the image, scored 62.17. The authors called the set robust because a model shown only the question or only the image scored near chance. Those blind runs weren't shown the answer options, though, and no run removed the caption from the strong models ([arXiv:2209.09513](https://arxiv.org/abs/2209.09513) (Lu et al., NeurIPS 2022)). When a model that reads a short caption beats one that sees the image, the benchmark isn't measuring sight. Run the blind baseline with everything except the image, options included.
 
@@ -54,6 +55,8 @@ flowchart LR
 For invoices, take a real invoice and edit one field: change the amount, remove the stamp, shift the due date. The model must get both versions right. A blind guess or a language prior gets at most one of the pair right, unless the two answers happen to be the same.
 
 The scorer can also hand out free points. In benchmarks that pick between a true caption and a false one by comparing scores, a tie resolves to the first option, and the true caption is often listed first. Bordes et al. note that a model whose weights are all zero could score 100% on such sets, and recommend adding a tiny random number or tracking when both captions get the same probability ([arXiv:2405.17247](https://arxiv.org/abs/2405.17247) (Bordes et al., 2024-05, preprint), §4.1.6). They also report that VQA exact-match accuracy underestimates generative models, because answer phrasing decides the score.
+
+Foil benchmarks apply the same idea to captions. FOIL-COCO changes one word in a human caption and asks the model to tell which is right, then find and fix the wrong word. VALSE extends this to existence, plurality, counting, spatial relations, actions and coreference: foils are proposed by a language model, kept only if an entailment model says they no longer describe the image, and checked by human annotators, mostly on COCO images (*Multimodal Deep Learning*, ch. 2). The book describes the design and gives no scores, so treat it as a recipe for your own foils: for an invoice, change one field in the description of a correct reading.
 
 ## Three test designs against three shortcuts
 

@@ -4,6 +4,7 @@ sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://scikit-learn.org/stable/modules/ensemble.html
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - https://doi.org/10.1023/a:1010933404324
   - https://doi.org/10.1214/aos/1013203451
 confidence: high
@@ -240,6 +241,8 @@ XGBoost, LightGBM and CatBoost run most tabular production boosting. All three e
 | More forest trees never overfit; more boosting rounds do | Averaging vs sequential fitting |
 | Report permutation importance or SHAP, not impurity importance | Impurity importance is biased and train-set based |
 | Don't use tree ensembles on sparse text features | Linear models win there |
+
+M&G's breast-cancer run (569 rows, one split, `random_state=0`, no tuning) shows the order (*Introduction to ML with Python*, ch. 2, "Ensembles of Decision Trees"). A 100-tree forest scores 0.972 test, with train 1.000. Default gradient boosting (100 trees, depth 3, rate 0.1) overfits to train 1.000 and test 0.958. Cutting `max_depth` to 1 gives 0.972 test; cutting `learning_rate` to 0.01 gives 0.965. Depth helped more than rate. With about 143 test rows, 0.01 is one or two rows, so read this as a method order and not a ranking. They also advise a boosting depth of five or less.
 
 ---
 

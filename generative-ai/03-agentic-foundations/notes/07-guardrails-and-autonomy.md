@@ -5,6 +5,7 @@ sources:
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
+  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 1, 2, 3"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -151,6 +152,11 @@ The unknown tool is denied by default, and the hard limit applies even with appr
 
 **Escalate to a human** when a failure threshold is exceeded (retries or operations past their cap) and before high-risk operations (cancellations, large refunds, payments), at least until reliability is proven. Depth: [harness 04 — execution boundaries](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
 
+
+Grounding supplies some of those triggers. *Agentic Architectural Patterns* (ch. 3) lists four: cite the source for what was retrieved, cross-check critical claims the model generated itself against a trusted database (possibly through a dedicated fact-checking sub-agent), act on confidence scores where the platform exposes them, and ask a clarifying question when the input is ambiguous. Its example sends a diagnosis to mandatory senior review when the model's stated confidence is below 70%. That cut-off is an illustration, and the chapter does not say how well model-stated confidence tracks correctness.
+
+Escalation needs a payload, not just a trigger. *Agentic Architectural Patterns* (ch. 1) tells the story of an e-commerce returns and order-status agent that passed its pilot on curated FAQs and a clean static copy of the order database, and was pulled from production after about a week. Three failures, each a design gap: it had only the internal order table, so a courier-strike delay left it repeating "has been shipped"; a Final Sale question missed its knowledge base, so it generalized from the standard policy and promised a full cash refund the company could not honor; and its only fallback was "I cannot help with that", with no chat transfer, ticket number or history passed to a person, so customers started over. The fixes are the controls in this note: ground the answer or say it is not known, and hand over the conversation when it escalates. It is one anonymized, unquantified case, with no rates of failure.
+
 ---
 
 ## What the user must be able to see
@@ -164,6 +170,10 @@ Bansal et al. ([Microsoft Research, 2024-12](https://www.microsoft.com/en-us/res
 
 Environment changes also make agents non-deterministic even at temperature 0. The same plan can produce a different outcome on a different day.
 
+What you can see after launch depends on what you log. *Agentic Architectural Patterns* (ch. 2) lists the AgentOps basics: track task success rate and tool-use accuracy (right tool, well-formed arguments), latency and cost, and drift, which can trigger a prompt update, fine-tuning or a rollback. Log the model input, the reasoning trace, each tool call and its response. Keep prompts, temperature settings and tool schemas under version control so a bad change can be rolled back. Count flagged prompt-injection attempts and policy-violating outputs. Its suggested dashboard shows P50, P90 and P99 latency per model call. The chapter names no thresholds and reports no measurements.
+
+The book's ch. 3 turns the same logging into callbacks on three events: `on_model_start`/`on_model_end` (prompt, reasoning, response, token counts, latency), `on_tool_start`/`on_tool_end` (which agent called which tool, with what arguments, what came back, any error) and `on_agent_start`/`on_agent_end` (goal, outcome, duration, which feeds service-level dashboards). The tool-level trail is what tells you whether a fault sits in the agent's reasoning or in the tool, and in a multi-agent run it shows the chain of delegation. It is a design sketch with no measured effect.
+
 ---
 
 ## How much autonomy exists today
@@ -176,6 +186,9 @@ Gao et al. (*Cell*, 2024) define autonomy levels for science agents:
 - Level 3: a scientist that proposes novel hypotheses, defines tasks to test them and completes them, as a peer.
 
 Raieli and Iuculano judge that no agent is beyond Level 1. Mitchell et al. (2025) go further and argue that fully autonomous agents should not be developed, because autonomous systems can make catastrophic errors from trivial causes (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11). This fits the [orchestrated-autonomy view](01-agent-fundamentals.md#agents-as-state-machines): keep the model's freedom inside designed regions, and keep humans at the gates.
+
+
+The same book orders organizational capability as a seven-rung ladder, which is a different axis from the autonomy levels above: level 0 data preparation, 1 model choice and prompting, 2 retrieval, 3 tuning (parameter-efficient or full), 4 grounding with citations and evaluation, 5 a single agent, 6 multiple agents (*Agentic Architectural Patterns*, ch. 1). Its claim is that agents sit on top of the lower rungs, so a team with no evaluation or grounding is not ready for a loop. It is the authors' framework, not measured.
 
 ---
 

@@ -6,6 +6,7 @@ sources:
   - https://doi.org/10.1214/08-aoas191 (Gelman et al., AOAS, 2008)
   - McElreath, Statistical Rethinking (draft of November 2015)
   - https://arxiv.org/abs/0901.4011
+  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 3, 4 and 7)
   - https://doi.org/10.1016/0196-8858(85)90002-8
 confidence: high
 cleaned: 2026-11-01
@@ -177,6 +178,20 @@ N=500  flat Beta(1,1) 0.610   biased Beta(2,10) 0.600   gap 0.010
 *Image Source: generated for this chapter, using the same setup as the code above*
 
 So the prior matters most exactly when Bayesian methods matter most: at small N. The gap in the table does not fall smoothly, because each N is one stretch of one data stream. The 32-observation row overshoots 0.6 under the flat prior: priors wash out toward what the data says, not toward the truth. A prior with zero mass at the truth never washes out at all.
+
+Downey's locomotive problem shows both halves with a count instead of a rate. With one sighting of train number 60 and a flat prior on the fleet size N, the posterior mean is 207, 333 or 552 when the prior's upper bound is 500, 1,000 or 2,000. With three sightings (30, 60, 90) the three means are 152, 164 and 171: more data pulls the priors together, but not all the way. The other fix is better background information. Firm sizes follow roughly a power law (many small firms, few large ones), so a prior proportional to N^-1 is more realistic than a flat one, and with all three sightings its means are 131, 133 and 134 for the same three bounds, with a 90% credible interval of 91 to 243 at a bound of 1,000. The power-law posterior is also nearly insensitive to the arbitrary bound, which a flat prior on an open-ended quantity is not (*Think Bayes*, ch. 3).
+
+| Prior on N | Upper bound 500 | 1,000 | 2,000 |
+|---|---|---|---|
+| Flat, train 60 only | 207 | 333 | 552 |
+| Flat, trains 30, 60, 90 | 152 | 164 | 171 |
+| Power law N^-1, trains 30, 60, 90 | 131 | 133 | 134 |
+
+Downey draws the practical rule from this: with a lot of data an informative and an uninformative prior agree, and with little data, or with a decision at stake, use the background information you have rather than pretend to know less (*Think Bayes*, ch. 3). The cells above are posterior means; I re-ran them and they match the book.
+
+The same swamping shows up on the Euro coin (140 heads in 250 spins, [chapter 1](01-bayesian-inference.md#the-coin-beta-binomial)). Downey compares a uniform prior over x = 0 to 100 with a triangular prior peaking at 50, which believes a lopsided coin less. After the 250 spins the medians (56) and the 90% credible intervals (51 to 61) are identical, and the means are 55.95 and 55.74, within 0.5% (*Think Bayes*, ch. 4; I re-ran both and the numbers match). He adds two caveats. Convergence needs the two people to agree on the model as well as the data, since a different likelihood moves the posterior however much data arrives. And a hypothesis given prior probability 0 keeps posterior probability 0 whatever is observed, which is the reasoning behind **Cromwell's rule**: never assign 0 to anything remotely possible (*Think Bayes*, ch. 4). That is the same warning as "never put zero prior mass where the truth could be" above, with a name.
+
+With little data the prior can decide the answer. In Downey's Boston Bruins series forecast, four games of scores and a prior on goals per game with sd 0.3 give the Bruins a 57% chance of the series, and the same data with a prior of sd 0.85 (the spread of pair-by-pair averages rather than team averages) give 80%. [Chapter 1](01-bayesian-inference.md#predicting-the-next-game-the-posterior-predictive-as-a-mixture) has the code (*Think Bayes*, ch. 7).
 
 ## Regularisation is a prior
 

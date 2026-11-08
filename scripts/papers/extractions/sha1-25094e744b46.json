@@ -1,0 +1,1053 @@
+{
+ "schema": 1,
+ "key": "sha1:25094e744b46",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/sam-3-2025.pdf",
+ "bib": {
+  "title": "SAM 3: Segment Anything with Concepts",
+  "authors": [
+   "Nicolas Carion",
+   "Laura Gustafson",
+   "Yuan-Ting Hu",
+   "Shoubhik Debnath",
+   "Ronghang Hu",
+   "Didac Suris",
+   "Chaitanya Ryali",
+   "Kalyan Vasudev Alwala",
+   "Haitham Khedr",
+   "Andrew Huang",
+   "Jie Lei",
+   "Tengyu Ma",
+   "Baishan Guo",
+   "Arpit Kalla",
+   "Markus Marks",
+   "Joseph Greer",
+   "Meng Wang",
+   "Peize Sun",
+   "Roman Rädle",
+   "Triantafyllos Afouras",
+   "Effrosyni Mavroudi",
+   "Katherine Xu",
+   "Tsung-Han Wu",
+   "Yu Zhou",
+   "Liliane Momeni",
+   "Rishi Hazra",
+   "Shuangrui Ding",
+   "Sagar Vaze",
+   "Francois Porcher",
+   "Feng Li",
+   "Siyuan Li",
+   "Aishwarya Kamath",
+   "Ho Kei Cheng",
+   "Piotr Dollár",
+   "Nikhila Ravi",
+   "Kate Saenko",
+   "Pengchuan Zhang",
+   "Christoph Feichtenhofer"
+  ],
+  "first_author": "Carion",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 266522,
+  "chars_total": 266522,
+  "engine": "pymupdf",
+  "skipped": "Reference list (from about char 224730) only skimmed by grep for arXiv ids. The garbled letter-spaced SAM 3 Agent reasoning trace (about lines 5568-6140) and the repetitive RefCOCO/ReasonSeg/OmniLabel baseline rows in Tables 40-42 were skimmed, not studied. Everything else read."
+ },
+ "type": "empirical",
+ "question": "Can one model detect, segment and track every instance of an open-vocabulary visual concept (short noun phrase, image exemplars, or both) in images and videos, and what data and architecture does that take?",
+ "hypothesis": "Decoupling recognition from localization with a presence head, and training on a large, diverse data-engine dataset with hard negatives and AI verifiers, gives a step change in promptable concept segmentation over existing open-vocabulary detectors.",
+ "contributions": [
+  "introducing the PCS task and SA-Co benchmark",
+  "an architecture that decouples recognition, localization and tracking and extends SAM 2 to solve concept segmentation while retaining visual segmentation capabilities",
+  "a high-quality, efficient data engine that leverages the complimentary strengths of human and AI annotators"
+ ],
+ "method": {
+  "summary": "SAM 3 is a ~850M-parameter model: a shared Perception Encoder backbone feeds a DETR-style detector (fusion encoder, 6-layer decoder, 200 object queries, global presence token, MaskFormer-style mask head) conditioned on noun-phrase text and image exemplars, plus a SAM 2-style memory tracker for video. It is trained in four stages on SA-Co data built by a human + AI-verifier data engine (Llama 3.2 fine-tuned as mask and exhaustivity verifiers), and evaluated on a new benchmark with the cgF1 metric.",
+  "task": "Promptable Concept Segmentation (open-vocabulary instance/semantic segmentation and video tracking from noun phrases and image exemplars); also Promptable Visual Segmentation (SAM 2 task)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "SA-Co/HQ",
+    "role": "train",
+    "size": "5.2M images, 4.0M unique NPs, 146.1M image-NP pairs, 52.3M masks; 88.5% of image-NPs negative",
+    "split": "train",
+    "source": "Data engine phases 1-3 (images mined from MetaCLIP, SA-1B and other pools in Table 26); verified by humans or AI verifiers",
+    "preprocessing": "Phase 1 4.3M image-NP pairs, Phase 2 122.2M, Phase 3 19.5M (Table 19); hard negatives from ontology siblings/cousins and Llama 4, kept only if adversarial to the current SAM 3"
+   },
+   {
+    "name": "SA-Co/SYN",
+    "role": "train",
+    "size": "39.4M images, 38.0M NPs, 1.7B image-NPs, 1.4B masks; 74.0% negative",
+    "split": "train",
+    "source": "MetaCLIP images, NPs from alt-text and Llama 4 captions, masks from SAM 3, verified by MV and EV AI verifiers only, no humans",
+    "preprocessing": "Dropped in training stage 3"
+   },
+   {
+    "name": "SA-Co/EXT",
+    "role": "train",
+    "size": "9.3M images, 497.4K NPs, 136.6M image-NPs, 70.5M masks; 71.8% negative",
+    "split": "train",
+    "source": "Eighteen external datasets with masks or boxes (Table 26); box-only datasets get SAM 2 masks",
+    "preprocessing": "Labels mapped to the SA-Co Wikidata ontology; extra negatives added from the hierarchy"
+   },
+   {
+    "name": "SA-Co/VIDEO",
+    "role": "train",
+    "size": "52.5K videos, 24.8K NPs, 134.3K video-NPs, 467.1K masklets; 26.7% negative; 84.1 frames per video at 6 fps on average",
+    "split": "train",
+    "source": "SA-V, SA-V internal, YT-Temporal-1B, SA-FARI; all human verified",
+    "preprocessing": "Mined for hard tracking (scene/motion filters, crowded clips, PLM judge); stage-4 tracker training"
+   },
+   {
+    "name": "SA-1B",
+    "role": "train",
+    "size": null,
+    "split": null,
+    "source": "Kirillov et al., 2023",
+    "preprocessing": "Used for visually prompted PVS pre-training (Table 18)"
+   },
+   {
+    "name": "Perception Encoder pre-training data",
+    "role": "pretrain",
+    "size": "5.4 billion image-text pairs",
+    "split": null,
+    "source": "Bolya et al., 2025",
+    "preprocessing": null
+   },
+   {
+    "name": "SA-Co/Gold",
+    "role": "eval",
+    "size": "51.8K NPs, 15.8K images, 168.9K image-NPs, 84.4% negative, 126.9K masks, 6.98% zero-shot NPs",
+    "split": "7 domains, 3 expert annotations per image-NP",
+    "source": "MetaCLIP, SA-1B, Attributes, Crowded, Wiki-Common, Wiki-Food&Drink, Wiki-Sports Equipment",
+    "preprocessing": "Benchmark should not be used for training"
+   },
+   {
+    "name": "SA-Co/Silver",
+    "role": "eval",
+    "size": "54.6K NPs, 66.1K images, 1.8M image-NPs, 94.0% negative",
+    "split": "10 domains, 1 annotation each",
+    "source": "Table 27",
+    "preprocessing": null
+   },
+   {
+    "name": "SA-Co/Bronze and SA-Co/Bio",
+    "role": "eval",
+    "size": "Bronze 105.3K NPs, 32.5K images, 1.0M image-NPs; Bio 166 NPs, 5.4K images, 35.9K image-NPs",
+    "split": "9 existing datasets in total",
+    "source": "Existing masks or SAM 2 masks prompted by boxes",
+    "preprocessing": null
+   },
+   {
+    "name": "SA-Co/VEval",
+    "role": "eval",
+    "size": "5.2K NPs, 1.7K videos, 10.3K video-NPs, 75.4% negative, 11.2K masklets",
+    "split": "3 domains (SA-V, YT-Temporal-1B, SmartGlasses), val and test, 1 annotator per video-NP",
+    "source": "Table 27/28",
+    "preprocessing": null
+   },
+   {
+    "name": "Public benchmarks",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "LVIS, COCO, COCO-O, ADE-847/150, Pascal Context 59/459, Cityscapes, ODinW13, Roboflow100-VL, CountBench (487 of 540 images usable), PixMo-Count (529 of 540 usable), LVVIS, BURST, YTVIS21, OVIS, BDD100K, GMOT40, DeepSeaMOT, ReasonSeg, OmniLabel, RefCOCO/+/g, VOS sets (MOSEv1/v2, DAVIS17, LVOSv2, SA-V, YTVOS19), SA-37 interactive set",
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "SAM 3",
+    "role": "proposed",
+    "params": "~850M (~450M vision encoder, ~300M text encoder, ~100M detector and tracker)",
+    "architecture": "Shared Perception Encoder; DETR-style detector (fusion encoder of 6 blocks, decoder of 6 blocks, Q=200 object queries, presence token, 4 geometric queries, MaskFormer-style segmentation head, ambiguity head) plus SAM 2-style memory tracker",
+    "init_from": "Perception Encoder (L+ size) pre-trained on 5.4B image-text pairs, no distillation and no video fine-tuning",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "vision encoder 32 layers, 4 with global attention; fusion encoder 6; decoder 6",
+    "hidden": null,
+    "heads": null,
+    "context": "text encoder is causal, max context length 32",
+    "other": {
+     "input_resolution": "1008 x 1008, PE patch size 14 (inferred from 'PE-L+ (14)' in Table 11)",
+     "attention": "windowed 24x24 tokens except global layers; image of 1008 px split into 3x3 windows of 336 px",
+     "token_downsampling": "2x2 to 1296 tokens before the fusion encoder (ablation setup)",
+     "ambiguity_head": "mixture of experts, K=2 best, K>3 mode collapse, winner-takes-all",
+     "latency": "30 ms per image with 100+ objects on an H200; video cost grows linearly with tracked objects"
+    }
+   },
+   {
+    "name": "OWLv2 / OWLv2*",
+    "role": "baseline",
+    "params": null,
+    "architecture": "open-vocabulary detector; boxes converted to masks with SAM 1",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "checkpoints": "google/owlv2-large-patch14 and google/owlv2-large-patch14-ensemble; * is partially trained on LVIS"
+    }
+   },
+   {
+    "name": "GroundingDino (gDino-T, gDino-B), LLMDet (L, B), APE-D, DINO-X, Gemini 2.5 Flash/Pro, T-Rex2, GLEE, Molmo-72B, Qwen2-VL-72B",
+    "role": "baseline",
+    "params": null,
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "detection_thresholds": "swept at 0.1 steps on LVIS cgF1: 0.4 for LLMDet-L, LLMDet-B, gDino-T; 0.3 for OWLv2*; 0.2 for OWLv2 and gDino-B; 0.5 for DINO-X"
+    }
+   },
+   {
+    "name": "Llama 3.2 (fine-tuned as MV and EV AI verifiers)",
+    "role": "judge",
+    "params": null,
+    "architecture": "MLLM, multiple-choice over image-phrase-mask inputs",
+    "init_from": "Llama 3.2",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "training_data": "over 200M image-text pairs to pre-train a foundational verifier, then ~10M high-quality human-annotated points per task",
+     "scoring": "softmax over answer-choice logits"
+    }
+   },
+   {
+    "name": "SAM 3 Agent MLLMs (Qwen2.5-VL 7B/72B, Llama4 Maverick, Qwen3-VL 8B/235B Thinking, Gemini 2.5 Pro)",
+    "role": "evaluated",
+    "params": null,
+    "architecture": "MLLM planner calling SAM 3 as a tool",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "DETR-style set prediction: box L1 weight 5 and gIoU weight 2, classification weight 100, focal 200, dice 10; Align loss in place of IoU prediction loss; DAC-DETR dual supervision; presence BCE weight 20 (stage 3); tracker stage: focal+dice for masks, MAE for IoU, CE for occlusion, weights 20:1:1:1",
+   "optimizer": "AdamW",
+   "lr": "stage 2: initial 5e-4 (1e-4 for vision and text encoder, 1e-3 for all other components); stage 3: all lrs x0.025; stage 4: peak 5.0e-4; long-context tracker fine-tune: x0.1",
+   "lr_schedule": "stage 2: reciprocal square-root with layer-wise lr decay 0.9 on the vision encoder; stage 4: cosine",
+   "warmup": "stage 2: 5k warm-up and cooldown steps; stage 4: linear warmup 1k iterations",
+   "batch_size": "stage 2: 896; stage 3: 512; stage 4: 512",
+   "steps": "stage 2: ~95k iterations; stage 3: ~5k iterations; stage 4: ~190k iterations, then 60k iterations on 16- and 32-frame videos",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": "0.1",
+   "dropout": "0.1 in encoder and decoder",
+   "regularisation": "layer-wise lr decay 0.9; mosaic augmentation up to 3x3; random crop/resize with padding spread over all sides; random horizontal flips; ontology-based synonym and negative sampling; safety negatives (slurs, subjective person adjectives)",
+   "hardware": "A100 and H200 GPUs",
+   "compute": "172k A100 GPU hours and 86k H200 GPU hours; 142k-176k kWh; 65.3-77.6 metric tons CO2e",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "stage_1": "Perception Encoder pre-training, 5.4B image-text pairs, L+ size, vision 450M and text 300M",
+    "stage_2": "detector pre-training on pseudo-labelled and human data; p=0.2 of image-NPs converted to visual queries and p=0.2 augmented with input boxes; PVS interactivity steps capped at 4",
+    "stage_3": "highest-quality exhaustivity-verified data only (SA-Co/SYN dropped), presence token introduced, PVS interactivity 7 steps, PCS interactivity 5 iterations of exemplar boxes",
+    "stage_4": "tracker decoder on frozen backbone",
+    "few_shot_finetune": "40 epochs, lr one-tenth of standard, batch size 2, mask losses disabled; ODinW13 averaged over three official few-shot splits",
+    "ablation_setup": "stride-28 variant (4x fewer detector tokens), 45% of SA-Co/SYN, shorter schedules, no presence post-training, internal SA-Co/Gold (human cgF1 70.8 vs public 72.8); encoder ablation trained on SA-Co/HQ viewing 5 million samples",
+    "ambiguity_head": "trained on top of a frozen SAM 3"
+   }
+  },
+  "inference": {
+   "decoding": "predictions with confidence above 0.5 are evaluated; scores are the product of presence score and object score",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "SAM 3 prompted with one NP at a time; ODinW13 few-shot mean and std over three splits; no other seeds or run counts stated",
+   "prompting": "short noun phrase, image exemplars as positive/negative boxes, or both; video NP prompts global to all frames",
+   "retrieval": null,
+   "parameters": {
+    "track_confirmation_delay_T": "15 frames",
+    "unconfirmed_masklet_threshold_V": "0",
+    "iou_threshold_matching": "0.1",
+    "periodic_reprompt_every_N_frames": "16, requires IoU >= 0.8 and detection and masklet scores > 0.8",
+    "detection_guided_reprompt": "when bbox IoU < 0.85",
+    "ambiguity_overlap_metric": "Intersection-over-Minimum (IoM)",
+    "counting_postprocessing": "no presence token, NMS with IoM threshold 0.5, keep confidence > 0.5, count masks",
+    "video_realtime_parallelism": "30 FPS: up to 10 objects on 2 H200s, 28 on 4, 64 on 8",
+    "mllm_tools": "segment_phrase, examine_each_mask, select_masks_and_return, report_no_mask; context pruning back to last segment_phrase call; up to ~60 steps on hard queries"
+   },
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "cgF1",
+     "definition": "100 * pmF1 * IL_MCC (classification-gated F1)",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "pmF1",
+     "definition": "positive micro F1 averaged over IoU thresholds 0.5 to 0.95 step 0.05, on positive media-phrase pairs with at least one ground-truth mask",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "IL_MCC",
+     "definition": "image-level Matthews correlation coefficient of 'is the object present' (any mask with confidence > 0.5), range [-1, 1]",
+     "unit": "ratio",
+     "higher_is_better": true
+    },
+    {
+     "name": "oracle protocol",
+     "definition": "prediction compared with each of 3 ground truths, best local F1 selected",
+     "unit": null,
+     "higher_is_better": null
+    },
+    {
+     "name": "pHOTA, pDetA, pAssA, VL_MCC",
+     "definition": "HOTA on remapped video-NP pairs (each video-NP its own video id) via TrackEval; video cgF1 = VL_MCC x positive macro F1 with volume IoU",
+     "unit": "points",
+     "higher_is_better": true
+    },
+    {
+     "name": "AP, mIoU, J&F, MAE, accuracy, gIoU",
+     "definition": "official metric of each public benchmark; LVIS uses AP-fixed",
+     "unit": "points",
+     "higher_is_better": null
+    }
+   ],
+   "baselines": [
+    "OWLv2",
+    "OWLv2*",
+    "GroundingDino",
+    "LLMDet",
+    "APE-D",
+    "DINO-X",
+    "Gemini 2.5 Flash/Pro",
+    "T-Rex2",
+    "GLEE",
+    "SAM 3 Detector + T-by-D",
+    "LLMDet + SAM 3 Tracker",
+    "SAM 2.1 L",
+    "SAMURAI",
+    "SAM2Long",
+    "SeC",
+    "Molmo-72B",
+    "Qwen2-VL-72B",
+    "LISA",
+    "Seg-Zero",
+    "RSVP",
+    "X-SAM"
+   ],
+   "protocol": "Single reported number per cell, no confidence intervals or seeds for the main tables; human performance estimated from three annotators (Oracle) and a Random Pair protocol (median of 1000 draws); negatives only have one label so human IL_MCC extrapolated from ~1000 extra annotated image-NPs per domain; ablations use a lighter model and are not comparable across tables."
+  },
+  "availability": {
+   "code": "https://github.com/facebookresearch/sam3 (inference code)",
+   "weights": "SAM 3 checkpoints released under the SAM license",
+   "data": "SA-Co benchmark released (annotations at the same repository); the paper does not state that the SA-Co training sets are released"
+  },
+  "prompts": [
+   {
+    "purpose": "Mask Verification AI verifier (Table 21)",
+    "text": "You are an expert annotator of object segmentation masks. For an image and a pre-deﬁned label, you are given a mask and asked to evaluate the quality of the mask. Follow the following rules when rating the mask. 1. Rate the mask as “Accept” when the label accurately describes the masked object and the mask covers the object with good boundaries. We do not need masks to be pixel-perfect for this task. However, the mask should cover all important parts of the object.",
+    "where": "Appendix D.4, Table 21 (first rule only; rules 2-5 Accept as text, Flag label, Whole image, Reject are in the paper)"
+   },
+   {
+    "purpose": "Exhaustivity Verification AI verifier (Table 22)",
+    "text": "You are an expert annotator of object detection. For an image and a pre-deﬁned label, you are given some boxes and asked to evaluate if the boxes are exhaustive. Follow the following rules when rating the boxes. 1. Rate the boxes as “Accept” when there are no undetected objects that match the label or the label is vague (i.e, “rent”, “it”) or malformed (heavily misspelled). 2. Rate the boxes as “Reject” when there are undetected objects and at least some undetected instances can be separated.",
+    "where": "Appendix D.4, Table 22 (first two rules only; remaining rules in the paper)"
+   },
+   {
+    "purpose": "SAM 3 Agent tool: segment_phrase",
+    "text": "Use the Segment Anything 3 model to ground all instances of a simple noun phrase by generating segmentation mask(s) that cover those instances on the raw input image. At the same time, all previously generated mask(s) will be deleted and cannot be referred to in future messages.",
+    "where": "Appendix G.1 (the full system prompt with the other three tools is in G.1)"
+   }
+  ],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use an initial learning rate of 5e-4, 1e-4 for vision and text encoder and 1e-3 for all other components.",
+    "where": "C.4.1 Stage 2; the sentence is ambiguous (5e-4 appears to be a global value and the other two component-specific)"
+   },
+   {
+    "field": "training.compute",
+    "quote": "The released SAM 3 was trained on 172k A100 GPU hours and 86k H200 GPU hours.",
+    "where": "Table 43 model card"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "SAM 3 reaches a zero-shot LVIS mask AP of 48.8 versus the previous best of 38.5.",
+   "kind": "measured",
+   "source": null,
+   "metric": "LVIS mask AP",
+   "value": "48.8",
+   "unit": "AP",
+   "baseline_value": "38.5",
+   "n": null,
+   "setup": "Zero-shot, closed-vocabulary LVIS, instance segmentation, SAM 3 prompted with one NP per class",
+   "quote": "reaching a zero-shot mask AP of 48.8 on LVIS vs. the current best of 38.5",
+   "table": null,
+   "note": "Table 1 prints SAM 3 LVIS mask AP as 48.5 (row SAM 3, instance segmentation LVIS AP), not 48.8.",
+   "where": "Section 1; Table 1"
+  },
+  {
+   "claim": "On SA-Co/Gold instance segmentation SAM 3 scores cgF1 54.1, more than double OWLv2* (29.3 in Table 1 on LVIS cgF1; 24.6 on Gold per Table 30) and 74% of estimated human performance (72.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold, instance segmentation)",
+   "value": "54.1",
+   "unit": "points",
+   "baseline_value": "24.6 (OWLv2*)",
+   "n": null,
+   "setup": "SA-Co/Gold, 7 domains, oracle protocol over 3 annotations, confidence threshold 0.5",
+   "quote": "SAM 3 achieves more than double the cgF1 score of the strongest baseline OWLv2⋆, and 74% of the estimated human performance",
+   "table": "Table 1, row SAM 3, column SA-Co Gold cgF1 (instance segmentation); Table 30 row SAM 3 Average cgF1 54.1",
+   "note": "Human cgF1 72.8; Table 1 SAM 3 box-detection Gold cgF1 is 55.7 vs human 74.0.",
+   "where": "Table 1, Table 30"
+  },
+  {
+   "claim": "SAM 3 beats other systems on the other SA-Co splits by large margins: Silver 49.6, Bronze 42.6, Bio pmF1 55.4 (instance segmentation).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 / pmF1",
+   "value": "49.6",
+   "unit": "points",
+   "baseline_value": "11.5 (OWLv2* Silver)",
+   "n": null,
+   "setup": "SA-Co/Silver instance segmentation, zero-shot",
+   "quote": null,
+   "table": "Table 1, row SAM 3, column Silver cgF1",
+   "note": null,
+   "where": "Table 1"
+  },
+  {
+   "claim": "The presence head raises cgF1 by 1.5 and image-level IL_MCC by 0.05.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "+1.5",
+   "unit": "points",
+   "baseline_value": "50.7 without, 52.2 with",
+   "n": null,
+   "setup": "Ablation with shorter training and lighter model; no presence post-training by default",
+   "quote": "The presence head boosts cgF1 by +1.5 (9a), improving image-level recognition measured by IL_MCC by +0.05.",
+   "table": "Table 9a",
+   "note": "Ablation numbers are not comparable across tables.",
+   "where": "Section 6, Table 9a"
+  },
+  {
+   "claim": "Adding hard negatives lifts image-level IL_MCC from 0.44 to 0.68 (cgF1 28.3 to 43.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "IL_MCC",
+   "value": "0.68",
+   "unit": "ratio",
+   "baseline_value": "0.44",
+   "n": null,
+   "setup": "0, 5, 15, 30 hard negative NPs per image in SA-Co/HQ; ablation setup",
+   "quote": "most notably the image-level IL_MCC from 0.44 to 0.68",
+   "table": "Table 9b, rows 0 and 30 negatives",
+   "note": null,
+   "where": "Section 6, Table 9b"
+  },
+  {
+   "claim": "Training data ablation: SYN adds +8.8 cgF1 over EXT alone and HQ adds a further +14.6 on top of that baseline; all three reach 47.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "47.4",
+   "unit": "points",
+   "baseline_value": "23.7 (EXT only)",
+   "n": null,
+   "setup": "Ablation with 45% of SYN, shorter training, internal Gold",
+   "quote": "synthetic (SYN) training data improves over the external (EXT) by +8.8 cgF1 and our high-quality (HQ) annotations add +14.6 cgF1 on top of this baseline",
+   "table": "Table 9c, row EXT+SYN+HQ",
+   "note": null,
+   "where": "Section 6, Table 9c"
+  },
+  {
+   "claim": "Replacing SAM 3's presence score with the exhaustivity AI verifier's raises cgF1 by 7.2; adding the mask verifier adds 1.1; together they close about half the gap to human performance (62.3 vs 72.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "62.3",
+   "unit": "points",
+   "baseline_value": "54.0",
+   "n": null,
+   "setup": "Final SAM 3 + EV AI verifier + MV AI verifier at inference",
+   "quote": "boosts cgF1 by +7.2",
+   "table": "Table 9d, row + MV AI",
+   "note": "Text says 'adds another 1.1 points'.",
+   "where": "Section 6, Table 9d, Table 14"
+  },
+  {
+   "claim": "AI verifiers roughly double data-engine throughput: 5x faster on negative phrases and 36% faster on positive phrases.",
+   "kind": "measured",
+   "source": null,
+   "metric": "annotation time",
+   "value": "23",
+   "unit": "sec per datamix item (Engine full) vs 50 (Engine all human)",
+   "baseline_value": "50",
+   "n": null,
+   "setup": "Wiki-Food&Drink domain, models never trained in the domain; datamix assumes 88.5% negatives",
+   "quote": "allow for a 5x speed up on negative phrases and a 36% speed up for positive phrases",
+   "table": "Table 15, row Time for datamix, column Engine - full",
+   "note": "Positive NP 207 s to 152 s; negative NP 30 s to 6 s.",
+   "where": "A.4, Table 15"
+  },
+  {
+   "claim": "After 3 interactive exemplar clicks, PCS beats text-only by 21.6 cgF1, and beats ideal PVS refinement by 2.0; performance plateaus after 4 clicks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "+21.6",
+   "unit": "points",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Simulated user adds one exemplar box at a time from errors, SA-Co/Gold",
+   "quote": "After 3 clicks, interactive PCS outperforms text-only by +21.6 cgF1 points",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Fig. 7"
+  },
+  {
+   "claim": "With a single exemplar, SAM 3 beats T-Rex2 by 18.3 on COCO, 10.3 on LVIS and 20.5 on ODinW13.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AP+",
+   "value": "+18.3 (COCO)",
+   "unit": "AP",
+   "baseline_value": null,
+   "n": null,
+   "setup": "One random ground-truth box as exemplar, positives only, image-only (I) prompt",
+   "quote": "SAM 3 outperforms prior state-of-the-art T-Rex2 by a healthy margin on COCO (+18.3), LVIS (+10.3), and ODinW (+20.5)",
+   "table": null,
+   "note": null,
+   "where": "Section 6, Table 3"
+  },
+  {
+   "claim": "SAM 3 reaches 10-shot ODinW13 AP 71.8, above Grounding DINO 1.5 Pro at 67.9, and zero-shot 61.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ODinW13 10-shot mean bbox AP",
+   "value": "71.8",
+   "unit": "AP",
+   "baseline_value": "67.9",
+   "n": null,
+   "setup": "Fine-tuned without mask loss, 40 epochs, batch size 2, lr 1/10 of standard, three few-shot splits",
+   "quote": null,
+   "table": "Table 2, row SAM 3, column ODinW13 AP10",
+   "note": "On Roboflow100-VL SAM 3 trails Grounding DINO zero-shot (15.2 vs 15.7) but leads 10-shot (36.5 vs 33.7).",
+   "where": "Table 2, Fig. 20, Table 36"
+  },
+  {
+   "claim": "On SA-Co/VEval SA-V, SAM 3 reaches cgF1 30.3 and pHOTA 58.0 versus GLEE 0.1 cgF1; it reaches over 80% of human pHOTA.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/VEval SA-V test)",
+   "value": "30.3",
+   "unit": "points",
+   "baseline_value": "25.7 (SAM 3 Detector + T-by-D)",
+   "n": null,
+   "setup": "Video PCS with NP prompts, test split, human cgF1 53.1",
+   "quote": "On SA-Co/VEval it reaches over 80% of human pHOTA.",
+   "table": "Table 5, row SAM 3, column SA-V cgF1",
+   "note": "Table 39a gives SA-V test cgF1 30.3 and val 29.3.",
+   "where": "Table 5, Table 39"
+  },
+  {
+   "claim": "Temporal disambiguation strategies improve video PCS: SA-V test cgF1 27.1 to 30.3, pHOTA 55.9 to 58.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/VEval SA-V test)",
+   "value": "30.3",
+   "unit": "points",
+   "baseline_value": "27.1",
+   "n": null,
+   "setup": "SAM 3 with vs without all temporal disambiguation strategies",
+   "quote": null,
+   "table": "Table 39a, rows SAM 3 w/o any temporal disambiguation and SAM 3, column SA-V test cgF1",
+   "note": null,
+   "where": "Table 39"
+  },
+  {
+   "claim": "On the MOSEv2 VOS benchmark SAM 3 scores J&F 60.3, 6.5 points above prior work (SeC 53.8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "J&F (MOSEv2 val)",
+   "value": "60.3",
+   "unit": "J&F",
+   "baseline_value": "53.8",
+   "n": null,
+   "setup": "Video object segmentation from mask prompt",
+   "quote": "particularly on the challenging MOSEv2 dataset, where SAM 3 outperforms prior work by 6.5 points",
+   "table": "Table 6, row SAM 3, column MOSEv2",
+   "note": "SAM 2.1 L zero-shot 47.9.",
+   "where": "Section 6, Table 6"
+  },
+  {
+   "claim": "Interactive image segmentation on SA-37: SAM 3 beats SAM 2.1 L at 3 and 5 clicks (81.3, 85.1 vs 80.3, 84.3) but not at 1 click (66.1 vs 66.4).",
+   "kind": "measured",
+   "source": null,
+   "metric": "average mIoU, 5 clicks",
+   "value": "85.1",
+   "unit": "mIoU",
+   "baseline_value": "84.3",
+   "n": null,
+   "setup": "37-dataset benchmark of Ravi et al. (2024)",
+   "quote": null,
+   "table": "Table 7, row SAM 3, column 5-clicks",
+   "note": "SAM 3 FPS 43.5 vs SAM 2.1 L 93.0 as printed.",
+   "where": "Table 7"
+  },
+  {
+   "claim": "SAM 3 Agent with Gemini 2.5 Pro reaches ReasonSeg val gIoU 77.0 and test 74.0 zero-shot.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ReasonSeg gIoU",
+   "value": "77.0",
+   "unit": "gIoU",
+   "baseline_value": "65.0 (LISA-13B-LLaVA1.5, fine-tuned)",
+   "n": null,
+   "setup": "Zero-shot, no RES or ReasonSeg training data, MLLM calls SAM 3 as tool",
+   "quote": null,
+   "table": "Table 8, row SAM 3 Agent Gemini 2.5 Pro, column ReasonSeg val All",
+   "note": "With Qwen2.5-VL 7B the val gIoU is 62.2; Qwen3-VL 235B Thinking reaches 76.6 (Table 40).",
+   "where": "Table 8, Table 40"
+  },
+  {
+   "claim": "On CountBench SAM 3 reaches MAE 0.12 and accuracy 93.8%; on PixMo-Count MAE 0.21 and accuracy 86.2%.",
+   "kind": "measured",
+   "source": null,
+   "metric": "CountBench accuracy",
+   "value": "93.8",
+   "unit": "%",
+   "baseline_value": "92.4 (Molmo-72B, Gemini 2.5 Pro)",
+   "n": 487,
+   "setup": "Internal SAM 3 checkpoint; 487 CountBench and 529 PixMo-Count images with working links; IoM NMS and no presence token",
+   "quote": null,
+   "table": "Table 4, row SAM 3, column CountBench Acc",
+   "note": "Table 38 ablation: IoM NMS without presence gives 94.0 / MAE 0.11 on CountBench, and presence token hurts counting.",
+   "where": "Table 4, F.4, Table 38"
+  },
+  {
+   "claim": "SAM 3 runs in 30 ms for one image with 100+ objects on an H200 and sustains near real-time video for about 5 concurrent objects.",
+   "kind": "measured",
+   "source": null,
+   "metric": "latency",
+   "value": "30",
+   "unit": "ms",
+   "baseline_value": null,
+   "n": null,
+   "setup": "H200 GPU, single image",
+   "quote": "On an H200 GPU, SAM 3 runs in 30 ms for a single image with 100+ detected objects.",
+   "table": null,
+   "note": null,
+   "where": "Section 1"
+  },
+  {
+   "claim": "Human agreement under the Oracle protocol is cgF1 76.2 on SA-Co/Gold but 55.5 under a Random Pair protocol, showing the task is inherently ambiguous.",
+   "kind": "measured",
+   "source": null,
+   "metric": "human cgF1 (3-reviewed subset)",
+   "value": "55.5",
+   "unit": "points",
+   "baseline_value": "76.2",
+   "n": null,
+   "setup": "Median over 1000 random annotation pairs vs best-of-three oracle",
+   "quote": null,
+   "table": "Table 29, row Random Pair, column cgF1",
+   "note": null,
+   "where": "E.4, Table 29"
+  },
+  {
+   "claim": "PE's aligned encoders are the best backbone: SA-Co/Gold cgF1 43.2 and COCO-O AP 42.5 versus Hiera-L 32.8 and 22.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "43.2",
+   "unit": "points",
+   "baseline_value": "32.8 (Hiera-L)",
+   "n": null,
+   "setup": "Ablation, each encoder trained on SA-Co/HQ for 5 million samples with a separately tuned recipe",
+   "quote": null,
+   "table": "Table 11, row PE-L+ (14), column SA-Co/Gold (cgF1)",
+   "note": "PE with unaligned DistilRoBERTa text encoder: 38.1.",
+   "where": "A.1, Table 11"
+  },
+  {
+   "claim": "SA-Co/HQ scales well: cgF1 on SA-Co/Gold goes from 23.7 (EXT only) to 45.5 with 100% HQ added.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 (SA-Co/Gold)",
+   "value": "45.5",
+   "unit": "points",
+   "baseline_value": "23.7",
+   "n": null,
+   "setup": "Lighter ablation model, random fixed percentage of SA-Co/HQ added to EXT",
+   "quote": null,
+   "table": "Table 12, row + 100% SA-Co/HQ, column SA-Co/Gold (All) cgF1",
+   "note": "Human (teacher) reference 70.8 on internal Gold.",
+   "where": "A.2, Table 12"
+  },
+  {
+   "claim": "Adding SA-Co video masklets to stage-4 training improves SA-Co/VEval SA-V val J&F from 84.9 to 86.5, while DAVIS17 stays about 91.5 and SA-V test moves 77.1 to 78.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "J&F (SA-Co/VEval SA-V val)",
+   "value": "86.5",
+   "unit": "J&F",
+   "baseline_value": "84.9",
+   "n": null,
+   "setup": "Stage-4 tracker training with SAM 2 video data only vs plus 100% SA-Co Train videos",
+   "quote": null,
+   "table": "Table 17, row + 100% SA-Co Train videos, column SA-Co/VEval SA-V val J&F",
+   "note": "SA-V val J&F goes 77.0 to 77.4, not monotonic.",
+   "where": "A.6, Table 17"
+  },
+  {
+   "claim": "Synthetic data from SAM 3 + AI verifiers lets a new domain (Food&drink) improve without human annotation, with SYN-Food catching up to human-verified HQ-Food at scale and surpassing its own teacher when mixed 1:1 with HQ data.",
+   "kind": "measured",
+   "source": null,
+   "metric": "cgF1 on Food&drink",
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Food&drink held out of SAM 3 and verifier training; data scaled from 1.5K to 750K; PL-Food (no verification) is far weaker",
+   "quote": null,
+   "table": null,
+   "note": "Read from Fig. 8 and Fig. 9; no table.",
+   "where": "Section 6 Fig. 8; A.3 Fig. 9"
+  },
+  {
+   "claim": "The ambiguity head (K=2 experts, winner-takes-all) gives a 15% reduction in overlapping instances.",
+   "kind": "measured",
+   "source": null,
+   "metric": "overlapping instances",
+   "value": "15",
+   "unit": "% reduction",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Overlap detected by IoM between masks",
+   "quote": "With the ambiguity head, we obtain a 15% reduction in overlapping instances.",
+   "table": null,
+   "note": null,
+   "where": "C.2"
+  },
+  {
+   "claim": "Training the released model took 172k A100 GPU hours and 86k H200 GPU hours.",
+   "kind": "measured",
+   "source": null,
+   "metric": "training compute",
+   "value": "172k A100 + 86k H200",
+   "unit": "GPU hours",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Released SAM 3",
+   "quote": "The released SAM 3 was trained on 172k A100 GPU hours and 86k H200 GPU hours.",
+   "table": null,
+   "note": null,
+   "where": "Table 43"
+  },
+  {
+   "claim": "The hard-negative dataset and domain breadth are scale claims: SA-Co/HQ has 4M unique NPs and the benchmark 207K unique concepts, over 50x more than existing benchmarks.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Dataset statistics, Tables 24 and 28",
+   "quote": null,
+   "table": null,
+   "note": "Section 1 says '> 50x more concepts than existing benchmarks'; Related Work says '> 100x more unique concepts than prior work'; E.2 says SA-Co/Gold has ~50x more unique phrases than LVIS-test.",
+   "where": "Sections 1, 7, E.2"
+  }
+ ],
+ "limits": [
+  "SAM 3 struggles to generalize to fine-grained out-of-domain concepts (e.g., aircraft types, medical terms) zero-shot, especially in niche domains such as thermal imagery; it adapts with fine-tuning or synthetic domain data (Section B).",
+  "Prompts are limited to simple noun phrases; multi-attribute queries beyond one or two attributes and referring expressions are unsupported without an MLLM (SAM 3 Agent).",
+  "Video inference cost scales linearly with the number of tracked objects; real-time needs multi-GPU parallelism (10 objects on 2 H200s, 28 on 4, 64 on 8); no shared object-level memory across objects.",
+  "A hard 'mode-switch' separates concept prompting from instance (PVS) prompting; interleaving is future work.",
+  "The PCS task is intrinsically ambiguous; SA-Co/Gold human cgF1 is 72.8 (oracle) and lower under random pairs (55.5), and the benchmark has one label per hard negative, so human IL_MCC is extrapolated.",
+  "Ablations use lighter models and shorter schedules and numbers are not comparable across tables (stated under Table 9).",
+  "Many baselines are tuned by the authors (detection thresholds swept on LVIS cgF1; GroundingDino and LLMDet prompted with 20-30 NPs at once); GLEE and LLMDet are zero-shot on SA-Co/VEval and the SmartGlasses egocentric data may lie outside their training distribution.",
+  "SAM 3 underperforms Grounding DINO zero-shot on Roboflow100-VL (15.2 vs 15.7 AP); authors attribute it to dataset-specific prompts outside current scope.",
+  "SAM 3 Agent on RefCOCO is weaker than trained methods; authors attribute low-IoU cases to annotation bias and ground-truth errors in RefCOCO-Seg (a hypothesis, error analysis in Fig. 28).",
+  "No seeds, confidence intervals or run counts are reported for main results; training precision and exact wall-clock are not stated.",
+  "Annotation pool does not represent all communities that will use SAM 3 (APAC and EMEA vendors, per the data annotation card); the benchmark is not meant for training.",
+  "Models and baselines (Gemini 2.5, Qwen2.5-VL, DINO-X, OWLv2) reflect mid-2025 state of the art and have likely dated."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Promptable Concept Segmentation (PCS)",
+   "definition": "given an image or short video (<=30 secs), detect, segment and track all instances of a visual concept specified by a short text phrase, image exemplars, or a combination of both",
+   "where": "Section 2"
+  },
+  {
+   "term": "Promptable Visual Segmentation (PVS)",
+   "definition": "the SAM 1/2 task of segmenting a single object per prompt with points, boxes or masks",
+   "where": "Section 1"
+  },
+  {
+   "term": "cgF1",
+   "definition": "classification-gated F1 = 100 * pmF1 * IL_MCC",
+   "where": "Section 5, E.3"
+  },
+  {
+   "term": "IL_MCC",
+   "definition": "image-level Matthews correlation coefficient of binary 'is the object present' prediction, in [-1, 1]",
+   "where": "E.3"
+  },
+  {
+   "term": "presence token / presence head",
+   "definition": "a learned global token that predicts p(NP is present in input) while each query only solves p(q_i is a match | NP present); final score is the product",
+   "where": "Section 3, C.2"
+  },
+  {
+   "term": "Mask Verification (MV) / Exhaustivity Verification (EV)",
+   "definition": "MV accepts or rejects masks on quality and relevance to the NP; EV checks that all instances of the NP have been masked",
+   "where": "Section 4, D.3"
+  },
+  {
+   "term": "AI verifier",
+   "definition": "a Llama 3.2 model fine-tuned on human MV or EV labels to do those tasks automatically",
+   "where": "Section 4 Phase 2"
+  },
+  {
+   "term": "masklet",
+   "definition": "a spatial-temporal mask tracking one object through a video",
+   "where": "Section 3"
+  },
+  {
+   "term": "Masklet Detection Score (MDS)",
+   "definition": "sum over a window of +1/-1 depending on whether a masklet matches a detection with IoU above a threshold",
+   "where": "C.3"
+  },
+  {
+   "term": "pHOTA",
+   "definition": "phrase-based HOTA: each video-NP pair is remapped to a unique video id with a single category, then HOTA is computed class-agnostically",
+   "where": "F.5"
+  },
+  {
+   "term": "Intersection-over-Minimum (IoM)",
+   "definition": "overlap divided by the area of the smaller mask, used to find nested instances and for counting NMS",
+   "where": "C.2, F.4"
+  },
+  {
+   "term": "hard negative",
+   "definition": "a phrase absent from the image for which (a previous generation of) SAM 3 predicts masks, i.e. adversarial to SAM 3",
+   "where": "A.2, D.4"
+  },
+  {
+   "term": "zero-shot NP",
+   "definition": "a phrase not seen in the combined set of SA-Co/HQ, SA-Co/EXT and SA-Co/VIDEO",
+   "where": "Table 28 caption"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Segment Anything (SAM 1)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "introduced promptable segmentation; SAM 1 used in the annotation tool and to convert detector boxes to masks",
+   "quote": "The SAM series (Kirillov et al., 2023; Ravi et al., 2024) introduced the promptable segmentation task for images and videos"
+  },
+  {
+   "work": "SAM 2: Segment anything in images and videos",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "tracker architecture, memory bank, PVS task and VOS baselines inherited",
+   "quote": "The tracker inherits the SAM 2 transformer encoder-decoder architecture"
+  },
+  {
+   "work": "Perception Encoder",
+   "year": 2025,
+   "arxiv": "2504.13181",
+   "relation": "uses-method",
+   "note": "shared vision-text backbone, L+ size, pre-trained on 5.4B image-text pairs",
+   "quote": "share a vision encoder (Bolya et al., 2025)"
+  },
+  {
+   "work": "DETR (Carion et al., 2020) and MDETR (Kamath et al., 2021)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "detector paradigm, text-conditioned detection",
+   "quote": "The detector is a DETR-based (Carion et al., 2020) model"
+  },
+  {
+   "work": "DAC-DETR, Align-DETR, MaskFormer, box-region-positional bias, iterative box refinement (Zhu et al., 2020)",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "dual supervision, Align loss, mask head, attention bias",
+   "quote": "we adopt dual supervision from DAC-DETR (Hu et al., 2023), and the Align loss (Cai et al., 2024)"
+  },
+  {
+   "work": "OWLv2 (Minderer et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "strongest open-vocabulary detector baseline; also used for Phase 1 mask proposals",
+   "quote": null
+  },
+  {
+   "work": "GroundingDino, LLMDet, APE, DINO-X, Gemini 2.5, T-Rex2, GLEE",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "image PCS, exemplar and video baselines",
+   "quote": null
+  },
+  {
+   "work": "Llama 3.2 / 3.1 / 4 (Dubey et al., 2024)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "AI verifiers, captioner, phrase parser, negative proposer",
+   "quote": "fine-tune Llama 3.2 (Dubey et al., 2024) to create AI verifiers"
+  },
+  {
+   "work": "MetaCLIP, SA-1B, SA-V, YT-Temporal-1B, SA-FARI, Wikidata and 18 external segmentation datasets",
+   "year": null,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "media pools for SA-Co training data and benchmark (Table 26)",
+   "quote": null
+  },
+  {
+   "work": "LVIS, COCO, COCO-O, ODinW13, Roboflow100-VL, CountBench, PixMo-Count, LVVIS, BURST, YTVIS21, OVIS, MOSEv2, ReasonSeg, OmniLabel, RefCOCO",
+   "year": null,
+   "arxiv": null,
+   "relation": "evaluates",
+   "note": "public benchmarks used in the experiments",
+   "quote": null
+  },
+  {
+   "work": "SAMURAI, SAM2Long, SeC",
+   "year": null,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "VOS comparisons",
+   "quote": null
+  },
+  {
+   "work": "LISA, Seg-Zero, RSVP, X-SAM, SAM4MLLM, GLaMM",
+   "year": null,
+   "arxiv": "2508.04655",
+   "relation": "baseline",
+   "note": "reasoning-segmentation and referring baselines for SAM 3 Agent (X-SAM arXiv id as printed)",
+   "quote": null
+  },
+  {
+   "work": "PerceptionLM (Cho et al., 2025)",
+   "year": 2025,
+   "arxiv": "2504.13180",
+   "relation": "uses-method",
+   "note": "PLM used as MLLM judge to select challenging video clips",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig. 4",
+   "caption": "SAM 3 architecture overview. See Fig. 10 for a more detailed diagram.",
+   "page": 4,
+   "why": "Shows detector + tracker sharing one backbone and where the presence token sits; Fig. 10 colours new vs SAM 2 vs PE components."
+  },
+  {
+   "figure": "Fig. 5",
+   "caption": "Overview of the final SAM 3 data engine. See E.1 for details of collected data.",
+   "page": 5,
+   "why": "The annotate-verify-correct loop with AI verifiers and hard-negative proposals that produces SA-Co/HQ."
+  },
+  {
+   "figure": "Fig. 1 and Fig. 2",
+   "caption": "SAM 3 improves over SAM 2 on promptable visual segmentation with clicks and introduces promptable concept segmentation; examples vs OWLv2 on SA-Co.",
+   "page": 1,
+   "why": "Fastest way to see the PCS task (text, exemplars, both) and what 'all instances' means."
+  },
+  {
+   "figure": "Fig. 7",
+   "caption": "cgF1 vs. # of interactive box prompts for SAM 3 compared to the ideal PVS baseline, averaged over SA-Co/Gold phrases.",
+   "page": 8,
+   "why": "Shows concept-level exemplar prompting improving faster than instance-level corrections, plateauing after 4 clicks."
+  },
+  {
+   "figure": "Table 9",
+   "caption": "Selected model and data ablations on SA-Co/Gold.",
+   "page": 10,
+   "why": "Presence head, hard negatives, EXT/SYN/HQ mix and AI-verifier contributions in four small tables."
+  },
+  {
+   "figure": "Fig. 9",
+   "caption": "Domain adaptation via synthetic data (with and without mixing pre-training data).",
+   "page": 16,
+   "why": "Scaling curves for PL, SYN and HQ data on a held-out domain."
+  },
+  {
+   "figure": "Fig. 14",
+   "caption": "Annotations in our SA-Co/Gold benchmark with three independent annotators.",
+   "page": 40,
+   "why": "Shows why PCS is ambiguous and why an oracle metric is needed."
+  },
+  {
+   "figure": "Table 15",
+   "caption": "Data engine efficiency - Image.",
+   "page": 17,
+   "why": "Per-task annotation seconds for human vs AI-verifier pipelines."
+  }
+ ],
+ "code": [
+  {
+   "where": "Section 3 and C.2 (equations)",
+   "snippet": "p(query_i matches NP) = p(query_i matches NP | NP appears in image) * p(NP appears in image)",
+   "verbatim": true
+  },
+  {
+   "where": "E.3 Eq. 3",
+   "snippet": "cgF1 = 100 * pmF1 * IL_MCC",
+   "verbatim": true
+  },
+  {
+   "where": "Section 3",
+   "snippet": "M_hat_t = propagate(M_{t-1}), O_t = detect(I_t, P), M_t = match_and_update(M_hat_t, O_t)",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "The PDF's printed text gives no arXiv id and no venue (the Meta Superintelligence Labs preprint; PDF creation date 2025-11-21 in metadata), so bib.arxiv is null and venue is 'preprint'.",
+  "The cached text breaks tables into one cell per line; table columns were reconstructed from column order and headers, so column assignment in Table 1 and Tables 30-32 should be checked against the PDF before reuse.",
+  "The SAM 3 Agent reasoning trace in Appendix G.2 is extracted letter-spaced (garbled) and was not usable verbatim.",
+  "Intro says LVIS mask AP 48.8; Table 1 prints 48.5 for SAM 3 instance-segmentation LVIS AP.",
+  "Unit/scope inconsistencies inside the paper: concept-scale claim is '> 50x' (Section 1), '> 100x' (Section 7) and '~50x' vs LVIS-test (E.2).",
+  "Learning-rate sentence in C.4.1 stage 2 is ambiguous about which component gets which value.",
+  "No embedded instructions were found in the PDF text."
+ ]
+}

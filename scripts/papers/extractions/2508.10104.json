@@ -1,0 +1,954 @@
+{
+ "schema": 1,
+ "key": "2508.10104",
+ "pdf": "ai-engineering/08-multimodal-engineering/sources/simeoni-2025-dinov3.pdf",
+ "bib": {
+  "title": "DINOv3",
+  "authors": [
+   "Oriane Siméoni",
+   "Huy V. Vo",
+   "Maximilian Seitzer",
+   "Federico Baldassarre",
+   "Maxime Oquab",
+   "Cijo Jose",
+   "Vasil Khalidov",
+   "Marc Szafraniec",
+   "Seungeun Yi",
+   "Michaël Ramamonjisoa",
+   "Francisco Massa",
+   "Daniel Haziza",
+   "Luca Wehrstedt",
+   "Jianyuan Wang",
+   "Timothée Darcet",
+   "Théo Moutakanni",
+   "Leonel Sentana",
+   "Claire Roberts",
+   "Andrea Vedaldi",
+   "Jamie Tolan",
+   "John Brandt",
+   "Camille Couprie",
+   "Julien Mairal",
+   "Hervé Jégou",
+   "Patrick Labatut",
+   "Piotr Bojanowski"
+  ],
+  "first_author": "Siméoni",
+  "year": 2025,
+  "venue": "preprint",
+  "arxiv": "2508.10104",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 230552,
+  "chars_total": 230552,
+  "engine": "pymupdf",
+  "skipped": "References (lines ~3319-3985) skimmed only for lineage"
+ },
+ "type": "empirical",
+ "question": "Can self-supervised learning be scaled to a 7B-parameter vision model on 1,689 million curated images while keeping dense feature maps good, giving one frozen backbone that beats specialised models?",
+ "hypothesis": "Long-training degradation of dense features can be removed by regularising patch-similarity structure toward an early teacher, which unlocks scaling.",
+ "contributions": [
+  "Data scaling with automatic curation mixed with retrieval and ImageNet data (LVD-1689M)",
+  "7B ViT with RoPE and constant hyperparameter schedules for 1M iterations",
+  "Gram anchoring against dense feature degradation",
+  "Post-hoc high-resolution adaptation, multi-student distillation into ViT and ConvNeXt family, text alignment",
+  "Application to satellite imagery"
+ ],
+ "method": {
+  "summary": "DINOv3 scales DINOv2-style self-supervised learning to a 6.7B ViT trained on 1,689 million curated images for 1M iterations with constant hyperparameters. A Gram anchoring loss against an early teacher repairs dense features that degrade over long training; post-training adds high-resolution adaptation, single-teacher multi-student distillation to ViT and ConvNeXt models, and text alignment. Evaluated frozen on dense, global, video, 3D and satellite tasks.",
+  "task": "self-supervised visual representation learning (vision foundation model)",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "LVD-1689M",
+    "role": "pretrain",
+    "size": "1,689 million images",
+    "split": null,
+    "source": "Curated by hierarchical k-means (Vo et al. 2024) from a pool of ~17 billion public Instagram images; 5 levels with 200M, 8M, 800k, 100k, 25k clusters; DINOv2 embeddings",
+    "preprocessing": "balanced sampling over the cluster hierarchy"
+   },
+   {
+    "name": "Retrieval-curated set",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "Images retrieved from the same pool similar to seed datasets (DINOv2-style)",
+    "preprocessing": null
+   },
+   {
+    "name": "ImageNet1k, ImageNet22k, Mapillary Street-level Sequences",
+    "role": "pretrain",
+    "size": null,
+    "split": null,
+    "source": "public CV datasets",
+    "preprocessing": "homogeneous ImageNet1k batches in 10% of iterations, heterogeneous mix otherwise"
+   },
+   {
+    "name": "SAT-493M",
+    "role": "pretrain",
+    "size": "493 million 512x512 images",
+    "split": null,
+    "source": "Random sample of Maxar RGB ortho-rectified imagery at 0.6 m resolution",
+    "preprocessing": "satellite RGB mean/std normalization"
+   },
+   {
+    "name": "SatLidar1M",
+    "role": "both",
+    "size": "1 million 512x512 images",
+    "split": "train/val/test 8/1/1",
+    "source": "Maxar images with LiDAR (Table 28 lists 10 sub-datasets)",
+    "preprocessing": null
+   },
+   {
+    "name": "Objects365 + COCO",
+    "role": "train",
+    "size": "Objects365 2.5M images, COCO 118k train / 5k val",
+    "split": null,
+    "source": "detector pre-training and finetuning (decoder only)",
+    "preprocessing": null
+   },
+   {
+    "name": "COCO-Stuff, Hypersim, ADE20k",
+    "role": "train",
+    "size": "COCO-Stuff 164k images/171 classes (118k train), Hypersim 77k/40 classes, ADE20k 20k train/2k val",
+    "split": null,
+    "source": "segmentation decoder training",
+    "preprocessing": null
+   },
+   {
+    "name": "Evaluation suites",
+    "role": "eval",
+    "size": null,
+    "split": null,
+    "source": "ImageNet-1k and variants, ADE20k, Cityscapes, VOC, NYUv2, KITTI, NAVI, SPair, DAVIS 2017, YouTube-VOS, MOSE, UCF101, SSv2, K400, Oxford/Paris, Met, AmsterTime, COCO/COCO-O, ETH3D, ScanNet, DIODE, GEO-Bench, LoveDA, iSAID, DIOR, Open-Canopy",
+    "preprocessing": "YouTube-VOS split 80/20 of train videos (2758/690); MOSE 1206 val / 301 test"
+   }
+  ],
+  "models": [
+   {
+    "name": "DINOv3 ViT-7B/16",
+    "role": "proposed",
+    "params": "6.7B (6716M)",
+    "architecture": "ViT with axial RoPE, 4 registers, SwiGLU FFN, patch size 16",
+    "init_from": "scratch",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40 blocks",
+    "hidden": "4096",
+    "heads": "32 (head dim 128)",
+    "context": null,
+    "other": {
+     "ffn_hidden": "8192",
+     "dino_head_mlp": "8192-8192-512",
+     "dino_prototypes": "256k",
+     "ibot_head_mlp": "8192-8192-384",
+     "ibot_prototypes": "96k",
+     "rope_box_jitter": "coordinate box [-1,1] scaled to [-s,s], s in [0.5,2]",
+     "gflops_res256": "3550",
+     "gflops_res512": "14515"
+    }
+   },
+   {
+    "name": "DINOv2 ViT-g/14",
+    "role": "baseline",
+    "params": "1.1B",
+    "architecture": "ViT-giant, learnable pos. emb., 4 registers",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "40",
+    "hidden": "1536",
+    "heads": "24",
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "DINOv3 ViT-S / S+ / B / L / H+",
+    "role": "proposed",
+    "params": "21M / 29M / 86M / 300M / 840M",
+    "architecture": "ViT students distilled from ViT-7B",
+    "init_from": "distilled from 7B teacher (fixed, no EMA)",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gflops_res256": "12 / 16 / 47 / 163 / 450",
+     "gflops_res512": "63 / 79 / 216 / 721 / 1903"
+    }
+   },
+   {
+    "name": "DINOv3 ConvNeXt T / S / B / L",
+    "role": "proposed",
+    "params": "29M / 50M / 89M / 198M",
+    "architecture": "ConvNeXt students distilled from ViT-7B",
+    "init_from": "distilled",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "gflops_res256": "5 / 11 / 20 / 38",
+     "gflops_res512": "20 / 46 / 81 / 152"
+    }
+   },
+   {
+    "name": "DINOv3 7B Sat / ViT-L Sat",
+    "role": "proposed",
+    "params": "7B / 0.3B",
+    "architecture": "same as web model",
+    "init_from": "scratch on SAT-493M",
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Baselines: PEcore, PEspatial, SigLIP 2, AM-RADIOv2.5, Web-DINO 7B, Franca, AIMv2, EVA-CLIP-18B, V-JEPA 2, DINOv2",
+    "role": "baseline",
+    "params": "various (ViT g/G/7B/18B)",
+    "architecture": null,
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L_Pre = L_DINO + L_iBOT + 0.1*L_DKoleo (Sinkhorn-Knopp centering); refinement L_Ref = wD*L_DINO + L_iBOT + wDK*L_DKoleo + wGram*L_Gram; L_Gram = ||X_S X_S^T - X_G X_G^T||_F^2 on L2-normalised patch features of global crops",
+   "optimizer": "AdamW",
+   "lr": "0.0004 constant",
+   "lr_schedule": "constant lr, weight decay and EMA momentum; linear warmup only for lr and teacher temperature; distilled students: 1M iterations then 250k iterations cosine lr cooldown",
+   "warmup": "100k iterations",
+   "batch_size": "4096 images across 256 GPUs; 3.7M tokens per batch",
+   "steps": "1M iterations (7B pretraining); Gram refinement starts after 1M, teacher updated every 10k iterations, max 3 updates; 10k iterations high-res adaptation; satellite: 100k + 10k + 8k",
+   "epochs": null,
+   "tokens": null,
+   "seq_len": "2 global crops 256x256 and 8 local crops 112x112 (3.7M tokens per batch)",
+   "precision": "bfloat16 and 8-bit floating-point matrix multiplications",
+   "weight_decay": "0.04",
+   "dropout": "stochastic depth 0.4",
+   "regularisation": "Koleo on batches of 16; layer-wise lr decay 0.98; teacher EMA 0.999; masking ratio in [0.1,0.5] of global-crop patches with 50% probability",
+   "hardware": "256 GPUs, fully-sharded data parallel PyTorch; H100-SXM5 700W (Table 20)",
+   "compute": "61,440 GPU hours (ViT-7B), 47 MWh, 18 tCO2eq; whole project ~9M GPU hours, ~2600 tCO2eq",
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "wGram": "2",
+    "high_res_adaptation": "global crops {512,768}, local {112,168,224,336}; (global, local, Gram teacher) pairs (512,112,768) p=0.3, (768,112,1152) p=0.3, (768,168,1152) p=0.3, (768,224,1152) p=0.05, (768,336,1152) p=0.05; Gram teacher is the 7B itself",
+    "gram_teacher": "early EMA teacher (100k or 200k iterations), input at 2x resolution then bicubic down-sample",
+    "wD and wDK values": "not stated in the text",
+    "text_alignment": "dino.txt/LiT recipe: text encoder from scratch, vision frozen, 2 extra transformer layers, CLS concatenated with mean-pooled patches; hyperparameters not given",
+    "distillation": "multi-student, teacher inference shared across all GPUs, GPU groups sized per student so iteration time matches; no Gram anchoring"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per number; seeds not stated",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {
+    "video_tracking_best": "context 7 frames, neighborhood 12 square, top-K 5, temperature 0.2 (Table 27 grid; best chosen on DAVIS train)",
+    "tokencut_threshold_sweep": "0 to 0.4 step 0.05"
+   },
+   "other": {
+    "linear_probe_image": "SGD momentum 0.9, 10 epochs, batch 1024, lr sweep 1e-4..5, wd {0,1e-5}",
+    "linear_probe_dense": "AdamW, lr {1e-4,3e-4,1e-3}, wd {1e-4,1e-3}",
+    "video_probe": "4 self-attention blocks + cross-attention, 16 frames, 256x256, 20 epochs, batch 64, lr {1e-4..5e-3}, wd {1e-3,1e-2,1e-1}",
+    "detection": "Plain-DETR; AdamW wd 0.05; Objects365 22 ep batch 32 lr 5e-5 (/10 after ep 20), then 4 ep lr 2.5e-5 at 2048, then COCO 12 ep lr 2.5e-5 cosine to 2.5e-6; encoder 6 blocks dim 768, decoder 6 blocks, 1500+1500 queries; layers [10,20,30,40]; 3x3 windowing",
+    "segmentation": "ViT-Adapter without injector + Mask2Former, dim 2048, batch 16, AdamW; COCO-Stuff 80k it lr 1.5e-5, Hypersim 10k it lr 2.5e-5, ADE20k 20k it lr 3e-5",
+    "depth": "DPT head, frozen backbone, 1024x768, lr 1e-3 PolyLR power 3.5, warmup 12k it, 256 bins 0.001-100 m, dropout 0.05",
+    "vggt": "image 592, lr 1e-4 (was 2e-4), 4 intermediate layers"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "mIoU",
+     "definition": "mean intersection-over-union (segmentation)",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "RMSE / ARel / delta1",
+     "definition": "depth error metrics",
+     "unit": "m or %",
+     "higher_is_better": false
+    },
+    {
+     "name": "Correspondence recall",
+     "definition": "% of keypoint matches within 1, 2, 5 cm (NAVI), top-1000 cosine matches",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "CorLoc",
+     "definition": "% of predicted boxes with IoU>0.5 vs any GT",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "J&F-mean",
+     "definition": "region similarity and contour accuracy, video object segmentation",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "Top-1 accuracy",
+     "definition": "classification",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "mAP / GAP",
+     "definition": "retrieval average precision (Oxford, Paris, AmsterTime mAP; Met GAP); detection mAP over IoU 0.5:0.05:0.95",
+     "unit": "%",
+     "higher_is_better": true
+    },
+    {
+     "name": "MAE / block R2",
+     "definition": "canopy height error",
+     "unit": "m",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "PEcore",
+    "PEspatial",
+    "SigLIP 2",
+    "AM-RADIOv2.5",
+    "DINOv2 with registers",
+    "Web-DINO 7B",
+    "Franca",
+    "AIMv2",
+    "EVA-CLIP-18B",
+    "V-JEPA 2",
+    "ViT-22B (reported)",
+    "EVA-02",
+    "InternImage",
+    "BEiT-3",
+    "ONE-PEACE",
+    "VGGT",
+    "Depth Anything V2",
+    "Tolan et al. 2024",
+    "Prithvi-v2",
+    "DOFA",
+    "BillionFM",
+    "SkySense V2"
+   ],
+   "protocol": "Backbone frozen unless stated; hyperparameters picked on validation splits; single run, no seeds or confidence intervals reported; patch-token counts matched across patch sizes 14 and 16."
+  },
+  "availability": {
+   "code": "A 'code release' with configuration files is mentioned but no URL appears in the text",
+   "weights": "The DINOv3 model suite is said to be shared; no URL in text",
+   "data": "Instagram pool not released; LVD-1689M curation described only"
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "training.lr",
+    "quote": "We use a constant learning rate of 0.0004 with a warmup of 100k",
+    "where": "App C"
+   },
+   {
+    "field": "training.batch_size",
+    "quote": "set the total batch size to 4096 images",
+    "where": "Sec 3.2"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "Frozen DINOv3 7B with a linear probe reaches 55.9 mIoU on ADE20k, ahead of all baselines (AM-RADIOv2.5 53.0, DINOv2 49.5, PEspatial 49.3).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "55.9",
+   "unit": "mIoU",
+   "baseline_value": "53.0 (AM-RADIOv2.5)",
+   "n": null,
+   "setup": "Dense linear probing, frozen ViT-7B/16, 512x512 input (1024 patch tokens); linear layer plus batch norm on last-layer patch features; sweep lr {1e-4,3e-4,1e-3}, wd {1e-4,1e-3}",
+   "note": null,
+   "where": "Sec 6.1.2, Table 3",
+   "quote": "obtained with a linear classifier on ADE20k (55.9 mIoU)",
+   "table": "Table 3, row DINOv3 7B/16, column ADE20k"
+  },
+  {
+   "claim": "Frozen DINOv3 7B plus a Plain-DETR decoder reaches 66.1 COCO mAP with test-time augmentation (65.6 simple).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mAP",
+   "value": "66.1",
+   "unit": "mAP",
+   "baseline_value": "66.0 (PEspatial DETA, TTA)",
+   "n": null,
+   "setup": "COCO val2017; backbone frozen; 100M trainable decoder; Objects365 22 epochs at 1536, 4 epochs at 2048, then COCO 12 epochs at 2048; TTA over resolutions 1536-2880 with SoftNMS",
+   "note": null,
+   "where": "Sec 1, 6.3.1, Table 10",
+   "quote": "object detection (COCO detection, mAP 66.1)",
+   "table": "Table 10, row DINOv3, columns COCO Simple / TTA"
+  },
+  {
+   "claim": "Frozen DINOv3 7B with ViT-Adapter + Mask2Former equals the ADE20k state of the art at 63.0 mIoU (62.6 single scale).",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU",
+   "value": "63.0",
+   "unit": "mIoU",
+   "baseline_value": "63.0 (ONE-PEACE, fine-tuned)",
+   "n": null,
+   "setup": "ADE20k val; decoder 927M params trained on COCO-Stuff 80k it, Hypersim 10k it, ADE20k 20k it at resolution 896; backbone frozen; multi-scale TTA",
+   "note": null,
+   "where": "Sec 1, 6.3.2, Table 11",
+   "quote": "image segmentation (ADE20k, mIoU 63.0)",
+   "table": "Table 11, row DINOv3, column TTA"
+  },
+  {
+   "claim": "Gram anchoring with a higher-resolution Gram teacher adds about 2 mIoU on ADE20k over the plain refinement objective.",
+   "kind": "measured",
+   "source": null,
+   "metric": "mIoU gain",
+   "value": "2",
+   "unit": "mIoU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-7B, refinement after 1M iterations; Gram teacher fed images at 2x resolution then bicubic down-sampled",
+   "note": null,
+   "where": "Sec 4.3, Fig 8",
+   "quote": "(+2 mIoU on ADE20k)"
+  },
+  {
+   "claim": "Gram anchoring ablation: ADE20k mIoU rises from 50.3 (baseline) to 55.7 with a 200k-iteration Gram teacher at 2x resolution, NYU RMSE falls from 0.307 to 0.281, IN1k linear drops 88.2 to 88.0.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU",
+   "value": "55.7",
+   "unit": "mIoU",
+   "baseline_value": "50.3",
+   "n": null,
+   "setup": "Fig 9b ablation; ViT-7B; Gram teacher from iteration 200k, input resolution x2",
+   "note": "Values come from a figure table embedded in Fig 9; numbers occur in the text extraction.",
+   "where": "Fig 9b",
+   "table": "Fig 9(b), row GRAM 200k x2, column ADE mIoU"
+  },
+  {
+   "claim": "Dense-task quality degrades with long training: segmentation performance declines after about 200k iterations for ViT-g and ViT-7B while ImageNet linear accuracy keeps rising.",
+   "kind": "measured",
+   "source": null,
+   "metric": "onset of dense degradation",
+   "value": "200k",
+   "unit": "iterations",
+   "baseline_value": null,
+   "n": null,
+   "setup": "VOC linear segmentation mIoU and IN1k linear top-1 over 1M iterations, ViT-g and ViT-7B, no Gram anchoring",
+   "note": null,
+   "where": "Sec 4.1, Fig 5",
+   "quote": "cases after approximately 200k iterations, falling below its early levels in the case of the ViT-7B."
+  },
+  {
+   "claim": "Per-crop layer norm for local and global crops improved late-training kNN by 0.2 and ADE20k by 1 mIoU.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU gain",
+   "value": "1",
+   "unit": "mIoU",
+   "baseline_value": null,
+   "n": null,
+   "setup": "ViT-7B training; separate layer norm on backbone outputs of local and global crops",
+   "note": "Also -0.02 RMSE on NYUv2; ablation table not given.",
+   "where": "Sec 3.2",
+   "quote": "late in training (+0.2 accuracy) and improve dense performance (e.g. +1 mIoU on ADE20k"
+  },
+  {
+   "claim": "The LVD-1689M data mixture gives the best IN1k linear accuracy (87.2) among raw, clustering, retrieval and mixed data at 200k iterations.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IN1k linear top-1",
+   "value": "87.2",
+   "unit": "%",
+   "baseline_value": "84.8 (raw)",
+   "n": null,
+   "setup": "200k-iteration ablation (vs 1M for the main run); same recipe; IN1k linear, raw pool 84.8, clustering 85.4, retrieval 86.7",
+   "note": null,
+   "where": "Sec 3.1, Table 1",
+   "table": "Table 1, row LVD-1689M (ours), column IN1k Linear"
+  },
+  {
+   "claim": "Distilled ViT-H+ (840M) is close to its 7B teacher: ADE20k 54.8 vs 55.9, IN1k 87.9 vs 88.4.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU",
+   "value": "54.8",
+   "unit": "mIoU",
+   "baseline_value": "55.9 (7B)",
+   "n": null,
+   "setup": "Fig 16b; ViT-H+ distilled from ViT-7B teacher",
+   "note": "Authors say ~10x fewer parameters in Fig 16 caption and '8 times larger' in text.",
+   "where": "Sec 7.1, Fig 16b",
+   "table": "Fig 16(b), values ViT-H+ 87.9, 54.8 vs ViT-7B 88.4, 55.9"
+  },
+  {
+   "claim": "Distilled ViT-L reaches 54.9 ADE20k mIoU and 0.352 NYU RMSE, beating DINOv2 ViT-L (48.8, 0.394) and SigLIP 2 / PE at the same size.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU",
+   "value": "54.9",
+   "unit": "mIoU",
+   "baseline_value": "48.8 (DINOv2 L)",
+   "n": null,
+   "setup": "Table 14; patch-token count matched across models (512 for patch 16, 448 for patch 14)",
+   "note": null,
+   "where": "Table 14",
+   "table": "Table 14, row L DINOv3, column ADE20k"
+  },
+  {
+   "claim": "DINOv3 7B has the best geometric 3D correspondence on NAVI (64.4 recall vs DINOv2 60.1) and semantic on SPair (58.7).",
+   "kind": "measured",
+   "source": null,
+   "metric": "correspondence recall",
+   "value": "64.4",
+   "unit": "%",
+   "baseline_value": "60.1 (DINOv2)",
+   "n": null,
+   "setup": "Probe3D protocol; recall averaged over 1, 2, 5 cm thresholds on NAVI; features with/without final layer norm, best reported",
+   "note": null,
+   "where": "Sec 6.1.3, Table 4",
+   "table": "Table 4, row DINOv3 7B/16, column NAVI"
+  },
+  {
+   "claim": "DINOv3 reaches 83.3 J&F on DAVIS at the large resolution, 6.7 above DINOv2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "J&F",
+   "value": "83.3",
+   "unit": "J&F",
+   "baseline_value": "76.6 (DINOv2)",
+   "n": null,
+   "setup": "Non-parametric label propagation, frozen ViT-7B, short side 1260/1440 px; hyperparameters chosen on DAVIS train",
+   "note": null,
+   "where": "Sec 6.1.5, Table 5",
+   "quote": "with a staggering 83.3 J &F on DAVIS-L, 6.7 points above DINOv2"
+  },
+  {
+   "claim": "DINOv3 linear-probe ImageNet val accuracy is 88.4, 0.7-0.9 below SigLIP 2 (89.1) and PE (89.3), but it has the best ImageNet-C score (19.6 mCE).",
+   "kind": "measured",
+   "source": null,
+   "metric": "IN1k val top-1",
+   "value": "88.4",
+   "unit": "%",
+   "baseline_value": "89.3 (PEcore)",
+   "n": null,
+   "setup": "Linear probe on CLS, SGD 10 epochs, batch 1024, 448/512 px input",
+   "note": null,
+   "where": "Sec 6.2.1, Table 7",
+   "table": "Table 7, row DINOv3 7B/16, column Val"
+  },
+  {
+   "claim": "DINOv3 gets the best iNaturalist 2021 linear accuracy, 89.8 vs 87.0 for PEcore.",
+   "kind": "measured",
+   "source": null,
+   "metric": "iNat21 accuracy",
+   "value": "89.8",
+   "unit": "%",
+   "baseline_value": "87.0 (PEcore)",
+   "n": null,
+   "setup": "Linear probe on frozen CLS features, ImageNet-1k-trained linear layer protocol of D.7",
+   "note": null,
+   "where": "Sec 6.2.1, Table 8",
+   "quote": "dataset at 89.8%, outperforming even the best weakly-supervised model PEcore with 87.0%"
+  },
+  {
+   "claim": "Instance retrieval: DINOv3 beats DINOv2 by 10.8 points on Met (GAP 55.4) and 7.6 on AmsterTime (mAP 56.5).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Met GAP",
+   "value": "55.4",
+   "unit": "GAP",
+   "baseline_value": "44.6 (DINOv2)",
+   "n": null,
+   "setup": "Cosine similarity of CLS tokens, frozen ViT-7B",
+   "note": null,
+   "where": "Sec 6.2.2",
+   "quote": "by +10.8 points on Met and +7.6 points",
+   "table": "Table 9 / Table 23, row DINOv3, columns Met GAP, AmsterTime mAP"
+  },
+  {
+   "claim": "Relative monocular depth with a frozen DINOv3 backbone in the Depth Anything V2 pipeline sets new state of the art on 4 of 5 datasets (NYUv2 ARel 4.3, delta1 98.0).",
+   "kind": "measured",
+   "source": null,
+   "metric": "NYUv2 ARel",
+   "value": "4.3",
+   "unit": "ARel (lower better)",
+   "baseline_value": "4.4 (DAv2 ViT-g)",
+   "n": null,
+   "setup": "Zero-shot scale-invariant depth; DPT head trained on DAv2 synthetic data at 1024x768; backbone frozen",
+   "note": null,
+   "where": "Sec 6.3.3, Table 12",
+   "table": "Table 12, row DINOv3, columns NYUv2 ARel and delta1"
+  },
+  {
+   "claim": "Swapping DINOv2 for DINOv3 ViT-L in VGGT improves camera pose AUC@30 on Re10K from 85.3 to 86.3 and CO3Dv2 from 88.2 to 89.6.",
+   "kind": "measured",
+   "source": null,
+   "metric": "AUC@30",
+   "value": "86.3",
+   "unit": "AUC",
+   "baseline_value": "85.3 (VGGT)",
+   "n": null,
+   "setup": "VGGT pipeline with backbone fine-tuned; image size 592; lr 1e-4; four intermediate layers concatenated",
+   "note": null,
+   "where": "Sec 6.3.4, Table 13",
+   "table": "Table 13a, row DINOv3, column Re10K"
+  },
+  {
+   "claim": "Distilled DINOv3 ConvNeXt-T gains 17.9 ADE20k mIoU over the supervised IN-22k ConvNeXt-T.",
+   "kind": "measured",
+   "source": null,
+   "metric": "ADE20k mIoU gain",
+   "value": "17.9",
+   "unit": "mIoU",
+   "baseline_value": "24.8",
+   "n": null,
+   "setup": "ADE20k at resolution 512; distilled from ViT-7B teacher",
+   "note": null,
+   "where": "Sec 7.2, Table 15",
+   "quote": "model yields a +17.9 mIoU (42.7 versus 24.8) improvement"
+  },
+  {
+   "claim": "Text-aligned DINOv3 ViT-L (dino.txt recipe) leads open-vocabulary segmentation (ADE20k 24.7, Cityscapes 36.9 mIoU) but trails SigLIP 2 and PE on global zero-shot tasks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "open-vocab ADE20k mIoU",
+   "value": "24.7",
+   "unit": "mIoU",
+   "baseline_value": "17.6 (PE)",
+   "n": null,
+   "setup": "ViT-L size, sequence length 576; zero-shot IN1k 82.3 vs PE 83.5",
+   "note": null,
+   "where": "Sec 7.3, Table 16",
+   "table": "Table 16, row DINOv3 dino.txt, column ADE20k"
+  },
+  {
+   "claim": "A satellite-pretrained 7B model cuts Open-Canopy MAE from 2.42 to 2.02 against the prior state of the art (Tolan et al. 2024).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Open-Canopy MAE",
+   "value": "2.02",
+   "unit": "MAE",
+   "baseline_value": "2.42",
+   "n": null,
+   "setup": "SAT-493M pretraining, frozen backbone, DPT decoder; Open-Canopy 4-channel with IR channel via patch-embed weight averaging",
+   "note": null,
+   "where": "Sec 8.2, Table 17",
+   "quote": "MAE from 2.4 to 2.2, from 3.4 to 3.2 and from 2.42 to 2.02 respectively."
+  },
+  {
+   "claim": "Training the ViT-7B took 61,440 H100 GPU hours, 47 MWh and 18 tCO2eq.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GPU hours",
+   "value": "61,440",
+   "unit": "GPU hours",
+   "baseline_value": "22,016 (DINOv2 ViT-g, A100)",
+   "n": null,
+   "setup": "Pretraining ViT-7B, 1,000k steps, H100-SXM5 700W, PUE 1.1, 0.385 kg CO2eq/kWh",
+   "note": null,
+   "where": "Sec 9, Table 20",
+   "table": "Table 20, row DINOv3 ViT-7B, column GPU hours"
+  },
+  {
+   "claim": "Whole-project estimate is 9M GPU hours and about 2600 tCO2eq.",
+   "kind": "measured",
+   "source": null,
+   "metric": "project footprint",
+   "value": "2600",
+   "unit": "tCO2eq",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rough estimate, GPU electricity only",
+   "note": null,
+   "where": "Sec 9",
+   "quote": "we estimate the total footprint to be roughly 2600 tCO2eq"
+  },
+  {
+   "claim": "On OCR-heavy classification DINOv3 trails the weakly-supervised PE-core (e.g. GTSRB 87.5 vs 94.8, Logo-2K+ 86.0 vs 93.2) though it beats DINOv2.",
+   "kind": "measured",
+   "source": null,
+   "metric": "GTSRB accuracy",
+   "value": "87.5",
+   "unit": "%",
+   "baseline_value": "94.8 (PE-core)",
+   "n": null,
+   "setup": "Linear probe, 512 px for DINOv3",
+   "note": null,
+   "where": "App B.4, Table 25",
+   "table": "Table 25, row DINOv3-7B, column GTSRB"
+  },
+  {
+   "claim": "Geographic fairness: a 23% drop in the low-income bucket versus the highest-income bucket remains.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative drop low vs high income",
+   "value": "23",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Protocol of Goyal et al. 2022b; DINOv3 ViT-7B low 69.6 vs high 90.9",
+   "note": null,
+   "where": "App B.5, Table 26",
+   "quote": "there is a notable performance drop of 23% in the low-income bucket"
+  },
+  {
+   "claim": "Four register tokens remove high-norm patch outliers and give IN1k 86.6 / ADE20k 53.0 vs 86.4 / 53.2 without; attention bias and value gating did not beat them.",
+   "kind": "measured",
+   "source": null,
+   "metric": "IN1k linear",
+   "value": "86.6",
+   "unit": "%",
+   "baseline_value": "86.4",
+   "n": null,
+   "setup": "7B models trained 150k iterations",
+   "note": null,
+   "where": "App A.1, Fig 20",
+   "table": "Fig 20(b), row 4 Registers, column IN1k (Linear)"
+  }
+ ],
+ "limits": [
+  "Weak on OCR-heavy tasks: authors say lacking image-text pairs, DINOv3 has a much harder time learning glyph associations and leave closing the gap to future work (App B.4).",
+  "Geographic fairness gaps remain (23% low- vs high-income, >14% Europe vs Africa).",
+  "Gram anchoring was applied late (after 1M iterations) and Gram teacher choice matters; no study of when it would be needed for smaller models (distilled students show no consistency issue).",
+  "Zero-shot global alignment slightly behind SigLIP 2 and PE (Sec 7.3).",
+  "No seeds, variance or significance reported; most ablations are single runs, some at 150k-200k iterations.",
+  "Training data from Instagram is not released, and wD, wDK loss weights are not given in the text.",
+  "Video SSv2 shows a dedicated video model (V-JEPA 2) ahead; DINOv3 ImageNet val trails SigLIP 2 / PE by 0.7-0.9.",
+  "Feature-dimension outliers appear in the 7B model; authors recommend final layer norm or batch norm for downstream use."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "Gram anchoring",
+   "definition": "Loss that pushes the Gram matrix (pairwise dot products of patch features) of the student toward that of an earlier Gram teacher, so features may move while their similarity structure stays",
+   "where": "Sec 4.2"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DINOv2: Learning robust visual features without supervision",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Same DINO + iBOT + Koleo recipe, scaled",
+   "quote": null
+  },
+  {
+   "work": "Automatic data curation for self-supervised learning (Vo et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Hierarchical k-means curation for LVD-1689M",
+   "quote": null
+  },
+  {
+   "work": "Vision transformers need registers (Darcet et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "4 register tokens",
+   "quote": null
+  },
+  {
+   "work": "dino.txt (Jose et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Text alignment recipe",
+   "quote": null
+  },
+  {
+   "work": "LiT: locked-image text tuning (Zhai et al.)",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Frozen vision encoder, text tower from scratch",
+   "quote": null
+  },
+  {
+   "work": "Scaling language-free visual representation learning (Web-DINO)",
+   "year": 2025,
+   "arxiv": "2504.01017",
+   "relation": "baseline",
+   "note": "7B SSL scaling; weak dense results",
+   "quote": null
+  },
+  {
+   "work": "Perception Encoder",
+   "year": 2025,
+   "arxiv": "2504.13181",
+   "relation": "baseline",
+   "note": "PEcore / PEspatial",
+   "quote": null
+  },
+  {
+   "work": "SigLIP 2 (Tschannen et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Weakly-supervised comparison",
+   "quote": null
+  },
+  {
+   "work": "AM-RADIOv2.5 (Heinrich et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Agglomerative model",
+   "quote": null
+  },
+  {
+   "work": "Franca",
+   "year": 2025,
+   "arxiv": "2507.14137",
+   "relation": "baseline",
+   "note": "Open-data SSL",
+   "quote": null
+  },
+  {
+   "work": "V-JEPA 2",
+   "year": 2025,
+   "arxiv": "2506.09985",
+   "relation": "baseline",
+   "note": "Video SSL reference in Table 6",
+   "quote": null
+  },
+  {
+   "work": "VGGT (Wang et al.)",
+   "year": 2025,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Backbone swapped to DINOv3 ViT-L",
+   "quote": null
+  },
+  {
+   "work": "Depth Anything V2 (Yang et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "DINOv2 swapped for frozen DINOv3",
+   "quote": null
+  },
+  {
+   "work": "Tolan et al. 2024 canopy height",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "Prior SSL satellite model",
+   "quote": null
+  },
+  {
+   "work": "Plain-DETR (Lin et al.)",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "Detection decoder",
+   "quote": null
+  },
+  {
+   "work": "Probe3D (El Banani et al.)",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "3D correspondence protocol",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 5",
+   "caption": "Evolution of cosine similarities (a) and accuracy on IN1k linear and VOC segmentation for ViT-g (b) and ViT-7B (c).",
+   "page": 10,
+   "why": "Shows IN1k rising while dense VOC mIoU falls after ~200k iterations, the problem Gram anchoring solves"
+  },
+  {
+   "figure": "Fig 6",
+   "caption": "Evolution of the cosine similarity between the patch noted in red and all other patches.",
+   "page": 11,
+   "why": "Visual of patch similarity maps turning noisy from 200k to 1M iterations"
+  },
+  {
+   "figure": "Fig 8",
+   "caption": "Evolution of results on benchmarks after applying Gram anchoring (original, L_Ref, L_HRef).",
+   "page": 13,
+   "why": "Dense gains within 10k iterations of Gram anchoring"
+  },
+  {
+   "figure": "Fig 12",
+   "caption": "Multi-student distillation procedure.",
+   "page": 16,
+   "why": "Diagram of shared teacher inference across GPU groups"
+  },
+  {
+   "figure": "Fig 13",
+   "caption": "Comparison of dense features via PCA to RGB for SigLIP 2, PEspatial, DINOv2 w/reg, DINOv3.",
+   "page": 18,
+   "why": "Fastest view of DINOv3 feature cleanliness vs baselines"
+  },
+  {
+   "figure": "Fig 2",
+   "caption": "Performance of the DINOv3 family vs other families across log-FLOPs on ADE20k, NAVI, ObjectNet.",
+   "page": 3,
+   "why": "Compute-versus-quality summary"
+  },
+  {
+   "figure": "Fig 3 / Fig 4",
+   "caption": "High-resolution dense features up to 4096x4096.",
+   "page": 4,
+   "why": "Shows stability at very high resolution"
+  },
+  {
+   "figure": "Table 3",
+   "caption": "Dense linear probing results on segmentation and depth.",
+   "page": 19,
+   "why": "Core evidence of dense feature lead"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2, Sec 4.2",
+   "snippet": "L_Gram = || X_S · X_S^T − X_G · X_G^T ||_F^2",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 1, Sec 3.2",
+   "snippet": "L_Pre = L_DINO + L_iBOT + 0.1 * L_DKoleo",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 3, Sec 4.2",
+   "snippet": "L_Ref = w_D L_DINO + L_iBOT + w_DK L_DKoleo + w_Gram L_Gram",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Table and figure-embedded values extracted as flat number columns; table cell assignment was inferred from column order.",
+  "Table 5 caption prints 1260/1140 pixels while the text says 1260/1440 pixels.",
+  "Table 9 row labels were lost in extraction; rows inferred from Table 23.",
+  "Figure 16 caption says ~10x fewer parameters while text says 8 times larger.",
+  "No embedded instructions found."
+ ]
+}

@@ -1,0 +1,372 @@
+{
+ "schema": 1,
+ "key": "1710.03222",
+ "pdf": "data-science/sources/bandara-2020-forecasting-across-time-series.pdf",
+ "bib": {
+  "title": "Forecasting Across Time Series Databases using Recurrent Neural Networks on Groups of Similar Series: A Clustering Approach",
+  "authors": ["Kasun Bandara", "Christoph Bergmeir", "Slawek Smyl"],
+  "first_author": "Bandara",
+  "year": 2018,
+  "venue": "preprint (arXiv:1710.03222v2 [cs.LG], 12 Sep 2018; 'Preprint submitted to Elsevier', 13 Sep 2018). The PDF prints no journal name; the repo's 'Expert Systems with Applications 2020' is not stated in this file.",
+  "arxiv": "1710.03222",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 90680,
+  "chars_total": 90680,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "empirical",
+ "question": "Does training LSTMs separately on groups of similar series (found by feature-based clustering) forecast better than one global LSTM across all series in a database?",
+ "hypothesis": "If a time series database is heterogeneous, a single global LSTM degrades, so building one model per subgroup of similar series should improve accuracy.",
+ "contributions": [
+  "A forecasting framework that clusters series (Hyndman et al. 2015b features + Snob MML mixture model) and trains one LSTM per cluster",
+  "Preprocessing pipeline: log transform, STL deterministic deseasonalisation, sliding-window local trend normalisation, seasonal lags via input window",
+  "Evaluation on CIF2016 and NN5 under competition, fixed-origin and rolling-origin setups with non-parametric significance tests"
+ ],
+ "method": {
+  "summary": "Series are described by 18 interpretable features (tsmeasures in R anomalous-acm), clustered with Snob (a Gaussian mixture picked by minimum message length, number of clusters chosen automatically), and each cluster gets its own peephole LSTM + affine output layer (CNTK). Each series is log-transformed, STL-deseasonalised (periodic), and trend-normalised per sliding window (MIMO strategy) before training; forecasts are denormalised and reseasonalised.",
+  "task": "multi-step univariate time series forecasting across a database of related series",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "CIF2016",
+    "role": "eval",
+    "size": "72 monthly series (57 with horizon 12, 15 with horizon 6); 48 are artificially generated, the rest banking; some series have only 23 points",
+    "split": "fixed origin with withheld test set (competition); last output window of train reserved for validation",
+    "source": "CIF 2016 competition (Stepnicka and Burda 2016), public",
+    "preprocessing": "log (log(y+1) if min(y)<=eps), STL with s.window periodic, local normalisation by last trend value in input window"
+   },
+   {
+    "name": "NN5",
+    "role": "eval",
+    "size": "111 daily series of UK ATM cash withdrawals, 2 years",
+    "split": "56 days ahead horizon; fixed origin (competition), plus rolling origin",
+    "source": "NN5 competition (Crone 2008), public",
+    "preprocessing": "same as above; inputSize 70, outputSize 56"
+   }
+  ],
+  "models": [
+   {
+    "name": "LSTM.Cluster",
+    "role": "proposed",
+    "params": null,
+    "architecture": "LSTM with peephole connections followed by affine layer without bias, size equal to output window; one model per Snob cluster",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": "LSTM-cell-dimension searched in 10 to 80 (chosen value not stated)",
+    "heads": null,
+    "context": "inputSize = 1.25 * max(outputSize, seasonal period)",
+    "other": {"CIF2016_note": "clustering only applied to the 57 series with horizon 12 (need 2 full periods); the 15 horizon-6 series get one separate LSTM"}
+   },
+   {
+    "name": "LSTM.Horizon",
+    "role": "proposed",
+    "params": null,
+    "architecture": "same LSTM, one model per forecast horizon group (6 vs 12); CIF2016 only",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "inputSize 7 for outputSize 6; inputSize 15 for outputSize 12",
+    "other": {}
+   },
+   {
+    "name": "LSTM.All",
+    "role": "baseline",
+    "params": null,
+    "architecture": "one global LSTM across all series, no grouping",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "CIF2016: inputSize 7, outputSize 12 for both horizons; NN5: 70 in, 56 out",
+    "other": {}
+   },
+   {
+    "name": "ETS, BaggedETS, ES (smooth package), ARIMA, Naive Seasonal",
+    "role": "baseline",
+    "params": null,
+    "architecture": "statistical univariate; forecast package (ES from smooth); recalibrated (re-fitted) at each rolling origin",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "L2-norm loss (sum of squared differences)",
+   "optimizer": null,
+   "lr": "learning-rates-per-sample searched in 0.001 to 0.04 (chosen values not stated)",
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "mini-batch size searched in 2 to 40",
+   "steps": null,
+   "epochs": "maximum-epochs searched in 10 to 40; epoch-size ntr to ntr*3",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "L2-regularization weight searched in 0.0005 to 0.0008; Gaussian noise injection 0.0005 to 0.005",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {"hyperparameter_search": "Bayesian optimisation (Snoek et al. 2012; Python bayesian-optimization package) on a validation set; ranges in Table 2; selected values not reported", "toolkit": "Microsoft CNTK", "rolling_origin": "LSTM not re-fitted at each origin ('updating mode'), statistical benchmarks are re-fitted"}
+  },
+  "inference": {
+   "decoding": "MIMO multi-output forecast over a whole output window; no recursion",
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": "single run per variant; no repeated seeds or ensembling reported",
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {}
+  },
+  "eval": {
+   "metrics": [
+    {"name": "Mean sMAPE", "definition": "mean over series of 200/h * sum |F-Y|/(|F|+|Y|)", "unit": "%", "higher_is_better": false},
+    {"name": "Median sMAPE", "definition": "median over series of sMAPE", "unit": "%", "higher_is_better": false},
+    {"name": "Rank sMAPE", "definition": "mean of per-series sMAPE ranks", "unit": "rank", "higher_is_better": false},
+    {"name": "Mean MASE", "definition": "MAE over horizon scaled by in-sample (seasonal, period M) naive MAE; <1 beats seasonal naive", "unit": "ratio", "higher_is_better": false},
+    {"name": "Median MASE / Rank MASE", "definition": "median and mean rank of per-series MASE", "unit": "ratio / rank", "higher_is_better": false}
+   ],
+   "baselines": ["ETS", "BaggedETS", "ES", "ARIMA", "Naive Seasonal", "Theta (CIF2016)", "all other CIF2016 and NN5 competition entrants (Tables 3, 6)", "LSTM.All"],
+   "protocol": "Three setups: competition (CO, fixed origin, Mean sMAPE vs original entrants), fixed origin (FO, with significance testing), rolling origin (RO, benchmarks re-fitted per origin). Significance: aligned Friedman rank-sum with Hochberg post-hoc (on sMAPE) for multiple methods, paired Wilcoxon signed-rank for two methods, alpha=0.05."
+  },
+  "availability": {"code": null, "weights": null, "data": "CIF2016 and NN5 public competition datasets"},
+  "prompts": [],
+  "evidence": [
+   {"field": "eval.protocol", "quote": "The statistical testing is done using the sMAPE measure.", "where": "Section 4.4"}
+  ]
+ },
+ "results": [
+  {
+   "claim": "On NN5 rolling origin (111 ATM series), LSTM.Cluster has Mean MASE 0.93 versus 0.95 for ungrouped LSTM.All; the exponential smoothing methods ES and ETS score 0.87.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean MASE (rolling origin)",
+   "value": "0.93",
+   "unit": "MASE",
+   "baseline_value": "LSTM.All 0.95; ES 0.87; ETS 0.87; BaggedETS 0.88; ARIMA 0.96; Naive Seasonal 1.10",
+   "n": 111,
+   "setup": "NN5, 111 daily ATM series, 56-day horizon, rolling origin (RO), LSTM not re-fitted, benchmarks re-fitted",
+   "table": "Table 8, column Mean MASE, rows LSTM.Cluster 0.93, LSTM.All 0.95, ES 0.87, ETS 0.87",
+   "note": "This is the likely source of the '0.93 vs 0.95, 0.87' figures. The 0.87 belongs to ES (smooth package) and ETS, not to 'simple exponential smoothing' (SES); the paper never uses the term SES for a benchmark.",
+   "where": "Table 8"
+  },
+  {
+   "claim": "NN5 fixed origin Mean MASE: LSTM.Cluster 0.94, LSTM.All 0.96, ES and ETS 0.86.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean MASE (fixed origin)",
+   "value": "0.94",
+   "unit": "MASE",
+   "baseline_value": "LSTM.All 0.96; ES 0.86",
+   "n": 111,
+   "setup": "NN5, fixed origin",
+   "table": "Table 7, column Mean MASE, rows LSTM.Cluster 0.94, LSTM.All 0.96, ES 0.86",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "NN5 fixed-origin Mean sMAPE: ES 21.44, ETS 21.46, LSTM.Cluster 21.66, LSTM.All 23.46.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean sMAPE (fixed origin)",
+   "value": "21.66",
+   "unit": "%",
+   "baseline_value": "LSTM.All 23.46; ES 21.44; ETS 21.46",
+   "n": 111,
+   "setup": "NN5, fixed origin",
+   "table": "Table 7, column Mean sMAPE, rows LSTM.Cluster 21.66, LSTM.All 23.46, ES 21.44",
+   "note": null,
+   "where": "Table 7"
+  },
+  {
+   "claim": "NN5 rolling-origin Mean sMAPE: ES 22.18, ETS 22.24, LSTM.Cluster 23.38, LSTM.All 23.89.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean sMAPE (rolling origin)",
+   "value": "23.38",
+   "unit": "%",
+   "baseline_value": "LSTM.All 23.89; ES 22.18; ETS 22.24",
+   "n": 111,
+   "setup": "NN5, rolling origin",
+   "table": "Table 8, column Mean sMAPE, rows LSTM.Cluster 23.38, LSTM.All 23.89, ES 22.18",
+   "note": null,
+   "where": "Table 8"
+  },
+  {
+   "claim": "In the NN5 competition setup LSTM.Cluster scores Mean sMAPE 21.6 (6th overall), LSTM.All 23.4; the winner (Wildi) scored 19.9.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean sMAPE (competition setup)",
+   "value": "21.6",
+   "unit": "%",
+   "baseline_value": "LSTM.All 23.4; Wildi 19.9",
+   "n": 111,
+   "setup": "NN5, original competition protocol",
+   "quote": "It can be seen that the proposed LSTM.Cluster variant performs better than the LSTM.All variant, and reaches a 6th overall rank.",
+   "table": "Table 6, rows LSTM.Cluster 21.6, LSTM.All 23.4, Wildi 19.9",
+   "note": null,
+   "where": "Section 4.7, Table 6"
+  },
+  {
+   "claim": "On NN5, LSTM.Cluster beats LSTM.All significantly (paired Wilcoxon p = 7.22e-4), but neither beats the exponential smoothing benchmarks.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Wilcoxon signed-rank p-value",
+   "value": "7.22 × 10−4",
+   "unit": "p",
+   "baseline_value": null,
+   "n": 111,
+   "setup": "NN5, LSTM.Cluster vs LSTM.All, sMAPE, alpha 0.05; the paper does not say whether FO or RO forecasts were used",
+   "quote": "The paired Wilcoxon signed-rank test gives an overall p-value of 7.22 × 10−4, within the\ntwo LSTM variants.",
+   "note": null,
+   "where": "Section 4.7"
+  },
+  {
+   "claim": "NN5 post-hoc test with ETS as control: LSTM.Cluster is not significantly worse than ETS (pHoch 0.233) while LSTM.All is (5.03e-8).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hochberg-adjusted p vs control ETS",
+   "value": "0.233",
+   "unit": "p",
+   "baseline_value": "LSTM.All 5.03 × 10−8",
+   "n": 111,
+   "setup": "NN5, aligned Friedman (overall p 6.59 × 10−11) on sMAPE, control = ETS",
+   "table": "Table 9, rows LSTM.Cluster 0.233, LSTM.All 5.03 × 10−8",
+   "note": "Not significantly worse is not evidence of equal or better: LSTM.Cluster never beats ETS on any NN5 measure.",
+   "where": "Table 9"
+  },
+  {
+   "claim": "On CIF2016 competition setup LSTM.Cluster has the lowest Mean sMAPE of all entrants (10.53) versus LSTM.All 10.69 and ETS 11.87.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean sMAPE (CO/FO)",
+   "value": "10.53",
+   "unit": "%",
+   "baseline_value": "LSTM.All 10.69; LSTM.Horizon 10.61; ETS 11.87; BaggedETS 13.13; ARIMA 14.56",
+   "n": 72,
+   "setup": "CIF2016, 72 monthly series, fixed origin",
+   "table": "Table 3, column Mean sMAPE, row LSTM.Cluster 10.53",
+   "note": null,
+   "where": "Table 3"
+  },
+  {
+   "claim": "On CIF2016 Mean MASE LSTM.Cluster (0.89) is worse than ungrouped LSTM.All (0.83); on Median sMAPE and Rank measures BaggedETS/ETS and LSTM.All lead.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean MASE",
+   "value": "0.89",
+   "unit": "MASE",
+   "baseline_value": "LSTM.All 0.83; LSTM and ETS combo 0.79; BaggedETS 0.83",
+   "n": 72,
+   "setup": "CIF2016 fixed origin",
+   "table": "Table 3, column Mean MASE, rows LSTM.Cluster 0.89, LSTM.All 0.83",
+   "note": "Authors: 'the results change quite drastically, and traditional univariate methods such as BaggedETS often outperform our methods'.",
+   "where": "Table 3, Section 4.6"
+  },
+  {
+   "claim": "On CIF2016 there is no significant difference among the LSTM variants (aligned Friedman p = 0.8010).",
+   "kind": "measured",
+   "source": null,
+   "metric": "aligned Friedman overall p-value, LSTM variants",
+   "value": "0.8010",
+   "unit": "p",
+   "baseline_value": null,
+   "n": 72,
+   "setup": "CIF2016, LSTM.Cluster/Horizon/All, sMAPE",
+   "quote": "the corresponding aligned Friedman test has an overall p-value\nof 0.8010, which highlights that these diﬀerences are insigniﬁcant",
+   "note": "This is the 'no significant difference on another dataset' result.",
+   "where": "Section 4.6"
+  },
+  {
+   "claim": "CIF2016 post-hoc: with BaggedETS as control, LSTM.Cluster (pHoch 0.092) and LSTM.All (0.216) are not significantly worse; LSTM.Horizon is borderline (0.048).",
+   "kind": "measured",
+   "source": null,
+   "metric": "Hochberg-adjusted p vs control BaggedETS",
+   "value": "0.092",
+   "unit": "p",
+   "baseline_value": null,
+   "n": 72,
+   "setup": "CIF2016 vs original entrants, overall Friedman p 7.84 × 10−6",
+   "table": "Table 4, rows LSTM.Cluster 0.092, LSTM.ALL 0.216, LSTM.Horizon 0.048",
+   "note": "Text says LSTM.All and LSTM.Cluster are not worse than control.",
+   "where": "Table 4"
+  },
+  {
+   "claim": "CIF2016 rolling origin: LSTM.Horizon has the best Mean sMAPE (9.80), LSTM.Cluster 9.95, ETS 10.76, LSTM.All 11.10; BaggedETS wins every other measure.",
+   "kind": "measured",
+   "source": null,
+   "metric": "Mean sMAPE (RO)",
+   "value": "9.80",
+   "unit": "%",
+   "baseline_value": "LSTM.Cluster 9.95; LSTM.All 11.10; ETS 10.76; BaggedETS 10.77",
+   "n": 72,
+   "setup": "CIF2016 rolling origin",
+   "table": "Table 5, column Mean sMAPE, row LSTM.Horizon 9.80",
+   "note": null,
+   "where": "Table 5"
+  }
+ ],
+ "limits": [
+  "Only two datasets (CIF2016, NN5); no M3: authors exclude it because its series are not similar.",
+  "CIF2016 contains 48 artificial series 'that may not contain useful cross-series information'; the authors attribute BaggedETS wins on other measures to this.",
+  "On CIF2016 the clustering only applies to the 57 horizon-12 series (STL needs 2 full periods); the 15 horizon-6 series use a separate model.",
+  "On NN5 the cluster LSTM never beats ES/ETS/BaggedETS on any measure; non-significance versus ETS only means not shown worse.",
+  "Significance testing uses sMAPE only; on CIF2016 the three LSTM variants are not significantly different from each other (p 0.8010), so the 10.53 vs 10.69 gap is not significant.",
+  "NN5 original entrants' forecasts are unavailable, so significance vs the competition winners is untested.",
+  "Rolling-origin LSTMs are not re-fitted while benchmarks are, a asymmetry the authors note for cost.",
+  "Selected hyperparameters, seeds, run counts, hardware and training time are not reported; code is not mentioned.",
+  "Input window heuristic would suit poorly daily data with yearly seasonality (authors' remark); deseasonalisation applied to all series regardless.",
+  "Dated: LSTM only (CNTK, now discontinued); no transformer or later M4/N-BEATS-style comparisons."
+ ],
+ "practices": [],
+ "terms": [
+  {"term": "LSTM.Cluster", "definition": "proposed method: one LSTM per cluster of series found by feature extraction + Snob", "where": "Section 4.3"},
+  {"term": "LSTM.All", "definition": "baseline LSTM: one global model across all series in the dataset", "where": "Section 4.3"},
+  {"term": "LSTM.Horizon", "definition": "CIF2016 variant grouping series by required forecast horizon (6 vs 12)", "where": "Section 4.3"}
+ ],
+ "lineage": [
+  {"work": "Smyl and Kuber 2016, Data preprocessing and augmentation for multiple short time series forecasting with RNNs", "year": 2016, "arxiv": null, "relation": "extends", "note": "base RNN forecasting framework (CIF2016 winner)", "quote": null},
+  {"work": "Hyndman, Wang, Laptev 2015, Large-scale unusual time series detection", "year": 2015, "arxiv": null, "relation": "uses-method", "note": "18 time series features (tsmeasures)", "quote": null},
+  {"work": "Wallace and Dowe 2000, MML clustering (Snob)", "year": 2000, "arxiv": null, "relation": "uses-method", "note": "clustering algorithm that chooses cluster count", "quote": null},
+  {"work": "Cleveland et al. 1990, STL", "year": 1990, "arxiv": null, "relation": "uses-method", "note": "deterministic deseasonalisation", "quote": null},
+  {"work": "Stepnicka and Burda 2016, CIF 2016 competition", "year": 2016, "arxiv": null, "relation": "uses-data", "note": "dataset and entrant results", "quote": null},
+  {"work": "Crone 2008, NN5 competition", "year": 2008, "arxiv": null, "relation": "uses-data", "note": "111 ATM series", "quote": null},
+  {"work": "Bergmeir, Hyndman, Benitez 2016, Bagging ETS using STL and Box-Cox", "year": 2016, "arxiv": null, "relation": "baseline", "note": "BaggedETS", "quote": null},
+  {"work": "Tashman 2000, out-of-sample tests", "year": 2000, "arxiv": null, "relation": "uses-method", "note": "rolling origin, recalibration vs updating", "quote": null},
+  {"work": "Snoek, Larochelle, Adams 2012, Practical Bayesian optimization", "year": 2012, "arxiv": null, "relation": "uses-method", "note": "hyperparameter search", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Figure 6", "caption": "Proposed network architecture, which includes a pre-processing layer, LSTM training layer and post-processing layer.", "page": 21, "why": "shows the whole pipeline in one picture"},
+  {"figure": "Table 8", "caption": "Results of the rolling origin evaluation ... for the 111 daily series of NN5", "page": 29, "why": "holds the 0.93 / 0.95 / 0.87 Mean MASE figures"}
+ ],
+ "code": [
+  {"where": "Section 3.4, p.14", "snippet": "inputSize = 1.25 · max(outputSize, seasonal period)", "verbatim": true}
+ ],
+ "problems": [
+  "No venue beyond 'Preprint submitted to Elsevier' (13 Sep 2018, arXiv v2) is printed; the 2020 ESWA publication is not stated in the PDF, and the published version may differ.",
+  "Table cells were read from a column-by-column text dump; row/column assignment was reconstructed from order and cross-checked with the prose.",
+  "Table 4 lists PB.RF and PB.GRNN etc. while Table 3 lists identical numbers for PB-GRNN and PB-RF (14.50 / 7.86 / 13.46 / 1.01 / 0.65 / 13.61): possible duplicated row in the paper.",
+  "No embedded instructions found."
+ ]
+}

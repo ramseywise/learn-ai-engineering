@@ -1,0 +1,261 @@
+{
+ "schema": 1,
+ "key": "sha1:95b85aea0123",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch04-procurement.pdf",
+ "bib": {
+  "title": "The Data Warehouse Toolkit, Chapter 4: Procurement",
+  "authors": [
+   "Ralph Kimball",
+   "Margy Ross"
+  ],
+  "first_author": "Kimball",
+  "year": 2002,
+  "venue": "Book chapter, The Data Warehouse Toolkit, 2nd ed. (edition inferred from the 2002 dates in the examples; not printed in the extracted pages)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 41589,
+  "chars_total": 41589,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should procurement be modelled dimensionally, and how should dimension attributes that change over time be handled?",
+ "hypothesis": null,
+ "contributions": [
+  "Single blended versus multiple transaction fact tables for procurement",
+  "Slowly changing dimension types 1, 2, 3 and hybrids (type 6), plus rapidly changing dimensions"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Type 2 SCD issues a new dimension row with a new surrogate key; old fact rows keep the old key, so history is partitioned without touching the fact table.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "new surrogate product key",
+   "value": "25984",
+   "unit": "key",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Type 2 example: SKU ABC922-Z, product key 12345 (Education) and new key 25984 (Strategy), change on January 15, 2002",
+   "quote": "We then would have two product dimension rows for Intel-",
+   "table": null,
+   "note": null,
+   "where": "pp.97-98 (Type 2)"
+  },
+  {
+   "claim": "Type 1 overwrites the attribute, so all history appears as if the product was always in the new department; preexisting aggregates by department must be rebuilt.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "product key unchanged",
+   "value": "12345",
+   "unit": "key",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Type 1 example: key 12345 stays, Department Education -> Strategy on January 15, 2002",
+   "quote": "The rows in the fact table still reference product key",
+   "table": null,
+   "note": null,
+   "where": "p.96 (Type 1)"
+  },
+  {
+   "claim": "Type 2 growth makes it possibly inappropriate for dimensions already over a million rows; the book defers to Chapter 6 for large dimensions.",
+   "kind": "claim",
+   "source": null,
+   "metric": "dimension rows",
+   "value": "1 million",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Guidance, no data",
+   "quote": "priate technique for dimension tables that already exceed a million rows.",
+   "table": null,
+   "note": null,
+   "where": "p.100 (Type 2)"
+  },
+  {
+   "claim": "Predictable annual changes can use a generalised type 3 with one district column per year (five versions plus Current District).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "district versions",
+   "value": "5",
+   "unit": "versions",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sales rep dimension, district map revised annually, five reorganisations in five years (Figure 4.3)",
+   "quote": "Over a 5-year period,",
+   "table": null,
+   "note": null,
+   "where": "p.102"
+  },
+  {
+   "claim": "Type 6 (2+3+1) hybrid: new row per change (type 2), a current-department column overwritten on all rows (type 3/1), plus a historical-department column.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "third surrogate key",
+   "value": "31726",
+   "unit": "key",
+   "baseline_value": null,
+   "n": null,
+   "setup": "IntelliKidz moved Education -> Strategy -> Critical Thinking, keys 12345, 25984, 31726",
+   "quote": "type 6 (2 + 3 + 1)",
+   "table": null,
+   "note": null,
+   "where": "pp.103-105"
+  },
+  {
+   "claim": "Use CRC checksums per dimension row in staging to detect changed rows rather than field-by-field comparison.",
+   "kind": "claim",
+   "source": null,
+   "metric": "attributes in example row",
+   "value": "100",
+   "unit": "attributes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Staging process for type 2 detection; example sizes 100 attributes, several million rows",
+   "quote": "extremely laborious, especially if we have 100 attributes in a several-million-",
+   "table": null,
+   "note": null,
+   "where": "p.99"
+  },
+  {
+   "claim": "Multiple fact tables chosen over one blended table for procurement: users see distinct processes, three source systems, differing dimensionality; five fact tables.",
+   "kind": "claim",
+   "source": null,
+   "metric": "source systems",
+   "value": "3",
+   "unit": "systems",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Procurement case study, Figure 4.2",
+   "quote": "with three separate source systems: purchasing, warehousing, and",
+   "table": null,
+   "note": null,
+   "where": "pp.92-93"
+  }
+ ],
+ "limits": [
+  "Design guidance from case studies, no measurements",
+  "Type 2 growth concern for million-row dimensions deferred to Chapter 6",
+  "Rapidly changing dimensions and surrogate key workflow deferred to Chapters 6 and 16",
+  "Written in 2002; no mention of modern warehouse features such as MERGE or columnar engines"
+ ],
+ "practices": [
+  "Choose blended vs separate transaction fact tables by user analytic needs, number of distinct business processes, number of source systems and dimensionality of facts (pp.91-92).",
+  "Make control numbers such as PO and check numbers degenerate dimensions (p.91).",
+  "Ask business representatives about change tracking up front; do not assume they do not care (p.95).",
+  "Use type 1 overwrite for corrections or when old values have no value; it keeps no history and requires rebuilding aggregates (p.96-97).",
+  "Use type 2 (new row, new surrogate key) as the workhorse for historically accurate attributes; never use the natural key plus version digits or effective date as the key (p.97-99).",
+  "Count products on the natural key, not the surrogate key, when type 2 rows exist (p.98).",
+  "Do not constrain on dimension effective dates to partition fact history; they are useful only for slicing the dimension itself (p.98-99).",
+  "Detect changed rows in staging with a per-row CRC checksum (p.100).",
+  "Use type 3 (added prior column) only when two views of the world are needed at once; rarely used and not 'better' than 1 or 2 (p.101-102).",
+  "Use predictable-change multiple version overlays (one column per year plus Current) for annual realignments (p.102-103).",
+  "Use the type 6 hybrid (historical plus current attribute) only if the business agrees the complexity is needed (p.104-105).",
+  "Split rapidly changing attributes into a separate dimension with its own foreign key in the fact table (p.105)."
+ ],
+ "terms": [
+  {
+   "term": "Slowly changing dimension (SCD)",
+   "definition": "nearly constant dimensions whose attributes change slowly over time; introduced by Ralph Kimball in 1994",
+   "where": "p.95"
+  },
+  {
+   "term": "Type 1",
+   "definition": "overwrite the old attribute value in the dimension row",
+   "where": "p.95"
+  },
+  {
+   "term": "Type 2",
+   "definition": "add a new dimension row with a new surrogate key for the changed profile",
+   "where": "p.97"
+  },
+  {
+   "term": "Type 3",
+   "definition": "add a dimension column to hold the prior value alongside the current one",
+   "where": "p.100-101"
+  },
+  {
+   "term": "Type 6 (2+3+1)",
+   "definition": "new row per change plus a current-value column overwritten on all rows plus a historical-value column",
+   "where": "p.105"
+  },
+  {
+   "term": "Natural key",
+   "definition": "operational identifier (SKU) that must remain inviolate and is demoted to an ordinary attribute",
+   "where": "p.96"
+  },
+  {
+   "term": "Degenerate dimension (DD)",
+   "definition": "control number kept in the fact table, such as contract or PO number",
+   "where": "p.91"
+  },
+  {
+   "term": "Alternate reality",
+   "definition": "type 3 use: current and prior descriptions both regarded as true at once",
+   "where": "p.101"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kimball, slowly changing dimensions (introduced 1994)",
+   "year": 1994,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "the chapter presents the SCD notion Kimball introduced in 1994",
+   "quote": "Since Ralph Kimball first introduced the notion of slowly changing dimensions in 1994,"
+  },
+  {
+   "work": "The Data Warehouse Toolkit, Chapters 2 and 3 (retail sales, inventory)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "reuses conformed date and product dimensions, transaction fact grain, bus architecture",
+   "quote": null
+  },
+  {
+   "work": "Chapters 5, 6, 8, 16 of same book",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "related",
+   "note": "forward references: accumulating snapshots, customer dimension, HR schema, surrogate key workflow",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Figure 4.1",
+   "caption": "Procurement fact table with multiple transaction types.",
+   "page": 90,
+   "why": "The blended design with a transaction type dimension, as the baseline to reject."
+  },
+  {
+   "figure": "Figure 4.2",
+   "caption": "Multiple fact tables for procurement processes.",
+   "page": 93,
+   "why": "Five fact tables inheriting dates and degenerate dimensions along the pipeline."
+  },
+  {
+   "figure": "Figure 4.3",
+   "caption": "Sample dimension table with multiple version overlays.",
+   "page": 102,
+   "why": "Shows the per-year district columns of the generalised type 3."
+  },
+  {
+   "figure": "Unnumbered tables",
+   "caption": "IntelliKidz product dimension rows under type 1, 2, 3 and 6",
+   "page": "95-104",
+   "why": "Smallest side-by-side demonstration of each SCD type; good deck candidate."
+  }
+ ],
+ "code": [],
+ "problems": [
+  "No section map was printed by extract.py text (no headings detected).",
+  "Figure content is extracted only as attribute lists; layout lost.",
+  "The edition is not printed in the extracted text; 2nd ed. is inferred from 2002 dates.",
+  "Page-header artifacts (TEAMFLY, blank lines) in text; no embedded instructions found."
+ ]
+}

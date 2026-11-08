@@ -1,0 +1,856 @@
+{
+ "schema": 1,
+ "key": "sha1:e6b198d501db",
+ "pdf": "generative-ai/01-llm-fundamentals/sources/xiao-foundations-llms/ch02-generative-models.pdf",
+ "bib": {
+  "title": "Foundations of Large Language Models, Chapter 2: Generative Models",
+  "authors": [
+   "Tong Xiao",
+   "Jingbo Zhu"
+  ],
+  "first_author": "Xiao",
+  "year": 2025,
+  "venue": "preprint (book chapter, arXiv:2501.09223)",
+  "arxiv": "2501.09223",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 153307,
+  "chars_total": 153307,
+  "engine": "pymupdf",
+  "skipped": "nothing; the chapter text ends at the Summary with no reference list in this file (citations only inline)"
+ },
+ "type": "book-chapter",
+ "question": "What are the basic concepts of generative LLMs, how are they trained at scale, and how are they adapted to long contexts?",
+ "hypothesis": null,
+ "contributions": [
+  "General introduction to LLMs: decoder-only Transformer, pre-training, instruction fine-tuning, alignment (SFT, RLHF), prompting",
+  "Large-scale training: data preparation, model modifications, distributed training, scaling laws",
+  "Long-sequence modeling: hardware optimisations, efficient architectures, KV cache and memory, head/layer sharing, position extrapolation and interpolation"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Pre-norm Transformer blocks (output = F(LNorm(input)) + input) are used by most LLMs because they train deep Transformers more stably than post-norm.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.2.2.1, qualitative; no experiment in the chapter",
+   "quote": "the pre-\nnorm architecture has proven to be especially useful in training deep Transformers",
+   "table": null,
+   "note": null,
+   "where": "2.2.2.1"
+  },
+  {
+   "claim": "GPT-3 175B has 96 layers, width 12,288 and 96/96 query/KV heads.",
+   "kind": "reported",
+   "source": "Brown et al., 2020",
+   "metric": "hidden width d",
+   "value": "12,288",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2.2 model configuration; width d",
+   "quote": null,
+   "table": "Table 2.2, row GPT-3, column Width d",
+   "note": null,
+   "where": "Table 2.2"
+  },
+  {
+   "claim": "Llama3/3.1 405B has 126 layers, width 16,384 and 128/8 query/KV heads (GQA).",
+   "kind": "reported",
+   "source": "Dubey et al., 2024",
+   "metric": "hidden width d",
+   "value": "16,384",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2.2 model configuration",
+   "quote": null,
+   "table": "Table 2.2, row Llama3/3.1 405B, column Width d",
+   "note": null,
+   "where": "Table 2.2"
+  },
+  {
+   "claim": "DeepSeek-V3 671B has 61 layers, width 7,168 and 128/128 heads.",
+   "kind": "reported",
+   "source": "Liu et al., 2024a",
+   "metric": "hidden width d",
+   "value": "7,168",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2.2 model configuration",
+   "quote": null,
+   "table": "Table 2.2, row DeepSeek-V3, column Width d",
+   "note": null,
+   "where": "Table 2.2"
+  },
+  {
+   "claim": "Reported pre-training token counts rose from 0.3T (GPT-3-175B) to 36T (Qwen3-235B-A22B).",
+   "kind": "reported",
+   "source": "Brown et al. 2020; Yang et al. 2025",
+   "metric": "pre-training tokens",
+   "value": "36T",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Table 2.3; counts depend on tokenizer and may include repeated sampling of data",
+   "quote": null,
+   "table": "Table 2.3, row Qwen3-235B-A22B, column # of Tokens",
+   "note": "Other rows: Falcon-180B 3.5T, PaLM-540B 0.78T, Gemma-7B 6T, Llama3.1-405B 15.6T, DeepSeek-V3 14.8T, GPT-3-175B 0.3T.",
+   "where": "Table 2.3"
+  },
+  {
+   "claim": "Heuristic filtering discarded 90% of a web-scraped corpus before LLM training.",
+   "kind": "reported",
+   "source": "Penedo et al., 2023",
+   "metric": null,
+   "value": "90%",
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Web-scraped data, heuristic processing techniques (Falcon RefinedWeb)",
+   "quote": "90% of their web-scraped",
+   "table": null,
+   "note": null,
+   "where": "2.2.1"
+  },
+  {
+   "claim": "Instruction fine-tuning needs orders of magnitude less data than pre-training: tens or hundreds of thousands of samples, or fewer if high quality.",
+   "kind": "reported",
+   "source": "Zhou et al. 2023a; Chen et al. 2023b",
+   "metric": null,
+   "value": "tens or hundreds of thousands",
+   "unit": "samples",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Instruction fine-tuning sample count versus billions or trillions of pre-training tokens",
+   "quote": "LLMs can be fine-tuned with tens or hundreds of thousands of samples",
+   "table": null,
+   "note": null,
+   "where": "2.1.3"
+  },
+  {
+   "claim": "Training an LLM with tens of billions of parameters from scratch generally needs hundreds or thousands of GPUs.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "hundreds or thousands",
+   "unit": "GPUs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.1.2, stated without a source",
+   "quote": "hundreds or thousands of GPUs",
+   "table": null,
+   "note": null,
+   "where": "2.1.2"
+  },
+  {
+   "claim": "Kaplan et al. fit test loss as power laws L(N)=(N/8.8e13)^-0.076 and L(D)=(D/5.4e13)^-0.095.",
+   "kind": "reported",
+   "source": "Kaplan et al., 2020",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq in 2.2.4 and Fig 2.4; data points in Fig 2.4 are illustrative only",
+   "quote": "performance of their language model improves as a power law of either N or D after an initial transient period",
+   "table": null,
+   "note": "Constants 8.8e13, 5.4e13, exponents -0.076, -0.095 are in garbled math text; see code.",
+   "where": "2.2.4, Fig 2.4"
+  },
+  {
+   "claim": "Chinchilla scaling law: L(N,D)=406.4/N^0.34 + 410.7/D^0.28 + 1.69.",
+   "kind": "reported",
+   "source": "Hoffmann et al., 2022",
+   "metric": "irreducible loss term",
+   "value": "1.69",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eq 2.39; 1.69 is the irreducible error term; N params, D tokens",
+   "quote": "1.69",
+   "table": null,
+   "note": "The quote is the bare constant; formula is in the code field.",
+   "where": "Eq 2.39"
+  },
+  {
+   "claim": "Lower test loss does not always mean better downstream performance, so scaling laws may differ per task.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.2.4 closing note",
+   "quote": "a lower test loss does not always\nimply better performance on all downstream tasks",
+   "table": null,
+   "note": null,
+   "where": "2.2.4"
+  },
+  {
+   "claim": "KV cache size is O(L*tau*dh*m) for MHA, O(L*dh*m) for MQA, O(L*ng*dh*m) for GQA; ng=tau gives MHA and ng=1 gives MQA.",
+   "kind": "reported",
+   "source": "Shazeer 2019; Ainslie et al. 2023",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "L layers, tau heads, dh per-head dim, m cached tokens; Section 2.3.4",
+   "quote": "When ng = τ, the\nmodel becomes the standard multi-head attention model.",
+   "table": null,
+   "note": null,
+   "where": "2.3.4"
+  },
+  {
+   "claim": "T5 relative bias in Fig 2.10 uses nb=32 buckets and distmax=1024: first half one offset per bucket, second half log-spaced, last bucket catches all offsets >= distmax.",
+   "kind": "reported",
+   "source": "Raffel et al., 2020",
+   "metric": null,
+   "value": "32 buckets, distmax 1024",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 2.10 illustration",
+   "quote": "nb = 32 and distmax = 1024",
+   "table": null,
+   "note": null,
+   "where": "Fig 2.10, Eq 2.79"
+  },
+  {
+   "claim": "RoPE sets theta_k = 10000^(-2(k-1)/d) analogous to sinusoidal embeddings.",
+   "kind": "reported",
+   "source": "Su et al., 2024",
+   "metric": null,
+   "value": "10000",
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.3.5.3",
+   "quote": "Typically, θk is set to 10000",
+   "table": null,
+   "note": null,
+   "where": "2.3.5.3"
+  },
+  {
+   "claim": "Linear position interpolation divides the position index by m/ml; NTK-aware scaling instead multiplies the RoPE base b by lambda=(m/ml)^(d/(d-2)).",
+   "kind": "reported",
+   "source": "Chen et al. 2023c; r/LocalLLaMA post",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eqs 2.100-2.105; ml train length, m target length, d embedding dim",
+   "quote": "This approach yields a modified embedding model",
+   "table": null,
+   "note": null,
+   "where": "2.3.5.4"
+  },
+  {
+   "claim": "ALiBi uses a per-head linear bias -beta*(i-j) with beta_k = 2^(-8k/n_head), no tuning needed.",
+   "kind": "reported",
+   "source": "Press et al., 2022",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Eqs 2.82-2.84",
+   "quote": "Press et al. [2022] demonstrated that setting β systematically across attention heads",
+   "table": null,
+   "note": null,
+   "where": "2.3.5.2"
+  },
+  {
+   "claim": "Perplexity mostly reflects local-context use; long-context evaluation uses needle-in-a-haystack, passkey retrieval, copy tasks and long-input NLP tasks, and no general method exists.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.3.6.3",
+   "quote": "there is still no general way to evaluate long-\ncontext LLMs",
+   "table": null,
+   "note": null,
+   "where": "2.3.6.3"
+  },
+  {
+   "claim": "Removing bias terms helps training stability of LLMs.",
+   "kind": "reported",
+   "source": "Chowdhery et al. 2022",
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Section 2.2.2.3; used in Llama and Gemma",
+   "quote": "Chowdhery et al. [2022] report that removing bias terms helps improve the training stability",
+   "table": null,
+   "note": null,
+   "where": "2.2.2.3"
+  }
+ ],
+ "limits": [
+  "Textbook chapter: almost no experiments of its own; numbers come from other work or are illustrative.",
+  "Authors state it is general, not comprehensive; RLHF/PPO and advanced prompting deferred to later chapters; no exhaustive literature review.",
+  "Fig 2.4 data points are illustrative only.",
+  "Table 2.3 token counts depend on tokenizer and may include repeated sampling of data.",
+  "Model table is a late-2024/early-2025 snapshot (Qwen3, DeepSeek-V3, Llama 3.1); test-time compute is mentioned in one sentence only.",
+  "Table 2.2 values look wrong in places (outside-knowledge check, unverified in the text): Gemma2 listed as 37B (released size is 27B), and Llama2-70B, Falcon and Mistral-7B listed with equal Q/KV heads although they are reported elsewhere to use GQA/MQA. Verify before citing."
+ ],
+ "practices": [
+  "Use pre-norm (F(LNorm(x))+x) for deep LLMs; most are pre-norm (2.2.2.1).",
+  "Use RMSNorm as in Llama (2.2.2.1).",
+  "Prefer SwiGLU/GeGLU FFN activations over ReLU in wide FFNs (2.2.2.2).",
+  "Remove bias terms to improve training stability (2.2.2.3).",
+  "Filter and clean web data; heuristic filtering can discard most of it (2.2.1).",
+  "Include code and multilingual data for diversity; code helps reasoning (2.2.1).",
+  "Compute SFT loss on the output segment only (2.1.3, Eq 2.18).",
+  "Train reward models on ranked comparisons rather than scalar ratings, since ratings are hard to annotate consistently (2.1.4).",
+  "Add few-shot demonstrations or chain-of-thought steps, or 'Let's think step by step', for multi-step reasoning (2.1.5).",
+  "Combine data, tensor and pipeline parallelism; naive model parallelism leaves devices idle (2.2.3).",
+  "Use mixed precision but watch non-associativity of floating-point accumulation across many nodes (2.2.3).",
+  "Use GQA to trade KV cache size against expressiveness via ng (2.3.4).",
+  "Prefer relative or rotary position schemes over learned absolute embeddings for length generalisation; fine-tune on longer sequences after pre-training (2.3.5, 2.3.6.2).",
+  "Use position interpolation or NTK-aware base scaling to extend RoPE models (2.3.5.4).",
+  "Do not rely on perplexity alone to evaluate long-context LLMs; use synthetic retrieval tasks and long-input NLP tasks, and beware prompt sensitivity (2.3.6.3)."
+ ],
+ "terms": [
+  {
+   "term": "language modeling",
+   "definition": "estimate the probability of a token sequence, factorised by the chain rule Pr(x0..xm)=prod Pr(xi|x0..xi-1)",
+   "where": "2.1, Eq 2.1"
+  },
+  {
+   "term": "decoder-only Transformer",
+   "definition": "stack of L blocks, each self-attention + FFN sub-layer, causal mask, softmax over vocabulary on top",
+   "where": "2.1.1"
+  },
+  {
+   "term": "post-norm / pre-norm",
+   "definition": "post-norm: LNorm(F(input)+input); pre-norm: F(LNorm(input))+input",
+   "where": "Eqs 2.4-2.5"
+  },
+  {
+   "term": "instruction fine-tuning",
+   "definition": "fine-tune pre-trained LLM on (instruction, response) pairs; loss computed on the output segment only",
+   "where": "2.1.3, Eq 2.18"
+  },
+  {
+   "term": "alignment",
+   "definition": "guiding LLMs to behave in ways that accord with human values and goals",
+   "where": "2.1.4"
+  },
+  {
+   "term": "SFT",
+   "definition": "continuing training of pre-trained LLMs on new, task-oriented, labelled data",
+   "where": "2.1.4"
+  },
+  {
+   "term": "RLHF",
+   "definition": "learn a reward model from human comparisons of outputs, then fine-tune the policy against it with RL (e.g. PPO)",
+   "where": "2.1.4"
+  },
+  {
+   "term": "reward model ranking loss",
+   "definition": "-E log Sigmoid(R(x,yk1)-R(x,yk2)) over human-preferred pairs",
+   "where": "Eq 2.19"
+  },
+  {
+   "term": "prompt",
+   "definition": "the entire input to an LLM; used interchangeably with model input",
+   "where": "2.1.5"
+  },
+  {
+   "term": "in-context learning (ICL)",
+   "definition": "demonstrate ways to solve problems in the prompt and condition predictions on them",
+   "where": "2.1.5"
+  },
+  {
+   "term": "chain-of-thought prompting",
+   "definition": "demonstrate intermediate problem-solving steps in the prompt; zero-shot CoT appends 'Let's think step by step.'",
+   "where": "2.1.5"
+  },
+  {
+   "term": "RMSNorm",
+   "definition": "only rescales by root mean square, no re-centering; used in Llama",
+   "where": "Eq 2.24"
+  },
+  {
+   "term": "GeLU / GLU / GeGLU / SwiGLU",
+   "definition": "GeLU: h*Phi(h); GLU: sigma(hW1+b1) * (hW2+b2); GeGLU uses GeLU, SwiGLU uses Swish; PaLM and Llama use SwiGLU",
+   "where": "Eqs 2.27-2.30"
+  },
+  {
+   "term": "data / model / tensor / pipeline parallelism",
+   "definition": "split minibatch; split layers; split a weight matrix; split batch into micro-batches overlapping across workers",
+   "where": "2.2.3"
+  },
+  {
+   "term": "scaling law",
+   "definition": "relation between performance and model size, compute and data; basic form L(x)=a x^b (+ irreducible error)",
+   "where": "2.2.4, Eqs 2.36-2.38"
+  },
+  {
+   "term": "emergent abilities",
+   "definition": "abilities that appear when model size is scaled to a certain level (Wei et al. 2022b)",
+   "where": "2.2.4"
+  },
+  {
+   "term": "KV cache",
+   "definition": "stored keys and values of previous tokens during autoregressive inference; grows linearly with sequence length",
+   "where": "2.3.2"
+  },
+  {
+   "term": "sparse attention",
+   "definition": "attend only to a subset G of positions; weights renormalised over G",
+   "where": "Eq 2.48"
+  },
+  {
+   "term": "linear attention",
+   "definition": "kernel feature map phi replaces softmax, giving recurrent summaries mu_i and nu_i, constant cost per step",
+   "where": "Eqs 2.49-2.51"
+  },
+  {
+   "term": "MQA / GQA",
+   "definition": "MQA shares one K,V across all heads; GQA shares K,V within ng groups",
+   "where": "2.3.4"
+  },
+  {
+   "term": "attention sink / global tokens",
+   "definition": "first few tokens kept in attention to absorb excessive attention scores and stabilise long context",
+   "where": "2.3.3.1"
+  },
+  {
+   "term": "kNN LM",
+   "definition": "interpolate LM distribution with distribution from k nearest hidden states in a datastore: lambda*Pr_knn + (1-lambda)*Pr_lm",
+   "where": "Eq 2.68"
+  },
+  {
+   "term": "RAG",
+   "definition": "retrieve k chunks for context x and build x' = g(c1..ck, x) via a prompt template",
+   "where": "Eq 2.69"
+  },
+  {
+   "term": "RoPE",
+   "definition": "rotary positional embedding: rotate token embedding by position-dependent angle so dot product depends on t-s",
+   "where": "2.3.5.3"
+  },
+  {
+   "term": "position interpolation",
+   "definition": "map positions in [0,m] into trained range [0,ml]",
+   "where": "2.3.5.4"
+  },
+  {
+   "term": "NTK-aware scaled RoPE",
+   "definition": "scale RoPE base b by lambda=(m/ml)^(d/(d-2))",
+   "where": "Eq 2.103"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Shannon 1951 language model",
+   "year": 1951,
+   "arxiv": null,
+   "relation": "related",
+   "note": "origin of language modeling",
+   "quote": null
+  },
+  {
+   "work": "Bengio et al. 2003 neural LM",
+   "year": 2003,
+   "arxiv": null,
+   "relation": "related",
+   "note": "feed-forward n-gram LM, word embeddings",
+   "quote": null
+  },
+  {
+   "work": "Mikolov et al. 2013 Word2Vec",
+   "year": 2013,
+   "arxiv": null,
+   "relation": "related",
+   "note": "embeddings from word prediction",
+   "quote": null
+  },
+  {
+   "work": "Devlin et al. 2019 BERT",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pre-trained Transformer",
+   "quote": null
+  },
+  {
+   "work": "Kaplan et al. 2020 scaling laws",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "power laws in N and D",
+   "quote": null
+  },
+  {
+   "work": "Hoffmann et al. 2022 Chinchilla",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "L(N,D) fit",
+   "quote": null
+  },
+  {
+   "work": "Hestness et al. 2017 scaling",
+   "year": 2017,
+   "arxiv": null,
+   "relation": "related",
+   "note": "power law in data size; three phases",
+   "quote": null
+  },
+  {
+   "work": "Ouyang et al. 2022 RLHF",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RLHF for instruction following",
+   "quote": null
+  },
+  {
+   "work": "Wei et al. 2022c chain-of-thought",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "CoT prompting",
+   "quote": null
+  },
+  {
+   "work": "Kojima et al. 2022 zero-shot CoT",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Let's think step by step",
+   "quote": null
+  },
+  {
+   "work": "Chung et al. 2022 scaling instruction-finetuned models",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "more fine-tuning tasks help",
+   "quote": null
+  },
+  {
+   "work": "Zhou et al. 2023a LIMA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "small high-quality SFT data",
+   "quote": null
+  },
+  {
+   "work": "Shazeer 2019 multi-query attention",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "MQA",
+   "quote": null
+  },
+  {
+   "work": "Ainslie et al. 2023 GQA",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "GQA",
+   "quote": null
+  },
+  {
+   "work": "Raffel et al. 2020 T5",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "T5 relative bias",
+   "quote": null
+  },
+  {
+   "work": "Press et al. 2022 ALiBi",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "linear biases",
+   "quote": null
+  },
+  {
+   "work": "Su et al. 2024 RoFormer",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RoPE",
+   "quote": null
+  },
+  {
+   "work": "Chen et al. 2023c position interpolation",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "linear position interpolation",
+   "quote": null
+  },
+  {
+   "work": "Katharopoulos et al. 2020 linear attention",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "linear attention",
+   "quote": null
+  },
+  {
+   "work": "Gu and Dao 2023 Mamba",
+   "year": 2023,
+   "arxiv": null,
+   "relation": "related",
+   "note": "state space models",
+   "quote": null
+  },
+  {
+   "work": "Rae et al. 2019 compressive Transformer",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "compressed memory",
+   "quote": null
+  },
+  {
+   "work": "Khandelwal et al. 2020 kNN-LM",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "kNN language modeling",
+   "quote": null
+  },
+  {
+   "work": "Xiao et al. 2024 attention sink",
+   "year": 2024,
+   "arxiv": null,
+   "relation": "related",
+   "note": "attention sinks",
+   "quote": null
+  },
+  {
+   "work": "Micikevicius et al. 2018 mixed precision",
+   "year": 2018,
+   "arxiv": null,
+   "relation": "related",
+   "note": "mixed precision training",
+   "quote": null
+  },
+  {
+   "work": "Zhang and Sennrich 2019 RMSNorm",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "RMS layer norm",
+   "quote": null
+  },
+  {
+   "work": "Shazeer 2020 GLU variants",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "SwiGLU etc.",
+   "quote": null
+  },
+  {
+   "work": "Dao et al. 2022 FlashAttention",
+   "year": 2022,
+   "arxiv": null,
+   "relation": "related",
+   "note": "IO-aware attention",
+   "quote": null
+  },
+  {
+   "work": "Narayanan et al. 2021",
+   "year": 2021,
+   "arxiv": null,
+   "relation": "related",
+   "note": "parallelism for LLM training",
+   "quote": null
+  },
+  {
+   "work": "Table 2.2 models: GPT-1/2/3, Llama2, Llama3/3.1, Gemma2, Qwen2.5, DeepSeek-V3, Falcon, Mistral",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "configurations tabulated",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 2.1",
+   "caption": "Illustration of generating the three tokens b c d given the prefix <s>a via a language model.",
+   "page": 38,
+   "why": "Shows autoregressive greedy decoding and the growing chain-rule product"
+  },
+  {
+   "figure": "Fig 2.1",
+   "caption": "The Transformer-decoder architecture for language modeling.",
+   "page": 40,
+   "why": "Decoder-only stack with masked self-attention, FFN, softmax"
+  },
+  {
+   "figure": "Table 2.2",
+   "caption": "Comparison of some LLMs in terms of model size, model depth, model width, and number of heads.",
+   "page": 41,
+   "why": "Config lookup across GPT-1 to DeepSeek-V3, shows MHA to GQA shift"
+  },
+  {
+   "figure": "Fig 2.2",
+   "caption": "An overview of RLHF. 4 key steps.",
+   "page": 48,
+   "why": "Pipeline: SFT, preference data, reward model, RL fine-tuning"
+  },
+  {
+   "figure": "Table 2.3",
+   "caption": "Reported pre-training token counts and major data categories for selected LLMs.",
+   "page": 56,
+   "why": "Token budgets 0.3T to 36T"
+  },
+  {
+   "figure": "Fig 2.3",
+   "caption": "A scaling law of test error against a variable of interest.",
+   "page": 64,
+   "why": "Three phases: slow, power-law, irreducible error"
+  },
+  {
+   "figure": "Fig 2.4",
+   "caption": "Test loss against model size (N) and training dataset size (D).",
+   "page": 65,
+   "why": "Kaplan power-law fits"
+  },
+  {
+   "figure": "Fig 2.5",
+   "caption": "self-attention, sparse attention, linear attention and recurrent models.",
+   "page": 72,
+   "why": "Which states each variant caches"
+  },
+  {
+   "figure": "Fig 2.6",
+   "caption": "Illustrations of fixed-size KV caches in LLMs.",
+   "page": 76,
+   "why": "Window, moving average, recurrent and hybrid caches"
+  },
+  {
+   "figure": "Fig 2.7",
+   "caption": "Illustrations of external memories (or datastores) for language modeling.",
+   "page": 79,
+   "why": "kNN attention vs kNN-LM vs RAG side by side"
+  },
+  {
+   "figure": "Fig 2.8",
+   "caption": "QKV attention under different multi-head and sharing mechanisms.",
+   "page": 81,
+   "why": "MHA, MQA, GQA and cross-layer sharing at a glance"
+  },
+  {
+   "figure": "Fig 2.9",
+   "caption": "positional embedding behaviors: no generalization, extrapolation, interpolation.",
+   "page": 83,
+   "why": "Distinguishes extrapolation from interpolation"
+  },
+  {
+   "figure": "Fig 2.10",
+   "caption": "Distributing query-key offsets into buckets in the T5 model (nb = 32 and distmax = 1024).",
+   "page": 85,
+   "why": "T5 bucket layout"
+  },
+  {
+   "figure": "Fig 2.11",
+   "caption": "Query-key products with biases (T5 bias above, ALiBi bias below).",
+   "page": 87,
+   "why": "Bias matrices compared"
+  },
+  {
+   "figure": "Fig 2.12",
+   "caption": "Illustrations of vector rotations in a plane.",
+   "page": 89,
+   "why": "Why RoPE encodes relative offset"
+  }
+ ],
+ "code": [
+  {
+   "where": "Eq 2.1-2.2",
+   "snippet": "Pr(x0,...,xm) = prod_{i=0..m} Pr(xi | x0,...,xi-1);  log Pr = sum_i log Pr(xi | x0,...,xi-1)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.4-2.5",
+   "snippet": "post-norm: output = LNorm(F(input) + input); pre-norm: output = F(LNorm(input)) + input",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 2.6",
+   "snippet": "Att_qkv(Q,K,V) = Softmax(QK^T / sqrt(d) + Mask) V",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.19",
+   "snippet": "Loss_w(Dr) = -E_{(x,yk1,yk2)~Dr} log(Sigmoid(R_w(x,yk1) - R_w(x,yk2)))",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.23-2.24",
+   "snippet": "LNorm(h) = alpha ⊙ (h - mu)/(sigma + eps) + beta;  RMSNorm(h) = alpha ⊙ h/(sigma_rms + eps)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.28-2.30",
+   "snippet": "GLU(h) = sigma(hW1+b1) ⊙ (hW2+b2); SwiGLU uses Swish(h)=h ⊙ Sigmoid(ch)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.36-2.39 and Fig 2.4",
+   "snippet": "L(x)=a x^b; L(x)=a x^b + eps_inf; Kaplan: L(N)=(N/8.8e13)^-0.076, L(D)=(D/5.4e13)^-0.095; Chinchilla: L(N,D)=406.4/N^0.34 + 410.7/D^0.28 + 1.69",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.68",
+   "snippet": "Pr(.|hi) = lambda * Pr_knn(.|hi) + (1-lambda) * Pr_lm(.|hi)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.69",
+   "snippet": "x' = g(c1,...,ck, x)",
+   "verbatim": true
+  },
+  {
+   "where": "Eq 2.84",
+   "snippet": "ALiBi: PE(i,j) = -beta*(i-j); beta_k = 2^(-8k/n_head)",
+   "verbatim": false
+  },
+  {
+   "where": "Eq 2.100, 2.103",
+   "snippet": "linear PI: Ro'(xi, i*theta) = Ro(xi, (ml/m) i*theta); NTK-aware: lambda = (m/ml)^(d/(d-2)), theta' uses (lambda*b)",
+   "verbatim": false
+  },
+  {
+   "where": "2.1.3 template",
+   "snippet": "{*sentence*}\nQuestion: Is this sentence grammatically correct?\nAnswer:",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No embedded instructions found.",
+  "Math is garbled in text extraction (fractions, exponents); equations in code are reconstructed from reading, so verbatim=false.",
+  "Chapter file has no reference list, so lineage comes from inline citations; arXiv ids left null because the text does not give them."
+ ]
+}

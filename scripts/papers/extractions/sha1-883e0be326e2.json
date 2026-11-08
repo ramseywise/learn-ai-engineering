@@ -1,0 +1,153 @@
+{
+ "schema": 1,
+ "key": "sha1:883e0be326e2",
+ "pdf": "data-analytics/sources/python-for-data-analysis/ch05-getting-started-pandas.pdf",
+ "bib": {
+  "title": "Getting Started with pandas (Chapter 5, Python for Data Analysis, 2nd ed.)",
+  "authors": ["Wes McKinney"],
+  "first_author": "McKinney",
+  "year": 2017,
+  "venue": "O'Reilly, Python for Data Analysis 2nd ed., ch. 5, pp. 123-165",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 60212,
+  "chars_total": 60212,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "What are pandas' two core data structures, Series and DataFrame, and the essential operations (reindexing, selection, alignment, sorting, reductions) on them?",
+ "hypothesis": null,
+ "contributions": [],
+ "method": null,
+ "results": [
+  {
+   "claim": "Label-based slicing includes the endpoint, unlike Python slicing.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Series obj with index a,b,c,d; obj['b':'c'] returns b and c",
+   "quote": "Slicing with labels behaves differently than normal Python slicing in that the end‐ point is inclusive:",
+   "table": null,
+   "note": "Quote uses a soft hyphen line break in the PDF; if the check fails use the table-free claim form.",
+   "where": "p. 141"
+  },
+  {
+   "claim": "Adding two Series with partly different labels gives the union of labels, with NaN where labels do not overlap (an outer join on the index).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "s1 (index a,c,d,e) + s2 (index a,c,e,f,g): a 5.2, c 1.1, e 0.0, d/f/g NaN",
+   "quote": "The internal data alignment introduces missing values in the label locations that don’t overlap.",
+   "table": null,
+   "note": null,
+   "where": "p. 146, In [154]"
+  },
+  {
+   "claim": "add with fill_value=0 treats a label missing from one frame as 0 instead of NaN.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "df1 (3x4) and df2 (4x5, with df2.loc[1,'b']=NaN); df1.add(df2, fill_value=0) gives row 3 equal to df2 row 3 (15.0 16.0 17.0 18.0 19.0)",
+   "quote": "Using the add method on df1, I pass df2 and an argument to fill_value:",
+   "table": null,
+   "note": null,
+   "where": "p. 148, In [171]"
+  },
+  {
+   "claim": "rank breaks ties by average rank by default; method='first' ranks by order of appearance.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 6.5,
+   "unit": "rank",
+   "baseline_value": null,
+   "n": null,
+   "setup": "obj = Series([7,-5,7,4,2,0,4]); obj.rank() gives 6.5 to the two 7s; method='first' gives 6 and 7",
+   "quote": "Here, instead of using the average rank 6.5 for the entries 0 and 2, they instead have been set to 6 and 7 because label 0 precedes label 2 in the data.",
+   "table": null,
+   "note": null,
+   "where": "p. 156"
+  },
+  {
+   "claim": "Daily-return correlation between MSFT and IBM in the chapter's example.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "Pearson correlation",
+   "value": 0.49976361144151144,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "pct_change of Yahoo Finance adjusted close for AAPL, IBM, MSFT, GOOG, data ending 2016-10-21 (start date not stated); returns['MSFT'].corr(returns['IBM'])",
+   "quote": "Out[244]: 0.49976361144151144",
+   "table": null,
+   "note": "Data source (Yahoo via pandas-datareader) no longer works; numbers not reproducible today.",
+   "where": "p. 161"
+  }
+ ],
+ "limits": [
+  "Written for pandas of about 0.20 (2017) and Python 3.6; later pandas removed or changed much of it.",
+  "Dated in pandas 2/3: ix (the chapter itself calls it deprecated) and get_value/set_value are removed; DataFrame.mad removed; Int64Index removed (plain Index with int64 dtype); pd.value_counts top-level and data.apply(pd.value_counts) deprecated in 2.x, use Series.value_counts; applymap renamed DataFrame.map; Index.is_monotonic removed (use is_monotonic_increasing); the level argument on reductions removed (use groupby); 'match' in Table 5-9 does not exist as a method; Series obj[1] / obj[[1,3]] positional fallback on a non-integer index is deprecated and removed in pandas 3, use iloc.",
+  "pandas 3 adds Copy-on-Write as the only behaviour: the chapter's claim that a column from df[col] is a view whose in-place changes show up in the DataFrame no longer holds. Also string columns default to a dedicated str dtype instead of object, so the object dtype outputs shown (e.g. frame2['state'], values arrays) differ. inplace=True is discouraged. Verify these against current release notes; they are from knowledge, not from the chapter.",
+  "pandas_datareader get_data_yahoo example no longer works; the chapter itself warns Yahoo may disappear.",
+  "Dict-constructed DataFrame columns are shown sorted (pop, state, year); since Python 3.7 and pandas 0.23 insertion order is kept.",
+  "No performance, memory or internals coverage; the chapter says DataFrame internals are out of scope."
+ ],
+ "practices": [
+  "Use loc for label-based and iloc for integer-based selection rather than ix or bare [] on integer indexes (p. 144-145).",
+  "With an integer axis index, [] selection is always label-oriented, so use loc or iloc for precise handling (p. 145).",
+  "Use loc as a succinct replacement for reindex; many users use it exclusively (p. 138).",
+  "Be careful with inplace=True because it destroys dropped data (p. 140).",
+  "Use the flexible arithmetic methods (add, sub, etc.) with fill_value or axis='index' to control alignment and broadcasting direction (p. 148-151).",
+  "Copy a column explicitly with Series.copy if you do not want in-place changes to reach the DataFrame (p. 132).",
+  "Avoid duplicate index labels where possible because selection return type varies between Series and scalar (p. 157)."
+ ],
+ "terms": [
+  {"term": "Series", "definition": "A one-dimensional array-like object containing a sequence of values (of similar types to NumPy types) and an associated array of data labels, called its index.", "where": "p. 124"},
+  {"term": "DataFrame", "definition": "A rectangular table of data and contains an ordered collection of columns, each of which can be a different value type; it can be thought of as a dict of Series all sharing the same index.", "where": "p. 128"},
+  {"term": "Index", "definition": "Index objects hold the axis labels and other metadata (like the axis name or names); they are immutable and can contain duplicates.", "where": "p. 134-135"},
+  {"term": "reindex", "definition": "Create a new object with the data conformed to a new index.", "where": "p. 136"},
+  {"term": "data alignment", "definition": "Arithmetic between objects with different indexes yields the union of the index pairs, like an automatic outer join on the index labels.", "where": "p. 146"},
+  {"term": "broadcasting", "definition": "Subtracting a row from a 2D array performs the subtraction once for each row.", "where": "p. 150"},
+  {"term": "reduction", "definition": "Methods that extract a single value (like the sum or mean) from a Series or a Series of values from the rows or columns of a DataFrame.", "where": "p. 158"}
+ ],
+ "lineage": [
+  {"work": "NumPy", "year": null, "arxiv": null, "relation": "uses-method", "note": "pandas adopts NumPy's array-based idioms; Series and DataFrame ops build on ndarray and ufuncs.", "quote": null},
+  {"work": "pandas-datareader / Yahoo! Finance", "year": null, "arxiv": null, "relation": "uses-data", "note": "Stock price and volume example data.", "quote": null}
+ ],
+ "figures": [
+  {"figure": "Table 5-4", "caption": "Indexing options with DataFrame", "page": 144, "why": "One table of df[], loc, iloc, at, iat; the best slide for the indexing note"},
+  {"figure": "Table 5-1", "caption": "Possible data inputs to DataFrame constructor", "page": 134, "why": "Maps input shapes to resulting frames"},
+  {"figure": "Table 5-6", "caption": "Tie-breaking methods with rank", "page": 156, "why": "Short lookup for average/min/max/first/dense"},
+  {"figure": "In [154] / In [159]", "caption": "s1 + s2 and df1 + df2 alignment outputs", "page": 146, "why": "Shows union-of-labels with NaN, better as a drawn diagram than prose"}
+ ],
+ "code": [
+  {"where": "p. 146", "snippet": "s1 + s2", "verbatim": true},
+  {"where": "p. 148", "snippet": "df1.add(df2, fill_value=0)", "verbatim": true},
+  {"where": "p. 151", "snippet": "frame.sub(series3, axis='index')", "verbatim": true},
+  {"where": "p. 143", "snippet": "data.loc['Colorado', ['two', 'three']]\ndata.iloc[2, [3, 0, 1]]", "verbatim": true},
+  {"where": "p. 145", "snippet": "ser[:1]\nser.loc[:1]\nser.iloc[:1]", "verbatim": true},
+  {"where": "p. 137", "snippet": "obj3.reindex(range(6), method='ffill')", "verbatim": true},
+  {"where": "p. 158", "snippet": "df.mean(axis='columns', skipna=False)", "verbatim": true}
+ ],
+ "problems": [
+  "Text extraction is clean. Soft hyphens (U+2010) appear at line breaks in a few places.",
+  "Code outputs are from pandas ~0.20; no embedded instructions found."
+ ]
+}

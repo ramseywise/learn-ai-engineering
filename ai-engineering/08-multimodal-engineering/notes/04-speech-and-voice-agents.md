@@ -16,7 +16,11 @@ sources:
   - https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf
   - https://arxiv.org/abs/2305.17547
   - https://arxiv.org/abs/2308.15930
-  - https://ai.meta.com/research/publications/omnilingual-asr-open-source-multilingual-speech-recognition-for-1600-languages/
+  - https://arxiv.org/abs/2511.09690
+  - https://arxiv.org/abs/2306.15687
+  - https://arxiv.org/abs/2312.15821
+  - https://arxiv.org/abs/2308.11596
+  - https://arxiv.org/abs/2312.05187
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -32,7 +36,7 @@ Modern recognisers combine local and global patterns in sound. Conformer put con
 
 Whisper attacked robustness through data. It trained on about 680,000 hours of web audio, weakly supervised by whatever transcripts came with it, and it splits audio into 30-second segments. On clean LibriSpeech its score was unremarkable, at 2.5 WER, but it held up much better on harder sets such as CHiME-6 and TED talks ([arXiv:2212.04356](https://arxiv.org/abs/2212.04356) (Radford et al., ICML 2023)). Its decoder also predicts a `<|nospeech|>` token, trained on segments with no speech in them, so a model that outputs one can double as a rough voice activity signal. The authors found that WER across languages tracked training hours closely, with an r² of 0.83, which is a good warning for any language you are about to launch in: check how much audio trained the model in that language.
 
-Coverage has continued to expand. Meta's Omnilingual ASR reports open models for over 1,600 languages, more than 500 of them not served by earlier systems, from 300M to 7B parameters ([Omnilingual ASR](https://ai.meta.com/research/publications/omnilingual-asr-open-source-multilingual-speech-recognition-for-1600-languages/) (Meta, 2025)). Kimi-Audio is an example of a current audio foundation model, trained on 13 million hours ([Kimi-Audio report](https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf) (Moonshot AI, 2025)).
+Coverage has continued to expand. Omnilingual ASR is open-source recognition for 1,600+ languages, with a wav2vec 2.0 encoder of 0.3B to 7B parameters pre-trained on about 3.84M hours of unlabeled audio in 1,239 languages. Paired with a 1.2B-parameter language-model decoder, the 7B version beats Whisper large-v3 on 65 of 81 FLEURS languages, with mean character error rate 5.6 against 22.6, and **78% of the 1,570 languages evaluated reach CER of 10 or below** ([arXiv:2511.09690](https://arxiv.org/abs/2511.09690) (Omnilingual ASR team, 2025-11, preprint)). The tail is the catch. Languages with under 10 hours of data average CER 18.0 to 18.6, and only about a third of them get under 10. Whisper still wins on the eight-language MLS set (2.0 against 2.4). The paper's "500 never before served" count has no table behind it. Its zero-shot mode shows what a language model decoder buys: given 10 audio-text example pairs in the prompt, CER on 32 held-out languages fell from 26.33% to 14.4%, though still well short of a trained language. Kimi-Audio is an example of a current audio foundation model, trained on 13 million hours ([Kimi-Audio report](https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf) (Moonshot AI, 2025)).
 
 ## Speaking: audio as tokens
 
@@ -70,6 +74,10 @@ raw 16-bit 24 kHz audio is 384 kbps, ratio 349x
 
 
 A frame of 80 ms sets a floor on how quickly such a system can react, and 1.1 kbps is low enough to stream on nearly any connection. Multimodal models like AudioPaLM ([arXiv:2306.12925](https://arxiv.org/abs/2306.12925) (Rubenstein et al., 2023-06, preprint)) and Spectron ([arXiv:2305.15255](https://arxiv.org/abs/2305.15255) (Nachmani et al., ICLR 2024)) train language models directly on audio representations, which leads to the second architecture below.
+
+Not all speech generation goes through codec tokens and a language model. Voicebox trains a 330M-parameter non-autoregressive model with flow matching to fill in masked mel-spectrogram frames given the text, so one model does zero-shot voice cloning, noise removal and editing by choosing the mask. On filtered LibriSpeech test-clean with a three-second prompt, it scored 1.9% word error rate against 5.9% for VALL-E (VALL-E's figure is from its own paper), and speaker similarity 0.681 against 0.580. It ran about 20 times faster at 2 function evaluations (0.31 s for 10 s of audio), but that edge shrinks to 4% slower at 64 ([arXiv:2306.15687](https://arxiv.org/abs/2306.15687) (Le et al., NeurIPS 2023)). It was trained on read audiobooks only, so conversational speech is untested. Audiobox kept the same flow-matching base and added natural-language descriptions of the voice or sound, reaching speaker similarity 0.745 against 0.710 for UniAudio on LibriSpeech zero-shot TTS. Its general-purpose pre-training cut sound-effect FAD by about 20% ([arXiv:2312.15821](https://arxiv.org/abs/2312.15821) (Vyas et al., 2023-12, preprint)). Neither paper releases its training data.
+
+Speech-to-speech translation shows the same cascade-versus-direct trade-off as the voice agent itself. SeamlessM4T's single model, 2.3B parameters, beat a Whisper-Large-v2 plus NLLB-3.3B cascade on Fleurs into-English speech-to-text, 24.0 against 22.7 BLEU across 81 directions. It lost on English-out (21.5 against 22.2). Its direct speech output scored 25.8 against 23.2 ASR-BLEU for a three-stage cascade. **Humans disagreed with the metric**: on the 24 languages rated, direct speech-to-speech scored XSTS 3.87 against 4.04 for the cascade, and annotators flagged 206 generations with audio problems against 22 ([arXiv:2308.11596](https://arxiv.org/abs/2308.11596) (Seamless Communication, 2023-08, preprint)). The v2 model and streaming follow-up raised Fleurs into-English speech-to-text to 26.6 BLEU. In streaming mode, at an EMMA threshold of 0.5, speech output reached 22.1 ASR-BLEU against 29.7 offline, with the output ending 2.79 s after the speaker. A preserved-expression variant lowered the clarity MOS from 4.58 to 4.09 ([arXiv:2312.05187](https://arxiv.org/abs/2312.05187) (Seamless Communication, 2023-12, preprint)). Treat the streaming cost as the price of a shorter latency budget, and rate output with people before trusting BLEU.
 
 ## Two architectures
 

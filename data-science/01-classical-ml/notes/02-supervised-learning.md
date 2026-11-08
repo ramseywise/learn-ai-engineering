@@ -2,6 +2,7 @@
 origin: synthesis  # was: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex1 to ex4, ex6)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
+  - Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)
   - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
   - https://www.coursera.org/specializations/machine-learning-introduction
   - ../practice/ng-machine-learning/ex1/ex1.ipynb
@@ -98,7 +99,7 @@ Predict with a weighted sum: $\hat y = w \cdot x + b$. For classification, thres
 | `Lasso` | $+\ \alpha \lVert w \rVert_1$ | Sets some weights exactly to 0: built-in feature selection | `alpha`; raise `max_iter` when small |
 | `ElasticNet` | Both penalties | Lasso's sparsity with ridge's stability | `alpha`, `l1_ratio` |
 
-M&G show the effect on their extended Boston data (104 features): OLS scores 0.95 on train and 0.61 on test; ridge at `alpha=1` gets 0.89 / 0.75; lasso at `alpha=0.01` uses 33 of the 104 features and generalises about as well. That dataset has since been removed from scikit-learn, so here is the same experiment on the diabetes data, expanded to squares and products of its features so that OLS has room to overfit:
+M&G show the effect on their extended Boston data (506 rows, 104 features, one split; *Introduction to ML with Python*, ch. 2, "Linear models for regression"): OLS scores 0.95 on train and 0.61 on test; ridge at `alpha=1` gets 0.89 / 0.75; lasso at `alpha=0.01` uses 33 of the 104 features and generalises about as well (test 0.77). Their default `alpha=1` lasso underfits with 4 features (train 0.29, test 0.21), and `alpha=0.0001` uses 94 and overfits again (test 0.64). Learning curves on subsets of the same data show OLS learning nothing below about 400 points while ridge does, so regularisation matters most when data is scarce. That dataset has since been removed from scikit-learn, so here is the same experiment on the diabetes data, expanded to squares and products of its features so that OLS has room to overfit:
 
 ```python
 import numpy as np
@@ -243,7 +244,7 @@ max_depth 0.988 0.902
 features used: 10 of 30
 ```
 
-A tree grown until every leaf is pure memorises the training set. Control it with **pre-pruning**: `max_depth`, `max_leaf_nodes`, or `min_samples_leaf`. scikit-learn also has cost-complexity post-pruning (`ccp_alpha`).
+A tree grown until every leaf is pure memorises the training set. M&G's breast-cancer run shows the same: unpruned train 1.000 and test 0.937, `max_depth=4` train 0.988 and test 0.951 (*Introduction to ML with Python*, ch. 2, "Decision trees"). Control it with **pre-pruning**: `max_depth`, `max_leaf_nodes`, or `min_samples_leaf`. scikit-learn also has cost-complexity post-pruning (`ccp_alpha`).
 
 **Two quirks to remember:**
 
@@ -280,6 +281,8 @@ print("scaled  ", round(svc.score(scaler.transform(X_test), y_test), 3))
 unscaled 0.629
 scaled   0.972
 ```
+
+M&G report the same collapse (train 1.00, test 0.63 unscaled) and the cause: breast-cancer feature ranges span several orders of magnitude, which the kernel's single `gamma` cannot serve (*Introduction to ML with Python*, ch. 2, "Kernelized support vector machines"). They put SVMs in comfortable reach to about 10,000 samples and hard at 100,000.
 
 | Knob | Small value | Large value |
 |---|---|---|
@@ -329,7 +332,7 @@ print(round(mlp.score(StandardScaler().fit(X_train).transform(X_test), y_test), 
 
 | Knob | Effect |
 |---|---|
-| `hidden_layer_sizes` | Width and depth: capacity |
+| `hidden_layer_sizes` | Width and depth: capacity. Parameters grow fast: 100 inputs and two layers of 100 give 20,100 weights, two layers of 1,000 give 1,101,000 (*Introduction to ML with Python*, ch. 2) |
 | `alpha` | L2 penalty on weights |
 | `activation` | `relu` (default) or `tanh` |
 | `random_state` | Different seeds give visibly different boundaries on small data |
@@ -389,7 +392,7 @@ A probability is only as good as the model's **calibration**: an overfit model r
 | Kernel SVM | `C`, `gamma` | Yes | Medium data, similar-scale features | Large n |
 | MLP | layers, `alpha` | Yes | Large data, time to tune | Small tabular data |
 
-M&G's advice when faced with a new dataset: start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks. All of them sit behind the same API, which is the reason a sweep across families costs a few lines. The scikit-learn paper makes that its case, a "consistent, task-oriented interface" that enables "easy comparison of methods" ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011), though it asserts this rather than measuring it.
+M&G's advice when faced with a new dataset (*Introduction to ML with Python*, ch. 2, "Summary and outlook"): start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks. All of them sit behind the same API, which is the reason a sweep across families costs a few lines. The scikit-learn paper makes that its case, a "consistent, task-oriented interface" that enables "easy comparison of methods" ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011), though it asserts this rather than measuring it.
 
 ---
 

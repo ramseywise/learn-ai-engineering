@@ -1,7 +1,7 @@
 ---
 origin: book-condensed
 sources:
-  - "Kimball and Ross, The Data Warehouse Toolkit, 2nd ed. (Wiley, 2002), ch. 1, 2, 4, 5, 13"
+  - "Kimball and Ross, The Data Warehouse Toolkit, 2nd ed. (Wiley, 2002), ch. 1 to 6, 13"
   - https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 3"
   - https://docs.getdbt.com/docs/build/snapshots
@@ -17,7 +17,7 @@ Two analysts bring the same metric to the same meeting with two different number
 
 The ingest chapter left us with raw copies of operational tables. Those tables are normalized for writing: a trip row holds a zone id, the zone table holds a name and a borough, and a payment code means whatever the application code says it means. That shape protects updates and is poor for reading, because each question means working out the joins again, and each analyst works them out slightly differently.
 
-Kimball's architecture separates the kitchen from the dining room ([*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed., ch. 1). Staging is where the cooking happens, and no one eats there. The presentation layer is what people query, and it is built from two kinds of table. The words *fact* and *dimension* come from joint work by General Mills and Dartmouth in the 1960s and spread through AC Nielsen and IRI in the 1970s, so the idea is older than most of the tools that now implement it.
+Kimball's architecture separates the kitchen from the dining room ([*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed., ch. 1). Staging is where the cooking happens, and no one eats there: it is off-limits to business users, and a normalized staging database is acceptable but "not the end goal". The presentation layer is what people query, and it is built from two kinds of table. The words *fact* and *dimension* come from joint work by General Mills and Dartmouth in the 1960s and spread through AC Nielsen and IRI in the 1970s, so the idea is older than most of the tools that now implement it. Kimball's rules of thumb for the proportions, which are practitioner experience and not measurements: fact tables take 90 percent or more of the space, dimensions are shallow (often far fewer than 1 million rows) but wide (50 to 100 attributes is common), and one fact table typically has 5 to 15 dimensions (ch. 1).
 
 - A **fact table** holds measurements. Each row is one event at one grain, and the columns are foreign keys plus numbers.
 - A **dimension table** holds the words people use to filter and group: names, categories, flags. Dimensions are wide, short and read far more often than they change.
@@ -149,11 +149,11 @@ orphan trips on the Unknown zone: 2187
 
 Four details in there are the ones an interviewer asks about.
 
-**Surrogate keys.** `zone_key` is a meaningless integer owned by the warehouse. It buffers us from the source, which may recycle codes or arrive with a second numbering after an acquisition (ch. 2), and the section on history below cannot work without it.
+**Surrogate keys.** `zone_key` is a meaningless integer owned by the warehouse. It buffers us from the source, which may recycle codes or arrive with a second numbering after an acquisition (ch. 2), and the section on history below cannot work without it. It is also cheap. In Kimball's worked retail example (a hypothetical chain: $4 billion a year at a $2.00 average item, so about 2 billion line items a year), four integer keys, a transaction number and four 4-byte facts make a row of only 38 bytes, about 38 GB per billion rows; adding shopper, clerk and time-of-day keys takes it to 48 bytes (ch. 2).
 
 **A row for "we do not know".** The 2187 trips in the ten unlisted zones got key `-1` instead of being dropped. An inner join to the lookup would have made them disappear quietly, so that fares by zone no longer summed to total fares. Kimball uses the same device for "No Promotion in Effect" and "Date to be Determined": the fact keeps a valid key, and the gap is visible as a row someone can count. This is the first place the subject's theme shows up. The model states exactly what it refuses to trust.
 
-**A date dimension built ahead of time.** Calendars do not arrive in events, and a month with no trips would otherwise vanish from a report. Ten years is only about 3,650 rows, so generate it once and generously.
+**A date dimension built ahead of time.** Calendars do not arrive in events, and a month with no trips would otherwise vanish from a report. Ten years is only about 3,650 rows, so generate it once and generously. Keep time of day out of it: folding minutes in would grow ten years to 5,256,000 rows (3,650 x 1,440), where a separate 1,440-row time-of-day dimension costs nothing (ch. 2).
 
 **A degenerate dimension.** `trip_id` sits in the fact with no table behind it. Everything descriptive about a trip already lives in the other dimensions, and the id still earns its place for tracing a row back to the source. Kimball's example is the transaction number on a till receipt.
 
@@ -218,6 +218,8 @@ Facts come in three kinds (ch. 1, with semi-additive balances in ch. 3):
 | Semi-additive | some dimensions, not time | account balance, vehicles in the depot | Summing a daily balance over a week gives a number that means nothing. Take the average or the last value. |
 | Non-additive | no dimension | fare per mile, percentages | Must be recomputed from additive parts |
 
+Kimball's balance example makes the semi-additive trap concrete: daily balances of $50, 50, 100, 100, 100 over a week sum to $400 but average $80, and SQL's `AVG` over a snapshot divides by every row (3 products x 4 stores x 7 dates is 84), where the right divisor is the 7 dates, so the date constraint has to be isolated and its cardinality used (ch. 3). Snapshots are also dense, unlike sparse sales facts: at 60,000 products x 100 stores each load adds about 6 million rows, so Kimball keeps 60 dailies plus 148 weeklies (208 snapshots) instead of 1,095 over three years (ch. 3, hypothetical grocery chain). Store the additive parts of a ratio such as gross margin return on inventory (GMROI) and compute it after summing (ch. 3).
+
 Kimball's line on the last row is worth memorizing: the ratio of the sums, not the sum of the ratios. Store the parts and compute the ratio at query time, at whatever level the user has grouped to.
 
 ```python
@@ -239,7 +241,7 @@ FROM fact_trips"""))
 
 These are three answers to "what do we charge per mile?". The ratio of sums, 3.41 dollars, is the real one, total fares over total miles. The average of per-trip ratios, 4.10, is a different quantity that weights a one-block trip the same as a run to the airport, and short trips carry a large share of the flag fall. It is a legitimate number if that is what you meant, and a 20% overstatement if it is not. The sum of ratios is nonsense, though it is the one a dashboard tool produces when someone drags a stored `fare_per_mile` column onto a chart with the default aggregation. That is the case for not storing it: leave out the column, and no one can sum it.
 
-Fact tables also come in three structural kinds (ch. 5). A **transaction** fact has one row per event and never changes, like ours. A **periodic snapshot** has one row per entity per period, such as vehicles in service each day. An **accumulating snapshot** has one row per process instance, updated as it moves through milestones, such as order placed, shipped, delivered. Pick by the question you are asked: the transaction fact tells you what happened, the snapshot how things stood.
+Fact tables also come in three structural kinds (ch. 5). A **transaction** fact has one row per event and never changes, like ours. A **periodic snapshot** has one row per entity per period, such as vehicles in service each day. An **accumulating snapshot** has one row per process instance, updated as it moves through milestones, such as order placed, shipped, delivered. The tests in Kimball's comparison table: an accumulating snapshot is the only kind whose rows are revisited and updated, it carries one date key per milestone, and several date columns alone do not make a fact table an accumulating snapshot. It fits short-lived processes with a definite end, while long-lived ones such as bank accounts belong in a periodic snapshot. Because many milestone dates are unknown at first load, the date keys must be surrogates pointing at an "Unknown" row, not literal SQL dates (ch. 5). Pick by the question you are asked: the transaction fact tells you what happened, the snapshot how things stood.
 
 ## History: slowly changing dimensions
 
@@ -267,7 +269,7 @@ Brooklyn fares for January, as reported after:  2710631.0
 
 January's Brooklyn revenue changed by about 328,000 dollars, for days already reported and possibly already invoiced, with no record that anything happened. Type 1 is correct for corrections, such as fixing a misspelled zone name, where the old value was simply wrong. It is wrong for anything people compare over time, and anything built on top, such as an aggregate table, now needs rebuilding.
 
-**Type 2, add a row.** Keep the old row, close it, and open a new one with a new surrogate key. This is the point of surrogate keys, since one natural key now has several rows. Kimball detects a change by comparing a row hash, which spares comparing each column one at a time (ch. 4).
+**Type 2, add a row.** Keep the old row, close it, and open a new one with a new surrogate key. This is the point of surrogate keys, since one natural key now has several rows. Kimball detects a change by comparing a row hash (he calls it a CRC), which spares comparing each column one at a time across, say, 100 attributes and millions of rows (ch. 4). Two cautions from the same chapter: count products on the natural key, not the surrogate, or each version is counted again; and do not constrain on a dimension row's effective date to partition facts, because versions can overlap and give the wrong answer. Type 2 on a dimension that already exceeds about a million rows is the case that leads to the next section (ch. 4).
 
 ```python
 con.execute("CREATE SEQUENCE zone_v_sk START 1")
@@ -366,9 +368,21 @@ The trade-offs in row growth are real. Kimball warns about Type 2 on a rapidly c
 
 Streaming has the same problem under another name. Kleppmann's example is applying a tax rate to a past sale: if you join to the rate as it is now, a rerun gives a different answer, so the join is not deterministic (pp. 475-476). His fix is the Type 2 idea, giving each version of the rate an identifier and referring to it from the sale. He also names the cost that a warehouse rarely feels and a log does, which is that with every version needed forever, log compaction cannot throw any of them away (p. 476). That is the same row growth as above, and the reason streaming pipelines tend to prefer a versioned dimension table to an endless changelog.
 
+## Shapes that keep a dimension manageable
+
+Three devices answer "the dimension is too big, too fast-changing or too awkward".
+
+**Minidimension.** Move a customer's volatile attributes (banded income, age band, credit score band) into a small separate dimension and put its key in the fact table beside the customer key. The fact row records the profile in force at event time, so the customer row stays unversioned. Banding is required, because raw values would make the minidimension as large as the customer dimension, and it is the compromise Kimball calls the most significant. Five attributes of ten values each give 100,000 rows, which he treats as a reasonable upper limit. If the demographics key instead sits in the customer row it is an outrigger, and that key must be Type 1 or the monster dimension returns (ch. 6). Type 2 stays the default for customer dimensions under about 100,000 rows (ch. 6).
+
+**Junk dimension.** Ten two-value flags on a fact become one dimension of at most 1,024 rows (2^10) and one key. Five three-valued flags give 243, so combine them. Five 100-valued flags give 100 million combinations, so keep those apart (ch. 5).
+
+**Role-playing dates and bridges.** An order has an order date, a requested ship date and more. Keep one date table and expose it through views, one per role (`order_date`, `req_ship_date`), each with its own key in the fact (ch. 2, ch. 5). A ragged customer hierarchy cannot be followed by `GROUP BY` through a parent pointer, so Kimball adds a bridge table of every parent and descendant pair; his eight-customer, four-level example needs 22 rows (1+4+9+8). It stays standard SQL, at the price of a table several times the dimension's size (ch. 6).
+
+Two further rules of thumb. Put unit-of-measure conversion factors on the fact row, not in the product dimension: in his order pipeline, 10 quantities and 4 factors make 14 facts per row, against 50 if each quantity were stored in all five units (ch. 5). And normalising facts into one amount column plus a fact-type dimension turns a 10-million-row order fact into 40 million, which he accepts only for sparse facts with no arithmetic between them (ch. 5).
+
 ## Conformed dimensions and drilling across
 
-One star is a report, while an enterprise warehouse is many stars that can be compared. Kimball's answer is the **bus architecture** (ch. 3): dimensions are built once and shared, so `dim_zone` means the same in trips, in driver shifts and in vehicle inspections. Planning happens on a **bus matrix**, business processes down the side and dimensions across the top, with a tick where a process uses a dimension. His retail example has rows such as Retail Sales, Retail Inventory and Purchase Orders against columns such as Date, Product, Store and Vendor. A single page makes the integration plan visible before anyone writes a pipeline.
+One star is a report, while an enterprise warehouse is many stars that can be compared. Kimball's answer is the **bus architecture** (ch. 3): dimensions are built once and shared, so `dim_zone` means the same in trips, in driver shifts and in vehicle inspections. Planning happens on a **bus matrix**, business processes down the side and dimensions across the top, with a tick where a process uses a dimension. His retail example has rows such as Retail Sales, Retail Inventory and Purchase Orders against columns such as Date, Product, Store and Vendor. A single page makes the integration plan visible before anyone writes a pipeline. Kimball calls the matrix part design tool, part project-management tool and part communication tool, with rows that follow source systems and not departments. Build single-source marts first and consolidated ones (profitability is his example) later, since ETL effort grows with every source. He puts conformed dimensions at about 90 percent of the up-front data-architecture effort. Where a fact cannot be conformed exactly, name the variants differently, and where units differ carry the fact in both units (ch. 3).
 
 | Process | Date | Zone | Payment | Vehicle | Driver |
 |---|---|---|---|---|---|
@@ -420,6 +434,7 @@ Two remarks from Kleppmann put the star in a wider frame. An event log and a fac
 - **Summing a snapshot across time.** Daily balances added over a month produce an impressive, meaningless figure.
 - **Type 1 by default.** An `UPDATE` on a dimension rewrites published history. Choose per attribute, and ask the people who read the reports.
 - **Fact-to-fact joins.** Always drill across through conformed dimensions.
+- **Snowflaking by reflex.** Normalising the product dimension in Kimball's retail example saves 2.7 MB (150,000 rows x 18 bytes) beside a fact table that may reach 10 GB, and it costs the user a join per attribute (ch. 2).
 - **Modelling the org chart.** A "marketing mart" with copies of everything breeds exactly the two-numbers meeting this whole design exists to prevent.
 
 ## Try it

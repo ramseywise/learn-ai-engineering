@@ -49,6 +49,7 @@ The rest of this note is about that last sentence. [The data generating process]
 Two questions come before any model, and Müller & Guido open with them (*Introduction to ML with Python*, ch. 1, "Knowing your task and knowing your data"):
 
 - What question am I answering, and is the data I have able to answer it?
+  No algorithm can predict from information the data lacks: M&G's example is a last name as the only feature, which cannot predict gender (ch. 1).
 - How will I measure success, and what does a wrong answer cost?
 
 Most failed projects fail here, not in model choice. [Breiman (Statistical Science, 2001)](https://doi.org/10.1214/ss/1009213726) made the measure of success the line between two cultures: one validates an assumed data model with goodness-of-fit tests and residuals, the other judges a model by its predictive accuracy. Cox's published reply goes back to the first question: "I would prefer to start with an issue, a question or a scientific hypothesis".
@@ -169,7 +170,7 @@ The one discipline that separates a real result from a fooled one:
 | Validation (or CV folds) | Choosing hyperparameters, features, model family | 10–20%, or k-fold over the training part |
 | Test | One final estimate of generalisation | 10–20% |
 
-`train_test_split` shuffles and holds out 25% by default. Fix `random_state` so the split is reproducible, and pass `stratify=y` for classification so the class balance matches.
+`train_test_split` shuffles and holds out 25% by default, which M&G call "a good rule of thumb" and a somewhat arbitrary size (*Introduction to ML with Python*, ch. 1, "Training and testing data"). Shuffling matters: iris is sorted by label, so its last 25% of rows would all be class 2. Fix `random_state` so the split is reproducible, and pass `stratify=y` for classification so the class balance matches.
 
 Two ways to break this, both covered in [04](04-model-evaluation.md):
 
@@ -205,6 +206,8 @@ print(knn.score(X_test, y_test))           # 4. score: accuracy for classifiers,
 ```text
 0.9736842105263158
 ```
+
+That is 37 of 38 correct on one split with one seed and `n_neighbors=1`, so it carries no interval. M&G read it as the expected accuracy on new irises only "under some mathematical assumptions" they never state (ch. 1, "Evaluating the model"). [04](04-model-evaluation.md) supplies the repeated splits that put an error bar on it.
 
 That uniformity is a design decision. The scikit-learn paper names it as a goal of the library: "API consistency" over many algorithms, for non-specialists, by code convention rather than inheritance, so that anything with a `fit` method can join in ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011). Consistency is a design claim there: the paper reports no usability study, and its one benchmark table measures time on a single dataset.
 

@@ -1,0 +1,508 @@
+{
+ "schema": 1,
+ "key": "sha1:1a63a7c0c68b",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch02-retail-sales.pdf",
+ "bib": {
+  "title": "Retail Sales (Chapter 2, The Data Warehouse Toolkit)",
+  "authors": [
+   "Ralph Kimball",
+   "Margy Ross"
+  ],
+  "first_author": "Kimball",
+  "year": null,
+  "venue": "Wiley book chapter (edition not printed in the chapter text; see problems)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 90578,
+  "chars_total": 90578,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should a retail point-of-sale business process be modelled as a dimensional schema, and which design rules generalise from it?",
+ "hypothesis": null,
+ "contributions": [
+  "Four-step dimensional design process",
+  "Transaction-grain fact table with date, product, store, promotion and degenerate transaction dimensions",
+  "Rules for additive and nonadditive facts, surrogate keys, flat dimensions and schema extension",
+  "Market basket fact table with progressive pruning"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Fact table size estimate: $4 billion annual revenue divided by $2.00 average item price gives about 2 billion POS line items per year.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "annual fact rows",
+   "value": "2 billion",
+   "unit": "rows/year",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; assumes $4B gross revenue and $2.00 average item price",
+   "quote": "we calculate that there are approximately 2 billion transaction line items per year",
+   "table": null,
+   "note": null,
+   "where": "Retail sales fact sizing"
+  },
+  {
+   "claim": "Fact row width with four foreign keys, a transaction number and four 4-byte facts is 38 bytes; a billion rows is about 38 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "fact row width",
+   "value": "38",
+   "unit": "bytes/row",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; keys 4+4+4 bytes (date, product, promotion) plus 2 bytes (store) = 14, transaction number 8, four facts at 4 bytes = 16",
+   "quote": "would make our fact table row only 38 bytes wide",
+   "table": null,
+   "note": null,
+   "where": "Surrogate Keys section"
+  },
+  {
+   "claim": "Adding shopper (4 B), clerk (4 B) and time-of-day (2 B) keys widens the row to 48 bytes; a billion rows is 48 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "fact row width, embellished schema",
+   "value": "48",
+   "unit": "bytes/row",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; embellished schema of Fig 2.11",
+   "quote": "then our fact table width grows to only 48 bytes",
+   "table": null,
+   "note": null,
+   "where": "Surrogate Keys section"
+  },
+  {
+   "claim": "Snowflaking the department attribute (20-byte description to 2-byte code on 150,000 product rows) saves only about 2.7 MB against a fact table of perhaps 10 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "space saved by snowflaking",
+   "value": "2.7",
+   "unit": "MB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; 150,000 product rows, 50 departments",
+   "quote": "we’d save a whopping 2.7 MB (150,000 x 18 bytes), but we may have a 10-GB fact table",
+   "table": null,
+   "note": null,
+   "where": "Dimension Normalization (Snowflaking)"
+  },
+  {
+   "claim": "Normalising dimension tables typically saves under 1 percent of total schema disk space.",
+   "kind": "claim",
+   "source": null,
+   "metric": "disk saved by snowflaking",
+   "value": "1",
+   "unit": "% (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "General statement, no data given",
+   "quote": "typically are less than 1 percent of the total disk space needed for the overall schema",
+   "table": null,
+   "note": null,
+   "where": "Dimension Normalization (Snowflaking)"
+  },
+  {
+   "claim": "A 10-year daily date dimension is about 3,650 rows; folding time of day by minute into it would give 5,256,000 rows, so use a separate 1,440-row time-of-day dimension.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "combined date+minute dimension rows",
+   "value": "5,256,000",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "10 years of days; 1,440 minutes per day",
+   "quote": "would expand to 5,256,000 rows if",
+   "table": null,
+   "note": "3,650 x 1,440 = 5,256,000; separate tables total 3,650 + 1,440 rows",
+   "where": "Date Dimension"
+  },
+  {
+   "claim": "Product dimension for the chain has at least 150,000 and perhaps as many as a million rows although one store stocks about 60,000 SKUs.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "product dimension rows",
+   "value": "150,000",
+   "unit": "rows (minimum)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; history and merchandising variation across stores",
+   "quote": "our product dimension would have at least 150,000 rows",
+   "table": null,
+   "note": null,
+   "where": "Product Dimension"
+  },
+  {
+   "claim": "About 50 distinct departments over 150,000 SKUs means each department value repeats about 3,000 times; the chapter says this redundancy is fine.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "3,000",
+   "unit": "repetitions per value",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study",
+   "quote": "there are 3,000 repetitions of each unique value",
+   "table": null,
+   "note": null,
+   "where": "Product Dimension"
+  },
+  {
+   "claim": "Promotion dimension has one row per combination of conditions (about 10,000 combinations from 1,000 ads, 5,000 temporary price reductions and 1,000 end-aisle displays a year).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "promotion dimension rows",
+   "value": "10,000",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Hypothetical 100-store, five-state grocery chain used as the chapter's case study; illustrative annual counts",
+   "quote": "but there may only be 10,000 combinations of these three conditions",
+   "table": null,
+   "note": null,
+   "where": "Promotion Dimension"
+  },
+  {
+   "claim": "Market basket pair table grows quadratically: 10,000 products give nearly 100,000,000 pairs and 100,000 SKUs give 10 billion.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "pairwise combinations for 10,000 products",
+   "value": "100,000,000",
+   "unit": "pairs",
+   "baseline_value": null,
+   "n": null,
+   "setup": "N x (N - 1) pairs",
+   "quote": "there would be nearly 100,000,000 pairwise combinations",
+   "table": null,
+   "note": null,
+   "where": "Market Basket Analysis"
+  },
+  {
+   "claim": "Progressive pruning starts at the top of the hierarchy: 25 categories give 625 category-by-category rows, which are pruned by basket count and dollar/unit balance before drilling down to brand and product.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "625",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "25 categories",
+   "quote": "this first step generates 625 market basket rows",
+   "table": null,
+   "note": null,
+   "where": "Market Basket Analysis"
+  },
+  {
+   "claim": "A 4-byte integer surrogate key holds about 2 billion positive values, enough for nearly any dimension.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "2 billion",
+   "unit": "values",
+   "baseline_value": null,
+   "n": null,
+   "setup": "32-bit signed integer",
+   "quote": "can handle approximately 2 billion positive values",
+   "table": null,
+   "note": null,
+   "where": "Surrogate Keys section"
+  },
+  {
+   "claim": "An SQL date key is typically 8 bytes, so an integer date key saves 4 bytes in every fact row.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "4",
+   "unit": "bytes per row saved",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Integer (4-byte) versus SQL date type as fact table key",
+   "quote": "you’re wasting 4 bytes in the fact table for every date key in every row",
+   "table": null,
+   "note": null,
+   "where": "Date Dimension"
+  },
+  {
+   "claim": "Most business processes can be represented with fewer than 15 dimensions; 25 or more signals that correlated dimensions should be merged.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "15",
+   "unit": "dimensions (upper bound)",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Rule of thumb, no data",
+   "quote": "Most business processes can be represented with less than 15 dimensions in",
+   "table": null,
+   "note": null,
+   "where": "Too Many Dimensions"
+  },
+  {
+   "claim": "A 50-cent price cut on paper towels plus an ad and display can make sales jump by a factor of 10.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "10",
+   "unit": "x sales",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative grocery promotion, no data source",
+   "quote": "can cause the sale of the paper towels to jump by a factor of 10",
+   "table": null,
+   "note": null,
+   "where": "Retail Case Study"
+  },
+  {
+   "claim": "The first edition rolled sales up by product and promotion in a store on a day because hardware then could not handle line-item volumes; this edition declares POS line-item grain.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Change from the first edition (Wiley 1996)",
+   "quote": "we elected to provide sales data rolled up by product and promotion in a store on a day",
+   "table": null,
+   "note": null,
+   "where": "Step 2. Declare the Grain"
+  },
+  {
+   "claim": "Query example: weekly sales for snacks in Boston stores, January 2002, by promotion, returns 22,647 / 4,851 No Promotion and 7,248 / 13,798 Super Bowl Promotion.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "13,798",
+   "unit": "$ sales dollar amount",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Illustrative query over the Fig 2.10 schema; constraints on date, store district, product category",
+   "quote": "Super Bowl Promotion",
+   "table": null,
+   "note": "The columnar result prints 13,798 for the week of January 27, 2002; the cross-tab prints 13,793.",
+   "where": "Retail Schema in Action"
+  }
+ ],
+ "limits": [
+  "Case study is a hypothetical 100-store grocery chain; all sizes are illustrative, none measured.",
+  "Chapter text prints no edition or year; contents (2002 example dates, 'first edition 1996' reference, 'TEAMFLY' watermark) indicate the 2nd edition, not the 3rd (2013).",
+  "Bitmap-index and disk-space arguments reflect early-2000s relational engines; columnar warehouses weaken them (not stated in the chapter).",
+  "Slowly changing dimensions, multiple dates, outriggers and ETL are deferred to Chapters 4, 5, 6, 12 and 16, not covered here."
+ ],
+ "practices": [
+  "Build the first dimensional model on the process with most impact that is also readily extractable (Step 1).",
+  "Model a business process, not a department, and publish the data once (Step 1).",
+  "Declare the grain before choosing dimensions and facts; if steps 3 or 4 contradict it, go back to step 2 (Step 2).",
+  "Build on the most atomic grain; aggregates are a performance tool, not a substitute (Step 2).",
+  "Take requirements from business users together with source data realities; do not model from source files alone (Fig 2.1).",
+  "Every dimension must take a single value per fact row at the declared grain; the yes/no test is the grain (Step 3, Extensibility).",
+  "All facts must be true to the grain; facts at another grain go in a separate fact table (Step 4, Extensibility).",
+  "Store additive components and compute ratios as the ratio of the sums, never the sum of ratios (Step 4).",
+  "Store computed facts such as gross profit physically, or only expose them through a view with no bypass (Step 4).",
+  "Triangulate fact table row counts from revenue / average item price or from source system counts (Step 4).",
+  "Use an explicit date dimension with calendar logic, text labels (Holiday/Nonholiday) and an integer surrogate key, not an SQL date (Date Dimension).",
+  "Keep time of day in its own dimension, separate from date (Date Dimension).",
+  "Fill dimensions with many verbose descriptive attributes (50 or more for product); drilling down is adding row headers (Product Dimension).",
+  "Hold several hierarchies, such as geography and district/region, in one flat dimension (Store Dimension).",
+  "Use 10- to 20-character descriptors, not one-character codes, for dimension attributes (Store Dimension).",
+  "Keep numeric but constant store attributes such as selling square footage in the dimension, not the fact table (Store Dimension).",
+  "Use a view over the date dimension for role-playing copies such as First Open Date, with columns relabelled (Store Dimension).",
+  "Combine correlated causal mechanisms into one promotion dimension unless users think of them separately (Promotion Dimension).",
+  "Never put null keys in a fact table; add a dimension row such as 'No Promotion in Effect' or 'Frequent Shopper Not Identified' (Promotion Dimension, Extensibility).",
+  "Answer 'on promotion but did not sell' with a promotion coverage factless fact table and a set difference against the sales fact table (Promotion Coverage).",
+  "Leave transaction numbers as degenerate dimensions at transaction or line-item grain; use a surrogate key if numbers are reused or not unique across stores (Degenerate, Surrogate Keys).",
+  "Extend by adding columns, foreign keys, facts at the same grain, or a new fact table for a new grain or source; do not mix grains (Extensibility).",
+  "Keep dimensions flat; snowflake only when a clump of correlated attributes is reused in independent roles (Snowflaking).",
+  "Avoid the centipede fact table: do not give each hierarchy level its own foreign key (Too Many Dimensions).",
+  "Use meaningless sequential integer surrogate keys for every dimension join, built through a staging cross-reference table; avoid concatenated keys and double-barreled joins (Surrogate Keys).",
+  "Assign date surrogate keys in sequential date order so the fact table can be partitioned by date (Surrogate Keys).",
+  "Do market basket analysis with a pair fact table and top-down progressive pruning on basket count and A/B balance, done in ETL (Market Basket Analysis)."
+ ],
+ "terms": [
+  {
+   "term": "Grain",
+   "definition": "Specifying exactly what an individual fact table row represents.",
+   "where": "Step 2"
+  },
+  {
+   "term": "Atomic data",
+   "definition": "The most detailed information collected; such data cannot be subdivided further.",
+   "where": "Step 2"
+  },
+  {
+   "term": "SKU",
+   "definition": "Stock keeping unit; an individual product on the shelf.",
+   "where": "Retail Case Study"
+  },
+  {
+   "term": "UPC",
+   "definition": "Universal product code; bar code on manufacturer packages, at the same grain as a SKU.",
+   "where": "Retail Case Study"
+  },
+  {
+   "term": "Additive fact",
+   "definition": "A fact whose sums across all dimensions are valid.",
+   "where": "Step 4"
+  },
+  {
+   "term": "Nonadditive fact",
+   "definition": "A fact such as gross margin or unit price that cannot be summed along any dimension.",
+   "where": "Step 4"
+  },
+  {
+   "term": "Semiadditive fact",
+   "definition": "The market basket basket count; summing across more than one product double-counts baskets.",
+   "where": "Market Basket Analysis"
+  },
+  {
+   "term": "Date dimension",
+   "definition": "Daily-grained dimension table (called the time dimension in the first edition).",
+   "where": "Date Dimension"
+  },
+  {
+   "term": "Causal dimension",
+   "definition": "A dimension such as promotion describing factors thought to cause a change in sales.",
+   "where": "Promotion Dimension"
+  },
+  {
+   "term": "Lift",
+   "definition": "Gain in sales of promoted products during the promotional period over baseline.",
+   "where": "Promotion Dimension"
+  },
+  {
+   "term": "Time shifting",
+   "definition": "A drop in sales just before or after a promotion that cancels the gain.",
+   "where": "Promotion Dimension"
+  },
+  {
+   "term": "Cannibalization",
+   "definition": "Gain for the promoted product with a matching decrease for nearby shelf products.",
+   "where": "Promotion Dimension"
+  },
+  {
+   "term": "Factless fact table",
+   "definition": "A fact table with no measurement metrics that only captures the relationship between keys.",
+   "where": "Promotion Coverage"
+  },
+  {
+   "term": "Degenerate dimension",
+   "definition": "A dimension key such as the POS transaction number in the fact table with no corresponding dimension table.",
+   "where": "Degenerate Transaction Number Dimension"
+  },
+  {
+   "term": "Outrigger",
+   "definition": "A dimension attached to another dimension rather than to the fact table, such as the First Open Date view on store.",
+   "where": "Store Dimension"
+  },
+  {
+   "term": "Snowflaking",
+   "definition": "Removing redundant attributes from a flat dimension into normalized secondary dimension tables.",
+   "where": "Dimension Normalization"
+  },
+  {
+   "term": "Centipede",
+   "definition": "A fact table with too many dimension keys, nearly 100 legs.",
+   "where": "Too Many Dimensions"
+  },
+  {
+   "term": "Surrogate key",
+   "definition": "Integers assigned sequentially as needed to populate a dimension.",
+   "where": "Surrogate Keys"
+  },
+  {
+   "term": "Double-barreled join",
+   "definition": "Multiple parallel joins between a dimension and a fact table.",
+   "where": "Surrogate Keys"
+  },
+  {
+   "term": "Market basket analysis",
+   "definition": "Analysing the combination of products that sell together; affinity grouping to data miners.",
+   "where": "Market Basket Analysis"
+  },
+  {
+   "term": "Progressive pruning",
+   "definition": "Top-down enumeration of product pairs by hierarchy level, pruned by basket count and dollar/unit balance.",
+   "where": "Market Basket Analysis"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Data Warehouse Toolkit, first edition (Wiley 1996)",
+   "year": 1996,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "This edition changes the grain from daily product totals to POS line items.",
+   "quote": "For readers of the first edition of The Data Warehouse Toolkit (Wiley 1996)"
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 2.1",
+   "caption": "Key input to the four-step dimensional design process.",
+   "page": 4,
+   "why": "Shows requirements and data realities both feeding the four steps."
+  },
+  {
+   "figure": "Fig 2.3",
+   "caption": "Measured facts in the retail sales schema.",
+   "page": 9,
+   "why": "Smallest complete star: one fact table, four dimensions, degenerate transaction number and facts."
+  },
+  {
+   "figure": "Fig 2.4",
+   "caption": "Date dimension in the retail sales schema.",
+   "page": 11,
+   "why": "Lists the calendar and fiscal attributes that justify an explicit date table."
+  },
+  {
+   "figure": "Fig 2.10",
+   "caption": "Querying the retail sales schema.",
+   "page": 23,
+   "why": "Maps query constraints (month, district, category) onto dimension attributes."
+  },
+  {
+   "figure": "Fig 2.11",
+   "caption": "Embellished retail sales schema.",
+   "page": 25,
+   "why": "Shows extension by adding shopper, clerk and time-of-day keys without touching existing tables."
+  },
+  {
+   "figure": "Fig 2.12",
+   "caption": "Partially snowflaked product dimension.",
+   "page": 27,
+   "why": "Contrast with the flat product dimension of Fig 2.7."
+  },
+  {
+   "figure": "Fig 2.13",
+   "caption": "Centipede fact table with too many dimensions.",
+   "page": 30,
+   "why": "Anti-pattern: hierarchy levels as separate fact foreign keys."
+  },
+  {
+   "figure": "Fig 2.14",
+   "caption": "Market basket fact table populated from purchase transactions.",
+   "page": 35,
+   "why": "Shows the grain change from line item to product pair."
+  }
+ ],
+ "code": [
+  {
+   "where": "Store Dimension (page 46 of book)",
+   "snippet": "CREATE VIEW FIRST_OPEN_DATE (FIRST_OPEN_DAY_NUMBER, FIRST_OPEN_MONTH ...)\nAS SELECT DAY_NUMBER, MONTH, ... \nFROM DATE",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "No title page or copyright page in the PDF, so authors and year are not printed in the text; authors come from the caller's brief.",
+  "Edition mismatch: the caller said 3rd ed. 2013, but the text matches the 2nd ed. (2002). In the 3rd ed. retail sales is chapter 3. Check the ledger and note citation.",
+  "Figure 2.10 columnar result prints 13,798 and the cross-tab prints 13,793 for the January 27 week.",
+  "Embedded 'TEAMFLY' watermark lines in the text; no instructions found.",
+  "The section map printed no headings; page numbers in figures are PDF pages, book pages are 29-65."
+ ]
+}

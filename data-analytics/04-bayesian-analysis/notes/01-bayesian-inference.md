@@ -4,7 +4,7 @@ sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 1 Introduction, ch. 2 A little more on PyMC)
   - https://github.com/prasoon2211/bayesian_inference_talk (DataTalks.Club talk, Introduction to Bayesian Inference for Parameter Estimation)
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers
-  - Downey, Think Bayes (Green Tea Press), https://greenteapress.com/wp/think-bayes/
+  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 1 to 5, 7 and 8)
   - https://doi.org/10.1080/01621459.1965.10480775 (Warner, JASA, 1965)
   - https://doi.org/10.1080/01621459.1989.10478858 (Dalal, Fowlkes and Hoadley, JASA, 1989)
 confidence: high
@@ -85,6 +85,38 @@ prior 0.80  posterior 0.89
 
 Passing the tests raises your belief, but how far depends on where you started. That is the whole method in one line.
 
+### Bayes by table: cookies, M&Ms and Monty Hall
+
+Downey's *Think Bayes* builds the same update as a table with one row per hypothesis and columns for prior, likelihood, their product and the posterior (*Think Bayes*, ch. 1). The hypotheses must be mutually exclusive and collectively exhaustive, which Downey calls a suite, so the normalising constant is just the sum of the product column. Two bowls hold 30 vanilla and 10 chocolate cookies (Bowl 1) and 20 of each (Bowl 2); a vanilla cookie from a random bowl gives p(Bowl 1 | vanilla) = (1/2)(3/4) / (5/8) = 3/5. Because the sum cancels any common scale, you may write likelihoods as percentages and skip the 10,000 factor.
+
+The table earns its keep when the data-generating process is tricky. In Monty Hall the data is "Monty opened door B and found no car", and the whole difficulty sits in one likelihood: if the car is behind your door A, Monty picks B half the time (1/2); if it is behind C he must open B (1); if it is behind B he cannot (0). The posterior is 1/3 for A and 2/3 for C, so switching wins two times in three. Change only the host's rule, so that he always opens B when he can, and p(D | A) becomes 1: the posteriors are 1/2 and 1/2, because his choice no longer carries information. Same prior, same data, different story about how the data arose, different answer (*Think Bayes*, ch. 1). The M&M version uses one sample from each of two bags, one from 1994 (20% yellow, 10% green) and one from 1996 (14% yellow, 20% green): a yellow from bag 1 and a green from bag 2 give 20/27 = 0.74 that bag 1 is the 1994 bag, from (20)(20) = 400 against (14)(10) = 140 in percentage units.
+
+Computationally the table is one function. Everything problem-specific lives in the likelihood, which is the point of Downey's `Suite` class (*Think Bayes*, ch. 2):
+
+```python
+def update(prior, likelihood, data):
+    post = {h: p * likelihood(data, h) for h, p in prior.items()}
+    total = sum(post.values())                      # the normalising constant
+    return {h: p / total for h, p in post.items()}
+
+def monty(data, hypo):                              # hypo = door with the car
+    return 0 if hypo == data else (0.5 if hypo == "A" else 1)
+
+print(update(dict.fromkeys("ABC", 1 / 3), monty, "B"))
+```
+
+```text
+{'A': 0.3333333333333333, 'B': 0.0, 'C': 0.6666666666666666}
+```
+
+Feeding the posterior back in as the next prior handles repeated data, which is the loop in the diagram above. The same `update` with an M&M likelihood returns 0.7407 for hypothesis A after the two draws, matching 20/27. If the cookies are eaten rather than replaced, the likelihood of each draw depends on the earlier draws, so the hypothesis must carry the bowls' current contents (Downey leaves this as an exercise, ch. 2).
+
+### The odds form and the Bayes factor
+
+With two hypotheses the normalising constant cancels from the ratio of posteriors, so posterior odds = prior odds × likelihood ratio, and the likelihood ratio is the **Bayes factor** (*Think Bayes*, ch. 5). The cookie problem is two numbers: prior odds 1 : 1, likelihood ratio (3/4) / (1/2) = 3/2, posterior odds 3 : 2, which is probability 3/5. This is the form to use on paper or in your head, and it separates how strong the evidence is (the factor) from where you started (the prior odds). A factor above 1 raises the odds, below 1 lowers them, and exactly 1 leaves them where they were.
+
+Data that fit a hypothesis are not necessarily evidence for it. Downey's version of MacKay's blood-trace problem: the scene holds two traces, type O (60% of the population) and type AB (1%), and the suspect Oliver is type O. If Oliver left the O trace, the data need only one random person to be AB: probability 0.01. If he did not, two random people must supply one O and one AB, in either order: 2(0.6)(0.01) = 0.012. The Bayes factor is 0.01 / 0.012 = 0.83, so the traces are very mildly evidence against Oliver, despite matching his blood. He accounts for the common event and leaves the rare one still to explain; if he is innocent the rare event gets two chances to occur (*Think Bayes*, ch. 5). The lesson: the question is never "is the data consistent with my hypothesis?" but "how much more likely is it under my hypothesis than under the alternative?".
+
 ## The coin: Beta-Binomial
 
 The cleanest Bayesian model, and the one under every Bayesian A/B test ([chapter 4](04-bayesian-ab-testing.md)).
@@ -151,6 +183,8 @@ Beta(4,4) prior: MAP 0.625  mean 0.621
 ```
 
 The prior pulls both Bayesian summaries toward 0.5. With a flat prior the posterior is the likelihood rescaled, so its peak is the MLE. That is the first of several places where a frequentist procedure turns out to be a Bayesian one with a particular prior: [chapter 3](03-priors-and-bandits.md) shows ridge and lasso are the same kind of thing.
+
+Downey's Euro problem is the same coin with real data: a Belgian one-euro coin spun on edge 250 times came up heads 140 times, and a statistician quoted in the *Guardian* called a result that extreme "less than 7%" likely under a fair coin. On 101 grid hypotheses (x = 0 to 100 per cent heads) with a uniform prior, the posterior has mean 55.95, median 56, and a 90% credible interval of 51 to 61. The Beta shortcut agrees: a uniform Beta(1, 1) plus 140 heads and 110 tails is Beta(141, 111), mean 141/252 = 55.95%. The interval excludes 50, which is evidence against a fair coin, but it is not yet the answer to "is it biased rather than fair?", which needs the Bayes factor from [the odds section above](#the-odds-form-and-the-bayes-factor). It is tempting to read the posterior at x = 50 (0.021 here) as the probability that the coin is fair, and Downey warns that this number is almost meaningless: it depends on how finely the grid slices the range, so a grid ten times finer would give roughly a tenth of it (*Think Bayes*, ch. 4). A point on a continuous posterior has no probability; an interval does. He also times the grid: updating once per spin costs time proportional to the spins, a likelihood `x**heads * (1-x)**tails` costs the same whatever the count, and the Beta update is two additions.
 
 ## What a credible interval buys you
 
@@ -367,6 +401,71 @@ sorted by predicted p: 00000100010010000001111
 
 The total number of failures is matched, but the fit is built to do that, so the check to trust is one the model was not tuned on. Splitting at 65°F shows the model expects about 3.3 cold failures against the 4 of 4 observed, and about 3.8 warm ones against 3. That is close, given how few launches there are. The last line is a rough form of BMH's **separation plot**: launches sorted by predicted probability, with 1 marking a real failure. A good model piles the 1s on the right. Here, most of them are, but three sit among the warm launches where it expected few, so the model is useful and not sharp.
 
+## Predicting the next game: the posterior predictive as a mixture
+
+An estimate is rarely the last step. Downey's Boston Bruins problem asks for a prediction: the Bruins lost their first two Stanley Cup final games 0-1 and 2-3, then won 8-1 and 4-0. What is the chance they win game 5, and the series? (*Think Bayes*, ch. 7). Goal scoring is modelled as a Poisson process, so a team's goals in a game are Poisson(λ) and the time to its first goal is exponential with rate λ. The prior on each team's λ is a Gaussian with mean about 2.7 and sd 0.3, a spread taken from the 2010-11 per-team averages, and the data are each team's four scores (0, 2, 8, 4 for Boston and 1, 3, 1, 0 for Vancouver).
+
+The key step is that you do not plug in one λ. The distribution of goals in the next game is a mixture of Poissons, one per grid value of λ, weighted by the posterior. That mixture is the posterior predictive, and it is wider than any single Poisson. Everything downstream follows by combining the two teams' mixtures:
+
+```python
+import numpy as np
+from scipy import stats
+
+def series(mu, sd, n=101):
+    lam = np.linspace(max(mu - 4 * sd, 0.05), mu + 4 * sd, n)
+    prior = stats.norm.pdf(lam, mu, sd)
+    def post(goals):
+        w = prior * np.prod([stats.poisson.pmf(k, lam) for k in goals], axis=0)
+        return w / w.sum()
+    pb, pc = post([0, 2, 8, 4]), post([1, 3, 1, 0])
+    ks = np.arange(11)
+    def goal_dist(p):                       # posterior predictive: a mixture of Poissons
+        g = (p[:, None] * stats.poisson.pmf(ks, lam[:, None])).sum(0)
+        return g / g.sum()
+    joint = np.outer(goal_dist(pb), goal_dist(pc))
+    diff = np.subtract.outer(ks, ks)
+    win, tie = joint[diff > 0].sum(), joint[diff == 0].sum()
+    # sudden death: P(Bruins score first) = E[lb / (lb + lc)] under the two posteriors
+    ot = (np.outer(pb, pc) * lam[:, None] / (lam[:, None] + lam[None, :])).sum()
+    p = win + tie * ot
+    return win, tie, ot, p, p**2 + 2 * p * (1 - p) * p   # win the next two, or split and win the third
+
+for mu, sd in ((2.7, 0.3), (2.8, 0.85)):
+    win, tie, ot, p, ser = series(mu, sd)
+    print(f"prior sd {sd}: win {win:.2f} tie {tie:.2f} overtime {ot:.2f} next game {p:.2f} series {ser:.2f}")
+```
+
+```text
+prior sd 0.3: win 0.46 tie 0.17 overtime 0.53 next game 0.55 series 0.58
+prior sd 0.85: win 0.62 tie 0.15 overtime 0.62 next game 0.71 series 0.80
+```
+
+For the 0.3 prior this reproduces Downey's numbers: win 46%, tie 17%, overtime win 52% (0.526 here), next game 55%, series 57% (0.575 unrounded, which the print above shows as 0.58) (*Think Bayes*, ch. 7). Overtime is sudden death, so what matters is time to the first goal rather than goals per game, and the exponential-race shortcut replaces his two mixtures of exponentials. A tied game goes to overtime, which is why the next-game probability is win + tie × overtime.
+
+The sensitivity is the lesson. The 0.3 spread is the spread of team averages across all opponents. Pair-by-pair averages for teams that met 4 to 6 times in the regular season have the same mean of 2.8 but a standard deviation of 0.85, because a good offence meeting a bad defence is far from average. Rerunning with that prior moves the series probability from 57% to 80% (my rerun: 0.80 with the prior truncated at 0.05 so that λ stays positive). With four games of data the prior is doing a lot of work, so Downey's advice is to spend effort on it (*Think Bayes*, ch. 7). The book's text gives the prior mean as 2.8 while its code uses 2.7, and the printed `MakeGaussianPmf` calls `norm.pdf` with its arguments in the wrong order. Evaluated as printed that prior gives different answers (series 0.76 in my run), so I treated it as a typo and used the correct density, which reproduces the book's results.
+
+## Observer bias: waiting for the train
+
+Downey's Red Line problem adds one idea the earlier sections lack: the data you see are a length-biased sample, so the likelihood is not only the Poisson term (*Think Bayes*, ch. 8). A passenger who arrives at a random moment lands in a long gap between trains more often than in a short one, with probability proportional to the gap. Take gaps of 5 and 10 minutes, equally likely. The true mean gap is 7.5, but a passenger sees 5 minutes one time in three and 10 minutes two times in three, a mean of 8.33. The same effect makes classes look bigger to students and planes look fuller to passengers. The wait y is uniform within the gap, so its mean is half the biased mean, 4.17 here. On his collected Red Line gaps (4 to 6 pm, five weekdays, about 15 trains a day, not held here) the book reports a mean true gap of 7.8 minutes, a biased mean of 8.8 and a mean wait of 4.4.
+
+The Bayesian step is then ordinary. The prior for x, the time since the last train, is the wait distribution above. The data are k passengers on the platform, arriving as a Poisson process with rate λ, so the likelihood of a hypothesis x is `poisson.pmf(k, lam * x)`. The predictive for the wait is the biased gap minus x, with the impossible negative values dropped.
+
+```python
+import numpy as np
+from scipy.stats import poisson
+
+gaps = np.array([5.0, 10.0]); p_z = np.array([0.5, 0.5])   # minutes
+p_zb = p_z * gaps / (p_z * gaps).sum()                     # length-biased: what a passenger sees
+xs = np.arange(0.5, 10, 0.5)                               # minutes since the last train
+prior_x = sum(pb * (xs < g) / (xs < g).sum() for pb, g in zip(p_zb, gaps))
+lam, k = 2.0, 15                                           # passengers per minute; on the platform
+post_x = prior_x * poisson.pmf(k, lam * xs); post_x /= post_x.sum()
+print(p_z @ gaps, round(p_zb @ gaps, 2), round(p_zb @ gaps / 2, 2))  # 7.5 8.33 4.17
+print(round(xs @ prior_x, 2), round(xs @ post_x, 2))                 # 4.17 7.18
+```
+
+Fifteen people at 2 per minute pull the expected elapsed time from 4.17 to 7.18 minutes, so more of the gap is already used up and the remaining wait is shorter. With the real gap distribution the book finds the elapsed time probably 5 to 10 minutes and the next train within 5 minutes with about 80% confidence (read off the book's figure, not re-run). The rate λ is itself estimated from five days of (wait, arrivals) pairs: 36 arrivals over about 18 minutes of waiting gives roughly 2 per minute, and a grid posterior over λ (the data in the chapter, my rerun) has mean 2.03. The book's method for carrying that uncertainty is the mixture from the previous section: run the analysis for each λ and weight by the posterior. Here it barely matters, which the book explains: variability in an input matters when the response is non-linear, and the response to λ is close to linear in this range. Last, the decision: with enough slack to wait 15 minutes, the book reads it off a figure: a platform under 20 people means normal running, 30 people implies a 15-minute-old gap and something wrong, and to accept a 10% chance of missing the connection he stays while there are fewer than 30 and takes a taxi above. That threshold rests on three long delays a year that the author supplied from memory, treated as a sample of the biased distribution, so it is a coarse figure; a proper cost per missed connection would give the optimal threshold, as in [note 5](05-loss-functions-and-decisions.md).
+
 ## German tanks: when the posterior is one line
 
 Captured tanks carry serial numbers 1…N. From 15 captured serials, estimate N.
@@ -432,6 +531,8 @@ max + gap  mean   999.8  sd  62.3  rmse  62.3
 ```
 
 The unbiased estimator is centred on the truth and spreads slightly wider than the maximum, and it still has the smaller overall error, because the maximum's bias of about 62 tanks costs more than the extra spread saves.
+
+Downey's version of the same problem is the locomotive problem: one train numbered 60 is seen, with a flat prior on N from 1 to 1000 and likelihood 1/N for N of at least 60. The likelihood is the same as for a die with N faces, so his dice example (one die from a box of 4-, 6-, 8-, 12- and 20-sided dice; a roll of 6 leaves 0.39, 0.29, 0.20 and 0.12 on the 6-, 8-, 12- and 20-sided die, and seven rolls in all leave 0.94 on the 8-sided die) runs through the same code. The posterior peaks at 60, the smallest possible N, and its mean is 333. That mean depends on the arbitrary upper bound: 207 at a bound of 500 and 552 at 2,000. Two further sightings, 30 and 90, pull the three means to 152, 164 and 171 (*Think Bayes*, ch. 3). The prior's role in that sensitivity is taken up in [chapter 3](03-priors-and-bandits.md#the-prior-washes-out). Downey also notes the historical use: Allied analysts reduced each block of 100 serial numbers to this problem and produced production estimates well below other intelligence, which the postwar records bore out (Ruggles and Brodie, JASA 1947, as reported in ch. 3; the book is the source here, not the paper).
 
 ## Pitfalls
 

@@ -1,0 +1,479 @@
+{
+ "schema": 1,
+ "key": "2008.00444",
+ "pdf": "data-science/sources/montero-manso-2021-locality-globality.pdf",
+ "bib": {
+  "title": "Principles and Algorithms for Forecasting Groups of Time Series: Locality and Globality",
+  "authors": [
+   "Pablo Montero-Manso",
+   "Rob J Hyndman"
+  ],
+  "first_author": "Montero-Manso",
+  "year": 2021,
+  "venue": "preprint (arXiv:2008.00444v3 [cs.LG], 26 Mar 2021; dated March 30, 2021; no journal name printed in the PDF)",
+  "arxiv": "2008.00444",
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 123773,
+  "chars_total": 123773,
+  "engine": "pymupdf",
+  "skipped": "Appendix figures (6-24) are plots with no numeric text; only their captions were read."
+ },
+ "type": "empirical",
+ "question": "Are global (one function for all series) forecasting methods less general than local ones, and why do they work on heterogeneous sets?",
+ "hypothesis": "Global methods can match local methods without similar series, and because local complexity grows with the number of series while global stays constant, global models can be more complex and still generalize better.",
+ "contributions": [
+  "Proposition 1: local and global algorithms can produce the same forecasts for time series, with no similarity assumption",
+  "Generalization bounds: local complexity grows with set size, global stays constant; implies larger memory for global autoregressions",
+  "Extensive empirical study of naive global models (linear, polynomial, deep network, trees, partitioned linear) vs local ets, auto.arima, theta, TBATS, STL-AR",
+  "Principles: add features, increase memory, partition (random partitioning as the naive form)"
+ ],
+ "method": {
+  "summary": "Lag-embeds each series at AR order M, stacks all series into one matrix and fits one regression (linear, polynomial deg 2/3, MLP, XGBoost), forecasting recursively one step at a time; compared with local forecast-package methods on MASE across about 17 datasets. Partitioned variant splits the set randomly into 10 equal groups and fits one global linear AR per group.",
+  "task": "univariate forecasting of groups of time series",
+  "trains": true,
+  "datasets": [
+   {
+    "name": "M4",
+    "role": "eval",
+    "size": "100,000 series (Yearly, Quarterly, Monthly, Weekly, Daily, Hourly)",
+    "split": "one-step-ahead out-of-sample error; Fig 6 subsamples M4 to 2000 series per frequency",
+    "source": "M4 competition",
+    "preprocessing": "each series scaled by MASE scaling as normalisation (Sec 4.3)"
+   },
+   {
+    "name": "M1",
+    "role": "eval",
+    "size": "1001 series (617 monthly)",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "M3",
+    "role": "eval",
+    "size": "3003 series (1428 monthly)",
+    "split": null,
+    "source": null,
+    "preprocessing": null
+   },
+   {
+    "name": "tourism, NN5, Wikipedia, FRED-MD, weather, dominick, traffic, electricity, car parts, hospital, CIF2016, Pedestrian, Double Pendulum, COVID19",
+    "role": "eval",
+    "size": "e.g. NN5 111 series; Wikipedia 115084 x 803; FRED-MD 107; weather 3010; dominick 115704; electricity 370; car parts 2674; hospital 767; CIF2016 72; pedestrian 66; COVID19 56",
+    "split": "COVID19 horizon last 14 days",
+    "source": null,
+    "preprocessing": null
+   }
+  ],
+  "models": [
+   {
+    "name": "Global linear AR (least squares)",
+    "role": "proposed",
+    "params": "M parameters (12 for AR(12))",
+    "architecture": "linear autoregression pooled over all series",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": "AR order M, up to length of shortest series",
+    "other": {}
+   },
+   {
+    "name": "Global deep network (MLP ReLU)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "ReLU MLP, linear final layer, Keras",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": "5",
+    "hidden": "32 units per layer",
+    "heads": null,
+    "context": "AR order M",
+    "other": {
+     "fit": "Adam default learning rate, early stopping on 15% cross-validation set, batch size 1024, loss MAE"
+    }
+   },
+   {
+    "name": "Global regression trees (XGBoost)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "XGBoost",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {
+     "fit": "default parameters subsampling=0.5, col_sampling=0.5, early stopping 15% validation, loss RMSE, validation MAE"
+    }
+   },
+   {
+    "name": "Featurized linear (polynomial deg 2 and 3)",
+    "role": "proposed",
+    "params": null,
+    "architecture": "least squares on polynomial features",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "Partitioned linear",
+    "role": "proposed",
+    "params": null,
+    "architecture": "random partition into 10 equal subsets, one global linear AR each",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   },
+   {
+    "name": "auto.arima, ets, theta, TBATS, STL-AR",
+    "role": "baseline",
+    "params": null,
+    "architecture": "local methods from R forecast package",
+    "init_from": null,
+    "tokenizer": null,
+    "vocab": null,
+    "layers": null,
+    "hidden": null,
+    "heads": null,
+    "context": null,
+    "other": {}
+   }
+  ],
+  "training": {
+   "objective": "least squares (linear, polynomial); MAE (deep net); RMSE (XGBoost)",
+   "optimizer": "Adam, default learning rate (deep net only)",
+   "lr": null,
+   "lr_schedule": null,
+   "warmup": null,
+   "batch_size": "1024 (deep net)",
+   "steps": null,
+   "epochs": "early stopping on 15% of the stacked matrix",
+   "tokens": null,
+   "seq_len": null,
+   "precision": null,
+   "weight_decay": null,
+   "dropout": null,
+   "regularisation": "early stopping; no dropout, batch norm or ensembling used",
+   "hardware": null,
+   "compute": null,
+   "wall_clock": null,
+   "seeds": null,
+   "other": {
+    "hyperparameter_search": "none",
+    "forecasting": "one-step model applied recursively for longer horizons"
+   }
+  },
+  "inference": {
+   "decoding": null,
+   "temperature": null,
+   "top_p": null,
+   "max_tokens": null,
+   "samples": null,
+   "prompting": null,
+   "retrieval": null,
+   "parameters": {},
+   "other": {
+    "Table 1 setup": "M4 treated as one heterogeneous set, AR(12), one-step-ahead MASE; Cluster = clustered by periodicity (frequency) with one global model per cluster; Glob. Deep+Feat. = fully global deep net with frequency and tsfeatures-type features added as inputs, no partitioning"
+   }
+  },
+  "eval": {
+   "metrics": [
+    {
+     "name": "MASE",
+     "definition": "mean absolute scaled error; series scaled as preprocessing so minimising MASE equals minimising MAE on scaled series",
+     "unit": "ratio (naive seasonal is about 1)",
+     "higher_is_better": false
+    }
+   ],
+   "baselines": [
+    "auto.arima",
+    "ets",
+    "theta",
+    "TBATS",
+    "STL-AR"
+   ],
+   "protocol": "one-step-ahead out-of-sample and in-sample errors; single run per configuration, no seeds or significance tests stated"
+  },
+  "availability": {
+   "code": null,
+   "weights": null,
+   "data": null
+  },
+  "prompts": [],
+  "evidence": [
+   {
+    "field": "Table 1",
+    "quote": "Method MASE auto.arima 0.7618 ets 0.7644 theta 0.7745 Global linear 0.9279 Cluster linear 0.8559 Global DeepNet 0.8149 Cluster DeepNet 0.7632 Glob. Deep+Feat. 0.7596",
+    "where": "p17 Table 1"
+   }
+  ]
+ },
+ "results": [
+  {
+   "claim": "On M4 one-step-ahead MASE, a fully global deep network with extra features is the best row, beating all local methods and the clustered network.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "0.7596",
+   "unit": "MASE",
+   "baseline_value": "0.7618 (auto.arima)",
+   "n": "100,000 series",
+   "setup": "M4 as one heterogeneous set, one-step-ahead, AR(12), deep network with frequency and other features as inputs, no partitioning",
+   "table": "Table 1, row Glob. Deep+Feat., column MASE",
+   "note": "Table 1 caption says features give 'equivalent results as clustering'; text says it outperforms all local and the clustered global. Gap to Cluster DeepNet is 0.0036 MASE, single run.",
+   "where": "Sec 5.5, Table 1, p17"
+  },
+  {
+   "claim": "On M4 one-step MASE, a deep network fitted per periodicity cluster (Cluster DeepNet) scores 0.7632.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "0.7632",
+   "unit": "MASE",
+   "baseline_value": "0.8149 (plain Global DeepNet)",
+   "n": "100,000 series",
+   "setup": "M4, one-step-ahead, AR(12), data split by periodicity then one global deep network per cluster",
+   "table": "Table 1, row Cluster DeepNet, column MASE",
+   "note": null,
+   "where": "Table 1, p17"
+  },
+  {
+   "claim": "The plain global deep network on all of M4 scores 0.8149, worse than all three local methods.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "0.8149",
+   "unit": "MASE",
+   "baseline_value": "0.7618 (auto.arima)",
+   "n": "100,000 series",
+   "setup": "M4, one-step-ahead, AR(12), single global deep network without clustering or features",
+   "table": "Table 1, row Global DeepNet, column MASE",
+   "note": null,
+   "where": "Table 1, p17"
+  },
+  {
+   "claim": "Other Table 1 rows: global linear 0.9279, cluster linear 0.8559; local auto.arima 0.7618, ets 0.7644, theta 0.7745.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "0.9279",
+   "unit": "MASE",
+   "baseline_value": null,
+   "n": "100,000 series",
+   "setup": "M4, one-step-ahead, AR(12); Global linear row",
+   "table": "Table 1, row Global linear, column MASE",
+   "note": "Cluster linear 0.8559; auto.arima 0.7618; ets 0.7644; theta 0.7745",
+   "where": "Table 1, p17"
+  },
+  {
+   "claim": "Random (not clustered) partitioning is evidence that having similar series is not the cause of good global performance; partitioning reduces sample size yet helps.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Sec 5.3: dataset randomly split into 10 equal groups, global linear AR per group; Fig 4 on M4 Monthly, Fig 11 on M1, M3, tourism, M4",
+   "quote": null,
+   "table": null,
+   "note": "Qualitative: no numeric MASE is printed in the text, only plots. Verbatim sentence: 'Since partitioning is done at random (not clustering), it is strong evidence towards the benefit of raw complexity in a model rather than finding the \"right\" model, and it shows that having similar series is not the cause of the good performance of global methods.' The sentence is in Sec 5.3 (p14), about the random-partition linear experiment, NOT the M4 Table 1 comparison.",
+   "where": "Sec 5.3, p14"
+  },
+  {
+   "claim": "The partitioning effect holds in most datasets where the global model is complexity-constrained; authors say it is a showcase of theory, not a recommendation.",
+   "kind": "measured",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 11 appendix: global linear vs 10-way random-partitioned linear on M1, M3, tourism, M4",
+   "quote": null,
+   "table": null,
+   "note": "Verbatim: 'the effect holds (with more or less beneficial impact) in the majority of datasets where the global model is complexity-constrained.' and 'The experiments in this section are meant to showcase the strength of theoretical results because they predict a counter-intuitive effect, they are not a specific recommendation.' Fig 11 caption: 'In the majority of datasets, the Partitioned model outperforms the unpartitioned one, showing that the global linear is constrained by its simplicity (under-fitting).'",
+   "where": "Sec 5.3, p14; Fig 11 p30"
+  },
+  {
+   "claim": "A global linear AR(25) fitted to 617 M1 Monthly series outperforms state-of-the-art local methods with 25 parameters versus about 1600 for auto.arima.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "25",
+   "unit": "parameters",
+   "baseline_value": "approximately 1600 (auto.arima)",
+   "n": "617 series",
+   "setup": "M1 Monthly, global linear AR over all orders (Fig 1)",
+   "quote": "A single AR(25) — i.e., 25 parameters — can “summarize” the dataset better than models that at\nleast use 1 parameter per series, e.g. auto.arima needs approximately 1600 parameters to ﬁt the whole set.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.1, p11"
+  },
+  {
+   "claim": "On M4 Yearly an AR(12) second-degree polynomial global model would have ranked second in the M4 competition.",
+   "kind": "measured",
+   "source": null,
+   "metric": "MASE",
+   "value": "3.01",
+   "unit": "MASE",
+   "baseline_value": null,
+   "n": "23000 series",
+   "setup": "M4 Yearly, global polynomial degree 2, AR(12)",
+   "quote": "In the M4 yearly an AR(12) polynomial of second degree not only outperforms the local benchmarks, it would have scored second in the M4\ncompetition according to its MASE of 3.01.",
+   "table": null,
+   "note": null,
+   "where": "Sec 5.2, p14"
+  },
+  {
+   "claim": "Scale normalization plus the scale as a feature gives slightly lower relative MASE than normalization alone, both relative to no normalization.",
+   "kind": "measured",
+   "source": null,
+   "metric": "relative MASE",
+   "value": "0.9479",
+   "unit": "ratio to non-normalized",
+   "baseline_value": "0.9497 (normalization only)",
+   "n": null,
+   "setup": "deep network AR(12), averaged across datasets, one-step-ahead",
+   "quote": null,
+   "table": "Table 2, row Relative MASE, column Normalization + Scale as Feature",
+   "note": "Relative MAE: normalization 1.0213, with scale feature 0.9959",
+   "where": "Sec 5.5 Table 2, p17"
+  }
+ ],
+ "limits": [
+  "Bounds are worst-case, agnostic and loose; authors say benefit is insight, not tight guarantees.",
+  "Bounds assume independent series and an unknown effective sample size N; dependent groups lose the guarantee.",
+  "Better bounds do not imply better out-of-sample error; used as a heuristic.",
+  "Clustering analysis is left out of scope; worst-case clustering bounds are vacuous.",
+  "No seeds, repeats or significance tests stated; Table 1 differences (0.7596 vs 0.7632) are small and single-run.",
+  "Deep network and trees not tuned; authors caution against preferring a model class.",
+  "dominick and parts (intermittent) do not show longer memory, better accuracy; authors have no explanation.",
+  "Random-partitioning experiments are a demonstration, not a recommendation. Code/data availability not stated in the PDF."
+ ],
+ "practices": [],
+ "terms": [
+  {
+   "term": "local approach",
+   "definition": "considering each time series as a separate regression task and fitting a function to each",
+   "where": "Abstract"
+  },
+  {
+   "term": "global approach",
+   "definition": "fitting a single function to all time series in the set",
+   "where": "Abstract"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "DeepAR (Salinas et al.)",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "global/cross-learning deep forecasting",
+   "quote": null
+  },
+  {
+   "work": "Smyl, hybrid ES-RNN",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "related",
+   "note": "M4-winning hybrid with a global part",
+   "quote": null
+  },
+  {
+   "work": "N-BEATS (Oreshkin et al.)",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "related",
+   "note": "pure global M4 result",
+   "quote": null
+  },
+  {
+   "work": "Bandara, Bergmeir, Smyl, clustering with RNNs",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "contradicts",
+   "note": "argues clusters of similar series help; paper says clustering is not essential",
+   "quote": null
+  },
+  {
+   "work": "Mariet and Kuznetsov, seq2seq foundations",
+   "year": 2019,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "generalization analysis of seq2seq forecasting",
+   "quote": null
+  },
+  {
+   "work": "Makridakis et al., M4 competition",
+   "year": 2020,
+   "arxiv": null,
+   "relation": "uses-data",
+   "note": "M4 and local benchmarks",
+   "quote": null
+  },
+  {
+   "work": "Hyndman and Khandakar, forecast R package",
+   "year": 2008,
+   "arxiv": null,
+   "relation": "baseline",
+   "note": "auto.arima, ets, theta, TBATS, STL-AR",
+   "quote": null
+  },
+  {
+   "work": "Abu-Mostafa et al., Learning from data",
+   "year": 2012,
+   "arxiv": null,
+   "relation": "uses-method",
+   "note": "basic generalization bound",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 4",
+   "caption": "The MASE of global linear models when complexity is increased by partitioning the set. The M4 Monthly is randomly partitioned into 10 parts of equal size...",
+   "page": 15,
+   "why": "shows random partitioning beating the global linear and local methods"
+  },
+  {
+   "figure": "Table 1",
+   "caption": "MASE of one-step-ahead forecasts in the M4 dataset...",
+   "page": 17,
+   "why": "clustering vs features vs plain global"
+  },
+  {
+   "figure": "Fig 1",
+   "caption": "The MASE of a global linear AR model as its memory increases...",
+   "page": 11,
+   "why": "memory effect"
+  }
+ ],
+ "code": [],
+ "problems": [
+  "PDF is the arXiv v3 preprint (26 Mar 2021); no journal name or DOI is printed, so the International Journal of Forecasting 2021 citation cannot be confirmed from this file.",
+  "Section numbering in the text jumps (Introduction 1 to 4); extraction heading map is partial. Table cells came out of the PDF as a column list; the row-to-value mapping was read in order.",
+  "Text cites 'Section 5.6' for scaling and 'Section 5.5' for heterogeneity; the scaling experiment sits unnumbered inside 5.5."
+ ]
+}

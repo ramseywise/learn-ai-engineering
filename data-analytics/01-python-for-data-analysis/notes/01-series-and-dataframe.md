@@ -1,7 +1,7 @@
 ---
 origin: synthesis
 sources:
-  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 5; 3rd ed. open access at https://wesmckinney.com/book/pandas-basics"
+  - "McKinney, Python for Data Analysis, 2nd ed. (O'Reilly, 2017), ch. 1 and 5; 3rd ed. open access at https://wesmckinney.com/book/pandas-basics"
   - "VanderPlas, Python Data Science Handbook (O'Reilly, 2016), ch. 3; https://jakevdp.github.io/PythonDataScienceHandbook/03.00-introduction-to-pandas.html"
   - "McKinney, Data Structures for Statistical Computing in Python (SciPy 2010), https://doi.org/10.25080/Majora-92bf1922-00a"
   - https://pandas.pydata.org/docs/whatsnew/v3.0.0.html
@@ -145,7 +145,7 @@ Notice the second result's dtype. Twelve and 240 were integers, but the Series c
 
 ## Alignment: the idea that makes it pandas
 
-If labels were only a lookup convenience, pandas would be a thin wrapper over NumPy. What sets it apart is that operations between two objects match values **by label, not by position**. McKinney calls this built-in data alignment and singles it out as the main enhancement over R's data frame at the time ([McKinney, SciPy 2010](https://doi.org/10.25080/Majora-92bf1922-00a)).
+If labels were only a lookup convenience, pandas would be a thin wrapper over NumPy. What sets it apart is that operations between two objects match values **by label, not by position**. McKinney calls this built-in data alignment and singles it out as the main enhancement over R's data frame at the time ([McKinney, SciPy 2010](https://doi.org/10.25080/Majora-92bf1922-00a)). The book's first chapter lists it first among the requirements he set himself at AQR Capital Management in 2008: "data structures with labeled axes supporting automatic or explicit data alignment", so that misaligned, differently indexed data cannot silently mix (*Python for Data Analysis*, ch. 1). The name "pandas" comes from "panel data", an econometrics term, and `DataFrame` from R's `data.frame` (ch. 1).
 
 Say the shop has two weeks of units sold per product, but the products do not line up. The first week sold no scales; the second week sold no grinders. And the two Series are in different orders.
 
@@ -189,7 +189,7 @@ scale       6.0
 dtype: float64
 ```
 
-Whether a gap means zero or means unknown is a question about the data and not about the code, and pandas leaves that decision with you. Chapter 2 returns to it.
+The book's own example is the same shape: `s1 + s2` over overlapping labels gives `NaN` for every label found on only one side, and `df1.add(df2, fill_value=0)` treats a missing label as 0 (*Python for Data Analysis*, ch. 5). Whether a gap means zero or means unknown is a question about the data and not about the code, and pandas leaves that decision with you. Chapter 2 returns to it.
 
 ## A DataFrame is a dictionary of aligned columns
 

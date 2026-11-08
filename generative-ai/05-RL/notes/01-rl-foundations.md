@@ -3,7 +3,7 @@ origin: curated  # was: notion-export
 confidence: medium
 cleaned: 2026-11-01
 sources:
-  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2020)"
+  - "Sutton & Barto, \"Reinforcement Learning: An Introduction\" (2nd ed., MIT Press, 2018), ch. 1–4"
   - "Phil Winder, \"Reinforcement Learning: Industrial Applications of Intelligent Agents\" (O'Reilly, 2020), ch. 1–9, 11"
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
@@ -49,7 +49,7 @@ see [03 — Preference optimization](03-preference-optimization.md)
 Unlike supervised learning (trained on a labeled answer key) or unsupervised learning
 (finds patterns in unlabeled data), RL relies on **trial and error**. An agent learns
 to make decisions by interacting with an unknown environment, maximizing cumulative
-reward over time.
+reward over time. Sutton and Barto's definition is "learning what to do, how to map situations to actions, so as to maximize a numerical reward signal", with trial-and-error search and delayed reward as its two defining features. They list four elements: a **policy**, a **reward signal** that defines the goal, a **value function** (expected total future reward, which is what the agent actually chases: "states of highest value, not highest reward"), and an optional **model**. They call value estimation "arguably the most important thing that has been learned about reinforcement learning over the last six decades", and it is what separates RL from evolutionary search over policies, which scores whole games and ignores what happened within them (*RL: An Introduction*, ch. 1).
 
 ### Markov Decision Process (MDP)
 
@@ -76,7 +76,7 @@ window is the belief state, and context engineering is belief-state engineering.
 G_t = r_{t+1} + γ·r_{t+2} + γ²·r_{t+3} + … = r_{t+1} + γ·G_{t+1}
 ```
 
-γ near 0 makes the agent myopic and γ near 1 makes it far-sighted. The recursive form on the
+γ near 0 makes the agent myopic and γ near 1 makes it far-sighted. With a constant reward of +1 per step the discounted return is `1/(1−γ)`, and the undiscounted return of a continuing task is infinite, which is why discounting exists (*RL: An Introduction*, ch. 3). The same chapter states the **reward hypothesis**: all goals and purposes can be thought of as maximizing the expected cumulative sum of a scalar signal. Its corollary is the reward-design rule of this pillar: the reward tells the agent *what* you want, not *how*. Reward chess for winning, not for taking pieces. The recursive form on the
 right is what every algorithm below exploits. Winder's test for whether a problem needs RL at
 all comes from it: the problem has to be *sequential* and *strategic*. A recommender trained
 by supervised learning to maximize the next click learns click-bait. One trained on the return
@@ -133,6 +133,8 @@ and GRPO estimates it from a group of sampled answers (see
 
 All three are instances of **generalized policy iteration**: evaluate the current policy,
 make it greedier against that evaluation, repeat.
+
+Two worked examples make the table concrete. In a 5×5 gridworld with γ = 0.9, off-grid moves costing −1, and a square A that pays +10 and teleports the agent, the equiprobable random policy values A at only 8.8, below its immediate reward (B's +5 is worth 5.3), because the destination square is worth less than the one it left; values near the bottom edge go negative from bumping the wall. The optimal values rise to 24.4 for A, computed from the Bellman optimality equation (*RL: An Introduction*, ch. 3, Figs 3.2 and 3.5). In a 4×4 gridworld with −1 per step and a random policy, iterative policy evaluation yields greedy policies that are already optimal after three sweeps, so full evaluation is wasted work, and truncating it to one sweep gives **value iteration** (*RL: An Introduction*, ch. 4, Fig. 4.1 and Example 4.1). DP needs a known model and is polynomial in states and actions; direct policy search is exponential. Even so, one sweep of backgammon's more than 10^20 states at a million updates per second would take over a thousand years, which is why everything after DP samples instead (*RL: An Introduction*, ch. 4).
 
 Two facts from a short tutorial summary of RL ([arXiv:2301.01379](https://arxiv.org/abs/2301.01379) (Ahilan, 2023-01, preprint)) explain why the table's methods differ beyond bias and variance. Repeated Bellman expectation backups converge because the backup is a γ-contraction in the infinity norm, which needs γ < 1 in an infinite-horizon problem. And on a fixed batch of experience, Monte Carlo converges to the value that minimises squared error on the observed returns, while TD(0) converges to the value of the maximum-likelihood Markov model of that data, so the two can disagree. The paper is a proof-sketch summary of Sutton and Barto and Silver's course, with no experiments, and stops before PPO.
 
@@ -508,6 +510,7 @@ run? Strategies:
   GRPO as published has no entropy term; its only regularizer is the KL penalty to the
   reference model ([arXiv:2402.03300](https://arxiv.org/abs/2402.03300)).
 
+- **Measured on the 10-armed testbed** (2,000 random problems, rewards N(q*, 1), 1,000 steps): greedy gets about 1 reward per step against 1.54 possible; ε = 0.1 never exceeds 91% optimal actions; optimistic initial values (Q₁ = +5, α = 0.1) start worse than ε-greedy and end better, but only help stationary problems; UCB with c = 2 beats ε = 0.1 after the first k steps (`A = argmax[Q(a) + c·√(ln t / N(a))]`); a gradient bandit with a baseline is unaffected when every mean shifts by +4, and without the baseline degrades. The gradient bandit's expected update equals the gradient of expected reward, so it is stochastic gradient ascent and the direct ancestor of REINFORCE below, with the baseline only reducing variance. Across a parameter sweep from 1/128 to 4, every method traces an inverted U, and UCB comes out best on this problem (*RL: An Introduction*, ch. 2). Exact Bayesian lookahead over 1,000 two-action steps has 2^2000 leaves, which is why Thompson sampling is used instead.
 - **Softmax (Boltzmann) selection:** sample actions with probability ∝ `exp(Q/τ)`. Unlike
   ε-greedy, which explores uniformly, it explores in proportion to how promising each action
   looks. Winder recommends feeding it advantages rather than raw values (*Reinforcement

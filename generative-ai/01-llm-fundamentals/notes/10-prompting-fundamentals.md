@@ -8,6 +8,7 @@ sources:
   - https://arxiv.org/abs/2205.11916
   - https://arxiv.org/abs/2210.03629
   - https://arxiv.org/abs/2206.14858
+  - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -90,7 +91,9 @@ Split a task into steps, each with its own prompt and its own check.
 - **Chaining:** the output of one call is the input of the next (outline → draft → edit).
 - **Self-evaluation:** a second call grades or critiques the first.
 - **Reasoning before answering:** asking for step-by-step work improves multi-step problems. Chain-of-thought exemplars took PaLM 540B to state of the art on GSM8K ([arXiv:2201.11903](https://arxiv.org/abs/2201.11903), Wei et al., 2022). Even the zero-shot phrase "Let's think step by step" lifted text-davinci-002 from 17.7% to 78.7% on MultiArith ([arXiv:2205.11916](https://arxiv.org/abs/2205.11916), Kojima et al., 2022). **Self-consistency** goes one step further: sample several chains of thought and take the majority answer. It only works when the answer can be compared exactly (a number, a choice), and it multiplies cost by the number of samples. The vote, not the sampling, does the work: on MATH, Minerva 62B scored 26.5% greedy, 21.8% from a single sample, 23.8% when it kept the sample the model itself rated likeliest, and 42.0% with a majority vote over 256 samples, with 97% of that accuracy already reached at 64 ([arXiv:2206.14858](https://arxiv.org/abs/2206.14858), Lewkowycz et al., NeurIPS 2022). Gemini's MMLU score was reported this way, with 32 samples per question (*AI Engineering*, ch. 2; *Building AI Agents*, ch. 3). Modern reasoning models do the step-by-step part internally; see [07 — Prompting reasoning models](../../../ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md).
+- **Decomposition, refinement, ensembling.** Xiao & Zhu organise this family as a generation step that splits the problem and a solving step per sub-problem; the solver can be a retriever, a calculator or another model call, which is why RAG and tool use are decomposition with the call made at inference time (*Foundations of LLMs*, ch. 3). Self-refinement is predict, get feedback, refine. Ensembling can vary the model, the prompt or the output, and self-consistency is the third kind. Their worked example samples three chains on a coin-flip question: two agree on 37.5% and one says 33.3%, so 37.5% wins. It is an illustration, not a measurement. The book notes diverse prompts help less with strong models.
 - **Meta-prompting:** have a model write or improve the prompt.
+- **Soft prompts.** Instead of rewording text, learn vectors: prefix tuning adds L × n × d trainable parameters (layers × prefix length × width), prompt tuning learns input embeddings only, and context distillation trains a model to behave as if a long prompt were present (*Foundations of LLMs*, ch. 3). Fine-tuning detail lives in [chapter 09](09-peft-and-fine-tuning-in-practice.md).
 - **Reason + act:** interleave thoughts with tool calls (ReAct, [arXiv:2210.03629](https://arxiv.org/abs/2210.03629)). This is where prompting turns into agents ([03-agentic-foundations](../../03-agentic-foundations/README.md)).
 
 Depth: [06 — Chaining and workflows](../../../ai-engineering/01-prompt-engineering/notes/06-chaining-and-workflows.md).

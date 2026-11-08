@@ -5,6 +5,7 @@ sources:
   - "Yang et al. 2026, Toward Efficient Agents: A Survey of Memory, Tool Use, and Planning — https://arxiv.org/abs/2601.14192"
   - "Xing et al. 2026, Critique of Agent Model — https://arxiv.org/abs/2606.23991"
   - "Zhao & Zhao 2026, Runtime-Independent Persistent Agents — https://arxiv.org/abs/2609.00546"
+  - "Agentic Architectural Patterns (Packt; authors and year not printed in the chapter PDFs), ch. 2"
 confidence: medium
 cleaned: 2026-11-06
 ---
@@ -125,6 +126,8 @@ The survey sorts the levers by where they cut cost. The table keeps the ones wit
 | Cheaper backbone per role | Price per token | Success rate, so check cost-of-pass, not price | [01](01-agent-fundamentals.md#choosing-a-model) |
 | Cache skills and plans | Repeat work | Building and maintaining them; pays only with reuse | [03b](03b-learning-from-experience.md) |
 | Fewer agents, sparser messages | Coordination tokens | Diversity, where it helped | [04b](04b-when-more-agents-pay.md) |
+
+*Agentic Architectural Patterns* (ch. 2) adds two serving-side levers that the survey does not cover. First, split the work by role: a larger model orchestrates and delegates sub-tasks to smaller specialised models or plain tools, so the flagship price is paid only where the reasoning needs it. Its two worked examples are a research assistant that reads dozens of papers (large model, large context, higher cost accepted) and a smart-home controller that only maps a short voice command to an API call (a small distilled model, minimal cost per task). Second, cut round trips: if one tool's output can feed the next tool directly, skip the intermediate reasoning step, or let the model plan several tool calls in a single pass instead of deciding, calling and waiting one call at a time. The chapter also notes that a fast model does not help if the tools are slow. These are the authors' design guidance. The chapter gives no measured savings for either.
 
 The survey's rule for judging any of these is the one this chapter uses: first check the agent is still effective, then compare cost at matched quality, or quality at a matched budget. It notes that most papers don't report that cleanly.
 

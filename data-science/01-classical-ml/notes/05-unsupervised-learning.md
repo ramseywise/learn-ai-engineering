@@ -15,6 +15,7 @@ sources:
   - ../practice/isolation_forest.py
   - https://doi.org/10.5555/1283383.1283494
   - https://arxiv.org/abs/1802.03426
+  - https://doi.org/10.1371/journal.pcbi.1011288
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -50,7 +51,7 @@ Blocks run top to bottom from this `notes/` folder. Figures attributed to M&G ar
 
 **Scale train and test with the same fitted scaler.** Fitting a second `MinMaxScaler` on the test set maps it to [0, 1] independently and shifts every point relative to the training data: M&G's plot shows the test points visibly displaced. `fit` on train, `transform` both, inside a pipeline ([03](03-feature-engineering-and-pipelines.md#pipelines)).
 
-Effect on a kernel SVM on breast cancer: 0.63 unscaled, 0.97 with `MinMaxScaler`, 0.96 with `StandardScaler`.
+Effect on a kernel SVM on breast cancer (`SVC(C=100)`, `random_state=0`, scaler fitted on train only): 0.63 unscaled, 0.97 with `MinMaxScaler`, 0.96 with `StandardScaler` (*Introduction to ML with Python*, ch. 3, "Applying data transformations").
 
 ---
 
@@ -81,7 +82,7 @@ The 2-D projection of breast cancer separates benign and malignant well, so even
 
 ### Eigenfaces: PCA as feature extraction
 
-On Labeled Faces in the Wild (3,023 images, 87×65 px = 5,655 pixels), a 1-nearest-neighbour classifier on raw pixels scores 0.23. After `PCA(n_components=100, whiten=True)` it scores 0.31. Distances between principal-component vectors are a better measure of face similarity than distances between pixels. Reconstructing a face from 10, 50, 100, 500 components shows coarse-to-fine detail.
+On Labeled Faces in the Wild (3,023 images of 62 people, 87×65 px = 5,655 pixels; M&G keep at most 50 images per person, leaving 2,063), a 1-nearest-neighbour classifier on raw pixels scores 26.6% on a stratified split with `random_state=0`. After `PCA(n_components=100, whiten=True)` fitted on the training rows it scores 35.7%, against about 1.6% for chance over 62 people (*Introduction to ML with Python*, ch. 3, "Principal component analysis"). Distances between principal-component vectors are a better measure of face similarity than distances between pixels. Reconstructing a face from 10, 50, 100, 500 components shows coarse-to-fine detail.
 
 ### From scratch: Ng ex7
 
@@ -159,7 +160,7 @@ PCA   ARI of 10 clusters on the 2-D picture vs true digit: 0.39
 t-SNE ARI of 10 clusters on the 2-D picture vs true digit: 0.89
 ```
 
-On the 8×8 digits, PCA's 2-D projection overlaps most classes; t-SNE separates nearly all ten without seeing labels ([JMLR 2008](https://www.jmlr.org/papers/v9/vandermaaten08a.html), van der Maaten and Hinton). Rules for reading a t-SNE plot: cluster sizes and distances between clusters mean little; run more than one `perplexity`; never use it as features for a model. UMAP is from the same family of neighbour-graph methods and usually faster ([arXiv:1802.03426](https://arxiv.org/abs/1802.03426), McInnes et al., preprint). In the authors' laptop timings, with one figure per cell and no spread, a single-core UMAP took 87 seconds on MNIST against 292 for multi-core FIt-SNE and 1,450 for Barnes-Hut t-SNE, though on these same 8×8 digits it was 9 against 17 for Barnes-Hut. On GoogleNews subsamples they find its scaling with sample count comparable to FIt-SNE's. The authors present UMAP as usable beyond plots, for later clustering or anomaly detection, which the paper does not evaluate; the rule above about not using an embedding as features is this note's caution for t-SNE. Its global-structure claim is hedged: the paper says "arguably", credits the Laplacian Eigenmaps initialisation and the cross-entropy objective, and notes that t-SNE started the same way can match UMAP on one measure. It treats mapping new points as future work, with no method or evaluation. [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) uses t-SNE to plot word vectors.
+On the 8×8 digits, PCA's 2-D projection overlaps most classes; t-SNE separates nearly all ten without seeing labels ([JMLR 2008](https://www.jmlr.org/papers/v9/vandermaaten08a.html), van der Maaten and Hinton). Rules for reading a t-SNE plot: cluster sizes and distances between clusters mean little; run more than one `perplexity`; never use it as features for a model. How far a 2-D map bends neighbourhoods has been measured: on six single-cell RNA-seq datasets, a point's 30 nearest neighbours on a 2-D t-SNE or UMAP map and in the original space differed by a mean Jaccard distance above 0.7, and the authors advise clustering in the full space and showing the map only afterwards ([PLOS Computational Biology, 2023](https://doi.org/10.1371/journal.pcbi.1011288), Chari and Pachter). UMAP is from the same family of neighbour-graph methods and usually faster ([arXiv:1802.03426](https://arxiv.org/abs/1802.03426), McInnes et al., preprint). In the authors' laptop timings, with one figure per cell and no spread, a single-core UMAP took 87 seconds on MNIST against 292 for multi-core FIt-SNE and 1,450 for Barnes-Hut t-SNE, though on these same 8×8 digits it was 9 against 17 for Barnes-Hut. On GoogleNews subsamples they find its scaling with sample count comparable to FIt-SNE's. The authors present UMAP as usable beyond plots, for later clustering or anomaly detection, which the paper does not evaluate; the rule above about not using an embedding as features is this note's caution for t-SNE. Its global-structure claim is hedged: the paper says "arguably", credits the Laplacian Eigenmaps initialisation and the cross-entropy objective, and notes that t-SNE started the same way can match UMAP on one measure. It treats mapping new points as future work, with no method or evaluation. [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) uses t-SNE to plot word vectors.
 
 ---
 
@@ -276,9 +277,9 @@ DBSCAN finds the number of clusters itself, handles arbitrary shapes (it solves 
 | With ground truth | Without ground truth |
 |---|---|
 | **Adjusted Rand Index** (ARI), normalised mutual information: 1 = same partition, ~0 = random. Ignore label names | **Silhouette** (−1 to 1): compactness vs separation. Favours round clusters; DBSCAN's correct `two_moons` gets a *worse* silhouette than k-means's wrong one |
-| Never use accuracy: cluster 0 vs label 0 is arbitrary | Robustness: do clusters survive noise, different parameters, subsampling? |
+| Never use accuracy: cluster 0 vs label 0 is arbitrary (M&G: the partition `[0,0,1,1,0]` against `[1,1,0,0,1]` scores accuracy 0.00 and ARI 1.00) | Robustness: do clusters survive noise, different parameters, subsampling? |
 
-In practice, the only reliable check is to inspect the clusters by hand. M&G's LFW case study runs all three algorithms on eigenfaces: DBSCAN finds one big cluster plus noise (the noise is faces with hats, open mouths, odd angles: an outlier detector); k-means with 10 clusters gives blurred "average faces" by pose and lighting; agglomerative gives similar groups with less uniform sizes. None finds identity.
+In practice, the only reliable check is to inspect the clusters by hand. M&G's LFW case study runs all three algorithms on eigenfaces: DBSCAN finds one big cluster plus noise (the noise is faces with hats, open mouths, odd angles: an outlier detector); k-means with 10 clusters gives blurred "average faces" by pose and lighting; agglomerative gives similar groups with less uniform sizes. None finds identity. The numbers, on 2,063 faces reduced to 100 whitened PCA components (*Introduction to ML with Python*, ch. 3, "Clustering"): DBSCAN at the default `eps` and `min_samples=3` labels every point noise; at `eps=15` it gives 27 noise points and one cluster of 2,036; at `eps=7` it gives 2,006 noise points and 13 clusters of 3 to 9 images. k-means (10 clusters) sizes run from 64 to 386 and agglomerative (ward) from 26 to 623. The two partitions agree at ARI 0.13, and the dendrogram shows no natural cut.
 
 | Algorithm | Specify | New points | Shapes | Noise |
 |---|---|---|---|---|

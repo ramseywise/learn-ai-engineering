@@ -1,0 +1,320 @@
+{
+ "schema": 1,
+ "key": "sha1:ee13f7881625",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch06-customer-relationship-management.pdf",
+ "bib": {
+  "title": "Customer Relationship Management (Chapter 6, The Data Warehouse Toolkit)",
+  "authors": [
+   "Ralph Kimball",
+   "Margy Ross"
+  ],
+  "first_author": "Kimball",
+  "year": 2002,
+  "venue": "book chapter, The Data Warehouse Toolkit, 2nd ed.",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 72666,
+  "chars_total": 72666,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How should the customer dimension and related tables be designed in a dimensional data warehouse to support CRM analysis?",
+ "hypothesis": null,
+ "contributions": [
+  "Customer name/address parsing and international handling",
+  "Common customer attributes: dates, segmentation scores, aggregated facts",
+  "Dimension outriggers for low-cardinality attribute clusters",
+  "Minidimensions for browsing, change tracking and variable-width attribute sets",
+  "Counting under type 2 changes",
+  "Behavior study groups",
+  "Fixed-depth and variable-depth (bridge table) customer hierarchies",
+  "Consolidating customer data and querying across business processes"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "A minidimension holds one row per unique combination of banded attributes; with 5 attributes of 10 values each it has 100,000 rows, which the authors give as a reasonable upper limit.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "minidimension rows",
+   "value": "100,000",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Demographic minidimension, 5 attributes x 10 values each",
+   "quote": "then the demographics dimension could have 100,000 (105) rows. This is a reasonable upper limit for the number of rows in a minidimension.",
+   "table": null,
+   "note": null,
+   "where": "p.157 (printed), Figure 6.5 discussion"
+  },
+  {
+   "claim": "The bridge table for the 8-customer, 4-level hierarchy of Figure 6.8 has 22 rows, computed as sum of (customers at level x level depth) = 1+4+9+8.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "bridge rows",
+   "value": "22",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Customer hierarchy bridge table, Fig 6.8 / Table 6.4",
+   "quote": "translated into 22 rows in the",
+   "table": null,
+   "note": null,
+   "where": "p.164"
+  },
+  {
+   "claim": "Bridge-table row count formula: multiply number of nodes at each level by the level depth and sum.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "bridge rows",
+   "value": "22 = (1 + 4 + 9 + 8)",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Figure 6.8 hierarchy: levels with 1, 2, 3, 2 customers",
+   "quote": "The sum total number of rows is 22 = (1 + 4 + 9 + 8).",
+   "table": null,
+   "note": null,
+   "where": "p.164"
+  },
+  {
+   "claim": "Variable-width example: 10 million contacts (9 million prospects, 1 million customers) at 1,000 bytes per row gives a 10-GB dimension, 90 percent with empty trailing columns, motivating a 1-million-row customer minidimension.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "dimension size",
+   "value": "10-GB",
+   "unit": "GB",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Prospect/customer contact dimension, 50 extra attributes, fixed-width database",
+   "quote": "This gets our attention when we’re dealing with a 10-GB dimension table.",
+   "table": null,
+   "note": null,
+   "where": "p.159"
+  },
+  {
+   "claim": "Type 2 SCD remains the predominant change-tracking technique for customer dimensions below 100,000 rows.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "less than 100,000 rows",
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Customer dimension change tracking",
+   "quote": "technique, where another row is added to the dimension table, would remain",
+   "table": null,
+   "note": null,
+   "where": "p.159"
+  },
+  {
+   "claim": "Monster customer dimensions can exceed 100 million rows; one direct marketer keeps over 3,000 attributes per customer.",
+   "kind": "reported",
+   "source": null,
+   "metric": null,
+   "value": ">100 million rows; >3,000 attributes",
+   "unit": "rows / attributes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Largest retailers, card companies, government agencies; one leading direct marketer (unnamed)",
+   "quote": "One leading direct marketer maintains over 3,000 attributes about its customers.",
+   "table": null,
+   "note": null,
+   "where": "p.146"
+  },
+  {
+   "claim": "A county-demographics outrigger of 150 attributes is allowed as a snowflake because the grain differs (county vs customer), loads at different times, and saves space.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "150",
+   "unit": "attributes",
+   "baseline_value": null,
+   "n": null,
+   "setup": "External-provider county demographics attached to customer dimension",
+   "quote": "consisting of 150 demographic and socioeconomic attributes regarding",
+   "table": null,
+   "note": null,
+   "where": "p.153"
+  },
+  {
+   "claim": "Behaviour: the demographics key sits in the fact table, so history of profile change is held in fact rows while the customer row is not duplicated (John Smith moves key 2 -> 18 on birthday).",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": "key 2 to key 18",
+   "unit": "surrogate key",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Monthly periodic snapshot fact, Table 6.3 minidimension",
+   "quote": "we’d begin by assigning demographics key 2 when loading the fact table.",
+   "table": null,
+   "note": null,
+   "where": "p.155"
+  },
+  {
+   "claim": "A bridge table in the fact-to-dimension path lets standard SQL aggregate revenue to any node of a ragged hierarchy; it is typically several times larger than the dimension.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Variable-depth customer hierarchy",
+   "quote": "The number of rows in the bridge table typically is several times larger than the",
+   "table": null,
+   "note": null,
+   "where": "p.164"
+  },
+  {
+   "claim": "Nonrelational OLAP tools navigate hierarchies for dimensions typically below 64,000 members.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": "64,000 members",
+   "unit": "members",
+   "baseline_value": null,
+   "n": null,
+   "setup": "OLAP built-in hierarchy support",
+   "quote": "typically with less than 64,000 members.",
+   "table": null,
+   "note": null,
+   "where": "p.168"
+  }
+ ],
+ "limits": [
+  "Chapter assumes 2002-era relational DBMS and tools (Oracle CONNECT BY, nonrelational OLAP under 64,000 members); no empirical evaluation.",
+  "Band choices in a minidimension are hard to change later (authors concede).",
+  "Bridge tables are 'not for the faint of heart' and give overcounting risk; huge parts explosions may make the bridge enormous.",
+  "Examples are illustrative; no benchmark numbers for performance gains."
+ ],
+ "practices": [
+  "Build a conformed customer dimension; do not let a packaged CRM application become a stovepipe data mart (p.145).",
+  "Parse names and addresses into elemental parts, then standardize and verify, rather than generic Name-1/Address-1 columns (p.147-148).",
+  "For international addresses, add a prebuilt address block attribute and several telephone dialing-sequence attributes, built once in staging (p.150).",
+  "Replace date attributes in the customer dimension with foreign keys to the date dimension, exposed as semantically distinct views (date outrigger) (p.151).",
+  "Store aggregated facts as customer attributes only for constraining and labeling, keep them few and slow-changing, and prefer descriptive bands like 'High Spender' (p.152).",
+  "Use a dimension outrigger only as an exception; many outriggers signal over-normalization (p.153).",
+  "For multimillion-row, rapidly changing customer dimensions, break frequently analyzed or changing attributes into a minidimension and avoid type 2 on the big table (p.154).",
+  "Convert continuous minidimension attributes (income, purchases) to banded ranges; keep raw values in the fact table if users need them (p.154-155).",
+  "Put both customer key and minidimension key in the fact table so the fact table records profile change; if the latest minidimension key is placed on the customer row, treat it as type 1 and label it current (p.155-156).",
+  "Cap a minidimension around 100,000 rows; split into several minidimensions (e.g. demographics vs purchase-credit scores), but never one per attribute (p.157).",
+  "Use a base dimension plus an extended-customer minidimension when prospects and customers have widely different attribute counts on fixed-width databases (p.158-159).",
+  "Use type 2 for customer dimensions under 100,000 rows and for very slowly changing leftover attributes; guard against overcounting with COUNT DISTINCT on the natural key or a most-recent-row indicator (p.159).",
+  "For point-in-time counts, constrain effective date <= date and expiration date >= date (operators depend on date rules) (p.160).",
+  "Capture keys of a query result as a behavior study group table and join to the customer natural key, hidden under a view (p.160-161).",
+  "Use denormalized level attributes for fixed-depth hierarchies, repeating lower-level values upward for shallow customers (p.162).",
+  "For ragged hierarchies use a bridge table, not a recursive pointer; constrain to one parent or use SELECT DISTINCT subsidiary keys to avoid double counting; add effective/expiration dates and weighting factors if needed (p.162-167).",
+  "Never join one dimension to two fact tables of different cardinality in one SELECT; use multipass SQL and outer join, or build a consolidated fact table (p.169-170)."
+ ],
+ "terms": [
+  {
+   "term": "minidimension",
+   "definition": "a separate dimension of frequently analyzed or frequently changing attributes, with one row per unique combination of banded values, whose key is part of the fact table composite key",
+   "where": "p.154-156"
+  },
+  {
+   "term": "outrigger",
+   "definition": "a dimension linked via a foreign key from another dimension; if the demographics key is a foreign key in the customer dimension it is an outrigger",
+   "where": "p.153, 156"
+  },
+  {
+   "term": "rapidly changing monster dimension",
+   "definition": "a multimillion-row customer dimension whose attributes change often, making type 2 impractical",
+   "where": "p.154"
+  },
+  {
+   "term": "behavior study group",
+   "definition": "a physical table of customer keys captured from a query or exception report, used to constrain later analysis",
+   "where": "p.160"
+  },
+  {
+   "term": "bridge table",
+   "definition": "a table between dimension and fact holding one row per pathway from a node to each subsidiary, plus a zero-length self row, with levels, bottom and top flags",
+   "where": "p.163-164"
+  },
+  {
+   "term": "snowflaking",
+   "definition": "removing low-cardinality columns of a dimension into separate normalized tables linked back to it",
+   "where": "p.153"
+  },
+  {
+   "term": "type 2 slowly changing dimension",
+   "definition": "technique where a new row is added to the dimension table on change",
+   "where": "p.154, 159"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "The Data Warehouse Toolkit chapters 1, 2, 4, 7, 9, 13 (same book, cross-referenced)",
+   "year": 2002,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Builds on SCD types (ch.4), snowflaking (ch.2), consolidated fact tables (ch.7), householding (ch.9), weighted bridge tables (ch.13)",
+   "quote": null
+  },
+  {
+   "work": "Toby Atkinson, Merriam-Webster's Guide to International Business Communications",
+   "year": 1999,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Recommended for international names and addresses",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Table 6.3",
+   "caption": "Sample Rows from a Demographic Minidimension",
+   "page": 155,
+   "why": "Shows banded combinations, not one row per customer"
+  },
+  {
+   "figure": "Figure 6.4",
+   "caption": "Demographic minidimension with a customer dimension.",
+   "page": 156,
+   "why": "Fact table carries both customer key and demographics key"
+  },
+  {
+   "figure": "Figure 6.5",
+   "caption": "Separate demographic and behavioral minidimensions.",
+   "page": 157,
+   "why": "Two minidimensions off one fact table"
+  },
+  {
+   "figure": "Figure 6.6",
+   "caption": "Variable-width customer attributes handled as a base dimension and minidimension.",
+   "page": 158,
+   "why": "Prospects vs customers split"
+  },
+  {
+   "figure": "Figure 6.9 / Table 6.4",
+   "caption": "Customer dimension and bridge tables with join configuration to descend the tree; sample bridge rows",
+   "page": 164,
+   "why": "Bridge join shape and 22-row example"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.166",
+   "snippet": "SELECT C.CUSTOMER_NAME, SUM(F.REVENUE)\nFROM CUSTOMER C, BRIDGE B, FACT F, DATE D\nWHERE C.CUSTOMER_KEY = B.PARENT_KEY\nAND B.SUBSIDIARY_KEY = F.CUSTOMER_KEY\nAND F.DATE_KEY = D.DATE_KEY\nAND C.CUSTOMER_NAME = 'ABC General International'\nAND D.MONTH = 'January 2002'\nGROUP BY C.CUSTOMER_NAME",
+   "verbatim": true
+  },
+  {
+   "where": "p.166",
+   "snippet": "SELECT 'San Francisco', SUM(F.REVENUE)\nFROM FACT F, DATE D\nWHERE F.CUSTOMER_KEY IN \n(SELECT DISTINCT B.SUBSIDIARY_KEY\nFROM CUSTOMER C, BRIDGE B\nWHERE C.CUSTOMER_KEY = B.PARENT_KEY\nAND C.CUSTOMER_CITY = 'San Francisco')\nAND F.DATE_KEY = D.DATE_KEY\nAND D.MONTH = 'January 2002'\nGROUP BY 'San Francisco'",
+   "verbatim": true
+  }
+ ],
+ "problems": [
+  "Year 2002 and edition are not printed in the chapter; inferred from user note and 'January 2002' examples.",
+  "Page numbers are the book's printed numbers (141-171) as seen in text.",
+  "Text contains a 'TEAMFLY' watermark and blank lines; ignored. No embedded instructions."
+ ]
+}

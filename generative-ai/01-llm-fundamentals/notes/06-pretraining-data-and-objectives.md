@@ -45,6 +45,7 @@ sources:
   - https://arxiv.org/abs/2211.09085
   - https://arxiv.org/abs/2201.11990
   - https://arxiv.org/abs/2303.17564
+  - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -77,6 +78,8 @@ The InstructGPT paper ([arXiv:2203.02155](https://arxiv.org/abs/2203.02155), Ouy
 ## Pretraining
 
 Pretraining is self-supervised: the label for each position is the next token in the text. [Fundamentals](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md#backpropagation) and [optimisation](../../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md#optimisers) in data science teach backprop, AdamW and the learning-rate sweep. Raschka writes the loop by hand (*LLMs from Scratch*, ch. 5; full code at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch)):
+
+Next-token prediction is one of several objectives. BERT-style masked language modelling picks about 15% of the tokens as targets and, of those, replaces 80% with `[MASK]`, 10% with a random token and leaves 10% unchanged. The last two stop the model learning that only `[MASK]` positions matter, a symbol it never sees at fine-tuning (*Foundations of LLMs*, ch. 1; recipe as described there, Devlin et al.'s). RoBERTa found that dropping the next-sentence loss costs nothing once training is scaled up (same chapter, reported from Liu et al., 2019). The book's Table 1.1 maps objective to architecture: causal LM to decoder-only, masked and denoising objectives to encoder or encoder-decoder. It is BERT-era and encoder-centric, so read it for the objectives, not for current practice.
 
 ```python
 import math

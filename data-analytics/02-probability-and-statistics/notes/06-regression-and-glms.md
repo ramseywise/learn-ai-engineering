@@ -8,6 +8,7 @@ sources:
   - https://www.statsmodels.org/stable/index.html
   - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
   - https://arxiv.org/abs/0901.4011
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 9, Correlation)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -166,6 +167,8 @@ joint p for the interactions: 0.396
 ```
 
 The effect on desktop (the baseline) is 0.87, on mobile 0.87 + 0.79 and on tablet 0.87 + 1.11. They look different, yet the joint test gives p = 0.40, so the data do not distinguish them. Test the interaction, as opposed to noticing that one segment is significant and another is not. Interaction estimates also have larger standard errors than main effects, so experiments rarely have the power to detect them.
+
+The simple-regression algebra behind this table is short, and *Think Stats* gives it in one place (ch. 9). With one predictor the least-squares slope is β = Cov(X, Y) / Var(X) and the intercept is α = ȳ − β·x̄. R² equals ρ², the square of Pearson's correlation, and it is 1 − Var(residual) / Var(Y): the share of the mean squared error removed compared with always guessing ȳ. So R² = 0.64 means the model cuts squared prediction error by 64%, a more careful wording than "explains 64% of the variability". The book notes least squares is the maximum likelihood fit when residuals are independent of x, normal, mean zero and of constant variance, and argues that computational convenience is no longer a reason to prefer squared loss over a cost function that matches the problem.
 
 ## Diagnostics
 

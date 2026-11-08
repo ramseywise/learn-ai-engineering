@@ -2,6 +2,7 @@
 origin: synthesis  # was: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 5 Would you rather lose an arm or a leg?)
+  - Downey, Think Bayes (Green Tea Press, 2012), https://greenteapress.com/wp/think-bayes/ (ch. 6)
   - Nate Silver, The Signal and the Noise (2012), weather forecasting chapter, as cited in BMH ch. 5
 confidence: high
 cleaned: 2026-11-01
@@ -160,6 +161,23 @@ risk 150,000: bid 11,800   P(overbid) 0.013
 ```
 
 `risk` is what the contestant says an overbid costs. The answer falls from about $14,700 to $11,800 as `risk` rises, all well below the posterior mean of $20,000, and the chance of overbidding falls from 7% to about 1%. The answer sits so far below the mean because of the shape of the loss. The expected loss is spiky, since the $250 window pays out only for the rare draws inside it. BMH uses a general optimiser on it, and we search a grid, which is why the bids move in steps.
+
+### Downey's version: an empirical prior and a rival
+
+*Think Bayes* works the same game from the show's records (*Think Bayes*, ch. 6). The prior is not a guessed Normal. It is a kernel density estimate over 313 past prices for the first showcase, smoothed from 2011 and 2012 data, with its main mode near $28,000 and a second near $50,000. The likelihood treats the contestant as a price-guessing instrument: the error, price minus guess, is Gaussian with mean 0 and the standard deviation of `diff = price - bid` from past episodes. That substitutes bids for guesses, which Downey admits is imperfect because bids are partly strategic. A density is a perfectly good likelihood here, since only proportionality matters once you normalise.
+
+Two results are worth keeping. First, a best guess of $20,000 moves the posterior mean to $25,096, not to $20,000: the history is a prior, and it pulls a low guess upward. Second, the payoff depends on the rival, because you win when the opponent overbids or lands further from the price than you do. Historical `diff` gives the overbid rate (25% for the first contestant, 29% for the second), and the expected gain of a bid is the posterior-weighted payoff:
+
+```python
+def gain(bid, price):                       # posterior-weighted over price gives expected gain
+    if bid > price:
+        return 0                            # overbid: nothing
+    diff = price - bid
+    prob = opponent_overbids + opponent_worse_than(diff)
+    return (2 if diff <= 250 else 1) * price * prob
+```
+
+With guesses of $20,000 and $40,000, the optimal bids are $21,000 (expected gain about $16,700, unusually above the guess) and $31,500 (about $19,400, the typical case below it) (*Think Bayes*, ch. 6). I could not re-run these: the showcase CSVs are not in the repo, so they are the book's numbers. The `risk` parameter above stands in for what Downey computes explicitly from the opponent's record. His argument for the whole exercise is the one of this chapter: the payoff is asymmetric and discontinuous, so summarising the posterior by its mean or MLE throws away what you need, and a decision needs the whole distribution (*Think Bayes*, ch. 6).
 
 ## Example: predicting stock returns with a sign-sensitive loss
 

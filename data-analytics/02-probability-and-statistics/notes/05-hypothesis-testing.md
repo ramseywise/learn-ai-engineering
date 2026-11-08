@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.1080/00031305.2016.1154108 (ASA statement on p-values, The American Statistician, 2016)
   - https://doi.org/10.1111/j.2517-6161.1995.tb02031.x (Benjamini and Hochberg, JRSS B, 1995)
   - https://docs.scipy.org/doc/scipy/reference/stats.html
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 1 and 7, statistical thinking and hypothesis testing)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -108,6 +109,12 @@ lift 0.0004, z 2.98, p 2.9e-03, relative lift 0.9%
 ```
 
 Statistically clear, and 0.9% in relative terms. Whether that is worth shipping is a business question that the p-value cannot answer.
+
+### One worked resampling test
+
+*Think Stats* runs this recipe on the NSFG pregnancy lengths of 4,413 first babies and 4,735 others. The observed difference in mean is δ = 0.078 weeks (about 13 hours). Pool the two groups, draw a pair of samples of those sizes 1,000 times, and 166 of the 1,000 differences were at least as large in absolute value, so p ≈ 0.166. The normal approximation, N(0, 0.0032) for the difference of means under the null, gives a two-tailed p of 0.168, which is the t-test-approximates-shuffling point made above on real data (*Think Stats*, ch. 7). The effect is not significant at α = 0.05, and Downey reports it as "a difference we cannot distinguish from chance", not as a proof of none. A chi-square test on the six cells (early at week 37 or before, on time at weeks 38 to 40, late at week 41 or after, by first baby or not) gives χ² = 91.64, about 1 chance in 10,000. That shows a difference in shape that the difference in means misses, but it used the same data that suggested the question, so the book recommends confirming on a second dataset and splitting the data when you can.
+
+Three more points sharpen the recipe. Define the effect before you test: any specific sequence of 10 coin tosses has probability 1 in 1,024, so "a pattern this unlikely" is true of every sequence (*Think Stats*, ch. 7). The false-positive rate equals α, lowering α raises false negatives, and only more data or less measurement error lowers both. And when a test finds nothing, say what it could have found: report that if the effect were as large as x, the test would reject with probability p (its power). The book offers a Bayesian reading too: with a naive alternative fixed at the observed δ and a 0.5 prior the posterior is 0.748, a figure Downey calls overstated because the same data chose the alternative, and a cross-validated version averages 0.621.
 
 ## Choosing the test
 

@@ -26,6 +26,7 @@ sources:
   - https://arxiv.org/abs/2204.02311
   - https://arxiv.org/abs/2201.11990
   - https://arxiv.org/abs/2303.17564
+  - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -77,6 +78,8 @@ It had one loss spike and 1–2 GPU failures a week, absorbed by spare nodes and
 ## Scaling, in practice
 
 Chinchilla ([chapter 03](03-scale-and-the-model-zoo.md#scale)) trained 400 models from 70M to over 16B parameters on 5B to 500B tokens and found the compute-optimal ratio is about 20 training tokens per parameter, scaled together: double the model, double the data (*AI Engineering*, ch. 2). Three qualifications from Huyen:
+
+Token budgets have moved far past that ratio. The book's Table 2.3 lists reported pre-training tokens of 0.3T for GPT-3 175B (under 2 tokens per parameter), 0.78T for PaLM 540B, 14.8T for DeepSeek-V3 (671B total parameters, a mixture of experts) and 15.6T for Llama 3.1 405B, about 39 per parameter (*Foundations of LLMs*, ch. 2; counts depend on the tokenizer and may include repeated epochs). Its Chinchilla form is L(N, D) = 406.4/N^0.34 + 410.7/D^0.28 + 1.69, where 1.69 is the irreducible loss. The book adds that a lower test loss does not always mean better downstream performance, so a scaling law is a statement about loss, not about every task.
 
 - **Compute-optimal is not deployment-optimal.** Llama was deliberately trained past the Chinchilla point: a smaller model on more tokens costs more to train but less to run. Sardana et al. (2023) rewrote the scaling law to include expected inference demand. Mistral 7B is the case for it. On Mistral's own re-run of every benchmark it beat Llama 2 13B on all of them (MMLU 60.1% against 55.6%), and on reasoning and MMLU it scored like a Llama 2 more than 3× its size. On knowledge (NaturalQuestions, TriviaQA) the factor was only 1.9×, which the authors put down to how much a 7B model can store ([arXiv:2310.06825](https://arxiv.org/abs/2310.06825) (Jiang et al., 2023, preprint)). They call scaling a three-way problem: capability, training cost and inference cost. They never disclosed the training data or token count, so the training-cost side cannot be checked. Llama 3 8B's 15T tokens is close to 2,000 tokens per parameter. Qwen2.5 trained every size on the same 18T tokens, which is about 36,000 tokens per parameter at 0.5B ([arXiv:2412.15115](https://arxiv.org/abs/2412.15115) (Qwen Team, 2024-12)). The payoff is at deployment. Quantized to 4 bits, phi-3-mini takes about 1.8GB and runs at more than 12 tokens per second on an iPhone 14 ([arXiv:2404.14219](https://arxiv.org/abs/2404.14219) (Abdin et al., 2024-04)).
 - **Returns diminish.** Going from a cross-entropy of about 3.4 to 2.8 nats takes ten times more data, yet users notice the difference.

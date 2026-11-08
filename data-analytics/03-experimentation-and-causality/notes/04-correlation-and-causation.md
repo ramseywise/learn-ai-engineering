@@ -14,6 +14,7 @@ sources:
   - https://doi.org/10.1080/01621459.1996.10476902
   - https://doi.org/10.1093/biomet/70.1.41
   - https://doi.org/10.1198/jasa.2009.ap08746
+  - "Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 9, Correlation)"
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -79,6 +80,8 @@ IV  mean y 7.50  r 0.817  line y = 3.00 + 0.500 x
 ```
 
 Plotted, they are a noisy line, a clean curve, a straight line with one outlier, and a vertical stack with one far-off point that creates the whole correlation. So plot before you correlate. `sns.heatmap(df.corr(), annot=True, center=0)` is the quickest overview of a feature table, and [chapter 1 of the statistics pillar](../../02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md) shows how to read one, but treat a heatmap as a list of things to investigate.
+
+*Think Stats* gives the same warnings in textbook form (ch. 9). Pearson's ρ measures linear association only: a clear curve can give ρ = 0, and ρ says nothing about slope, since a flat-looking and a steep line can share ρ = 1. It is not robust to outliers, which Anscombe's quartet shows, and the remedies are Spearman's rank correlation or a transform such as the log of lognormal data. For evidence of cause Downey lists time order, randomisation (an RCT is "the most reliable" way), natural experiments, and holding a confounder fixed by stratifying. His worked case compares NSFG birth weight of first babies and others within groups of mother's age, because age relates to both birth order and weight. The sections below turn each of these into estimators.
 
 ## Confounding
 

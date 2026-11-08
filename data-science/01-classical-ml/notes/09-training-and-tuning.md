@@ -16,7 +16,7 @@ cleaned: 2026-11-02
 
 > You know the model families. This note is what you do with one: split the data, beat a baseline, read the curves that say what is wrong, use folds to separate real differences from luck, regularise, stop at the right round, search at a sensible budget, and report one number you can defend. Adult census runs through all of it.
 
-**In plain words.** Think of a student preparing for an exam. Practice questions are for learning. A mock exam tells the student how the learning is going and whether to change how they study. The real exam happens once, and its result is what counts. A student who memorises the practice answers aces the practice and fails the real thing, so a good teacher makes them learn the method. Training a model is the same job: practice rows, mock rows, exam rows, and habits that make the model learn the method and not the answers.
+**In plain words.** Think of a student preparing for an exam. Practice questions are for learning. A mock exam shows how the learning is going and whether to study differently. The real exam happens once, and its result is what counts. A student who memorises the practice answers aces the practice and fails the exam, so a good teacher makes them learn the method. Training a model is the same job: practice rows, mock rows, exam rows, and habits that make the model learn the method and not the answers.
 
 Blocks run top to bottom from this `notes/` folder. The whole note takes about 5 minutes, nearly all of it in the search, and needs `optuna`, `torch` and `scipy` on top of the usual packages.
 
@@ -227,7 +227,7 @@ n= 2000, 13 independent samples: mean CV AUC 0.8960; true sd of the CV mean 0.00
 
 **The fold spread is not a clean standard error.** It is tempting to divide it by $\sqrt{5}$. The last two lines test that by running 5-fold on separate, non-overlapping samples and measuring how much the CV mean truly varies. At 500 rows the true standard deviation is 0.0252 and the naive formula averages 0.0147, too confident by about 40%. At 2,000 rows they roughly agree on average, 0.0066 and 0.0069, but one run's naive figure ranges from 0.0042 to 0.0116. These are 20 and 13 samples, so treat them as rough.
 
-Bengio and Grandvalet, [*No Unbiased Estimator of the Variance of K-Fold Cross-Validation*](https://jmlr.org/papers/volume5/grandvalet04a/grandvalet04a.pdf) (JMLR 2004), prove that no universal unbiased estimator of this variance exists. Folds share training rows, so their scores are correlated, and the part a naive estimate captures was 50 to 70% of the total in their experiments. Use the spread as a rough guide to noise, and paired differences to compare.
+Bengio and Grandvalet, [*No Unbiased Estimator of the Variance of K-Fold Cross-Validation*](https://jmlr.org/papers/volume5/grandvalet04a/grandvalet04a.pdf) (JMLR 2004), prove that no universal unbiased estimator of this variance exists. Folds share training rows, so their scores are correlated. On Letter (trees, 10 folds) the single-example variance was only 50 to 70% of the total, so using it alone runs low. Treat the spread as rough; compare with paired differences.
 
 ### When to change the folds
 
@@ -441,7 +441,7 @@ fig.tight_layout(); fig.savefig(IMG + "training-tuning-regularisation-knobs-adul
 
 The circle marks the best validation score. Across panels the shape repeats: too little capacity, a peak, then train climbing while validation falls. A depth of 6 scores 0.879 and a depth of 24 scores 0.740 while its train AUC reaches 0.999. A learning rate of 0.03 scores 0.908 and a rate of 1 scores 0.853.
 
-The network shows the far side of the hump. With no regularisation it has train 0.999 and validation 0.860. Weight decay of 10 lifts validation to 0.904, a gain of 0.044, and a decay of 100 kills the network outright at 0.500, off the bottom of the panel. Dropout follows the same path: 0.860 with none, a peak of 0.900 at 0.95, and 0.888 at 0.98. AdamW multiplies the decay by the learning rate at every step, so with a rate of 1e-3 the useful values look huge. Do not copy a good value between setups with different learning rates.
+The network shows the far side of the hump. With no regularisation it has train 0.999 and validation 0.860. Weight decay of 10 lifts validation to 0.904; a decay of 100 kills the network at 0.500, below the panel. Dropout follows the same path: 0.860 with none, a peak of 0.900 at 0.95, and 0.888 at 0.98. AdamW multiplies the decay by the learning rate each step, so at a rate of 1e-3 useful values look huge. Do not copy a good value between setups with different learning rates.
 
 ## Early stopping is regularisation too
 
@@ -509,9 +509,9 @@ A **hyperparameter** is a setting you choose and the model does not learn. Knobs
 
 **Grid search** tries every combination, so four values on five knobs costs 4⁵ = 1,024 fits. To fit a budget you must drop values or knobs.
 
-**Random search** draws every knob at random from a range. Bergstra and Bengio, [*Random Search for Hyper-Parameter Optimization*](https://jmlr.org/papers/v13/bergstra12a.html) (JMLR 2012), explain why that beats a grid. Usually only a few knobs matter, and you do not know which in advance. Nine grid trials test the important knob at 3 values, and nine random trials test it at 9. They found between one and four knobs mattered in a 7-knob network problem, with the learning rate always among them. With 8 trials it matched or beat grids averaging 100. Trials are also independent, so you can stop at any time or add more.
+**Random search** draws every knob at random from a range. Bergstra and Bengio, [*Random Search for Hyper-Parameter Optimization*](https://jmlr.org/papers/v13/bergstra12a.html) (JMLR 2012), explain why that beats a grid. Usually few knobs matter, and you cannot know which in advance. Nine grid trials test the important knob at 3 values, and nine random trials test it at 9. They found between one and four knobs mattered in a 7-knob network problem, with the learning rate always among them. With 8 trials it matched or beat grids averaging 100. Trials are also independent, so you can stop at any time or add more.
 
-**Bayesian search** uses earlier trials to choose the next. The Tree-structured Parzen Estimator of Bergstra et al., [*Algorithms for Hyper-Parameter Optimization*](https://papers.nips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf) (NeurIPS 2011), splits past trials into good and bad, models each group's settings as $l(x)$ and $g(x)$, and next tries the $x$ with the highest $l(x)/g(x)$. On their 32-dimensional network problem at up to 200 trials it reached 14.13% test error against 18.97% for random. [Optuna](https://arxiv.org/abs/1907.10902) (Akiba et al., KDD 2019) makes this the default, with the search space written in ordinary code through `trial.suggest_*`.
+**Bayesian search** uses earlier trials to choose the next. The Tree-structured Parzen Estimator of Bergstra et al., [*Algorithms for Hyper-Parameter Optimization*](https://papers.nips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf) (NeurIPS 2011), splits past trials into good and bad, models each group's settings as $l(x)$ and $g(x)$, and next tries the $x$ with the highest $l(x)/g(x)$. On their 32-knob network search (convex, 200 trials) it reached 14.13% test error against 18.97% for random. [Optuna](https://arxiv.org/abs/1907.10902) (Akiba et al., KDD 2019) makes this the default, with the search space written in ordinary code through `trial.suggest_*`.
 
 Below, each method gets 32 fits and five seeds. The validation pile is cut in half: the **search rows** choose the winner and the **report rows** then score it, so no method can flatter itself with luck on its own rows. The first grid spreads two values over all five knobs. The second puts four values on the knobs people trust most.
 
@@ -610,7 +610,7 @@ fig.tight_layout(); fig.savefig(IMG + "training-tuning-search-comparison-adult.p
 
 The honest result: on this data, at this budget, they tie. All four finish within 0.0003 on search rows and 0.0016 on report rows, close to the seed-to-seed spread of 0.0005 to 0.0008, and each beats the default settings' report score by 0.0025 to 0.0041. Much of what a search buys is avoiding bad settings: the worst trials average 0.8995 to 0.9118.
 
-Three things explain the tie. The plateau is wide, with little to find once the learning rate is sensible, and the learning rate carries about 0.61 of the importance (fANOVA over the random searches, a rough estimate from 32 trials). The grid's values came from knowing what good boosting settings look like, which a new problem will not give you. And TPE's first 10 trials are random by default, leaving it 22 to exploit. The right panel still shows Bergstra and Bengio's geometry: the grid tried 2 learning rates and random tried 32.
+Three things explain the tie. The plateau is wide, with little to find once the learning rate is sensible, and the learning rate carries about 0.61 of the importance (fANOVA over the random searches, a rough estimate from 32 trials). The grid's values came from prior knowledge of good boosting settings, which a new problem will not give you. And TPE's first 10 trials are random by default, leaving it 22 to exploit. The right panel still shows Bergstra and Bengio's geometry: the grid tried 2 learning rates and random tried 32.
 
 | Situation | Use |
 |---|---|
@@ -623,7 +623,7 @@ Three things explain the tie. The plateau is wide, with little to find once the 
 
 ## The honest final number
 
-The winner of any search looks better than it is, because you chose it partly for its luck on those rows. Cawley and Talbot, [*On Over-fitting in Model Selection*](https://jmlr.org/papers/volume11/cawley10a/cawley10a.pdf) (JMLR 2010), show that the variance of the selection score can pick a worse model, and that the resulting bias is often as large as the differences between algorithms. To measure it, take the 32 random configurations, choose a winner on some rows, and score that winner on the rest.
+The winner of any search looks better than it is, because you chose it partly for its luck on those rows. Cawley and Talbot, [*On Over-fitting in Model Selection*](https://jmlr.org/papers/volume11/cawley10a/cawley10a.pdf) (JMLR 2010), show that the variance of the selection score can pick a worse model, and that on kernel machines the bias was often as large as the differences between algorithms. To measure it, take the 32 random configurations, choose a winner on some rows, and score that winner on the rest.
 
 ```python
 q = np.array([t[3] for t in runs["random"][0]])    # 32 configurations' scores on every validation row

@@ -42,7 +42,7 @@ Phil Winder's comparison is learning to ride a bike (*Reinforcement Learning*, c
 - An **action** is one choice the agent makes: take the key, go north, call a tool.
 - A **reward** is a number the environment hands back after an action. Positive is good, negative is bad. The agent's only goal is to collect as much reward as it can over time.
 
-One feature separates this from the spam example: the reward comes late and it comes for a whole chain of choices. When the agent finally reaches the treasure, which of its earlier moves deserves the credit? Picking up the key eight moves ago mattered. Walking in a circle did not. Sorting that out is most of what RL does.
+One feature separates this from the spam example: the reward comes late and it comes for a whole chain of choices. When the agent finally reaches the treasure, which of its earlier moves deserves the credit? Picking up the key eight moves ago mattered. Walking in a circle did not. Sorting that out is most of what RL does. Sutton and Barto name exactly these two traits, trial-and-error search and delayed reward, as the distinguishing features of RL, and set it beside supervised and unsupervised learning as a third paradigm (*RL: An Introduction*, ch. 1). Their first worked example is tic-tac-toe against an imperfect opponent: keep one number per board, the estimated chance of winning, start unseen boards at 0.5, play mostly the highest-valued move, and after each greedy move nudge the earlier board's value toward the later one's. That nudge, `V(s) ← V(s) + α·(V(s') − V(s))`, is the update line you meet in the programs below. It needs no model of the opponent and no search.
 
 ## The reward is the whole instruction
 
@@ -93,6 +93,8 @@ epsilon=0.5  average reward per 1000 pulls= 580.8  share on best machine=66%
 ```
 
 Read the three lines against what you would expect. With no randomness at all (`epsilon=0.0`) the agent starts on machine A because every estimate is tied at zero, and it never leaves: A is the only machine whose estimate ever changes. It scores about 200, the worst machine's rate. With 10% randomness it finds the best machine and spends 85% of its pulls there. With 50% randomness it knows the best machine perfectly well and still wastes half of its pulls on purpose, so it scores less.
+
+The textbook version of this experiment is the 10-armed testbed: 2,000 random bandit problems, each arm's true value drawn from N(0,1) and each reward from N(true value, 1), 1,000 steps, sample-average estimates. Pure greedy plateaus near 1 reward per step against a best possible 1.54 and finds the best arm in only about a third of problems. ε = 0.1 never picks the best arm more than 91% of the time, and ε = 0.01 improves more slowly but is claimed to win in the long run (*RL: An Introduction*, ch. 2). The shape matches the table above: some randomness is essential, and too much caps the score.
 
 Two lines in that program deserve a second look, because they return in every chapter. `estimate[machine]` is the agent's current belief about a machine, and the update line moves that belief a little toward each new result. Everything an RL agent knows is a pile of numbers like that one, nudged a little at a time.
 

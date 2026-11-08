@@ -1,0 +1,443 @@
+{
+ "schema": 1,
+ "key": "sha1:a9125a319295",
+ "pdf": "data-engineering/sources/data-warehouse-toolkit/ch03-inventory.pdf",
+ "bib": {
+  "title": "Inventory (Chapter 3, The Data Warehouse Toolkit)",
+  "authors": [
+   "Ralph Kimball",
+   "Margy Ross"
+  ],
+  "first_author": "Kimball",
+  "year": 2002,
+  "venue": "Wiley book chapter (2nd ed.; edition and year not printed in the chapter text)",
+  "arxiv": null,
+  "doi": null
+ },
+ "read": {
+  "by": "source-reader",
+  "at": "2026-11-08",
+  "chars_read": 51571,
+  "chars_total": 51571,
+  "engine": "pymupdf",
+  "skipped": null
+ },
+ "type": "book-chapter",
+ "question": "How to dimensionally model inventory (periodic snapshot, transaction, accumulating snapshot) and how to integrate data marts across a value chain via a bus architecture with conformed dimensions and facts.",
+ "hypothesis": null,
+ "contributions": [
+  "Three inventory fact-table models",
+  "Semi-additive facts and enhanced inventory facts (turns, days' supply, GMROI)",
+  "Data warehouse bus architecture and bus matrix",
+  "Conformed dimensions and facts"
+ ],
+ "method": null,
+ "results": [
+  {
+   "claim": "Inventory levels are semi-additive: summable across products and stores but not across dates; combine across dates by averaging.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Inventory periodic snapshot, quantity on hand",
+   "quote": "Because inventory levels (and all forms of financial account balances) are additive across some dimensions but not all, we refer to them as",
+   "table": null,
+   "note": null,
+   "where": "p.71"
+  },
+  {
+   "claim": "Checking-account example: balances of $50, 50, 100, 100, 100 across the week average to $80, not $400.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": "average balance",
+   "value": 80,
+   "unit": "$",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Mon-Fri balances $50,$50,$100,$100,$100",
+   "quote": "resulting in an $80 average balance in the checking example",
+   "table": null,
+   "note": null,
+   "where": "p.71"
+  },
+  {
+   "claim": "SQL AVG over a 3-product x 4-store x 7-date query divides by 84 rows instead of the 7 dates, so the app must divide the sum by date-constraint cardinality.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 84,
+   "unit": "rows",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 products, 4 stores, 7 dates; correct divisor 7",
+   "quote": "would divide the summed inventory value by 84 (3 products x 4 stores x 7 dates)",
+   "table": null,
+   "note": null,
+   "where": "p.72"
+  },
+  {
+   "claim": "A dense daily inventory snapshot for 60,000 products in 100 stores inserts about 6 million rows per load.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 6,
+   "unit": "million rows per load",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Zero-quantity rows kept explicitly",
+   "quote": "we would insert approximately 6 million rows (60,000 products x 100 stores)",
+   "table": null,
+   "note": null,
+   "where": "p.70"
+  },
+  {
+   "claim": "With a 14-byte row, each daily load adds 84 MB and a year of daily snapshots exceeds 30 GB.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 84,
+   "unit": "MB per load",
+   "baseline_value": null,
+   "n": null,
+   "setup": "14-byte row, 6M rows per load, 365 daily loads",
+   "quote": "the fact table would grow by 84",
+   "table": null,
+   "note": "'MB' follows on next line in text; 'over 30 GB' per year also stated",
+   "where": "p.70"
+  },
+  {
+   "claim": "Retaining 60 daily plus 148 weekly snapshots (208) instead of 1,095 daily over 3 years cuts data size by more than a factor of 5.",
+   "kind": "worked-example",
+   "source": null,
+   "metric": null,
+   "value": 208,
+   "unit": "snapshots",
+   "baseline_value": null,
+   "n": null,
+   "setup": "3 years; last 60 days daily, older weekly, two fact tables",
+   "quote": "the number could be reduced to 208 total snapshots",
+   "table": null,
+   "note": null,
+   "where": "p.70"
+  },
+  {
+   "claim": "Sales fact table was sparse (about 10 percent of products sold per day) whereas inventory snapshots are dense.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 10,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Chapter 2 retail sales vs. inventory snapshot",
+   "quote": "only about 10 percent of the products in each of our hypothetical",
+   "table": null,
+   "note": null,
+   "where": "p.70"
+  },
+  {
+   "claim": "Number of turns = quantity sold / quantity on hand daily; over a span, total quantity sold / daily average quantity on hand; days' supply = final quantity on hand / average quantity sold.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Enhanced inventory snapshot",
+   "quote": "the number of turns is the total quantity sold divided by the daily average",
+   "table": null,
+   "note": null,
+   "where": "p.72"
+  },
+  {
+   "claim": "GMROI is not additive and must not be stored in the fact table; store additive components (quantity sold, value at cost, value at latest selling price) and compute after summing.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Enhanced periodic snapshot, Fig 3.3",
+   "quote": "We do not store GMROI in the fact table because it is not additive.",
+   "table": null,
+   "note": null,
+   "where": "p.73"
+  },
+  {
+   "claim": "Periodic snapshot suits long-running continuously replenished inventory; accumulating snapshot suits finite inventory with a definite beginning and end; add transaction model for depth.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Summary",
+   "quote": "The accumulating snapshot would be used for one-time, finite inven-",
+   "table": null,
+   "note": null,
+   "where": "p.88"
+  },
+  {
+   "claim": "Conformed dimensions are identical or strict mathematical subsets of the most granular dimension, with consistent keys, attribute names, definitions and values.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bus architecture",
+   "quote": "Conformed dimensions are either identical or strict mathe-",
+   "table": null,
+   "note": null,
+   "where": "p.82"
+  },
+  {
+   "claim": "Conformed dimensions are about 90 percent of the up-front data architecture effort; conformed fact definitions are the rest.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": 90,
+   "unit": "%",
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bus architecture",
+   "quote": "This is 90 percent of the up-front data architecture effort.",
+   "table": null,
+   "note": null,
+   "where": "p.87"
+  },
+  {
+   "claim": "Bus matrix rows are business processes (not departments), columns are common dimensions; it is a design, project-management and communication tool.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Fig 3.8",
+   "quote": "part technical design tool, part project management tool, and part communication tool.",
+   "table": null,
+   "note": null,
+   "where": "p.81"
+  },
+  {
+   "claim": "Start implementation with first-level (single-source) data marts; consolidated marts such as profitability come later because ETL effort grows with each source.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bus matrix rows",
+   "quote": "we recommend start-",
+   "table": null,
+   "note": null,
+   "where": "p.80"
+  },
+  {
+   "claim": "Isolated independent data marts are worse than a lost opportunity: they give irreconcilable views and block a coherent warehouse.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Bus architecture",
+   "quote": "They deliver access to irreconcilable views of the organization",
+   "table": null,
+   "note": null,
+   "where": "p.81"
+  },
+  {
+   "claim": "Carry a fact in both units of measure (e.g. shipping cases and scanned units) rather than a conversion factor in the product dimension.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conformed facts",
+   "quote": "The correct solution is to carry the fact in both",
+   "table": null,
+   "note": null,
+   "where": "p.87"
+  },
+  {
+   "claim": "Facts that cannot be conformed exactly should get different names.",
+   "kind": "claim",
+   "source": null,
+   "metric": null,
+   "value": null,
+   "unit": null,
+   "baseline_value": null,
+   "n": null,
+   "setup": "Conformed facts",
+   "quote": "If it is impossible to conform a fact exactly, then you should give different names to the different interpretations.",
+   "table": null,
+   "note": null,
+   "where": "p.87"
+  }
+ ],
+ "limits": [
+  "Examples are hypothetical (60,000 products, 100 stores); no measured data.",
+  "Written around 2002 data-mart/OLAP tooling; storage figures (14-byte rows, 30 GB/year) have dated, and the SQL AVG limitation is stated for standard SQL of that time.",
+  "Accumulating snapshot deferred to Chapter 5; multiple units of measure to Chapter 5; heterogeneous products to Chapter 9."
+ ],
+ "practices": [
+  "Declare grain first, then dimensions: daily inventory by product by store gives date, product, store (p.69).",
+  "Do not attach a promotion dimension to inventory snapshots; promotions attach to product movement (p.69).",
+  "Treat inventory snapshot as dense and include zero-quantity rows; cut volume by keeping recent days daily and older history weekly in a separate fact table (p.70).",
+  "Aggregate semi-additive facts over time by averaging, dividing by the count of dates, not by SQL AVG row count (p.72).",
+  "Store additive components, never ratios like GMROI (p.73).",
+  "Pair a transaction fact table with a snapshot table, since transactions alone are impractical for inventory position (p.75).",
+  "Use accumulating snapshot (one row per shipment, updated through milestones, multiple date FKs) when shipments can be reliably distinguished (p.75).",
+  "Build the bus matrix early: rows are source-aligned business processes, columns common dimensions (p.79-81).",
+  "Implement first-level data marts before consolidated ones; avoid profitability as a first mart, or allocate costs by rule of thumb if forced (p.80).",
+  "Retrofit stovepipe marts by cross-reference mapping to conformed dimensions and re-keying facts, or rebuild if grain is wrong (p.82).",
+  "Roll-up dimensions (brand) must be strict subsets of the atomic dimension (product), with identically labelled shared attributes (p.83).",
+  "Assign a dimension authority to build once in staging and publish synchronously to marts (p.85-86).",
+  "Make conformed-dimension use a business policy mandated from the top (p.86).",
+  "If full conformity is unrealistic, conform a least-common-denominator set of attributes (p.87).",
+  "Drill across with multipass SQL per mart, outer-joined on a common dimension attribute (p.77)."
+ ],
+ "terms": [
+  {
+   "term": "Value chain",
+   "definition": "the natural, logical flow of an organization's primary activities",
+   "where": "p.68"
+  },
+  {
+   "term": "Inventory periodic snapshot",
+   "definition": "every day (or at some other regular time interval), we measure the inventory levels of each product and place them as separate rows in a fact table",
+   "where": "p.69"
+  },
+  {
+   "term": "Inventory accumulating snapshot",
+   "definition": "one fact table row for each product delivery and update the row until the product leaves the warehouse",
+   "where": "p.69"
+  },
+  {
+   "term": "Semiadditive facts",
+   "definition": "additive across some dimensions but not all (e.g. inventory levels, account balances)",
+   "where": "p.71"
+  },
+  {
+   "term": "GMROI",
+   "definition": "gross margin return on inventory: total quantity sold x (value at latest selling price - value at cost) / (daily average quantity on hand x value at latest selling price)",
+   "where": "p.73"
+  },
+  {
+   "term": "Drill across",
+   "definition": "multipass SQL querying each data mart separately, outer joining results on a common dimension attribute",
+   "where": "p.77"
+  },
+  {
+   "term": "Data warehouse bus architecture",
+   "definition": "a standard interface so separate data marts built by different groups at different times plug together via conformed dimensions and facts",
+   "where": "p.78"
+  },
+  {
+   "term": "Data warehouse bus matrix",
+   "definition": "business processes as rows, common dimensions as columns; the tool to create, document and communicate the bus architecture",
+   "where": "p.79"
+  },
+  {
+   "term": "First-level data mart",
+   "definition": "a data mart derived from a single primary source system",
+   "where": "p.80"
+  },
+  {
+   "term": "Consolidated data mart",
+   "definition": "a multisource mart that typically crosses business processes (e.g. profitability)",
+   "where": "p.80"
+  },
+  {
+   "term": "Conformed dimension",
+   "definition": "identical or strict mathematical subsets of the most granular, detailed dimension, with consistent keys, attribute names, definitions and values",
+   "where": "p.82"
+  },
+  {
+   "term": "Dimension authority",
+   "definition": "group responsible for defining, maintaining, and publishing a conformed dimension or its subsets",
+   "where": "p.85"
+  },
+  {
+   "term": "Conformed facts",
+   "definition": "KPIs such as revenue and profit that share definitions, equations, dimensional context and units across marts",
+   "where": "p.87"
+  }
+ ],
+ "lineage": [
+  {
+   "work": "Kimball & Ross, The Data Warehouse Toolkit, Chapter 2 (retail sales case)",
+   "year": null,
+   "arxiv": null,
+   "relation": "extends",
+   "note": "Reuses grocery case, four-step design process, date/product/store dimensions",
+   "quote": null
+  },
+  {
+   "work": "Chapter 5 (accumulating snapshots, multiple units of measure) and Chapter 9 (heterogeneous products)",
+   "year": null,
+   "arxiv": null,
+   "relation": "related",
+   "note": "Forward references",
+   "quote": null
+  }
+ ],
+ "figures": [
+  {
+   "figure": "Fig 3.1",
+   "caption": "Subset of a retailer's value chain.",
+   "page": 67,
+   "why": "Purchase order to warehouse to store to sales flow that rows of the bus matrix derive from"
+  },
+  {
+   "figure": "Fig 3.3",
+   "caption": "Enhanced inventory periodic snapshot to support GMROI analysis.",
+   "page": 73,
+   "why": "Shows which facts are semi-additive (quantity on hand) vs additive"
+  },
+  {
+   "figure": "Fig 3.5",
+   "caption": "Warehouse inventory accumulating snapshot.",
+   "page": 76,
+   "why": "Multiple date FKs and milestone quantities in one updatable row"
+  },
+  {
+   "figure": "Fig 3.8",
+   "caption": "Sample data warehouse bus matrix.",
+   "page": 79,
+   "why": "Processes x common dimensions grid; the core planning artifact (cell shading lost in text)"
+  },
+  {
+   "figure": "Fig 3.9",
+   "caption": "Conforming roll-up dimension subsets.",
+   "page": 84,
+   "why": "Brand dimension as strict subset of product dimension"
+  }
+ ],
+ "code": [
+  {
+   "where": "p.73 GMROI formula",
+   "snippet": "GMROI = total quantity sold x (value at latest selling price - value at cost) / (daily average quantity on hand x value at latest selling price)",
+   "verbatim": false
+  }
+ ],
+ "problems": [
+  "Edition and year not printed in the chapter text; 2002 is the caller's inference.",
+  "Bus matrix cell shading (Fig 3.8) is not in the text, so which dimensions apply to which process is unreadable; only row and column labels are present.",
+  "'TEAMFLY' watermark and blank lines in cache; no embedded instructions found."
+ ]
+}

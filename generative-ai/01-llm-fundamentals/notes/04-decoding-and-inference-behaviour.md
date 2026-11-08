@@ -27,6 +27,7 @@ sources:
   - https://arxiv.org/abs/2005.12872
   - https://arxiv.org/abs/2302.03917
   - https://arxiv.org/abs/2303.08896
+  - "Xiao & Zhu, Foundations of Large Language Models (arXiv, 2025), ch. 1–3"
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -194,6 +195,8 @@ K, V vectors computed for this token: full = 20  cached = 2
 ```
 
 What you pay for that is memory, and it scales with every part of the model's shape. One key and one value per token, per head, per layer. Reducing the number of key/value heads is exactly what GQA does:
+
+The book gives the per-token cache size symbolically: with L layers, head size d_h, m bytes per value and τ heads, it is proportional to L·τ·d_h·m for multi-head attention, L·d_h·m for multi-query attention (one KV head) and L·n_g·d_h·m for grouped-query attention with n_g KV groups. Setting n_g = τ recovers MHA and n_g = 1 recovers MQA (*Foundations of LLMs*, ch. 2). The sizes below are the n_g = 8 case.
 
 ```python
 def kv_gb(layers, kv_heads, head_dim, context, bytes_per=2):

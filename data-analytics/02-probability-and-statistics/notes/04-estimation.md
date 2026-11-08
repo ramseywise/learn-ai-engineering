@@ -5,6 +5,7 @@ sources:
   - Efron & Hastie, Computer Age Statistical Inference (Cambridge, 2016), https://hastie.su.domains/CASI/ (Efron & Hastie, ch. 2-4, 10-11)
   - https://doi.org/10.1214/aos/1176344552 (Efron, Bootstrap Methods, Annals of Statistics, 1979; not held)
   - https://doi.org/10.1007/s10618-008-0114-1 (sample-size rule of thumb)
+  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 8, Estimation)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -54,6 +55,8 @@ divide by n-1: mean 3.988  bias -0.012  var 7.98  mse 7.98
 ```
 
 Dividing by n lands low on average, because deviations from the sample mean are smaller than deviations from the true mean: the sample mean has already moved toward the data. Dividing by n − 1 corrects that and is unbiased. But the divide-by-n version has the *smaller* mean squared error in this example. Unbiasedness is one property, not the goal. That trade, accepting a little bias for less variance, is what regularisation and [shrinkage](03-distributions-and-sampling.md) do, and Efron and Hastie give it a chapter of its own through the James-Stein estimator (*Computer Age Statistical Inference*, ch. 7). At n in the thousands the n versus n − 1 question has no practical effect, but the reasoning returns everywhere.
+
+Which estimator is "best" depends on the loss, and *Think Stats* shows it with two small cases (ch. 8). Six draws from N(0, 1) have mean 0.155; replace the last by −213.8 (a misplaced decimal point) and the sample mean becomes −35.12, which is why robust estimators exist. For the total of three dice, 10.5 minimises mean squared error, but if only an exact hit scores, the maximum likelihood guess of 10 or 11 wins 1 time in 8. The locomotive problem makes the same point with an unknown count N of trains, having seen one numbered i. Every estimator has the form a·i: the MLE is i (a = 1), the minimum-MSE one is a = 3N / (2N + 1), which tends to 3/2, and the unbiased one is a = 2N / (N + 1), which tends to 2 (the book prints N − 1 in the denominator; solving E[a·i] = N with E[i] = (N + 1) / 2 gives N + 1). The estimator 2i − 1 makes the population mean equal the sample mean. They disagree because they encode different losses and implicit priors, and they converge only when the data swamp the prior. A Bayesian answer needs none of that choice: after seeing train 60 with a uniform prior on 1 to 200, the 90% credible interval for N is [63, 189] (5th and 95th percentiles of the posterior), which is honestly wide for one observation. The book also warns that a frequentist 90% interval does not mean a 90% chance the parameter is inside it.
 
 ## Maximum likelihood
 

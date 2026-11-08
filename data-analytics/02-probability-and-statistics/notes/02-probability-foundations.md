@@ -161,6 +161,24 @@ base rate 0.02: P(real | significant) = 0.25
 
 The base rate here is "how often are the ideas we test really good", and it is usually low. Ioannidis made the argument for whole research fields in [Why Most Published Research Findings Are False](https://doi.org/10.1371/journal.pmed.0020124) (PLOS Medicine, 2005). For a company that tests modest changes, this is why a win at p = 0.04 deserves some suspicion, and [chapter 5](05-hypothesis-testing.md) and the [experimentation pillar](../../03-experimentation-and-causality/README.md) take it up.
 
+*Think Stats* adds three exercises worth running. In its drug-test example, 60% sensitivity, 99% specificity and 5% prevalence give P(user | positive) = 0.03 / 0.0395 = 0.76, so about one positive in four is a non-user (*Think Stats*, ch. 5, using the sensitivity and specificity estimates it cites from the drug-testing literature). The **Monty Hall** problem has switching win 2/3 of the time and sticking 1/3, with the host always opening a car-free door you did not pick. Mathematicians resisted the answer, and Downey reports that Erdős was convinced only by a computer simulation, so simulate it:
+
+```python
+import random
+def monty(switch, n=100_000):
+    wins = 0
+    for _ in range(n):
+        car, pick = random.randrange(3), random.randrange(3)
+        opened = next(d for d in range(3) if d not in (car, pick))
+        if switch:
+            pick = next(d for d in range(3) if d not in (pick, opened))
+        wins += pick == car
+    return wins / n
+print(monty(True), monty(False))   # about 0.667 and 0.333
+```
+
+The third is the conjunction rule, P(A and B) ≤ P(A) always, since the multiplication P(A)P(B | A) cannot exceed P(A). A story with more detail is more vivid and never more probable (*Think Stats*, ch. 5). Streaks follow the same logic: runs that look like a hot hand are what independent sequences produce, and a Monte Carlo test can check an apparent cluster against that baseline. Downey also warns that Monte Carlo is slow for rare events, and "a little bit of analysis can save a lot of computing" (*Think Stats*, ch. 5): for 100 dice, P(no sixes) = (5/6)^100 by hand.
+
 ## Independence
 
 A and B are independent if P(A and B) = P(A) P(B), or equivalently if knowing one leaves the other's probability unchanged. This is an assumption about the world, and in analytics it is usually the assumption most at risk. Two common failures get their own chapters. Rows in one group resemble each other, which [multilevel models](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#intraclass-correlation-is-the-design-effects-input) measure as the intraclass correlation. A customer's next state depends on the current one, which [states and sequences](../../06-applied-analyses/notes/08-states-and-sequences.md#the-transition-matrix) models as a Markov chain.

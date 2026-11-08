@@ -104,7 +104,7 @@ For [10](notes/10-adversarial-prompting.md). For the system-level view, see [saf
 - Greshake et al., *Not What You've Signed Up For* (indirect prompt injection) — 2302.12173
 - Debenedetti et al., *Defeating Prompt Injections by Design* (CaMeL) — 2503.18813
 - [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) — LLM01 is prompt injection
-- NIST, [*Adversarial Machine Learning: A Taxonomy*](https://csrc.nist.gov/pubs/ai/100/2/e2023/final) (AI 100-2)
+- NIST, [*Adversarial Machine Learning: A Taxonomy*](https://csrc.nist.gov/pubs/ai/100/2/e2023/final) (NIST AI 100-2e2023, Jan 2024; a [2025 edition](https://csrc.nist.gov/pubs/ai/100/2/e2025/final) exists)
 - Kang et al., *Exploiting Programmatic Behavior of LLMs* — 2302.05733 (jailbreaks as programs)
 - 2303.07320 — cited on the DAIR adversarial page
 - Armstrong & Gorman, *Using GPT-Eliezer against ChatGPT jailbreaking* (LessWrong, 2022) — the input-screening prompt

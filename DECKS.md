@@ -159,17 +159,17 @@ flowchart LR
 
 | Pillar | Lectures written | Notes | Pillar deck |
 |---|---|---|---|
-| [ai-engineering/01-prompt-engineering](ai-engineering/01-prompt-engineering/README.md) | 0 of 13 | 12 | yes |
+| [ai-engineering/01-prompt-engineering](ai-engineering/01-prompt-engineering/README.md) | 0 of 14 | 13 | yes |
 | [ai-engineering/02-context-engineering](ai-engineering/02-context-engineering/README.md) | 0 of 16 | 15 | yes |
 | [ai-engineering/03-harness-engineering](ai-engineering/03-harness-engineering/README.md) | 0 of 12 | 11 | yes |
 | [ai-engineering/04-loop-engineering](ai-engineering/04-loop-engineering/README.md) | 0 of 12 | 11 | yes |
 | [ai-engineering/05-graph-engineering](ai-engineering/05-graph-engineering/README.md) | 0 of 19 | 18 | yes |
-| [ai-engineering/07-inference-engineering](ai-engineering/07-inference-engineering/README.md) | 0 of 11 | 10 | yes |
+| [ai-engineering/07-inference-engineering](ai-engineering/07-inference-engineering/README.md) | 0 of 12 | 11 | yes |
 | [ai-engineering/08-multimodal-engineering](ai-engineering/08-multimodal-engineering/README.md) | 0 of 9 | 8 | yes |
 | [ai-engineering/09-safety-and-security](ai-engineering/09-safety-and-security/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/01-llm-fundamentals](generative-ai/01-llm-fundamentals/README.md) | 0 of 16 | 15 | yes |
-| [generative-ai/02-rag-retrieval](generative-ai/02-rag-retrieval/README.md) | 0 of 16 | 15 | yes |
-| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 12 | 11 | yes |
+| [generative-ai/02-rag-retrieval](generative-ai/02-rag-retrieval/README.md) | 0 of 19 | 18 | yes |
+| [generative-ai/03-agentic-foundations](generative-ai/03-agentic-foundations/README.md) | 0 of 14 | 13 | yes |
 | [generative-ai/04-agentic-frameworks](generative-ai/04-agentic-frameworks/README.md) | 0 of 8 | 7 | yes |
 | [generative-ai/05-RL](generative-ai/05-RL/README.md) | 0 of 16 | 15 | yes |
 | [generative-ai/06-observability](generative-ai/06-observability/README.md) | 0 of 7 | 6 | yes |

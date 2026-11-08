@@ -2,7 +2,7 @@
 origin: synthesis
 sources:
   - Bruce & Bruce, Practical Statistics for Data Scientists (O'Reilly, 2017) (ch. 1, Exploratory Data Analysis)
-  - Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 2-3, descriptive statistics and the class size paradox)
+  - "Downey, Think Stats (Green Tea Press, 2011), https://allendowney.github.io/ThinkStats/ (ch. 1-3 and 9, statistical thinking, descriptive statistics, CDFs and the class size paradox, scatterplots and correlation)"
   - Reinhart, Statistics Done Wrong (No Starch, 2015)
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_data_cleaning.py
@@ -30,6 +30,8 @@ flowchart LR
     E --> F[Write down findings and questions]
     F -->|new question| B
 ```
+
+Downey opens *Think Stats* with the same argument in the form of a checklist. An anecdote fails for four reasons: too few observations, selection bias, confirmation bias, and inaccuracy. The statistical alternative is a small kit: data collection, descriptive statistics, exploration, hypothesis testing and estimation (Downey, *Think Stats*, ch. 1). His running dataset is the US National Survey of Family Growth (NSFG, Cycle 6, January 2002 to March 2003, 7,643 female respondents aged 15 to 44, 13,593 pregnancies). Two habits from it are worth copying. First, reproduce the codebook's counts before analysing anything, since a loader that returns a different row count has already gone wrong. Second, read the sampling design: the NSFG deliberately oversamples Hispanic and African-American respondents and teenagers, so each row carries a weight (`finalwgt`, the number of people it represents), and an unweighted mean describes the sample rather than the population.
 
 ## The data, and what kind of data it is
 
@@ -188,6 +190,8 @@ The standard deviation squares every deviation, so one large value dominates it.
 
 That single comparison is the most reliable outlier detector you have. When the mean and median, or the standard deviation and the IQR, disagree by a lot, the tail is running the summary, and you should look at the tail. And report percentiles rather than one number: 141 at p90 and 427 at p99 tell a planner far more than a mean does.
 
+The same discipline applies to values that are possible but implausible. In the NSFG live-birth file the ten lowest pregnancy lengths are 0, 4, 9, 13, 17, 17, 18, 19, 20 and 21 weeks. Downey treats anything under 20 weeks as certainly an error, anything over 30 as probably real, and the band between as hard to judge (*Think Stats*, ch. 2). There is no mechanical trimming rule: decide, write the rule down, and report how many rows it removed.
+
 ## Shape: histograms, logs, the CDF
 
 The rest of the course uses plots from [pillar 05](../../05-visualisation-and-storytelling/README.md). Here a text histogram is enough, because the point is the shape.
@@ -243,6 +247,8 @@ skew raw 5.1, skew log 0.01
 ```
 
 Read it as sentences: 61% of orders are at most 50, and only about 1% exceed 500. The skewness numbers confirm the histogram: 5.1 on the raw scale, essentially zero on the log scale. Chapter 3 shows why that skew matters: it slows the Central Limit Theorem, so a mean based on a few hundred users can have an interval that misses far more often than it should.
+
+Three more points from *Think Stats* sharpen the choice of summary. A mean can describe nobody: six pumpkins weighing 1, 1, 1, 3, 3 and 591 pounds have a mean of 100, and no pumpkin is near it. When a distribution has a clear mode, as pregnancy length does at 39 weeks, the mode is the better "typical value" (*Think Stats*, ch. 2). To compare two groups of different size, normalise to probabilities (a probability mass function, PMF) instead of counts, and then plot the difference. Downey's difference of PMFs for weeks 35 to 45 shows first babies are less often born at 39 weeks and somewhat more often at weeks 41 and 42. A single relative risk summarises one slice: 18.2% of first babies were early (week 37 or before) against 16.8% of others, a risk ratio of 1.08 (*Think Stats*, ch. 2, treated there as an observed effect, with no test). When PMFs are too noisy to read, compare CDFs. Chapter 3 does this for NSFG birth weights, where the CDFs show first babies slightly lighter across the distribution and by more above the mean, which the PMFs hid (*Think Stats*, ch. 3). It also gives the *percentile rank* (the share of values at or below yours: 88 in the scores 55, 66, 77, 88, 99 has rank 80) and defines the median as the 50th percentile and the IQR as the 75th minus the 25th.
 
 ## Two columns at a time
 
@@ -323,6 +329,8 @@ mean as seen by a random session: 372.9
 ```
 
 The same arithmetic applies to any metric sampled one way and quoted another way. Larkspur's mean sessions per user is 68 in this toy table, yet a randomly chosen session belongs to a user with 373 sessions, because the heavy user owns most of them. That is why a per-session metric and a per-user metric can move in opposite directions, and it returns as a practical pitfall in [metric design](../../03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md).
+
+Plotting two numeric columns has its own traps. Heights in the BRFSS survey are rounded to whole inches, so points stack on vertical lines. Adding uniform noise of about ±1.3 cm (half an inch is 1.27 cm) before plotting spreads them out, for display only. Overplotting at 414,509 respondents hides the density, and Downey's fixes in order are transparency (`alpha=0.2`), jitter and hexagonal bins (`plt.hexbin`), where transparency on only the first 1,000 records exposes a horizontal band near 90 kg that comes from self-reported pounds being rounded (*Think Stats*, ch. 9). The same chapter says what Pearson's ρ measures: the mean product of standardised scores, Cov(X, Y) / (σ_X σ_Y), always between −1 and +1, linear association only, and unrelated to the slope.
 
 ## From EDA to a written finding
 
